@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "house-party-protocol"
+version = "2.0.0"
+description = "A local-first reliability harness for coding agents."
+requires-python = ">=3.9"
+dependencies = []
+
+[project.scripts]
+hpp = "hpp.cli:main"
+
+[tool.setuptools]
+packages = ["hpp"]

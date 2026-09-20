@@ -1,9 +1,18 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 400" width="1280" height="400" role="img" aria-label="House Party Protocol — by Rushar Labs">
-  <title>House Party Protocol</title><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0000FF"/><stop offset="1" stop-color="#FF00FF"/></linearGradient></defs>
-  <rect width="1280" height="400" fill="#FFFFFF"/>
-  <g transform="translate(96,80)"><circle cx="120" cy="120" r="84" fill="none" stroke="url(#g)" stroke-width="3" stroke-dasharray="6 7" stroke-linecap="round"/><circle cx="120" cy="120" r="14" fill="url(#g)"/><circle cx="120" cy="120" r="5" fill="#FFFFFF"/><g fill="#0B0B12"><circle cx="120" cy="36" r="9"/><circle cx="169.4" cy="52" r="9"/><circle cx="199.9" cy="94" r="9"/><circle cx="199.9" cy="146" r="9"/><circle cx="169.4" cy="188" r="9"/><circle cx="120" cy="204" r="9"/><circle cx="70.6" cy="188" r="9"/><circle cx="40.1" cy="146" r="9"/><circle cx="40.1" cy="94" r="9"/><circle cx="70.6" cy="52" r="9"/></g><line x1="120" y1="106" x2="120" y2="46" stroke="url(#g)" stroke-width="3" stroke-linecap="round"/></g>
-  <text x="392" y="176" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="64" font-weight="800" letter-spacing="-1" fill="#0B0B12">HOUSE PARTY PROTOCOL</text>
-  <text x="394" y="226" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="26" fill="#59636E">Dez kits. Uma régua comum: prova antes de “pronto”.</text>
-  <text x="394" y="292" font-family="'JetBrains Mono', Consolas, Menlo, monospace" font-size="20" fill="#59636E">Claude Code  ·  Codex CLI</text>
-  <text x="394" y="344" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="18" font-weight="600" letter-spacing="3" fill="#0B0B12">RUSHAR LABS</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 360" role="img" aria-labelledby="title desc">
+  <title id="title">House Party Protocol</title>
+  <desc id="desc">Operate coding agents under evidence, not trust.</desc>
+  <rect width="1200" height="360" rx="36" fill="#F2F0E9"/>
+  <path d="M0 302C210 244 360 326 566 278s354-32 634-120v202H0Z" fill="#5DE4C7" opacity=".15"/>
+  <g transform="translate(64 52)">
+    <rect width="256" height="256" rx="52" fill="#0C0F0E"/>
+    <path d="M38 128H92M164 128H218" stroke="#5DE4C7" stroke-width="14" stroke-linecap="round"/>
+    <path d="M92 72V184M164 72V184" stroke="#F2F0E9" stroke-width="14" stroke-linecap="round"/>
+    <path d="M92 98H164M92 158H164" stroke="#D7FF64" stroke-width="14" stroke-linecap="round"/>
+    <circle cx="38" cy="128" r="13" fill="#FF6B5F"/><circle cx="218" cy="128" r="16" fill="#D7FF64"/>
+  </g>
+  <text x="374" y="119" font-family="JetBrains Mono, Cascadia Code, Consolas, monospace" font-size="20" letter-spacing="5" fill="#66706B">HOUSE PARTY PROTOCOL</text>
+  <text x="372" y="191" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="44" font-weight="760" fill="#0C0F0E">Operate coding agents</text>
+  <text x="372" y="246" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="44" font-weight="760" fill="#0C0F0E">under evidence, not trust.</text>
+  <path d="M374 285H1092" stroke="#0C0F0E" stroke-width="2" opacity=".18"/>
+  <circle cx="782" cy="285" r="8" fill="#FF6B5F"/><circle cx="934" cy="285" r="8" fill="#5DE4C7"/><circle cx="1092" cy="285" r="10" fill="#D7FF64"/>
 </svg>

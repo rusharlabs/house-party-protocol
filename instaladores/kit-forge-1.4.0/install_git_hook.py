@@ -2,9 +2,9 @@
 """
 install_git_hook — instalador de git hook CHAIN-PRESERVING (nunca substitui um hook alheio).
 
-Substitui o `bin/install-hooks.js` da casa por decisão C4 do kickoff v2: o `.git/hooks/pre-commit`
-vivo pode já ser um wrapper importante (ex.: o guard TEAR B1); rodar um instalador ingênuo hoje
-SUBSTITUIRIA esse guard = regressão silenciosa. Este instalador NUNCA sobrescreve — ele ENCADEIA:
+Um `.git/hooks/pre-commit` existente pode ser um wrapper importante; um instalador ingênuo
+substituiria essa proteção e criaria uma regressão silenciosa. Este instalador nunca sobrescreve:
+ele encadeia.
 se já existe um hook diferente do nosso, preserva-o como `<hook>.pre-kitforge` e escreve um novo
 `<hook>` que roda (1) o original preservado, (2) nosso payload — nesta ordem, com `set -e` (o
 original falhar aborta ANTES do nosso payload rodar; nunca pulamos o guard alheio).
@@ -24,6 +24,20 @@ import sys
 from pathlib import Path
 
 _MARKER = "installed-by: kit-forge/install_git_hook.py"
+
+
+def _find_posix_shell() -> str | None:
+    """Resolve Git for Windows' shell before Windows' WSL launcher."""
+    git = shutil.which("git")
+    if git:
+        git_path = Path(git).resolve()
+        roots = [git_path.parent.parent, git_path.parent]
+        for root in roots:
+            for relative in (Path("bin") / "sh.exe", Path("usr") / "bin" / "sh.exe"):
+                candidate = root / relative
+                if candidate.is_file():
+                    return str(candidate)
+    return shutil.which("sh")
 
 
 def _make_executable(path: Path) -> None:
@@ -100,7 +114,7 @@ def _self_test() -> int:
         code1b, report1b = install(repo, "pre-commit", payload1)
         assert code1b == 0 and report1b["status"] == "no-op", f"2a instalação deveria ser no-op: {report1b}"
 
-        # cenário 2: hook ALHEIO já existente (simula o guard TEAR B1) — deve encadear, não substituir
+        # cenário 2: hook alheio já existente — deve encadear, não substituir
         repo2 = tmp / "repo2"
         (repo2 / ".git" / "hooks").mkdir(parents=True)
         original_hook = repo2 / ".git" / "hooks" / "pre-commit"
@@ -114,8 +128,10 @@ def _self_test() -> int:
         assert report2["preserved_original"] is not None
 
         marker_log = tmp / "marker.log"
+        shell = _find_posix_shell()
+        assert shell is not None, "shell POSIX não encontrado para validar o hook"
         result = subprocess.run(
-            ["sh", str(repo2 / ".git" / "hooks" / "pre-commit"), str(marker_log)],
+            [shell, str(repo2 / ".git" / "hooks" / "pre-commit"), str(marker_log)],
             capture_output=True, text=True,
         )
         log_content = marker_log.read_text(encoding="utf-8") if marker_log.exists() else ""

@@ -1,24 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="240" height="240" role="img" aria-label="House Party Protocol">
-  <title>House Party Protocol — dez nós, um protocolo</title>
-  <defs>
-    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#0000FF"/>
-      <stop offset="1" stop-color="#FF00FF"/>
-    </linearGradient>
-  </defs>
-  <!-- anel de coordenação: dez kits compartilham a mesma régua -->
-  <circle cx="120" cy="120" r="84" fill="none" stroke="url(#g)" stroke-width="3" stroke-dasharray="6 7" stroke-linecap="round"/>
-  <!-- gate humano no centro -->
-  <circle cx="120" cy="120" r="14" fill="url(#g)"/>
-  <circle cx="120" cy="120" r="5" fill="#FFFFFF"/>
-  <!-- dez kits independentes -->
-  <g fill="#0B0B12">
-    <circle cx="120" cy="36" r="9"/><circle cx="169.4" cy="52.0" r="9"/>
-    <circle cx="199.9" cy="94.0" r="9"/><circle cx="199.9" cy="146.0" r="9"/>
-    <circle cx="169.4" cy="188.0" r="9"/><circle cx="120" cy="204" r="9"/>
-    <circle cx="70.6" cy="188.0" r="9"/><circle cx="40.1" cy="146.0" r="9"/>
-    <circle cx="40.1" cy="94.0" r="9"/><circle cx="70.6" cy="52.0" r="9"/>
-  </g>
-  <!-- uma conexão medida: o protocolo torna a prova visível -->
-  <line x1="120" y1="106" x2="120" y2="46" stroke="url(#g)" stroke-width="3" stroke-linecap="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title desc">
+  <title id="title">House Party Protocol mark</title>
+  <desc id="desc">A signal crosses two gates and ends in a verified node.</desc>
+  <rect width="256" height="256" rx="52" fill="#0C0F0E"/>
+  <path d="M38 128H92M164 128H218" stroke="#5DE4C7" stroke-width="14" stroke-linecap="round"/>
+  <path d="M92 72V184M164 72V184" stroke="#F2F0E9" stroke-width="14" stroke-linecap="round"/>
+  <path d="M92 98H164M92 158H164" stroke="#D7FF64" stroke-width="14" stroke-linecap="round"/>
+  <circle cx="38" cy="128" r="13" fill="#FF6B5F"/>
+  <circle cx="218" cy="128" r="16" fill="#D7FF64"/>
+  <path d="m211 128 5 5 10-12" fill="none" stroke="#0C0F0E" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>
