@@ -312,7 +312,7 @@ def main(argv: list[str] | None = None) -> int:
     except (ManifestError, InstallError, StateError, EvalError, ValueError, json.JSONDecodeError) as exc:
         print(f"hpp: {exc}", file=sys.stderr)
         return 2
-    except Exception as exc:  # pragma: no cover - final boundary for a CLI process
+    except Exception as exc:
         print(f"hpp: internal error: {type(exc).__name__}: {exc}", file=sys.stderr)
         return 3
 
