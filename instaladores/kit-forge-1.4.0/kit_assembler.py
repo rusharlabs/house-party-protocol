@@ -213,7 +213,7 @@ def _entrada_proibida(nome: str) -> str | None:
 
     partes = nome.split("/")
     base = partes[-1]
-    # Why: o .gitignore desta casa nega .env.example de proposito; a regua tem
+    # Why: o .gitignore de distribuicao nega .env.example de proposito; a regua tem
     # de negar junto, senao o gate reprova o arquivo que ele quer que exista.
     if base.endswith(".example"):
         return None
@@ -439,7 +439,7 @@ def apply_replaces(staging: Path, regras: list) -> tuple[list, list, list]:
                 _escreve_preservando_quebra(target, novo)
                 aplicadas.append(
                     {"file": rel_file, "find": find, "replace": repl,
-                     # revisor 2026-09-20: o report diz o modo que ACONTECEU, nao o pedido
+                     # Why: o relatorio registra o modo aplicado, nao apenas o solicitado.
                      "mode": ("literal (degradado de word)" if modo == "word" and padrao is None else modo),
                      "hits": n}
                 )

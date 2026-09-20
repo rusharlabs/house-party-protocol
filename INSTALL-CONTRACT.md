@@ -53,7 +53,7 @@ Lê `questions:` do `kit.install.yaml`. Sem `--answers`: usa os `default` de cad
 $ python kit_doctor.py install <kit_dir> --target <project_dir>
    → roda os 6 estágios em MODO PLANO (nenhuma escrita real acontece)
    → imprime o plano completo (JSON) e SAI COM EXIT 0
-   → o humano lê o plano (na conversa, se for um agente Claude Code operando)
+   → o humano lê o plano (na conversa, se for um agente operando)
 
 $ python kit_doctor.py install <kit_dir> --target <project_dir> --apply
    → roda os 6 estágios de verdade, aplicando profile/registrando install
@@ -83,10 +83,16 @@ questions:                  # opcional — consumido pelo estágio `configure` E
 verification:               # comandos de aceite pós-install (cada um deve ser executável e sair 0)
   - "python scripts/algo.py --self-test"
 hosts:
-  claude-code:               # único host suportado hoje — ver seção "Seam de host" abaixo
+  claude-code:               # host nativo de plugin — ver seção "Seam de host" abaixo
     plugin: true|false        # tem .claude-plugin/plugin.json?
     wiring_spec: install/wiring-spec.yaml   # se houver wiring de hooks/statusLine
     manual_gates: [statusLine]              # o que NUNCA pode ser auto-armado (sempre gate humano)
+  codex:                     # host por cópia explícita, sem ativação automática de hooks
+    plugin: false
+    agents: AGENTS.md
+    skills_path: .agents/skills
+    runtime_path: .agents/hpp/<nome-do-kit>
+    manual_gates: [hooks]
 docs: README.md
 ```
 
@@ -100,9 +106,9 @@ Isso garante que "responder perguntas" tem UM formato só, não dois.
 {"id": "lane_mode", "prompt": "Projeto roda multi-sessão (lanes) ou solo?", "type": "choice", "options": ["solo", "lanes"], "default": "solo"}
 ```
 
-## Seam de host (cross-host, sem construir adaptador)
+## Seam de host (Claude Code + Codex CLI)
 
-Hoje só existe `claude-code`. O motor mantém um dict interno:
+O motor mantém um dict interno com os dois hosts comprovados:
 
 ```python
 HOSTS = {
@@ -111,15 +117,24 @@ HOSTS = {
         "plugin_manifest": ".claude-plugin/plugin.json",
         "path_token": "${CLAUDE_PLUGIN_ROOT}",
     },
+    "codex": {
+        "agents_file": "AGENTS.md",
+        "skills_path": ".agents/skills",
+        "runtime_path": ".agents/hpp",
+        "path_token": "{{HPP_CODEX_RUNTIME}}",
+    },
 }
 ```
 
 Fontes NOVAS (`kit.install.yaml`, `install/wiring-spec.yaml`) usam o token neutro
-`{{KIT_ROOT}}`, resolvido para `path_token` do host ativo (`--host`, default e único
-valor hoje: `claude-code`). Os 14 usos EXISTENTES de `${CLAUDE_PLUGIN_ROOT}` em
+`{{KIT_ROOT}}`, resolvido para `path_token` do host ativo (`--host`; o default segue
+`claude-code`). Os usos EXISTENTES de `${CLAUDE_PLUGIN_ROOT}` em
 `hooks.json`/scripts NÃO são reescritos — são artefatos nativos do Claude Code e
-continuam assim. Um adaptador Codex/Cursor/Gemini futuro = nova entrada em `HOSTS`
-+ bloco `hosts.<novo>:` nos YAMLs — zero mudança nos 6 estágios. Não inventar
+continuam assim. No Codex, `codex_skills.py` copia o runtime para
+`.agents/hpp/<kit>` e gera skills namespaced em `.agents/skills/`, substituindo o
+token somente nessas cópias. Hooks permanecem desligados. Um adaptador
+Cursor/Gemini futuro = nova entrada em `HOSTS` + bloco `hosts.<novo>:` nos YAMLs —
+zero mudança nos 6 estágios. Não inventar
 vocabulário de evento "neutro" fingido: eventos tipo `Stop`/`PreCompact` são conceitos
 Claude Code e ficam declarados sob `hosts.claude-code`, honestamente.
 
@@ -139,6 +154,7 @@ Claude Code e ficam declarados sob `hosts.claude-code`, honestamente.
 [ ] questions (se houver) têm default sensato — instalar sem --answers nunca trava
 [ ] verification: tem ≥1 comando real, executável, que sai 0 quando tudo está ok
 [ ] hosts.claude-code.manual_gates lista tudo que NUNCA deve ser auto-armado
+[ ] hosts.codex declara AGENTS.md, .agents/skills, runtime namespaced e hooks em manual_gates
 [ ] README.md segue o INSTALL-GUIDE-TEMPLATE.md
 [ ] kit_doctor.py install <kit> --target <dir-virgem> roda sem erro (plano)
 [ ] kit_doctor.py install <kit> --target <dir-virgem> --apply roda sem erro (aplica)

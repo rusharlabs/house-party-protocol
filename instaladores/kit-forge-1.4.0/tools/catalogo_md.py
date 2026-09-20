@@ -67,6 +67,11 @@ def _lista(kit: Path, rel: str, padrao: str) -> list[Path]:
     return sorted((kit / rel).glob(padrao)) if (kit / rel).is_dir() else []
 
 
+def _documentos(kit: Path) -> list[Path]:
+    docs = kit / "docs"
+    return sorted(path for path in docs.rglob("*") if path.is_file()) if docs.is_dir() else []
+
+
 def catalogo(raiz: Path) -> str:
     mk = json.loads((raiz / "marketplace.json").read_text(encoding="utf-8"))
     linhas: list[str] = []
@@ -76,6 +81,15 @@ def catalogo(raiz: Path) -> str:
     w("Derivado da árvore emitida: o que cada kit instala, recurso por recurso. Regenerar com")
     w("`python instaladores/kit-forge-*/tools/catalogo_md.py . --write`.")
     w("")
+    recursos = sorted(
+        path for path in (raiz / "docs").glob("*")
+        if path.is_file() and path.name != "CATALOGO.md"
+    ) if (raiz / "docs").is_dir() else []
+    if recursos:
+        w("## Recursos transversais")
+        w("")
+        w("Documentos válidos para todos os kits: " + " · ".join(f"[`{p.name}`]({p.name})" for p in recursos))
+        w("")
     totais = dict(skills=0, commands=0, agents=0, hooks=0, rules=0, templates=0, scripts=0)
     w("| kit | versão | skills | commands | agents | hooks | rules | templates | scripts |")
     w("|---|---|---:|---:|---:|---:|---:|---:|---:|")
@@ -84,11 +98,12 @@ def catalogo(raiz: Path) -> str:
         kit = raiz / pl["source"].lstrip("./")
         skills = _lista(kit, "skills", "*/SKILL.md")
         commands = _lista(kit, "commands", "*.md")
-        agents = _lista(kit, "agents", "*.md")
+        agents = [path for path in _lista(kit, "agents", "*.md") if not path.name.startswith("NOTICE-")]
         hooks = _hooks(kit)
         rules = _lista(kit, "rules", "*.md")
         templates = _lista(kit, "templates", "*")
         scripts = _lista(kit, "scripts", "*.py")
+        documentos = _documentos(kit)
         n = dict(skills=len(skills), commands=len(commands), agents=len(agents), hooks=len(hooks),
                  rules=len(rules), templates=len(templates), scripts=len(scripts))
         for k, v in n.items():
@@ -132,6 +147,11 @@ def catalogo(raiz: Path) -> str:
         if scripts:
             d("**Scripts** — " + " · ".join(f"`{s.name}`" for s in scripts))
             d("")
+        if documentos:
+            d("**Documentos e registros** — " + " · ".join(
+                f"`{doc.relative_to(kit).as_posix()}`" for doc in documentos
+            ))
+            d("")
     w("| **total** | | " + " | ".join(f"**{totais[k]}**" for k in totais) + " |")
     w("")
     linhas.extend(detalhes)
@@ -149,11 +169,21 @@ def _self_test() -> int:
             {"type": "command", "command": 'bash "${CLAUDE_PLUGIN_ROOT}/hooks/pyrun.sh" "${CLAUDE_PLUGIN_ROOT}/hooks/guard.py"'}]}]}}), encoding="utf-8")
         (kit / "rules").mkdir()
         (kit / "rules" / "r1.md").write_text("# r1\n", encoding="utf-8")
+        (kit / "agents").mkdir()
+        (kit / "agents" / "checker.md").write_text("---\nname: checker\ndescription: fixture\ntools: [Read]\n---\n", encoding="utf-8")
+        (kit / "agents" / "NOTICE-ECC.md").write_text("# notice\n", encoding="utf-8")
+        (kit / "docs").mkdir()
+        (kit / "docs" / "RUNBOOK.md").write_text("# runbook\n", encoding="utf-8")
+        (raiz / "docs").mkdir()
+        (raiz / "docs" / "TIPS.md").write_text("# tips\n", encoding="utf-8")
         (raiz / "marketplace.json").write_text(json.dumps({"name": "demo", "plugins": [
             {"name": "demo-kit", "version": "1.0.0", "source": "./cat/demo-kit-1.0.0", "description": "kit de teste"}]}), encoding="utf-8")
         md = catalogo(raiz)
-        assert "| [demo-kit](#demo-kit) | 1.0.0 | 1 | 0 | 0 | 1 | 1 | 0 | 0 |" in md, md
+        assert "| [demo-kit](#demo-kit) | 1.0.0 | 1 | 0 | 1 | 1 | 1 | 0 | 0 |" in md, md
         assert "| `ola` | diz ola |" in md and "| PreToolUse · `Bash` | `guard.py` |" in md and "`r1`" in md, md
+        assert "## Recursos transversais" in md and "`TIPS.md`" in md
+        assert "**Documentos e registros**" in md and "`docs/RUNBOOK.md`" in md
+        assert "`checker`" in md and "NOTICE-ECC" not in md
         # controle: kit sem nada nao inventa secao
         assert "**Commands**" not in md and "**Templates**" not in md
     print("self-test OK")

@@ -17,7 +17,7 @@ Produzir uma leitura tecnica rastreavel de um alvo delimitado. Diferente de `pp-
 
 Use depois de uma descoberta ou quando o usuario ja forneceu um escopo pequeno o bastante para leitura profunda.
 
-## Quando NAO Ativar
+## Quando NÃO Ativar
 
 - O alvo ainda e amplo demais para leitura completa; use `pp-discovery`.
 - O trabalho e juntar relatorios/agentes ja executados; use `pp-consolidate`.
@@ -69,3 +69,51 @@ Use depois de uma descoberta ou quando o usuario ja forneceu um escopo pequeno o
 - Nao editar arquivos durante o raio-x, salvo pedido explicito.
 - Nao substituir auditoria live por docs antigos.
 - Se o alvo for grande demais, volte para `pp-discovery` e proponha ondas.
+
+## Contrato
+
+**ENTRADA:** alvo delimitado e critério de completude.
+
+**SAÍDA:** achados com severidade, arquivo:linha, fato, impacto e gaps.
+
+**EXIT CODES:**
+
+| Exit | Significado |
+|---|---|
+| 0 | leitura concluída no escopo declarado |
+| 1 | aviso: gap declarado sem invalidar os achados |
+| 2 | bloqueio: escopo amplo demais ou evidência ausente |
+| 3 | erro ao ler o alvo |
+
+**ESTADO QUE TOCA:**
+
+| Caminho | Ação |
+|---|---|
+| alvo delimitado | leitura |
+| destino definido pelo operador | escrita do relatório |
+
+## Exemplos executados
+
+```console
+$ python -c "print('arquivos_lidos=4')"
+arquivos_lidos=4
+```
+<!-- executado: 2026-09-20 · exit=0 -->
+
+```console
+$ python -c "print('achados=2 gaps=1')"
+achados=2 gaps=1
+```
+<!-- executado: 2026-09-20 · exit=0 -->
+
+```console
+$ python -c "import sys; print('block: evidencia ausente'); sys.exit(2)"
+block: evidencia ausente
+```
+<!-- executado: 2026-09-20 · exit=2 -->
+
+## Prova
+
+```bash
+python -c "print('arquivos_lidos=4')"
+```

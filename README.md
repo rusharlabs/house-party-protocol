@@ -1,195 +1,199 @@
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="assets/hpp-banner-dark.svg">
-    <img alt="House Party Protocol — dez kits para Claude Code" src="assets/hpp-banner-light.svg" width="100%">
+    <img alt="House Party Protocol — dez kits, uma régua comum" src="assets/hpp-banner-light.svg" width="100%">
   </picture>
 </p>
 
 <p align="center">
   <a href="LICENSE"><img alt="MIT" src="https://img.shields.io/badge/licen%C3%A7a-MIT-0000FF"></a>
   <a href="#os-dez-kits"><img alt="10 kits" src="https://img.shields.io/badge/kits-10-FF00FF"></a>
-  <img alt="Claude Code plugin marketplace" src="https://img.shields.io/badge/Claude%20Code-plugin%20marketplace-0B0B12">
-  <img alt="macOS · Linux · Windows" src="https://img.shields.io/badge/macOS%20%C2%B7%20Linux%20%C2%B7%20Windows-portável-59636E">
+  <img alt="Claude Code e Codex CLI" src="https://img.shields.io/badge/hosts-Claude%20Code%20%7C%20Codex%20CLI-0B0B12">
+  <img alt="macOS, Linux e Windows" src="https://img.shields.io/badge/macOS%20%C2%B7%20Linux%20%C2%B7%20Windows-port%C3%A1vel-59636E">
 </p>
 
 # House Party Protocol
 
-**An agent harness where nothing ships without a second measurement.**
+**Dez kits. Uma régua comum: prova antes de “pronto”.**
 
-Dez kits instaláveis para Claude Code. Cada um resolve um problema que aparece quando você
-para de conversar com um agente e passa a **operar** vários.
+House Party Protocol é um marketplace aberto de componentes para operar agentes de código
+com menos confiança implícita e mais evidência reproduzível. Cada kit cobre uma falha
+operacional específica — conclusão sem teste, sessões que colidem, contexto que se perde,
+saúde aparente, memória que não aprende — sem exigir que você adote o conjunto inteiro.
 
-> O revisor roda em outro modelo e **não tem ferramenta de escrita**.
-> Ou o checker tem `Write`, ou não tem — e isso é verificável.
+Funciona com **Claude Code** como marketplace de plugins e com **Codex CLI** por instalação
+determinística em `.agents/`.
 
-```bash
-/plugin marketplace add rushar-labs/house-party-protocol
-/plugin install operator-kit@house-party-protocol
-```
+## Comece pela falha que você quer evitar
 
----
+| Se o problema é... | Comece por | A prova que ele exige |
+|---|---|---|
+| “pronto” sem verificação | `operator-kit` | comando, saída e exit code frescos |
+| duas sessões no mesmo caminho | `lane-kit` | claim, território e maker ≠ checker |
+| retomada após crash ou `/clear` | `continuity-kit` | handoff com rederivação antes de repetir |
+| serviço verde com dado stale | `health-kit` | saúde de serviço separada da saúde do dado |
+| falha recorrente sem aprendizado | `gotcha-memory` | recorrência classificada antes da próxima tentativa |
+| criação de skills/hooks sem contrato | `claude-dev-kit` + `kit-forge` | lint, self-test, manifesto e checksum |
 
-## A história
+## Instalação rápida
 
-Este projeto nasceu dentro de uma agência operada por agentes de IA, onde várias sessões
-trabalham em paralelo sobre o mesmo repositório, todos os dias. A velocidade veio rápido.
-A confiança, não.
-
-O que se acumulou foram as falhas silenciosas: o agente que disse "pronto" sobre um teste
-que nunca rodou; o `grep` que devolveu zero porque abortou, não porque não havia nada; duas
-sessões que editaram o mesmo arquivo com a melhor das intenções; o revisor que "consertou e
-seguiu" — e com isso apagou a única evidência de que o processo estava furado.
-
-Cada uma dessas falhas virou uma regra. Cada regra virou um gate. Cada gate nasceu com o
-teste que o força a reprovar. Quando o conjunto ficou grande demais para caber num único
-projeto, ele foi cortado em kits — cada um cobrindo um buraco que o outro não cobre, todos
-passando pela mesma forja e pelo mesmo linter de publicação.
-
-**O nome.** Em *Iron Man 3*, o House Party Protocol é a ordem que chama **todas** as armaduras
-de uma vez — cada uma com um papel, nenhuma decorativa, e só quando o operador dá a palavra.
-É o que este marketplace é: dez kits que chegam juntos, e nenhum deles decide sozinho o que
-só o humano decide.
-
-O que o projeto acredita está escrito no [`MANIFESTO.md`](MANIFESTO.md).
-
----
-
-## Instalar
-
-Pelo marketplace de plugins do Claude Code:
+### Claude Code
 
 ```bash
 /plugin marketplace add rushar-labs/house-party-protocol
 /plugin install operator-kit@house-party-protocol
 ```
 
-Ou por cópia, sem plugin — cada kit traz `install/kit.install.yaml` e o instalador imprime
-o plano antes de aplicar:
+### Codex CLI
 
 ```bash
-python instaladores/kit-forge-1.4.0/kit_doctor.py install --kit <caminho-do-kit>   # imprime o plano
-python instaladores/kit-forge-1.4.0/kit_doctor.py install --kit <caminho-do-kit> --apply
+python instaladores/kit-forge-1.4.0/kit_doctor.py install --kit frameworks-com-plugins/operator-kit-1.3.0 --host codex --target /caminho/do/repo --apply
+codex -C /caminho/do/repo
 ```
 
-**Portabilidade.** Os hooks de cada kit rodam via `hooks/pyrun.sh` (bash), que escolhe o
-Python do projeto (`.venv`), depois `python3`, depois `python` — macOS, Linux e Windows
-(Git Bash) sem alias nenhum. Nos comandos escritos nesta documentação, leia `python` como
-"o seu Python 3" (`python3` no macOS).
+O instalador copia o runtime completo para `.agents/hpp/operator-kit/` e gera as skills com
+namespace `hpp-...` em `.agents/skills/`. Ele não altera `~/.codex/config.toml` e não ativa
+hooks do Claude Code no Codex.
 
----
+## Por que “House Party Protocol”
+
+Uma house party só funciona quando cada pessoa sabe por que está ali, o que pode tocar e
+quando precisa parar. O projeto aplica essa ideia a agentes: muitos componentes podem atuar
+sob o mesmo teto, mas entram por um protocolo comum — fronteira explícita, gate humano para
+o sensível, segunda medição e handoff verificável.
+
+O símbolo do projeto mostra isso: dez nós independentes, um anel de coordenação e uma conexão
+medida. Não existe peça decorativa; existe responsabilidade observável.
+
+## O protocolo
+
+Quatro invariantes atravessam os dez kits:
+
+1. **Quem constrói não aprova.** Revisores são read-only por configuração, não por promessa.
+2. **A régua acompanha o número.** Toda contagem ou estado vem com o comando que o produziu.
+3. **O controle antecede o zero.** Um detector só declara ausência depois de provar que encontra um caso vivo.
+4. **O gate sabe reprovar.** Cada proteção nasce com um teste que falha antes e passa depois.
+
+O [`MANIFESTO.md`](MANIFESTO.md) desenvolve os princípios completos.
 
 ## Os dez kits
 
-| kit | versão | o que resolve |
-|---|---|---|
-| **operator-kit** | 1.3.0 | A camada portátil: verdade-antes-de-done, execução autônoma com guardrail, planejamento spec-driven, paralelismo com teto. Config-driven por um `profile.yaml` (autonomia × intensidade). Traz o loop `/ralph-gate`, o ledger de dívida técnica, 13 regras como doutrina instalável e o gerador de `CLAUDE.md` a partir do perfil (`claude-md-from-profile`). |
-| **kit-forge** | 1.4.0 | A fábrica. Monta kits a partir de manifesto, com `ip_pii_linter` (gate de IP/PII), `guard_origins`, `skill_lint` e `kit_doctor` de 6 estágios. É também o gate que decide o que pode sair de casa. |
-| **lane-kit** | 1.2.0 | N sessões sem colisão. Board com estado `CLAIMED → BUILDING → CHECKPOINT-READY → UNDER-REVIEW → VERIFIED/NEEDS-FIX → MERGED`, maker ≠ checker cross-model obrigatório, lock por diretório. Depende do `continuity-kit`. |
-| **continuity-kit** | 1.2.1 | A sessão sobrevive a parada, `/clear` ou crash sem perder o próximo passo. Handoff com comando de re-derivação e de verificação-primeiro embutidos. |
-| **claude-dev-kit** | 1.3.1 | Ferramentas de construir ferramentas: `skill-writer`, `hookify`, `plugin-dev`, `teaching`. Wiring idempotente com `--undo`. |
-| **health-kit** | 1.3.1 | Sonda de serviço config-driven, com segmento de statusline cache-first. Doutrina embarcada: *health de SERVIÇO ≠ health de DADO*. |
-| **dev-squad-kit** | 1.0.0 | 12 agentes de papel via slash-command, mais 3 skills de leitura e consolidação paralela token-safe. |
-| **agent-framework-wizard** | 1.1.1 | Wizard de 6 passos para gerar o esqueleto de um agente ou skill novo. Modo não-interativo e `--demo`. |
-| **supabase-pack** | 1.1.0 | Auditoria de RLS de verdade (via `pg_policies` + advisors) e scaffold de Edge Function. |
-| **gotcha-memory** | 1.0.0 | A falha vira lição. Postflight registra cada comando que falha, classificado por família; recorrência vira um **gotcha**, e o preflight injeta a lição ANTES da próxima execução da mesma tarefa. Detecção conservadora — ambíguo não é falha. WARN-only. |
+| Kit | Versão | O que entrega |
+|---|---:|---|
+| **operator-kit** | 1.3.0 | Gates de conclusão, execução com guardrails, planejamento e regras instaláveis. |
+| **kit-forge** | 1.4.0 | Montagem, lint de IP/PII, contrato de skills, checksums, instalação e publicação. |
+| **lane-kit** | 1.2.0 | Coordenação de sessões, locks por território e maker/checker cross-provider. |
+| **continuity-kit** | 1.2.1 | Handoff, retomada e espelho de estado com verificação antes de repetição. |
+| **claude-dev-kit** | 1.3.1 | Criação de skills, hooks e plugins com wiring reversível. |
+| **health-kit** | 1.3.1 | Probe config-driven e statusline cache-first. |
+| **dev-squad-kit** | 1.0.0 | Papéis especializados, subagents e consolidação paralela. |
+| **agent-framework-wizard** | 1.1.1 | Wizard de seis passos para esqueleto de agente ou skill. |
+| **supabase-pack** | 1.1.0 | Auditoria RLS e scaffold de Edge Function. |
+| **gotcha-memory** | 1.0.0 | Falha → recorrência → lição injetada antes da próxima execução. |
 
----
+O inventário gerado de skills, agents, hooks, regras, templates e scripts está em
+[`docs/CATALOGO.md`](docs/CATALOGO.md).
 
-## Por que existe
-
-A maior parte do ferramental de agente resolve *velocidade*. Este resolve *confiança* — e a
-diferença aparece no dia em que o agente diz "pronto" e não está.
-
-Quatro decisões de projeto atravessam os dez kits:
-
-**1 · O revisor não tem caneta.** Quem constrói não aprova, e quem aprova roda em outro
-modelo com `allowedTools` sem `Write` nem `Edit`. Não é uma instrução no prompt — é a
-ausência da ferramenta. Se o checker pudesse editar, ele consertaria e seguiria, e o defeito
-de processo nunca apareceria.
-
-**2 · A régua ao lado do número.** Nenhum número é publicado sem o comando que o produziu.
-Um relatório que diz "18 testes passando" sem o comando é uma afirmação sobre a memória de
-alguém, não sobre o repositório.
-
-**3 · O controle antes do veredito.** Antes de declarar algo morto, zero ou ausente, aponte
-o mesmo instrumento para um caso que você sabe estar vivo. Se ele também disser "morto", o
-instrumento não discrimina — e o veredito não vale.
-
-**4 · O gate prova que sabe reprovar.** Todo gate nasce com um teste que o força a falhar
-sobre o caso que ele existe para barrar. Um teste que só exercita o caminho feliz não
-distingue "gate funcionando" de "gate ausente" — os dois passam igual.
-
----
-
-## Os três contratos
-
-O que separa um kit de uma pasta de scripts está escrito, e é verificável por lint:
-
-| contrato | o que impõe | quem verifica |
-|---|---|---|
-| [`INSTALL-CONTRACT.md`](INSTALL-CONTRACT.md) | 6 estágios em ordem fixa (`detect → prereqs → profile → configure → wire-suggest → smoke`), fluxo plano→`--apply`, proibido `input()` bloqueante, `wire-suggest` nunca escreve em settings | `kit_doctor install` |
-| [`SKILL-CONTRACT.md`](SKILL-CONTRACT.md) | 6 cláusulas: header, contrato de I/O, ≥3 exemplos **executados** com saída real colada (≥1 de falha, expirando em 90 dias), prova em <5s sem rede, portabilidade, corpo executável | `tools/skill_lint.py` |
-| [`INSTALL-GUIDE-TEMPLATE.md`](INSTALL-GUIDE-TEMPLATE.md) | as 9 seções obrigatórias do README de cada kit, incluindo a seção 8 (prova com saída real, nunca inventada) e a 9 (desfazer) | revisão + lint futuro |
-
-Contrato de saída, único em toda a família: **`0` ok/no-op · `1` warn · `2` block · `3` erro.**
-Não existe `--skip-lint`.
-
----
-
-## Documentação
-
-- [`MANIFESTO.md`](MANIFESTO.md) — o que o projeto acredita, em oito princípios
-- [`docs/MANUAL.html`](docs/MANUAL.html) — o manual da forja, com mini-curso de 6 módulos
-- [`docs/CATALOGO.md`](docs/CATALOGO.md) — o que cada kit instala, recurso por recurso (skills, commands, hooks, rules, templates, scripts)
-- [`docs/CATALOGO.html`](docs/CATALOGO.html) — o mesmo catálogo, navegável
-- [`docs/UX-INSTALL-JOURNEY.md`](docs/UX-INSTALL-JOURNEY.md) — a jornada de instalação e os 3 papéis (instalador, agente, humano)
-- [`CHANGELOG.md`](CHANGELOG.md) — as versões publicadas
-
----
-
-## Verificar uma instalação
-
-Cada kit traz `CHECKSUMS.txt` com sha256 por arquivo e um `SANITIZACAO.md` declarando o que
-foi retirado antes de publicar.
+Os 24 atalhos operacionais estão em [`docs/TIPS.md`](docs/TIPS.md). Antes de um
+`done_gate`, valide Python, PyYAML, Git e a escrita de settings:
 
 ```bash
-cd <kit>
-tr -d '\r' < CHECKSUMS.txt | sha256sum -c
+python frameworks-com-plugins/operator-kit-1.3.0/scripts/preflight.py --project .
 ```
 
-> O `tr -d` não é enfeite: em checkout com CRLF o `sha256sum -c` anexa `\r` ao nome do
-> arquivo, procura um arquivo que não existe, e devolve **FAILED com exit 0** — verificação
-> nenhuma, com cara de verificação feita.
+## Codex CLI
 
----
+O suporte ao Codex é explícito, não uma adaptação presumida:
 
-## Atribuição
+- `AGENTS.md` existe na raiz e dentro de cada kit;
+- skills de repositório usam o diretório oficial `.agents/skills`;
+- skills duplicadas entre kits recebem namespace durante a geração;
+- o runtime original fica em `.agents/hpp/<kit>` para scripts e recursos continuarem juntos;
+- `${CLAUDE_PLUGIN_ROOT}` é removido das cópias geradas;
+- `hooks.json`, slash commands e lifecycle hooks do Claude Code não são armados no Codex.
 
-Alguns kits adaptam trabalho de terceiros, sempre com licença compatível e origem declarada
-no README do kit — notadamente material do [ECC](https://github.com/affaan-m/ECC) (MIT) no
-`health-kit` (dashboard-builder) e no `claude-dev-kit` (architecture-decision-records,
-skill-scout, search-first).
+Prova mínima do `operator-kit` após a instalação:
 
-Código vendorizado dentro de um kit (`_lib/`) carrega a origem no cabeçalho do arquivo.
+```bash
+python .agents/hpp/operator-kit/scripts/done_gate.py --self-test
+python .agents/hpp/operator-kit/scripts/live_count.py --self-test
+python .agents/hpp/operator-kit/scripts/claude_md_from_profile.py --self-test
+```
 
----
+O Codex descobre as skills automaticamente. Use `/skills` ou mencione uma skill com `$`.
 
-## Autor
+## Claude Code
 
-House Party Protocol é feito por **Max Parisi** na **Rushar Labs** — o braço de engenharia de
-agentes da [Rushar](https://rushar.com.br), Porto Alegre.
+No Claude Code, cada kit mantém sua estrutura nativa de plugin:
 
-- Site: [rushar.com.br](https://rushar.com.br)
-- GitHub: [rushar-labs](https://github.com/rushar-labs)
-- Segurança: ver [`SECURITY.md`](SECURITY.md) · Contribuir: ver [`CONTRIBUTING.md`](CONTRIBUTING.md)
-- Citar: [`CITATION.cff`](CITATION.cff) (o GitHub mostra o botão *Cite this repository*)
+- `.claude-plugin/plugin.json` para metadados;
+- `skills/`, `commands/` e `agents/` quando aplicável;
+- `hooks/hooks.json` para lifecycle hooks do host;
+- `${CLAUDE_PLUGIN_ROOT}` para resolver recursos do plugin.
 
-Se este projeto lhe poupou uma noite, um link de volta já é o crédito que a licença pede.
+O caminho por cópia também funciona sem marketplace:
+
+```bash
+python instaladores/kit-forge-1.4.0/kit_doctor.py install --kit <caminho-do-kit> --host claude-code --target <repo>
+python instaladores/kit-forge-1.4.0/kit_doctor.py install --kit <caminho-do-kit> --host claude-code --target <repo> --apply
+```
+
+O primeiro comando imprime o plano; o segundo aplica. Configurações já existentes não são
+sobrescritas silenciosamente.
+
+## O que cada host recebe
+
+| Capacidade | Claude Code | Codex CLI |
+|---|---|---|
+| Skills | plugin `skills/` | cópia gerada em `.agents/skills/` |
+| Instruções do projeto | `CLAUDE.md`/docs do kit | `AGENTS.md` |
+| Scripts Python | runtime do plugin | `.agents/hpp/<kit>/` |
+| Hooks lifecycle | nativos via `hooks.json` | não aplicados; execução explícita |
+| Slash commands | quando o kit fornece | não convertidos automaticamente |
+| Self-tests | `python ... --self-test` | o mesmo comando no runtime copiado |
+
+## Três contratos, um resultado
+
+| Contrato | O que impede | Gate |
+|---|---|---|
+| [`INSTALL-CONTRACT.md`](INSTALL-CONTRACT.md) | instalação que sobrescreve estado ou esconde pré-requisito | `kit_doctor install` |
+| [`SKILL-CONTRACT.md`](SKILL-CONTRACT.md) | skill vaga, sem I/O, prova ou portabilidade | `skill_lint.py` |
+| [`INSTALL-GUIDE-TEMPLATE.md`](INSTALL-GUIDE-TEMPLATE.md) | guia sem instalação, prova e rollback | revisão + publicação |
+
+Convenção de saída: **`0` ok/no-op · `1` warn · `2` block · `3` erro**.
+
+## Estrutura
+
+```text
+house-party-protocol/
+├── AGENTS.md                 # instruções para Codex CLI
+├── marketplace.json          # catálogo dos 10 kits
+├── frameworks-com-plugins/   # operator, dev, health, squad e Supabase
+├── multi-sessao/             # lane-kit
+├── continuidade/             # continuity-kit e gotcha-memory
+├── wizards/                  # agent-framework-wizard
+├── instaladores/             # kit-forge
+└── docs/                     # catálogo gerado e padrões táticos
+```
+
+## Verificação do pacote
+
+```bash
+python instaladores/kit-forge-1.4.0/kit_doctor.py marketplace .
+python instaladores/kit-forge-1.4.0/kit_doctor.py verify frameworks-com-plugins/operator-kit-1.3.0
+python instaladores/kit-forge-1.4.0/tools/skill_lint.py --all frameworks-com-plugins/operator-kit-1.3.0/skills
+```
+
+Cada kit inclui `CHECKSUMS.txt`; o catálogo é regenerado a partir da árvore que realmente será
+distribuída.
+
+## Contribuir
+
+Leia [`CONTRIBUTING.md`](CONTRIBUTING.md). Uma mudança entra com escopo cirúrgico, teste que
+reproduz a falha e prova fresca do resultado. Crédito e origem viajam com o código.
 
 ## Licença
 
 MIT — ver [`LICENSE`](LICENSE). Copyright © 2026 Max Parisi (Rushar Labs).
-A licença MIT exige uma coisa só de quem redistribui: **manter o aviso de copyright**. É
-assim que o crédito viaja com o código — ver [`NOTICE`](NOTICE).
 
 <p align="center"><sub>Rushar Labs · Ideias · Sistemas · Pessoas · Impacto — <em>Construindo o que vem depois.</em></sub></p>

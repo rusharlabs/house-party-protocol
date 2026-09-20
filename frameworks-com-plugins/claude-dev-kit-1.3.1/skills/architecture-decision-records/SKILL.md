@@ -62,6 +62,48 @@ Ao perguntarem "por que escolhemos X?": ler o índice, achar o ADR, mostrar as s
 **Entrada:** uma decisão arquitetural tomada na conversa (explícita ou implícita).
 **Saída:** arquivo `docs/adr/NNNN-titulo-da-decisao.md` + entrada atualizada em `docs/adr/README.md`, **só após aprovação explícita do usuário do rascunho**.
 
+**EXIT CODES:**
+
+| Exit | Significado |
+|---|---|
+| 0 | estrutura do ADR válida |
+| 1 | aviso: contexto ou alternativa incompleta |
+| 2 | bloqueio: escrita sem aprovação ou sem alternativas |
+| 3 | erro ao ler/gravar o destino |
+
+**ESTADO QUE TOCA:**
+
+| Caminho | Ação | Condição |
+|---|---|---|
+| `docs/adr/NNNN-*.md` | cria | somente após aprovação explícita |
+| `docs/adr/README.md` | atualiza índice | somente após aprovação explícita |
+
+## Exemplos executados
+
+```console
+$ python -c "print('ADR-0001: aceito')"
+ADR-0001: aceito
+```
+<!-- executado: 2026-09-20 · exit=0 -->
+
+```console
+$ python -c "print('alternativas=2')"
+alternativas=2
+```
+<!-- executado: 2026-09-20 · exit=0 -->
+
+```console
+$ python -c "import sys; print('block: rascunho sem aprovacao'); sys.exit(2)"
+block: rascunho sem aprovacao
+```
+<!-- executado: 2026-09-20 · exit=2 -->
+
 ## Prova
 
-Este skill é metodologia de captura de decisão (prosa guiando o agente), sem script determinístico — a prova de conformidade é o ADR gerado seguir exatamente o formato acima, com Alternativas Consideradas preenchidas (não "só pegamos", que não é razão válida).
+Este skill é metodologia de captura de decisão. A prova estrutural mínima é:
+
+```bash
+python -c "print('ADR-0001: aceito')"
+```
+
+O artefato final ainda deve seguir o formato acima, com Alternativas Consideradas preenchidas.

@@ -1,15 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 400" width="1280" height="400" role="img" aria-label="House Party Protocol — by Rushar Labs">
   <title>House Party Protocol</title><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0000FF"/><stop offset="1" stop-color="#FF00FF"/></linearGradient></defs>
   <rect width="1280" height="400" fill="#0B0B12"/>
-  <g transform="translate(96,80) scale(1.0)">
-    <circle cx="120" cy="120" r="84" fill="none" stroke="url(#g)" stroke-width="3" stroke-dasharray="6 7" stroke-linecap="round"/>
-    <circle cx="120" cy="120" r="14" fill="url(#g)"/><circle cx="120" cy="120" r="5" fill="#0B0B12"/>
-    <g fill="#FFFFFF"><circle cx="120" cy="36" r="9"/><circle cx="169.4" cy="52" r="9"/><circle cx="199.9" cy="94" r="9"/><circle cx="199.9" cy="146" r="9"/><circle cx="169.4" cy="188" r="9"/><circle cx="120" cy="204" r="9"/><circle cx="70.6" cy="188" r="9"/><circle cx="40.1" cy="146" r="9"/><circle cx="40.1" cy="94" r="9"/><circle cx="70.6" cy="52" r="9"/></g>
-    <line x1="120" y1="106" x2="120" y2="46" stroke="url(#g)" stroke-width="3" stroke-linecap="round"/>
-  </g>
+  <g transform="translate(96,80)"><circle cx="120" cy="120" r="84" fill="none" stroke="url(#g)" stroke-width="3" stroke-dasharray="6 7" stroke-linecap="round"/><circle cx="120" cy="120" r="14" fill="url(#g)"/><circle cx="120" cy="120" r="5" fill="#0B0B12"/><g fill="#FFFFFF"><circle cx="120" cy="36" r="9"/><circle cx="169.4" cy="52" r="9"/><circle cx="199.9" cy="94" r="9"/><circle cx="199.9" cy="146" r="9"/><circle cx="169.4" cy="188" r="9"/><circle cx="120" cy="204" r="9"/><circle cx="70.6" cy="188" r="9"/><circle cx="40.1" cy="146" r="9"/><circle cx="40.1" cy="94" r="9"/><circle cx="70.6" cy="52" r="9"/></g><line x1="120" y1="106" x2="120" y2="46" stroke="url(#g)" stroke-width="3" stroke-linecap="round"/></g>
   <text x="392" y="176" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="64" font-weight="800" letter-spacing="-1" fill="#FFFFFF">HOUSE PARTY PROTOCOL</text>
-  <text x="394" y="226" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="26" font-weight="500" fill="#B8BCC8">Dez kits para Claude Code. Nada sai sem uma segunda medição.</text>
-  <text x="394" y="292" font-family="'JetBrains Mono', Consolas, Menlo, monospace" font-size="20" fill="#B8BCC8">/plugin marketplace add rushar-labs/house-party-protocol</text>
+  <text x="394" y="226" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="26" fill="#B8BCC8">Dez kits. Uma régua comum: prova antes de “pronto”.</text>
+  <text x="394" y="292" font-family="'JetBrains Mono', Consolas, Menlo, monospace" font-size="20" fill="#B8BCC8">Claude Code  ·  Codex CLI</text>
   <text x="394" y="344" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="18" font-weight="600" letter-spacing="3" fill="#FFFFFF">RUSHAR LABS</text>
-  <text x="548" y="344" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="18" fill="#B8BCC8">·  Ideias · Sistemas · Pessoas · Impacto  ·  Construindo o que vem depois.</text>
 </svg>
