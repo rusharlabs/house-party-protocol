@@ -1,0 +1,33 @@
+# Ruido de execucao
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# Artefato de trabalho: nunca entra num kit distribuido
+*.bak
+*.bak-*
+*.orig
+*.rej
+*.rebuild*.json
+*.build.json
+dist/
+
+# 🔴 O ruleset REAL do ip_pii_linter carrega nome de cliente e de infra interna.
+# So o ip-ruleset.example.yaml e publicavel. Esta linha e a diferenca entre publicar
+# o gate e publicar o que o gate esconde.
+ip-ruleset.yaml
+**/ip-ruleset.yaml
+
+# Segredo, sempre
+.env
+.env.*
+!.env.example
+
+# SO
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Geracoes anteriores dos kits ficam locais; o repositorio publica so a versao corrente.
+_superseded-*/

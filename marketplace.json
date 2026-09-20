@@ -1,0 +1,170 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
+  "name": "house-party-protocol",
+  "description": "House Party Protocol — todas as armaduras respondem ao chamado. Marketplace distribuivel de kits Claude Code publicados por Max Parisi. Cada plugin e um kit auto-contido, com self-test, SKILL-CONTRACT e MANIFEST.json (sha256) verificaveis via kit_doctor.",
+  "version": "1.4.0",
+  "owner": {
+    "name": "Max Parisi",
+    "url": "https://rushar.com.br"
+  },
+  "plugins": [
+    {
+      "name": "kit-forge",
+      "displayName": "Kit Forge",
+      "source": "./instaladores/kit-forge-1.4.0",
+      "description": "O gate de IP/PII + o montador de kits. ip_pii_linter + kit_assembler (com guard_origins integrado) + kit_doctor (verify/install/registry, 6 estagios: detect/prereqs/profile/configure/wire-suggest/smoke) + guard_origins + wire_settings + install_git_hook + skill_lint + tools/browse.py (menu interativo do marketplace), contrato unico de exit (0 ok/no-op, 1 warn, 2 block, 3 erro). Sem --skip-lint.",
+      "version": "1.4.0",
+      "category": "installers",
+      "keywords": [
+        "ip-scanner",
+        "pii",
+        "kit-builder",
+        "skill-lint",
+        "governance",
+        "installer-engine"
+      ]
+    },
+    {
+      "name": "operator-kit",
+      "displayName": "Operator Kit",
+      "source": "./frameworks-com-plugins/operator-kit-1.3.0",
+      "description": "Camada portatil de verdade-antes-de-done, execucao autonoma com guardrails, planejamento spec-driven, paralelismo com teto, memoria que se cura e comunicacao direta. Config-driven por um unico profile.yaml (autonomia + intensidade: lite/full/ultra/off). Inclui o loop /ralph-gate, scripts/debt_ledger.py (divida tecnica) e rules/ (13 regras universais, doutrina instalavel).",
+      "version": "1.3.0",
+      "category": "productivity",
+      "keywords": [
+        "operator",
+        "guardrails",
+        "autonomy",
+        "verification",
+        "portable",
+        "loop",
+        "spec-driven",
+        "tech-debt"
+      ]
+    },
+    {
+      "name": "continuity-kit",
+      "displayName": "Continuity Kit",
+      "source": "./continuidade/continuity-kit-1.2.1",
+      "description": "Handoff-v1.1: uma sessao sobrevive a parada/clear/crash sem perder o proximo passo. Schema com git-block + re_derive_cmd (LC-1) + verify_first_cmd (LC-4), hooks Stop/PreCompact/SessionStart. Inclui doc-rollup (historico/evolucao com degradacao embutida) + pre-clear (longo-prazo + curto-prazo).",
+      "version": "1.2.1",
+      "category": "productivity",
+      "keywords": [
+        "handoff",
+        "continuity",
+        "session",
+        "resume",
+        "stop-hook",
+        "doc-rollup"
+      ]
+    },
+    {
+      "name": "lane-kit",
+      "displayName": "Lane Kit",
+      "source": "./multi-sessao/lane-kit-1.2.0",
+      "description": "N sessoes sem colisao. Lane board com estado CLAIMED->BUILDING->CHECKPOINT-READY->UNDER-REVIEW->VERIFIED/NEEDS-FIX->MERGED, maker!=checker cross-model obrigatorio, lock por diretorio. Depende do continuity-kit. Inclui o subsistema de seguranca: registry de lanes vivas + git-guard + territory-guard.",
+      "version": "1.2.0",
+      "category": "productivity",
+      "keywords": [
+        "multi-session",
+        "concurrency",
+        "lane",
+        "maker-checker"
+      ]
+    },
+    {
+      "name": "health-kit",
+      "displayName": "Health Kit",
+      "source": "./frameworks-com-plugins/health-kit-1.3.1",
+      "description": "Sonda de saude de servicos (http/cmd) config-driven por profile.yaml + segmento de statusline com detalhe por-servico (api:OK db:DOWN), cache-first (statusline nunca toca rede). Doutrina embarcada: health de SERVICO != health de DADO. +dashboard-builder (Grafana/SigNoz, adaptado do ECC MIT).",
+      "version": "1.3.1",
+      "category": "monitoring",
+      "keywords": [
+        "health-check",
+        "monitoring",
+        "statusline",
+        "dashboard"
+      ]
+    },
+    {
+      "name": "claude-dev-kit",
+      "displayName": "Claude Dev Kit",
+      "source": "./frameworks-com-plugins/claude-dev-kit-1.3.1",
+      "description": "Ferramentas de construir ferramentas: skill-writer + hookify + plugin-dev + teaching (as 4 meta-skills, SKILL-CONTRACT vendorizado) + wire_settings (merge idempotente byte-estavel + --undo) + install_git_hook (encadeia com hook pre-commit existente, nunca sobrescreve) + secret_scan_on_write hook base. +architecture-decision-records +skill-scout +search-first (adaptados do ECC MIT).",
+      "version": "1.3.1",
+      "category": "installers",
+      "keywords": [
+        "settings",
+        "git-hooks",
+        "secret-scan",
+        "setup",
+        "skill-writer",
+        "hookify",
+        "plugin-dev"
+      ]
+    },
+    {
+      "name": "supabase-pack",
+      "displayName": "Supabase Pack",
+      "source": "./frameworks-com-plugins/supabase-pack-1.1.0",
+      "description": "rls-audit (RLS de verdade via pg_policies + get_advisors) + supabase-edge-scaffold (Edge Function TS com deno check).",
+      "version": "1.1.0",
+      "category": "database",
+      "keywords": [
+        "supabase",
+        "rls",
+        "security",
+        "edge-functions"
+      ]
+    },
+    {
+      "name": "agent-framework-wizard",
+      "displayName": "Agent Framework Wizard",
+      "source": "./wizards/agent-framework-wizard-1.1.1",
+      "description": "Wizard de 6 passos (check_python->check_git->check_deps->configure->validate->generate_and_summary) para gerar o esqueleto de um agente/skill novo. --interview/--answers nao-interativos + --demo; skip-exists com --force.",
+      "version": "1.1.1",
+      "category": "scaffolding",
+      "keywords": [
+        "wizard",
+        "scaffold",
+        "agent",
+        "generator",
+        "interview"
+      ]
+    },
+    {
+      "name": "dev-squad-kit",
+      "displayName": "Dev Squad Kit",
+      "source": "./frameworks-com-plugins/dev-squad-kit-1.0.0",
+      "description": "Squad de 12 agentes de papel (master orchestrator, analyst, architect, data-engineer, dev, devops, pm, po, qa, sm, squad-creator, ux-design-expert) via slash-command, mais 3 skills de leitura/consolidacao paralela token-safe (pp-discovery, pp-raiox, pp-consolidate). Camada de persona/prompt -- nao inclui arvore de tasks/templates proprietaria.",
+      "version": "1.0.0",
+      "category": "agents",
+      "keywords": [
+        "agents",
+        "squad",
+        "roles",
+        "orchestration",
+        "discovery",
+        "consolidation"
+      ]
+    },
+    {
+      "name": "gotcha-memory",
+      "displayName": "Gotcha Memory",
+      "source": "./continuidade/gotcha-memory-1.0.0",
+      "description": "Loop de aprendizado operacional standalone: a falha vira conhecimento. Depois de cada comando Bash que falha, o postflight registra o evento classificado por familia de erro; quando o mesmo tipo recorre N vezes numa janela, vira um GOTCHA -- uma licao acionavel que o preflight injeta ANTES da proxima execucao da mesma tarefa. Gotchas curated (suas regras) sao always-on. Deteccao conservadora: so sinal claro de erro conta, ambiguo nao e falha. Dois hooks WARN-only (exit 0 sempre) -- o loop de aprendizado jamais bloqueia o fluxo. stdlib only.",
+      "version": "1.0.0",
+      "category": "productivity",
+      "keywords": [
+        "learning-loop",
+        "gotchas",
+        "failure-memory",
+        "preflight",
+        "postflight",
+        "error-classification",
+        "recurrence",
+        "lessons-learned"
+      ]
+    }
+  ]
+}

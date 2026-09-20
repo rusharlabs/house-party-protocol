@@ -1,0 +1,38 @@
+// wiring.settings.jsonc — bloco de colar (GATE HUMANO — o classifier bloqueia auto-edit de
+// settings/hooks). ADITIVO: mesclar dentro dos arrays "hooks" já existentes em
+// settings.json/settings.local.json — NUNCA substituir o arquivo inteiro.
+//
+// Launcher: NUNCA fixar "py" — detectar na instalação (${CLAUDE_PLUGIN_ROOT} + _lib/launcher.py
+// do operator-kit, ou o Python resolvido pelo instalador). Os comandos abaixo usam "python"
+// (correto na maioria dos PATHs); troque por caminho absoluto do venv se o projeto-alvo tiver um.
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          { "type": "command", "command": "python \"${CLAUDE_PLUGIN_ROOT}/hooks/handoff_inject.py\"", "timeout": 30 }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          { "type": "command", "command": "python \"${CLAUDE_PLUGIN_ROOT}/hooks/handoff_guard.py\"", "timeout": 30 }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          { "type": "command", "command": "python \"${CLAUDE_PLUGIN_ROOT}/hooks/handoff_guard.py\"", "timeout": 30 }
+        ]
+      }
+    ]
+  }
+}
+
+// Checklist pós-wiring (rodar o round-trip real, não presumir — LC-1):
+//   python "${CLAUDE_PLUGIN_ROOT}/hooks/_handoff_io.py" --self-test
+//   python "${CLAUDE_PLUGIN_ROOT}/hooks/_handoff_io.py" write --demo --lane solo
+//   echo '{"hook_event_name":"SessionStart","session_id":"proof"}' | python "${CLAUDE_PLUGIN_ROOT}/hooks/handoff_inject.py"
+//   tail -1 .claude/handoff/HANDOFF-LEDGER.jsonl   # confirmar "event": "consumed"

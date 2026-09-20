@@ -1,0 +1,14 @@
+kit: kit-forge
+requires:
+  python: ">=3.8"
+  pyyaml: true
+  external_services: []
+verification:
+  - "python kit_doctor.py --self-test"
+  - "python ip_pii_linter.py --self-test"
+  - "python wire_settings.py --self-test"
+hosts:
+  claude-code:
+    plugin: false
+    manual_gates: [hooks, PreToolUse]
+docs: README.md

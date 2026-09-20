@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "dev-squad-kit",
+  "displayName": "Dev Squad Kit",
+  "version": "1.0.0",
+  "description": "Squad de 12 agentes de papel (master orchestrator, analyst, architect, data-engineer, dev, devops, pm, po, qa, sm, squad-creator, ux-design-expert) via slash-command, mais 3 skills de leitura/consolidacao paralela token-safe (pp-discovery, pp-raiox, pp-consolidate). Camada de persona/prompt -- nao inclui arvore de tasks/templates proprietaria.",
+  "author": { "name": "Max Parisi", "url": "https://rushar.com.br" },
+  "license": "MIT",
+  "keywords": ["agents", "squad", "roles", "persona", "orchestration", "discovery", "consolidation", "pm", "architect", "qa"],
+  "commands": "./commands"
+}

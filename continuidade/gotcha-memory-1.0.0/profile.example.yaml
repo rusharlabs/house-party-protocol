@@ -1,0 +1,16 @@
+# gotcha-memory — subset do operator-profile.yaml que este kit lê.
+# Copie estas seções para o operator-profile.yaml do SEU projeto (ou use como está).
+# Sem profile, o kit degrada para os defaults comentados abaixo — nunca quebra.
+
+paths:
+  # Onde failures.jsonl + curated.jsonl vivem. Recomendado gitignorar
+  # (é memória operacional local, regenerável — perda = zero dano estrutural).
+  gotcha_store: .claude/gotchas          # default: .claude/gotchas/ sob a cwd
+
+gotchas:
+  window_hours: 24                       # janela p/ considerar uma falha "recorrente" (default 24)
+  min_count: 3                           # >= N falhas iguais na janela viram gotcha (default 3)
+  top: 5                                 # máximo de lições no preâmbulo injetado (default 5)
+  # Lições curated iniciais (opcional). Formato: ver curated.seed.example.yaml.
+  # Seede com: python _lib/gotchas_memory.py --seed <arquivo>
+  # seed_file: gotcha-memory/curated.seed.example.yaml

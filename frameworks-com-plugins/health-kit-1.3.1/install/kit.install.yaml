@@ -1,0 +1,19 @@
+kit: health-kit
+requires:
+  python: ">=3.8"
+  pyyaml: true
+  external_services: []
+questions:
+  - id: configurar_probes_agora
+    prompt: "Configurar as sondas de saúde (health.probes) agora? (não = copia profile.example.yaml como está; você ajusta depois — é o default)"
+    type: bool
+    options: [true, false]
+    default: false
+verification:
+  - "python scripts/health_probe.py --self-test"
+  - "python statusline/statusline.py --self-test"
+hosts:
+  claude-code:
+    plugin: true
+    manual_gates: [statusLine, hooks, SessionStart]
+docs: README.md

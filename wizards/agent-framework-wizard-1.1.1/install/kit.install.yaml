@@ -1,0 +1,30 @@
+kit: agent-framework-wizard
+requires:
+  python: ">=3.9"
+  pyyaml: true
+  external_services: []
+questions:
+  - id: project_name
+    prompt: "Qual o nome do projeto/agente? (entra nos arquivos gerados; ex.: meu-agente)"
+    type: string
+    default: agente-teste
+  - id: templates
+    prompt: "Quais documentos-base gerar? Pode escolher mais de um (default: todos os 4 — 00-LEIA-PRIMEIRO, 00-STATE, 00-VISION, 00-PROCESSES)"
+    type: choice
+    options:
+      - "00-LEIA-PRIMEIRO"
+      - "00-PROCESSES"
+      - "00-STATE"
+      - "00-VISION"
+    default:
+      - "00-LEIA-PRIMEIRO"
+      - "00-STATE"
+      - "00-VISION"
+      - "00-PROCESSES"
+verification:
+  - "python wizard.py --self-test"
+hosts:
+  claude-code:
+    plugin: true
+    manual_gates: []
+docs: README.md

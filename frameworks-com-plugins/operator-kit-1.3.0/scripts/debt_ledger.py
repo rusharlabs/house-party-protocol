@@ -1,0 +1,234 @@
+#!/usr/bin/env python3
+"""
+debt_ledger (Operator Kit) — rastreia dívida técnica declarada antes que "depois" vire "nunca".
+
+Varre o projeto-alvo procurando o marcador `# debt: <teto>, <upgrade>` (ou `// debt:` em
+.js/.ts) e gera um ledger (reference/TECH-DEBT-LEDGER.md por padrão) com arquivo, linha,
+teto, upgrade e idade-git do arquivo. <teto> é uma data (YYYY-MM-DD) ou uma condição
+textual curta ("até migrar pro v2"); <upgrade> é o que fazer depois — sempre a partir da
+primeira vírgula após "debt:".
+
+Uso:
+    python scripts/debt_ledger.py                       # varre cwd, escreve o ledger
+    python scripts/debt_ledger.py --root <dir>           # varre outra raiz
+    python scripts/debt_ledger.py --out <path>           # onde escrever (default: profile
+                                                          # paths.debt_ledger ou TECH-DEBT-LEDGER.md)
+    python scripts/debt_ledger.py --json                 # mesma info em JSON (stdout)
+    python scripts/debt_ledger.py --dry-run              # não escreve o .md, só imprime o que geraria
+    python scripts/debt_ledger.py --self-test
+
+Exit: 0 = ok (zero marcadores OU todos bem-formados e dentro do teto) ·
+      1 = warn (marcador malformado OU teto vencido — data no passado) ·
+      3 = erro de uso.
+stdlib only (git é opcional — idade-git degrada para "" sem git ou fora de repo).
+v1.0.0 — 2026-07-11 (Operator Kit · ponytail #2 · `docs/plans/2026-06-29-PONYTAIL-ANALYSIS.md`)
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import re
+import subprocess
+import sys
+from datetime import date
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+try:
+    from _lib.profile_loader import get, load_profile
+except Exception:  # noqa: BLE001 — sem loader, --out cai no default fixo
+    load_profile = None  # type: ignore[assignment]
+    get = None  # type: ignore[assignment]
+
+_MARKER_RE = re.compile(r"(?:#|//)\s*debt:\s*(.+?)\s*$")
+_CODE_EXT = {".py", ".js", ".mjs", ".cjs", ".ts", ".tsx", ".jsx"}
+_IGNORE_DIRS = {".git", "__pycache__", "node_modules", ".venv", "venv", "dist", "build", ".next"}
+_SELF_NAME = Path(__file__).name  # o próprio debt_ledger.py documenta o marcador na docstring
+                                    # e embute exemplos no self-test -- excluído p/ não se autodetectar
+
+
+def _iter_code_files(root: Path):
+    for p in sorted(root.rglob("*")):
+        if not p.is_file() or p.suffix not in _CODE_EXT or p.name == _SELF_NAME:
+            continue
+        if any(part in _IGNORE_DIRS for part in p.relative_to(root).parts):
+            continue
+        yield p
+
+
+def _git_age(path: Path, root: Path) -> str:
+    try:
+        r = subprocess.run(
+            ["git", "-C", str(root), "log", "-1", "--format=%ai", "--", str(path.relative_to(root))],
+            capture_output=True, text=True, timeout=10,
+        )
+        return (r.stdout or "").strip() if r.returncode == 0 else ""
+    except Exception:  # noqa: BLE001 — idade-git é informativa, nunca derruba o scan
+        return ""
+
+
+def _parse_marker(raw: str) -> dict:
+    """raw = tudo após 'debt:'. Retorna {teto, upgrade, malformed, vencido}."""
+    parts = raw.split(",", 1)
+    if len(parts) != 2 or not parts[1].strip():
+        return {"teto": raw.strip(), "upgrade": "", "malformed": True, "vencido": False}
+    teto_raw, upgrade = parts[0].strip(), parts[1].strip()
+    vencido = False
+    try:
+        teto_date = date.fromisoformat(teto_raw)
+        vencido = teto_date < date.today()
+    except ValueError:
+        pass  # condição textual — não checável automaticamente, não conta como vencida
+    return {"teto": teto_raw, "upgrade": upgrade, "malformed": False, "vencido": vencido}
+
+
+def scan(root: Path) -> list:
+    """Varre root por marcadores de dívida. Retorna lista de entradas (ordem de arquivo/linha)."""
+    entries = []
+    for f in _iter_code_files(root):
+        try:
+            text = f.read_text(encoding="utf-8", errors="replace")
+        except Exception:  # noqa: BLE001
+            continue
+        for lineno, line in enumerate(text.splitlines(), start=1):
+            m = _MARKER_RE.search(line)
+            if not m:
+                continue
+            parsed = _parse_marker(m.group(1))
+            entries.append({
+                "file": str(f.relative_to(root)).replace("\\", "/"),
+                "line": lineno,
+                "git_age": _git_age(f, root),
+                **parsed,
+            })
+    return entries
+
+
+def _default_out(root: Path) -> Path:
+    if load_profile is not None and get is not None:
+        configured = get(load_profile(str(root)), "paths.debt_ledger", None)
+        if configured:
+            return root / configured
+    return root / "reference" / "TECH-DEBT-LEDGER.md" if (root / "reference").is_dir() else root / "TECH-DEBT-LEDGER.md"
+
+
+def render_markdown(entries: list) -> str:
+    lines = ["# TECH-DEBT-LEDGER — gerado por scripts/debt_ledger.py", ""]
+    if not entries:
+        lines.append("Nenhum marcador `# debt:` encontrado.")
+        return "\n".join(lines) + "\n"
+    lines.append("| Arquivo | Linha | Teto | Upgrade | Idade-git |")
+    lines.append("|---|---|---|---|---|")
+    for e in entries:
+        teto = e["teto"] + (" ⚠️ VENCIDO" if e["vencido"] else "")
+        upgrade = e["upgrade"] if not e["malformed"] else "⚠️ MARCADOR MALFORMADO (falta `, <upgrade>`)"
+        lines.append(f"| {e['file']} | {e['line']} | {teto} | {upgrade} | {e['git_age']} |")
+    return "\n".join(lines) + "\n"
+
+
+def _self_test() -> int:
+    import shutil
+    import tempfile
+
+    tmp = Path(tempfile.mkdtemp(prefix="debt_ledger_selftest_"))
+    try:
+        (tmp / "ok.py").write_text(
+            "x = 1\n# debt: até migrar pro v2, trocar polling por webhook\ny = 2\n",
+            encoding="utf-8",
+        )
+        (tmp / "vencido.py").write_text(
+            "z = 1  # debt: 2020-01-01, remover shim legado\n",
+            encoding="utf-8",
+        )
+        (tmp / "malformado.py").write_text(
+            "w = 1  # debt: sem virgula nenhuma aqui\n",
+            encoding="utf-8",
+        )
+        (tmp / "limpo.py").write_text("nada_aqui = True\n", encoding="utf-8")
+
+        entries = scan(tmp)
+        assert len(entries) == 3, f"esperava 3 marcadores, achou {len(entries)}: {entries}"
+
+        by_file = {e["file"]: e for e in entries}
+        assert by_file["ok.py"]["malformed"] is False and by_file["ok.py"]["vencido"] is False, by_file["ok.py"]
+        assert by_file["ok.py"]["upgrade"] == "trocar polling por webhook"
+
+        # CASO DE FALHA REAL: teto no passado -> vencido=True -> exit 1 no CLI real
+        assert by_file["vencido.py"]["vencido"] is True, by_file["vencido.py"]
+
+        assert by_file["malformado.py"]["malformed"] is True, by_file["malformado.py"]
+
+        md = render_markdown(entries)
+        assert "VENCIDO" in md and "MALFORMADO" in md and "trocar polling" in md
+
+        assert scan(tmp / "nao-existe") == []  # raiz inexistente = zero marcadores, nao erro
+
+        # --dry-run não escreve; sem --dry-run escreve
+        out = tmp / "out" / "LEDGER.md"
+        assert not out.exists()
+        code_dry = main(["--root", str(tmp), "--out", str(out), "--dry-run"])
+        assert code_dry == 1, "dry-run com vencido+malformado ainda deve reportar warn (exit 1)"
+        assert not out.exists(), "--dry-run não deveria escrever o arquivo"
+        code_real = main(["--root", str(tmp), "--out", str(out)])
+        assert code_real == 1 and out.exists() and "VENCIDO" in out.read_text(encoding="utf-8")
+
+        # projeto limpo (só limpo.py) -> exit 0
+        clean_root = tmp / "clean"
+        clean_root.mkdir()
+        (clean_root / "a.py").write_text("nada = 1\n", encoding="utf-8")
+        code_clean = main(["--root", str(clean_root), "--dry-run"])
+        assert code_clean == 0, "sem marcador nenhum -> exit 0"
+
+        print("self-test OK — marcador válido, teto vencido (warn real), marcador malformado (warn), "
+              "--dry-run não escreve, projeto limpo = exit 0, raiz inexistente não quebra")
+        return 0
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+def build_parser() -> argparse.ArgumentParser:
+    p = argparse.ArgumentParser(prog="debt_ledger.py")
+    p.add_argument("--root", default=".")
+    p.add_argument("--out", default=None)
+    p.add_argument("--json", action="store_true")
+    p.add_argument("--dry-run", action="store_true")
+    p.add_argument("--self-test", action="store_true")
+    return p
+
+
+def main(argv) -> int:
+    args = build_parser().parse_args(argv)
+    if args.self_test:
+        return _self_test()
+
+    root = Path(args.root).resolve()
+    if not root.is_dir():
+        print(f"debt_ledger: --root não existe: {root}", file=sys.stderr)
+        return 3
+
+    entries = scan(root)
+    any_malformed = any(e["malformed"] for e in entries)
+    any_vencido = any(e["vencido"] for e in entries)
+
+    if args.json:
+        print(json.dumps({"entries": entries, "malformed_count": sum(1 for e in entries if e["malformed"]),
+                          "vencido_count": sum(1 for e in entries if e["vencido"])}, ensure_ascii=False, indent=2))
+    else:
+        md = render_markdown(entries)
+        if args.dry_run:
+            print(md, end="")
+        else:
+            out_path = Path(args.out).resolve() if args.out else _default_out(root)
+            out_path.parent.mkdir(parents=True, exist_ok=True)
+            out_path.write_text(md, encoding="utf-8")
+            print(f"debt_ledger: {len(entries)} marcador(es) -> {out_path}")
+
+    return 1 if (any_malformed or any_vencido) else 0
+
+
+if __name__ == "__main__":
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")  # type: ignore[attr-defined]
+    except (AttributeError, ValueError):
+        pass
+    sys.exit(main(sys.argv[1:]))

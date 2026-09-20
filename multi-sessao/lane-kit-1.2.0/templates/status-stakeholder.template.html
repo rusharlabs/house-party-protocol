@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Lane Board — Status {{project_name}}</title>
+<style>
+  :root { color-scheme: dark; }
+  body { background:#0d1117; color:#c9d1d9; font-family:-apple-system,Segoe UI,sans-serif; margin:0; padding:2rem; }
+  h1 { color:#58a6ff; font-size:1.4rem; margin-bottom:.25rem; }
+  .sub { color:#8b949e; font-size:.85rem; margin-bottom:1.5rem; }
+  table { width:100%; border-collapse:collapse; margin-bottom:2rem; }
+  th, td { text-align:left; padding:.5rem .75rem; border-bottom:1px solid #21262d; font-size:.9rem; }
+  th { color:#8b949e; font-weight:600; text-transform:uppercase; font-size:.75rem; letter-spacing:.05em; }
+  .badge { display:inline-block; padding:.15rem .5rem; border-radius:999px; font-size:.75rem; font-weight:600; }
+  .b-claimed { background:#3730a3; color:#c7d2fe; }
+  .b-building { background:#854d0e; color:#fef3c7; }
+  .b-checkpoint { background:#155e75; color:#cffafe; }
+  .b-review { background:#7c2d12; color:#fed7aa; }
+  .b-verified { background:#14532d; color:#bbf7d0; }
+  .b-needsfix { background:#7f1d1d; color:#fecaca; }
+  .b-merged { background:#1e293b; color:#94a3b8; }
+  .b-deferred { background:#44403c; color:#e7e5e4; }
+  .meter { height:6px; background:#21262d; border-radius:3px; overflow:hidden; }
+  .meter > div { height:100%; background:#58a6ff; }
+  @media print { body { background:#fff; color:#000; } }
+</style>
+</head>
+<body>
+  <h1>Lane Board — {{project_name}}</h1>
+  <div class="sub">Gerado {{generated_at}} · fonte: .claude/lanes/board.jsonl (read-only — este HTML NUNCA edita o board)</div>
+
+  <table>
+    <thead><tr><th>Item</th><th>Estado</th><th>Lane</th><th>Papel</th><th>Última atualização</th></tr></thead>
+    <tbody>
+      <!-- {{#items}} -->
+      <tr>
+        <td>{{item_id}}</td>
+        <td><span class="badge b-{{estado_classe}}">{{estado}}</span></td>
+        <td>{{lane_id}}</td>
+        <td>{{role}}</td>
+        <td>{{ts}}</td>
+      </tr>
+      <!-- {{/items}} -->
+    </tbody>
+  </table>
+
+  <div class="sub">Lanes vivas: {{lanes_vivas}} · Itens MERGED: {{total_merged}}/{{total_itens}}</div>
+  <div class="meter"><div style="width:{{pct_merged}}%"></div></div>
+</body>
+</html>
