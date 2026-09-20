@@ -19,7 +19,7 @@ Famílias (config-driven via guardrails.block_families / warn_families):
     curl-pipe-bash      — curl|sh / wget|bash (código não-auditado)
   WARN
     git-push-pr-only    — git push p/ branch em guardrails.protected_branches => BLOCK;
-                          push p/ outra branch => WARN (CLAUDE.md: branch+PR, nunca main)
+                          push p/ outra branch => WARN (policy: branch+PR, nunca main)
     npm-floating-specifier — npm/pnpm/yarn install|add ou pip install com @latest/^/~/*
 
 Por padrão TODAS as famílias estão ativas. O profile pode RESTRINGIR via
@@ -30,7 +30,10 @@ DUPLO MODO:
   1. Biblioteca:  assess(cmd, profile) -> {"action","rule","reason"}
   2. Hook PreToolUse (matcher Bash): lê stdin JSON; se tool_name=='Bash',
      avalia o command e imprime '[operation_guard] <ACTION> (<rule>): <reason>'
-     em stderr. WARN-only — exit 0 SEMPRE (REGRA #29). Nunca bloqueia.
+     em stderr. `audit` apenas avisa; `enforce` retorna exit 2 para BLOCK.
+
+Política: `HPP_POLICY_MODE=audit|enforce` sobrepõe
+`guardrails.operation_guard_mode` do profile. O default é `audit`.
 
 stdlib only (re/json). Cross-platform. Determinística. --self-test cobre cada família.
 
@@ -39,6 +42,7 @@ v1.0.0 — 2026-06-19 (Operator Kit · Tier 1 · classificador de operacoes port
 from __future__ import annotations
 
 import json
+import os
 import re
 import sys
 from pathlib import Path
@@ -189,7 +193,7 @@ def assess(command: str, profile: dict | None = None) -> dict:
             return {
                 "action": BLOCK, "rule": "rm-rf-codigo-vivo",
                 "reason": (f"rm recursivo em path protegido ({hit}) — destruição de código vivo. "
-                           "NUNCA (incidente 03/Abr/2026)."),
+                           "NUNCA sem escopo explícito e rollback."),
             }
 
     # git-push-force: --force / -f reescreve histórico remoto
@@ -217,7 +221,7 @@ def assess(command: str, profile: dict | None = None) -> dict:
         return {
             "action": BLOCK, "rule": "curl-pipe-bash",
             "reason": ("baixar e executar direto (curl|bash / wget|sh) = código não-auditado. "
-                       "PROIBIDO (ANTHROPIC-STANDARDS deny-list)."),
+                       "PROIBIDO pela policy de supply chain."),
         }
 
     # ---------------- WARN/BLOCK condicional ----------------
@@ -230,7 +234,7 @@ def assess(command: str, profile: dict | None = None) -> dict:
                 return {
                     "action": BLOCK, "rule": "git-push-pr-only",
                     "reason": (f"git push direto na branch protegida '{target}'. PROIBIDO "
-                               "(CLAUDE.md: NUNCA push na main — use branch + PR + merge)."),
+                               "pela policy: use branch + PR + merge."),
                 }
         if warn_on("git-push-pr-only") or warn_on("git-push-feature"):
             return {
@@ -256,9 +260,17 @@ def assess(command: str, profile: dict | None = None) -> dict:
 
 # ----------------------------- modo HOOK PreToolUse -----------------------------
 
+def _policy_mode(profile: dict) -> str:
+    """Resolve a política explícita; valor inválido degrada para audit."""
+    value = os.environ.get("HPP_POLICY_MODE") or get(
+        profile, "guardrails.operation_guard_mode", "audit"
+    )
+    return "enforce" if str(value).casefold() == "enforce" else "audit"
+
+
 def _run_hook() -> int:
     """Lê JSON do stdin (PreToolUse). Se tool_name=='Bash', avalia o command e
-    imprime aviso em stderr. WARN-only: exit 0 sempre. Defensivo total."""
+    imprime aviso em stderr. BLOCK só impede a ação em modo enforce."""
     try:
         raw = sys.stdin.read()
     except Exception:  # noqa: BLE001
@@ -297,6 +309,8 @@ def _run_hook() -> int:
         sys.stderr.write(
             f"[operation_guard] {verdict['action']} ({verdict['rule']}): {verdict['reason']}\n"
         )
+    if verdict["action"] == BLOCK and _policy_mode(profile) == "enforce":
+        return 2
     return 0
 
 
@@ -354,21 +368,30 @@ def _self_test() -> None:
     # ---- modo hook: payload não-Bash e malformado não quebram ----
     assert _run_hook_with("not json") == 0
     assert _run_hook_with(json.dumps({"tool_name": "Read"})) == 0
-    assert _run_hook_with(json.dumps(
-        {"tool_name": "Bash", "tool_input": {"command": "rm -rf src"}})) == 0
+    block_payload = json.dumps(
+        {"tool_name": "Bash", "tool_input": {"command": "rm -rf src"}}
+    )
+    assert _run_hook_with(block_payload, "audit") == 0
+    assert _run_hook_with(block_payload, "enforce") == 2
 
     print("self-test OK")
 
 
-def _run_hook_with(raw: str) -> int:
+def _run_hook_with(raw: str, mode: str = "audit") -> int:
     """Helper de teste: roda _run_hook() com stdin simulado (sem rede/profile real)."""
     import io
     old = sys.stdin
+    old_mode = os.environ.get("HPP_POLICY_MODE")
     try:
+        os.environ["HPP_POLICY_MODE"] = mode
         sys.stdin = io.StringIO(raw)
         return _run_hook()
     finally:
         sys.stdin = old
+        if old_mode is None:
+            os.environ.pop("HPP_POLICY_MODE", None)
+        else:
+            os.environ["HPP_POLICY_MODE"] = old_mode
 
 
 if __name__ == "__main__":
@@ -381,13 +404,24 @@ if __name__ == "__main__":
     arg = sys.argv[1] if len(sys.argv) > 1 else ""
     if arg in ("--self-test", "-t"):
         _self_test()
-    elif arg in ("--assess", "-a") and len(sys.argv) > 2:
-        # uso CLI: avalia o resto da linha como comando, lendo o profile real
+    elif arg in ("--assess", "-a"):
+        import argparse
+
+        parser = argparse.ArgumentParser(description="Classifica um comando antes da execução")
+        parser.add_argument("--assess", "-a", action="store_true")
+        parser.add_argument("--mode", choices=("audit", "enforce"), default="audit")
+        parser.add_argument("command", nargs="+")
+        args = parser.parse_args()
         try:
             prof = load_profile() if load_profile is not None else {}
         except Exception:  # noqa: BLE001
             prof = {}
-        v = assess(" ".join(sys.argv[2:]), prof)
+        v = assess(" ".join(args.command), prof)
         print(f"[{v['action']}] {v['rule']}\n  {v['reason']}")
+        if args.mode == "enforce" and v["action"] == BLOCK:
+            sys.exit(2)
+        if args.mode == "enforce" and v["action"] == WARN:
+            sys.exit(1)
+        sys.exit(0)
     else:
         sys.exit(_run_hook())

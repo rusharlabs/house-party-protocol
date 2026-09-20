@@ -1,0 +1,4 @@
+[
+  {"id": "maker-a", "territory": ["hpp/workgraph.py"], "exclusive": true, "heartbeat_at": 980},
+  {"id": "checker-a", "territory": ["tests/"], "exclusive": true, "heartbeat_at": 950}
+]

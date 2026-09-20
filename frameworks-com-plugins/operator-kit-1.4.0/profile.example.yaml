@@ -47,6 +47,7 @@ concorrencia:
 
 guardrails:                         # operation-guard config-driven
   operation_guard: on
+  operation_guard_mode: audit       # audit avisa; enforce retorna exit 2 para BLOCK confiável
   protected_paths: ["src/**", "app/**", "engine/**", ".git/**"]
   protected_branches: ["main", "master", "release/*"]
   block_families: ["rm-rf-codigo-vivo", "git-push-force", "drop-truncate", "curl-pipe-bash"]

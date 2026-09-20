@@ -1,8 +1,8 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
   "name": "house-party-protocol",
-  "description": "House Party Protocol — dez kits coordenados por um princípio: nada sai sem uma segunda medição. Marketplace para Claude Code e Codex CLI, com instalação determinística, checkers read-only, self-test, SKILL-CONTRACT e MANIFEST.json verificáveis.",
-  "version": "1.5.0",
+  "description": "House Party Protocol é um harness modular e cross-host para Claude Code e Codex CLI: gates executáveis, loops governados, revisão independente, continuidade, avaliação determinística e distribuição verificável.",
+  "version": "2.0.0",
   "owner": {
     "name": "Max Parisi",
     "url": "https://rushar.com.br"
@@ -27,9 +27,9 @@
     {
       "name": "operator-kit",
       "displayName": "Operator Kit",
-      "source": "./frameworks-com-plugins/operator-kit-1.3.0",
-      "description": "Camada portatil de verdade-antes-de-done, execucao autonoma com guardrails e planejamento spec-driven. Inclui preflight, runbook MCP, loop /ralph-gate, ledger de divida, 13 regras e dois subagents read-only: refutador e silent-failure-hunter.",
-      "version": "1.3.0",
+      "source": "./frameworks-com-plugins/operator-kit-1.4.0",
+      "description": "Módulo operacional do harness: gates executáveis, loops governados, pass@k/pass^k standalone, política audit/enforce, preflight, planejamento spec-driven e dois checkers read-only.",
+      "version": "1.4.0",
       "category": "productivity",
       "keywords": [
         "operator",

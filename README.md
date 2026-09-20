@@ -1,199 +1,264 @@
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="assets/hpp-banner-dark.svg">
-    <img alt="House Party Protocol — dez kits, uma régua comum" src="assets/hpp-banner-light.svg" width="100%">
+    <img alt="House Party Protocol — operate coding agents under evidence, not trust" src="assets/hpp-banner-light.svg" width="100%">
   </picture>
 </p>
 
 <p align="center">
-  <a href="LICENSE"><img alt="MIT" src="https://img.shields.io/badge/licen%C3%A7a-MIT-0000FF"></a>
-  <a href="#os-dez-kits"><img alt="10 kits" src="https://img.shields.io/badge/kits-10-FF00FF"></a>
-  <img alt="Claude Code e Codex CLI" src="https://img.shields.io/badge/hosts-Claude%20Code%20%7C%20Codex%20CLI-0B0B12">
-  <img alt="macOS, Linux e Windows" src="https://img.shields.io/badge/macOS%20%C2%B7%20Linux%20%C2%B7%20Windows-port%C3%A1vel-59636E">
+  <a href="LICENSE"><img alt="MIT" src="https://img.shields.io/badge/license-MIT-0C0F0E"></a>
+  <a href="#quickstart"><img alt="Python 3.9+" src="https://img.shields.io/badge/Python-3.9%2B-5DE4C7"></a>
+  <img alt="Claude Code and Codex CLI" src="https://img.shields.io/badge/hosts-Claude%20Code%20%7C%20Codex%20CLI-D7FF64">
 </p>
 
 # House Party Protocol
 
-**Dez kits. Uma régua comum: prova antes de “pronto”.**
+**Operate coding agents under evidence, not trust.**
 
-House Party Protocol é um marketplace aberto de componentes para operar agentes de código
-com menos confiança implícita e mais evidência reproduzível. Cada kit cobre uma falha
-operacional específica — conclusão sem teste, sessões que colidem, contexto que se perde,
-saúde aparente, memória que não aprende — sem exigir que você adote o conjunto inteiro.
+House Party Protocol (HPP) é um **harness local-first, modular e cross-host para agentes de
+código**. Ele envolve o trabalho de Claude Code e Codex CLI com gates executáveis, revisão
+independente, lanes isoladas, continuidade entre sessões, loops governados, avaliação
+determinística, monitores explícitos e uma cadeia de distribuição verificável.
 
-Funciona com **Claude Code** como marketplace de plugins e com **Codex CLI** por instalação
-determinística em `.agents/`.
+O produto é o harness. O protocol define os invariantes. Os módulos implementam capacidades.
+O marketplace é apenas um canal de distribuição para Claude Code; o instalador por cópia é o
+canal equivalente para Codex CLI.
 
-## Comece pela falha que você quer evitar
+```text
+intent/spec
+    │
+    ▼
+WorkGraph ──waves──▶ lanes ──execute──▶ evidence
+    │                   │                    │
+    │                   └── Lane Map         ▼
+    └── model policy                  independent checker
+                                              │
+                         monitors ──▶ gate ───┤
+                                              ▼
+                                      verified / blocked
+                                              │
+                                              ▼
+                                      event log + resume
+```
 
-| Se o problema é... | Comece por | A prova que ele exige |
-|---|---|---|
-| “pronto” sem verificação | `operator-kit` | comando, saída e exit code frescos |
-| duas sessões no mesmo caminho | `lane-kit` | claim, território e maker ≠ checker |
-| retomada após crash ou `/clear` | `continuity-kit` | handoff com rederivação antes de repetir |
-| serviço verde com dado stale | `health-kit` | saúde de serviço separada da saúde do dado |
-| falha recorrente sem aprendizado | `gotcha-memory` | recorrência classificada antes da próxima tentativa |
-| criação de skills/hooks sem contrato | `claude-dev-kit` + `kit-forge` | lint, self-test, manifesto e checksum |
+## O que o harness controla
 
-## Instalação rápida
+| Camada | Capacidade executável |
+|---|---|
+| Integridade epistêmica | `done_gate`, evidência fresca, parcial declarado e controles negativos |
+| Separação de papéis | maker diferente de checker; revisores sem ferramentas de escrita |
+| Segurança operacional | classificação `ALLOW/WARN/BLOCK`, modos `audit` e `enforce`, snapshot e rollback |
+| Coordenação | Lane Map com dono, território, heartbeat, colisão e handoff |
+| Trabalho spec-driven | WorkGraph com dependências, rejeição de ciclos e waves topológicas |
+| Loops | charter, budget, stop conditions, autoprompt e retomada sem aceitar promessa como prova |
+| Avaliação | runner standalone de pass@k e pass^k; determinismo medido em `k` execuções |
+| Observabilidade | Monitor Map; saúde de serviço separada do frescor e da saúde do dado |
+| Memória operacional | falhas recorrentes classificadas, promovidas e reinjetadas com gate humano |
+| Supply chain | build determinístico, lint de IP/PII, checksums e ZIP reaberto antes da release |
 
-### Claude Code
+## Quickstart
+
+Requer Python 3.9+ e não adiciona dependência de runtime.
 
 ```bash
-/plugin marketplace add rushar-labs/house-party-protocol
+git clone https://github.com/rusharlabs/house-party-protocol.git
+cd house-party-protocol
+python -m hpp doctor
+python -m hpp graph --view operational --format mermaid
+python -m hpp benchmark -k 3
+```
+
+Planejamento do bundle de confiabilidade:
+
+```bash
+python -m hpp install --bundle reliable-coding --host codex --target ../meu-repo
+```
+
+Esse comando é deliberadamente read-only. A aplicação real usa o instalador verificado de cada
+módulo, mostrado na seção Codex CLI; o harness não grava um receipt para fingir que copiou bytes.
+
+Para Claude Code, o canal nativo continua disponível:
+
+```text
+/plugin marketplace add rusharlabs/house-party-protocol
 /plugin install operator-kit@house-party-protocol
-```
-
-### Codex CLI
-
-```bash
-python instaladores/kit-forge-1.4.0/kit_doctor.py install --kit frameworks-com-plugins/operator-kit-1.3.0 --host codex --target /caminho/do/repo --apply
-codex -C /caminho/do/repo
-```
-
-O instalador copia o runtime completo para `.agents/hpp/operator-kit/` e gera as skills com
-namespace `hpp-...` em `.agents/skills/`. Ele não altera `~/.codex/config.toml` e não ativa
-hooks do Claude Code no Codex.
-
-## Por que “House Party Protocol”
-
-Uma house party só funciona quando cada pessoa sabe por que está ali, o que pode tocar e
-quando precisa parar. O projeto aplica essa ideia a agentes: muitos componentes podem atuar
-sob o mesmo teto, mas entram por um protocolo comum — fronteira explícita, gate humano para
-o sensível, segunda medição e handoff verificável.
-
-O símbolo do projeto mostra isso: dez nós independentes, um anel de coordenação e uma conexão
-medida. Não existe peça decorativa; existe responsabilidade observável.
-
-## O protocolo
-
-Quatro invariantes atravessam os dez kits:
-
-1. **Quem constrói não aprova.** Revisores são read-only por configuração, não por promessa.
-2. **A régua acompanha o número.** Toda contagem ou estado vem com o comando que o produziu.
-3. **O controle antecede o zero.** Um detector só declara ausência depois de provar que encontra um caso vivo.
-4. **O gate sabe reprovar.** Cada proteção nasce com um teste que falha antes e passa depois.
-
-O [`MANIFESTO.md`](MANIFESTO.md) desenvolve os princípios completos.
-
-## Os dez kits
-
-| Kit | Versão | O que entrega |
-|---|---:|---|
-| **operator-kit** | 1.3.0 | Gates de conclusão, execução com guardrails, planejamento e regras instaláveis. |
-| **kit-forge** | 1.4.0 | Montagem, lint de IP/PII, contrato de skills, checksums, instalação e publicação. |
-| **lane-kit** | 1.2.0 | Coordenação de sessões, locks por território e maker/checker cross-provider. |
-| **continuity-kit** | 1.2.1 | Handoff, retomada e espelho de estado com verificação antes de repetição. |
-| **claude-dev-kit** | 1.3.1 | Criação de skills, hooks e plugins com wiring reversível. |
-| **health-kit** | 1.3.1 | Probe config-driven e statusline cache-first. |
-| **dev-squad-kit** | 1.0.0 | Papéis especializados, subagents e consolidação paralela. |
-| **agent-framework-wizard** | 1.1.1 | Wizard de seis passos para esqueleto de agente ou skill. |
-| **supabase-pack** | 1.1.0 | Auditoria RLS e scaffold de Edge Function. |
-| **gotcha-memory** | 1.0.0 | Falha → recorrência → lição injetada antes da próxima execução. |
-
-O inventário gerado de skills, agents, hooks, regras, templates e scripts está em
-[`docs/CATALOGO.md`](docs/CATALOGO.md).
-
-Os 24 atalhos operacionais estão em [`docs/TIPS.md`](docs/TIPS.md). Antes de um
-`done_gate`, valide Python, PyYAML, Git e a escrita de settings:
-
-```bash
-python frameworks-com-plugins/operator-kit-1.3.0/scripts/preflight.py --project .
 ```
 
 ## Codex CLI
 
-O suporte ao Codex é explícito, não uma adaptação presumida:
-
-- `AGENTS.md` existe na raiz e dentro de cada kit;
-- skills de repositório usam o diretório oficial `.agents/skills`;
-- skills duplicadas entre kits recebem namespace durante a geração;
-- o runtime original fica em `.agents/hpp/<kit>` para scripts e recursos continuarem juntos;
-- `${CLAUDE_PLUGIN_ROOT}` é removido das cópias geradas;
-- `hooks.json`, slash commands e lifecycle hooks do Claude Code não são armados no Codex.
-
-Prova mínima do `operator-kit` após a instalação:
+O Codex recebe cada módulo por cópia verificável, com skills namespaced em `.agents/skills` e
+runtime em `.agents/hpp`. Para instalar um módulo emitido:
 
 ```bash
-python .agents/hpp/operator-kit/scripts/done_gate.py --self-test
-python .agents/hpp/operator-kit/scripts/live_count.py --self-test
-python .agents/hpp/operator-kit/scripts/claude_md_from_profile.py --self-test
+python instaladores/kit-forge-1.4.0/kit_doctor.py install \
+  --kit frameworks-com-plugins/operator-kit-1.4.0 \
+  --host codex --target ../meu-repo --apply
 ```
 
-O Codex descobre as skills automaticamente. Use `/skills` ou mencione uma skill com `$`.
+Forma compacta: `kit_doctor.py install --kit <módulo> --host codex --target <repo> --apply`.
 
-## Claude Code
+O comando executa o plano, copia o runtime e roda os smokes declarados. Hooks de lifecycle do
+Claude Code não são ativados silenciosamente no Codex; o doctor marca essa integração como
+`explicit-command` ou `unsupported`.
 
-No Claude Code, cada kit mantém sua estrutura nativa de plugin:
+## Uma superfície, várias projeções
 
-- `.claude-plugin/plugin.json` para metadados;
-- `skills/`, `commands/` e `agents/` quando aplicável;
-- `hooks/hooks.json` para lifecycle hooks do host;
-- `${CLAUDE_PLUGIN_ROOT}` para resolver recursos do plugin.
-
-O caminho por cópia também funciona sem marketplace:
+O HPP não precisa de um banco de grafo para ser explicável. O CLI projeta arquivos e eventos
+locais em mapas determinísticos:
 
 ```bash
-python instaladores/kit-forge-1.4.0/kit_doctor.py install --kit <caminho-do-kit> --host claude-code --target <repo>
-python instaladores/kit-forge-1.4.0/kit_doctor.py install --kit <caminho-do-kit> --host claude-code --target <repo> --apply
+python -m hpp graph --view capability --format json
+python -m hpp graph --view agent --format mermaid
+python -m hpp graph --view evidence --format json
+python -m hpp graph --view operational --format mermaid
 ```
 
-O primeiro comando imprime o plano; o segundo aplica. Configurações já existentes não são
-sobrescritas silenciosamente.
+- **Capability Map:** módulos, capacidades, hosts e bundles.
+- **Agent Map:** maker, checker, gate humano, permissões e handoffs.
+- **Lane Map:** sessões vivas, territórios, heartbeats e colisões.
+- **WorkGraph:** unidades derivadas da spec, dependências e waves seguras.
+- **Grafo operacional / Execution/Evidence Graph:** ações, artefatos, medições e vereditos.
+- **Context/Knowledge Map:** fontes incluídas ou omitidas, prioridade, hash e orçamento.
+- **Monitor Map:** probe, alvo, cadência, frescor, severidade e consumidor.
 
-## O que cada host recebe
+O `Code Map` raiz mostra módulos e componentes declarados; não finge ser um grafo AST de chamadas.
+Quando análise semântica de código for necessária, ela entra como fonte/adaptador, não como banco
+obrigatório do produto.
+
+Veja [arquitetura](docs/ARCHITECTURE.md) e [modelo de grafos](docs/GRAPH-MODEL.md).
+
+## Spec-driven em waves
+
+Uma spec vira unidades com `id`, dependências, critério de aceite e tier. O WorkGraph rejeita
+ciclos e só coloca na mesma wave itens sem dependência entre si. A barreira fecha uma wave antes
+de abrir a próxima; evidência e review continuam obrigatórios por unidade.
+
+```bash
+python -m hpp work plan examples/reliable-coding/workgraph.json
+python -m hpp work waves examples/reliable-coding/workgraph.json
+```
+
+O roteador escolhe um tier provider-neutral (`economy`, `balanced`, `frontier`) por risco,
+complexidade, contexto e estágio. Ele não chama modelos e não esconde fallback:
+
+```bash
+python -m hpp route \
+  --request examples/reliable-coding/route-request.json \
+  --providers examples/reliable-coding/providers.json \
+  --policy economy
+```
+
+Risco, complexidade e tamanho de contexto estabelecem um piso: uma política econômica nunca
+rebaixa trabalho de alto risco. O fallback só pode subir de tier e fica registrado no output.
+
+Contexto também é compilado antes da execução, sob orçamento e com proveniência:
+
+```bash
+python -m hpp context compile examples/reliable-coding/context.json --budget 160
+python -m hpp map context examples/reliable-coding/context.json --budget 160
+```
+
+## Lane Map e Monitor Map
+
+Lane Map deriva ownership e colisões de territórios exclusivos. Quando `--now` é informado, o
+estado `alive/suspect/dead` vem do heartbeat e de limites explícitos; uma lane morta não mantém um
+bloqueio eterno.
+
+```bash
+python -m hpp map lane examples/reliable-coding/lanes.json \
+  --now 1000 --suspect-after 60 --dead-after 300
+python -m hpp map agent
+python -m hpp map monitor examples/reliable-coding/monitors.json --now 1000
+```
+
+Monitor Map não inicia processos. Ele projeta probes declaradas em `healthy`, `stale` ou
+`unknown`. `healthy` significa sinal fresco dentro daquela régua — não resultado correto, dado
+atualizado ou operação concluída.
+
+## Estado, loops e retomada
+
+O event log é append-only. A projeção atual pode ser reconstruída, auditada e resumida sem
+depender da memória de uma conversa.
+
+```bash
+python -m hpp event append --type work_started --data '{"work":"ITEM-1","actor":"maker-a"}'
+python -m hpp event append --type evidence_recorded --data '{"work":"ITEM-1","ref":"pytest.txt"}'
+python -m hpp status --json
+python -m hpp resume
+```
+
+Autoprompt é continuidade; não é autonomia ilimitada. O loop para por sucesso provado, budget,
+bloqueio ou gate humano. Veja [loops](docs/LOOPS.md).
+
+## Avaliação reproduzível
+
+```bash
+python -m hpp eval run examples/reliable-coding/benchmark-suite.json -k 3 --gate both
+```
+
+- `pass@k`: o caso passou ao menos uma vez; mede capacidade.
+- `pass^k`: o caso passou em todas as execuções; mede confiabilidade.
+- release-critical exige `pass^k = 1.00` para o universo declarado.
+
+O [benchmark](docs/BENCHMARK.md) usa controles positivos e negativos e pode ser repetido em
+clone limpo. Resultado sem comando, saída, versão e escopo não é tratado como prova.
+
+## Os módulos
+
+| Módulo | Papel no harness |
+|---|---|
+| `operator-kit` | gates, política, loops, pass@k/pass^k, preflight e checkers |
+| `lane-kit` | Lane Board, territórios, liveness e maker/checker |
+| `continuity-kit` | handoff, anti-replay, pre-compact e retomada |
+| `health-kit` | probes, cache, statusline e separação serviço/dado |
+| `gotcha-memory` | memória de falhas recorrentes com promoção controlada |
+| `kit-forge` | montagem, instalação, IP/PII lint, checksums e verificação |
+| `claude-dev-kit` | construção e validação de skills, hooks e plugins |
+| `dev-squad-kit` | papéis especializados e leitores paralelos com teto |
+| `agent-framework-wizard` | scaffold guiado e validado para novas capacidades |
+| `supabase-pack` | RLS auditável e scaffold de Edge Functions |
+
+Cada módulo continua instalável separadamente. O Capability Map distingue dependência dura de
+integração opcional; modularidade não é tratada como ausência de arquitetura.
+
+## Cobertura por host
 
 | Capacidade | Claude Code | Codex CLI |
 |---|---|---|
-| Skills | plugin `skills/` | cópia gerada em `.agents/skills/` |
-| Instruções do projeto | `CLAUDE.md`/docs do kit | `AGENTS.md` |
-| Scripts Python | runtime do plugin | `.agents/hpp/<kit>/` |
-| Hooks lifecycle | nativos via `hooks.json` | não aplicados; execução explícita |
-| Slash commands | quando o kit fornece | não convertidos automaticamente |
-| Self-tests | `python ... --self-test` | o mesmo comando no runtime copiado |
+| skills/instruções | nativa por plugin | cópia em `.agents/skills` |
+| hooks de lifecycle | nativa quando configurada | não disponível; comando explícito |
+| política audit/enforce | hook + CLI | CLI/preflight explícito |
+| event log, maps, WorkGraph, eval | CLI | CLI |
+| instalação | marketplace ou CLI | CLI por cópia |
 
-## Três contratos, um resultado
+`hpp doctor` reporta `native`, `explicit-command` ou `unsupported`; não converte ausência de hook
+em promessa de enforcement.
 
-| Contrato | O que impede | Gate |
-|---|---|---|
-| [`INSTALL-CONTRACT.md`](INSTALL-CONTRACT.md) | instalação que sobrescreve estado ou esconde pré-requisito | `kit_doctor install` |
-| [`SKILL-CONTRACT.md`](SKILL-CONTRACT.md) | skill vaga, sem I/O, prova ou portabilidade | `skill_lint.py` |
-| [`INSTALL-GUIDE-TEMPLATE.md`](INSTALL-GUIDE-TEMPLATE.md) | guia sem instalação, prova e rollback | revisão + publicação |
+## Limites honestos
 
-Convenção de saída: **`0` ok/no-op · `1` warn · `2` block · `3` erro**.
+HPP 2.0 é um harness CLI local, não um daemon ou serviço remoto. Ele não agenda tarefas, não
+executa modelos por API, não guarda credenciais, não inicia monitores ocultos e não usa banco de
+grafo. Os mapas são projeções determinísticas de manifestos, eventos e estado local. Essa escolha
+mantém o sistema auditável, portátil e reversível.
 
-## Estrutura
+## Desenvolvimento e verificação
 
-```text
-house-party-protocol/
-├── AGENTS.md                 # instruções para Codex CLI
-├── marketplace.json          # catálogo dos 10 kits
-├── frameworks-com-plugins/   # operator, dev, health, squad e Supabase
-├── multi-sessao/             # lane-kit
-├── continuidade/             # continuity-kit e gotcha-memory
-├── wizards/                  # agent-framework-wizard
-├── instaladores/             # kit-forge
-└── docs/                     # catálogo gerado e padrões táticos
-```
+Os diretórios versionados dos módulos são artefatos emitidos. Mudanças nascem nas fontes,
+recebem teste vermelho→verde e passam pela forja.
 
-## Verificação do pacote
+Antes de instalar ou concluir trabalho, `preflight.py` verifica os pré-requisitos declarados pelo
+Operator Kit; o doctor raiz verifica o contrato do harness.
 
 ```bash
+python -m pytest -q
+python -m hpp doctor
+python -m hpp benchmark -k 3
 python instaladores/kit-forge-1.4.0/kit_doctor.py marketplace .
-python instaladores/kit-forge-1.4.0/kit_doctor.py verify frameworks-com-plugins/operator-kit-1.3.0
-python instaladores/kit-forge-1.4.0/tools/skill_lint.py --all frameworks-com-plugins/operator-kit-1.3.0/skills
 ```
 
-Cada kit inclui `CHECKSUMS.txt`; o catálogo é regenerado a partir da árvore que realmente será
-distribuída.
-
-## Contribuir
-
-Leia [`CONTRIBUTING.md`](CONTRIBUTING.md). Uma mudança entra com escopo cirúrgico, teste que
-reproduz a falha e prova fresca do resultado. Crédito e origem viajam com o código.
+Leitura adicional: [manual](docs/MANUAL.html) · [catálogo](docs/CATALOGO.html) ·
+[provas](docs/PROOF.md) · [identidade](docs/BRAND.md) · [dicas](docs/TIPS.md).
 
 ## Licença
 
-MIT — ver [`LICENSE`](LICENSE). Copyright © 2026 Max Parisi (Rushar Labs).
-
-<p align="center"><sub>Rushar Labs · Ideias · Sistemas · Pessoas · Impacto — <em>Construindo o que vem depois.</em></sub></p>
+MIT. Componentes adaptados preservam os respectivos arquivos `NOTICE` e atribuições.
