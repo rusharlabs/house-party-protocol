@@ -1,0 +1,110 @@
+# operator-profile.yaml — fonte única de verdade do Operator Kit (TEMPLATE)
+# Copie para `operator-profile.yaml` e ajuste por projeto. Todo mecanismo lê daqui.
+# Stdlib + PyYAML. Caminhos relativos à raiz do projeto onde o perfil vive.
+
+projeto: "nome-do-projeto"
+idioma: pt-BR                      # rótulos, mensagens, output-style (pt-BR | en | es)
+forma_tratamento: neutro          # neutro | formal (opt-in)
+
+paths:
+  state_ssot: ".planning/STATE.md"          # SSoT com pendências "- [ ]"
+  boot_doc:   ".planning/BOOT.md"            # doc canônico de retomada
+  resume_pointer: ".claude/RESUME-NEXT.md"   # gerado no Stop; ADICIONAR ao .gitignore
+  memory_dir: ".claude/memory/"              # store de regras/feedback
+  logs_dir:   ".claude/sessions/"
+  gotchas_store: ".claude/gotchas/failures.jsonl"
+  gate_sheet: "docs/GATES-HUMANO.md"
+  draft_dir:  "drafts/"                      # rascunhos de envio externo
+  tracker_doc: ""                            # doc com <!-- CHECKLIST --> p/ a statusline (vazio = usa o state_ssot)
+  health_cache: ".claude/health-cache.json"  # cache de saúde de serviços p/ a statusline (sem rede)
+
+autonomia:                          # nível 0-5 por tipo de ação (slider Karpathy)
+  default: 2
+  por_acao:
+    rm_codigo_vivo: 0               # nunca auto
+    git_push_branch_protegida: 0
+    deploy: 0
+    edit_codigo: 3
+    docs_logs: 4
+    auto_edit_harness: 1            # gated-improvement: propõe, não aplica
+  paths_sensiveis_auto_gate:        # auto-gate forçado, nunca auto-merge
+    - "settings*.json"
+    - ".claude/hooks/**"
+    - "**/.env"
+    - ".claude/rules/**"
+
+intensidade:                         # dimensão ORTOGONAL à autonomia — QUANTO se verifica por ação
+                                      # (não QUEM aprova). Ver rules/partial-autonomy-slider.md
+                                      # "Dimensão 2 — Intensidade".
+  default: full                      # lite | full | ultra | off ("off" NUNCA default de verdade)
+
+concorrencia:
+  teto: 3                           # máx agentes simultâneos (lição: 3 vencem onde 10-16 explodem)
+  wave_size: 3
+  rate_limit_signals: ["429", "rate limit", "quota", "overloaded"]
+  fallback: sequential-local        # sequential-local | retry-backoff | abort
+  backoff_seconds: 30
+
+guardrails:                         # operation-guard config-driven
+  operation_guard: on
+  protected_paths: ["src/**", "app/**", "engine/**", ".git/**"]
+  protected_branches: ["main", "master", "release/*"]
+  block_families: ["rm-rf-codigo-vivo", "git-push-force", "drop-truncate", "curl-pipe-bash"]
+  warn_families:  ["git-push-feature", "npm-floating-specifier"]
+  ban_floating_npm: true            # bloqueia @latest, ^, ~, *
+  secret_scan_on_write: warn
+  external_send_tools: []           # nomes MCP de envio externo; vazio = só curl/wget POST externo
+  approval_keywords: ["ok", "aprovo", "pode enviar"]
+
+verificacao:
+  done_criterios:                   # consumidos por done_gate.py --profile <tipo>
+    py:   ["python -m pytest -q", "ruff check ."]
+    web:  ["npm run lint", "npm run build"]
+    deploy: ["curl -fsS https://staging/_health/exclusive-route"]
+  ladder:                           # verify-ladder (Tier 2): comando por nível ("" = SKIPPED, nunca verde-falso)
+    lint:     "ruff check ."
+    test:     "python -m pytest -q"
+    build:    ""
+    visual:   ""
+    staging:  ""
+    security: ""
+  ladder_obrigatorios: ["lint", "test"]
+  ladder_score_minimo: 2
+  determinism_runs: 5
+  fonte_suspeita_ttl_dias: 7        # dado mais velho = re-verificar (LC-1)
+
+loop:
+  charter: ".planning/CHARTER.md"
+  work_list: ".planning/STATE.md"
+  stop_conditions: ["work_list_vazia", "teto_tempo_4h", "tier_risco_irreversivel"]
+  fronteiras_proibidas: ["../outro-repo/**", "production/**"]
+  gatilho_autorizacao: ["/goal", "auto", "100%", "faça tudo", "máxima capacidade"]
+
+planejamento:
+  thresholds: { pequeno: "<=2 arquivos", medio: "<=8 arquivos", grande: ">8 arquivos" }
+  eval_cmd: ""                      # vazio = eval desligado
+  prd_path: "docs/plans/"
+
+distill:
+  janela_sessoes: 50                # N
+  limiar_recorrencia: 3             # K (>=K sessões distintas)
+  ledger_rejeitadas: ".claude/memory/_distill-rejeitadas.md"
+  regra_alvo: ".claude/rules/learned-corrections.md"
+
+memoria:
+  marcadores_enfase: ["SEMPRE", "NUNCA", "já falei", "toda vez", "pare de"]
+  rule_capture: on
+
+statusline:                         # segmentos da barra do rodapé (statusline.py); ordem = ordem de exibição
+  segments: ["progress", "commits", "branch"]   # +"health","tokens","autonomy","donegate","gates" conforme o projeto
+  token_cmd: ""                     # comando rápido que imprime custo/contexto (ex: "◔41% $63/100"); vazio = omite
+  autonomy_level: null              # 0-5 (slider Karpathy); omite se null
+  donegate_cache: ""                # path p/ cache do done-gate (json {done:bool} ou {passed,total}); omite se ausente
+
+health:                             # sondas p/ health_probe.py (escreve o health_cache que o segmento 'health' lê)
+  probes: []                        # ex: [{name: api, type: http, target: "http://127.0.0.1:3000/health"}, {name: db, type: cmd, target: "pg_isready"}]
+
+report:
+  estilo_interno: dark              # cru, falhas expostas
+  estilo_externo: light             # premium, sem expor falhas; passa por gate
+  frases_banidas: ["consider it done", "com certeza!", "ótima pergunta"]

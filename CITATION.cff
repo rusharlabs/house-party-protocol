@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+message: "If you use House Party Protocol, please cite it as below."
+type: software
+title: "House Party Protocol"
+abstract: "Ten installable kits for Claude Code: an agent harness where nothing ships without a second measurement — penless cross-model checker, budget as a hard stop, and 'done' only on exit 0."
+version: "1.4.0"
+date-released: "2026-09-20"
+license: MIT
+url: "https://rushar.com.br"
+repository-code: "https://github.com/rushar-labs/house-party-protocol"
+authors:
+  - family-names: "Parisi"
+    given-names: "Max"
+    affiliation: "Rushar Labs"
+keywords:
+  - claude-code
+  - agents
+  - guardrails
+  - verification
+  - plugins

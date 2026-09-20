@@ -1,0 +1,29 @@
+# curated.seed.example.yaml — lições curated de EXEMPLO (genéricas, sem dados pessoais).
+# Edite/substitua pelas SUAS regras antes de seedar. Cada entrada:
+#   key:        substring que casa com a task_key (description do Bash), ou "*" = always-on
+#   prevention: a lição acionável (o que o agente deve fazer/evitar)
+#   severity:   0-100 (peso na ordenação do preâmbulo; default 90)
+#   family:     opcional (default "manual")
+#
+# Seedar (idempotente — re-rodar não duplica):
+#   python _lib/gotchas_memory.py --seed curated.seed.example.yaml
+
+- key: "deploy"
+  prevention: "Deploy/routing: verifique que o BACKEND trocou (rota exclusiva da versão nova + marca de build), não só o gate de auth ou o status do processo."
+  severity: 92
+
+- key: "contagem"
+  prevention: "Antes de citar qualquer número/contagem/status, audite a fonte AO VIVO — trate dado de sessão anterior ou de doc como suspeito até reconfirmar."
+  severity: 90
+
+- key: "criar script"
+  prevention: "grep/ls ANTES de criar script novo ou marcar item como pendente/órfão — 'pendente' é hipótese a refutar, não verdade."
+  severity: 85
+
+- key: "rm "
+  prevention: "Ação destrutiva exige rollback ESCRITO antes de executar (snapshot → ação → verify). Sem rollback pronto, não execute."
+  severity: 95
+
+- key: "migra"
+  prevention: "Migração/alteração de schema: backup verificado antes; teste o parser/consumidor contra a FORMA REAL do dado, não contra forma inventada."
+  severity: 90

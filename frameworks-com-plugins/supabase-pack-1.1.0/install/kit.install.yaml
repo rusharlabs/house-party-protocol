@@ -1,0 +1,13 @@
+kit: supabase-pack
+requires:
+  external_services:
+    - name: Supabase
+      via: MCP
+      credenciais: "URL + anon key"
+verification:
+  - "python ../../instaladores/kit-forge/tools/skill_lint.py --all skills --run-proofs"
+hosts:
+  claude-code:
+    plugin: true
+    manual_gates: []
+docs: README.md

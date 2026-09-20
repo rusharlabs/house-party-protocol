@@ -1,0 +1,36 @@
+# lanes.example.yaml — config do lane-engine (registry + guards de concorrência)
+#
+# Copie para .claude/lanes/lanes.yaml do seu projeto (esse SIM é rastreado no git — é
+# config, diferente de registry.json/board.jsonl, que são estado runtime e devem ir pro
+# .gitignore). Todos os campos são opcionais; sem PyYAML instalado ou sem este arquivo,
+# _lane_io.py usa os defaults abaixo embutidos no código.
+
+schema_version: "1.0"
+
+git_guard:
+  mode: warn                 # warn (default) | block — recomendado: 1 semana em warn com
+                              # zero falso-positivo antes de virar block (ver evals/collision-git-guard.sh)
+  fallback_heuristic: true   # sem registry.json (ex.: outra lane não instalou o kit ainda):
+                              # WARN se o último commit do repo tem < heuristic_minutes — NUNCA block por heurística
+  heuristic_minutes: 10
+  extra_patterns: []         # regexes adicionais de comando git perigoso, além das 6 famílias built-in
+                              # exemplos: ["git\\s+restore\\s+\\.", "git\\s+reset\\b(?!.*--hard)"]
+
+liveness:
+  alive_minutes: 10          # heartbeat mais recente que isto = lane VIVA
+  dead_minutes: 30           # heartbeat mais velho que isto = lane MORTA (evict no próximo register)
+                              # entre alive_minutes e dead_minutes = SUSPEITA (guards degradam para warn)
+  heartbeat_throttle_seconds: 60   # heartbeats mais frequentes que isto são no-op (barato no hot path)
+
+zonas_vermelhas:              # WARN para EDIÇÃO destes paths, mesmo para uma lane solo
+  - ".claude/settings*.json"
+  - "**/MEMORY.md"
+  # - "docs/plans/execucao/00-STATE.md"   # exemplo: doc de estado single-writer, se o seu projeto tiver um
+
+territories: {}               # opcional: pré-reivindicar paths exclusivos por lane_id no register
+  # exec-a: { paths: ["src/**"], exclusive: ["src/api/**"] }
+  # exec-b: { paths: ["docs/**"], exclusive: [] }
+
+mailbox:
+  dir: ".claude/lanes/mailbox"
+  check_on_register: true    # avisa no SessionStart se há mensagem não lida endereçada a esta lane

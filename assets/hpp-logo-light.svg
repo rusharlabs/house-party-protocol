@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 160" width="760" height="160" role="img" aria-label="House Party Protocol">
+  <title>House Party Protocol</title><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0000FF"/><stop offset="1" stop-color="#FF00FF"/></linearGradient></defs>
+  <g transform="translate(8,8) scale(0.6)">
+    <circle cx="120" cy="120" r="84" fill="none" stroke="url(#g)" stroke-width="3" stroke-dasharray="6 7" stroke-linecap="round"/>
+    <circle cx="120" cy="120" r="14" fill="url(#g)"/><circle cx="120" cy="120" r="5" fill="#FFFFFF"/>
+    <g fill="#0B0B12"><circle cx="120" cy="36" r="9"/><circle cx="169.4" cy="52" r="9"/><circle cx="199.9" cy="94" r="9"/><circle cx="199.9" cy="146" r="9"/><circle cx="169.4" cy="188" r="9"/><circle cx="120" cy="204" r="9"/><circle cx="70.6" cy="188" r="9"/><circle cx="40.1" cy="146" r="9"/><circle cx="40.1" cy="94" r="9"/><circle cx="70.6" cy="52" r="9"/></g>
+    <line x1="120" y1="106" x2="120" y2="46" stroke="url(#g)" stroke-width="3" stroke-linecap="round"/>
+  </g>
+  <text x="168" y="86" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="46" font-weight="800" letter-spacing="-0.5" fill="#0B0B12">HOUSE PARTY PROTOCOL</text>
+  <text x="170" y="122" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="17" font-weight="600" letter-spacing="2.5" fill="#59636E">BY RUSHAR LABS</text>
+</svg>

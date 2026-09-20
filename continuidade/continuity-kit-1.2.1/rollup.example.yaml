@@ -1,0 +1,133 @@
+# rollup.example.yaml — doc-rollup generico (copiar p/ rollup.yaml e ajustar por projeto)
+#
+# Declara, por repo (suporta N repos — o segundo/terceiro entry pode apontar pra um
+# repo IRMAO via `root` absoluto), a lista de arquivos-alvo que o doc_rollup.py mantem
+# apos uma sessao significativa. Os nomes/paths REAIS do seu projeto (ex.: um
+# CHANGELOG-ARCHITECTURE.md especifico, ou o path de um repo irmao) só existem no seu
+# `rollup.yaml` LOCAL — nunca neste template.
+#
+# Papeis de documento (3 preservados do padrao original, nomes neutros aqui):
+#   changelog       -> log cronologico (1 entrada nova por sessao, mais recente no topo)
+#   evolution       -> timeline narrativa (contexto + destaques, mais recente no topo)
+#   snapshot        -> estado atual (SEMPRE só a ultima sessao — sem acumular; ver
+#                      mode: header-and-section)
+#   learnings       -> licoes/guardrails aprendidos (acumula, append-only)
+#   state-log       -> log de estado tipo estrutural (SSoT do projeto) — geralmente
+#                      melhor deixar como snapshot ou fora do rollup e vivo por outro meio
+#   session-wrapup  -> 1 arquivo NOVO por sessao (mode: create-new)
+#
+# Modos de escrita (NUNCA sobrescrevem o arquivo inteiro — só inserem/anexam):
+#   prepend-after-header  -> insere logo apos o cabecalho (1a linha em branco do arquivo)
+#   append-section         -> anexa no final do arquivo
+#   create-new              -> cria um arquivo novo (path pode usar {date}); se o path
+#                               resolvido ja existir, e tratado como NO-OP (nao sobrescreve)
+#   header-and-section      -> substitui SÓ o conteudo entre marcadores
+#                               <!-- ROLLUP:SNAPSHOT:BEGIN/END --> (cria os marcadores se
+#                               nao existirem); o resto do arquivo fica intocado — e o
+#                               unico modo que "substitui" algo, e so a propria secao que
+#                               o rollup criou.
+#
+# DEGRADACAO EMBUTIDA (a licao real do padrao original — EVOLUTION-MASTER.md e
+# CURRENT-STATE-OF-ECOSYSTEM.md deste proprio ecossistema se auto-declararam "STALE"
+# depois de crescer demais, e passaram a apontar pra um estado vivo em vez de narrar
+# tudo a mao pra sempre): quando um alvo passa de `max_bytes` (default 65536, mesma
+# constante ja usada em `_handoff_io.py` deste kit) OU de `max_entries` entradas
+# gerenciadas (contadas via `entry_marker`), o rollup AUTOMATICAMENTE para de escrever
+# a narrativa completa e passa a escrever so 1 linha-carimbo + ponteiro pro estado vivo
+# (`pointer`). Isso acontece desde a PRIMEIRA sessao que cruza o limiar — nao precisa
+# descobrir a decadencia depois, como aconteceu com os originais.
+
+repos:
+  - name: "principal"
+    root: "."                        # "." = raiz do projeto onde o rollup.yaml vive
+    targets:
+
+      - path: "CHANGELOG.md"
+        role: changelog
+        mode: prepend-after-header
+        entry_marker: "^## \\["      # regex p/ contar entradas gerenciadas (1 por sessao)
+        max_bytes: 65536
+        max_entries: 30
+        pointer: "ver o git log e o STATE.md para o historico recente"
+        template: |
+          ## [{date}] {resumo}
+
+          ### Shipments
+          {shipments_bullets}
+
+          ### Metricas
+          {metricas_table}
+
+          ### Decisoes
+          {decisoes_bullets}
+
+      - path: "docs/EVOLUTION.md"
+        role: evolution
+        mode: prepend-after-header
+        entry_marker: "^## SESSAO "
+        max_bytes: 65536
+        max_entries: 30
+        pointer: "ver CHANGELOG.md e o git log para o detalhe recente"
+        template: |
+          ## SESSAO {date} — {resumo}
+
+          {shipments_bullets}
+
+      - path: "docs/CURRENT-STATE.md"
+        role: snapshot
+        mode: header-and-section
+        pointer: "ver STATE.md (SSoT) e as sondas de health para o numero ao vivo"
+        template: |
+          **Ultima sessao:** {date} — {resumo}
+
+          {metricas_table}
+
+      - path: "docs/LEARNINGS.md"
+        role: learnings
+        mode: append-section
+        entry_marker: "^## \\["
+        max_bytes: 65536
+        max_entries: 60                # aprendizados acumulam mais devagar que sessoes
+        pointer: "arquive entradas antigas manualmente se precisar reduzir"
+        template: |
+          ## [{date}] {resumo}
+          {aprendizados_bullets}
+
+      - path: "docs/sessions/{date}-SESSION-WRAPUP.md"
+        role: session-wrapup
+        mode: create-new
+        template: |
+          # Session Wrap-up — {date}
+
+          ## Resumo
+          {resumo}
+
+          ## Shipments
+          {shipments_bullets}
+
+          ## Metricas
+          {metricas_table}
+
+          ## Decisoes
+          {decisoes_bullets}
+
+          ## Aprendizados
+          {aprendizados_bullets}
+
+      # Exemplo de path "mirror passivo" — doc_rollup.py RECUSA escrever aqui mesmo que
+      # apareca por engano num rollup.yaml real (defesa em profundidade, nao so convencao
+      # de config). Documentado aqui so por visibilidade — nao precisa existir de fato.
+      - path: "docs/_state-mirror"
+        role: mirror-passive
+        passive: true
+
+  # Exemplo de um SEGUNDO repo (ex.: um repo-irmao) — descomente e ajuste no SEU rollup.yaml:
+  # - name: "repo-irmao"
+  #   root: "../outro-repo"
+  #   targets:
+  #     - path: "MEMORY.md"
+  #       role: learnings
+  #       mode: append-section
+  #       template: |
+  #         ## [{date}] {resumo}
+  #         {aprendizados_bullets}

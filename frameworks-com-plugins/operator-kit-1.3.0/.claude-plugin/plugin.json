@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "operator-kit",
+  "displayName": "Operator Kit",
+  "version": "1.3.0",
+  "description": "Camada portatil de operacao com IA de forma disciplinada: verdade-antes-de-done, execucao autonoma, guardrails, planejamento spec-driven, paralelismo com teto, memoria que se cura, comunicacao direta. Config-driven por operator-profile.yaml.",
+  "author": { "name": "Max Parisi", "url": "https://rushar.com.br" },
+  "license": "MIT",
+  "keywords": [
+    "operator",
+    "guardrails",
+    "autonomy",
+    "verification",
+    "portable",
+    "config-driven",
+    "loop",
+    "spec-driven"
+  ],
+  "hooks": "./hooks/hooks.json",
+  "commands": "./commands"
+}

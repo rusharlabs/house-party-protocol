@@ -1,0 +1,9 @@
+# wiring-spec.yaml — consumido por scripts/wire_settings.py --spec (claude-dev-kit)
+hooks:
+  PreToolUse:
+    matcher: "Edit|Write|MultiEdit"
+    match_substring: "secret_scan_on_write"
+    value:
+      type: command
+      command: "python \"${CLAUDE_PLUGIN_ROOT}/hooks/secret_scan_on_write.py\""
+      timeout: 30

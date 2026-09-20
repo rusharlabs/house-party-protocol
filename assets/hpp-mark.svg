@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="240" height="240" role="img" aria-label="House Party Protocol">
+  <title>House Party Protocol — dez armaduras respondem ao chamado</title>
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0000FF"/>
+      <stop offset="1" stop-color="#FF00FF"/>
+    </linearGradient>
+  </defs>
+  <!-- o anel: a ordem que chama todas as armaduras -->
+  <circle cx="120" cy="120" r="84" fill="none" stroke="url(#g)" stroke-width="3" stroke-dasharray="6 7" stroke-linecap="round"/>
+  <!-- o operador, no centro: quem da a palavra -->
+  <circle cx="120" cy="120" r="14" fill="url(#g)"/>
+  <circle cx="120" cy="120" r="5" fill="#FFFFFF"/>
+  <!-- as dez armaduras, cada uma com um papel -->
+  <g fill="#0B0B12">
+    <circle cx="120" cy="36" r="9"/>
+    <circle cx="169.4" cy="52.0" r="9"/>
+    <circle cx="199.9" cy="94.0" r="9"/>
+    <circle cx="199.9" cy="146.0" r="9"/>
+    <circle cx="169.4" cy="188.0" r="9"/>
+    <circle cx="120" cy="204" r="9"/>
+    <circle cx="70.6" cy="188.0" r="9"/>
+    <circle cx="40.1" cy="146.0" r="9"/>
+    <circle cx="40.1" cy="94.0" r="9"/>
+    <circle cx="70.6" cy="52.0" r="9"/>
+  </g>
+  <!-- a que ja respondeu: a linha entre o operador e a armadura -->
+  <line x1="120" y1="106" x2="120" y2="46" stroke="url(#g)" stroke-width="3" stroke-linecap="round"/>
+</svg>
