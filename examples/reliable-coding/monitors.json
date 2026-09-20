@@ -1,0 +1,4 @@
+[
+  {"id": "service-health", "target": "local-cli", "type": "command", "cadence": 60, "freshness": 120, "last_signal": 950, "severity": "block", "cost": "low", "consumer_gate": "doctor"},
+  {"id": "data-freshness", "target": "event-log", "type": "timestamp", "cadence": 60, "freshness": 120, "last_signal": 700, "severity": "warn", "cost": "low", "consumer_gate": "resume"}
+]

@@ -1,0 +1,4 @@
+[
+  {"id": "local-economy", "tiers": ["economy"], "stages": ["inspect", "build"], "max_context": 8000},
+  {"id": "local-frontier", "tiers": ["balanced", "frontier"], "stages": ["inspect", "build", "review"], "max_context": 64000}
+]

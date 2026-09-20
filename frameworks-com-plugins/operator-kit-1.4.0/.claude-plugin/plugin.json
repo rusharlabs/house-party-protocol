@@ -2,8 +2,8 @@
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "operator-kit",
   "displayName": "Operator Kit",
-  "version": "1.3.0",
-  "description": "Camada portatil de operacao com IA de forma disciplinada: verdade-antes-de-done, execucao autonoma, guardrails, planejamento spec-driven, paralelismo com teto, memoria que se cura, comunicacao direta. Config-driven por operator-profile.yaml.",
+  "version": "1.4.0",
+  "description": "Módulo operacional do harness: gates executáveis, loops governados, avaliação pass@k/pass^k standalone, política audit/enforce e retomada explícita. Configurado por operator-profile.yaml.",
   "author": { "name": "Max Parisi", "url": "https://rushar.com.br" },
   "license": "MIT",
   "keywords": [

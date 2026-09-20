@@ -1,11 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 160" width="760" height="160" role="img" aria-label="House Party Protocol">
-  <title>House Party Protocol</title><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0000FF"/><stop offset="1" stop-color="#FF00FF"/></linearGradient></defs>
-  <g transform="translate(8,8) scale(0.6)">
-    <circle cx="120" cy="120" r="84" fill="none" stroke="url(#g)" stroke-width="3" stroke-dasharray="6 7" stroke-linecap="round"/>
-    <circle cx="120" cy="120" r="14" fill="url(#g)"/><circle cx="120" cy="120" r="5" fill="#0B0B12"/>
-    <g fill="#FFFFFF"><circle cx="120" cy="36" r="9"/><circle cx="169.4" cy="52" r="9"/><circle cx="199.9" cy="94" r="9"/><circle cx="199.9" cy="146" r="9"/><circle cx="169.4" cy="188" r="9"/><circle cx="120" cy="204" r="9"/><circle cx="70.6" cy="188" r="9"/><circle cx="40.1" cy="146" r="9"/><circle cx="40.1" cy="94" r="9"/><circle cx="70.6" cy="52" r="9"/></g>
-    <line x1="120" y1="106" x2="120" y2="46" stroke="url(#g)" stroke-width="3" stroke-linecap="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 240" role="img" aria-labelledby="title desc">
+  <title id="title">House Party Protocol logo, dark</title>
+  <desc id="desc">Signal gate mark with the House Party Protocol wordmark on ink.</desc>
+  <rect width="920" height="240" rx="32" fill="#0C0F0E"/>
+  <g transform="translate(34 30) scale(.7)">
+    <rect width="256" height="256" rx="52" fill="#F2F0E9"/>
+    <path d="M38 128H92M164 128H218" stroke="#5DE4C7" stroke-width="14" stroke-linecap="round"/>
+    <path d="M92 72V184M164 72V184" stroke="#0C0F0E" stroke-width="14" stroke-linecap="round"/>
+    <path d="M92 98H164M92 158H164" stroke="#D7FF64" stroke-width="14" stroke-linecap="round"/>
+    <circle cx="38" cy="128" r="13" fill="#FF6B5F"/><circle cx="218" cy="128" r="16" fill="#D7FF64"/>
   </g>
-  <text x="168" y="86" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="46" font-weight="800" letter-spacing="-0.5" fill="#FFFFFF">HOUSE PARTY PROTOCOL</text>
-  <text x="170" y="122" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="17" font-weight="600" letter-spacing="2.5" fill="#B8BCC8">BY RUSHAR LABS</text>
+  <text x="250" y="108" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="54" font-weight="750" fill="#F2F0E9">HOUSE PARTY</text>
+  <text x="252" y="158" font-family="JetBrains Mono, Cascadia Code, Consolas, monospace" font-size="27" letter-spacing="8" fill="#B8C2BC">PROTOCOL</text>
 </svg>

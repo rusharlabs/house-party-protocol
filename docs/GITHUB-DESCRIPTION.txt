@@ -1,0 +1,1 @@
+Evidence-first harness for coding agents across Claude Code and Codex CLI: governed loops, isolated lanes, deterministic evaluation, and verified delivery.

@@ -1,9 +1,39 @@
 # Changelog
 
-Todas as mudanças relevantes deste marketplace são registradas aqui. O formato segue
+Todas as mudanças relevantes do harness são registradas aqui. O formato segue
 [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e as versões seguem
-[SemVer](https://semver.org/lang/pt-BR/). A versão do marketplace descreve o conjunto;
-cada kit mantém sua própria versão no `plugin.json` e no `marketplace.json`.
+[SemVer](https://semver.org/lang/pt-BR/). A versão do produto descreve o contrato do harness;
+cada módulo mantém sua própria versão no `plugin.json` e no `marketplace.json`.
+
+## [2.0.0] — 2026-09-20
+
+### Adicionado
+
+- Núcleo local-first e stdlib-only em `python -m hpp`, com manifesto raiz, doctor, instalação
+  planejada, estado append-only, retomada, avaliação e benchmark.
+- WorkGraph spec-driven com rejeição de ciclos, critérios de aceite e waves topológicas.
+- Capability, Agent, Lane, Code, Evidence, Monitor e grafo operacional como projeções
+  determinísticas, sem daemon ou banco de grafo.
+- Context compiler com orçamento, proveniência e hash; recusa de material semelhante a segredo.
+- Roteamento provider-neutral por tiers `economy`, `balanced` e `frontier`, com piso de risco e
+  fallback explícito apenas para cima.
+- Monitor Map com alvo, cadência, frescor, severidade, custo e gate consumidor; nenhum monitor é
+  iniciado de forma oculta.
+- Benchmark reproduzível com controles declarados e runner standalone de `pass@k` e `pass^k`.
+- Identidade visual Signal Path aplicada ao README, manual, catálogo e ativos SVG.
+
+### Alterado
+
+- O posicionamento passa a liderar com harness → protocol → módulos → distribuição.
+- O `operator-kit` 1.4.0 pode bloquear famílias confiáveis em modo `enforce` e mantém `audit`
+  explícito para regras advisory.
+- A documentação diferencia saúde do serviço, frescor do sinal e correção do resultado.
+- Claude Code e Codex CLI compartilham o mesmo contrato; diferenças de host permanecem visíveis.
+
+### Corrigido
+
+- `passk_eval.py` não depende mais de pacote externo nem de modo degradado.
+- A release não publica duas versões vivas do mesmo módulo.
 
 ## [1.5.0] — 2026-09-20
 
@@ -58,5 +88,6 @@ publicar.
 - Hooks resolvem `.venv`, `python3` ou `python` por `hooks/pyrun.sh`.
 - Kits são emitidos em LF e levam checksums dos bytes distribuídos.
 
-[1.5.0]: https://github.com/rushar-labs/house-party-protocol/releases/tag/v1.5.0
-[1.4.0]: https://github.com/rushar-labs/house-party-protocol/releases/tag/v1.4.0
+[1.5.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v1.5.0
+[1.4.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v1.4.0
+[2.0.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.0.0
