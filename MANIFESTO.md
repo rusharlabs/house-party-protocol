@@ -1,89 +1,69 @@
-# Manifesto
+# Manifesto House Party Protocol
 
-> *Nada sai sem uma segunda medição.*
+## Agentes poderosos ainda precisam de uma casa operacional
 
-House Party Protocol é um conjunto de kits para quem parou de conversar com um agente e passou
-a **operar** vários. Ele não existe para fazer o agente ir mais rápido. Existe para que, quando
-o agente disser "pronto", a palavra valha alguma coisa.
+House Party Protocol é um harness para operar agentes de código sob evidência. O modelo raciocina;
+o harness delimita, observa, registra, verifica e decide quando o trabalho pode avançar.
 
-Oito princípios atravessam os dez kits. Cada um nasceu de uma falha real, e cada um tem pelo
-menos um gate que o impõe — porque princípio sem gate é intenção, e intenção não sobrevive à
-terceira sessão em paralelo.
+Uma resposta convincente não é prova. Uma sessão ativa não é coordenação. Um processo online não
+garante dado fresco. Um autor revisando o próprio trabalho não é revisão independente. HPP existe
+para transformar essas diferenças em contratos executáveis.
 
----
+## O protocol
 
-## 1 · O revisor não tem caneta
+O protocol é o conjunto compartilhado de invariantes:
 
-Quem constrói não aprova. Quem aprova roda em **outro modelo** e recebe um conjunto de
-ferramentas **sem `Write` nem `Edit`**. Isto não é uma instrução no prompt — é a ausência
-física da ferramenta. Um revisor que pode editar "conserta e segue", e o defeito de processo
-que produziu o erro nunca aparece.
+1. estado declarado não substitui estado medido;
+2. maker e checker são papéis diferentes;
+3. conclusão exige critério, comando, saída e frescor;
+4. trabalho concorrente declara lane, dono e território;
+5. toda wave fecha sua barreira antes da próxima;
+6. retomada deriva do event log, não da memória da conversa;
+7. monitor separa disponibilidade, frescor e correção do dado;
+8. política distingue aviso, bloqueio e gate humano;
+9. capacidade e confiabilidade são medidas separadamente por pass@k e pass^k;
+10. artefato distribuído é reaberto e verificado antes de ser chamado de release.
 
-## 2 · A régua vai ao lado do número
+## O harness
 
-Nenhum número é publicado sem o comando que o produziu. "18 testes passando" sem o comando é
-uma afirmação sobre a memória de alguém. Com o comando, é uma afirmação sobre o repositório —
-e qualquer pessoa pode refazê-la amanhã.
+O harness torna o protocol operável. Ele mantém um manifesto de capacidades, transforma uma spec
+em WorkGraph, organiza dependências em waves, projeta Lane Map e Agent Map, compila contexto com
+proveniência, registra eventos, produz retomada e conecta evidência a veredito.
 
-## 3 · O controle vem antes do veredito
+Os módulos fornecem mecanismos especializados. A distribuição para Claude Code e Codex CLI leva
+esses mecanismos aos hosts sem fingir que os dois oferecem os mesmos lifecycle hooks.
 
-Antes de declarar algo morto, zero ou ausente, aponte o mesmo instrumento para um caso que
-você **sabe** estar vivo. Se ele também disser "morto", o instrumento não discrimina, e o
-veredito não vale. Um `grep` que aborta devolve zero com a mesma cara de um `grep` que não
-achou nada.
+## Loops com freio e memória
 
-## 4 · O gate prova que sabe reprovar
+Loop útil tem objetivo, observação, ação, budget, gate, condição de parada e escalonamento. Sem
+esses elementos, repetição é apenas insistência automatizada.
 
-Todo gate nasce com um teste que o força a falhar sobre o caso que ele existe para barrar.
-Um teste que só exercita o caminho feliz não distingue "gate funcionando" de "gate ausente":
-os dois passam igual.
+Autoprompt preserva continuidade. Gotchas preservam aprendizado operacional. Monitores preservam
+consciência de estado. Nenhum deles autoriza autonomia ilimitada: o próximo passo continua sujeito
+à política, ao território, à evidência e ao gate humano quando necessário.
 
-## 5 · Parcial se declara, nunca se disfarça
+## Grafos sem teatro de infraestrutura
 
-Existem três estados, não dois: **feito**, **parcial declarado** e **não feito**. O parcial
-declarado é a saída honesta — "não terminei, e este é o buraco". O único estado proibido é o
-parcial silencioso, aquele em que o verde esconde o que faltou.
+HPP usa grafos como modelos explicáveis, não como decoração e nem como desculpa para criar um
+banco. Capability, agent, lane, work, execution, evidence e monitor maps são projeções
+determinísticas de manifestos e eventos locais. Se uma aresta não muda uma decisão, ela não entra.
 
-## 6 · A falha vira lição, ou vira rotina
+## Portabilidade honesta
 
-Um comando que falha uma vez é um acidente. O mesmo comando falhando três vezes é um padrão —
-e um padrão que ninguém registrou vai se repetir na próxima sessão, com a mesma surpresa. A
-lição se grava, se classifica e se injeta **antes** da próxima tentativa.
+Cross-host não significa identidade artificial. Claude Code pode executar hooks de lifecycle;
+Codex CLI aplica várias capacidades por instrução ou comando explícito. O diagnóstico mostra essa
+diferença. Cobertura ausente é `unsupported`, nunca “provavelmente funciona”.
 
-## 7 · O que viaja é o que foi provado
+## Prova antes de escala
 
-O diretório é o que foi montado; o zip é o que viaja. São dois artefatos, e os dois precisam
-de régua. Um kit só sai da forja depois que o artefato distribuído — não a cópia local — foi
-reaberto, conferido byte a byte e lintado contra o que nunca pode sair de casa.
+O HPP não chama a si mesmo de confiável por possuir muitos componentes. Confiabilidade vem de
+controles negativos, execução repetida, revisão independente e cadeia de publicação verificável.
+Uma release crítica precisa demonstrar seu piso, não apenas o melhor resultado que conseguiu obter.
 
-## 8 · O humano decide o que só o humano decide
+## O compromisso
 
-Há uma classe de ação que nenhum nível de autonomia destrava: apagar dado, tocar credencial,
-mover dinheiro, falar com cliente, agir em conta de terceiro. Um agente pode preparar,
-recomendar e executar o reversível. O irreversível para e pergunta — e o `--human-approved`
-é literal.
+Operar agentes sob evidência, preservar a separação de papéis, expor limites do host, tornar o
+estado retomável e bloquear a conclusão que não atravessou o gate correspondente.
 
----
-
-## Sobre quem faz
-
-House Party Protocol é um projeto da **Rushar Labs**, o braço de engenharia de agentes da
-[Rushar](https://rushar.com.br).
-
-A Rushar Labs se organiza em quatro dimensões conectadas:
-
-**Ideias** — a investigação, o território das possibilidades: o que ainda não existe e o que
-pode existir. É onde este projeto começou, como uma lista de falhas que ninguém tinha
-nomeado.
-
-**Sistemas** — a transformação do conhecimento em algo que funciona. Regra vira gate, gate
-vira kit, kit vira produto. Se não roda, não é sistema.
-
-**Pessoas** — quem constrói, colabora e usa. Um kit é escrito para o operador que vai
-instalá-lo às 2h da manhã com um deploy na fila; a documentação existe para essa pessoa.
-
-**Impacto** — a mudança que acontece. Não o que foi entregue, mas o que ficou diferente depois
-da entrega. Um agente que passa a dizer "não terminei" é impacto; um relatório dizendo que
-ele terminou não é.
-
-*Construindo o que vem depois.*
+Essa é a casa. O protocol são as regras. Os módulos são as ferramentas. A prova é o que permite
+abrir a próxima porta.

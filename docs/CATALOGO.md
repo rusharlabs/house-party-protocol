@@ -5,12 +5,12 @@ Derivado da árvore emitida: o que cada kit instala, recurso por recurso. Regene
 
 ## Recursos transversais
 
-Documentos válidos para todos os kits: [`CATALOGO.html`](CATALOGO.html) · [`MANUAL.html`](MANUAL.html) · [`TIPS.md`](TIPS.md) · [`UX-INSTALL-JOURNEY.md`](UX-INSTALL-JOURNEY.md)
+Documentos válidos para todos os kits: [`ARCHITECTURE.md`](ARCHITECTURE.md) · [`BENCHMARK.md`](BENCHMARK.md) · [`BRAND.md`](BRAND.md) · [`CATALOGO.html`](CATALOGO.html) · [`GITHUB-DESCRIPTION.txt`](GITHUB-DESCRIPTION.txt) · [`GRAPH-MODEL.md`](GRAPH-MODEL.md) · [`LOOPS.md`](LOOPS.md) · [`MANUAL.html`](MANUAL.html) · [`PROOF.md`](PROOF.md) · [`TIPS.md`](TIPS.md) · [`UX-INSTALL-JOURNEY.md`](UX-INSTALL-JOURNEY.md)
 
 | kit | versão | skills | commands | agents | hooks | rules | templates | scripts |
 |---|---|---:|---:|---:|---:|---:|---:|---:|
 | [kit-forge](#kit-forge) | 1.4.0 | 0 | 0 | 0 | 1 | 0 | 0 | 0 |
-| [operator-kit](#operator-kit) | 1.3.0 | 13 | 2 | 2 | 8 | 13 | 1 | 17 |
+| [operator-kit](#operator-kit) | 1.4.0 | 13 | 2 | 2 | 8 | 13 | 1 | 17 |
 | [continuity-kit](#continuity-kit) | 1.2.1 | 2 | 0 | 0 | 3 | 0 | 12 | 2 |
 | [lane-kit](#lane-kit) | 1.2.0 | 1 | 0 | 0 | 3 | 0 | 4 | 2 |
 | [health-kit](#health-kit) | 1.3.1 | 2 | 0 | 0 | 1 | 0 | 0 | 3 |
@@ -33,7 +33,7 @@ O gate de IP/PII + o montador de kits. ip_pii_linter + kit_assembler (com guard_
 
 ## operator-kit
 
-Camada portatil de verdade-antes-de-done, execucao autonoma com guardrails e planejamento spec-driven. Inclui preflight, runbook MCP, loop /ralph-gate, ledger de divida, 13 regras e dois subagents read-only: refutador e silent-failure-hunter.
+Módulo operacional do harness: gates executáveis, loops governados, pass@k/pass^k standalone, política audit/enforce, preflight, planejamento spec-driven e dois checkers read-only.
 
 **Skills**
 
