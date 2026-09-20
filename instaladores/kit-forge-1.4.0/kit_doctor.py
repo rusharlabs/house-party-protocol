@@ -19,7 +19,7 @@ registry (v2.0.0): grava/lista instalações em ~/.claude-kits/registry.json, ag
 Uso:
     python kit_doctor.py <kit_dir> [--json out.json]        # forma antiga = verify
     python kit_doctor.py verify <kit_dir> [--json out.json]
-    python kit_doctor.py install <kit_dir> [--target <dir>] [--host claude-code]
+    python kit_doctor.py install --kit <kit_dir> [--target <dir>] [--host claude-code|codex]
                                   [--answers <file>] [--apply] [--human]
                                   [--registry-path <path>] [--no-register]
     python kit_doctor.py registry [--registry-path <path>]
@@ -53,13 +53,18 @@ _IGNORE_NAMES = {"CHECKSUMS.txt", ".lint-report.json"}
 _SUBCOMMANDS = ("verify", "install", "registry", "marketplace")
 _DEFAULT_REGISTRY = Path.home() / ".claude-kits" / "registry.json"
 
-# Seam de host (cross-host, ver INSTALL-CONTRACT.md). Hoje só claude-code existe;
-# um adaptador futuro (Codex/Cursor/Gemini) = nova entrada aqui, zero mudança nos estágios.
+# Seam de host (cross-host, ver INSTALL-CONTRACT.md).
 HOSTS = {
     "claude-code": {
         "settings_path": ".claude/settings.local.json",
         "plugin_manifest": ".claude-plugin/plugin.json",
         "path_token": "${CLAUDE_PLUGIN_ROOT}",
+    },
+    "codex": {
+        "settings_path": None,
+        "plugin_manifest": None,
+        "path_token": ".agents/hpp/<kit>",
+        "skills_path": ".agents/skills",
     },
 }
 _DEFAULT_HOST = "claude-code"
@@ -356,14 +361,14 @@ def stage_prereqs(kit_dir: Path) -> dict:
     return {"stage": "prereqs", "status": "ok" if ok else "warn", "checks": checks}
 
 
-def stage_profile(kit_dir: Path, dry_run: bool) -> dict:
+def stage_profile(kit_dir: Path, target_dir: Path, dry_run: bool, host: str) -> dict:
     """Descobre *.example.* na raiz do kit e oferece copiar pro nome real (sem
     sobrescrever se já existir — mesmo espírito do wire_settings.py: nunca sobrescreve
     config alheia por padrão)."""
     actions = []
     for example in sorted(kit_dir.glob("*.example.*")):
         target_name = example.name.replace(".example.", ".")
-        target = kit_dir / target_name
+        target = target_dir / target_name
         if target.exists():
             actions.append({"file": example.name, "action": "skip-exists", "target": target_name})
             continue
@@ -372,7 +377,24 @@ def stage_profile(kit_dir: Path, dry_run: bool) -> dict:
         else:
             target.write_bytes(example.read_bytes())
             actions.append({"file": example.name, "action": "copied", "target": target_name})
-    return {"stage": "profile", "status": "ok", "actions": actions}
+    codex_report = None
+    status = "ok"
+    if host == "codex":
+        generator = Path(__file__).resolve().parent / "tools" / "codex_skills.py"
+        cmd = [
+            sys.executable, "-X", "utf8", str(generator),
+            "--kit", str(kit_dir.resolve()), "--target", str(target_dir.resolve()),
+        ]
+        if not dry_run:
+            cmd.append("--apply")
+        proc = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8")
+        try:
+            codex_report = json.loads(proc.stdout)
+        except json.JSONDecodeError:
+            codex_report = {"status": "error", "detail": (proc.stdout + proc.stderr)[-500:]}
+        if proc.returncode != 0:
+            status = "fail"
+    return {"stage": "profile", "status": status, "actions": actions, "codex": codex_report}
 
 
 def stage_configure(kit_dir: Path, answers_path: str | None) -> dict:
@@ -412,10 +434,20 @@ def stage_configure(kit_dir: Path, answers_path: str | None) -> dict:
     }
 
 
-def stage_wire_suggest(kit_dir: Path) -> dict:
+def stage_wire_suggest(kit_dir: Path, host: str) -> dict:
     """NUNCA auto-arma settings/hooks — só detecta os caminhos disponíveis e sugere.
     Mutar settings.json/settings.local.json é gate humano nesta doutrina."""
     suggestions = []
+    if host == "codex":
+        suggestions.append({
+            "path": "codex",
+            "action": "skills copiadas para .agents/skills; runtime em .agents/hpp; AGENTS.md lido pelo Codex",
+        })
+        suggestions.append({
+            "path": "hooks",
+            "action": "hooks do Claude Code não são ativados no Codex; rode scripts e gates explicitamente",
+        })
+        return {"stage": "wire-sugerido", "status": "ok", "suggestions": suggestions}
     plugin_json = kit_dir / ".claude-plugin" / "plugin.json"
     if plugin_json.exists():
         suggestions.append({
@@ -454,8 +486,9 @@ def stage_smoke(kit_dir: Path) -> dict:
             continue
         try:
             proc = subprocess.run(
-                [sys.executable, str(py_file.resolve()), "--self-test"],
-                capture_output=True, text=True, timeout=30, cwd=str(kit_dir_abs),
+                [sys.executable, "-B", "-X", "utf8", str(py_file.resolve()), "--self-test"],
+                capture_output=True, text=True, encoding="utf-8", errors="replace",
+                timeout=30, cwd=str(kit_dir_abs),
             )
         except Exception as e:  # noqa: BLE001
             results.append({"file": str(py_file.relative_to(kit_dir)), "status": "error", "detail": str(e)})
@@ -481,13 +514,15 @@ def run_install(
     dry_run = not apply
     detect = stage_detect(kit_dir, target_dir, registry_path)
     prereqs = stage_prereqs(kit_dir)
-    profile = stage_profile(kit_dir, dry_run)
+    if host not in HOSTS:
+        raise ValueError(f"host não suportado: {host}")
+    profile = stage_profile(kit_dir, target_dir, dry_run, host)
     configure = stage_configure(kit_dir, answers_path)
-    wire = stage_wire_suggest(kit_dir)
+    wire = stage_wire_suggest(kit_dir, host)
     smoke = stage_smoke(kit_dir)
 
     overall = "ok"
-    if smoke["status"] == "fail":
+    if smoke["status"] == "fail" or profile["status"] == "fail":
         overall = "fail"
     elif prereqs["status"] == "warn":
         overall = "warn"
@@ -583,7 +618,10 @@ def render_plan(report: dict) -> str:
         lines.append("Depois de corrigir, rode o plano de novo para confirmar antes do --apply.")
     elif is_plan:
         lines.append("Nada foi modificado. Se o plano está de acordo, aplique com:")
-        lines.append(f"  python kit_doctor.py install {report['kit_dir']} --target {report['target_dir']} --apply")
+        lines.append(
+            f"  python kit_doctor.py install --kit {report['kit_dir']} "
+            f"--target {report['target_dir']} --host {report['host']} --apply"
+        )
     else:
         lines.append("Instalação aplicada e registrada. Wiring de settings/hooks (se sugerido acima) segue manual.")
     return "\n".join(lines)
@@ -641,7 +679,8 @@ def build_parser() -> argparse.ArgumentParser:
     sp_verify.add_argument("--json", dest="json_out", default=None)
 
     sp_install = sub.add_parser("install")
-    sp_install.add_argument("kit_dir")
+    sp_install.add_argument("kit_dir", nargs="?")
+    sp_install.add_argument("--kit", dest="kit_option", default=None)
     sp_install.add_argument("--target", default=None, help="raiz do projeto-alvo (default: kit_dir)")
     sp_install.add_argument("--host", default=_DEFAULT_HOST, choices=list(HOSTS.keys()))
     sp_install.add_argument("--answers", dest="answers_path", default=None)
@@ -690,7 +729,11 @@ def main(argv) -> int:
         return _verify_exit(report)
 
     if args.cmd == "install":
-        kit_dir = Path(args.kit_dir)
+        kit_arg = args.kit_option or args.kit_dir
+        if not kit_arg:
+            print("kit_doctor: informe <kit_dir> ou --kit <kit_dir>", file=sys.stderr)
+            return 3
+        kit_dir = Path(kit_arg)
         if not kit_dir.is_dir():
             print(f"kit_doctor: pasta não existe: {kit_dir}", file=sys.stderr)
             return 3
@@ -869,9 +912,10 @@ def _self_test() -> int:
         installs2 = list_installs(reg_path)
         assert len(installs2) == 1 and installs2[0]["verify_status"] == "warn", "mesmo par (kit,target) -> atualiza, nao duplica"
 
-        # --- HOSTS/seam: --host default existe e é o único suportado hoje ---
+        # --- HOSTS/seam: Claude Code e Codex compartilham os seis estágios ---
         assert _DEFAULT_HOST in HOSTS
         assert HOSTS["claude-code"]["path_token"] == "${CLAUDE_PLUGIN_ROOT}"
+        assert HOSTS["codex"]["skills_path"] == ".agents/skills"
 
         # --- marketplace: o caso que FORÇA a reprovar + o controle que exige silêncio ---
         mk = tmp / "mk"

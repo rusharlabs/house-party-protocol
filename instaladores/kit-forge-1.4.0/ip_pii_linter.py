@@ -225,7 +225,7 @@ def _is_encoded_blob(line: str) -> bool:
         return False
     if "://" in t or t.startswith(("/", "./", "~")) or "\\" in t:
         return False
-    if re.search(r"/[a-z]{3,}/", t):   # segmento-palavra entre barras = caminho relativo, nao base64 (revisor 2026-09-20)
+    if re.search(r"/[a-z]{3,}/", t):   # Why: segmento-palavra entre barras e caminho relativo, nao base64.
         return False
     return re.fullmatch(r"[A-Za-z0-9+/=_-]+", t) is not None
 

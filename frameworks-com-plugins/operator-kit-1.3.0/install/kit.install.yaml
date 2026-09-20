@@ -67,5 +67,11 @@ hosts:
     # (SETTINGS-WIRE.md secao 1) -- o caminho plugin os arma automaticamente via
     # ${CLAUDE_PLUGIN_ROOT}, mas kit_doctor.py nunca aplica nenhum dos dois sozinho.
     manual_gates: [statusLine, PreToolUse, UserPromptSubmit, Stop]
+  codex:
+    plugin: false
+    agents: AGENTS.md
+    skills_path: .agents/skills
+    runtime_path: .agents/hpp/operator-kit
+    manual_gates: [statusLine, hooks, PreToolUse, UserPromptSubmit, Stop]
 
 docs: README.md

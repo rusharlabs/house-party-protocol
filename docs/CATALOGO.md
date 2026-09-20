@@ -3,19 +3,23 @@
 Derivado da árvore emitida: o que cada kit instala, recurso por recurso. Regenerar com
 `python instaladores/kit-forge-*/tools/catalogo_md.py . --write`.
 
+## Recursos transversais
+
+Documentos válidos para todos os kits: [`CATALOGO.html`](CATALOGO.html) · [`MANUAL.html`](MANUAL.html) · [`TIPS.md`](TIPS.md) · [`UX-INSTALL-JOURNEY.md`](UX-INSTALL-JOURNEY.md)
+
 | kit | versão | skills | commands | agents | hooks | rules | templates | scripts |
 |---|---|---:|---:|---:|---:|---:|---:|---:|
 | [kit-forge](#kit-forge) | 1.4.0 | 0 | 0 | 0 | 1 | 0 | 0 | 0 |
-| [operator-kit](#operator-kit) | 1.3.0 | 13 | 2 | 0 | 8 | 13 | 1 | 16 |
+| [operator-kit](#operator-kit) | 1.3.0 | 13 | 2 | 2 | 8 | 13 | 1 | 17 |
 | [continuity-kit](#continuity-kit) | 1.2.1 | 2 | 0 | 0 | 3 | 0 | 12 | 2 |
-| [lane-kit](#lane-kit) | 1.2.0 | 1 | 0 | 0 | 3 | 0 | 4 | 1 |
+| [lane-kit](#lane-kit) | 1.2.0 | 1 | 0 | 0 | 3 | 0 | 4 | 2 |
 | [health-kit](#health-kit) | 1.3.1 | 2 | 0 | 0 | 1 | 0 | 0 | 3 |
 | [claude-dev-kit](#claude-dev-kit) | 1.3.1 | 8 | 0 | 0 | 1 | 0 | 0 | 2 |
 | [supabase-pack](#supabase-pack) | 1.1.0 | 2 | 0 | 0 | 0 | 0 | 0 | 0 |
 | [agent-framework-wizard](#agent-framework-wizard) | 1.1.1 | 1 | 0 | 0 | 0 | 0 | 4 | 0 |
-| [dev-squad-kit](#dev-squad-kit) | 1.0.0 | 3 | 12 | 0 | 0 | 0 | 0 | 0 |
+| [dev-squad-kit](#dev-squad-kit) | 1.0.0 | 3 | 12 | 12 | 0 | 0 | 0 | 0 |
 | [gotcha-memory](#gotcha-memory) | 1.0.0 | 1 | 0 | 0 | 2 | 0 | 0 | 0 |
-| **total** | | **33** | **14** | **0** | **19** | **13** | **21** | **24** |
+| **total** | | **33** | **14** | **14** | **19** | **13** | **21** | **26** |
 
 ## kit-forge
 
@@ -29,7 +33,7 @@ O gate de IP/PII + o montador de kits. ip_pii_linter + kit_assembler (com guard_
 
 ## operator-kit
 
-Camada portatil de verdade-antes-de-done, execucao autonoma com guardrails, planejamento spec-driven, paralelismo com teto, memoria que se cura e comunicacao direta. Config-driven por um unico profile.yaml (autonomia + intensidade: lite/full/ultra/off). Inclui o loop /ralph-gate, scripts/debt_ledger.py (divida tecnica) e rules/ (13 regras universais, doutrina instalavel).
+Camada portatil de verdade-antes-de-done, execucao autonoma com guardrails e planejamento spec-driven. Inclui preflight, runbook MCP, loop /ralph-gate, ledger de divida, 13 regras e dois subagents read-only: refutador e silent-failure-hunter.
 
 **Skills**
 
@@ -51,6 +55,8 @@ Camada portatil de verdade-antes-de-done, execucao autonoma com guardrails, plan
 
 **Commands** — `/cancel-ralph-gate` · `/ralph-gate`
 
+**Agents** — `refutador` · `silent-failure-hunter`
+
 **Hooks**
 
 | evento | script |
@@ -68,7 +74,9 @@ Camada portatil de verdade-antes-de-done, execucao autonoma com guardrails, plan
 
 **Templates** — `loop-charter-template.md`
 
-**Scripts** — `audit_plan.py` · `claude_md_from_profile.py` · `debt_ledger.py` · `delta_inventory.py` · `determinism_harness.py` · `distill_corrections.py` · `done_gate.py` · `drift_check.py` · `gate_sheet_panel.py` · `goal_ledger.py` · `goal_review.py` · `health_probe.py` · `live_count.py` · `passk_eval.py` · `status_now.py` · `verify_ladder.py`
+**Scripts** — `audit_plan.py` · `claude_md_from_profile.py` · `debt_ledger.py` · `delta_inventory.py` · `determinism_harness.py` · `distill_corrections.py` · `done_gate.py` · `drift_check.py` · `gate_sheet_panel.py` · `goal_ledger.py` · `goal_review.py` · `health_probe.py` · `live_count.py` · `passk_eval.py` · `preflight.py` · `status_now.py` · `verify_ladder.py`
+
+**Documentos e registros** — `docs/ANTHROPIC-STANDARDS.md` · `docs/MCP-RUNBOOK.md`
 
 ## continuity-kit
 
@@ -95,7 +103,7 @@ Handoff-v1.1: uma sessao sobrevive a parada/clear/crash sem perder o proximo pas
 
 ## lane-kit
 
-N sessoes sem colisao. Lane board com estado CLAIMED->BUILDING->CHECKPOINT-READY->UNDER-REVIEW->VERIFIED/NEEDS-FIX->MERGED, maker!=checker cross-model obrigatorio, lock por diretorio. Depende do continuity-kit. Inclui o subsistema de seguranca: registry de lanes vivas + git-guard + territory-guard.
+N sessoes sem colisao. Lane board, maker!=checker cross-model, lock por diretorio, git-guard e territory-guard. O checker_router detecta Codex, Cursor e Gemini e escolhe um provider diferente do maker.
 
 **Skills**
 
@@ -113,7 +121,7 @@ N sessoes sem colisao. Lane board com estado CLAIMED->BUILDING->CHECKPOINT-READY
 
 **Templates** — `lane-registry.example.json` · `lanes.example.yaml` · `REORIENT-MAILBOX.template.md` · `status-stakeholder.template.html`
 
-**Scripts** — `lane_board.py`
+**Scripts** — `checker_router.py` · `lane_board.py`
 
 ## health-kit
 
@@ -136,7 +144,7 @@ Sonda de saude de servicos (http/cmd) config-driven por profile.yaml + segmento 
 
 ## claude-dev-kit
 
-Ferramentas de construir ferramentas: skill-writer + hookify + plugin-dev + teaching (as 4 meta-skills, SKILL-CONTRACT vendorizado) + wire_settings (merge idempotente byte-estavel + --undo) + install_git_hook (encadeia com hook pre-commit existente, nunca sobrescreve) + secret_scan_on_write hook base. +architecture-decision-records +skill-scout +search-first (adaptados do ECC MIT).
+Ferramentas de construir ferramentas: skill-writer, hookify, plugin-dev, teaching, wiring reversivel, secret scan, tres skills adaptadas do ECC MIT e um registro auditavel de skills externas candidatas.
 
 **Skills**
 
@@ -158,6 +166,8 @@ Ferramentas de construir ferramentas: skill-writer + hookify + plugin-dev + teac
 | PreToolUse · `Edit|Write|MultiEdit` | `secret_scan_on_write.py` |
 
 **Scripts** — `install_git_hook.py` · `wire_settings.py`
+
+**Documentos e registros** — `docs/hook-template.py` · `docs/SKILL-CANDIDATES.json` · `docs/SKILL-CONTRACT.md` · `docs/skill-template.md`
 
 ## supabase-pack
 
@@ -184,7 +194,7 @@ Wizard de 6 passos (check_python->check_git->check_deps->configure->validate->ge
 
 ## dev-squad-kit
 
-Squad de 12 agentes de papel (master orchestrator, analyst, architect, data-engineer, dev, devops, pm, po, qa, sm, squad-creator, ux-design-expert) via slash-command, mais 3 skills de leitura/consolidacao paralela token-safe (pp-discovery, pp-raiox, pp-consolidate). Camada de persona/prompt -- nao inclui arvore de tasks/templates proprietaria.
+Squad com 12 papéis disponíveis como slash commands e subagents reais, tools explícitos e QA read-only, mais 3 skills de leitura/consolidação paralela token-safe. Não inclui árvore proprietária de tasks/templates.
 
 **Skills**
 
@@ -195,6 +205,8 @@ Squad de 12 agentes de papel (master orchestrator, analyst, architect, data-engi
 | `pp-raiox` | Parallel Process Raio-X - leitura linha-a-linha de um modulo/repo externo com evidencias, riscos e chamadas de proxima investigacao |
 
 **Commands** — `/analyst` · `/architect` · `/data-engineer` · `/dev` · `/devops` · `/master` · `/pm` · `/po` · `/qa` · `/sm` · `/squad-creator` · `/ux-design-expert`
+
+**Agents** — `analyst` · `architect` · `data-engineer` · `dev` · `devops` · `master` · `pm` · `po` · `qa` · `sm` · `squad-creator` · `ux-design-expert`
 
 ## gotcha-memory
 

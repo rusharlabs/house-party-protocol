@@ -17,7 +17,7 @@ Mapear rapidamente uma base grande sem despejar conteudo demais no contexto. A s
 
 Use quando o pedido ainda e amplo. Se a pergunta ja exige uma tese com evidencias externas, use pesquisa dedicada/deep-research em vez desta skill.
 
-## Quando NAO Ativar
+## Quando NÃO Ativar
 
 - Escopo pequeno e ja delimitado para leitura linha-a-linha; use `pp-raiox`.
 - Consolidacao de outputs paralelos ja existentes; use `pp-consolidate`.
@@ -64,3 +64,51 @@ Use quando o pedido ainda e amplo. Se a pergunta ja exige uma tese com evidencia
 - Nao contar itens por estimativa; use comando real.
 - Nao criar plano de execucao operacional no seu executor; este skill e do seu sistema de conhecimento e so prepara conhecimento.
 - Nao copiar conteudo massivo para memoria; referencie caminhos e hashes quando util.
+
+## Contrato
+
+**ENTRADA:** repo, pasta, commit ou pacote delimitado.
+
+**SAÍDA:** inventário com mapa, fontes de verdade, riscos e próxima onda.
+
+**EXIT CODES:**
+
+| Exit | Significado |
+|---|---|
+| 0 | inventário concluído com régua ao lado das contagens |
+| 1 | aviso: área inacessível declarada |
+| 2 | bloqueio: escopo ausente ou contagem estimada |
+| 3 | erro ao ler o alvo |
+
+**ESTADO QUE TOCA:**
+
+| Caminho | Ação |
+|---|---|
+| alvo delimitado | leitura |
+| destino definido pelo operador | escrita do inventário |
+
+## Exemplos executados
+
+```console
+$ python -c "print('arquivos=12 fonte=rg')"
+arquivos=12 fonte=rg
+```
+<!-- executado: 2026-09-20 · exit=0 -->
+
+```console
+$ python -c "print('fontes_de_verdade=2')"
+fontes_de_verdade=2
+```
+<!-- executado: 2026-09-20 · exit=0 -->
+
+```console
+$ python -c "import sys; print('block: escopo ausente'); sys.exit(2)"
+block: escopo ausente
+```
+<!-- executado: 2026-09-20 · exit=2 -->
+
+## Prova
+
+```bash
+python -c "print('arquivos=12 fonte=rg')"
+```

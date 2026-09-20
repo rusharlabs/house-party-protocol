@@ -18,7 +18,7 @@ Uso:
 Exit: 0 = ok · 1 = --set não encontrou o goal · 2 = ledger ausente/uso inválido.
 stdlib-only. Leitura NÃO muta; --set faz edição cirúrgica só da célula Status.
 
-v1.0.0 — 2026-06-27 (G-CONT · PRD-CONTINUIDADE-LOOP · branch feat/codex-migration)
+v1.0.0 — 2026-06-27 (G-CONT · PRD-CONTINUIDADE-LOOP)
 v1.1.0 — 2026-07-10 (Operator Kit · Tier 2 · embarcado no operator-kit — raiz resolvida via
          CLAUDE_PROJECT_DIR/${CLAUDE_PLUGIN_ROOT}/busca por .git, não mais parents[N] fixo:
          a profundidade do arquivo muda quando o kit é instalado em outro projeto — o mesmo

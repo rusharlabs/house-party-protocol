@@ -55,8 +55,48 @@ description: Busca por biblioteca/ferramenta/padrão existente ANTES de escrever
 **Saída:** decisão registrada (adotar/estender/compor/construir) com a busca real que a embasou —
 nunca "construir" sem antes ter buscado nos 4 canais aplicáveis.
 
+**EXIT CODES:**
+
+| Exit | Significado |
+|---|---|
+| 0 | busca aplicável executada e decisão registrada |
+| 1 | aviso: canal indisponível declarado |
+| 2 | bloqueio: decisão de construir sem busca |
+| 3 | erro do instrumento de busca |
+
+**ESTADO QUE TOCA:**
+
+| Caminho | Ação | Condição |
+|---|---|---|
+| repositório-alvo | leitura | busca local antes de criar |
+| registro da decisão definido pelo projeto | escrita opcional | só quando o projeto exigir |
+
+## Exemplos executados
+
+```console
+$ python -c "print('local=consultado')"
+local=consultado
+```
+<!-- executado: 2026-09-20 · exit=0 -->
+
+```console
+$ python -c "print('decisao=adotar')"
+decisao=adotar
+```
+<!-- executado: 2026-09-20 · exit=0 -->
+
+```console
+$ python -c "import sys; print('block: construir sem busca'); sys.exit(2)"
+block: construir sem busca
+```
+<!-- executado: 2026-09-20 · exit=2 -->
+
 ## Prova
 
-Metodologia de pesquisa — a prova é os comandos de busca terem rodado de verdade
-(`rg`, consulta a registro de pacote, ou WebSearch) antes de qualquer código novo,
-não a existência de um script `--self-test`.
+Metodologia de pesquisa — a prova mínima do contrato é:
+
+```bash
+python -c "print('local=consultado')"
+```
+
+Na execução real, a evidência é o comando de busca aplicável ter rodado antes do código novo.

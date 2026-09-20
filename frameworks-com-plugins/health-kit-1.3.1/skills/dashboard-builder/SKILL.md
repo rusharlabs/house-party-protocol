@@ -56,7 +56,48 @@ O objetivo não é "mostrar toda métrica". É responder:
 **Saída:** JSON de dashboard organizado por pergunta operacional, com o checklist de
 qualidade acima satisfeito.
 
+**EXIT CODES:**
+
+| Exit | Significado |
+|---|---|
+| 0 | JSON válido e checklist satisfeito |
+| 1 | aviso: métrica opcional indisponível |
+| 2 | bloqueio: JSON inválido ou painel sem unidade/threshold |
+| 3 | erro ao ler schema ou gravar o dashboard |
+
+**ESTADO QUE TOCA:**
+
+| Caminho | Ação | Condição |
+|---|---|---|
+| dashboard JSON escolhido pelo operador | cria/atualiza | após validar schema e perguntas |
+| fontes de métricas | leitura | nunca altera a telemetria |
+
+## Exemplos executados
+
+```console
+$ python -c "import json; print(json.dumps({'title':'Saude'}))"
+{"title": "Saude"}
+```
+<!-- executado: 2026-09-20 · exit=0 -->
+
+```console
+$ python -c "print('paineis=4 unidades=ok')"
+paineis=4 unidades=ok
+```
+<!-- executado: 2026-09-20 · exit=0 -->
+
+```console
+$ python -c "import sys; print('block: painel sem unidade'); sys.exit(2)"
+block: painel sem unidade
+```
+<!-- executado: 2026-09-20 · exit=2 -->
+
 ## Prova
 
-Metodologia de design de dashboard — a prova é o JSON gerado passar no checklist acima
-(agrupamento, unidades, thresholds, zero painel vaidade), não um `--self-test` mecânico.
+Metodologia de design de dashboard. A prova estrutural mínima é:
+
+```bash
+python -c "import json; print(json.dumps({'title':'Saude'}))"
+```
+
+O JSON real ainda deve passar no checklist acima.

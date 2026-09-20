@@ -6,9 +6,9 @@ recorrencia nao ha licao a injetar.
 
 == ORIGEM =====================================================================
 
-Escrito do zero em 2026-09-19 a partir das falhas que ESTA casa mediu nos proprios
-transcripts e documentou nas proprias regras — cada familia abaixo cita o incidente
-que a comprou. Substitui, por reescrita clean-room, uma versao anterior adaptada de
+Escrito do zero a partir de falhas observadas em transcripts e documentadas como regras —
+cada familia abaixo cita o incidente que a justificou. Substitui, por reescrita clean-room,
+uma versao anterior adaptada de
 um repositorio de terceiro sem licenca declarada (`NOASSERTION` = todos os direitos
 reservados). Nem renomear nem atribuir resolve codigo sem licenca; reescrever a partir
 do proprio dado resolve — e produz uma taxonomia melhor para quem opera Claude Code,
@@ -20,8 +20,8 @@ Sete familias sao o contrato que o `gotchas_memory` le (severidade e prevencao p
 familia). Duas nasceram aqui e nao existem em tabela generica nenhuma:
 
   instrument   o INSTRUMENTO mentiu: o comando devolveu zero, vazio ou parcial e saiu
-               com exit 0 — ou saiu com exit 1 sobre um resultado legitimo. Nesta casa
-               e a familia mais cara, porque o numero PARECE medicao. Casos medidos:
+               com exit 0 — ou saiu com exit 1 sobre um resultado legitimo. E a familia
+               mais cara, porque o numero PARECE medicao. Casos medidos:
                `grep -c` devolvendo exit 1 quando a contagem e 0 · o MSYS convertendo
                todo argumento iniciado por barra em caminho Windows (`/health` vira
                `C:/Program Files/Git/health`, zero hits) · `tar` lendo `X:/` como host
@@ -159,7 +159,7 @@ _FAMILIAS: tuple = (
         sinais=(
             "timeout", "timed out", "etimedout",
             "econnrefused", "connection refused", "conexao recusada", "cannot connect to",
-            "could not resolve host", "resolve failed",   # DNS e' rede (revisor 2026-09-20: estava orfao)
+            "could not resolve host", "resolve failed",   # Why: falha de DNS pertence a rede.
             "econnreset", "connection reset",
             "socket hang up",
             "network is unreachable", "temporary failure in name resolution",
@@ -396,7 +396,7 @@ def _self_test() -> None:
         "env not set", "out of memory", "index.lock",
         "tar (child): Cannot connect to P: resolve failed", "xyz",
     )}) == 9
-    # e a conexao de VERDADE nao e instrumento (checker 2026-09-20): rede escala por teto
+    # Why: conexao recusada e falha de rede; a estrategia escala ate o teto de tentativas.
     assert classify_error("Cannot connect to the Docker daemon") == "transient"
     assert select_strategy("Cannot connect to the Docker daemon", attempt=3, max_retries=3).terminal
     assert classify_error("timeout after 42900ms") != "ratelimit", "429 dentro de 42900 nao e rate limit"

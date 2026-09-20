@@ -11,4 +11,10 @@ hosts:
   claude-code:
     plugin: false
     manual_gates: [hooks, PreToolUse]
+  codex:
+    plugin: false
+    agents: AGENTS.md
+    skills_path: .agents/skills
+    runtime_path: .agents/hpp/kit-forge
+    manual_gates: [hooks, PreToolUse]
 docs: README.md

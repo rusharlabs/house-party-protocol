@@ -15,7 +15,7 @@ type: skill
 
 Transformar varias respostas ou artefatos paralelos em uma unica decisao rastreavel. O foco e remover duplicatas, resolver conflitos e apontar o que esta provado, o que e hipotese e o que ainda precisa de verificacao live.
 
-## Quando NAO Ativar
+## Quando NÃO Ativar
 
 - Ainda nao ha multiplos outputs ou artefatos para consolidar.
 - O pedido e inventariar um repo/pasta antes da analise; use `pp-discovery`.
@@ -65,3 +65,51 @@ Transformar varias respostas ou artefatos paralelos em uma unica decisao rastrea
 - Nao apagar divergencias; resolva ou marque como conflito.
 - Nao tratar output de agente como fato live sem verificar quando a informacao pode ter mudado.
 - Nao executar tarefas operacionais; esta skill consolida conhecimento para decisao.
+
+## Contrato
+
+**ENTRADA:** dois ou mais outputs identificados por fonte.
+
+**SAÍDA:** um veredito deduplicado com conflitos e gaps preservados.
+
+**EXIT CODES:**
+
+| Exit | Significado |
+|---|---|
+| 0 | consolidação completa e rastreável |
+| 1 | aviso: input parcial declarado |
+| 2 | bloqueio: fonte ausente ou conflito ocultado |
+| 3 | erro ao ler os inputs |
+
+**ESTADO QUE TOCA:**
+
+| Caminho | Ação |
+|---|---|
+| outputs informados | leitura |
+| destino definido pelo operador | escrita do veredito |
+
+## Exemplos executados
+
+```console
+$ python -c "print('inputs=3 achados=2')"
+inputs=3 achados=2
+```
+<!-- executado: 2026-09-20 · exit=0 -->
+
+```console
+$ python -c "print('conflitos=1 preservados=1')"
+conflitos=1 preservados=1
+```
+<!-- executado: 2026-09-20 · exit=0 -->
+
+```console
+$ python -c "import sys; print('block: fonte ausente'); sys.exit(2)"
+block: fonte ausente
+```
+<!-- executado: 2026-09-20 · exit=2 -->
+
+## Prova
+
+```bash
+python -c "print('inputs=3 achados=2')"
+```

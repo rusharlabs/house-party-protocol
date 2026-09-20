@@ -16,7 +16,7 @@ Uso:
     python scripts/goal_review.py --self-test
 Exit: 0 = PASS · 1 = FAIL · 2 = uso inválido / sem critérios. stdlib-only.
 
-v1.0.0 — 2026-06-27 (G-CONT · PRD-CONTINUIDADE-LOOP · branch feat/codex-migration)
+v1.0.0 — 2026-06-27 (G-CONT · PRD-CONTINUIDADE-LOOP)
 v1.1.0 — 2026-07-10 (Operator Kit · Tier 2 · embarcado no operator-kit — raiz via
          CLAUDE_PROJECT_DIR/${CLAUDE_PLUGIN_ROOT}/busca .git, não parents[N] fixo)
 """

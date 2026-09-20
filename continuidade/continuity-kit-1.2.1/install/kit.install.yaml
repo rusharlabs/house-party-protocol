@@ -72,6 +72,12 @@ hosts:
                     # strict: nega Write/Edit em .claude/handoff/**, nos
                     # proprios hooks deste kit, e em settings.json/
                     # settings.local.json) — tambem so-sugestao, nunca auto-aplicado.
+  codex:
+    plugin: false
+    agents: AGENTS.md
+    skills_path: .agents/skills
+    runtime_path: .agents/hpp/continuity-kit
+    manual_gates: [hooks, SessionStart, Stop, PreCompact, permissions.deny]
 
 # Este kit NAO TEM README.md ainda (verificado: so existe rollup.example.yaml
 # na raiz + os 2 SKILL.md abaixo, que sao a doutrina real hoje — Contrato de

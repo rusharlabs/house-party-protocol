@@ -1,8 +1,8 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
   "name": "house-party-protocol",
-  "description": "House Party Protocol — todas as armaduras respondem ao chamado. Marketplace distribuivel de kits Claude Code publicados por Max Parisi. Cada plugin e um kit auto-contido, com self-test, SKILL-CONTRACT e MANIFEST.json (sha256) verificaveis via kit_doctor.",
-  "version": "1.4.0",
+  "description": "House Party Protocol — dez kits coordenados por um princípio: nada sai sem uma segunda medição. Marketplace para Claude Code e Codex CLI, com instalação determinística, checkers read-only, self-test, SKILL-CONTRACT e MANIFEST.json verificáveis.",
+  "version": "1.5.0",
   "owner": {
     "name": "Max Parisi",
     "url": "https://rushar.com.br"
@@ -28,7 +28,7 @@
       "name": "operator-kit",
       "displayName": "Operator Kit",
       "source": "./frameworks-com-plugins/operator-kit-1.3.0",
-      "description": "Camada portatil de verdade-antes-de-done, execucao autonoma com guardrails, planejamento spec-driven, paralelismo com teto, memoria que se cura e comunicacao direta. Config-driven por um unico profile.yaml (autonomia + intensidade: lite/full/ultra/off). Inclui o loop /ralph-gate, scripts/debt_ledger.py (divida tecnica) e rules/ (13 regras universais, doutrina instalavel).",
+      "description": "Camada portatil de verdade-antes-de-done, execucao autonoma com guardrails e planejamento spec-driven. Inclui preflight, runbook MCP, loop /ralph-gate, ledger de divida, 13 regras e dois subagents read-only: refutador e silent-failure-hunter.",
       "version": "1.3.0",
       "category": "productivity",
       "keywords": [
@@ -62,7 +62,7 @@
       "name": "lane-kit",
       "displayName": "Lane Kit",
       "source": "./multi-sessao/lane-kit-1.2.0",
-      "description": "N sessoes sem colisao. Lane board com estado CLAIMED->BUILDING->CHECKPOINT-READY->UNDER-REVIEW->VERIFIED/NEEDS-FIX->MERGED, maker!=checker cross-model obrigatorio, lock por diretorio. Depende do continuity-kit. Inclui o subsistema de seguranca: registry de lanes vivas + git-guard + territory-guard.",
+      "description": "N sessoes sem colisao. Lane board, maker!=checker cross-model, lock por diretorio, git-guard e territory-guard. O checker_router detecta Codex, Cursor e Gemini e escolhe um provider diferente do maker.",
       "version": "1.2.0",
       "category": "productivity",
       "keywords": [
@@ -90,7 +90,7 @@
       "name": "claude-dev-kit",
       "displayName": "Claude Dev Kit",
       "source": "./frameworks-com-plugins/claude-dev-kit-1.3.1",
-      "description": "Ferramentas de construir ferramentas: skill-writer + hookify + plugin-dev + teaching (as 4 meta-skills, SKILL-CONTRACT vendorizado) + wire_settings (merge idempotente byte-estavel + --undo) + install_git_hook (encadeia com hook pre-commit existente, nunca sobrescreve) + secret_scan_on_write hook base. +architecture-decision-records +skill-scout +search-first (adaptados do ECC MIT).",
+      "description": "Ferramentas de construir ferramentas: skill-writer, hookify, plugin-dev, teaching, wiring reversivel, secret scan, tres skills adaptadas do ECC MIT e um registro auditavel de skills externas candidatas.",
       "version": "1.3.1",
       "category": "installers",
       "keywords": [
@@ -136,7 +136,7 @@
       "name": "dev-squad-kit",
       "displayName": "Dev Squad Kit",
       "source": "./frameworks-com-plugins/dev-squad-kit-1.0.0",
-      "description": "Squad de 12 agentes de papel (master orchestrator, analyst, architect, data-engineer, dev, devops, pm, po, qa, sm, squad-creator, ux-design-expert) via slash-command, mais 3 skills de leitura/consolidacao paralela token-safe (pp-discovery, pp-raiox, pp-consolidate). Camada de persona/prompt -- nao inclui arvore de tasks/templates proprietaria.",
+      "description": "Squad com 12 papéis disponíveis como slash commands e subagents reais, tools explícitos e QA read-only, mais 3 skills de leitura/consolidação paralela token-safe. Não inclui árvore proprietária de tasks/templates.",
       "version": "1.0.0",
       "category": "agents",
       "keywords": [

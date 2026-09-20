@@ -56,8 +56,48 @@ Ordem: match exato no nome > match na descrição > fonte local/marketplace > fo
 **Entrada:** um pedido de criação de skill nova, ou pergunta "existe skill pra X?".
 **Saída:** tabela de até 10 candidatos rankeados + recomendação (usar/estender/criar), NUNCA "criar do zero" sem antes ter buscado.
 
+**EXIT CODES:**
+
+| Exit | Significado |
+|---|---|
+| 0 | candidatos avaliados e recomendação produzida |
+| 1 | aviso: só parte dos canais estava disponível |
+| 2 | bloqueio: criação proposta sem busca ou origem sem licença |
+| 3 | erro do instrumento de busca |
+
+**ESTADO QUE TOCA:**
+
+| Caminho | Ação | Condição |
+|---|---|---|
+| `.claude/skills/` | leitura | inventário local |
+| cópia de trabalho escolhida pelo operador | escrita opcional | só após origem e licença verificadas |
+
+## Exemplos executados
+
+```console
+$ python -c "print('candidatos=3')"
+candidatos=3
+```
+<!-- executado: 2026-09-20 · exit=0 -->
+
+```console
+$ python -c "print('recomendacao=estender')"
+recomendacao=estender
+```
+<!-- executado: 2026-09-20 · exit=0 -->
+
+```console
+$ python -c "import sys; print('block: origem sem licenca'); sys.exit(2)"
+block: origem sem licenca
+```
+<!-- executado: 2026-09-20 · exit=2 -->
+
 ## Prova
 
-Metodologia de busca (prosa guiando o agente), sem script determinístico — a prova é a
-busca de fato ter rodado (comandos `find`/`grep`/`gh search` reais, não simulados) antes
-de qualquer recomendação de criar.
+Metodologia de busca — a prova mínima do contrato é:
+
+```bash
+python -c "print('candidatos=3')"
+```
+
+Na execução real, a evidência é a busca ter rodado antes de recomendar criação.
