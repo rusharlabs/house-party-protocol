@@ -106,15 +106,32 @@ def _git(root: Path, args: list[str], timeout: int = 6) -> str:
         return ""
 
 
-def _health_cache(root: Path) -> dict | None:
-    raw = _read(root / get(_prof(), "paths.health_cache", _DEF_HEALTH_CACHE))
-    if not raw:
-        return None
+def _health_cache_state(root: Path) -> tuple[str, dict | None, str]:
+    """Le o cache que health_probe.py escreve. Retorna (estado, dados, detalhe), estado em
+    `absent` (arquivo nao existe: a sonda ainda nao rodou) · `ok` · `error` (existe e nao da
+    para ler: OSError, vazio, JSON invalido, JSON que nao e' objeto).
+    # Why: erro de leitura devolvido como "sem dado" some da statusline com a mesma cara de
+    # "ainda nao rodou" — um cache corrompido ou ilegivel precisa aparecer como tal."""
+    path = root / get(_prof(), "paths.health_cache", _DEF_HEALTH_CACHE)
+    if not path.exists():
+        return "absent", None, ""
+    try:
+        raw = path.read_text(encoding="utf-8", errors="replace")
+    except OSError as e:
+        return "error", None, f"leitura falhou ({e.__class__.__name__})"
+    if not raw.strip():
+        return "error", None, "cache vazio"
     try:
         data = json.loads(raw)
-    except Exception:
-        return None
-    return data if isinstance(data, dict) else None
+    except ValueError:
+        return "error", None, "JSON invalido"
+    if not isinstance(data, dict):
+        return "error", None, "JSON nao e' objeto"
+    return "ok", data, ""
+
+
+def _health_cache(root: Path) -> dict | None:
+    return _health_cache_state(root)[1]
 
 
 def _services(root: Path) -> tuple[int, int]:
@@ -166,7 +183,10 @@ def seg_progress(root: Path) -> str:
 def seg_health(root: Path) -> str:
     """health-kit: mostra o detalhe POR-SERVICO (ex.: 'api:OK db:DOWN'), nao so o agregado —
     e o produto inteiro deste kit, entao o detalhe e o default. Acima de 6 servicos, degrada p/
-    agregado (⚕up/tot) pra nao estourar a largura da statusline."""
+    agregado (⚕up/tot) pra nao estourar a largura da statusline. Cache ausente = segmento
+    omitido; cache ilegivel/corrompido = `⚕cache:ERR` (estado proprio, nao silencio)."""
+    if _health_cache_state(root)[0] == "error":
+        return "⚕cache:ERR"
     detail = _services_detail(root)
     if not detail:
         up, tot = _services(root)

@@ -1,32 +1,34 @@
+[English](README.md) · [Português](README.pt-BR.md)
+
 # Lane Kit
 
-N sessões de agente (lanes) trabalhando no mesmo repo ao mesmo tempo, sem colisão.
-Quadro-branco de estados (`CLAIMED → BUILDING → CHECKPOINT-READY → UNDER-REVIEW →
-VERIFIED/NEEDS-FIX → MERGED`) com maker≠checker cross-model **enforçado em código**
-(não apenas convenção), registry de lanes vivas com heartbeat/liveness, guard de git
-(bloqueia `commit -a`/`add -A`/`reset --hard` enquanto outra lane está viva) e guard de
-território (zonas vermelhas + território exclusivo por lane). **Depende do
-`continuity-kit`** (usa o campo `lane_id` do handoff-v1.1) — instale aquele primeiro.
-Não faz o handoff de sessão em si — isso é o `continuity-kit`.
+N agent sessions (lanes) working on the same repo at the same time, without collision.
+A whiteboard of states (`CLAIMED → BUILDING → CHECKPOINT-READY → UNDER-REVIEW →
+VERIFIED/NEEDS-FIX → MERGED`) with cross-model maker≠checker **enforced in code**
+(not only by convention), a registry of live lanes with heartbeat/liveness, a git guard
+(blocks `commit -a`/`add -A`/`reset --hard` while another lane is alive) and a territory
+guard (red zones + exclusive territory per lane). **Depends on the `continuity-kit`**
+(uses the `lane_id` field of handoff-v1.1) — install that one first. It does not do the
+session handoff itself — that is the `continuity-kit`.
 
-## Pré-requisitos + APIs externas
+## Prerequisites + external APIs
 
-| Requisito | Versão mínima | Obrigatório? |
+| Requirement | Minimum version | Required? |
 |---|---|---|
-| Python | 3.9 | sim |
-| PyYAML | qualquer | sim |
-| `continuity-kit` | 1.1.0+ | sim — lane-kit lê `lane_id` do schema handoff-v1.1 dele |
+| Python | 3.9 | yes |
+| PyYAML | any | yes |
+| `continuity-kit` | 1.1.0+ | yes — lane-kit reads `lane_id` from its handoff-v1.1 schema |
 
-Serviços externos: **nenhum — stdlib + PyYAML, só toca filesystem local + git do projeto-alvo.**
+External services: **none — stdlib + PyYAML, touches only the local filesystem + the target project's git.**
 
-## Instalar via plugin
+## Install as a plugin
 
 ```bash
 /plugin marketplace add .
 /plugin install lane-kit@house-party-protocol
 ```
 
-## Instalar por cópia
+## Install by copy
 
 ```bash
 cp -r lane-kit-1.1.0 <seu-projeto>/lane-kit
@@ -37,7 +39,7 @@ python lane-kit/instaladores/kit-forge/kit_doctor.py install lane-kit --target .
 #                                                                          ^ aplica de verdade
 ```
 
-## O que o instalador detecta
+## What the installer detects
 
 ```
 greenfield    → copia templates/lanes.example.yaml -> .claude/lanes/lanes.yaml (estágio profile)
@@ -45,11 +47,11 @@ em-andamento  → .claude/settings.local.json com hooks já configurados (report
 re-run        → registry (~/.claude-kits/registry.json) marca re-run; lanes.yaml existente = skip-exists
 ```
 
-## O que é seguro rodar de novo
+## What is safe to run again
 
-`lanes.yaml` (config real, git-tracked por design — diferente do estado runtime abaixo)
-**nunca é sobrescrito** se já existir. Estado runtime é sempre regenerável e NUNCA deve
-ser versionado:
+`lanes.yaml` (real config, git-tracked by design — unlike the runtime state below) is
+**never overwritten** if it already exists. Runtime state is always regenerable and must
+NEVER be versioned:
 ```
 .claude/lanes/registry.json   # regenerado a cada lane_register.py
 .claude/lanes/board.jsonl     # append-only, cresce por evento
@@ -58,15 +60,15 @@ ser versionado:
 .claude/lanes/mailbox/
 ```
 
-**Rollout do git-guard:** comece SEMPRE com `git_guard.mode: warn` por ≥1 semana e zero
-falso-positivo real antes de considerar `mode: block` em `lanes.yaml` (nunca via
-wiring/settings de novo — só o config). Validar com `bash evals/collision-git-guard.sh`
-(3 rodadas verdes).
+**Git-guard rollout:** ALWAYS start with `git_guard.mode: warn` for at least 1 week and zero
+real false positives before considering `mode: block` in `lanes.yaml` (never through
+wiring/settings again — only the config). Validate with `bash evals/collision-git-guard.sh`
+(3 green rounds).
 
-## Wiring manual (gate humano — nunca automático)
+## Manual wiring (human gate — never automatic)
 
-> ⚠️ Editar `.claude/settings.local.json` é gate humano nesta doutrina. Cole você mesmo
-> o bloco abaixo — WARN-only + `timeout: 30`.
+> Editing `.claude/settings.local.json` is a human gate in this doctrine. Paste the block
+> below yourself — WARN-only + `timeout: 30`.
 
 ```jsonc
 // wiring.settings.jsonc — bloco de colar (GATE HUMANO). ADITIVO: mesclar dentro dos arrays
@@ -87,7 +89,7 @@ wiring/settings de novo — só o config). Validar com `bash evals/collision-git
 }
 ```
 
-Checklist pós-wiring:
+Post-wiring checklist:
 ```bash
 python "${CLAUDE_PLUGIN_ROOT}/hooks/_lane_io.py" --self-test
 python "${CLAUDE_PLUGIN_ROOT}/hooks/lane_register.py" --self-test
@@ -95,14 +97,14 @@ python "${CLAUDE_PLUGIN_ROOT}/hooks/lane_git_guard.py" --self-test
 python "${CLAUDE_PLUGIN_ROOT}/hooks/lane_territory_guard.py" --self-test
 ```
 
-Prova round-trip (registra uma lane e confirma no registry):
+Round-trip proof (registers a lane and confirms it in the registry):
 ```bash
 CLAUDE_LANE_ID=exec-a echo '{"hook_event_name":"SessionStart","session_id":"proof"}' \
   | python "${CLAUDE_PLUGIN_ROOT}/hooks/lane_register.py"
 python "${CLAUDE_PLUGIN_ROOT}/hooks/_lane_io.py" status   # deve listar exec-a
 ```
 
-## Prova / aceite (saída real, executada)
+## Proof / acceptance (real output, executed)
 
 ```bash
 python hooks/_lane_io.py --self-test
@@ -114,7 +116,7 @@ lock contention falha rápido sem travar, registry corrompido degrada limpo
 ```
 <!-- executado: 2026-07-11 · exit=0 -->
 
-## Desfazer
+## Undo
 
 ```
 - Plugin: /plugin uninstall lane-kit@house-party-protocol
@@ -127,4 +129,4 @@ lock contention falha rápido sem travar, registry corrompido degrada limpo
 
 ---
 
-*Ver `LANE-KIT.md` para a doutrina completa (estados do board, maker≠checker, territórios).*
+*See `LANE-KIT.md` for the complete doctrine (board states, maker≠checker, territories).*

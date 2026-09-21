@@ -34,7 +34,7 @@ description: Loop de aprendizado operacional — registra falhas de comandos, de
 | `<store>/curated.jsonl` | Lê/Escreve (append idempotente) | suas regras always-on |
 
 ## Processo
-1. **Instale os hooks** (via plugin ou wire manual — ver README): `PreToolUse Bash → gotcha_preflight.py` e `PostToolUse Bash → gotcha_postflight.py`, ambos `timeout: 30`, WARN-only.
+1. **Instale os hooks** (via plugin ou wire manual — ver README): `PreToolUse Bash → gotcha_preflight.py` e `PostToolUse` + `PostToolUseFailure Bash → gotcha_postflight.py`, todos `timeout: 30`, WARN-only. Os dois eventos de saída apontam para o mesmo script porque o host emite `PostToolUseFailure` quando o Bash falha — o caso que esta memória existe para registrar.
 2. **Seede suas regras** (opcional, idempotente):
    ```bash
    python "${CLAUDE_PLUGIN_ROOT}/_lib/gotchas_memory.py" --seed curated.seed.example.yaml

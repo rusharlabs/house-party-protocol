@@ -1,37 +1,41 @@
+[English](README.md) · [Português](README.pt-BR.md)
+
 # Dev Squad Kit
 
-## 1. O que é
+## 1. What it is
 
-Um squad de 12 agentes de papel via slash-command (`*master`, `*analyst`, `*architect`,
+A squad of 12 role agents via slash-command (`*master`, `*analyst`, `*architect`,
 `*data-engineer`, `*dev`, `*devops`, `*pm`, `*po`, `*qa`, `*sm`, `*squad-creator`,
-`*ux-design-expert`) — cada um com persona própria, comandos numerados e checklist de
-colaboração com os outros — mais 3 skills de leitura/consolidação paralela token-safe
+`*ux-design-expert`) — each with its own persona, numbered commands and a collaboration
+checklist with the others — plus 3 token-safe parallel reading/consolidation skills
 (`pp-discovery`, `pp-raiox`, `pp-consolidate`).
 
-**O que este kit NÃO faz:** não inclui a árvore proprietária de tasks/templates/checklists
-que os comandos `*create`, `*task`, `*workflow`, `*execute-checklist` esperam encontrar em
-`.devsquad-core/{tasks,templates,checklists,data,utils,workflows}/`. Sem essa árvore, esses
-comandos específicos vão falhar ou improvisar. Use os 12 agentes para persona, `*help`,
-`*guide` e delegação de raciocínio entre papéis — ou construa/traga sua própria árvore de
-tasks se quiser os comandos de criação de documento completos.
+**What this kit does NOT do:** it does not include the proprietary tree of
+tasks/templates/checklists that the `*create`, `*task`, `*workflow`, `*execute-checklist`
+commands expect to find in `.devsquad-core/{tasks,templates,checklists,data,utils,workflows}/`.
+Without that tree, those specific commands will fail or improvise. Use the 12 agents for
+persona, `*help`, `*guide` and delegation of reasoning between roles — or build/bring your
+own task tree if you want the complete document-creation commands. Each of the 12 commands
+carries this same notice at the top (the **Dependências fora deste kit:** block), before
+the activation instructions, so the agent knows what to skip when the path does not exist.
 
-## 2. Pré-requisitos + APIs externas
+## 2. Prerequisites + external APIs
 
-| Requisito | Versão mínima | Obrigatório? |
+| Requirement | Minimum version | Required? |
 |---|---|---|
-| Python | 3.9 | só para o `skill_lint.py`/`kit_doctor.py` do instalador |
+| Python | 3.9 | only for the installer's `skill_lint.py`/`kit_doctor.py` |
 
-Serviços externos: **nenhum — stdlib only.** Os 12 agentes são arquivos `.md` de persona
-(prompt), não código executável, e não chamam nenhuma API.
+External services: **none — stdlib only.** The 12 agents are persona `.md` files (prompt),
+not executable code, and call no API.
 
-## 3. Instalar via plugin
+## 3. Install as a plugin
 
 ```bash
 /plugin marketplace add .
 /plugin install dev-squad-kit@house-party-protocol
 ```
 
-## 4. Instalar por cópia
+## 4. Install by copy
 
 ```bash
 cp -r dev-squad-kit <seu-projeto>/dev-squad-kit
@@ -40,7 +44,7 @@ python dev-squad-kit/../instaladores/kit-forge/kit_doctor.py install dev-squad-k
 python dev-squad-kit/../instaladores/kit-forge/kit_doctor.py install dev-squad-kit --target . --apply
 ```
 
-## 5. O que o instalador detecta
+## 5. What the installer detects
 
 ```
 greenfield    → copia os 12 comandos + 3 skills, nada mais a gerar (não há profile.yaml)
@@ -48,17 +52,17 @@ em-andamento  → se já existir commands/<nome>.md com o mesmo nome, reporta co
 re-run        → cópia idempotente; nenhum estado externo pra perder
 ```
 
-## 6. O que é seguro rodar de novo
+## 6. What is safe to run again
 
-Tudo. Não há profile customizável nem estado gerado — os comandos e skills são estáticos.
-Rodar a instalação de novo apenas re-copia os mesmos arquivos.
+Everything. There is no customisable profile and no generated state — the commands and
+skills are static. Running the installation again only re-copies the same files.
 
-## 7. Wiring manual
+## 7. Manual wiring
 
-Nenhum. Este kit não tem hooks — só `commands/` e `skills/`, ambos auto-descobertos pelo
-Claude Code via `.claude-plugin/plugin.json`.
+None. This kit has no hooks — only `commands/` and `skills/`, both auto-discovered by
+Claude Code through `.claude-plugin/plugin.json`.
 
-## 8. Prova (saída real, executada)
+## 8. Proof (real output, executed)
 
 ```
 $ python ../instaladores/kit-forge/tools/skill_lint.py --all skills --run-proofs
@@ -73,19 +77,19 @@ $ python ../instaladores/kit-forge/tools/skill_lint.py --all skills --run-proofs
 skill_lint: 0 pass · 0 warn · 3 fail (de 3)
 ```
 
-**Honestidade de produto:** as 3 skills `pp-*` são metodologia de investigação (prosa
-guiando como inventariar/ler um repo antes de mergulhar), não scripts com output
-determinístico — por isso não têm `--self-test` nem seção `## Prova` no formato que o
-`SKILL-CONTRACT.md` deste marketplace exige para skills-ferramenta. Elas ainda não foram
-atualizadas pro contrato v1.0 formal (seção `## Contrato`, 3 exemplos executados). Funcionam
-como guia de raciocínio; não têm prova mecânica de execução. Documentado aqui em vez de
-escondido — decida se isso serve seu caso antes de instalar.
+**Product honesty:** the 3 `pp-*` skills are investigation methodology (prose guiding how
+to inventory/read a repo before diving in), not scripts with deterministic output — which
+is why they have no `--self-test` and no `## Prova` section in the format that this
+marketplace's `SKILL-CONTRACT.md` requires for tool-skills. They have not yet been updated
+to the formal v1.0 contract (`## Contrato` section, 3 executed examples). They work as a
+reasoning guide; they have no mechanical proof of execution. Documented here rather than
+hidden — decide whether that serves your case before installing.
 
-Os 12 agentes de persona não têm mecanismo de self-test (são prompt, não código) — a prova
-possível é a leitura do `.md` em si, que define determinística e explicitamente comandos,
-personas e regras de colaboração.
+The 12 persona agents have no self-test mechanism (they are prompt, not code) — the
+possible proof is reading the `.md` itself, which deterministically and explicitly defines
+commands, personas and collaboration rules.
 
-## 9. Desfazer
+## 9. Undo
 
 ```
 - Plugin: /plugin uninstall dev-squad-kit@house-party-protocol

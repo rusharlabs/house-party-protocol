@@ -5,7 +5,7 @@ Derivado da árvore emitida: o que cada kit instala, recurso por recurso. Regene
 
 ## Recursos transversais
 
-Documentos válidos para todos os kits: [`ARCHITECTURE.md`](ARCHITECTURE.md) · [`BENCHMARK.md`](BENCHMARK.md) · [`BRAND.md`](BRAND.md) · [`CATALOGO.html`](CATALOGO.html) · [`GITHUB-DESCRIPTION.txt`](GITHUB-DESCRIPTION.txt) · [`GRAPH-MODEL.md`](GRAPH-MODEL.md) · [`LOOPS.md`](LOOPS.md) · [`MANUAL.html`](MANUAL.html) · [`PROOF.md`](PROOF.md) · [`TIPS.md`](TIPS.md) · [`UX-INSTALL-JOURNEY.md`](UX-INSTALL-JOURNEY.md)
+Documentos válidos para todos os kits: [`ARCHITECTURE.md`](ARCHITECTURE.md) · [`ARCHITECTURE.pt-BR.md`](ARCHITECTURE.pt-BR.md) · [`BENCHMARK.md`](BENCHMARK.md) · [`BENCHMARK.pt-BR.md`](BENCHMARK.pt-BR.md) · [`BRAND.md`](BRAND.md) · [`BRAND.pt-BR.md`](BRAND.pt-BR.md) · [`CATALOGO.html`](CATALOGO.html) · [`CONCEPTS.md`](CONCEPTS.md) · [`CONCEPTS.pt-BR.md`](CONCEPTS.pt-BR.md) · [`GITHUB-DESCRIPTION.txt`](GITHUB-DESCRIPTION.txt) · [`GRAPH-MODEL.md`](GRAPH-MODEL.md) · [`GRAPH-MODEL.pt-BR.md`](GRAPH-MODEL.pt-BR.md) · [`LOOPS.md`](LOOPS.md) · [`LOOPS.pt-BR.md`](LOOPS.pt-BR.md) · [`MANUAL.html`](MANUAL.html) · [`METHOD.md`](METHOD.md) · [`METHOD.pt-BR.md`](METHOD.pt-BR.md) · [`PROOF.md`](PROOF.md) · [`PROOF.pt-BR.md`](PROOF.pt-BR.md) · [`TIPS.md`](TIPS.md) · [`TIPS.pt-BR.md`](TIPS.pt-BR.md) · [`UX-INSTALL-JOURNEY.md`](UX-INSTALL-JOURNEY.md)
 
 | kit | versão | skills | commands | agents | hooks | rules | templates | scripts |
 |---|---|---:|---:|---:|---:|---:|---:|---:|
@@ -18,8 +18,8 @@ Documentos válidos para todos os kits: [`ARCHITECTURE.md`](ARCHITECTURE.md) · 
 | [supabase-pack](#supabase-pack) | 1.1.0 | 2 | 0 | 0 | 0 | 0 | 0 | 0 |
 | [agent-framework-wizard](#agent-framework-wizard) | 1.1.1 | 1 | 0 | 0 | 0 | 0 | 4 | 0 |
 | [dev-squad-kit](#dev-squad-kit) | 1.0.0 | 3 | 12 | 12 | 0 | 0 | 0 | 0 |
-| [gotcha-memory](#gotcha-memory) | 1.0.0 | 1 | 0 | 0 | 2 | 0 | 0 | 0 |
-| **total** | | **33** | **14** | **14** | **19** | **13** | **21** | **26** |
+| [gotcha-memory](#gotcha-memory) | 1.0.0 | 1 | 0 | 0 | 3 | 0 | 0 | 0 |
+| **total** | | **33** | **14** | **14** | **20** | **13** | **21** | **26** |
 
 ## kit-forge
 
@@ -224,3 +224,4 @@ Loop de aprendizado operacional standalone: a falha vira conhecimento. Depois de
 |---|---|
 | PreToolUse · `Bash` | `gotcha_preflight.py` |
 | PostToolUse · `Bash` | `gotcha_postflight.py` |
+| PostToolUseFailure · `Bash` | `gotcha_postflight.py` |

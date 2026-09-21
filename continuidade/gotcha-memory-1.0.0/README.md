@@ -1,29 +1,30 @@
+[English](README.md) · [Português](README.pt-BR.md)
+
 # Gotcha Memory
 
-Loop de aprendizado operacional **standalone**: a falha vira conhecimento. Depois de
-cada comando Bash que FALHA, o `gotcha_postflight.py` registra o evento (classificado
-por família de erro via `error_strategy`). Quando o MESMO tipo de falha recorre
-**>= N vezes** numa janela de tempo, vira um **GOTCHA** — uma lição acionável que o
-`gotcha_preflight.py` injeta no stderr ANTES da próxima execução da mesma tarefa.
-Gotchas **curated** (regras suas, seedadas de arquivo) são always-on quando a chave
-casa por substring. Dois hooks, uma fronteira clara: **preflight LÊ as lições,
-postflight ESCREVE as falhas.** Tudo WARN-only (exit 0 sempre) — o loop de
-aprendizado jamais bloqueia o fluxo.
+**Standalone** operational learning loop: the failure becomes knowledge. After each Bash
+command that FAILS, `gotcha_postflight.py` records the event (classified by error family
+through `error_strategy`). When the SAME kind of failure recurs **>= N times** within a
+time window, it becomes a **GOTCHA** — an actionable lesson that `gotcha_preflight.py`
+injects into stderr BEFORE the next execution of the same task. **Curated** gotchas (your
+rules, seeded from a file) are always-on when the key matches by substring. Two hooks, one
+clear boundary: **preflight READS the lessons, postflight WRITES the failures.** Everything
+WARN-only (exit 0 always) — the learning loop never blocks the flow.
 
-**Doutrina embarcada:** detecção CONSERVADORA — só sinal claro de erro conta
-(exit != 0, `is_error`, campo `error`); ambíguo = não-falha. O sistema nunca
-inventa uma falha para "parecer que aprendeu".
+**Embedded doctrine:** CONSERVATIVE detection — only a clear error signal counts
+(exit != 0, `is_error`, `error` field); ambiguous = not a failure. The system never
+invents a failure to "look like it learned".
 
-## Pré-requisitos + APIs externas
+## Prerequisites + external APIs
 
-| Requisito | Versão mínima | Obrigatório? |
+| Requirement | Minimum version | Required? |
 |---|---|---|
-| Python | 3.8 | sim |
-| PyYAML | qualquer | não — só p/ profile e seed `.yaml` (seed `.jsonl` é stdlib) |
+| Python | 3.8 | yes |
+| PyYAML | any | no — only for the profile and `.yaml` seed (`.jsonl` seed is stdlib) |
 
-Serviços externos: **nenhum**. I/O é 100% local (JSONL append/read no store).
+External services: **none**. I/O is 100% local (JSONL append/read in the store).
 
-## O que tem nesta pasta
+## What is in this folder
 
 ```
 gotcha-memory/
@@ -35,7 +36,7 @@ gotcha-memory/
 │   ├── error_strategy.py         ← classificador puro erro→família→estratégia (vendorizado, stdlib)
 │   └── profile_loader.py         ← acha+lê o operator-profile.yaml (vendorizado; degrada p/ defaults)
 ├── hooks/
-│   ├── hooks.json                ← PreToolUse Bash → preflight · PostToolUse Bash → postflight
+│   ├── hooks.json                ← PreToolUse Bash → preflight · PostToolUse + PostToolUseFailure Bash → postflight
 │   ├── gotcha_preflight.py       ← injeta o preâmbulo "⚠️ GOTCHAS" no stderr antes do comando
 │   └── gotcha_postflight.py      ← registra a falha depois do comando (conservador)
 ├── skills/
@@ -46,20 +47,23 @@ gotcha-memory/
     └── plugin.json               ← manifesto do plugin
 ```
 
-## Instalar via plugin (1 clique)
+## Install as a plugin (1 click)
 
 ```bash
 /plugin marketplace add .
 /plugin install gotcha-memory@house-party-protocol
 ```
 
-Instala os 2 hooks (`PreToolUse`/`PostToolUse`, matcher `Bash`) via
-`${CLAUDE_PLUGIN_ROOT}` — nenhum path relativo hardcoded.
+Installs the hooks (`PreToolUse` → preflight; `PostToolUse` **and** `PostToolUseFailure` →
+postflight, matcher `Bash`) through `${CLAUDE_PLUGIN_ROOT}` — no hardcoded relative path.
+The host emits `PostToolUseFailure` when Bash fails; listening only to `PostToolUse` would
+leave the memory blind to the failure. The same call (`tool_use_id`) becomes **one** record,
+however many events arrive.
 
-## Instalar por cópia (wire manual)
+## Install by copy (manual wire)
 
-Copie a pasta para o seu projeto e cole em `.claude/settings.local.json` (o wire de
-hooks é **gate-humano** por design — editar settings é decisão sua):
+Copy the folder into your project and paste into `.claude/settings.local.json` (wiring
+hooks is a **human gate** by design — editing settings is your decision):
 
 ```json
 {
@@ -73,6 +77,11 @@ hooks é **gate-humano** por design — editar settings é decisão sua):
       { "matcher": "Bash", "hooks": [
         { "type": "command", "command": "python \"gotcha-memory/hooks/gotcha_postflight.py\"", "timeout": 30 }
       ]}
+    ],
+    "PostToolUseFailure": [
+      { "matcher": "Bash", "hooks": [
+        { "type": "command", "command": "python \"gotcha-memory/hooks/gotcha_postflight.py\"", "timeout": 30 }
+      ]}
     ]
   }
 }
@@ -80,11 +89,11 @@ hooks é **gate-humano** por design — editar settings é decisão sua):
 
 ## Config (operator-profile.yaml)
 
-Copie de `profile.example.yaml`. Sem profile, defaults: store `.claude/gotchas/`,
-janela 24h, min_count 3, top 5. Override de store também via env `GOTCHA_STORE_DIR`.
-Recomendado **gitignorar o store** (memória local regenerável).
+Copy from `profile.example.yaml`. Without a profile, defaults: store `.claude/gotchas/`,
+24h window, min_count 3, top 5. The store can also be overridden through the
+`GOTCHA_STORE_DIR` env var. Recommended: **gitignore the store** (regenerable local memory).
 
-## Uso direto (CLI)
+## Direct use (CLI)
 
 ```bash
 python _lib/gotchas_memory.py                                  # demo do loop inteiro (store temporário)
@@ -93,7 +102,7 @@ python _lib/gotchas_memory.py --seed curated.seed.example.yaml # seeda suas regr
 python _lib/gotchas_memory.py --preamble "rodar o deploy"      # o que o agente veria antes dessa task
 ```
 
-## Verificação (o critério de "instalado e funcionando")
+## Verification (the criterion for "installed and working")
 
 ```bash
 python _lib/error_strategy.py --self-test      # OK
@@ -102,20 +111,20 @@ python hooks/gotcha_preflight.py --self-test   # self-test OK
 python hooks/gotcha_postflight.py --self-test  # self-test OK
 ```
 
-Teste ponta-a-ponta do loop: provoque 3 falhas iguais (`bash -c "exit 1"` com a mesma
-description) e confirme que o próximo preflight da mesma tarefa imprime
-`[gotcha-memory] ⚠️ GOTCHAS … [3x]` no stderr.
+End-to-end test of the loop: provoke 3 identical failures (`bash -c "exit 1"` with the same
+description) and confirm that the next preflight of the same task prints
+`[gotcha-memory] ⚠️ GOTCHAS … [3x]` to stderr.
 
-## Limites honestos
+## Honest limits
 
-- Só a tool **Bash** é observada (matcher dos hooks). Ampliar = novos matchers + derivação de task_key por tool.
-- Falha silenciosa (exit 0 com resultado errado) não é capturada — por design (conservador).
-- A task_key é `description || cmd[:80]`: descriptions estáveis geram aprendizado melhor que comandos longos e únicos.
-- O seed de exemplo é genérico de propósito — as lições valiosas são as SUAS (e as que o próprio loop aprende).
+- Only the **Bash** tool is observed (the hooks' matcher). Widening = new matchers + task_key derivation per tool.
+- Silent failure (exit 0 with a wrong result) is not captured — by design (conservative).
+- The task_key is `description || cmd[:80]`: stable descriptions produce better learning than long, unique commands.
+- The example seed is generic on purpose — the valuable lessons are YOURS (and the ones the loop itself learns).
 
-## Proveniência
+## Provenance
 
-Extração standalone do loop de gotchas do repo-de-origem
-(`gotchas_memory` + `error_strategy` + hooks agentic pre/postflight), despersonalizada:
-o seed hardcoded do dono foi removido e substituído por `seed_from_file()` +
-`curated.seed.example.yaml`. Licença MIT.
+Standalone extraction of the gotcha loop from the origin repo
+(`gotchas_memory` + `error_strategy` + agentic pre/postflight hooks), de-personalised:
+the owner's hardcoded seed was removed and replaced by `seed_from_file()` +
+`curated.seed.example.yaml`. MIT licence.

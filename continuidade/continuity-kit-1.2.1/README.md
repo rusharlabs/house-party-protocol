@@ -1,31 +1,33 @@
+[English](README.md) · [Português](README.pt-BR.md)
+
 # Continuity Kit
 
-Uma sessão de agente sobrevive a parada/`/clear`/crash sem perder o próximo passo. O
-handoff (schema `handoff-v1.1`) grava um bloco git (branch/commit/staged) + um
-`re_derive_cmd` (LC-1 — re-derivar o estado ao vivo, nunca confiar no que ficou escrito)
-+ um `verify_first_cmd` (LC-4 — antes de continuar uma ação que o handoff descreve,
-verificar se ela já foi feita, nunca re-disparar cego). Inclui também **doc-rollup**
-(histórico/evolução do projeto que se consolida sozinho, com degradação embutida acima
-de limiares de tamanho). Não faz multi-sessão/lanes — para isso, ver `lane-kit` (que
-depende deste kit).
+An agent session survives a stop/`/clear`/crash without losing the next step. The
+handoff (schema `handoff-v1.1`) records a git block (branch/commit/staged) + a
+`re_derive_cmd` (LC-1 — re-derive the state live, never trust what was left written)
++ a `verify_first_cmd` (LC-4 — before continuing an action the handoff describes,
+check whether it was already done, never re-fire blindly). It also includes **doc-rollup**
+(project history/evolution that consolidates itself, with built-in degradation above size
+thresholds). It does not do multi-session/lanes — for that, see `lane-kit` (which depends
+on this kit).
 
-## Pré-requisitos + APIs externas
+## Prerequisites + external APIs
 
-| Requisito | Versão mínima | Obrigatório? |
+| Requirement | Minimum version | Required? |
 |---|---|---|
-| Python | 3.8 | sim |
-| PyYAML | qualquer | sim — `doc_rollup.py` sai exit 2 sem ela; `state_mirror.py` vira no-op silencioso sem ela |
+| Python | 3.8 | yes |
+| PyYAML | any | yes — `doc_rollup.py` exits 2 without it; `state_mirror.py` becomes a silent no-op without it |
 
-Serviços externos: **nenhum — stdlib + PyYAML, só toca filesystem local + git do projeto-alvo.**
+External services: **none — stdlib + PyYAML, touches only the local filesystem + the target project's git.**
 
-## Instalar via plugin
+## Install as a plugin
 
 ```bash
 /plugin marketplace add .
 /plugin install continuity-kit@house-party-protocol
 ```
 
-## Instalar por cópia
+## Install by copy
 
 ```bash
 cp -r continuity-kit-1.1.0 <seu-projeto>/continuity-kit
@@ -35,10 +37,10 @@ python continuity-kit/instaladores/kit-forge/kit_doctor.py install continuity-ki
 python continuity-kit/instaladores/kit-forge/kit_doctor.py install continuity-kit --target . --apply
 #                                                                                     ^ aplica de verdade
 ```
-(ajuste o path do `kit_doctor.py` para onde o kit-forge foi copiado — é o motor único de
-instalação de todo o marketplace, ver `INSTALL-CONTRACT.md`.)
+(adjust the `kit_doctor.py` path to wherever kit-forge was copied — it is the single
+installation engine of the whole marketplace, see `INSTALL-CONTRACT.md`.)
 
-## O que o instalador detecta
+## What the installer detects
 
 ```
 greenfield    → copia rollup.example.yaml -> rollup.yaml (estágio profile); nenhum handoff prévio
@@ -46,19 +48,19 @@ em-andamento  → detecta .claude/settings.local.json já com hooks configurados
 re-run        → rollup.yaml já existe -> skip-exists; registry (~/.claude-kits/registry.json) marca re-run
 ```
 
-## O que é seguro rodar de novo
+## What is safe to run again
 
-O estágio `profile` do `kit_doctor.py` **nunca sobrescreve** `rollup.yaml` se ele já
-existir (skip-exists, reportado explicitamente — não silencioso). O conteúdo do handoff
-em si (`.claude/handoff/HANDOFF-LEDGER.jsonl`) é append-only por design (cada evento vira
-uma linha nova; nada é reescrito). Rodar `kit_doctor.py install --apply` de novo é seguro:
-customização em `rollup.yaml` sobrevive.
+The `profile` stage of `kit_doctor.py` **never overwrites** `rollup.yaml` if it already
+exists (skip-exists, reported explicitly — not silently). The handoff content itself
+(`.claude/handoff/HANDOFF-LEDGER.jsonl`) is append-only by design (each event becomes a
+new line; nothing is rewritten). Running `kit_doctor.py install --apply` again is safe:
+customisation in `rollup.yaml` survives.
 
-## Wiring manual (gate humano — nunca automático)
+## Manual wiring (human gate — never automatic)
 
-> ⚠️ Editar `.claude/settings.local.json` é gate humano nesta doutrina — sessões
-> automatizadas têm trava explícita contra auto-editar arquivo de settings/hooks. Cole
-> você mesmo o bloco abaixo — WARN-only + `timeout: 30`.
+> Editing `.claude/settings.local.json` is a human gate in this doctrine — automated
+> sessions have an explicit lock against self-editing settings/hooks files. Paste the
+> block below yourself — WARN-only + `timeout: 30`.
 
 ```jsonc
 // wiring.settings.jsonc — bloco de colar (GATE HUMANO — o classifier bloqueia auto-edit de
@@ -95,7 +97,7 @@ customização em `rollup.yaml` sobrevive.
 }
 ```
 
-Checklist pós-wiring (rodar o round-trip real, não presumir — LC-1):
+Post-wiring checklist (run the real round-trip, do not presume — LC-1):
 ```bash
 python "${CLAUDE_PLUGIN_ROOT}/hooks/_handoff_io.py" --self-test
 python "${CLAUDE_PLUGIN_ROOT}/hooks/_handoff_io.py" write --demo --lane solo
@@ -103,7 +105,7 @@ echo '{"hook_event_name":"SessionStart","session_id":"proof"}' | python "${CLAUD
 tail -1 .claude/handoff/HANDOFF-LEDGER.jsonl   # confirmar "event": "consumed"
 ```
 
-## Prova / aceite (saída real, executada)
+## Proof / acceptance (real output, executed)
 
 ```bash
 python hooks/_handoff_io.py --self-test
@@ -115,13 +117,13 @@ degraded-auto
 ```
 <!-- executado: 2026-07-11 · exit=0 -->
 
-Prova estendida (round-trip real via a interface de hook — stdin JSON → stdout JSON, C1-C4:
+Extended proof (real round-trip through the hook interface — stdin JSON → stdout JSON, C1-C4:
 round-trip, staleness, degraded-auto <5s, anti-replay LC-4):
 ```bash
 bash evals/handoff-roundtrip-C1-C4.sh
 ```
 
-## Desfazer
+## Undo
 
 ```
 - Plugin: /plugin uninstall continuity-kit@house-party-protocol
@@ -134,4 +136,4 @@ bash evals/handoff-roundtrip-C1-C4.sh
 
 ---
 
-*Ver `LANE-KIT.md` (kit irmão) para multi-sessão/lanes — este kit é o alicerce single-lane.*
+*See `LANE-KIT.md` (sibling kit) for multi-session/lanes — this kit is the single-lane foundation.*

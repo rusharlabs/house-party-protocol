@@ -6,7 +6,7 @@ Este kit transforma falhas recorrentes em lições operacionais consultáveis.
 
 - Instale por cópia com `kit_doctor.py install --kit <gotcha-memory> --host codex --target <repo> --apply`.
 - Runtime e memória de exemplo ficam em `.agents/hpp/gotcha-memory/`.
-- Hooks `PreToolUse`/`PostToolUse` do Claude Code não são ativados no Codex; use os scripts explicitamente.
+- Hooks `PreToolUse`/`PostToolUse`/`PostToolUseFailure` do Claude Code não são ativados no Codex; use os scripts explicitamente.
 
 ## Verificação
 
