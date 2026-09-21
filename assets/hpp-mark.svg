@@ -1,11 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title desc">
   <title id="title">House Party Protocol mark</title>
   <desc id="desc">A signal crosses two gates and ends in a verified node.</desc>
-  <rect width="256" height="256" rx="52" fill="#0C0F0E"/>
-  <path d="M38 128H92M164 128H218" stroke="#5DE4C7" stroke-width="14" stroke-linecap="round"/>
-  <path d="M92 72V184M164 72V184" stroke="#F2F0E9" stroke-width="14" stroke-linecap="round"/>
-  <path d="M92 98H164M92 158H164" stroke="#D7FF64" stroke-width="14" stroke-linecap="round"/>
-  <circle cx="38" cy="128" r="13" fill="#FF6B5F"/>
-  <circle cx="218" cy="128" r="16" fill="#D7FF64"/>
-  <path d="m211 128 5 5 10-12" fill="none" stroke="#0C0F0E" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect width="256" height="256" rx="52" fill="#0F1113"/>
+  <path d="M38 128H92M164 128H218" stroke="#FF8A3D" stroke-width="14" stroke-linecap="round"/>
+  <path d="M92 72V184M164 72V184" stroke="#F4F1EB" stroke-width="14" stroke-linecap="round"/>
+  <path d="M92 98H164M92 158H164" stroke="#FF6A00" stroke-width="14" stroke-linecap="round"/>
+  <circle cx="38" cy="128" r="13" fill="#E5484D"/>
+  <circle cx="218" cy="128" r="16" fill="#FF6A00"/>
+  <path d="m211 128 5 5 10-12" fill="none" stroke="#0F1113" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

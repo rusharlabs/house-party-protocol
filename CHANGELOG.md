@@ -5,6 +5,39 @@ Todas as mudanças relevantes do harness são registradas aqui. O formato segue
 [SemVer](https://semver.org/lang/pt-BR/). A versão do produto descreve o contrato do harness;
 cada módulo mantém sua própria versão no `plugin.json` e no `marketplace.json`.
 
+## [2.3.0] — 2026-09-21
+
+### Adicionado
+
+- **`hpp init` — a instalação virou uma experiência.** Um wizard que cumpre os seis estágios do
+  contrato de instalação (`detect → prereqs → profile → configure → wire-suggest → smoke`), com
+  sequência de abertura onde **cada linha aparece quando o estágio correspondente termina de
+  verdade** — o movimento é o progresso, não enfeite. Fecha com o lockup da marca em blocos de
+  terminal e a assinatura da instalação.
+- **Readiness medido, não estimado.** Uma barra e uma contagem (`7/11 verified`) derivadas do que
+  foi de fato verificado — host, integridade da distribuição, checksum por módulo, classificador
+  de política, gate de benchmark. Cada item mostra o comando que o produziu, e o que não foi
+  medido aparece como **não verificado**, nunca como zero nem como cem.
+- **Degradação declarada de cor e movimento:** truecolor → 256 cores → 16 cores → nenhuma, com
+  `NO_COLOR` e `--no-animation` respeitados, fallback de glifo quando o terminal não codifica
+  blocos, e saída completa sem TTY. `--non-interactive`, `--yes`, `--profile` e `--modules` para
+  CI e agentes: nenhum prompt é alcançado nesse modo.
+- Sem `--apply`, o wizard **imprime o plano e não escreve nada** — provado por hash da árvore
+  antes e depois. `wire-suggest` mostra o bloco para colar e nunca toca em `settings`.
+
+### Alterado
+
+- **Identidade visual unificada na marca aprovada.** O material anterior usava uma paleta que
+  antecedia o lockup e não tinha relação com ele. Agora são quatro cores e um acento só — preto,
+  carvão, branco-quente e laranja de sinal —, medidas no próprio lockup. O README abre com a arte
+  oficial, e `docs/BRAND.md` descreve o sistema, incluindo como a marca se comporta no terminal.
+
+### Corrigido
+
+- A suíte carregava um **caminho absoluto com nome de usuário**, o que a prendia a uma única
+  máquina e fazia esse caminho viajar no pacote publicado. A raiz passou a ser derivada da posição
+  do arquivo, com `HPP_EMITTED_COPY` para apontar outra árvore.
+
 ## [2.2.0] — 2026-09-21
 
 ### Adicionado
@@ -146,3 +179,4 @@ publicar.
 [2.0.0]: https://github.com/rushar-labs/house-party-protocol/releases/tag/v2.0.0
 [2.1.0]: https://github.com/rushar-labs/house-party-protocol/releases/tag/v2.1.0
 [2.2.0]: https://github.com/rushar-labs/house-party-protocol/releases/tag/v2.2.0
+[2.3.0]: https://github.com/rushar-labs/house-party-protocol/releases/tag/v2.3.0

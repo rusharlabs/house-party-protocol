@@ -18,6 +18,7 @@ from hpp.maps import build_agent_map, build_context_map, build_lane_map, build_m
 from hpp.policy import assess, exit_for as policy_exit_for
 from hpp.routing import route
 from hpp.state import StateError, append_event, event_path, project, read_events
+from hpp.wizard import InitUsageError, prepare_options, run_init_command
 from hpp.workgraph import compile_workgraph
 
 
@@ -72,6 +73,16 @@ def command_install(args: argparse.Namespace) -> int:
     plan = installation_plan(manifest, args.bundle, args.host, target)
     _json(plan)
     return 0
+
+
+def command_init(args: argparse.Namespace) -> int:
+    manifest, path = _manifest(args)
+    try:
+        options = prepare_options(args, manifest)
+    except InitUsageError as exc:
+        print(f"hpp init: {exc}", file=sys.stderr)
+        return 3
+    return run_init_command(options, manifest, path, json_output=args.json, no_animation=args.no_animation)
 
 
 def command_policy(args: argparse.Namespace) -> int:
@@ -235,6 +246,30 @@ def build_parser() -> argparse.ArgumentParser:
     install.add_argument("--host", required=True)
     install.add_argument("--target", required=True)
     install.set_defaults(func=command_install)
+
+    init = sub.add_parser(
+        "init",
+        description="Six fixed stages (detect, prereqs, profile, configure, wire-suggest, smoke). "
+                    "Without --apply it only prints what it would do; wire-suggest never writes settings.",
+    )
+    init.add_argument("--manifest")
+    init.add_argument("--target", default=".", help="project to initialise (default: current directory)")
+    init.add_argument("--apply", action="store_true", help="write .hpp/profile.json inside the target (default: plan only)")
+    init.add_argument("--host", help="host to plan for; defaults to the manifest's first supported host")
+    init.add_argument("--bundle", help="bundle to plan; ignored when --modules is given")
+    init.add_argument("--modules", help="comma-separated module ids instead of a bundle")
+    init.add_argument("--policy-mode", dest="policy_mode", choices=["audit", "enforce"],
+                      help="how the command policy should run in the suggested wiring")
+    init.add_argument("--profile", help="JSON file with answers: host, bundle, policy_mode, modules")
+    init.add_argument("--yes", action="store_true", help="accept every default without prompting")
+    init.add_argument("--non-interactive", dest="non_interactive", action="store_true",
+                      help="never prompt; unanswered questions take their defaults")
+    init.add_argument("--no-animation", dest="no_animation", action="store_true", help="plain output, no cursor tricks")
+    init.add_argument("--no-benchmark", dest="no_benchmark", action="store_true",
+                      help="skip the benchmark control in smoke (reported as not verified)")
+    init.add_argument("--marketplace", help="marketplace slug used in the Claude Code wire block")
+    init.add_argument("--json", action="store_true", help="machine-readable report, no animation, no colour")
+    init.set_defaults(func=command_init)
 
     policy = sub.add_parser("policy")
     policy_sub = policy.add_subparsers(dest="policy_command", required=True)

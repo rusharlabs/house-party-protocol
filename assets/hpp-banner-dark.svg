@@ -1,18 +1,18 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 360" role="img" aria-labelledby="title desc">
   <title id="title">House Party Protocol, dark</title>
   <desc id="desc">Operate coding agents under evidence, not trust.</desc>
-  <rect width="1200" height="360" rx="36" fill="#0C0F0E"/>
-  <path d="M0 302C210 244 360 326 566 278s354-32 634-120v202H0Z" fill="#5DE4C7" opacity=".09"/>
+  <rect width="1200" height="360" rx="36" fill="#0F1113"/>
+  <path d="M0 302C210 244 360 326 566 278s354-32 634-120v202H0Z" fill="#FF8A3D" opacity=".09"/>
   <g transform="translate(64 52)">
-    <rect width="256" height="256" rx="52" fill="#F2F0E9"/>
-    <path d="M38 128H92M164 128H218" stroke="#5DE4C7" stroke-width="14" stroke-linecap="round"/>
-    <path d="M92 72V184M164 72V184" stroke="#0C0F0E" stroke-width="14" stroke-linecap="round"/>
-    <path d="M92 98H164M92 158H164" stroke="#D7FF64" stroke-width="14" stroke-linecap="round"/>
-    <circle cx="38" cy="128" r="13" fill="#FF6B5F"/><circle cx="218" cy="128" r="16" fill="#D7FF64"/>
+    <rect width="256" height="256" rx="52" fill="#F4F1EB"/>
+    <path d="M38 128H92M164 128H218" stroke="#FF8A3D" stroke-width="14" stroke-linecap="round"/>
+    <path d="M92 72V184M164 72V184" stroke="#0F1113" stroke-width="14" stroke-linecap="round"/>
+    <path d="M92 98H164M92 158H164" stroke="#FF6A00" stroke-width="14" stroke-linecap="round"/>
+    <circle cx="38" cy="128" r="13" fill="#E5484D"/><circle cx="218" cy="128" r="16" fill="#FF6A00"/>
   </g>
-  <text x="374" y="119" font-family="JetBrains Mono, Cascadia Code, Consolas, monospace" font-size="20" letter-spacing="5" fill="#B8C2BC">HOUSE PARTY PROTOCOL</text>
-  <text x="372" y="191" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="44" font-weight="760" fill="#F2F0E9">Operate coding agents</text>
-  <text x="372" y="246" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="44" font-weight="760" fill="#F2F0E9">under evidence, not trust.</text>
-  <path d="M374 285H1092" stroke="#F2F0E9" stroke-width="2" opacity=".17"/>
-  <circle cx="782" cy="285" r="8" fill="#FF6B5F"/><circle cx="934" cy="285" r="8" fill="#5DE4C7"/><circle cx="1092" cy="285" r="10" fill="#D7FF64"/>
+  <text x="374" y="119" font-family="JetBrains Mono, Cascadia Code, Consolas, monospace" font-size="20" letter-spacing="5" fill="#A8ADB5">HOUSE PARTY PROTOCOL</text>
+  <text x="372" y="191" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="44" font-weight="760" fill="#F4F1EB">Operate coding agents</text>
+  <text x="372" y="246" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="44" font-weight="760" fill="#F4F1EB">under evidence, not trust.</text>
+  <path d="M374 285H1092" stroke="#F4F1EB" stroke-width="2" opacity=".17"/>
+  <circle cx="782" cy="285" r="8" fill="#E5484D"/><circle cx="934" cy="285" r="8" fill="#FF8A3D"/><circle cx="1092" cy="285" r="10" fill="#FF6A00"/>
 </svg>

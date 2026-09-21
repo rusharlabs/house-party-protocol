@@ -1,22 +1,27 @@
 """Verificacao de integridade dos modulos distribuidos, via CHECKSUMS.txt.
 
-product-root/ (esta arvore) nao contem os diretorios fisicos dos modulos nem
-marketplace.json -- eles so existem na COPIA EMITIDA, montada por outra etapa do
-pipeline de publicacao. Este arquivo le essa copia como referencia SOMENTE
-LEITURA, no caminho fixo documentado pela tarefa que gerou esta suite. Ela nao
-existe em nenhum runner de CI (que so clona o conteudo publicado) nem em um
-clone novo desta maquina -- nesses casos o teste PULA, explicitamente, em vez de
-falhar por um caminho que nunca existiria ali.
+A arvore-FONTE nao contem os diretorios fisicos dos modulos nem marketplace.json --
+eles so existem na COPIA EMITIDA, montada por outra etapa do pipeline. Rodando de
+dentro da copia emitida (o caso de quem instalou, e o do CI sobre o conteudo
+publicado), a raiz e o proprio diretorio acima de `tests/`; rodando da fonte, nao ha
+o que conferir e o teste PULA, explicitamente.
+
+# Why: o caminho era absoluto e carregava o nome de usuario de UMA maquina. Um teste
+# assim nunca roda em lugar nenhum alem dela, e o caminho pessoal viaja dentro do
+# pacote publicado. A raiz se DERIVA da posicao do arquivo; HPP_EMITTED_COPY permite
+# apontar para outra arvore sem editar codigo.
 """
 from __future__ import annotations
 
 import hashlib
 import json
+import os
 from pathlib import Path
 
 import pytest
 
-EMITTED_COPY = Path(r"C:\Users\liver\Desktop\house-party-protocol")
+_RAIZ_DERIVADA = Path(__file__).resolve().parents[1]
+EMITTED_COPY = Path(os.environ.get("HPP_EMITTED_COPY") or _RAIZ_DERIVADA)
 MARKETPLACE = EMITTED_COPY / "marketplace.json"
 
 

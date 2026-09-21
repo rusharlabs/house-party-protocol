@@ -1,14 +1,13 @@
 <p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="assets/hpp-banner-dark.svg">
-    <img alt="House Party Protocol — operate coding agents under evidence, not trust" src="assets/hpp-banner-light.svg" width="100%">
-  </picture>
+  <img alt="House Party Protocol — by Rushar Labs" src="assets/hpp-logo.png" width="620">
 </p>
 
+<p align="center"><sub><code>AGENTS &nbsp;·&nbsp; EVIDENCE &nbsp;·&nbsp; MEMORY &nbsp;·&nbsp; PROTOCOL &nbsp;·&nbsp; CONTINUITY</code></sub></p>
+
 <p align="center">
-  <a href="LICENSE"><img alt="MIT" src="https://img.shields.io/badge/license-MIT-0C0F0E"></a>
-  <a href="#quickstart"><img alt="Python 3.9+" src="https://img.shields.io/badge/Python-3.9%2B-5DE4C7"></a>
-  <img alt="Claude Code and Codex CLI" src="https://img.shields.io/badge/hosts-Claude%20Code%20%7C%20Codex%20CLI-D7FF64">
+  <a href="LICENSE"><img alt="MIT" src="https://img.shields.io/badge/license-MIT-0F1113"></a>
+  <a href="#quickstart"><img alt="Python 3.10+" src="https://img.shields.io/badge/Python-3.10%2B-FF6A00"></a>
+  <img alt="Claude Code and Codex CLI" src="https://img.shields.io/badge/hosts-Claude%20Code%20%7C%20Codex%20CLI-F4F1EB">
 </p>
 
 # House Party Protocol
