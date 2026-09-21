@@ -27,7 +27,8 @@ Toda escrita gera backup `<target>.bak-<timestamp>` ANTES, valida o JSON DEPOIS 
 automático se quebrar) e grava `<target>.wire-undo.json` apontando pro backup mais recente,
 para o --undo funcionar sem precisar lembrar o timestamp.
 
-Exit: 0 ok (wired ou no-op) · 1 warn (conflito sem --force, nada sobrescrito) · 3 erro.
+Exit: 0 ok (wired ou no-op) · 1 warn (conflito sem --force, nada sobrescrito) ·
+2 block (o alvo mudou entre a leitura e a escrita — nada gravado, rode de novo) · 3 erro.
 stdlib + PyYAML. v1.0.0 — 2026-07-10 (FASE 1 · kit-forge)
 """
 from __future__ import annotations
@@ -35,6 +36,7 @@ from __future__ import annotations
 import argparse
 import datetime
 import json
+import os
 import shutil
 import sys
 from pathlib import Path
@@ -84,25 +86,40 @@ def apply_spec(data: dict, spec: dict, force: bool):
     return data, changed, warnings
 
 
-def _write_json_atomic(target: Path, data: dict, backup: Path):
+def _write_json_atomic(target: Path, data: dict, *, expected_bytes: bytes | None = None) -> str:
+    """Grava `data` em `target` sem janela de corrupção. Retorna "ok" | "invalid" | "conflict".
+
+    # Why: escrever direto no alvo deixa um settings.json truncado se o processo cair no
+    # meio, e sobrescreve o que outro processo gravou entre a leitura e a escrita. O
+    # temporario fica no MESMO diretorio (os.replace so e atomico no mesmo volume) e a
+    # comparacao byte-a-byte com o que foi lido recusa a escrita em vez de perder a alheia.
+    """
     out = json.dumps(data, indent=2, ensure_ascii=False) + "\n"
-    target.write_text(out, encoding="utf-8")
     try:
-        json.loads(target.read_text(encoding="utf-8"))
+        json.loads(out)
     except json.JSONDecodeError:
-        shutil.copy2(backup, target)
-        return False
-    return True
+        return "invalid"
+    tmp = target.with_name(f".{target.name}.tmp-{os.getpid()}")
+    try:
+        tmp.write_text(out, encoding="utf-8")
+        with tmp.open("r+b") as fh:
+            os.fsync(fh.fileno())
+        if expected_bytes is not None and target.read_bytes() != expected_bytes:
+            return "conflict"
+        os.replace(tmp, target)
+    finally:
+        tmp.unlink(missing_ok=True)
+    return "ok"
 
 
 def wire(target: Path, spec: dict, force: bool) -> tuple:
     if not target.exists():
         return 3, {"status": "error", "errors": [f"target não existe: {target}"]}
 
-    raw = target.read_text(encoding="utf-8")
+    raw_bytes = target.read_bytes()
     try:
-        data = json.loads(raw)
-    except json.JSONDecodeError as e:
+        data = json.loads(raw_bytes.decode("utf-8"))
+    except (json.JSONDecodeError, UnicodeDecodeError) as e:
         return 3, {"status": "error", "errors": [f"JSON inválido em {target}: {e}"]}
 
     stamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S%f")
@@ -116,9 +133,13 @@ def wire(target: Path, spec: dict, force: bool) -> tuple:
         status = "warn" if warnings else "no-op"
         return (1 if warnings else 0), {"status": status, "changed": [], "warnings": warnings}
 
-    ok = _write_json_atomic(target, new_data, backup)
-    if not ok:
-        return 3, {"status": "error", "errors": ["JSON ficou inválido após escrita — restaurado do backup"]}
+    result = _write_json_atomic(target, new_data, expected_bytes=raw_bytes)
+    if result == "conflict":
+        backup.unlink(missing_ok=True)
+        return 2, {"status": "conflict", "errors": [f"{target} mudou entre a leitura e a escrita — nada foi gravado; rode de novo"]}
+    if result != "ok":
+        backup.unlink(missing_ok=True)
+        return 3, {"status": "error", "errors": ["JSON gerado ficou inválido — nada foi gravado"]}
 
     undo_state = target.with_name(target.name + ".wire-undo.json")
     undo_state.write_text(json.dumps({"target": str(target), "backup": str(backup)}), encoding="utf-8")
@@ -193,7 +214,48 @@ def _self_test() -> int:
         assert undo_code == 0 and undo_report["status"] == "restored", f"undo falhou: {undo_report}"
         assert target.read_bytes() == original_bytes, "undo não restaurou byte-idêntico ao original"
 
-        print("self-test OK — wire idempotente, conflito sem --force preservado, --force sobrescreve, --undo byte-idêntico")
+        # Queda no meio da escrita: o alvo NÃO pode ficar truncado
+        crash_target = tmp / "crash.json"
+        crash_target.write_text(json.dumps({"hooks": {}, "dono": "eu"}), encoding="utf-8")
+        antes = crash_target.read_bytes()
+        _orig_write_text = Path.write_text
+
+        def _cai_no_meio(self, data, *a, **k):
+            with open(self, "w", encoding="utf-8") as f:
+                f.write(data[: len(data) // 2])
+            raise OSError("queda simulada")
+
+        Path.write_text = _cai_no_meio  # type: ignore[method-assign]
+        try:
+            try:
+                wire(crash_target, spec, force=False)
+            except OSError:
+                pass
+        finally:
+            Path.write_text = _orig_write_text  # type: ignore[method-assign]
+        assert crash_target.read_bytes() == antes, "queda no meio da escrita truncou o alvo"
+
+        # Escrita alheia entre a leitura e a gravação: recusa (exit 2) e não sobrescreve
+        race_target = tmp / "race.json"
+        race_target.write_text(json.dumps({"hooks": {}}), encoding="utf-8")
+        _orig_apply = globals()["apply_spec"]
+
+        def _apply_com_intruso(data, spec_, force_):
+            cur = json.loads(race_target.read_text(encoding="utf-8"))
+            cur["alheio"] = 1
+            race_target.write_text(json.dumps(cur), encoding="utf-8")
+            return _orig_apply(data, spec_, force_)
+
+        globals()["apply_spec"] = _apply_com_intruso
+        try:
+            code6, report6 = wire(race_target, spec, force=False)
+        finally:
+            globals()["apply_spec"] = _orig_apply
+        assert code6 == 2 and report6["status"] == "conflict", f"escrita concorrente deveria recusar: {report6}"
+        assert json.loads(race_target.read_text(encoding="utf-8")).get("alheio") == 1, "update alheio foi perdido"
+
+        print("self-test OK — wire idempotente, conflito sem --force preservado, --force sobrescreve, --undo byte-idêntico, "
+              "queda no meio não trunca, escrita concorrente recusa (exit 2)")
         return 0
     finally:
         shutil.rmtree(tmp, ignore_errors=True)

@@ -68,8 +68,10 @@ _SECRET_PATTERNS = [
     re.compile(r"AIza[0-9A-Za-z_\-]{20,}"),            # Google API key
 ]
 
-# Placeholders aceitáveis (não são segredo real) — se o match estiver dentro de
-# uma linha que contenha um destes, ignora.
+# Placeholders aceitáveis (não são segredo real). A supressão vale para a OCORRÊNCIA
+# casada, nunca para a linha inteira.
+# Why: suprimir a linha inteira deixava passar um segredo real escrito ao lado de um
+# exemplo permitido; a marca de placeholder tem de estar no proprio trecho casado.
 _PLACEHOLDER_TOKENS = [
     "<your_key>", "<your-key>", "your_key_here", "xxxx", "example",
     "placeholder", "<token>", "<api_key>", "redacted", "dummy", "fake",
@@ -112,9 +114,15 @@ def _extract_texts(tool_input: dict) -> list[str]:
     return out
 
 
-def _line_is_placeholder(line: str) -> bool:
-    low = line.lower()
-    return any(tok in low for tok in _PLACEHOLDER_TOKENS)
+def _occurrence_is_placeholder(line: str, m: re.Match) -> bool:
+    """A ocorrência é placeholder se o próprio trecho casado carrega a marca, ou se está
+    dentro de um template (<...>, ${...}, {{...}})."""
+    frag = m.group(0).lower()
+    if any(tok in frag for tok in _PLACEHOLDER_TOKENS):
+        return True
+    antes = line[max(0, m.start() - 2):m.start()]
+    depois = line[m.end():m.end() + 2]
+    return antes.endswith(("<", "${", "{{")) or depois.startswith((">", "}"))
 
 
 def scan(file_path: str, texts: list[str], globs: list[str]) -> list[str]:
@@ -124,10 +132,8 @@ def scan(file_path: str, texts: list[str], globs: list[str]) -> list[str]:
     hits: list[str] = []
     for text in texts:
         for line in text.splitlines():
-            if _line_is_placeholder(line):
-                continue
             for pat in _SECRET_PATTERNS:
-                m = pat.search(line)
+                m = next((c for c in pat.finditer(line) if not _occurrence_is_placeholder(line, c)), None)
                 if m:
                     frag = m.group(0)
                     shown = frag[:8] + "..." if len(frag) > 8 else frag
@@ -187,11 +193,14 @@ def _self_test() -> None:
     # 3. placeholder allowlistado -> sem hit
     h3 = scan("CLAUDE.md", ["key: stored in `.env` as FOO; example sk-xxxxxxxxxxxxxxxx"], globs)
     assert not h3, f"placeholder/.env não deveria avisar: {h3}"
+    # 3b. placeholder e segredo real na MESMA linha -> o real continua sendo visto
+    h3b = scan("CLAUDE.md", ["example sk-xxxxxxxxxxxxxxxx  e  " + "ghp" + "_EXEMPLOEXEMPLOEXEMPLOEXEMPLO1234"], globs)
+    assert h3b and "ghp_EXEM" in h3b[0], f"segredo real ao lado de placeholder deveria avisar: {h3b}"
     # 4. GitHub PAT em md de docs -> hit
-    h4 = scan("docs/x.md", ["token ghp_0123456789abcdefABCD"], globs)
+    h4 = scan("docs/x.md", ["token " + "ghp" + "_0123456789abcdefABCD"], globs)
     assert h4, f"deveria detectar ghp_, got {h4}"
     # 5. PEM private key -> hit
-    h5 = scan("notes/MEMORY.md", ["-----BEGIN RSA PRIVATE KEY-----"], globs)
+    h5 = scan("notes/MEMORY.md", ["-----BEGIN " + "RSA PRIVATE KEY-----"], globs)
     assert h5, f"deveria detectar PEM, got {h5}"
     # 6. texto inofensivo -> sem hit
     h6 = scan("docs/x.md", ["apenas um texto comum sem segredo"], globs)

@@ -1,0 +1,112 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Why: the suite is stdlib-only and needs nothing beyond checkout + a source
+# read, so the workflow never needs more than read access to the repository.
+permissions:
+  contents: read
+
+# Why: a new push on the same branch/PR supersedes the run already in flight,
+# instead of letting runs pile up on top of each other.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: pytest + hpp doctor/benchmark (${{ matrix.os }}, py${{ matrix.python-version }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      # Why: `python -m pytest` (as opposed to a bare `pytest`) puts the current
+      # working directory on sys.path[0], which is what lets `import hpp`
+      # resolve without an install step; tests/conftest.py adds a defensive
+      # fallback for any invocation that skips that. No `pip install` needed:
+      # the package has zero third-party dependencies (pyproject.toml
+      # `dependencies = []`).
+      - name: Run test suite (pytest, stdlib-only)
+        run: python -m pytest tests -q -p no:cacheprovider
+
+      - name: hpp doctor
+        run: python -m hpp doctor
+
+      # Why: runs the harness's own executable controls (manifest contract,
+      # policy enforcement, workgraph waves, lane collisions, monitor
+      # freshness, context provenance, routing floor, event/evidence gate,
+      # graph determinism, evidence attestation) with k=3 repeats. This is the
+      # product's self-check, not a substitute for tests/: it exercises the
+      # packaged example suite end-to-end through the real CLI entrypoint.
+      - name: hpp benchmark (self-check controls, k=3)
+        run: python -m hpp benchmark -k 3
+
+      # Why: verifies every CHECKSUMS.txt found in the checkout against the
+      # bytes on disk. `shell: python` runs this identically on all three
+      # platforms (Actions invokes `python <tmp-script>`), so no OS branching
+      # is needed. As of this writing, product-root/ (the tree this workflow
+      # ships from) does not itself contain assembled module directories or
+      # CHECKSUMS.txt files -- those are produced by a separate build/assembly
+      # step (kit-forge) that is not part of this source tree. When none are
+      # present the step says so explicitly and exits 0, rather than either
+      # failing on a check with nothing to verify or silently doing nothing;
+      # it becomes a real gate automatically the day assembled modules (with
+      # CHECKSUMS.txt) are checked in or produced earlier in this job.
+      - name: Verify CHECKSUMS.txt for any distributed module present in the checkout
+        shell: python
+        run: |
+          import hashlib
+          import pathlib
+          import sys
+
+          root = pathlib.Path(".").resolve()
+          checksum_files = sorted(root.rglob("CHECKSUMS.txt"))
+
+          if not checksum_files:
+              print(
+                  "::notice::No CHECKSUMS.txt found in this checkout. Assembled "
+                  "module bundles (each with its own CHECKSUMS.txt) are produced "
+                  "by a separate build step and are not part of this source tree, "
+                  "so there is nothing to verify here yet."
+              )
+              sys.exit(0)
+
+          failures = []
+          for checksums_file in checksum_files:
+              module_dir = checksums_file.parent
+              for line in checksums_file.read_text(encoding="utf-8").splitlines():
+                  if not line.strip():
+                      continue
+                  expected_hash, separator, relative_path = line.partition("  ")
+                  if not separator:
+                      failures.append(f"{checksums_file}: malformed line: {line!r}")
+                      continue
+                  target = module_dir / relative_path
+                  if not target.is_file():
+                      failures.append(f"{checksums_file}: listed and missing: {relative_path}")
+                      continue
+                  actual_hash = hashlib.sha256(target.read_bytes()).hexdigest()
+                  if actual_hash != expected_hash:
+                      failures.append(f"{checksums_file}: hash mismatch: {relative_path}")
+
+          if failures:
+              print("::error::CHECKSUMS.txt verification failed")
+              for failure in failures:
+                  print(f"::error::{failure}")
+              sys.exit(1)
+
+          print(f"CHECKSUMS.txt verified for {len(checksum_files)} module(s).")

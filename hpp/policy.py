@@ -5,8 +5,36 @@ import re
 from typing import Any
 
 
+_RECURSIVE_DELETE_REASON = "recursive deletion requires an explicit recovery plan"
+_RM_COMMAND = re.compile(r"(?:.*[\\/])?rm", re.I)
+
+
+def _rm_recursive_force(text: str) -> bool:
+    # Why: flag order and flag form vary (-rf, -fr, -r -f, --recursive --force), so the
+    # check reads the option set of each rm invocation instead of matching one spelling.
+    for segment in re.split(r"[|;&\n]+", text):
+        tokens = [token.strip("\"'") for token in segment.split()]
+        for index, token in enumerate(tokens):
+            if not _RM_COMMAND.fullmatch(token):
+                continue
+            recursive = force = False
+            for option in tokens[index + 1:]:
+                if option == "--":
+                    break
+                if option.startswith("--"):
+                    recursive = recursive or option == "--recursive"
+                    force = force or option == "--force"
+                elif option.startswith("-") and len(option) > 1:
+                    letters = option[1:].lower()
+                    recursive = recursive or "r" in letters
+                    force = force or "f" in letters
+            if recursive and force:
+                return True
+    return False
+
+
 _BLOCK_RULES = (
-    ("recursive-delete", re.compile(r"\brm\s+-[a-z]*r[a-z]*f|\brmdir\s+/s", re.I), "recursive deletion requires an explicit recovery plan"),
+    ("recursive-delete", re.compile(r"\brmdir\s+/s", re.I), _RECURSIVE_DELETE_REASON),
     ("force-push", re.compile(r"\bgit\s+push\b[^\n]*(?:--force|-f\b)", re.I), "force push rewrites shared history"),
     ("main-push", re.compile(r"\bgit\s+push\b[^\n]*\b(?:main|master)\b", re.I), "main branch must be merged through review"),
     ("pipe-to-shell", re.compile(r"\b(?:curl|wget)\b[^|\n]*\|\s*(?:ba)?sh\b", re.I), "downloaded code must be inspected before execution"),
@@ -22,6 +50,8 @@ def assess(command: str) -> dict[str, Any]:
     text = command.strip()
     if not text:
         return {"action": "ALLOW", "rule": "empty", "reason": "no command supplied"}
+    if _rm_recursive_force(text):
+        return {"action": "BLOCK", "rule": "recursive-delete", "reason": _RECURSIVE_DELETE_REASON}
     for rule, pattern, reason in _BLOCK_RULES:
         if pattern.search(text):
             return {"action": "BLOCK", "rule": rule, "reason": reason}

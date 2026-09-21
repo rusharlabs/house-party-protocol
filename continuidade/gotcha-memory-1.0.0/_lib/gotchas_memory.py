@@ -34,7 +34,9 @@ v1.0.0 — 2026-07-11 (kit gotcha-memory · extração standalone)
 from __future__ import annotations
 
 import json
+import math
 import os
+import re
 import sys
 import time
 from dataclasses import dataclass
@@ -193,6 +195,81 @@ def _prevention(family: str, strategy: str) -> str:
     return f"{base} {hint}".strip()
 
 
+# ─────────────────────────── redação (antes de persistir) ───────────────────────────
+# Why: o erro e o comando que falhou vao para o disco e voltam ao transcript no proximo
+# hook; um token ecoado por um 401 ficaria gravado em claro. A redacao e por FORMA
+# (prefixo de provedor, cabecalho de autorizacao, chave=valor, credencial em URL, blob de
+# alta entropia) e registra so o TIPO e o COMPRIMENTO — nunca o valor.
+
+_REDACTED = "[REDACTED:{tipo}:{n}]"
+_KEYWORDS = (
+    r"(?:api[_-]?key|access[_-]?key|secret(?:[_-]?key)?|client[_-]?secret|password|passwd"
+    r"|token|auth[_-]?token|private[_-]?key)"
+)
+_VALOR = r"[^\s\"'&;,]"
+# (tipo, regex, grupo que carrega o valor a redigir)
+_REDACT_RULES: list[tuple[str, re.Pattern[str], int]] = [
+    ("private-key", re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----.*?(?:-----END [A-Z ]*PRIVATE KEY-----|\Z)", re.DOTALL), 0),
+    ("url-credential", re.compile(r"(?<=://)([^/\s@:]+:[^@\s/]+)(?=@)"), 1),
+    ("basic-credential", re.compile(r"(?:^|\s)(?:-u|--user|--proxy-user)[ =]\s*[\"']?([^\s\"'@:]+:[^\s\"']+)"), 1),
+    ("auth-header", re.compile(r"(?i)\b(bearer|basic)\s+([A-Za-z0-9_\-.=+/]{16,})"), 2),
+    ("provider-token", re.compile(
+        r"\b(?:sk-ant-[A-Za-z0-9_\-]{8,}|sk-[A-Za-z0-9_\-]{16,}|gh[pousr]_[A-Za-z0-9]{20,}"
+        r"|github_pat_[A-Za-z0-9_]{20,}|glpat-[A-Za-z0-9_\-]{20,}|xox[baprs]-[A-Za-z0-9\-]{8,}"
+        r"|AKIA[0-9A-Z]{12,}|AIza[0-9A-Za-z_\-]{20,})"), 0),
+    ("jwt", re.compile(r"\beyJ[A-Za-z0-9_\-]{8,}\.[A-Za-z0-9_\-]{8,}\.[A-Za-z0-9_\-]{8,}"), 0),
+    ("assignment", re.compile(r"(?i)\b" + _KEYWORDS + r"[\"']?\s*=\s*[\"']?(" + _VALOR + r"{4,})"), 1),
+    # forma `chave: valor` so quando o valor tem cara de credencial (digito/simbolo, >= 8),
+    # para nao apagar prosa como "token: expired".
+    ("assignment", re.compile(r"(?i)\b" + _KEYWORDS + r"[\"']?\s*:\s*[\"']?((?=" + _VALOR + r"*[0-9_\-+/=.!@#$%^*~])" + _VALOR + r"{8,})"), 1),
+    ("high-entropy", re.compile(r"(?<![A-Za-z0-9+=_\-])[A-Za-z0-9+=_\-]{32,}(?![A-Za-z0-9+=_\-])"), 0),
+]
+
+
+def _shannon_bits(s: str) -> float:
+    n = len(s)
+    counts: dict[str, int] = {}
+    for ch in s:
+        counts[ch] = counts.get(ch, 0) + 1
+    return -sum((c / n) * math.log2(c / n) for c in counts.values())
+
+
+def _looks_random(tok: str) -> bool:
+    """Blob de alta entropia: maiuscula + minuscula + digito e >= 4 bits/char. Hash hex
+    (so minusculas) e identificador camelCase ficam de fora."""
+    return (
+        any(c.islower() for c in tok) and any(c.isupper() for c in tok)
+        and any(c.isdigit() for c in tok) and _shannon_bits(tok) >= 4.0
+    )
+
+
+def redact_secrets(text: str) -> str:
+    """Substitui segredos por `[REDACTED:<tipo>:<comprimento>]`. Texto sem segredo volta igual."""
+    if not text:
+        return text
+    out = text
+    for tipo, rx, grp in _REDACT_RULES:
+        def _sub(m: re.Match[str], tipo: str = tipo, grp: int = grp) -> str:
+            val = m.group(grp)
+            if val.startswith("[REDACTED:") or (tipo == "high-entropy" and not _looks_random(val)):
+                return m.group(0)
+            tag = _REDACTED.format(tipo=tipo, n=len(val))
+            s, e = m.start(grp) - m.start(0), m.end(grp) - m.start(0)
+            return m.group(0)[:s] + tag + m.group(0)[e:]
+        out = rx.sub(_sub, out)
+    return out
+
+
+def _redact_obj(obj: Any) -> Any:
+    if isinstance(obj, str):
+        return redact_secrets(obj)
+    if isinstance(obj, dict):
+        return {k: _redact_obj(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return [_redact_obj(v) for v in obj]
+    return obj
+
+
 # ─────────────────────────── API pública ───────────────────────────
 
 def record_failure(
@@ -206,16 +283,18 @@ def record_failure(
     store_dir: str | Path | None = None,
     now: float | None = None,
 ) -> dict[str, Any]:
-    """Registra uma falha (classificada via error_strategy) em failures.jsonl. Retorna o evento."""
+    """Registra uma falha (classificada via error_strategy) em failures.jsonl. Retorna o evento.
+
+    Segredos em task_key/erro/contexto sao redigidos ANTES de truncar e de persistir."""
     ts = time.time() if now is None else now
     dec = select_strategy(error_message, attempt=attempt, max_retries=max_retries, is_critical=is_critical)
     event = {
-        "task_key": str(task_key),
-        "error": str(error_message or "")[:500],
+        "task_key": redact_secrets(str(task_key)),
+        "error": redact_secrets(str(error_message or ""))[:500],
         "family": dec.family,
         "strategy": dec.strategy,
         "terminal": dec.terminal,
-        "context": context or {},
+        "context": _redact_obj(context or {}),
         "ts": ts,
     }
     _append_jsonl(_store(store_dir) / "failures.jsonl", event)
@@ -473,6 +552,15 @@ def _self_test() -> None:
         assert seed_from_file(store / "nao-existe.jsonl", store_dir=store) == -1, "arquivo ausente = -1"
         # Store ausente degrada pra vazio (não crasha)
         assert curated_gotchas(store_dir=store / "sub" / "que-nao-existe") == []
+        # Redação antes de persistir: o valor nunca chega ao disco; tipo + comprimento chegam
+        record_failure(
+            "task:auth", "401 Bearer " + "sk-" + "ant-EXEMPLO0000000000000000 token=" + "ghp" + "_EXEMPLOEXEMPLOEXEMPLOEXEMPLO12",
+            context={"cmd": "curl -u user:SENHA-EXEMPLO-1 https://x"}, store_dir=store, now=t0,
+        )
+        bruto = (store / "failures.jsonl").read_text(encoding="utf-8")
+        assert "EXEMPLO" not in bruto, "segredo foi persistido em claro"
+        assert "[REDACTED:auth-header:30]" in bruto and "[REDACTED:basic-credential:20]" in bruto, bruto
+        assert redact_secrets("ETIMEDOUT em api.example.com:443") == "ETIMEDOUT em api.example.com:443"
         print("self-test OK ✓")
 
 

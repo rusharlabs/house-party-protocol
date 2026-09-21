@@ -35,6 +35,7 @@ from __future__ import annotations
 import argparse
 import datetime
 import json
+import os
 import shutil
 import sys
 from pathlib import Path
@@ -84,22 +85,38 @@ def apply_spec(data: dict, spec: dict, force: bool):
     return data, changed, warnings
 
 
-def _write_json_atomic(target: Path, data: dict, backup: Path):
+def _write_json_atomic(target: Path, data: dict, backup: Path, *, expected_bytes: bytes | None = None) -> str:
+    """Grava `data` em `target` sem janela de corrupcao. Retorna "ok" | "invalid" | "conflict".
+
+    # Why: escrever direto no alvo deixa um settings.json truncado se o processo cair no
+    # meio, e sobrescreve o que outro processo gravou entre a leitura e a escrita. O
+    # temporario fica no MESMO diretorio (os.replace so e atomico no mesmo volume) e a
+    # comparacao byte-a-byte com o que foi lido recusa a escrita em vez de perder a alheia.
+    """
     out = json.dumps(data, indent=2, ensure_ascii=False) + "\n"
-    target.write_text(out, encoding="utf-8")
     try:
-        json.loads(target.read_text(encoding="utf-8"))
+        json.loads(out)
     except json.JSONDecodeError:
-        shutil.copy2(backup, target)
-        return False
-    return True
+        return "invalid"
+    tmp = target.with_name(f".{target.name}.tmp-{os.getpid()}")
+    try:
+        tmp.write_text(out, encoding="utf-8")
+        with tmp.open("r+b") as fh:
+            os.fsync(fh.fileno())
+        if expected_bytes is not None and target.read_bytes() != expected_bytes:
+            return "conflict"
+        os.replace(tmp, target)
+    finally:
+        tmp.unlink(missing_ok=True)
+    return "ok"
 
 
 def wire(target: Path, spec: dict, force: bool) -> tuple:
     if not target.exists():
         return 3, {"status": "error", "errors": [f"target não existe: {target}"]}
 
-    raw = target.read_text(encoding="utf-8")
+    raw_bytes = target.read_bytes()
+    raw = raw_bytes.decode("utf-8")
     try:
         data = json.loads(raw)
     except json.JSONDecodeError as e:
@@ -116,9 +133,12 @@ def wire(target: Path, spec: dict, force: bool) -> tuple:
         status = "warn" if warnings else "no-op"
         return (1 if warnings else 0), {"status": status, "changed": [], "warnings": warnings}
 
-    ok = _write_json_atomic(target, new_data, backup)
-    if not ok:
-        return 3, {"status": "error", "errors": ["JSON ficou inválido após escrita — restaurado do backup"]}
+    resultado = _write_json_atomic(target, new_data, backup, expected_bytes=raw_bytes)
+    if resultado == "conflict":
+        return 2, {"status": "conflict", "errors": [
+            f"{target} mudou entre a leitura e a escrita — nada foi gravado. Rode de novo."]}
+    if resultado != "ok":
+        return 3, {"status": "error", "errors": ["a serializacao nao produziu JSON valido — nada foi gravado"]}
 
     undo_state = target.with_name(target.name + ".wire-undo.json")
     undo_state.write_text(json.dumps({"target": str(target), "backup": str(backup)}), encoding="utf-8")

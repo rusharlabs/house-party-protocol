@@ -1,12 +1,13 @@
 {
   "protocol_version": "2.0",
-  "product_version": "2.0.0",
+  "product_version": "2.2.0",
   "name": "house-party-protocol",
   "hosts": ["claude-code", "codex"],
   "invariants": [
     "A verified outcome has recorded evidence and an explicit human gate.",
     "A checker is read-only relative to the maker's workspace.",
-    "A loop advances only through a recorded event."
+    "A loop advances only through a recorded event.",
+    "An approval is invalid when its bound spec, commit, or repository snapshot changes."
   ],
   "roles": ["maker", "checker", "human-gate"],
   "exit_codes": {"ok": 0, "warn": 1, "block": 2, "error": 3},
@@ -27,7 +28,7 @@
     ]
   },
   "modules": [
-    {"id": "operator-kit", "version": "1.4.0", "path": "frameworks-com-plugins/operator-kit-1.4.0", "requires": [], "integrates_with": ["continuity-kit", "lane-kit"], "capabilities": ["evidence-gate", "loop-control", "policy", "workflow.spec-driven", "workflow.waves"], "hosts": {"claude-code": "native", "codex": "explicit-command"}, "components": ["skills", "commands", "hooks", "rules"]},
+    {"id": "operator-kit", "version": "1.4.0", "path": "frameworks-com-plugins/operator-kit-1.4.0", "requires": [], "integrates_with": ["continuity-kit", "lane-kit"], "capabilities": ["evidence-gate", "evidence-attestation", "loop-control", "policy", "workflow.spec-driven", "workflow.waves"], "hosts": {"claude-code": "native", "codex": "explicit-command"}, "components": ["skills", "commands", "hooks", "rules"]},
     {"id": "kit-forge", "version": "1.4.0", "path": "instaladores/kit-forge-1.4.0", "requires": [], "integrates_with": ["claude-dev-kit"], "capabilities": ["deterministic-build", "supply-chain"], "hosts": {"claude-code": "explicit-command", "codex": "explicit-command"}, "components": ["scripts", "templates"]},
     {"id": "lane-kit", "version": "1.2.0", "path": "multi-sessao/lane-kit-1.2.0", "requires": [], "integrates_with": ["continuity-kit", "operator-kit"], "capabilities": ["lane-isolation", "read-only-checker", "coordination.lane-map"], "hosts": {"claude-code": "native", "codex": "explicit-command"}, "components": ["hooks", "agents", "commands"]},
     {"id": "continuity-kit", "version": "1.2.1", "path": "continuidade/continuity-kit-1.2.1", "requires": [], "integrates_with": ["lane-kit", "gotcha-memory"], "capabilities": ["handoff", "event-resume"], "hosts": {"claude-code": "native", "codex": "explicit-command"}, "components": ["hooks", "templates", "skills"]},
@@ -46,7 +47,7 @@
   "bundles": {
     "reliable-coding": {
       "modules": ["operator-kit", "kit-forge", "lane-kit", "continuity-kit", "health-kit", "gotcha-memory"],
-      "capabilities": ["evidence-gate", "loop-control", "policy", "deterministic-build", "lane-isolation", "read-only-checker", "handoff", "event-resume", "service-health", "data-freshness", "failure-memory", "preflight-learning"]
+      "capabilities": ["evidence-gate", "evidence-attestation", "loop-control", "policy", "deterministic-build", "lane-isolation", "read-only-checker", "handoff", "event-resume", "service-health", "data-freshness", "failure-memory", "preflight-learning"]
     }
   }
 }

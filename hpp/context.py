@@ -10,6 +10,7 @@ _SECRET_PATTERN = re.compile(
     r"(?:api[_-]?key|access[_-]?token|secret|password)\s*[:=]|-----BEGIN [A-Z ]+-----|\bsk-[A-Za-z0-9_-]{8,}",
     re.IGNORECASE,
 )
+_SEPARATOR = "\n\n"
 
 
 class ContextError(ValueError):
@@ -59,18 +60,22 @@ def compile_context(inputs: list[dict[str, Any]], budget: int) -> dict[str, Any]
     used = 0
     for item in ordered:
         record = _record(item)
-        if used + record["chars"] <= budget:
+        # Why: the separator joining blocks is part of the produced text, so it is charged
+        # to the budget; otherwise `used` under-reports and the text overflows the budget.
+        cost = record["chars"] + (len(_SEPARATOR) if selected else 0)
+        if used + cost <= budget:
             included.append(record)
             selected.append(item["content"])
-            used += record["chars"]
+            used += cost
         else:
             omitted.append(record)
+    text = _SEPARATOR.join(selected)
     return {
         "schema": "hpp.context/v1",
         "budget": budget,
-        "used": used,
-        "remaining": budget - used,
+        "used": len(text),
+        "remaining": budget - len(text),
         "included": included,
         "omitted": omitted,
-        "text": "\n\n".join(selected),
+        "text": text,
     }

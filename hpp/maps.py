@@ -177,12 +177,14 @@ def build_context_map(inputs: list[dict[str, Any]], budget: int) -> dict[str, An
     )
 
 
-def build_monitor_map(monitors: list[dict[str, Any]], now: int) -> dict[str, Any]:
+def build_monitor_map(monitors: list[dict[str, Any]], now: int, skew_tolerance: int = 5) -> dict[str, Any]:
     """Project declared probes only; it neither schedules nor starts monitoring."""
     if not isinstance(monitors, list):
         raise MapError("monitors must be a list")
     if not isinstance(now, int) or now < 0:
         raise MapError("now must be a non-negative integer")
+    if not isinstance(skew_tolerance, int) or skew_tolerance < 0:
+        raise MapError("skew_tolerance must be a non-negative integer")
     required = ("id", "target", "type", "cadence", "freshness", "severity", "cost", "consumer_gate")
     projected: list[dict[str, Any]] = []
     seen: set[str] = set()
@@ -202,10 +204,20 @@ def build_monitor_map(monitors: list[dict[str, Any]], now: int) -> dict[str, Any
             raise MapError(f"monitor {monitor_id} needs positive cadence and freshness")
         if signal is not None and (not isinstance(signal, int) or signal < 0):
             raise MapError(f"monitor {monitor_id} has invalid last_signal")
-        status = "unknown" if signal is None else ("healthy" if now - signal <= freshness else "stale")
+        # Why: a signal dated after `now` beyond the declared tolerance is not evidence of
+        # freshness; a skewed clock or a fabricated timestamp must stay distinguishable from healthy.
+        if signal is None:
+            status = "unknown"
+        elif signal > now + skew_tolerance:
+            status = "skew"
+        elif now - signal <= freshness:
+            status = "healthy"
+        else:
+            status = "stale"
         projected.append({
             "id": monitor_id, "target": monitor["target"], "type": monitor["type"], "cadence": cadence,
             "freshness": freshness, "last_signal": signal, "status": status, "severity": monitor["severity"],
             "cost": monitor["cost"], "consumer_gate": monitor["consumer_gate"],
         })
-    return {"schema": "hpp.monitor-map/v1", "now": now, "monitors": sorted(projected, key=lambda item: item["id"])}
+    return {"schema": "hpp.monitor-map/v1", "now": now, "skew_tolerance": skew_tolerance,
+            "monitors": sorted(projected, key=lambda item: item["id"])}

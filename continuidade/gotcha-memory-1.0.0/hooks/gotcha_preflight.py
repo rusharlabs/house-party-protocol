@@ -17,6 +17,14 @@ import sys
 from pathlib import Path
 
 _LIB = Path(__file__).resolve().parent.parent / "_lib"
+if str(_LIB) not in sys.path:
+    sys.path.insert(0, str(_LIB))
+try:
+    import gotchas_memory as gm
+except Exception:  # noqa: BLE001 -- Why: um hook de preflight nunca pode derrubar o comando
+    # do usuario. Sem a lib (instalacao parcial, import quebrado) o hook vira no-op e sai 0;
+    # o unico efeito de remover esta guarda e transformar falha de import em falha do Bash.
+    gm = None  # type: ignore[assignment]
 
 
 def _stderr_utf8() -> None:
@@ -34,7 +42,12 @@ def _task_key(data: dict) -> str:
     cmd = ti.get("command", "")
     if not cmd:
         return ""
-    return ti.get("description") or cmd[:80]
+    if ti.get("description"):
+        return ti["description"]
+    # Why: a chave derivada do comando tem de casar com a que o postflight grava, e ele
+    # redige o comando ANTES de truncar — sem o mesmo passo aqui, a licao nunca dispara
+    # para um comando que carregava credencial.
+    return (gm.redact_secrets(cmd) if gm is not None else cmd)[:80]
 
 
 def main() -> None:
@@ -45,14 +58,10 @@ def main() -> None:
         sys.exit(0)
 
     key = _task_key(data)
-    if not key:
+    if not key or gm is None:
         sys.exit(0)
 
     try:
-        if str(_LIB) not in sys.path:
-            sys.path.insert(0, str(_LIB))
-        import gotchas_memory as gm
-
         _stderr_utf8()
         cfg = gm.config()
         preamble = gm.inject_preamble(
@@ -77,9 +86,7 @@ def _self_test() -> None:
     assert _task_key({}) == ""
     # ponta-a-ponta com store temporário: curated dispara no preâmbulo
     import tempfile
-    if str(_LIB) not in sys.path:
-        sys.path.insert(0, str(_LIB))
-    import gotchas_memory as gm
+    assert gm is not None, "lib vendorizada nao importou"
     with tempfile.TemporaryDirectory() as d:
         gm.add_curated_gotcha("deploy", "cheque o backend, nao so o gate", store_dir=d)
         pre = gm.inject_preamble("rodar o deploy do site", store_dir=d)

@@ -96,8 +96,10 @@ def main() -> None:
 
         _stderr_utf8()
         # task_key CASA com o do gotcha_preflight: description or cmd[:80]
-        desc = ti.get("description") or cmd[:80]
-        gm.record_failure(desc, err, context={"cmd": cmd[:200]})
+        # Why: truncar antes de redigir pode cortar um token ao meio e deixar o prefixo
+        # dele fora do alcance da redacao; a redacao vem primeiro, o corte depois.
+        desc = gm.redact_secrets(ti.get("description") or gm.redact_secrets(cmd)[:80])
+        gm.record_failure(desc, err, context={"cmd": gm.redact_secrets(cmd)[:200]})
         try:
             # Why: o append era sem teto (1,9 MB / 1.744 linhas em um mes) e o preflight rele o
             # arquivo INTEIRO a cada Bash.
