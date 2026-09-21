@@ -189,6 +189,65 @@ python -m hpp event append --type human_approved --data '{"work":"ITEM-1","by":"
 python -m hpp event append --type verified --data '{"work":"ITEM-1"}'
 ```
 
+## 10. Deixe o grafo decidir a ordem
+
+### Escreva uma spec pequena o bastante para compilar
+
+Uma spec é um objeto JSON com uma lista `work`. Cada unidade tem um `id`, uma lista `depends_on`
+(vazia quando não depende de nada), ao menos um critério de `acceptance` escrito como algo que um
+comando consegue decidir, e um `tier`. Uma unidade é pequena o bastante quando uma pessoa consegue
+dizer, num comando, o que a fecha; quando uma unidade precisa de um parágrafo, ela é duas
+unidades. O compilador não mede tamanho; mede forma. Dependências são escritas, não lembradas: uma
+aresta que vive só na conversa não existe para o compilador. Ele recusa uma spec com id duplicado,
+dependência desconhecida, lista de aceite vazia ou tier inválido, e diz qual unidade.
+
+```bash
+python -m hpp work plan SPEC.json
+```
+
+### Leia as waves antes de começar
+
+`hpp work waves` imprime as waves em ordem com as unidades de cada uma. Leia como o plano do dia:
+tudo da wave 1 pode começar agora; nada da wave 2 pode começar até que toda unidade da wave 1
+tenha passado nos próprios critérios. Uma wave com uma unidade só é um passo serial, e não há o
+que fazer a respeito além de terminar a unidade. A ordem dentro de uma wave é alfabética, não é
+prioridade: escolha qualquer ordem, ou todas de uma vez. Duas unidades na mesma wave ainda podem
+tocar os mesmos caminhos; o grafo não conhece os arquivos, então as lanes são declaradas à parte,
+e o Lane Map é o que reporta sobreposição entre territórios vivos e exclusivos.
+
+```bash
+python -m hpp work waves SPEC.json
+python -m hpp map lane LANES.json --now "$(date +%s)"
+```
+
+### Quando o grafo acusa ciclo
+
+`dependency cycle: a -> c -> b -> a` quer dizer que a spec se contradiz: cada unidade do caminho
+pede para rodar depois da seguinte, e nenhuma ordem satisfaz todas. O harness nomeia o caminho e
+sai com 2; ele nunca descarta uma aresta para fazer a spec compilar. O conserto está na spec, e é
+um de três: uma aresta foi declarada ao contrário, duas unidades são na verdade uma, ou uma
+unidade faz duas coisas e a segunda metade pertence a uma unidade nova que depende da primeira.
+Mude a spec e recompile; o compilador é o teste.
+
+```bash
+python -m hpp work waves SPEC.json
+```
+
+### Decidir que uma unidade não pode rodar em paralelo
+
+Uma unidade roda depois de outra somente quando uma aresta diz isso, e a aresta vale ser declarada
+quando a unidade posterior lê o que a anterior produz: um schema antes do código que o usa, um
+build antes da checagem que o executa, um rename antes das referências ao nome novo. Quando a
+resposta é "elas tocam os mesmos arquivos", isso é pergunta de lane, não de dependência: dê às duas
+unidades territórios disjuntos, ou faça uma depender da outra e aceite o passo serial. Uma vez
+declarada, a aresta aparece em `edges`, da dependência para a unidade que espera por ela, com a
+relação `depends-on`, e a unidade posterior passa para uma wave mais tarde; se ela não se moveu,
+a aresta não é a que você queria.
+
+```bash
+python -m hpp work plan SPEC.json
+```
+
 ## O loop, de ponta a ponta
 
 ```text

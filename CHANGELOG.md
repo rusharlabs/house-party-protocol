@@ -9,13 +9,38 @@ keeps its own version in `plugin.json` and in `marketplace.json`.
 
 ## [Unreleased]
 
+## [2.4.1] — 2026-09-21
+
 ### Added
 
-- **Documentation in two languages.** Every document a person reads to decide whether to adopt
-  the project ships in English (the source of truth) and in Brazilian Portuguese as a `.pt-BR.md`
-  sibling, with a language link line at the top of both. Files an agent reads to execute
-  (`skills/*/SKILL.md`, `commands/*.md`, `rules/*.md`) stay English-only on purpose. A test in
-  the source repository rejects a pair whose headings or code blocks diverge.
+- **The remaining human-facing documents got their Portuguese pair.** `CONTRIBUTING`, `SECURITY`
+  and `docs/UX-INSTALL-JOURNEY` ship as `.pt-BR.md` siblings, and the operating manual as
+  `docs/MANUAL.pt-BR.html`, all under the same pair gate.
+- **The catalogue is generated in both languages and in the brand palette.** One pass of the
+  generator writes `docs/CATALOGO.md`, `CATALOGO.pt-BR.md`, `CATALOGO.html` and
+  `CATALOGO.pt-BR.html` from `marketplace.json` (which now carries `description_en` per module);
+  the hand-written HTML page, Portuguese-only and in the retired palette, was replaced by the
+  generated one so it cannot drift again.
+
+### Changed
+
+- **The operating manual was rewritten against measured behaviour.** Policy verdicts
+  (`ALLOW / MANUAL / BLOCK` and what each mode exits with), the nine map projections, the monitor
+  states including `skew`, the six stages of `hpp init` with the readiness it reports on an empty
+  target, Codex CLI paths, attestation and exit codes are the ones the CLI produces today.
+- **The public address of the author is `https://rusharlabs.com`** in the license, citation,
+  notice, marketplace and every module manifest; the security contact e-mail is unchanged.
+- **The Quickstart installs the CLI with `pip`** and keeps the checkout as the developer path.
+  Packaging leftovers (`build/`, `*.egg-info/`) are ignored by the repository.
+
+### Fixed
+
+- **The pip-installed package shipped without its manifest.** `pip install` produced a
+  `site-packages/hpp/` with no `hpp.manifest.json`, so from any directory outside a checkout
+  `hpp doctor` and `hpp init` exited 2 with "hpp.manifest.json not found". The wheel now carries
+  the manifest as package data, and the resolver falls back to it after the working directory and
+  the source root — a checkout still wins, and site-packages is never treated as an emitted
+  distribution. Guarded by tests that build a real wheel and drive it from an empty directory.
 
 ## [2.4.0] — 2026-09-21
 

@@ -41,6 +41,31 @@ provenance, appends events, derives resumption and binds evidence to a verdict.
 The modules provide the specialised mechanisms. Distribution carries them to Claude Code and Codex
 CLI without pretending the two hosts offer the same lifecycle hooks.
 
+## Order comes from the spec, not from the conversation
+
+Work enters the house as a spec: units with an id, the units they depend on, the criteria that
+decide them and the risk they carry. The harness compiles it, refuses a cycle with the path
+named, and returns waves. A dependency that was discussed but never written in `depends_on` does
+not exist for the harness, and no amount of context in a transcript makes it exist.
+
+Parallelism is a consequence of that graph, not a goal. Units with no edge between them fall in
+the same wave; a unit waits for the last of its dependencies. Nobody sets a number of parallel
+agents, and nobody is asked whether two units "can" run together: the absence of an edge already
+answered. Running everything at once would ignore the edges; running by wave ignores nothing and
+still runs together everything that may.
+
+The barrier is what makes progress legible. When a wave closes, every unit in it has met its
+criteria; a unit of the next wave that starts early builds on a dependency that has not passed,
+and its evidence describes a checkout that may not survive. "Wave two is closed" is a sentence a
+command can check. "We are about seventy percent done" is not.
+
+What this does not promise: the harness does not discover dependencies. It does not read the
+files a unit will touch, it does not deduce that two units collide from what they do, and it does
+not stop an operator from starting a unit before its wave. It compiles the dependencies that were
+declared, reports where each barrier is, and leaves the declaring and the honouring to the people
+and agents doing the work. A missing edge is a defect in the spec, and the spec is where it is
+fixed.
+
 ## Why this is not bureaucracy
 
 Process fails in two directions. Process that protects makes the cost of an error visible before

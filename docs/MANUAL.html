@@ -1,57 +1,261 @@
 <!doctype html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>House Party Protocol — Manual do harness</title>
+  <title>House Party Protocol — Harness manual</title>
+  <meta name="description" content="Operating manual for the House Party Protocol harness 2.4.1: init, maps, loop, policy, proof, hosts and exit codes, each claim with the command that reproduces it.">
+  <link rel="alternate" hreflang="en" href="MANUAL.html">
+  <link rel="alternate" hreflang="pt-BR" href="MANUAL.pt-BR.html">
   <style>
-    :root{--hpp-ink: #0F1113;--hpp-paper: #F4F1EB;--hpp-signal: #FF6A00;--hpp-trace: #FF8A3D;--hpp-alert: #E5484D;--hpp-muted: #6B7280;--max:1120px}
-    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--hpp-paper);color:var(--hpp-ink);font:16px/1.65 Inter,"Segoe UI",Arial,sans-serif}a{color:#075E55;text-underline-offset:3px}a:focus-visible,button:focus-visible{outline:4px solid var(--hpp-signal);outline-offset:3px}.wrap{width:min(var(--max),calc(100% - 40px));margin:auto}.hero{background:var(--hpp-ink);color:var(--hpp-paper);padding:44px 0 50px}.hero img{width:min(720px,100%);display:block}.eyebrow,.mono,code,pre{font-family:"JetBrains Mono","Cascadia Code",Consolas,monospace}.eyebrow{color:var(--hpp-trace);letter-spacing:.13em;text-transform:uppercase;font-size:.78rem}.hero h1{font-size:clamp(2.2rem,6vw,5.2rem);line-height:.95;margin:.35em 0}.hero p{max-width:760px;font-size:1.18rem;color:#D5DDD8}.signal{color:var(--hpp-signal)}nav{position:sticky;top:0;z-index:2;background:rgba(242,240,233,.96);border-bottom:1px solid #C9CEC9;backdrop-filter:blur(8px)}nav .wrap{display:flex;gap:20px;overflow:auto;padding:12px 0}nav a{white-space:nowrap;text-decoration:none;font-weight:700}.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:20px}.card{grid-column:span 4;border:1px solid #BBC2BD;border-radius:16px;padding:22px;background:#FAF9F5}.card h3{margin-top:0}.wide{grid-column:span 6}section{padding:64px 0;border-bottom:1px solid #CDD2CE}h2{font-size:clamp(1.75rem,3vw,2.7rem);line-height:1.1;margin-top:0}pre{background:var(--hpp-ink);color:var(--hpp-paper);padding:20px;border-radius:12px;overflow:auto;border-left:6px solid var(--hpp-trace)}table{width:100%;border-collapse:collapse;background:#FAF9F5}th,td{text-align:left;padding:12px;border-bottom:1px solid #CBD0CC;vertical-align:top}th{background:#E4E7E1}.gate{display:inline-block;border-radius:999px;padding:.15rem .6rem;font:bold .8rem "JetBrains Mono",monospace}.ok{background:var(--hpp-signal)}.warn{background:#FFE29A}.block{background:var(--hpp-alert);color:var(--hpp-ink)}footer{padding:48px 0;background:var(--hpp-ink);color:var(--hpp-paper)}@media(max-width:760px){.card,.wide{grid-column:1/-1}.wrap{width:min(100% - 26px,var(--max))}th,td{font-size:.88rem;padding:8px}.hero{padding-top:28px}}@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+    :root{--hpp-black: #000000;--hpp-ink: #0F1113;--hpp-paper: #F4F1EB;--hpp-signal: #FF6A00;--line:rgba(15,17,19,.18);--surface:rgba(15,17,19,.04);--muted:rgba(15,17,19,.72);--max:1120px}
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;background:var(--hpp-paper);color:var(--hpp-ink);font:16px/1.65 Inter,"Segoe UI",Arial,sans-serif}
+    a{color:var(--hpp-ink);text-decoration:underline;text-decoration-color:var(--hpp-signal);text-decoration-thickness:2px;text-underline-offset:3px}
+    a:hover{color:var(--hpp-signal)}
+    a:focus-visible{outline:4px solid var(--hpp-signal);outline-offset:3px}
+    .wrap{width:min(var(--max),calc(100% - 40px));margin:auto}
+    .lang{background:var(--hpp-black);color:var(--hpp-paper);font-size:.9rem;padding:10px 0}
+    .lang a{color:var(--hpp-paper)}
+    .lang a[aria-current]{text-decoration:none;font-weight:700}
+    .hero{background:var(--hpp-ink);color:var(--hpp-paper);padding:44px 0 50px}
+    .hero img{width:min(720px,100%);display:block}
+    .hero h1{font:800 clamp(2.2rem,6vw,5rem)/.95 Sora,Inter,"Segoe UI",sans-serif;letter-spacing:-.02em;margin:.35em 0}
+    .hero p{max-width:760px;font-size:1.15rem;color:rgba(244,241,235,.82)}
+    .hero .eyebrow{color:var(--hpp-paper);border-color:var(--hpp-signal)}
+    .signal{color:var(--hpp-signal)}
+    .eyebrow,.mono,code,pre,.gate,.label{font-family:"JetBrains Mono","Cascadia Code",Consolas,monospace}
+    .eyebrow{display:inline-block;letter-spacing:.13em;text-transform:uppercase;font-size:.78rem;border-left:4px solid var(--hpp-signal);padding-left:.6em;margin:0 0 .6em}
+    nav{position:sticky;top:0;z-index:2;background:rgba(244,241,235,.96);border-bottom:1px solid var(--line);backdrop-filter:blur(8px)}
+    nav .wrap{display:flex;gap:20px;overflow:auto;padding:12px 0}
+    nav a{white-space:nowrap;text-decoration:none;font-weight:700}
+    nav a:hover{text-decoration:underline;text-decoration-color:var(--hpp-signal)}
+    section{padding:64px 0;border-bottom:1px solid var(--line)}
+    h2{font:800 clamp(1.7rem,3vw,2.6rem)/1.1 Sora,Inter,"Segoe UI",sans-serif;letter-spacing:-.01em;margin:0 0 .6em}
+    h3{margin:0 0 .4em;font-size:1.1rem}
+    .lead{max-width:780px;color:var(--muted)}
+    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:20px}
+    .card{grid-column:span 4;border:1px solid var(--line);border-radius:16px;padding:22px;background:var(--surface)}
+    .card.wide{grid-column:span 6}
+    .card.full{grid-column:1/-1}
+    pre{background:var(--hpp-ink);color:var(--hpp-paper);padding:20px;border-radius:12px;overflow:auto;border-left:6px solid var(--hpp-signal);font-size:.92rem;line-height:1.5}
+    code{font-size:.94em}
+    p code,li code,td code{background:var(--surface);padding:.08em .35em;border-radius:5px}
+    pre code{background:none;padding:0}
+    table{width:100%;border-collapse:collapse;background:var(--surface);margin:1em 0}
+    th,td{text-align:left;padding:12px;border-bottom:1px solid var(--line);vertical-align:top}
+    th{background:rgba(15,17,19,.08);font-weight:700}
+    .gate{display:inline-block;border-radius:999px;padding:.15rem .7rem;font-weight:700;font-size:.8rem;margin-bottom:.6em}
+    .gate.allow{background:var(--hpp-signal);color:var(--hpp-ink)}
+    .gate.manual{border:2px solid var(--hpp-ink);color:var(--hpp-ink)}
+    .gate.block{background:var(--hpp-ink);color:var(--hpp-paper)}
+    .label{font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+    .measured{border-left:4px solid var(--hpp-signal);padding-left:1em;color:var(--muted);font-size:.95rem}
+    ul,ol{padding-left:1.3em}
+    li{margin:.25em 0}
+    footer{padding:48px 0;background:var(--hpp-black);color:var(--hpp-paper)}
+    footer a{color:var(--hpp-paper)}
+    footer .five{letter-spacing:.2em;font-size:.8rem;color:rgba(244,241,235,.72)}
+    @media(max-width:760px){.card,.card.wide{grid-column:1/-1}.wrap{width:min(100% - 32px,var(--max))}th,td{font-size:.88rem;padding:8px}.hero{padding-top:28px}section{padding:44px 0}}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
   </style>
 </head>
 <body>
+  <div class="lang"><div class="wrap"><a href="MANUAL.html" aria-current="page" hreflang="en">English</a> · <a href="MANUAL.pt-BR.html" hreflang="pt-BR" lang="pt-BR">Português</a></div></div>
   <header class="hero">
     <div class="wrap">
-      <img src="../assets/hpp-logo-dark.svg" alt="House Party Protocol">
-      <p class="eyebrow">Manual do harness · v2.1.0</p>
-      <h1>Da spec à prova.<br><span class="signal">Sem salto de confiança.</span></h1>
-      <p>Um guia operacional para compor agentes, lanes, waves, monitores, evidências e gates em Claude Code e Codex CLI.</p>
+      <img src="../assets/hpp-logo-dark.svg" alt="House Party Protocol — by Rushar Labs">
+      <p class="eyebrow">Harness manual · v2.4.1 · Claude Code and Codex CLI</p>
+      <h1>From spec to proof.<br><span class="signal">Without a leap of trust.</span></h1>
+      <p>An operating guide to the harness: how <code>hpp init</code> installs, what each map projects, how the loop advances, what the policy blocks, and what counts as proof. Every claim below carries the command that reproduces it; the outputs quoted were measured on this source tree, version 2.4.0.</p>
     </div>
   </header>
-  <nav aria-label="Capítulos"><div class="wrap"><a href="#modelo">Modelo</a><a href="#inicio">Começar</a><a href="#maps">Maps</a><a href="#loops">Loops</a><a href="#policy">Política</a><a href="#proof">Prova</a></div></nav>
+  <nav aria-label="Chapters"><div class="wrap"><a href="#model">Model</a><a href="#start">Start</a><a href="#init">Init</a><a href="#maps">Maps</a><a href="#loop">Loop</a><a href="#policy">Policy</a><a href="#proof">Proof</a><a href="#hosts">Hosts</a><a href="#exit">Exit codes</a></div></nav>
   <main>
-    <section id="modelo"><div class="wrap"><p class="eyebrow">01 · modelo</p><h2>Harness primeiro; módulos depois.</h2><div class="grid">
-      <article class="card"><h3>Harness</h3><p>CLI, manifesto, events, maps, política e eval.</p></article>
-      <article class="card"><h3>Protocol</h3><p>Invariantes, transições, gates e exit codes.</p></article>
-      <article class="card"><h3>Modules</h3><p>Capacidades instaláveis que continuam independentes.</p></article>
-      <article class="card wide"><h3>Claude Code</h3><p>Marketplace, plugins e lifecycle hooks nativos quando o host suporta.</p></article>
-      <article class="card wide"><h3>Codex CLI</h3><p>Skills e runtime por cópia; preflight explícito onde não há hook equivalente.</p></article>
-    </div></div></section>
-    <section id="inicio"><div class="wrap"><p class="eyebrow">02 · quickstart</p><h2>Diagnostique antes de instalar.</h2><pre>python -m hpp doctor
-python -m hpp graph --view operational --format mermaid
-python -m hpp install --bundle reliable-coding --host codex --target ../repo
-python -m hpp benchmark -k 3</pre><p>O comando de bundle é somente plano. A cópia real usa o <code>kit_doctor.py install --kit ... --apply</code> do módulo.</p></div></section>
-    <section id="maps"><div class="wrap"><p class="eyebrow">03 · maps</p><h2>O estado possui mais de uma vista.</h2><table><thead><tr><th>Mapa</th><th>Decisão</th><th>Fonte</th></tr></thead><tbody>
-      <tr><td>Capability</td><td>qual módulo/host cobre a capacidade?</td><td>manifesto</td></tr>
-      <tr><td>Agent</td><td>quem faz, revisa e aprova?</td><td>papéis + eventos</td></tr>
-      <tr><td>Lane</td><td>quem ocupa qual território e existe colisão?</td><td>registry + heartbeat</td></tr>
-      <tr><td>Work</td><td>quais unidades entram na mesma wave?</td><td>spec + dependências</td></tr>
-      <tr><td>Evidence</td><td>qual prova sustenta o veredito?</td><td>critérios + refs</td></tr>
-      <tr><td>Context/Knowledge</td><td>quais fontes entraram no contexto?</td><td>prioridade + hash + budget</td></tr>
-      <tr><td>Monitor</td><td>o sinal está online, fresco e útil?</td><td>probes + events</td></tr>
-    </tbody></table></div></section>
-    <section id="loops"><div class="wrap"><p class="eyebrow">04 · loops e waves</p><h2>Paralelismo segue o WorkGraph.</h2><p>A spec vira unidades com dependências e acceptance criteria. O compilador rejeita ciclos, cria waves topológicas e fecha cada barreira antes de liberar dependentes.</p><pre>python -m hpp work plan examples/reliable-coding/workgraph.json
-python -m hpp work waves examples/reliable-coding/workgraph.json
-python -m hpp resume</pre><p>Autoprompt deriva continuidade; o done gate decide conclusão.</p></div></section>
-    <section id="policy"><div class="wrap"><p class="eyebrow">05 · política</p><h2>Advisory não se fantasia de bloqueio.</h2><div class="grid">
-      <article class="card"><span class="gate ok">0 · OK</span><h3>Allow</h3><p>Nenhuma regra de risco casou.</p></article>
-      <article class="card"><span class="gate warn">1 · WARN</span><h3>Audit</h3><p>Registra o risco; não impede.</p></article>
-      <article class="card"><span class="gate block">2 · BLOCK</span><h3>Enforce</h3><p>Detector confiável impede a ação.</p></article>
-    </div><pre>python -m hpp policy check --mode audit --command "git push origin main"
-python -m hpp policy check --mode enforce --command "git push origin main"</pre></div></section>
-    <section id="proof"><div class="wrap"><p class="eyebrow">06 · prova</p><h2>Capacidade e confiabilidade não são a mesma métrica.</h2><p><code>pass@k</code> mede se um caso passou ao menos uma vez. <code>pass^k</code> mede se passou sempre. Uma release crítica exige piso repetível no universo declarado.</p><pre>python -m hpp eval run examples/reliable-coding/benchmark-suite.json -k 3 --gate both
-python -m hpp benchmark -k 3 --json</pre><p>Veja a <a href="PROOF.md">matriz de prova</a> e o <a href="BENCHMARK.md">contrato do benchmark</a>.</p></div></section>
+
+    <section id="model"><div class="wrap">
+      <p class="eyebrow">01 · model</p>
+      <h2>Harness first; modules after.</h2>
+      <p class="lead">The product is layered, and the layers are not interchangeable. The harness is the surface you operate; the protocol is what it enforces; the modules are what it installs; the distribution is how each host receives them.</p>
+      <div class="grid">
+        <article class="card"><h3>Harness</h3><p><code>python -m hpp</code> — doctor, init, event log, attestation, maps, WorkGraph, policy, routing, context, eval and benchmark. A Python package with no runtime dependencies; nothing runs in the background.</p></article>
+        <article class="card"><h3>Protocol</h3><p><code>hpp.manifest.json</code> — protocol 2.0: four invariants, three roles (maker, checker, human-gate), five loop transitions with a named gate each, exit codes, host coverage per module, declared monitors and bundles.</p></article>
+        <article class="card"><h3>Modules</h3><p>Versioned directories, each installable on its own. Coverage per host is declared as <code>native</code>, <code>explicit-command</code> or <code>unsupported</code>; no adapter pretends otherwise.</p></article>
+        <article class="card wide"><h3>Claude Code</h3><p>Native plugin channel (<code>/plugin marketplace add</code> and <code>/plugin install</code>) and lifecycle hooks once you paste the wiring. <code>.claude/settings.local.json</code> — hooks and statusLine — stays a human gate.</p></article>
+        <article class="card wide"><h3>Codex CLI</h3><p>Verified copy per module through the module installer: skills to <code>.agents/skills</code>, runtime to <code>.agents/hpp/&lt;module&gt;</code>, <code>AGENTS.md</code> read by the host. There are no lifecycle hooks; the same capabilities are explicit commands.</p></article>
+        <article class="card full"><h3>The four invariants</h3><ul>
+          <li>A verified outcome has recorded evidence and an explicit human gate.</li>
+          <li>A checker is read-only relative to the maker's workspace.</li>
+          <li>A loop advances only through a recorded event.</li>
+          <li>An approval is invalid when its bound spec, commit, or repository snapshot changes.</li>
+        </ul><p class="measured">Source: <code>hpp.manifest.json</code>, key <code>invariants</code>.</p></article>
+      </div>
+    </div></section>
+
+    <section id="start"><div class="wrap">
+      <p class="eyebrow">02 · start</p>
+      <h2>Diagnose before you install.</h2>
+      <pre>python -m hpp doctor
+python -m hpp init --target ../your-repo
+python -m hpp init --target ../your-repo --apply
+python -m hpp benchmark -k 3</pre>
+      <p><code>hpp doctor</code> validates the manifest. On this checkout it prints <code>HPP doctor: ok · modules=10 · hosts=claude-code, codex</code>; with <code>--json</code> the distribution field reads <code>source-contract</code>, because a source tree has no <code>marketplace.json</code> to cross-check — the command says what it could not verify instead of reporting a check it did not run. Against the emitted distribution the same field reads <code>checked</code>.</p>
+      <p><code>hpp install --bundle reliable-coding --host codex --target ../your-repo</code> prints a receipt with <code>"mode": "plan-only"</code> and copies nothing. The copy is done by the module installer, which ships with the emitted distribution and not with this source tree: <code>kit_doctor.py install --kit &lt;module-path&gt; --host &lt;host&gt; --target ../your-repo</code> prints a plan, and the same command with <code>--apply</code> performs it. <code>hpp init</code> prints these lines for you in its wire block.</p>
+      <p class="measured">Requirements: Python 3.10 or newer (<code>pyproject.toml</code>), <code>git</code> on <code>PATH</code> for attestation and for the commit count in <code>detect</code>; no third-party package.</p>
+    </div></section>
+
+    <section id="init"><div class="wrap">
+      <p class="eyebrow">03 · init</p>
+      <h2>Six fixed stages. A plan before any write.</h2>
+      <p class="lead"><code>hpp init</code> fulfils the six stages of the installation contract. Without <code>--apply</code> it prints the plan and writes nothing; with <code>--apply</code> it writes exactly one file, <code>.hpp/profile.json</code>, inside the target. Host wiring is never written — it is a block you paste.</p>
+      <table><thead><tr><th>Stage</th><th>What it measures</th><th>What can stop it</th></tr></thead><tbody>
+        <tr><td><code>detect</code></td><td>Classifies the target as <code>greenfield</code>, <code>in-progress</code> or <code>re-run</code> from <code>.claude/settings*.json</code> (hooks or statusLine already set), <code>AGENTS.md</code>, <code>.agents/</code>, <code>.hpp/events.jsonl</code>, a previous <code>.hpp/profile.json</code> and the git commit count. Lists what already exists and is kept.</td><td>A corrupt event log or profile is reported as a warning with the file to inspect.</td></tr>
+        <tr><td><code>prereqs</code></td><td>Python at or above 3.10; the manifest contract; the distribution when <code>marketplace.json</code> sits beside the manifest; <code>git</code> on <code>PATH</code>.</td><td>Python below the floor or a manifest/marketplace divergence halts the run (exit 2). A missing <code>git</code> is a warning with the install hint for your platform.</td></tr>
+        <tr><td><code>profile</code></td><td>Three answers — host, bundle, policy mode — taken from flags, a <code>--profile</code> JSON file, the prompt (only on a TTY) or the default, and the source of each is recorded. Plan reports <code>would-write</code>; <code>--apply</code> writes; the same answers again are a <code>no-op</code>.</td><td>A recorded profile with different answers is a <code>conflict</code>: nothing is overwritten, the differing keys are named.</td></tr>
+        <tr><td><code>configure</code></td><td>The module plan for the chosen host, with <code>native</code> or <code>explicit-command</code> per module, and a <code>CHECKSUMS.txt</code> verification for every module directory present in the tree.</td><td>A module unsupported on the host, or a checksum mismatch, halts the run (exit 2).</td></tr>
+        <tr><td><code>wire-suggest</code></td><td>The block to paste for the host: plugin channel lines for Claude Code, module-installer lines for Codex CLI and for explicit-command modules, and the policy command as configured. Reports <code>0 files written</code>.</td><td>Nothing; it never writes.</td></tr>
+        <tr><td><code>smoke</code></td><td>Four controls: the policy classifier (<code>rm -rf</code> must be <code>BLOCK</code>, <code>pytest</code> must be <code>ALLOW</code>), a non-empty capability graph, the event log projecting onto the loop, and the benchmark at <code>k=1</code>.</td><td>A failed control sets exit 1 and the plan says which one; <code>--no-benchmark</code> reports that control as not verified instead of skipping it silently.</td></tr>
+      </tbody></table>
+      <h3>Readiness is counted, not estimated</h3>
+      <p>Eleven items, each <code>verified</code>, <code>not verified</code> or <code>failed</code>, each with the command that reproduces it. What was not measured appears as not verified — never as zero and never as one hundred. This is the boot sequence and the readiness line measured on an empty target from this source tree:</p>
+      <pre>&gt; detecting host...           ✓ greenfield · 0 existing item(s) preserved
+&gt; checking prerequisites...   ✓ python 3.14.3 · protocol 2.0
+&gt; mounting profile...         ✓ would-write · host=claude-code · bundle=reliable-coding · policy=audit · 3 default(s)
+&gt; loading modules...          ✓ 6 modules · reliable-coding · claude-code
+&gt; wiring suggestions...       ✓ 7 commands to paste · 0 files written
+&gt; verifying evidence...       ✓ policy · graph · events · benchmark
+&gt; protocol online.
+
+  READINESS  every line is a check that ran; the command below it reproduces it
+  █████████████░░░░░░░  7/11 verified · 4 not verified · 0 failed</pre>
+      <p class="measured">The four not verified are the ones a source checkout cannot prove: distribution integrity and module checksums (only the emitted distribution carries <code>marketplace.json</code> and <code>CHECKSUMS.txt</code>), the profile (plan only) and the host wiring (a paste you do yourself). Command: <code>python -m hpp init --target &lt;empty-dir&gt; --non-interactive --no-animation</code>; the target directory held 0 files afterwards.</p>
+      <h3>Flags</h3>
+      <ul>
+        <li><code>--host</code>, <code>--bundle</code>, <code>--policy-mode audit|enforce</code> — answer the three questions; <code>--modules a,b</code> replaces the bundle with an explicit list.</li>
+        <li><code>--profile answers.json</code> — the same answers from a file (keys <code>host</code>, <code>bundle</code>, <code>policy_mode</code>, <code>modules</code>; an unknown key is a usage error).</li>
+        <li><code>--yes</code>, <code>--non-interactive</code>, <code>--json</code>, or <code>CI</code> set in the environment — no prompt is reached; unanswered questions take their defaults and the report says so.</li>
+        <li><code>--no-animation</code> — plain output; <code>NO_COLOR</code> is honoured; without a TTY the output is complete and uncoloured.</li>
+        <li><code>--marketplace</code> — the slug used in the Claude Code wire block, for forks.</li>
+      </ul>
+      <p>Exit codes of <code>init</code>: <code>0</code> ok · <code>1</code> a warning or a non-blocking failure (git missing, a smoke control failed) · <code>2</code> halted at a blocking stage · <code>3</code> the invocation itself was wrong (target is not a directory, bad <code>--profile</code> file). A halted run never prints the closing brand line.</p>
+    </div></section>
+
+    <section id="maps"><div class="wrap">
+      <p class="eyebrow">04 · maps</p>
+      <h2>The state has more than one view.</h2>
+      <p class="lead">Maps have no state of their own. Each is a projection of one or two inputs, sorted so that the same input yields the same output byte for byte. The Monitor Map does not probe anything and the Lane Map does not know your sessions: you supply <code>last_signal</code> and heartbeats, and <code>--now</code> is explicit so that no projection depends on the ambient clock.</p>
+      <table><thead><tr><th>Map</th><th>Input</th><th>Question it answers</th><th>Command</th></tr></thead><tbody>
+        <tr><td>Capability</td><td>manifest</td><td>which module provides which capability, on which host, in which bundle</td><td><code>graph --view capability</code></td></tr>
+        <tr><td>Operational</td><td>manifest <code>loop</code></td><td>which event moves which state through which gate</td><td><code>graph --view operational</code></td></tr>
+        <tr><td>Agent</td><td>roles and modules; optional events</td><td>who may make, check and approve; what has happened, in order</td><td><code>map agent</code> · <code>graph --view agent</code></td></tr>
+        <tr><td>Evidence</td><td>fixed</td><td>how a criterion, a record and a verdict relate</td><td><code>graph --view evidence</code></td></tr>
+        <tr><td>Code</td><td>manifest components</td><td>which surfaces each module declares (not an AST)</td><td><code>graph --view code</code></td></tr>
+        <tr><td>Lane</td><td>lanes JSON, <code>--now</code>, thresholds</td><td>who owns what, who is alive, where live claims overlap</td><td><code>map lane</code></td></tr>
+        <tr><td>Context</td><td>context JSON, <code>--budget</code></td><td>what entered the compiled context, what was omitted, with hashes</td><td><code>map context</code></td></tr>
+        <tr><td>Monitor</td><td>monitors JSON, <code>--now</code>, <code>--skew-tolerance</code></td><td>what is observed, how fresh, and which gate consumes it</td><td><code>map monitor</code></td></tr>
+        <tr><td>Work</td><td>spec JSON</td><td>which units can run together and in which order</td><td><code>work plan</code> · <code>work waves</code></td></tr>
+      </tbody></table>
+      <h3>Monitor Map: four states, and a clock that can lie</h3>
+      <table><thead><tr><th>State</th><th>Rule</th></tr></thead><tbody>
+        <tr><td><code>healthy</code></td><td><code>now − last_signal ≤ freshness</code></td></tr>
+        <tr><td><code>stale</code></td><td>the signal is older than the declared freshness</td></tr>
+        <tr><td><code>skew</code></td><td><code>last_signal &gt; now + skew_tolerance</code> — a timestamp in the future is not evidence of freshness; default tolerance 5 s, set with <code>--skew-tolerance</code></td></tr>
+        <tr><td><code>unknown</code></td><td>no <code>last_signal</code> supplied</td></tr>
+      </tbody></table>
+      <pre>python -m hpp map monitor examples/reliable-coding/monitors.json --now 1000</pre>
+      <p class="measured">Measured: <code>service-health</code> (signal 950, freshness 120) → <code>healthy</code>; <code>data-freshness</code> (signal 700, freshness 120) → <code>stale</code>. With a synthetic file, a signal at 1010 against <code>--now 1000</code> projected as <code>skew</code>, and as <code>healthy</code> once <code>--skew-tolerance 20</code> was passed; a monitor without <code>last_signal</code> projected as <code>unknown</code>.</p>
+      <h3>Lane Map: liveness from heartbeats</h3>
+      <p>A lane is <code>alive</code> when its heartbeat is at most <code>--suspect-after</code> seconds old (default 300), <code>suspect</code> up to <code>--dead-after</code> (default 900), and <code>dead</code> beyond that or when declared closed. A lane without a heartbeat is <code>unknown</code>. A dead lane never produces a collision; two live exclusive lanes whose territories overlap do. Command: <code>python -m hpp map lane examples/reliable-coding/lanes.json --now 1000</code>.</p>
+    </div></section>
+
+    <section id="loop"><div class="wrap">
+      <p class="eyebrow">05 · loop and waves</p>
+      <h2>The loop advances only through a recorded event.</h2>
+      <pre>planned --work_started--&gt; active --evidence_recorded--&gt; evidenced --check_passed--&gt; checked
+        [scope]                   [fresh-evidence]                 [read-only-checker]
+
+checked --human_approved--&gt; approved --verified--&gt; verified
+        [human]                      [closure]</pre>
+      <p>The event log is <code>.hpp/events.jsonl</code> in the workspace, append-only. An event that does not fit the current state is refused before anything is written, and <code>verified</code> requires at least one recorded evidence item. <code>hpp status</code> projects the log onto the machine above and names the next step; <code>hpp resume</code> returns the same answer as JSON. Neither asks a model to remember anything.</p>
+      <pre>python -m hpp event append --type work_started
+python -m hpp status
+python -m hpp resume</pre>
+      <p class="measured">Measured in an empty directory: <code>event append --type verified</code> as the first event → <code>hpp: invalid transition at event 1: planned --verified--&gt; ?</code>, exit 2, no file created. Then <code>event append --type work_started</code> → state <code>active</code>, <code>hpp status</code> prints <code>HPP status: active · events=1 · next=record fresh evidence</code>.</p>
+      <h3>Parallelism follows the WorkGraph</h3>
+      <p>A spec lists work units, each with dependencies, non-empty acceptance criteria and a tier (<code>economy</code>, <code>balanced</code>, <code>frontier</code>). The compiler rejects a dependency cycle as an error — never as an empty wave — and emits topological waves: each unit sits in the first wave after all of its dependencies. It launches nothing; the operator honours the barrier between waves.</p>
+      <pre>python -m hpp work plan examples/reliable-coding/workgraph.json
+python -m hpp work waves examples/reliable-coding/workgraph.json</pre>
+      <p class="measured">Measured on the example: wave 1 <code>spec</code> · wave 2 <code>build</code>, <code>docs</code> · wave 3 <code>verify</code>; tier counts <code>economy 2 · balanced 1 · frontier 1</code>.</p>
+    </div></section>
+
+    <section id="policy"><div class="wrap">
+      <p class="eyebrow">06 · policy</p>
+      <h2>Advisory does not dress up as a block.</h2>
+      <p class="lead">The classifier returns one of three verdicts and never executes the command. The mode decides what the verdict costs: in <code>audit</code> the exit code is always 0 and the verdict is only recorded; in <code>enforce</code> the verdict becomes the exit code.</p>
+      <div class="grid">
+        <article class="card"><span class="gate allow">ALLOW · exit 0</span><h3>No rule matched</h3><p>The command runs. The rule set is small and explicit; it does not claim to catch every destructive form.</p></article>
+        <article class="card"><span class="gate manual">MANUAL · exit 1 in enforce</span><h3>Human gate</h3><p>Any <code>git push</code>, any <code>curl</code> or <code>wget</code> to a URL: external publication or transfer needs a person.</p></article>
+        <article class="card"><span class="gate block">BLOCK · exit 2 in enforce</span><h3>Refused</h3><p>Recursive delete in any flag order (<code>-rf</code>, <code>-fr</code>, <code>-r -f</code>, <code>--recursive --force</code>, <code>rmdir /s</code>), force push, push to <code>main</code> or <code>master</code>, <code>curl | sh</code>, <code>DROP</code>/<code>TRUNCATE</code>.</p></article>
+      </div>
+      <pre>python -m hpp policy check --mode audit --command "git push origin main"
+python -m hpp policy check --mode enforce --command "git push origin main"</pre>
+      <table><thead><tr><th>Command</th><th>Verdict · rule</th><th>audit</th><th>enforce</th></tr></thead><tbody>
+        <tr><td><code>git push origin main</code></td><td><code>BLOCK</code> · main-push</td><td>exit 0</td><td>exit 2</td></tr>
+        <tr><td><code>git push origin feature</code></td><td><code>MANUAL</code> · external-push</td><td>exit 0</td><td>exit 1</td></tr>
+        <tr><td><code>rm -rf src</code></td><td><code>BLOCK</code> · recursive-delete</td><td>exit 0</td><td>exit 2</td></tr>
+        <tr><td><code>python -m pytest -q</code></td><td><code>ALLOW</code></td><td>exit 0</td><td>exit 0</td></tr>
+      </tbody></table>
+      <p class="measured">All eight cells measured on this tree with <code>python -m hpp policy check</code>. <code>rm file.txt</code>, <code>grep -rf patterns.txt</code> and <code>cp -rf a b</code> are not blocks: the check reads the option set of each <code>rm</code> invocation, not a spelling.</p>
+    </div></section>
+
+    <section id="proof"><div class="wrap">
+      <p class="eyebrow">07 · proof</p>
+      <h2>Capability and reliability are not the same metric.</h2>
+      <p><code>pass@k</code> measures whether a case passed at least once in <code>k</code> runs. <code>pass^k</code> measures whether it passed every time. The capability gate requires <code>pass@k ≥ 0.90</code>; the regression gate requires <code>pass^k = 1.0</code>; <code>--gate both</code> requires both. A suite that passes the first and fails the second is flaky, and the report says by how much.</p>
+      <pre>python -m hpp eval run examples/reliable-coding/benchmark-suite.json -k 3 --gate both
+python -m hpp benchmark -k 3 --json</pre>
+      <p class="measured">Measured: <code>HPP benchmark: pass@k=1.00 · pass^k=1.00 · gate=PASS</code> over ten controls (manifest contract, policy enforcement, WorkGraph waves, lane collision, monitor freshness, context provenance, routing floor, event/evidence gate, graph determinism, evidence attestation), three runs each. The JSON report carries the suite's sha256 and the platform it ran on. Exit 0 when the gate passes, 1 when it does not.</p>
+      <h3>Attestation binds an approval to bytes</h3>
+      <p><code>hpp attest create</code> records a verdict together with the spec hash, the base commit, a digest of the full repository snapshot (tracked and untracked), the maker, the checker and the session. Maker and checker must differ, or the record is refused. <code>hpp attest verify</code> re-derives every binding and blocks when any of them moved.</p>
+      <pre>python -m hpp attest create --repo . --spec spec.md --output att.json --maker a --checker b --session s1 --verdict approved
+python -m hpp attest verify att.json --repo .</pre>
+      <p class="measured">Measured in a scratch repository: <code>--maker a --checker a</code> → <code>hpp: maker and checker must be different non-empty actors</code>, exit 2. With different actors the record is <code>approved</code> and <code>verify</code> returns <code>valid</code>, exit 0; after one line of the spec changed, <code>verify</code> returns <code>blocked</code> with <code>mismatches: spec_sha256, snapshot_digest</code>, exit 2. Attestation requires <code>git</code>.</p>
+      <p>See the <a href="PROOF.md">claim matrix</a> and the <a href="BENCHMARK.md">benchmark contract</a>.</p>
+    </div></section>
+
+    <section id="hosts"><div class="wrap">
+      <p class="eyebrow">08 · hosts</p>
+      <h2>Same contract, visible differences.</h2>
+      <table><thead><tr><th></th><th>Claude Code</th><th>Codex CLI</th></tr></thead><tbody>
+        <tr><td>Distribution</td><td>plugin marketplace (<code>/plugin marketplace add rushar-labs/house-party-protocol</code>, then <code>/plugin install &lt;module&gt;@house-party-protocol</code>)</td><td>verified copy per module through <code>kit_doctor.py install --host codex</code></td></tr>
+        <tr><td>Where it lands</td><td>the host's plugin store; <code>.claude/settings.local.json</code> for hooks and statusLine</td><td><code>.agents/skills</code> for skills, <code>.agents/hpp/&lt;module&gt;</code> for runtime; <code>AGENTS.md</code> is what the host reads</td></tr>
+        <tr><td>Lifecycle hooks</td><td>native, once the wiring is pasted (a human gate; <code>hpp init</code> lists the modules that declare hooks)</td><td>none; the same capabilities are explicit commands</td></tr>
+        <tr><td>Coverage in the manifest</td><td>six modules <code>native</code>, four <code>explicit-command</code></td><td>nine <code>explicit-command</code>; <code>claude-dev-kit</code> is <code>unsupported</code>, and <code>hpp init</code> halts rather than plan it there</td></tr>
+      </tbody></table>
+      <p class="measured">Source: <code>hosts</code> in each module entry of <code>hpp.manifest.json</code>; the per-host paths are the ones <code>hpp init</code> prints in its wire block. <code>hpp init --host codex</code> plans the <code>reliable-coding</code> bundle with all six modules as <code>explicit-command</code>.</p>
+    </div></section>
+
+    <section id="exit"><div class="wrap">
+      <p class="eyebrow">09 · exit codes</p>
+      <h2>One contract: 0 ok · 1 warn · 2 block · 3 error.</h2>
+      <table><thead><tr><th>Command</th><th>0</th><th>1</th><th>2</th><th>3</th></tr></thead><tbody>
+        <tr><td><code>policy check --mode enforce</code></td><td><code>ALLOW</code></td><td><code>MANUAL</code></td><td><code>BLOCK</code></td><td>—</td></tr>
+        <tr><td><code>policy check --mode audit</code></td><td>always</td><td>—</td><td>—</td><td>—</td></tr>
+        <tr><td><code>eval run</code> · <code>benchmark</code></td><td>gate passed</td><td>gate failed</td><td>invalid suite</td><td>—</td></tr>
+        <tr><td><code>attest create</code> · <code>attest verify</code></td><td>approved · valid</td><td>—</td><td>revise/blocked · invalid · refused</td><td>—</td></tr>
+        <tr><td><code>init</code></td><td>ok · no-op</td><td>warning, non-blocking failure</td><td>halted</td><td>usage error</td></tr>
+        <tr><td><code>event append</code> · <code>status</code> · maps</td><td>ok</td><td>—</td><td>invalid transition, corrupt log, invalid input</td><td>internal error</td></tr>
+      </tbody></table>
+      <p class="measured">Source: <code>exit_codes</code> in the manifest, <code>hpp/cli.py</code> and the measurements quoted above. Any known error (manifest, install, state, eval, attestation, invalid JSON) exits 2 with a one-line message; an unexpected exception exits 3.</p>
+    </div></section>
+
   </main>
-  <footer><div class="wrap"><strong>House Party Protocol</strong><p>Operate coding agents under evidence, not trust.</p></div></footer>
+  <footer><div class="wrap">
+    <p class="five">AGENTS · EVIDENCE · MEMORY · PROTOCOL · CONTINUITY</p>
+    <strong>House Party Protocol</strong>
+    <p>Operate coding agents under evidence, not trust.</p>
+    <p><a href="../README.md">README</a> · <a href="CONCEPTS.md">Concepts</a> · <a href="ARCHITECTURE.md">Architecture</a> · <a href="../CHANGELOG.md">Changelog</a> · <a href="CATALOGO.html">Module catalogue</a></p>
+  </div></footer>
 </body>
 </html>

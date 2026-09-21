@@ -20,10 +20,15 @@ def find_manifest(explicit: str | None = None, start: Path | None = None) -> Pat
         candidate = base / "hpp.manifest.json"
         if candidate.is_file():
             return candidate
-    packaged = Path(__file__).resolve().parent.parent / "hpp.manifest.json"
-    if packaged.is_file():
-        return packaged
-    raise ManifestError("hpp.manifest.json not found from current directory or package root")
+    package_dir = Path(__file__).resolve().parent
+    # Why (pip install shipped no manifest, 2026-09-21): the root file only exists in a source
+    # checkout or an editable install, where its parent is the distribution root the wizard
+    # verifies. Inside site-packages that parent holds no manifest, so the copy the wheel carries
+    # as package data is the last resort — checked last so a real checkout always wins.
+    for packaged in (package_dir.parent / "hpp.manifest.json", package_dir / "hpp.manifest.json"):
+        if packaged.is_file():
+            return packaged
+    raise ManifestError("hpp.manifest.json not found from current directory, source root or installed package")
 
 
 def load_manifest(path: str | None = None) -> tuple[dict[str, Any], Path]:

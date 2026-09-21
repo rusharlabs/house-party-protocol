@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>House Party Protocol — Manual do harness</title>
+  <meta name="description" content="Manual operacional do harness House Party Protocol 2.4.1: init, mapas, loop, política, prova, hosts e exit codes, cada afirmação com o comando que a reproduz.">
+  <link rel="alternate" hreflang="en" href="MANUAL.html">
+  <link rel="alternate" hreflang="pt-BR" href="MANUAL.pt-BR.html">
+  <style>
+    :root{--hpp-black: #000000;--hpp-ink: #0F1113;--hpp-paper: #F4F1EB;--hpp-signal: #FF6A00;--line:rgba(15,17,19,.18);--surface:rgba(15,17,19,.04);--muted:rgba(15,17,19,.72);--max:1120px}
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;background:var(--hpp-paper);color:var(--hpp-ink);font:16px/1.65 Inter,"Segoe UI",Arial,sans-serif}
+    a{color:var(--hpp-ink);text-decoration:underline;text-decoration-color:var(--hpp-signal);text-decoration-thickness:2px;text-underline-offset:3px}
+    a:hover{color:var(--hpp-signal)}
+    a:focus-visible{outline:4px solid var(--hpp-signal);outline-offset:3px}
+    .wrap{width:min(var(--max),calc(100% - 40px));margin:auto}
+    .lang{background:var(--hpp-black);color:var(--hpp-paper);font-size:.9rem;padding:10px 0}
+    .lang a{color:var(--hpp-paper)}
+    .lang a[aria-current]{text-decoration:none;font-weight:700}
+    .hero{background:var(--hpp-ink);color:var(--hpp-paper);padding:44px 0 50px}
+    .hero img{width:min(720px,100%);display:block}
+    .hero h1{font:800 clamp(2.2rem,6vw,5rem)/.95 Sora,Inter,"Segoe UI",sans-serif;letter-spacing:-.02em;margin:.35em 0}
+    .hero p{max-width:760px;font-size:1.15rem;color:rgba(244,241,235,.82)}
+    .hero .eyebrow{color:var(--hpp-paper);border-color:var(--hpp-signal)}
+    .signal{color:var(--hpp-signal)}
+    .eyebrow,.mono,code,pre,.gate,.label{font-family:"JetBrains Mono","Cascadia Code",Consolas,monospace}
+    .eyebrow{display:inline-block;letter-spacing:.13em;text-transform:uppercase;font-size:.78rem;border-left:4px solid var(--hpp-signal);padding-left:.6em;margin:0 0 .6em}
+    nav{position:sticky;top:0;z-index:2;background:rgba(244,241,235,.96);border-bottom:1px solid var(--line);backdrop-filter:blur(8px)}
+    nav .wrap{display:flex;gap:20px;overflow:auto;padding:12px 0}
+    nav a{white-space:nowrap;text-decoration:none;font-weight:700}
+    nav a:hover{text-decoration:underline;text-decoration-color:var(--hpp-signal)}
+    section{padding:64px 0;border-bottom:1px solid var(--line)}
+    h2{font:800 clamp(1.7rem,3vw,2.6rem)/1.1 Sora,Inter,"Segoe UI",sans-serif;letter-spacing:-.01em;margin:0 0 .6em}
+    h3{margin:0 0 .4em;font-size:1.1rem}
+    .lead{max-width:780px;color:var(--muted)}
+    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:20px}
+    .card{grid-column:span 4;border:1px solid var(--line);border-radius:16px;padding:22px;background:var(--surface)}
+    .card.wide{grid-column:span 6}
+    .card.full{grid-column:1/-1}
+    pre{background:var(--hpp-ink);color:var(--hpp-paper);padding:20px;border-radius:12px;overflow:auto;border-left:6px solid var(--hpp-signal);font-size:.92rem;line-height:1.5}
+    code{font-size:.94em}
+    p code,li code,td code{background:var(--surface);padding:.08em .35em;border-radius:5px}
+    pre code{background:none;padding:0}
+    table{width:100%;border-collapse:collapse;background:var(--surface);margin:1em 0}
+    th,td{text-align:left;padding:12px;border-bottom:1px solid var(--line);vertical-align:top}
+    th{background:rgba(15,17,19,.08);font-weight:700}
+    .gate{display:inline-block;border-radius:999px;padding:.15rem .7rem;font-weight:700;font-size:.8rem;margin-bottom:.6em}
+    .gate.allow{background:var(--hpp-signal);color:var(--hpp-ink)}
+    .gate.manual{border:2px solid var(--hpp-ink);color:var(--hpp-ink)}
+    .gate.block{background:var(--hpp-ink);color:var(--hpp-paper)}
+    .label{font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+    .measured{border-left:4px solid var(--hpp-signal);padding-left:1em;color:var(--muted);font-size:.95rem}
+    ul,ol{padding-left:1.3em}
+    li{margin:.25em 0}
+    footer{padding:48px 0;background:var(--hpp-black);color:var(--hpp-paper)}
+    footer a{color:var(--hpp-paper)}
+    footer .five{letter-spacing:.2em;font-size:.8rem;color:rgba(244,241,235,.72)}
+    @media(max-width:760px){.card,.card.wide{grid-column:1/-1}.wrap{width:min(100% - 32px,var(--max))}th,td{font-size:.88rem;padding:8px}.hero{padding-top:28px}section{padding:44px 0}}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+  </style>
+</head>
+<body>
+  <div class="lang"><div class="wrap"><a href="MANUAL.html" hreflang="en" lang="en">English</a> · <a href="MANUAL.pt-BR.html" aria-current="page" hreflang="pt-BR">Português</a></div></div>
+  <header class="hero">
+    <div class="wrap">
+      <img src="../assets/hpp-logo-dark.svg" alt="House Party Protocol — by Rushar Labs">
+      <p class="eyebrow">Manual do harness · v2.4.1 · Claude Code e Codex CLI</p>
+      <h1>Da spec à prova.<br><span class="signal">Sem salto de confiança.</span></h1>
+      <p>Um guia operacional do harness: como o <code>hpp init</code> instala, o que cada mapa projeta, como o loop avança, o que a política bloqueia e o que conta como prova. Toda afirmação abaixo carrega o comando que a reproduz; as saídas citadas foram medidas nesta árvore-fonte, versão 2.4.0.</p>
+    </div>
+  </header>
+  <nav aria-label="Capítulos"><div class="wrap"><a href="#model">Modelo</a><a href="#start">Começar</a><a href="#init">Init</a><a href="#maps">Mapas</a><a href="#loop">Loop</a><a href="#policy">Política</a><a href="#proof">Prova</a><a href="#hosts">Hosts</a><a href="#exit">Exit codes</a></div></nav>
+  <main>
+
+    <section id="model"><div class="wrap">
+      <p class="eyebrow">01 · modelo</p>
+      <h2>Harness primeiro; módulos depois.</h2>
+      <p class="lead">O produto tem camadas, e as camadas não são intercambiáveis. O harness é a superfície que você opera; o protocolo é o que ele impõe; os módulos são o que ele instala; a distribuição é como cada host os recebe.</p>
+      <div class="grid">
+        <article class="card"><h3>Harness</h3><p><code>python -m hpp</code> — doctor, init, log de eventos, atestação, mapas, WorkGraph, política, roteamento, contexto, eval e benchmark. Um pacote Python sem dependência de runtime; nada roda em segundo plano.</p></article>
+        <article class="card"><h3>Protocolo</h3><p><code>hpp.manifest.json</code> — protocolo 2.0: quatro invariantes, três papéis (maker, checker, human-gate), cinco transições do loop com um gate nomeado cada, exit codes, cobertura por host de cada módulo, monitores declarados e bundles.</p></article>
+        <article class="card"><h3>Módulos</h3><p>Diretórios versionados, cada um instalável por conta própria. A cobertura por host é declarada como <code>native</code>, <code>explicit-command</code> ou <code>unsupported</code>; nenhum adaptador finge o contrário.</p></article>
+        <article class="card wide"><h3>Claude Code</h3><p>Canal nativo de plugin (<code>/plugin marketplace add</code> e <code>/plugin install</code>) e lifecycle hooks depois que você cola o wiring. O <code>.claude/settings.local.json</code> — hooks e statusLine — continua sendo gate humano.</p></article>
+        <article class="card wide"><h3>Codex CLI</h3><p>Cópia verificada por módulo pelo instalador de módulos: skills em <code>.agents/skills</code>, runtime em <code>.agents/hpp/&lt;módulo&gt;</code>, <code>AGENTS.md</code> lido pelo host. Não há lifecycle hooks; as mesmas capacidades são comandos explícitos.</p></article>
+        <article class="card full"><h3>As quatro invariantes</h3><ul>
+          <li>Um resultado verificado tem evidência registrada e um gate humano explícito.</li>
+          <li>Um checker é somente-leitura em relação ao workspace do maker.</li>
+          <li>Um loop só avança por um evento registrado.</li>
+          <li>Uma aprovação é inválida quando a spec, o commit ou o snapshot do repositório a que está atada mudam.</li>
+        </ul><p class="measured">Fonte: <code>hpp.manifest.json</code>, chave <code>invariants</code> (o texto original está em inglês).</p></article>
+      </div>
+    </div></section>
+
+    <section id="start"><div class="wrap">
+      <p class="eyebrow">02 · começar</p>
+      <h2>Diagnostique antes de instalar.</h2>
+      <pre>python -m hpp doctor
+python -m hpp init --target ../seu-repo
+python -m hpp init --target ../seu-repo --apply
+python -m hpp benchmark -k 3</pre>
+      <p>O <code>hpp doctor</code> valida o manifesto. Neste checkout ele imprime <code>HPP doctor: ok · modules=10 · hosts=claude-code, codex</code>; com <code>--json</code> o campo de distribuição diz <code>source-contract</code>, porque uma árvore-fonte não tem <code>marketplace.json</code> para cruzar — o comando diz o que não pôde verificar em vez de reportar uma checagem que não rodou. Contra a distribuição emitida, o mesmo campo diz <code>checked</code>.</p>
+      <p><code>hpp install --bundle reliable-coding --host codex --target ../seu-repo</code> imprime um recibo com <code>"mode": "plan-only"</code> e não copia nada. A cópia é feita pelo instalador de módulos, que viaja com a distribuição emitida e não com esta árvore-fonte: <code>kit_doctor.py install --kit &lt;caminho-do-módulo&gt; --host &lt;host&gt; --target ../seu-repo</code> imprime um plano, e o mesmo comando com <code>--apply</code> o executa. O <code>hpp init</code> imprime essas linhas para você no bloco de wiring.</p>
+      <p class="measured">Requisitos: Python 3.10 ou mais novo (<code>pyproject.toml</code>), <code>git</code> no <code>PATH</code> para a atestação e para a contagem de commits do <code>detect</code>; nenhum pacote de terceiro.</p>
+    </div></section>
+
+    <section id="init"><div class="wrap">
+      <p class="eyebrow">03 · init</p>
+      <h2>Seis estágios fixos. Um plano antes de qualquer escrita.</h2>
+      <p class="lead">O <code>hpp init</code> cumpre os seis estágios do contrato de instalação. Sem <code>--apply</code> ele imprime o plano e não escreve nada; com <code>--apply</code> escreve exatamente um arquivo, <code>.hpp/profile.json</code>, dentro do target. O wiring do host nunca é escrito — é um bloco que você cola.</p>
+      <table><thead><tr><th>Estágio</th><th>O que mede</th><th>O que pode pará-lo</th></tr></thead><tbody>
+        <tr><td><code>detect</code></td><td>Classifica o target como <code>greenfield</code>, <code>in-progress</code> ou <code>re-run</code> a partir de <code>.claude/settings*.json</code> (hooks ou statusLine já configurados), <code>AGENTS.md</code>, <code>.agents/</code>, <code>.hpp/events.jsonl</code>, um <code>.hpp/profile.json</code> anterior e a contagem de commits do git. Lista o que já existe e é preservado.</td><td>Log de eventos ou profile corrompido é reportado como aviso, com o arquivo a inspecionar.</td></tr>
+        <tr><td><code>prereqs</code></td><td>Python em 3.10 ou acima; o contrato do manifesto; a distribuição quando há <code>marketplace.json</code> ao lado do manifesto; <code>git</code> no <code>PATH</code>.</td><td>Python abaixo do piso ou divergência manifesto/marketplace interrompe a execução (exit 2). <code>git</code> ausente é aviso, com a dica de instalação para a sua plataforma.</td></tr>
+        <tr><td><code>profile</code></td><td>Três respostas — host, bundle, modo de política — vindas de flags, de um arquivo JSON via <code>--profile</code>, do prompt (só em TTY) ou do default, com a origem de cada uma registrada. O plano reporta <code>would-write</code>; <code>--apply</code> escreve; as mesmas respostas de novo são <code>no-op</code>.</td><td>Um profile gravado com respostas diferentes é <code>conflict</code>: nada é sobrescrito, as chaves divergentes são nomeadas.</td></tr>
+        <tr><td><code>configure</code></td><td>O plano de módulos para o host escolhido, com <code>native</code> ou <code>explicit-command</code> por módulo, e a verificação do <code>CHECKSUMS.txt</code> de cada diretório de módulo presente na árvore.</td><td>Módulo sem suporte no host, ou checksum divergente, interrompe a execução (exit 2).</td></tr>
+        <tr><td><code>wire-suggest</code></td><td>O bloco a colar para o host: linhas do canal de plugin para o Claude Code, linhas do instalador de módulos para o Codex CLI e para módulos <code>explicit-command</code>, e o comando de política como configurado. Reporta <code>0 files written</code>.</td><td>Nada; ele nunca escreve.</td></tr>
+        <tr><td><code>smoke</code></td><td>Quatro controles: o classificador de política (<code>rm -rf</code> tem de dar <code>BLOCK</code>, <code>pytest</code> tem de dar <code>ALLOW</code>), um grafo de capacidades não vazio, o log de eventos projetando no loop, e o benchmark com <code>k=1</code>.</td><td>Um controle reprovado dá exit 1 e o plano diz qual; <code>--no-benchmark</code> reporta esse controle como não verificado em vez de pulá-lo em silêncio.</td></tr>
+      </tbody></table>
+      <h3>Prontidão é contada, não estimada</h3>
+      <p>Onze itens, cada um <code>verified</code>, <code>not verified</code> ou <code>failed</code>, cada um com o comando que o reproduz. O que não foi medido aparece como não verificado — nunca como zero e nunca como cem. Esta é a sequência de abertura e a linha de prontidão medidas num target vazio a partir desta árvore-fonte:</p>
+      <pre>&gt; detecting host...           ✓ greenfield · 0 existing item(s) preserved
+&gt; checking prerequisites...   ✓ python 3.14.3 · protocol 2.0
+&gt; mounting profile...         ✓ would-write · host=claude-code · bundle=reliable-coding · policy=audit · 3 default(s)
+&gt; loading modules...          ✓ 6 modules · reliable-coding · claude-code
+&gt; wiring suggestions...       ✓ 7 commands to paste · 0 files written
+&gt; verifying evidence...       ✓ policy · graph · events · benchmark
+&gt; protocol online.
+
+  READINESS  every line is a check that ran; the command below it reproduces it
+  █████████████░░░░░░░  7/11 verified · 4 not verified · 0 failed</pre>
+      <p class="measured">Os quatro não verificados são os que um checkout da fonte não consegue provar: integridade da distribuição e checksums dos módulos (só a distribuição emitida carrega <code>marketplace.json</code> e <code>CHECKSUMS.txt</code>), o profile (só plano) e o wiring do host (uma colagem que você mesmo faz). Comando: <code>python -m hpp init --target &lt;dir-vazio&gt; --non-interactive --no-animation</code>; o diretório-alvo tinha 0 arquivos depois.</p>
+      <h3>Flags</h3>
+      <ul>
+        <li><code>--host</code>, <code>--bundle</code>, <code>--policy-mode audit|enforce</code> — respondem as três perguntas; <code>--modules a,b</code> substitui o bundle por uma lista explícita.</li>
+        <li><code>--profile answers.json</code> — as mesmas respostas a partir de um arquivo (chaves <code>host</code>, <code>bundle</code>, <code>policy_mode</code>, <code>modules</code>; chave desconhecida é erro de uso).</li>
+        <li><code>--yes</code>, <code>--non-interactive</code>, <code>--json</code>, ou <code>CI</code> definido no ambiente — nenhum prompt é alcançado; pergunta sem resposta assume o default e o relatório diz isso.</li>
+        <li><code>--no-animation</code> — saída plana; <code>NO_COLOR</code> é respeitado; sem TTY a saída sai completa e sem cor.</li>
+        <li><code>--marketplace</code> — o slug usado no bloco de wiring do Claude Code, para forks.</li>
+      </ul>
+      <p>Exit codes do <code>init</code>: <code>0</code> ok · <code>1</code> aviso ou falha não bloqueante (git ausente, um controle do smoke reprovou) · <code>2</code> interrompido num estágio bloqueante · <code>3</code> a própria invocação estava errada (target não é diretório, arquivo de <code>--profile</code> inválido). Uma execução interrompida nunca imprime a linha de fechamento da marca.</p>
+    </div></section>
+
+    <section id="maps"><div class="wrap">
+      <p class="eyebrow">04 · mapas</p>
+      <h2>O estado tem mais de uma vista.</h2>
+      <p class="lead">Mapas não têm estado próprio. Cada um é uma projeção de uma ou duas entradas, ordenada para que a mesma entrada produza a mesma saída byte a byte. O Monitor Map não sonda nada e o Lane Map não conhece as suas sessões: você fornece <code>last_signal</code> e heartbeats, e <code>--now</code> é explícito para que nenhuma projeção dependa do relógio ambiente.</p>
+      <table><thead><tr><th>Mapa</th><th>Entrada</th><th>Pergunta que responde</th><th>Comando</th></tr></thead><tbody>
+        <tr><td>Capability</td><td>manifesto</td><td>qual módulo provê qual capacidade, em qual host, em qual bundle</td><td><code>graph --view capability</code></td></tr>
+        <tr><td>Operational</td><td><code>loop</code> do manifesto</td><td>qual evento move qual estado por qual gate</td><td><code>graph --view operational</code></td></tr>
+        <tr><td>Agent</td><td>papéis e módulos; eventos opcionais</td><td>quem pode fazer, checar e aprovar; o que aconteceu, em ordem</td><td><code>map agent</code> · <code>graph --view agent</code></td></tr>
+        <tr><td>Evidence</td><td>fixa</td><td>como critério, registro e veredito se relacionam</td><td><code>graph --view evidence</code></td></tr>
+        <tr><td>Code</td><td>componentes do manifesto</td><td>quais superfícies cada módulo declara (não é uma AST)</td><td><code>graph --view code</code></td></tr>
+        <tr><td>Lane</td><td>JSON de lanes, <code>--now</code>, limiares</td><td>quem é dono do quê, quem está vivo, onde reivindicações vivas se sobrepõem</td><td><code>map lane</code></td></tr>
+        <tr><td>Context</td><td>JSON de contexto, <code>--budget</code></td><td>o que entrou no contexto compilado, o que foi omitido, com hashes</td><td><code>map context</code></td></tr>
+        <tr><td>Monitor</td><td>JSON de monitores, <code>--now</code>, <code>--skew-tolerance</code></td><td>o que é observado, quão fresco, e qual gate consome</td><td><code>map monitor</code></td></tr>
+        <tr><td>Work</td><td>JSON da spec</td><td>quais unidades podem rodar juntas e em que ordem</td><td><code>work plan</code> · <code>work waves</code></td></tr>
+      </tbody></table>
+      <h3>Monitor Map: quatro estados, e um relógio que pode mentir</h3>
+      <table><thead><tr><th>Estado</th><th>Regra</th></tr></thead><tbody>
+        <tr><td><code>healthy</code></td><td><code>now − last_signal ≤ freshness</code></td></tr>
+        <tr><td><code>stale</code></td><td>o sinal é mais velho que a frescura declarada</td></tr>
+        <tr><td><code>skew</code></td><td><code>last_signal &gt; now + skew_tolerance</code> — timestamp no futuro não é evidência de frescura; tolerância default 5 s, ajustável com <code>--skew-tolerance</code></td></tr>
+        <tr><td><code>unknown</code></td><td>nenhum <code>last_signal</code> fornecido</td></tr>
+      </tbody></table>
+      <pre>python -m hpp map monitor examples/reliable-coding/monitors.json --now 1000</pre>
+      <p class="measured">Medido: <code>service-health</code> (sinal 950, frescura 120) → <code>healthy</code>; <code>data-freshness</code> (sinal 700, frescura 120) → <code>stale</code>. Com um arquivo sintético, um sinal em 1010 contra <code>--now 1000</code> projetou como <code>skew</code>, e como <code>healthy</code> quando se passou <code>--skew-tolerance 20</code>; um monitor sem <code>last_signal</code> projetou como <code>unknown</code>.</p>
+      <h3>Lane Map: vitalidade a partir de heartbeats</h3>
+      <p>Uma lane está <code>alive</code> quando o heartbeat tem no máximo <code>--suspect-after</code> segundos (default 300), <code>suspect</code> até <code>--dead-after</code> (default 900), e <code>dead</code> além disso ou quando declarada fechada. Lane sem heartbeat é <code>unknown</code>. Uma lane morta nunca produz colisão; duas lanes vivas e exclusivas com territórios sobrepostos, sim. Comando: <code>python -m hpp map lane examples/reliable-coding/lanes.json --now 1000</code>.</p>
+    </div></section>
+
+    <section id="loop"><div class="wrap">
+      <p class="eyebrow">05 · loop e waves</p>
+      <h2>O loop só avança por um evento registrado.</h2>
+      <pre>planned --work_started--&gt; active --evidence_recorded--&gt; evidenced --check_passed--&gt; checked
+        [scope]                   [fresh-evidence]                 [read-only-checker]
+
+checked --human_approved--&gt; approved --verified--&gt; verified
+        [human]                      [closure]</pre>
+      <p>O log de eventos é o <code>.hpp/events.jsonl</code> no workspace, somente-acréscimo. Um evento que não cabe no estado atual é recusado antes de qualquer escrita, e <code>verified</code> exige ao menos um item de evidência registrado. O <code>hpp status</code> projeta o log na máquina acima e nomeia o próximo passo; o <code>hpp resume</code> devolve a mesma resposta em JSON. Nenhum dos dois pede a um modelo que lembre de alguma coisa.</p>
+      <pre>python -m hpp event append --type work_started
+python -m hpp status
+python -m hpp resume</pre>
+      <p class="measured">Medido num diretório vazio: <code>event append --type verified</code> como primeiro evento → <code>hpp: invalid transition at event 1: planned --verified--&gt; ?</code>, exit 2, nenhum arquivo criado. Depois <code>event append --type work_started</code> → estado <code>active</code>, e <code>hpp status</code> imprime <code>HPP status: active · events=1 · next=record fresh evidence</code>.</p>
+      <h3>Paralelismo segue o WorkGraph</h3>
+      <p>Uma spec lista unidades de trabalho, cada uma com dependências, critérios de aceitação não vazios e um tier (<code>economy</code>, <code>balanced</code>, <code>frontier</code>). O compilador rejeita ciclo de dependência como erro — nunca como wave vazia — e emite waves topológicas: cada unidade fica na primeira wave depois de todas as suas dependências. Ele não dispara nada; quem respeita a barreira entre waves é o operador.</p>
+      <pre>python -m hpp work plan examples/reliable-coding/workgraph.json
+python -m hpp work waves examples/reliable-coding/workgraph.json</pre>
+      <p class="measured">Medido no exemplo: wave 1 <code>spec</code> · wave 2 <code>build</code>, <code>docs</code> · wave 3 <code>verify</code>; contagem por tier <code>economy 2 · balanced 1 · frontier 1</code>.</p>
+    </div></section>
+
+    <section id="policy"><div class="wrap">
+      <p class="eyebrow">06 · política</p>
+      <h2>Advisory não se fantasia de bloqueio.</h2>
+      <p class="lead">O classificador devolve um de três vereditos e nunca executa o comando. O modo decide o que o veredito custa: em <code>audit</code> o exit code é sempre 0 e o veredito só é registrado; em <code>enforce</code> o veredito vira o exit code.</p>
+      <div class="grid">
+        <article class="card"><span class="gate allow">ALLOW · exit 0</span><h3>Nenhuma regra casou</h3><p>O comando segue. O conjunto de regras é pequeno e explícito; ele não afirma pegar toda forma destrutiva.</p></article>
+        <article class="card"><span class="gate manual">MANUAL · exit 1 em enforce</span><h3>Gate humano</h3><p>Qualquer <code>git push</code>, qualquer <code>curl</code> ou <code>wget</code> para uma URL: publicação ou transferência externa precisa de uma pessoa.</p></article>
+        <article class="card"><span class="gate block">BLOCK · exit 2 em enforce</span><h3>Recusado</h3><p>Deleção recursiva em qualquer ordem de flags (<code>-rf</code>, <code>-fr</code>, <code>-r -f</code>, <code>--recursive --force</code>, <code>rmdir /s</code>), force push, push em <code>main</code> ou <code>master</code>, <code>curl | sh</code>, <code>DROP</code>/<code>TRUNCATE</code>.</p></article>
+      </div>
+      <pre>python -m hpp policy check --mode audit --command "git push origin main"
+python -m hpp policy check --mode enforce --command "git push origin main"</pre>
+      <table><thead><tr><th>Comando</th><th>Veredito · regra</th><th>audit</th><th>enforce</th></tr></thead><tbody>
+        <tr><td><code>git push origin main</code></td><td><code>BLOCK</code> · main-push</td><td>exit 0</td><td>exit 2</td></tr>
+        <tr><td><code>git push origin feature</code></td><td><code>MANUAL</code> · external-push</td><td>exit 0</td><td>exit 1</td></tr>
+        <tr><td><code>rm -rf src</code></td><td><code>BLOCK</code> · recursive-delete</td><td>exit 0</td><td>exit 2</td></tr>
+        <tr><td><code>python -m pytest -q</code></td><td><code>ALLOW</code></td><td>exit 0</td><td>exit 0</td></tr>
+      </tbody></table>
+      <p class="measured">As oito células foram medidas nesta árvore com <code>python -m hpp policy check</code>. <code>rm arquivo.txt</code>, <code>grep -rf padroes.txt</code> e <code>cp -rf a b</code> não são bloqueio: a checagem lê o conjunto de opções de cada invocação de <code>rm</code>, não uma grafia.</p>
+    </div></section>
+
+    <section id="proof"><div class="wrap">
+      <p class="eyebrow">07 · prova</p>
+      <h2>Capacidade e confiabilidade não são a mesma métrica.</h2>
+      <p><code>pass@k</code> mede se um caso passou ao menos uma vez em <code>k</code> execuções. <code>pass^k</code> mede se passou todas as vezes. O gate de capacidade exige <code>pass@k ≥ 0.90</code>; o gate de regressão exige <code>pass^k = 1.0</code>; <code>--gate both</code> exige os dois. Uma suíte que passa no primeiro e reprova no segundo é instável, e o relatório diz em quanto.</p>
+      <pre>python -m hpp eval run examples/reliable-coding/benchmark-suite.json -k 3 --gate both
+python -m hpp benchmark -k 3 --json</pre>
+      <p class="measured">Medido: <code>HPP benchmark: pass@k=1.00 · pass^k=1.00 · gate=PASS</code> sobre dez controles (contrato do manifesto, enforcement de política, waves do WorkGraph, colisão de lanes, frescura de monitor, proveniência de contexto, piso de roteamento, gate evento/evidência, determinismo do grafo, atestação de evidência), três execuções cada. O relatório JSON carrega o sha256 da suíte e a plataforma em que rodou. Exit 0 quando o gate passa, 1 quando não.</p>
+      <h3>A atestação amarra uma aprovação a bytes</h3>
+      <p><code>hpp attest create</code> registra um veredito junto com o hash da spec, o commit-base, um digest do snapshot completo do repositório (rastreado e não rastreado), o maker, o checker e a sessão. Maker e checker têm de ser diferentes, ou o registro é recusado. <code>hpp attest verify</code> re-deriva cada amarração e bloqueia quando qualquer uma se moveu.</p>
+      <pre>python -m hpp attest create --repo . --spec spec.md --output att.json --maker a --checker b --session s1 --verdict approved
+python -m hpp attest verify att.json --repo .</pre>
+      <p class="measured">Medido num repositório de rascunho: <code>--maker a --checker a</code> → <code>hpp: maker and checker must be different non-empty actors</code>, exit 2. Com atores diferentes o registro sai <code>approved</code> e o <code>verify</code> devolve <code>valid</code>, exit 0; depois de uma linha da spec mudar, o <code>verify</code> devolve <code>blocked</code> com <code>mismatches: spec_sha256, snapshot_digest</code>, exit 2. A atestação exige <code>git</code>.</p>
+      <p>Veja a <a href="PROOF.pt-BR.md">matriz de prova</a> e o <a href="BENCHMARK.pt-BR.md">contrato do benchmark</a>.</p>
+    </div></section>
+
+    <section id="hosts"><div class="wrap">
+      <p class="eyebrow">08 · hosts</p>
+      <h2>Mesmo contrato, diferenças visíveis.</h2>
+      <table><thead><tr><th></th><th>Claude Code</th><th>Codex CLI</th></tr></thead><tbody>
+        <tr><td>Distribuição</td><td>marketplace de plugins (<code>/plugin marketplace add rushar-labs/house-party-protocol</code>, depois <code>/plugin install &lt;módulo&gt;@house-party-protocol</code>)</td><td>cópia verificada por módulo via <code>kit_doctor.py install --host codex</code></td></tr>
+        <tr><td>Onde cai</td><td>o store de plugins do host; <code>.claude/settings.local.json</code> para hooks e statusLine</td><td><code>.agents/skills</code> para skills, <code>.agents/hpp/&lt;módulo&gt;</code> para runtime; <code>AGENTS.md</code> é o que o host lê</td></tr>
+        <tr><td>Lifecycle hooks</td><td>nativos, depois que o wiring é colado (gate humano; o <code>hpp init</code> lista os módulos que declaram hooks)</td><td>nenhum; as mesmas capacidades são comandos explícitos</td></tr>
+        <tr><td>Cobertura no manifesto</td><td>seis módulos <code>native</code>, quatro <code>explicit-command</code></td><td>nove <code>explicit-command</code>; <code>claude-dev-kit</code> é <code>unsupported</code>, e o <code>hpp init</code> interrompe em vez de planejá-lo ali</td></tr>
+      </tbody></table>
+      <p class="measured">Fonte: <code>hosts</code> em cada entrada de módulo do <code>hpp.manifest.json</code>; os caminhos por host são os que o <code>hpp init</code> imprime no bloco de wiring. <code>hpp init --host codex</code> planeja o bundle <code>reliable-coding</code> com os seis módulos como <code>explicit-command</code>.</p>
+    </div></section>
+
+    <section id="exit"><div class="wrap">
+      <p class="eyebrow">09 · exit codes</p>
+      <h2>Um contrato: 0 ok · 1 warn · 2 block · 3 error.</h2>
+      <table><thead><tr><th>Comando</th><th>0</th><th>1</th><th>2</th><th>3</th></tr></thead><tbody>
+        <tr><td><code>policy check --mode enforce</code></td><td><code>ALLOW</code></td><td><code>MANUAL</code></td><td><code>BLOCK</code></td><td>—</td></tr>
+        <tr><td><code>policy check --mode audit</code></td><td>sempre</td><td>—</td><td>—</td><td>—</td></tr>
+        <tr><td><code>eval run</code> · <code>benchmark</code></td><td>gate passou</td><td>gate reprovou</td><td>suíte inválida</td><td>—</td></tr>
+        <tr><td><code>attest create</code> · <code>attest verify</code></td><td>approved · valid</td><td>—</td><td>revise/blocked · invalid · recusado</td><td>—</td></tr>
+        <tr><td><code>init</code></td><td>ok · no-op</td><td>aviso, falha não bloqueante</td><td>interrompido</td><td>erro de uso</td></tr>
+        <tr><td><code>event append</code> · <code>status</code> · mapas</td><td>ok</td><td>—</td><td>transição inválida, log corrompido, entrada inválida</td><td>erro interno</td></tr>
+      </tbody></table>
+      <p class="measured">Fonte: <code>exit_codes</code> no manifesto, <code>hpp/cli.py</code> e as medições citadas acima. Qualquer erro conhecido (manifesto, instalação, estado, eval, atestação, JSON inválido) sai com 2 e uma mensagem de uma linha; uma exceção inesperada sai com 3.</p>
+    </div></section>
+
+  </main>
+  <footer><div class="wrap">
+    <p class="five">AGENTS · EVIDENCE · MEMORY · PROTOCOL · CONTINUITY</p>
+    <strong>House Party Protocol</strong>
+    <p>Opere agentes de código sob evidência, não confiança.</p>
+    <p><a href="../README.pt-BR.md">README</a> · <a href="CONCEPTS.pt-BR.md">Conceitos</a> · <a href="ARCHITECTURE.pt-BR.md">Arquitetura</a> · <a href="../CHANGELOG.pt-BR.md">Changelog</a> · <a href="CATALOGO.pt-BR.html">Catálogo de módulos</a></p>
+  </div></footer>
+</body>
+</html>

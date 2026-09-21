@@ -4,7 +4,7 @@
   "displayName": "Supabase Pack",
   "version": "1.1.0",
   "description": "Duas skills SKILL-CONTRACT-compliant para projetos com Supabase: rls-audit (RLS de verdade via pg_policies + get_advisors, nao so a flag relrowsecurity) e supabase-edge-scaffold (Edge Function TypeScript com CORS + service-role via env + smoke-test deno check). Ferramentas MCP declaradas por capability, nunca por prefixo hardcoded.",
-  "author": { "name": "Max Parisi", "url": "https://rushar.com.br" },
+  "author": { "name": "Max Parisi", "url": "https://rusharlabs.com" },
   "license": "MIT",
   "keywords": ["supabase", "rls", "row-level-security", "edge-function", "postgres", "security-audit", "deno", "mcp", "database"]
 }

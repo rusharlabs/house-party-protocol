@@ -143,6 +143,84 @@ error with the cycle path in the message, never an empty wave.
 waves and tier counts; the benchmark control `workgraph-waves` feeds it `a -> b -> a` and expects
 an error.
 
+## spec-driven work
+
+**Is:** work that derives from a declared specification: a JSON object whose `work` list names
+each unit with an `id`, its `depends_on`, non-empty `acceptance` criteria and a `tier`. The spec
+is the input; the order, the waves and the edges are outputs of compiling it.
+
+**Is not:** a waterfall, and not "write a document before coding". The spec is small enough to
+be recompiled every time it changes, and compiling it costs one command. It is also not a
+conversation: a dependency that was agreed in chat but not written in `depends_on` does not
+exist for the harness.
+
+**Verify:** `python -m hpp work plan examples/reliable-coding/workgraph.json` prints the compiled
+form; remove an `acceptance` list and the same command exits 2 with "needs non-empty acceptance
+criteria"; name a dependency that is not a unit and it exits 2 with "unknown dependency".
+
+## wave-driven execution
+
+**Is:** advancing by wave rather than by task: every unit in a wave may start once the wave
+opens, and the next wave opens only after every unit in the current one has closed.
+
+**Is not:** a queue of tasks picked in any order, and not a promise the harness enforces on its
+own. `hpp work waves` computes where each barrier is; nothing in `python -m hpp` stops an
+operator from starting a wave-2 unit early. Honouring the barrier is the operator's contract,
+and the loop's events name no wave.
+
+**Verify:** `python -m hpp work waves examples/reliable-coding/workgraph.json` returns
+`waves` with an `index` per wave and the units that belong to it; `verify` appears only in
+wave 3, after `build` and `docs`.
+
+## parallel and sequential
+
+**Is:** a consequence of the dependency graph, not a choice. Two units with no path between
+them, whose dependencies have all closed, land in the same wave; a unit lands in the wave after
+the latest of its dependencies. Nobody decides that `build` and `docs` may run together; the
+absence of an edge between them decides it.
+
+**Is not:** "run everything in parallel". Running everything at once ignores the edges; running
+by wave ignores nothing. It is also not a safety claim about files: two units in the same wave
+may still write the same paths, and the WorkGraph does not look at paths. That question is
+answered by the Lane Map, whose collision is two live exclusive lanes whose territories are
+equal or nested.
+
+**Verify:** `python -m hpp work waves examples/reliable-coding/workgraph.json` places `build`
+and `docs` in wave 2 together (both depend only on `spec`); `python -m hpp map lane examples/reliable-coding/lanes.json --now 1000`
+reports `collisions: []` for two lanes on disjoint paths.
+
+## topological order
+
+**Is:** the order in which units are released, derived from the edges: a unit is never released
+before every unit it depends on. Within one wave the order is alphabetical by `id`, so the same
+spec yields the same output on every machine.
+
+**Is not:** a priority list, and not the order in which units were written in the spec. The
+person declares edges; the graph decides the order; neither the person nor the agent picks the
+sequence by hand. A cycle is a spec that contradicts itself: `a` must finish before `c`, `c`
+before `b`, `b` before `a`, and no order satisfies all three. The compiler refuses it and names
+the path; it never breaks the cycle for you.
+
+**Verify:** a spec with `a -> c -> b -> a` makes `python -m hpp work waves SPEC.json` exit 2 with
+`dependency cycle: a -> c -> b -> a`; a unit that depends on itself exits 2 with
+`dependency cycle: a -> a`. The benchmark control `workgraph-waves` runs the two-unit case.
+
+## barrier
+
+**Is:** the boundary between two waves: the point at which every unit of the current wave has
+met its acceptance criteria and the next wave may open.
+
+**Is not:** a checkpoint meeting or a status update. A unit in wave `n+1` depends, directly or
+through other units, on something in an earlier wave; starting it before the barrier closes means
+building on a dependency whose criteria have not passed. If that dependency then changes, the
+early unit's evidence describes a checkout that no longer exists, and "wave `n` is closed" stops
+being a sentence with a measurable meaning.
+
+**Verify:** `python -m hpp work waves examples/reliable-coding/workgraph.json` shows three waves;
+the barrier is the boundary between consecutive indices. The harness computes it and reports it,
+and does not enforce it: there is no wave in the loop's events, only `work_started` through
+`verified` (`python -m hpp graph --view operational --format mermaid`).
+
 ## context budget
 
 **Is:** a character limit under which the context compiler fits whole input blocks, highest

@@ -4,7 +4,7 @@
   "displayName": "Lane Kit",
   "version": "1.2.0",
   "description": "N sessoes (lanes) simultaneas sobre o mesmo repo, sem colisao: quadro-branco de estados (CLAIMED->BUILDING->CHECKPOINT-READY->UNDER-REVIEW->VERIFIED/NEEDS-FIX->MERGED) com maker!=checker cross-model enforcado em codigo, registry de lanes vivas com heartbeat/liveness, guard de git (bloqueia commit -a/add -A/reset --hard com outra lane viva) e guard de territorio (zonas vermelhas + territorio exclusivo). Depende do continuity-kit (campo lane_id do handoff).",
-  "author": { "name": "Max Parisi", "url": "https://rushar.com.br" },
+  "author": { "name": "Max Parisi", "url": "https://rusharlabs.com" },
   "license": "MIT",
   "keywords": ["lane", "lanes", "multi-session", "concurrency", "maker-checker", "git-guard", "territory-guard", "board", "coordination"]
 }

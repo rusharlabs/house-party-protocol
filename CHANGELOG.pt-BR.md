@@ -9,13 +9,38 @@ cada módulo mantém sua própria versão no `plugin.json` e no `marketplace.jso
 
 ## [Unreleased]
 
+## [2.4.1] — 2026-09-21
+
 ### Adicionado
 
-- **Documentação em dois idiomas.** Todo documento que uma pessoa lê para decidir se adota o
-  projeto é publicado em inglês (a fonte de verdade) e em português do Brasil como um irmão
-  `.pt-BR.md`, com uma linha de links de idioma no topo dos dois. Arquivos que um agente lê para
-  executar (`skills/*/SKILL.md`, `commands/*.md`, `rules/*.md`) ficam só em inglês, de propósito.
-  Um teste no repositório de origem reprova um par cujos títulos ou blocos de código divirjam.
+- **Os documentos humanos que faltavam ganharam o par em português.** `CONTRIBUTING`, `SECURITY`
+  e `docs/UX-INSTALL-JOURNEY` saem como irmãos `.pt-BR.md`, e o manual operacional como
+  `docs/MANUAL.pt-BR.html`, todos sob o mesmo gate de par.
+- **O catálogo é gerado nos dois idiomas e na paleta da marca.** Um passe do gerador escreve
+  `docs/CATALOGO.md`, `CATALOGO.pt-BR.md`, `CATALOGO.html` e `CATALOGO.pt-BR.html` a partir do
+  `marketplace.json` (que agora carrega `description_en` por módulo); a página HTML escrita à mão,
+  só em português e na paleta aposentada, foi substituída pela gerada para não divergir de novo.
+
+### Alterado
+
+- **O manual operacional foi reescrito contra o comportamento medido.** Vereditos de política
+  (`ALLOW / MANUAL / BLOCK` e com que código cada modo sai), as nove projeções de mapa, os estados
+  do monitor incluindo `skew`, os seis estágios do `hpp init` com a prontidão que ele reporta num
+  alvo vazio, os caminhos do Codex CLI, attestation e códigos de saída são os que a CLI produz hoje.
+- **O endereço público do autor é `https://rusharlabs.com`** na licença, na citação, no aviso, no
+  marketplace e em todo manifesto de módulo; o e-mail de contato de segurança não mudou.
+- **O Quickstart instala a CLI com `pip`** e mantém o checkout como caminho de quem desenvolve.
+  Restos de empacotamento (`build/`, `*.egg-info/`) são ignorados pelo repositório.
+
+### Corrigido
+
+- **O pacote instalado via pip saía sem o manifesto.** O `pip install` produzia um
+  `site-packages/hpp/` sem `hpp.manifest.json`, então de qualquer diretório fora de um checkout
+  `hpp doctor` e `hpp init` saíam com código 2 e "hpp.manifest.json not found". O wheel agora
+  carrega o manifesto como package data, e o resolvedor cai para ele depois do diretório de
+  trabalho e da raiz da fonte — um checkout continua vencendo, e o site-packages nunca é tratado
+  como distribuição emitida. Guardado por testes que constroem um wheel real e o acionam de um
+  diretório vazio.
 
 ## [2.4.0] — 2026-09-21
 

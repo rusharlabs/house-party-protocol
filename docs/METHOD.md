@@ -189,6 +189,65 @@ python -m hpp event append --type human_approved --data '{"work":"ITEM-1","by":"
 python -m hpp event append --type verified --data '{"work":"ITEM-1"}'
 ```
 
+## 10. Let the graph decide the order
+
+### Write a spec small enough to compile
+
+A spec is a JSON object with a `work` list. Each unit has an `id`, a `depends_on` list (empty
+when it depends on nothing), at least one `acceptance` criterion written as something a command
+can decide, and a `tier`. A unit is small enough when one person can say, in one command, what
+closes it; when a unit needs a paragraph, it is two units. The compiler does not measure size; it
+measures shape. Dependencies are written, not remembered: an edge that lives only in the
+conversation does not exist for the compiler. It refuses a spec with a duplicate id, an unknown
+dependency, an empty acceptance list or an invalid tier, and says which unit.
+
+```bash
+python -m hpp work plan SPEC.json
+```
+
+### Read the waves before starting
+
+`hpp work waves` prints the waves in order with the units of each. Read it as the plan of the
+day: everything in wave 1 may start now; nothing in wave 2 may start until every unit of wave 1
+has passed its criteria. A wave with a single unit is a serial step, and there is nothing to do
+about it except finish the unit. The order inside a wave is alphabetical, not a priority: pick
+any order, or all at once. Two units in the same wave may still touch the same paths; the graph
+does not know the files, so lanes are declared separately, and the Lane Map is what reports an
+overlap between live, exclusive territories.
+
+```bash
+python -m hpp work waves SPEC.json
+python -m hpp map lane LANES.json --now "$(date +%s)"
+```
+
+### When the graph reports a cycle
+
+`dependency cycle: a -> c -> b -> a` means the spec contradicts itself: each unit in the path
+asks to run after the next one, and no order satisfies all of them. The harness names the path
+and exits 2; it never drops an edge to make the spec compile. The fix is in the spec, and it is
+one of three: an edge was declared backwards, two units are really one, or a unit does two
+things and the second half belongs to a new unit that depends on the first. Change the spec and
+recompile; the compiler is the test.
+
+```bash
+python -m hpp work waves SPEC.json
+```
+
+### Deciding that a unit cannot run in parallel
+
+A unit runs after another only when an edge says so, and the edge is worth declaring when the
+later unit reads what the earlier one produces: a schema before the code that uses it, a build
+before the check that runs it, a rename before the references to the new name. When the answer
+is "they touch the same files", that is a lane question, not a dependency: give the two units
+disjoint territories, or make one depend on the other and accept the serial step. Once declared,
+the edge appears in `edges`, from the dependency to the unit that waits for it, with the relation
+`depends-on`, and the later unit moves to a later wave; if it did not move, the edge is not the
+one you meant.
+
+```bash
+python -m hpp work plan SPEC.json
+```
+
 ## The loop, end to end
 
 ```text
