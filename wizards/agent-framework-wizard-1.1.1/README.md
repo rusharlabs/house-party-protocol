@@ -1,41 +1,43 @@
+[English](README.md) · [Português](README.pt-BR.md)
+
 # Agent Framework Wizard
 
-Wizard de 6 passos (`check_python → check_git → check_deps → configure → validate →
-generate_and_summary`) que faz o scaffold de um agente/projeto novo: gera
-`operator-profile.yaml` (escada de verificação R0-R4) + os templates escolhidos
-(`00-LEIA-PRIMEIRO`, `00-STATE`, `00-VISION`, `00-PROCESSES`). Não instala o
-`operator-kit` em si — gera o esqueleto inicial que um projeto novo usaria com ele.
+A 6-step wizard (`check_python → check_git → check_deps → configure → validate →
+generate_and_summary`) that scaffolds a new agent/project: it generates
+`operator-profile.yaml` (verification ladder R0-R4) + the chosen templates
+(`00-LEIA-PRIMEIRO`, `00-STATE`, `00-VISION`, `00-PROCESSES`). It does not install the
+`operator-kit` itself — it generates the initial skeleton a new project would use with it.
 
-## Pré-requisitos + APIs externas
+## Prerequisites + external APIs
 
-| Requisito | Versão mínima | Obrigatório? |
+| Requirement | Minimum version | Required? |
 |---|---|---|
-| Python | 3.9 | sim |
-| git | qualquer | sim — o wizard confirma `git --version` no passo 2 |
-| PyYAML | qualquer | sim |
+| Python | 3.9 | yes |
+| git | any | yes — the wizard confirms `git --version` in step 2 |
+| PyYAML | any | yes |
 
-Serviços externos: **nenhum — stdlib + PyYAML.**
+External services: **none — stdlib + PyYAML.**
 
-## Instalar via plugin
+## Install as a plugin
 
 ```bash
 /plugin marketplace add .
 /plugin install agent-framework-wizard@house-party-protocol
 ```
 
-## Instalar por cópia
+## Install by copy
 
 ```bash
 cp -r agent-framework-wizard-1.0.0 <seu-projeto>/agent-framework-wizard
 cd <seu-projeto>/agent-framework-wizard
 ```
-Este kit não tem hooks/wiring — depois de copiado, use direto (seção seguinte).
+This kit has no hooks/wiring — once copied, use it directly (next section).
 
-## Como usar (não-interativo — nenhum modo bloqueia em stdin)
+## How to use (non-interactive — no mode blocks on stdin)
 
-O operador real deste ecossistema é frequentemente um agente atuando pelo humano — um
-`input()` de terminal trava exatamente nesse contexto. O "Confirm" deste wizard é
-`--interview` (imprime o schema de perguntas) seguido de `--answers` (aplica as respostas):
+The real operator of this ecosystem is often an agent acting for the human — a terminal
+`input()` hangs in exactly that context. This wizard's "Confirm" is `--interview` (prints
+the question schema) followed by `--answers` (applies the answers):
 
 ```bash
 # 1. Ver o schema de perguntas (JSON, exit 0, não gera nada)
@@ -48,12 +50,12 @@ python wizard.py --demo --out <dir>
 python wizard.py --answers respostas.json --out <dir>
 ```
 
-Exemplo de `respostas.json`:
+Example `respostas.json`:
 ```json
 {"project_name": "meu-agente", "templates": ["00-STATE", "00-VISION"]}
 ```
 
-## O que o instalador detecta / o wizard detecta
+## What the installer detects / what the wizard detects
 
 ```
 greenfield    → gera operator-profile.yaml + templates do zero em <out>/docs/plans/execucao/
@@ -62,20 +64,20 @@ em-andamento  → arquivo já existe com conteúdo DIFERENTE do que seria gerado
 re-run        → conteúdo idêntico ao que já existe -> no_op:true (nada muda, nada quebra)
 ```
 
-## O que é seguro rodar de novo
+## What is safe to run again
 
-`generate_and_summary()` **nunca sobrescreve** um arquivo que já existe com conteúdo
-diferente do que seria gerado (customização do usuário) — o campo
-`files_skipped_customized` no JSON de retorno lista exatamente o que foi preservado.
-Rodar duas vezes sem editar nada dá `no_op: true`. Para forçar regeneração de propósito
-(descartando customização), use `--force`.
+`generate_and_summary()` **never overwrites** a file that already exists with content
+different from what would be generated (user customisation) — the
+`files_skipped_customized` field in the returned JSON lists exactly what was preserved.
+Running twice without editing anything gives `no_op: true`. To force regeneration on
+purpose (discarding customisation), use `--force`.
 
-## Wiring manual
+## Manual wiring
 
-Nenhum — este kit não tem hooks nem toca `settings.local.json`. É uma ferramenta de
-linha de comando pura.
+None — this kit has no hooks and does not touch `settings.local.json`. It is a pure
+command-line tool.
 
-## Prova / aceite (saída real, executada)
+## Proof / acceptance (real output, executed)
 
 ```bash
 python wizard.py --self-test
@@ -86,7 +88,7 @@ config vazia, --interview/--answers sem NotImplementedError, skip-exists preserv
 ```
 <!-- executado: 2026-07-11 · exit=0 -->
 
-Prova do `--interview` (schema real impresso, não inventado):
+Proof of `--interview` (real schema printed, not invented):
 ```bash
 python wizard.py --interview
 ```
@@ -111,7 +113,7 @@ python wizard.py --interview
 ```
 <!-- executado: 2026-07-11 · exit=0 -->
 
-## Desfazer
+## Undo
 
 ```
 - Plugin: /plugin uninstall agent-framework-wizard@house-party-protocol

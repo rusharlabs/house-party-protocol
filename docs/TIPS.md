@@ -1,155 +1,157 @@
-# Padrões táticos
+[English](TIPS.md) · [Português](TIPS.pt-BR.md)
 
-Comandos curtos para operar os kits sem depender de memória implícita. Ajuste
-caminhos ao diretório emitido e leia o plano antes de usar `--apply`.
+# Tactical patterns
 
-### 1. Inventarie antes de criar
+Short commands to operate the kits without relying on implicit memory. Adjust
+paths to the emitted directory and read the plan before using `--apply`.
+
+### 1. Inventory before creating
 
 ```bash
 rg --files | rg '(^|/)(nome|termo)'
 ```
 
-### 2. Meça a árvore Git sem confundir não rastreado
+### 2. Measure the Git tree without confusing untracked files
 
 ```bash
 git status --short --branch
 ```
 
-### 3. Separe mudança local do último commit
+### 3. Separate local change from the last commit
 
 ```bash
 git diff --stat && git diff --cached --stat
 ```
 
-### 4. Encontre a decisão, não só a implementação
+### 4. Find the decision, not only the implementation
 
 ```bash
 rg -n -i 'decisão|decision|rejeitad|supersed' docs . --glob '*.md'
 ```
 
-### 5. Execute o preflight antes do done gate
+### 5. Run the preflight before the done gate
 
 ```bash
 python scripts/preflight.py --project .
 ```
 
-### 6. Faça o critério falhar antes da correção
+### 6. Make the criterion fail before the fix
 
 ```bash
 python -m pytest caminho/do/teste.py::test_caso -q
 ```
 
-### 7. Valide sintaxe Python isoladamente
+### 7. Validate Python syntax in isolation
 
 ```bash
 python -m py_compile caminho/do/script.py
 ```
 
-### 8. Rode o self-test do artefato
+### 8. Run the artifact's self-test
 
 ```bash
 python caminho/do/script.py --self-test
 ```
 
-### 9. Feche múltiplos critérios com AND
+### 9. Close multiple criteria with AND
 
 ```bash
 python scripts/done_gate.py "python -m pytest -q" "python -m py_compile app.py"
 ```
 
-### 10. Declare parcial sem pintar de verde
+### 10. Declare a partial without painting it green
 
 ```bash
 python scripts/done_gate.py "python -m pytest -q" --declare-partial "falta validar o destino externo"
 ```
 
-### 11. Instale um kit primeiro em modo plano
+### 11. Install a kit in plan mode first
 
 ```bash
 python instaladores/kit-forge-*/kit_doctor.py install --kit <kit> --target . --host claude-code
 ```
 
-### 12. Aplique a instalação somente após ler o plano
+### 12. Apply the installation only after reading the plan
 
 ```bash
 python instaladores/kit-forge-*/kit_doctor.py install --kit <kit> --target . --host claude-code --apply
 ```
 
-### 13. Instale skills namespaced no Codex
+### 13. Install namespaced skills on Codex
 
 ```bash
 python instaladores/kit-forge-*/kit_doctor.py install --kit <kit> --target . --host codex --apply
 ```
 
-### 14. Verifique integridade de um kit emitido
+### 14. Verify the integrity of an emitted kit
 
 ```bash
 python instaladores/kit-forge-*/kit_doctor.py verify <kit>
 ```
 
-### 15. Liste instalações registradas
+### 15. List registered installations
 
 ```bash
 python instaladores/kit-forge-*/kit_doctor.py registry
 ```
 
-### 16. Escolha checker de outro provider
+### 16. Choose a checker from another provider
 
 ```bash
 python multi-sessao/lane-kit-*/scripts/checker_router.py --maker claude --require
 ```
 
-### 17. Veja as lanes sem editar o registry
+### 17. See the lanes without editing the registry
 
 ```bash
 python multi-sessao/lane-kit-*/scripts/lane_board.py --help
 ```
 
-### 18. Conte itens com uma régua explícita
+### 18. Count items with an explicit ruler
 
 ```bash
 python instaladores/operator-kit-*/scripts/live_count.py --help
 ```
 
-### 19. Procure erros silenciosos comuns
+### 19. Look for common silent errors
 
 ```bash
 rg -n 'except\s+Exception|catch\s*\(|\.catch\(' --glob '*.py' --glob '*.js' --glob '*.ts'
 ```
 
-### 20. Confirme a conta GitHub ativa
+### 20. Confirm the active GitHub account
 
 ```bash
 gh api user --jq .login
 ```
 
-### 21. Compare o remoto antes de enviar
+### 21. Compare the remote before pushing
 
 ```bash
 git ls-remote origin refs/heads/main
 ```
 
-### 22. Liste MCPs por host
+### 22. List MCPs per host
 
 ```bash
 claude mcp list && codex mcp list
 ```
 
-### 23. Gere o catálogo a partir da árvore
+### 23. Generate the catalogue from the tree
 
 ```bash
 python instaladores/kit-forge-*/tools/catalogo_md.py . --write
 ```
 
-### 24. Valide todas as skills publicadas
+### 24. Validate every published skill
 
 ```bash
 find . -type d -name skills -exec python instaladores/kit-forge-*/tools/skill_lint.py --all {} \;
 ```
 
-## Proveniência
+## Provenance
 
-O formato de índice tático foi inspirado no repositório
-`shanraisshan/claude-code-best-practice`, licença MIT, commit
-`bde3f03174714fff4145d21cfda41ddd2ffffb28`. A seleção, os textos e os comandos
-desta página são uma implementação original do House Party Protocol.
+The tactical index format was inspired by the repository
+`shanraisshan/claude-code-best-practice`, MIT licence, commit
+`bde3f03174714fff4145d21cfda41ddd2ffffb28`. The selection, the texts and the commands
+on this page are an original implementation of House Party Protocol.

@@ -282,10 +282,16 @@ def record_failure(
     is_critical: bool = True,
     store_dir: str | Path | None = None,
     now: float | None = None,
+    dedupe_key: str | None = None,
 ) -> dict[str, Any]:
     """Registra uma falha (classificada via error_strategy) em failures.jsonl. Retorna o evento.
 
-    Segredos em task_key/erro/contexto sao redigidos ANTES de truncar e de persistir."""
+    Segredos em task_key/erro/contexto sao redigidos ANTES de truncar e de persistir.
+
+    `dedupe_key`: identidade da falha na origem (ex.: o tool_use_id do host). Se ja houver um
+    evento com a mesma chave em failures.jsonl, nada e' gravado e o evento existente volta.
+    # Why: a mesma falha pode chegar ao hook por mais de um evento do host; sem a chave, cada
+    # chegada vira um registro e a recorrencia (min_count) e' atingida sem recorrer de fato."""
     ts = time.time() if now is None else now
     dec = select_strategy(error_message, attempt=attempt, max_retries=max_retries, is_critical=is_critical)
     event = {
@@ -297,7 +303,13 @@ def record_failure(
         "context": _redact_obj(context or {}),
         "ts": ts,
     }
-    _append_jsonl(_store(store_dir) / "failures.jsonl", event)
+    path = _store(store_dir) / "failures.jsonl"
+    if dedupe_key:
+        event["dedupe_key"] = str(dedupe_key)
+        for prev in _read_jsonl(path):
+            if prev.get("dedupe_key") == event["dedupe_key"]:
+                return prev
+    _append_jsonl(path, event)
     return event
 
 

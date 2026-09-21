@@ -1,32 +1,34 @@
+[English](README.md) · [Português](README.pt-BR.md)
+
 # Kit Forge
 
-O gate de IP/PII + o montador de kits deste marketplace. Não é um kit para instalar num
-projeto de terceiro — é a ferramenta que **constrói e verifica** os outros kits
-(incluindo a si mesma). `ip_pii_linter.py` (varre nomes de cliente/infra internos antes
-de qualquer coisa virar público), `kit_assembler.py` (monta um kit a partir de um
-manifesto declarativo + a fonte, com `guard_origins` integrado — aborta se a fonte mudar
-no meio da montagem), `kit_doctor.py` (verify/install/registry — o motor único de
-instalação de todo o marketplace, 6 estágios), `wire_settings.py` (merge idempotente em
-`settings.local.json`), `install_git_hook.py` (encadeia com `pre-commit` alheio), e
-`tools/skill_lint.py` (o linter que cobra o SKILL-CONTRACT das skills de outros kits).
-Contrato único de exit em tudo: `0 ok/no-op`, `1 warn`, `2 block`, `3 erro`. Sem
-`--skip-lint` em nenhuma ferramenta — o gate de IP/PII é sempre obrigatório.
+The IP/PII gate + the kit assembler of this marketplace. It is not a kit to install in a
+third-party project — it is the tool that **builds and verifies** the other kits
+(including itself). `ip_pii_linter.py` (scans for internal client/infra names before
+anything becomes public), `kit_assembler.py` (assembles a kit from a declarative manifest
++ the source, with `guard_origins` built in — aborts if the source changes mid-assembly),
+`kit_doctor.py` (verify/install/registry — the single installation engine of the whole
+marketplace, 6 stages), `wire_settings.py` (idempotent merge into `settings.local.json`),
+`install_git_hook.py` (chains with someone else's `pre-commit`), and `tools/skill_lint.py`
+(the linter that enforces the SKILL-CONTRACT on other kits' skills). A single exit
+contract everywhere: `0 ok/no-op`, `1 warn`, `2 block`, `3 error`. No `--skip-lint` in any
+tool — the IP/PII gate is always mandatory.
 
-## Pré-requisitos + APIs externas
+## Prerequisites + external APIs
 
-| Requisito | Versão mínima | Obrigatório? |
+| Requirement | Minimum version | Required? |
 |---|---|---|
-| Python | 3.8 | sim |
-| PyYAML | qualquer | sim — `kit_assembler.py`/`ip_pii_linter.py`/`wire_settings.py` parseiam manifesto/ruleset/spec com ela; a função central dessas 3 ferramentas depende dela |
+| Python | 3.8 | yes |
+| PyYAML | any | yes — `kit_assembler.py`/`ip_pii_linter.py`/`wire_settings.py` parse manifest/ruleset/spec with it; the core function of these 3 tools depends on it |
 
-Serviços externos: **nenhum — stdlib + PyYAML, só toca filesystem local.**
+External services: **none — stdlib + PyYAML, touches only the local filesystem.**
 
-## Instalar via plugin
+## Install as a plugin
 
-Este kit não tem `.claude-plugin/plugin.json` (não é consumido como plugin — é a
-ferramenta que constrói/verifica os OUTROS kits do marketplace). Use por cópia.
+This kit has no `.claude-plugin/plugin.json` (it is not consumed as a plugin — it is the
+tool that builds/verifies the OTHER kits of the marketplace). Use it by copy.
 
-## Instalar por cópia
+## Install by copy
 
 ```bash
 cp -r kit-forge-1.2.0 <seu-projeto>/kit-forge
@@ -37,7 +39,7 @@ python kit-forge/kit_doctor.py install kit-forge --target . --apply
 #                                                     ^ aplica de verdade
 ```
 
-## O que o instalador detecta
+## What the installer detects
 
 ```
 greenfield    → nenhum arquivo de config próprio (ip-ruleset.yaml é do NEGÓCIO que usa
@@ -46,32 +48,31 @@ em-andamento  → ip-ruleset.yaml customizado já presente (skip-exists, nunca s
 re-run        → registry (~/.claude-kits/registry.json) marca re-run
 ```
 
-## O que é seguro rodar de novo
+## What is safe to run again
 
-`wire_settings.py` é idempotente e byte-estável (rodar duas vezes não duplica). O
-`ip-ruleset.yaml` real (com nomes de cliente/porta/domínio do SEU negócio) nunca é
-sobrescrito automaticamente por nenhuma ferramenta aqui — só você edita.
-`kit_assembler.py` sempre monta num diretório de saída novo (nunca escreve por cima do
-kit já emitido em produção sem você apontar `--out` explicitamente).
+`wire_settings.py` is idempotent and byte-stable (running it twice does not duplicate). The
+real `ip-ruleset.yaml` (with the client/port/domain names of YOUR business) is never
+overwritten automatically by any tool here — only you edit it. `kit_assembler.py` always
+assembles into a fresh output directory (it never writes over the kit already emitted to
+production unless you point `--out` at it explicitly).
 
-## Wiring manual
+## Manual wiring
 
-Nenhum — este kit não tem hooks/plugin. É uma coleção de ferramentas de linha de
-comando invocadas sob demanda (ex.: por um cron de CI, ou manualmente antes de publicar
-um kit novo).
+None — this kit has no hooks/plugin. It is a collection of command-line tools invoked on
+demand (e.g. by a CI cron, or by hand before publishing a new kit).
 
-## Configurar o ruleset de IP/PII (o passo real antes de montar qualquer kit)
+## Configure the IP/PII ruleset (the real step before assembling any kit)
 
 ```bash
 cp ip-ruleset.example.yaml ip-ruleset.yaml
 # editar ip-ruleset.yaml com os nomes de cliente/infra REAIS do seu negócio
 python ip_pii_linter.py --self-test
 ```
-`ip-ruleset.example.yaml` é neutro (pode compor um kit distribuído); `ip-ruleset.yaml`
-real (com nomes reais) **nunca** sai num kit montado — fica fora do manifesto de
-qualquer `kit_assembler.py`.
+`ip-ruleset.example.yaml` is neutral (it can be part of a distributed kit); the real
+`ip-ruleset.yaml` (with real names) **never** leaves in an assembled kit — it stays out of
+the manifest of any `kit_assembler.py`.
 
-## Prova / aceite (saída real, executada)
+## Proof / acceptance (real output, executed)
 
 ```bash
 python kit_doctor.py --self-test
@@ -99,7 +100,7 @@ self-test OK — wire idempotente, conflito sem --force preservado, --force sobr
 ```
 <!-- executado: 2026-07-11 · exit=0 -->
 
-## Desfazer
+## Undo
 
 ```
 - Cópia: remover a pasta kit-forge/ do projeto (nada mais para reverter — sem
@@ -107,11 +108,12 @@ self-test OK — wire idempotente, conflito sem --force preservado, --force sobr
 - ip-ruleset.yaml: apagar manualmente se não quiser mais rodar o lint neste negócio
 ```
 
-## Documentação estendida
+## Extended documentation
 
-- `INSTALL-CONTRACT.md` (raiz do marketplace) — o contrato completo dos 6 estágios de
-  `kit_doctor.py install`, schema de `kit.install.yaml`, seam de cross-host.
-- `../../SKILL-CONTRACT.md` (raiz do marketplace) — o contrato de `SKILL.md` cobrado
-  por `tools/skill_lint.py`.
-- `../../docs/UX-INSTALL-JOURNEY.md` — a jornada de instalação contada na conversa
-  (greenfield/em-andamento/re-run/falha), do ponto de vista do agente guiando o humano.
+- `INSTALL-CONTRACT.md` (marketplace root) — the complete contract of the 6 stages of
+  `kit_doctor.py install`, the `kit.install.yaml` schema, the cross-host seam.
+- `../../SKILL-CONTRACT.md` (marketplace root) — the `SKILL.md` contract enforced by
+  `tools/skill_lint.py`.
+- `../../docs/UX-INSTALL-JOURNEY.md` — the installation journey told in the conversation
+  (greenfield/in-progress/re-run/failure), from the point of view of the agent guiding the
+  human.

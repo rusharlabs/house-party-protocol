@@ -1,32 +1,35 @@
+[English](README.md) · [Português](README.pt-BR.md)
+
 # Claude Dev Kit
 
-Ferramentas de **construir ferramentas** para Claude Code. 4 meta-skills (`skill-writer`,
-`hookify`, `plugin-dev`, `teaching`) com `SKILL-CONTRACT.md` vendorizado — não descrevem em
-prosa como criar uma skill/hook/plugin, cobram o mesmo contrato (header + I/O + ≥3 exemplos
-reais + prova) de quem o usa para criar as próprias. Mais 2 ferramentas de instalação:
-`wire_settings.py` (merge idempotente e byte-estável em `settings.local.json`, com `--undo`)
-e `install_git_hook.py` (encadeia com um `pre-commit` alheio já existente — nunca substitui).
-Não gera código de produto — gera a ferramenta que gera/audita outras ferramentas.
+Tools for **building tools** for Claude Code. 4 meta-skills (`skill-writer`, `hookify`,
+`plugin-dev`, `teaching`) with a vendored `SKILL-CONTRACT.md` — they do not describe in
+prose how to create a skill/hook/plugin, they enforce the same contract (header + I/O + at
+least 3 real examples + proof) on whoever uses them to create their own. Plus 2 installation
+tools: `wire_settings.py` (idempotent, byte-stable merge into `settings.local.json`, with
+`--undo`) and `install_git_hook.py` (chains with an existing `pre-commit` from someone
+else — never replaces it). It does not generate product code — it generates the tool that
+generates/audits other tools.
 
-## Pré-requisitos + APIs externas
+## Prerequisites + external APIs
 
-| Requisito | Versão mínima | Obrigatório? |
+| Requirement | Minimum version | Required? |
 |---|---|---|
-| Python | 3.8 | sim |
-| PyYAML | qualquer | sim |
+| Python | 3.8 | yes |
+| PyYAML | any | yes |
 
-Serviços externos: **nenhum — stdlib + PyYAML, só toca filesystem local + git do projeto-alvo.**
+External services: **none — stdlib + PyYAML, touches only the local filesystem + the target project's git.**
 
-## Instalar via plugin (auto-wire de 1 clique)
+## Install as a plugin (1-click auto-wire)
 
 ```bash
 /plugin marketplace add .
 /plugin install claude-dev-kit@house-party-protocol
 ```
-O `hooks/hooks.json` já arma `secret_scan_on_write.py` automaticamente (via
+The `hooks/hooks.json` already wires `secret_scan_on_write.py` automatically (through
 `${CLAUDE_PLUGIN_ROOT}`, matcher `Edit|Write|MultiEdit`).
 
-## Instalar por cópia
+## Install by copy
 
 ```bash
 cp -r claude-dev-kit-1.1.0 <seu-projeto>/claude-dev-kit
@@ -37,7 +40,7 @@ python claude-dev-kit/instaladores/kit-forge/kit_doctor.py install claude-dev-ki
 #                                                                                       ^ aplica de verdade
 ```
 
-## O que o instalador detecta
+## What the installer detects
 
 ```
 greenfield    → nenhum profile.example.* neste kit (sem config configurável — YAGNI); nada a copiar
@@ -45,26 +48,26 @@ em-andamento  → .claude/settings.local.json já com o hook secret_scan_on_writ
 re-run        → registry (~/.claude-kits/registry.json) marca re-run; wire_settings.py idempotente detecta merge já aplicado
 ```
 
-## O que é seguro rodar de novo
+## What is safe to run again
 
-`wire_settings.py` é **idempotente e byte-estável**: rodar duas vezes produz o mesmo
-`settings.local.json` (não duplica a entrada). Em conflito (uma entrada diferente já
-existe no mesmo path), preserva o que já está lá **sem `--force`** — só sobrescreve com
-`--force` explícito. `install_git_hook.py` é **chain-preserving**: se já existir um
-`pre-commit` de outra ferramenta, encadeia (nunca substitui).
+`wire_settings.py` is **idempotent and byte-stable**: running it twice produces the same
+`settings.local.json` (it does not duplicate the entry). On conflict (a different entry
+already exists at the same path), it preserves what is there **without `--force`** — it
+only overwrites with an explicit `--force`. `install_git_hook.py` is **chain-preserving**:
+if a `pre-commit` from another tool already exists, it chains (never replaces).
 
-## Wiring manual (gate humano — nunca automático)
+## Manual wiring (human gate — never automatic)
 
-> ⚠️ Editar `.claude/settings.local.json` é gate humano. O `wire_settings.py` é
-> **programático** (formato diferente do `wiring.settings.jsonc` colar-humano dos outros
-> kits) — mas mesmo assim NUNCA roda sozinho: o gate humano é quem invoca o comando.
+> Editing `.claude/settings.local.json` is a human gate. `wire_settings.py` is
+> **programmatic** (a different format from the human-paste `wiring.settings.jsonc` of the
+> other kits) — but it still NEVER runs on its own: the human gate is who invokes the command.
 
 ```bash
 python scripts/wire_settings.py --spec hooks/wiring-spec.yaml --settings .claude/settings.local.json
 #                                                                          ^ merge idempotente; --undo reverte
 ```
 
-Conteúdo de `hooks/wiring-spec.yaml` (o que será mesclado):
+Content of `hooks/wiring-spec.yaml` (what will be merged):
 ```yaml
 # wiring-spec.yaml — consumido por scripts/wire_settings.py --spec (claude-dev-kit)
 hooks:
@@ -77,12 +80,12 @@ hooks:
       timeout: 30
 ```
 
-Git hook (encadeia com `pre-commit` alheio, nunca substitui):
+Git hook (chains with someone else's `pre-commit`, never replaces it):
 ```bash
 python scripts/install_git_hook.py --repo . --hook-name pre-commit --payload <payload.sh>
 ```
 
-## Prova / aceite (saída real, executada)
+## Proof / acceptance (real output, executed)
 
 ```bash
 python scripts/wire_settings.py --self-test
@@ -92,7 +95,7 @@ self-test OK — wire idempotente, conflito sem --force preservado, --force sobr
 ```
 <!-- executado: 2026-07-11 · exit=0 -->
 
-## Desfazer
+## Undo
 
 ```
 - Plugin: /plugin uninstall claude-dev-kit@house-party-protocol

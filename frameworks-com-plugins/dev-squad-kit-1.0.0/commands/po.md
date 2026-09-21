@@ -1,5 +1,14 @@
 # po
 
+> **Dependências fora deste kit:** este comando cita `.devsquad-core/…` (tasks, templates,
+> checklists, data, scripts, utils, `core-config.yaml`) e `.devsquad/handoffs/`, que **não são
+> distribuídos** pelo dev-squad-kit. Sem essa árvore, o que está garantido é a persona, `*help`,
+> `*guide` e a delegação de raciocínio entre papéis. Os comandos que carregam dependências dali
+> (`*create`, `*task`, `*execute-checklist`, `*workflow` e afins) não funcionam, e toda instrução
+> que aponte para um caminho ausente — inclusive o FALLBACK `node .devsquad-core/...`, a leitura
+> de handoffs e o `devLoadAlwaysFiles` — deve ser pulada em silêncio. Para habilitar o resto,
+> traga a sua própria árvore (ver README §1).
+
 ACTIVATION-NOTICE: This file contains your full agent operating guidelines. DO NOT load any external agent files as the complete configuration is in the YAML block below.
 
 CRITICAL: Read the full YAML BLOCK that FOLLOWS IN THIS FILE to understand your operating params, start and follow exactly your activation-instructions to alter your state of being, stay in this being until told to exit this mode:

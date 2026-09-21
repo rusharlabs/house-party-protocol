@@ -426,7 +426,9 @@ def stage_profile(kit_dir: Path, target_dir: Path, dry_run: bool, host: str) -> 
             codex_report = json.loads(proc.stdout)
         except json.JSONDecodeError:
             codex_report = {"status": "error", "detail": (proc.stdout + proc.stderr)[-500:]}
-        if proc.returncode != 0:
+        if proc.returncode == 1:
+            status = "warn"  # o gerador copiou, mas deixou algo de fora e listou (ex.: links ignorados)
+        elif proc.returncode != 0:
             status = "fail"
     return {"stage": "profile", "status": status, "actions": actions, "codex": codex_report}
 
@@ -508,11 +510,12 @@ def stage_wire_suggest(kit_dir: Path, host: str) -> dict:
     return {"stage": "wire-sugerido", "status": "ok", "suggestions": suggestions}
 
 
-def stage_smoke(kit_dir: Path) -> dict:
+def stage_smoke(kit_dir: Path, timeout: float = 30) -> dict:
     """Roda --self-test em todo .py do kit que suporta o contrato uniforme da casa
     (SKILL-CONTRACT C4). Scripts sem --self-test são ignorados (não é falha). Sempre
     roda, mesmo em modo plano — não escreve nada no target, só valida que o kit
-    funciona ANTES de comprometer a instalação."""
+    funciona ANTES de comprometer a instalação. Self-test que estoura `timeout` conta
+    como FALHA (status `timeout`), nunca como ok."""
     results = []
     kit_dir_abs = kit_dir.resolve()
     for py_file in sorted(kit_dir.rglob("*.py")):
@@ -522,8 +525,16 @@ def stage_smoke(kit_dir: Path) -> dict:
             proc = subprocess.run(
                 [sys.executable, "-B", "-X", "utf8", str(py_file.resolve()), "--self-test"],
                 capture_output=True, text=True, encoding="utf-8", errors="replace",
-                timeout=30, cwd=str(kit_dir_abs),
+                timeout=timeout, cwd=str(kit_dir_abs),
             )
+        except subprocess.TimeoutExpired:
+            # Why: um self-test que nunca responde nao provou nada; caindo no except generico ele
+            # virava `error`, que nao entrava na contagem de falhas, e o smoke aprovava o kit.
+            results.append({
+                "file": str(py_file.relative_to(kit_dir)), "status": "timeout",
+                "detail": f"sem resposta em {timeout:g}s", "timeout_s": timeout,
+            })
+            continue
         except Exception as e:  # noqa: BLE001
             results.append({"file": str(py_file.relative_to(kit_dir)), "status": "error", "detail": str(e)})
             continue
@@ -537,7 +548,7 @@ def stage_smoke(kit_dir: Path) -> dict:
             "status": "ok" if proc.returncode == 0 else "fail",
             "exit": proc.returncode,
         })
-    failed = [r for r in results if r["status"] == "fail"]
+    failed = [r for r in results if r["status"] in ("fail", "timeout")]
     return {"stage": "smoke", "status": "fail" if failed else "ok", "results": results, "failed_count": len(failed)}
 
 
@@ -643,6 +654,8 @@ def render_plan(report: dict) -> str:
             for r in results:
                 if r["status"] == "fail":
                     lines.append(f"      ⚠ FALHOU: {r['file']} (exit {r.get('exit')})")
+                elif r["status"] == "timeout":
+                    lines.append(f"      ⚠ TIMEOUT: {r['file']} ({r.get('detail', 'sem resposta')})")
                 elif r["status"] == "error":
                     lines.append(f"      ⚠ ERRO: {r['file']} ({r.get('detail', 'sem detalhe')})")
 

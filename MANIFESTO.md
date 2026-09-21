@@ -1,69 +1,132 @@
-# Manifesto House Party Protocol
+[English](MANIFESTO.md) · [Português](MANIFESTO.pt-BR.md)
 
-## Agentes poderosos ainda precisam de uma casa operacional
+# House Party Protocol Manifesto
 
-House Party Protocol é um harness para operar agentes de código sob evidência. O modelo raciocina;
-o harness delimita, observa, registra, verifica e decide quando o trabalho pode avançar.
+## Capable agents still need an operating house
 
-Uma resposta convincente não é prova. Uma sessão ativa não é coordenação. Um processo online não
-garante dado fresco. Um autor revisando o próprio trabalho não é revisão independente. HPP existe
-para transformar essas diferenças em contratos executáveis.
+House Party Protocol is a harness for operating coding agents under evidence. The model reasons.
+The harness bounds, observes, records, verifies and decides when work may advance.
 
-## O protocol
+A convincing answer is not proof. An open session is not coordination. A process that responds is
+not fresh data. An author reviewing their own work is not independent review. HPP exists to turn
+each of those differences into a contract that a command can check.
 
-O protocol é o conjunto compartilhado de invariantes:
+## The protocol
 
-1. estado declarado não substitui estado medido;
-2. maker e checker são papéis diferentes;
-3. conclusão exige critério, comando, saída e frescor;
-4. trabalho concorrente declara lane, dono e território;
-5. toda wave fecha sua barreira antes da próxima;
-6. retomada deriva do event log, não da memória da conversa;
-7. monitor separa disponibilidade, frescor e correção do dado;
-8. política distingue aviso, bloqueio e gate humano;
-9. capacidade e confiabilidade são medidas separadamente por pass@k e pass^k;
-10. artefato distribuído é reaberto e verificado antes de ser chamado de release.
+The protocol is the set of invariants every module and every host must respect:
 
-## O harness
+1. Declared state does not replace measured state.
+2. Maker and checker are different actors, and the checker holds no pen.
+3. Completion requires a criterion, a command, its output and its freshness.
+4. Concurrent work declares a lane, an owner and a territory.
+5. A wave closes its barrier before the next one opens.
+6. Resumption derives from the event log, never from the memory of a conversation.
+7. A monitor keeps availability, freshness and correctness apart.
+8. Policy distinguishes a warning, a block and a human gate.
+9. Capability and reliability are measured separately, as `pass@k` and `pass^k`.
+10. A distributed artifact is reopened and verified before it is called a release.
 
-O harness torna o protocol operável. Ele mantém um manifesto de capacidades, transforma uma spec
-em WorkGraph, organiza dependências em waves, projeta Lane Map e Agent Map, compila contexto com
-proveniência, registra eventos, produz retomada e conecta evidência a veredito.
+Four of these are written into `hpp.manifest.json` as machine-checked invariants: a verified
+outcome has recorded evidence and an explicit human gate; a checker is read-only relative to the
+maker's workspace; a loop advances only through a recorded event; an approval is invalid once its
+bound spec, commit or repository snapshot changes. The rest are enforced by the modules that
+implement them and by the tests that force them to fail.
 
-Os módulos fornecem mecanismos especializados. A distribuição para Claude Code e Codex CLI leva
-esses mecanismos aos hosts sem fingir que os dois oferecem os mesmos lifecycle hooks.
+## The harness
 
-## Loops com freio e memória
+The harness makes the protocol operable. It holds a manifest of capabilities, compiles a spec into
+a WorkGraph, orders dependencies into waves, projects lane and agent maps, compiles context with
+provenance, appends events, derives resumption and binds evidence to a verdict.
 
-Loop útil tem objetivo, observação, ação, budget, gate, condição de parada e escalonamento. Sem
-esses elementos, repetição é apenas insistência automatizada.
+The modules provide the specialised mechanisms. Distribution carries them to Claude Code and Codex
+CLI without pretending the two hosts offer the same lifecycle hooks.
 
-Autoprompt preserva continuidade. Gotchas preservam aprendizado operacional. Monitores preservam
-consciência de estado. Nenhum deles autoriza autonomia ilimitada: o próximo passo continua sujeito
-à política, ao território, à evidência e ao gate humano quando necessário.
+## Why this is not bureaucracy
 
-## Grafos sem teatro de infraestrutura
+Process fails in two directions. Process that protects makes the cost of an error visible before
+the error is committed. Process that obstructs makes people pay that cost on every step, whether
+or not an error was possible. The difference is not the amount of ceremony. It is whether each
+step answers a question that would otherwise be answered by guessing.
 
-HPP usa grafos como modelos explicáveis, não como decoração e nem como desculpa para criar um
-banco. Capability, agent, lane, work, execution, evidence e monitor maps são projeções
-determinísticas de manifestos e eventos locais. Se uma aresta não muda uma decisão, ela não entra.
+Every gate in HPP is a question with a measurable answer: did the criterion command exit 0; is the
+snapshot the same one the checker saw; is this lane alive; is this signal fresher than its declared
+freshness; does this command match a destructive form. When the answer is yes, the gate costs one
+command and nothing else. When the answer is no, the gate reports what was measured, what was
+expected and what to do next, and the person decides.
 
-## Portabilidade honesta
+Three properties keep the gates on the protecting side. First, a gate never asks what it can
+measure: readiness, liveness, freshness and checksums are computed, not requested. Second, a gate
+that would fire on legitimate work is not shipped; `hpp policy check` blocks `rm -rf`, `rm -fr`
+and `rm --recursive --force`, and leaves `rm file.txt`, `grep -rf patterns.txt` and `cp -rf a b`
+alone, because a guard that shouts at the innocent is switched off before the day it is right.
+Third, every gate ships with the test that forces it to fail, so that a gate that has quietly
+stopped gating is caught by the suite and not by an incident.
 
-Cross-host não significa identidade artificial. Claude Code pode executar hooks de lifecycle;
-Codex CLI aplica várias capacidades por instrução ou comando explícito. O diagnóstico mostra essa
-diferença. Cobertura ausente é `unsupported`, nunca “provavelmente funciona”.
+Bureaucracy is a step whose absence nobody would notice. Each step here has a failure it was
+built for, written down next to it.
 
-## Prova antes de escala
+## What the project refuses to do
 
-O HPP não chama a si mesmo de confiável por possuir muitos componentes. Confiabilidade vem de
-controles negativos, execução repetida, revisão independente e cadeia de publicação verificável.
-Uma release crítica precisa demonstrar seu piso, não apenas o melhor resultado que conseguiu obter.
+These are decisions, not gaps. Each has a reason that would have to change before the decision
+does.
 
-## O compromisso
+- **No daemon, no server, no scheduler.** A check that did not run was not run. A background
+  process would make "is it running?" a second question to verify, and would carry state that the
+  event log does not see.
+- **No model calls.** The harness routes work to a tier and a provider id you declared. It does
+  not pick a vendor, a model name or a price, and it holds no credential. The moment it called a
+  model, its verdicts would depend on something it cannot reproduce.
+- **No graph database.** Every map is a projection of manifests, events and JSON you supply. The
+  same input yields the same nodes and edges, in the same order, and you can hash the result. A
+  stored graph would be a second source of truth that drifts from the first.
+- **No silent writes.** `hpp init` plans first and writes one file on `--apply`. The module
+  installer plans first and applies on a second explicit invocation. Neither touches
+  `settings.json`, hooks or `AGENTS.md`; that wiring is printed for a person to paste.
+- **No promise accepted as evidence.** A completion tag in a transcript does not stop a loop; the
+  done gate re-runs the criterion commands outside the model's reach. An empty output, an
+  identical maker and checker, or a verdict other than `approved` never becomes proof.
+- **No host parity by assertion.** Claude Code runs lifecycle hooks; Codex CLI does not. Coverage
+  is declared per module as `native`, `explicit-command` or `unsupported`, and an unsupported
+  module halts the plan instead of being installed as if it worked.
+- **No headline numbers.** The count of modules is not a quality claim. A number appears next to
+  the command that produced it or it does not appear.
+- **No remote telemetry.** Nothing leaves the machine unless a person runs a command that sends
+  it, and that command is classified `MANUAL` by the policy.
 
-Operar agentes sob evidência, preservar a separação de papéis, expor limites do host, tornar o
-estado retomável e bloquear a conclusão que não atravessou o gate correspondente.
+## Loops with brakes and memory
 
-Essa é a casa. O protocol são as regras. Os módulos são as ferramentas. A prova é o que permite
-abrir a próxima porta.
+A useful loop has an objective, an observation, an action, a budget, a gate, a stop condition and
+an escalation path. Without them, repetition is insistence with a timer.
+
+Autoprompt preserves continuity: it answers "what is the next step derivable from the recorded
+state?" Gotchas preserve operational memory: a failure that recurs becomes a lesson injected
+before the next attempt, and is redacted by shape before it is stored. Monitors preserve awareness
+of state. None of the three grants a loop the right to run past its budget, its territory, its
+evidence gate or the human gate when one is declared. Stopping on budget is a legitimate end,
+recorded as such, not a failure.
+
+## Graphs without infrastructure theatre
+
+HPP uses graphs as explanations, not as decoration and not as a reason to stand up a database.
+Capability, agent, lane, work, execution, evidence, context and monitor maps are derived from
+local files. If an edge does not change a decision, it is not drawn.
+
+## Honest portability
+
+Two hosts is not one identity. Claude Code can run hooks on `Stop`, `PreToolUse` and
+`SessionStart`; Codex CLI reads `AGENTS.md` and skills, and runs the rest as explicit commands.
+The doctor shows the difference. Missing coverage is `unsupported`, never "probably works".
+
+## Proof before scale
+
+HPP does not call itself reliable for having many components. Reliability comes from negative
+controls, repeated execution, independent review and a verifiable release chain. A critical
+release must demonstrate its floor, `pass^k`, not the best result it ever obtained.
+
+## The commitment
+
+Operate agents under evidence. Keep maker and checker apart. Expose the limits of each host. Make
+state resumable from what was recorded. Block the completion that did not pass its gate.
+
+That is the house. The protocol is the rules. The modules are the tools. Proof is what opens the
+next door.

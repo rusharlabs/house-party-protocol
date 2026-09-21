@@ -1,178 +1,226 @@
+[English](CHANGELOG.md) · [Português](CHANGELOG.pt-BR.md)
+
 # Changelog
 
-Todas as mudanças relevantes do harness são registradas aqui. O formato segue
-[Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e as versões seguem
-[SemVer](https://semver.org/lang/pt-BR/). A versão do produto descreve o contrato do harness;
-cada módulo mantém sua própria versão no `plugin.json` e no `marketplace.json`.
+All relevant changes to the harness are recorded here. The format follows
+[Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versions follow
+[SemVer](https://semver.org/). The product version describes the harness contract; each module
+keeps its own version in `plugin.json` and in `marketplace.json`.
+
+## [Unreleased]
+
+### Added
+
+- **Documentation in two languages.** Every document a person reads to decide whether to adopt
+  the project ships in English (the source of truth) and in Brazilian Portuguese as a `.pt-BR.md`
+  sibling, with a language link line at the top of both. Files an agent reads to execute
+  (`skills/*/SKILL.md`, `commands/*.md`, `rules/*.md`) stay English-only on purpose. A test in
+  the source repository rejects a pair whose headings or code blocks diverge.
+
+## [2.4.0] — 2026-09-21
+
+### Added
+
+- **Bilingual documentation.** Every document a person reads before deciding to use the project
+  now exists in English and Portuguese, paired as `NAME.md` and `NAME.pt-BR.md` with reciprocal
+  links at the top. Files an agent reads to execute — skills, commands and rules — stay in one
+  language on purpose: translating them doubles the maintenance and invites silent divergence.
+- **A gate that keeps the pair honest.** `test_documentacao_bilingue` rejects a missing
+  counterpart, a broken top link, structural divergence (the two sides must carry the same
+  headings, in the same order — translation changes words, not structure), differing code blocks
+  (a command is a command in any language), and any attempt to translate a file from the agent
+  layer. Nine controls prove the gate can reject.
+
+### Fixed
+
+Five defects from an external audit, each reproduced before the fix:
+
+- **The failure memory could never fire.** It listened only for the success event, while a tool
+  failure arrives on a separate one. Measured with a real payload: nothing was ever written. It
+  now listens to both and deduplicates by tool call.
+- **The skill generator could write outside its target.** A module name containing a traversal
+  escaped the destination; a directory link caused a file from outside the tree to be copied
+  without being reported; two module names differing only in separator collapsed into one, in
+  silence.
+- **A smoke test that ran out of time was recorded as success** and did not count as a failure.
+- **An unreadable cache and an absent one were indistinguishable** in the service probe.
+- **Twelve commands promised a directory tree that ships with zero files.** The capability was
+  not invented: the external dependency is now declared, along with what still works without it.
+
+- The published Python floor is now the lowest version the CI matrix actually exercises. The code
+  carries no syntax exclusive to it, so the previous claim was plausible — and unverified.
 
 ## [2.3.0] — 2026-09-21
 
-### Adicionado
+### Added
 
-- **`hpp init` — a instalação virou uma experiência.** Um wizard que cumpre os seis estágios do
-  contrato de instalação (`detect → prereqs → profile → configure → wire-suggest → smoke`), com
-  sequência de abertura onde **cada linha aparece quando o estágio correspondente termina de
-  verdade** — o movimento é o progresso, não enfeite. Fecha com o lockup da marca em blocos de
-  terminal e a assinatura da instalação.
-- **Readiness medido, não estimado.** Uma barra e uma contagem (`7/11 verified`) derivadas do que
-  foi de fato verificado — host, integridade da distribuição, checksum por módulo, classificador
-  de política, gate de benchmark. Cada item mostra o comando que o produziu, e o que não foi
-  medido aparece como **não verificado**, nunca como zero nem como cem.
-- **Degradação declarada de cor e movimento:** truecolor → 256 cores → 16 cores → nenhuma, com
-  `NO_COLOR` e `--no-animation` respeitados, fallback de glifo quando o terminal não codifica
-  blocos, e saída completa sem TTY. `--non-interactive`, `--yes`, `--profile` e `--modules` para
-  CI e agentes: nenhum prompt é alcançado nesse modo.
-- Sem `--apply`, o wizard **imprime o plano e não escreve nada** — provado por hash da árvore
-  antes e depois. `wire-suggest` mostra o bloco para colar e nunca toca em `settings`.
+- **`hpp init` — installation became an experience.** A wizard that fulfils the six stages of the
+  installation contract (`detect → prereqs → profile → configure → wire-suggest → smoke`), with
+  an opening sequence where **each line appears when the corresponding stage has actually
+  finished** — the movement is the progress, not decoration. It closes with the brand lockup in
+  terminal blocks and the installation signature.
+- **Readiness measured, not estimated.** A bar and a count (`7/11 verified`) derived from what was
+  in fact verified — host, distribution integrity, checksum per module, policy classifier,
+  benchmark gate. Each item shows the command that produced it, and what was not measured appears
+  as **not verified**, never as zero and never as one hundred.
+- **Declared degradation of colour and motion:** truecolor → 256 colours → 16 colours → none,
+  with `NO_COLOR` and `--no-animation` honoured, glyph fallback when the terminal does not encode
+  blocks, and full output without a TTY. `--non-interactive`, `--yes`, `--profile` and
+  `--modules` for CI and agents: no prompt is reached in that mode.
+- Without `--apply`, the wizard **prints the plan and writes nothing** — proven by hashing the
+  tree before and after. `wire-suggest` shows the block to paste and never touches `settings`.
 
-### Alterado
+### Changed
 
-- **Identidade visual unificada na marca aprovada.** O material anterior usava uma paleta que
-  antecedia o lockup e não tinha relação com ele. Agora são quatro cores e um acento só — preto,
-  carvão, branco-quente e laranja de sinal —, medidas no próprio lockup. O README abre com a arte
-  oficial, e `docs/BRAND.md` descreve o sistema, incluindo como a marca se comporta no terminal.
+- **Visual identity unified on the approved brand.** The previous material used a palette that
+  predated the lockup and had no relation to it. There are now four colours and a single accent —
+  black, charcoal, warm white and signal orange — measured on the lockup itself. The README opens
+  with the official artwork, and `docs/BRAND.md` describes the system, including how the brand
+  behaves in the terminal.
 
-### Corrigido
+### Fixed
 
-- A suíte carregava um **caminho absoluto com nome de usuário**, o que a prendia a uma única
-  máquina e fazia esse caminho viajar no pacote publicado. A raiz passou a ser derivada da posição
-  do arquivo, com `HPP_EMITTED_COPY` para apontar outra árvore.
+- The suite carried an **absolute path with a user name**, which tied it to a single machine and
+  made that path travel in the published package. The root is now derived from the file's
+  location, with `HPP_EMITTED_COPY` to point at another tree.
 
 ## [2.2.0] — 2026-09-21
 
-### Adicionado
+### Added
 
-- Suíte de testes própria do harness (`tests/`, 106 casos, stdlib-only, sem rede): contrato do
-  CLI derivado do manifesto, coerência de versão entre manifesto/pacote/módulo, classificação de
-  comando destrutivo, event log append-only e retomada, ciclo e waves do WorkGraph, orçamento de
-  contexto, e conferência de `CHECKSUMS.txt`. Cada arquivo carrega ao menos um controle que prova
-  que o teste sabe reprovar.
-- Integração contínua em 12 combinações (Linux, macOS e Windows × Python 3.10–3.13), executando a
-  suíte, `hpp doctor` e `hpp benchmark -k 3` — os controles do próprio produto, pelo CLI real.
-  Permissões mínimas de leitura e sem passo mascarado por `continue-on-error`.
-- Estado `skew` no Monitor Map, com tolerância declarada e publicada (`--skew-tolerance`).
+- The harness's own test suite (`tests/`, 106 cases, stdlib-only, no network): CLI contract
+  derived from the manifest, version coherence across manifest/package/module, destructive
+  command classification, append-only event log and resumption, WorkGraph cycle and waves,
+  context budget, and `CHECKSUMS.txt` verification. Each file carries at least one control that
+  proves the test knows how to fail.
+- Continuous integration across 12 combinations (Linux, macOS and Windows × Python 3.10–3.13),
+  running the suite, `hpp doctor` and `hpp benchmark -k 3` — the product's own controls, through
+  the real CLI. Minimal read permissions and no step masked by `continue-on-error`.
+- `skew` state in the Monitor Map, with a declared and published tolerance (`--skew-tolerance`).
 
-### Corrigido
+### Fixed
 
-Sete defeitos reproduzidos antes do conserto, cada um com teste que falha antes e passa depois:
+Seven defects reproduced before the fix, each with a test that fails before and passes after:
 
-- **Política de comandos ignorava a ordem das flags.** `rm -rf` era bloqueado, mas `rm -fr`,
-  `rm -r -f`, `rm --recursive --force` e a forma com `sudo` passavam como permitidas. A
-  classificação agora lê o conjunto de opções de cada invocação, para em `--` e segmenta por
-  `| ; &` — sem transformar `rm arquivo.txt`, `grep -rf padroes.txt` ou `cp -rf a b` em bloqueio.
-- **Orçamento de contexto não cobrava o separador entre blocos**, então o número publicado era
-  menor que o texto entregue e o teto podia ser estourado. `used` passa a ser o tamanho real.
-- **Sinal de monitor com timestamp no futuro era reportado como saudável** — relógio adiantado ou
-  timestamp fabricado viravam frescor.
-- **Memória de falhas persistia segredo em texto claro** e o devolvia no relato. Toda entrada passa
-  por redaction por forma (chave privada, credencial em URL, `Bearer`/`Basic`, prefixos de
-  provedor, JWT, `chave=valor`, blob de alta entropia), registrando tipo e comprimento — nunca o
-  valor. Erro sem segredo continua legível.
-- **A escrita de `settings.json` não era atômica** nos três instaladores que a fazem: uma queda no
-  meio truncava o arquivo e um update concorrente era perdido em silêncio. Agora é temporário no
-  mesmo diretório, `fsync` e `os.replace`, com comparação byte a byte antes de trocar — divergência
-  recusa a escrita (saída `2`) em vez de sobrescrever.
-- **O scanner de segredo suprimia a linha inteira** quando ela continha um exemplo permitido: um
-  valor real na mesma linha passava. A supressão passou a valer para a ocorrência, não para a linha.
-- **A verificação de `CHECKSUMS.txt` aceitava inventário vazio como sucesso** e caminho que escapa
-  do módulo (`../fora.txt`, caminho absoluto). As três formas agora reprovam com saída `2`.
+- **Command policy ignored flag order.** `rm -rf` was blocked, but `rm -fr`, `rm -r -f`,
+  `rm --recursive --force` and the `sudo` form passed as allowed. Classification now reads the
+  option set of each invocation, stops at `--` and splits on `| ; &` — without turning
+  `rm arquivo.txt`, `grep -rf padroes.txt` or `cp -rf a b` into a block.
+- **Context budget did not charge the separator between blocks**, so the published number was
+  smaller than the delivered text and the ceiling could be exceeded. `used` is now the real size.
+- **A monitor signal with a timestamp in the future was reported as healthy** — a fast clock or a
+  fabricated timestamp became freshness.
+- **Failure memory persisted secrets in clear text** and returned them in the report. Every entry
+  now goes through redaction by shape (private key, credential in URL, `Bearer`/`Basic`, provider
+  prefixes, JWT, `key=value`, high-entropy blob), recording type and length — never the value. An
+  error without a secret stays readable.
+- **Writing `settings.json` was not atomic** in the three installers that do it: a crash midway
+  truncated the file and a concurrent update was lost silently. It is now a temporary file in the
+  same directory, `fsync` and `os.replace`, with a byte-by-byte comparison before swapping —
+  divergence refuses the write (exit `2`) instead of overwriting.
+- **The secret scanner suppressed the whole line** when it contained an allowed example: a real
+  value on the same line got through. Suppression now applies to the occurrence, not the line.
+- **`CHECKSUMS.txt` verification accepted an empty inventory as success** and a path escaping the
+  module (`../fora.txt`, absolute path). All three forms now fail with exit `2`.
 
 ## [2.1.0] — 2026-09-20
 
-### Adicionado
+### Added
 
-- Attestation provider-neutral que vincula aprovação a spec, identidade do repositório,
-  commit-base, snapshot completo, maker, checker e identificador de revisão.
-- `hpp attest create` e `hpp attest verify`, com bloqueio quando conteúdo rastreado, staged,
-  removido ou untracked diverge após a inspeção.
-- Controle executável no benchmark para provar aprovação válida e invalidação após mutação.
+- Provider-neutral attestation that binds an approval to spec, repository identity, base commit,
+  full snapshot, maker, checker and review identifier.
+- `hpp attest create` and `hpp attest verify`, blocking when tracked, staged, removed or untracked
+  content diverges after inspection.
+- Executable control in the benchmark to prove a valid approval and its invalidation after
+  mutation.
 
-### Corrigido
+### Fixed
 
-- URLs de clone, marketplace e releases apontam para a conta canônica `rushar-labs`.
+- Clone, marketplace and release URLs point to the canonical `rushar-labs` account.
 
 ## [2.0.0] — 2026-09-20
 
-### Adicionado
+### Added
 
-- Núcleo local-first e stdlib-only em `python -m hpp`, com manifesto raiz, doctor, instalação
-  planejada, estado append-only, retomada, avaliação e benchmark.
-- WorkGraph spec-driven com rejeição de ciclos, critérios de aceite e waves topológicas.
-- Capability, Agent, Lane, Code, Evidence, Monitor e grafo operacional como projeções
-  determinísticas, sem daemon ou banco de grafo.
-- Context compiler com orçamento, proveniência e hash; recusa de material semelhante a segredo.
-- Roteamento provider-neutral por tiers `economy`, `balanced` e `frontier`, com piso de risco e
-  fallback explícito apenas para cima.
-- Monitor Map com alvo, cadência, frescor, severidade, custo e gate consumidor; nenhum monitor é
-  iniciado de forma oculta.
-- Benchmark reproduzível com controles declarados e runner standalone de `pass@k` e `pass^k`.
-- Identidade visual Signal Path aplicada ao README, manual, catálogo e ativos SVG.
+- Local-first, stdlib-only core in `python -m hpp`, with root manifest, doctor, planned
+  installation, append-only state, resumption, evaluation and benchmark.
+- Spec-driven WorkGraph with cycle rejection, acceptance criteria and topological waves.
+- Capability, Agent, Lane, Code, Evidence, Monitor and operational graph as deterministic
+  projections, with no daemon or graph database.
+- Context compiler with budget, provenance and hash; refusal of secret-like material.
+- Provider-neutral routing by `economy`, `balanced` and `frontier` tiers, with a risk floor and
+  explicit fallback upward only.
+- Monitor Map with target, cadence, freshness, severity, cost and consumer gate; no monitor is
+  started covertly.
+- Reproducible benchmark with declared controls and a standalone `pass@k` and `pass^k` runner.
+- Signal Path visual identity applied to the README, manual, catalogue and SVG assets.
 
-### Alterado
+### Changed
 
-- O posicionamento passa a liderar com harness → protocol → módulos → distribuição.
-- O `operator-kit` 1.4.0 pode bloquear famílias confiáveis em modo `enforce` e mantém `audit`
-  explícito para regras advisory.
-- A documentação diferencia saúde do serviço, frescor do sinal e correção do resultado.
-- Claude Code e Codex CLI compartilham o mesmo contrato; diferenças de host permanecem visíveis.
+- Positioning now leads with harness → protocol → modules → distribution.
+- `operator-kit` 1.4.0 can block trusted families in `enforce` mode and keeps `audit` explicit
+  for advisory rules.
+- The documentation distinguishes service health, signal freshness and result correctness.
+- Claude Code and Codex CLI share the same contract; host differences remain visible.
 
-### Corrigido
+### Fixed
 
-- `passk_eval.py` não depende mais de pacote externo nem de modo degradado.
-- A release não publica duas versões vivas do mesmo módulo.
+- `passk_eval.py` no longer depends on an external package or a degraded mode.
+- The release does not publish two live versions of the same module.
 
 ## [1.5.0] — 2026-09-20
 
-### Adicionado
+### Added
 
-- Suporte comprovado ao **Codex CLI**: `AGENTS.md` na raiz e nos dez kits, instalação por
-  cópia em `.agents/hpp/` e geração namespaced das 33 skills em `.agents/skills/`.
-- **14 subagents** com `tools` explícitos: 12 papéis de desenvolvimento, um refutador e um
-  caçador de falhas silenciosas; os três checkers são read-only.
-- Roteador de **checker cross-provider** que detecta Codex, Cursor e Gemini sem executar
-  ferramentas nem alterar permissões.
-- `preflight.py` para validar Python, PyYAML, repositório Git e settings gravável antes do
-  done gate, além de `docs/MCP-RUNBOOK.md` e 24 padrões em `docs/TIPS.md`.
-- Registro de skills externas candidatas com origem, licença, blob e decisão explícitos.
+- Proven support for **Codex CLI**: `AGENTS.md` at the root and in the ten kits, installation by
+  copy into `.agents/hpp/` and namespaced generation of the 33 skills into `.agents/skills/`.
+- **14 subagents** with explicit `tools`: 12 development roles, one refuter and one silent-failure
+  hunter; the three checkers are read-only.
+- **Cross-provider checker** router that detects Codex, Cursor and Gemini without executing tools
+  or changing permissions.
+- `preflight.py` to validate Python, PyYAML, Git repository and writable settings before the done
+  gate, plus `docs/MCP-RUNBOOK.md` and 24 patterns in `docs/TIPS.md`.
+- Registry of candidate external skills with explicit origin, licence, blob and decision.
 
-### Alterado
+### Changed
 
-- A publicação agora reprova skills fora do contrato e cobre ruído de revisão, nomes de
-  casa e narrativa de marca descartada.
-- O catálogo passa a inventariar subagents, documentos, registros e recursos transversais.
-- A identidade visual e a descrição geral usam a metáfora original de componentes sob o
-  mesmo teto, sem referências a personagens ou franquias externas.
+- Publication now rejects skills outside the contract and covers review noise, house names and
+  discarded brand narrative.
+- The catalogue now inventories subagents, documents, registries and cross-cutting resources.
+- The visual identity and the general description use the original metaphor of components under
+  the same roof, with no reference to characters or external franchises.
 
-### Corrigido
+### Fixed
 
-- O gerador Codex preserva LF ou CRLF do frontmatter e não ativa hooks do Claude Code.
-- Scripts que produziam metadados internos agora usam rationale impessoal e termos públicos.
+- The Codex generator preserves LF or CRLF in the frontmatter and does not activate Claude Code
+  hooks.
+- Scripts that produced internal metadata now use impersonal rationale and public terms.
 
 ## [1.4.0] — 2026-09-20
 
-Primeira versão pública. Dez kits, um contrato de saída único (`0` ok · `1` warn · `2` block ·
-`3` erro), `CHECKSUMS.txt` por kit e `SANITIZACAO.md` declarando o que foi retirado antes de
-publicar.
+First public version. Ten kits, a single exit contract (`0` ok · `1` warn · `2` block ·
+`3` error), `CHECKSUMS.txt` per kit and `SANITIZACAO.md` declaring what was removed before
+publishing.
 
-### Adicionado
+### Added
 
-| kit | versão | o que entrega |
+| kit | version | what it delivers |
 |---|---|---|
-| operator-kit | 1.3.0 | `done_gate` de três estados, `/ralph-gate`, ledger de dívida e 13 regras instaláveis |
-| kit-forge | 1.4.0 | assembler, lint de IP/PII, instalação em seis estágios e zip verificado |
-| lane-kit | 1.2.0 | coordenação de sessões, maker ≠ checker e lock por diretório |
-| continuity-kit | 1.2.1 | handoff, rederivação e verificação antes de retomar |
-| claude-dev-kit | 1.3.1 | criação de skills, hooks e plugins com wiring reversível |
-| health-kit | 1.3.1 | sonda config-driven e statusline cache-first |
-| dev-squad-kit | 1.0.0 | 12 papéis e consolidação paralela |
-| agent-framework-wizard | 1.1.1 | wizard de seis passos para agente ou skill |
-| supabase-pack | 1.1.0 | auditoria RLS e scaffold de Edge Function |
-| gotcha-memory | 1.0.0 | falha recorrente transformada em lição operacional |
+| operator-kit | 1.3.0 | three-state `done_gate`, `/ralph-gate`, debt ledger and 13 installable rules |
+| kit-forge | 1.4.0 | assembler, IP/PII lint, six-stage installation and verified zip |
+| lane-kit | 1.2.0 | session coordination, maker ≠ checker and per-directory lock |
+| continuity-kit | 1.2.1 | handoff, re-derivation and verification before resuming |
+| claude-dev-kit | 1.3.1 | creation of skills, hooks and plugins with reversible wiring |
+| health-kit | 1.3.1 | config-driven probe and cache-first statusline |
+| dev-squad-kit | 1.0.0 | 12 roles and parallel consolidation |
+| agent-framework-wizard | 1.1.1 | six-step wizard for an agent or skill |
+| supabase-pack | 1.1.0 | RLS audit and Edge Function scaffold |
+| gotcha-memory | 1.0.0 | recurring failure turned into an operational lesson |
 
-### Portabilidade
+### Portability
 
-- Hooks resolvem `.venv`, `python3` ou `python` por `hooks/pyrun.sh`.
-- Kits são emitidos em LF e levam checksums dos bytes distribuídos.
+- Hooks resolve `.venv`, `python3` or `python` through `hooks/pyrun.sh`.
+- Kits are emitted in LF and carry checksums of the distributed bytes.
 
 [1.4.0]: https://github.com/rushar-labs/house-party-protocol/releases/tag/v1.4.0
 [1.5.0]: https://github.com/rushar-labs/house-party-protocol/releases/tag/v1.5.0
@@ -180,3 +228,4 @@ publicar.
 [2.1.0]: https://github.com/rushar-labs/house-party-protocol/releases/tag/v2.1.0
 [2.2.0]: https://github.com/rushar-labs/house-party-protocol/releases/tag/v2.2.0
 [2.3.0]: https://github.com/rushar-labs/house-party-protocol/releases/tag/v2.3.0
+[2.4.0]: https://github.com/rushar-labs/house-party-protocol/releases/tag/v2.4.0

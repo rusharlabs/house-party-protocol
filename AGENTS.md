@@ -1,29 +1,31 @@
+[English](AGENTS.md) · [Português](AGENTS.pt-BR.md)
+
 # AGENTS.md — House Party Protocol
 
-House Party Protocol é um harness local-first de confiabilidade, governança e avaliação para
-agentes de código em Claude Code e Codex CLI. Os módulos são capacidades instaláveis do harness;
-o marketplace é apenas um canal de distribuição.
+House Party Protocol is a local-first harness for reliability, governance and evaluation of
+coding agents on Claude Code and Codex CLI. The modules are installable capabilities of the
+harness; the marketplace is only a distribution channel.
 
-## Regras do repositório
+## Repository rules
 
-- Trate `hpp.manifest.json` como contrato executável de módulos, relações, hosts e invariantes.
-- Os diretórios versionados dos módulos são artefatos emitidos; não os edite à mão.
-- Alterações nascem nas fontes, recebem teste vermelho→verde e passam pela forja.
-- Nunca reduza um gate para obter verde. Corrija o artefato que o gate reprovou.
-- Preserve MIT, NOTICE e atribuições de código adaptado.
-- Não registre credenciais, caminhos pessoais, clientes ou infraestrutura privada.
-- `healthy` prova frescor do sinal declarado; não prova correção do trabalho.
-- Waves vêm de dependências do WorkGraph; uma lane não recebe território conflitante.
+- Treat `hpp.manifest.json` as the executable contract of modules, relations, hosts and invariants.
+- The versioned module directories are emitted artifacts; do not edit them by hand.
+- Changes are born in the sources, get a red-to-green test and go through the forge.
+- Never lower a gate to get green. Fix the artifact the gate rejected.
+- Preserve MIT, NOTICE and attributions of adapted code.
+- Do not record credentials, personal paths, clients or private infrastructure.
+- `healthy` proves freshness of the declared signal; it does not prove correctness of the work.
+- Waves come from WorkGraph dependencies; a lane does not receive conflicting territory.
 
-## Códigos de saída
+## Exit codes
 
-`0` ok · `1` warn/manual · `2` block · `3` erro.
+`0` ok · `1` warn/manual · `2` block · `3` error.
 
 ## Codex CLI
 
 Use `instaladores/kit-forge-1.4.0/kit_doctor.py install --kit <kit> --host codex --target <repo> --apply`.
-As skills vão para `.agents/skills`; o runtime completo vai para `.agents/hpp`. Hooks declarados
-em `hooks.json` pertencem ao Claude Code e não são ativados automaticamente no Codex.
+Skills go to `.agents/skills`; the full runtime goes to `.agents/hpp`. Hooks declared in
+`hooks.json` belong to Claude Code and are not activated automatically on Codex.
 
-Antes de declarar uma mudança concluída, rode o self-test do script alterado, `python -m hpp
-doctor`, o benchmark, o verificador dos módulos e o gate de publicação.
+Before declaring a change complete, run the self-test of the changed script, `python -m hpp
+doctor`, the benchmark, the module verifier and the publication gate.

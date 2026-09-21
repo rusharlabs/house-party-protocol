@@ -1,26 +1,27 @@
+[English](README.md) · [Português](README.pt-BR.md)
+
 # Health Kit
 
-Sonda config-driven de saúde de serviços (HTTP ou comando local) + um segmento de
-**statusline** que mostra o detalhe por-serviço (`api:OK db:DOWN`) sem nunca tocar rede
-no caminho quente — só lê um cache que `health_probe.py` escreve. `health_probe.py`
-sonda os serviços declarados em `health.probes` e grava um cache JSON; `statusline.py`
-(ou qualquer outra ferramenta) lê **só o cache** — nunca faz I/O de rede no caminho que
-roda a cada tecla/prompt. Dois processos, uma fronteira clara: quem sonda não é quem
-exibe. **Doutrina embarcada:** health de SERVIÇO ≠ health de DADO — este kit prova que o
-processo está de pé, não que o dado que ele serve está correto/atualizado.
+Config-driven probe of service health (HTTP or local command) + a **statusline**
+segment that shows per-service detail (`api:OK db:DOWN`) without ever touching the
+network on the hot path — it only reads a cache that `health_probe.py` writes.
+`health_probe.py` probes the services declared in `health.probes` and writes a JSON cache;
+`statusline.py` (or any other tool) reads **only the cache** — it never does network I/O on
+the path that runs at every keystroke/prompt. Two processes, one clear boundary: whoever
+probes is not whoever displays. **Embedded doctrine:** SERVICE health ≠ DATA health — this
+kit proves the process is up, not that the data it serves is correct/up to date.
 
-## Pré-requisitos + APIs externas
+## Prerequisites + external APIs
 
-| Requisito | Versão mínima | Obrigatório? |
+| Requirement | Minimum version | Required? |
 |---|---|---|
-| Python | 3.8 | sim |
-| PyYAML | qualquer | sim |
+| Python | 3.8 | yes |
+| PyYAML | any | yes |
 
-Serviços externos: **nenhum kit-específico** — `health.probes` no seu profile aponta
-para os serviços DO SEU projeto (HTTP ou comando local); o kit em si não fala com
-nenhum serviço fixo.
+External services: **none kit-specific** — `health.probes` in your profile points at the
+services OF YOUR project (HTTP or local command); the kit itself talks to no fixed service.
 
-## O que tem nesta pasta
+## What is in this folder
 
 ```
 health-kit/
@@ -42,17 +43,17 @@ health-kit/
     └── plugin.json               ← manifesto do plugin
 ```
 
-## Instalar via plugin (1 clique)
+## Install as a plugin (1 click)
 
 ```bash
 /plugin marketplace add .
 /plugin install health-kit@house-party-protocol
 ```
-Instala o hook `SessionStart` (refresh automático do cache a cada sessão nova) via
-`${CLAUDE_PLUGIN_ROOT}`. A **statusLine continua manual** — rode `wire_statusline.py`
-(limite do Claude Code: plugin não embute `statusLine`).
+Installs the `SessionStart` hook (automatic cache refresh at every new session) through
+`${CLAUDE_PLUGIN_ROOT}`. The **statusLine remains manual** — run `wire_statusline.py`
+(a Claude Code limit: a plugin cannot embed `statusLine`).
 
-## Instalar por cópia
+## Install by copy
 
 ```bash
 cp -r health-kit-1.1.0 <seu-projeto>/health-kit
@@ -62,16 +63,16 @@ python health-kit/instaladores/kit-forge/kit_doctor.py install health-kit --targ
 python health-kit/instaladores/kit-forge/kit_doctor.py install health-kit --target . --apply
 #                                                                              ^ aplica de verdade
 ```
-O estágio `configure` pergunta se você quer configurar `health.probes` agora ou copiar
-`profile.example.yaml` como está e ajustar depois (default: ajustar depois). Smoke test
-manual, se preferir não usar o `kit_doctor.py`:
+The `configure` stage asks whether you want to configure `health.probes` now or copy
+`profile.example.yaml` as is and adjust later (default: adjust later). Manual smoke test,
+if you prefer not to use `kit_doctor.py`:
 ```bash
 cp profile.example.yaml operator-profile.yaml   # ou mesclar com um já existente do Operator Kit
 python health-kit/scripts/health_probe.py            # sonda + grava o cache
 python health-kit/statusline/statusline.py --statusline   # lê o cache, mostra o segmento
 ```
 
-## O que o instalador detecta
+## What the installer detects
 
 ```
 greenfield    → copia profile.example.yaml -> operator-profile.yaml (estágio profile)
@@ -79,27 +80,27 @@ em-andamento  → operator-profile.yaml já existe com health.probes configurado
 re-run        → registry (~/.claude-kits/registry.json) marca re-run
 ```
 
-## O que é seguro rodar de novo
+## What is safe to run again
 
-`wire_statusline.py` é **idempotente** (rodar de novo é no-op) e **nunca sobrescreve**
-uma `statusLine` já configurada por outra ferramenta sem `--force`:
+`wire_statusline.py` is **idempotent** (running it again is a no-op) and **never
+overwrites** a `statusLine` already configured by another tool without `--force`:
 ```bash
 python health-kit/scripts/wire_statusline.py --target .claude/settings.local.json
 python health-kit/scripts/wire_statusline.py --undo --target .claude/settings.local.json
 ```
-`operator-profile.yaml` também nunca é sobrescrito pelo estágio `profile` se já existir.
+`operator-profile.yaml` is also never overwritten by the `profile` stage if it already exists.
 
-## Wiring manual (gate humano — nunca automático)
+## Manual wiring (human gate — never automatic)
 
-> ⚠️ Editar `.claude/settings.local.json` é gate humano. `statusLine` é **sempre**
-> manual (Claude Code não aceita `statusLine` dentro de plugin) — rode
-> `wire_statusline.py` você mesmo (comandos acima). `SessionStart`/`hooks` vêm de graça
-> via o caminho plugin; no caminho por cópia, colar `hooks/hooks.json` manualmente em
+> Editing `.claude/settings.local.json` is a human gate. `statusLine` is **always**
+> manual (Claude Code does not accept `statusLine` inside a plugin) — run
+> `wire_statusline.py` yourself (commands above). `SessionStart`/`hooks` come for free
+> through the plugin path; on the copy path, paste `hooks/hooks.json` by hand into
 > `.claude/settings.local.json`.
 
-## Prova / aceite (saída real, executada)
+## Proof / acceptance (real output, executed)
 
-Prova que o segmento reage a um serviço real subindo e caindo — sem mock:
+Proof that the segment reacts to a real service going up and down — no mock:
 
 ```bash
 # 1. sobe um servidor HTTP real na porta 18823
@@ -125,13 +126,13 @@ python health-kit/statusline/statusline.py --statusline
 ```
 <!-- executado: 2026-07-10 · exit=0 -->
 
-Executado de verdade nesta sessão (porta 18823, probe `type: http`): UP → `⚕ 1/1 UP`,
-DOWN após `kill` → `⚕ 0/1 UP (DOWN: api)`. Com `statusline.segments: ["health"]` isolado,
-o segmento mostra o nome do serviço: `api:OK` / `api:DOWN`.
+Actually executed in that run (port 18823, probe `type: http`): UP → `⚕ 1/1 UP`,
+DOWN after `kill` → `⚕ 0/1 UP (DOWN: api)`. With `statusline.segments: ["health"]` alone,
+the segment shows the service name: `api:OK` / `api:DOWN`.
 
-**Segmento `health` — agregado vs. detalhe:** 1-6 serviços mostram detalhe por-serviço
-(`api:OK db:DOWN`); 7+ degradam para o agregado `⚕<online>/<total>` (evita estourar a
-largura da statusline).
+**`health` segment — aggregate vs. detail:** 1-6 services show per-service detail
+(`api:OK db:DOWN`); 7+ degrade to the aggregate `⚕<online>/<total>` (avoids blowing the
+statusline width).
 
 **Cache (schema):**
 ```json
@@ -145,7 +146,7 @@ largura da statusline).
 }
 ```
 
-## Desfazer
+## Undo
 
 ```
 - Plugin: /plugin uninstall health-kit@house-party-protocol
@@ -154,9 +155,9 @@ largura da statusline).
 - Cache: rm .claude/health-cache.json (efêmero, seguro apagar — regenerado pelo próximo probe)
 ```
 
-## Portabilidade honesta
+## Honest portability
 
-`health_probe.py`, `statusline.py`, `wire_statusline.py`, `gate_sheet_panel.py` e
-`_lib/profile_loader.py` são **100% portáteis** — só dependem de Python stdlib + PyYAML.
-Nenhum mecanismo depende de rede/serviço específico de nenhum projeto: tudo vem de
-`health.probes` no profile.
+`health_probe.py`, `statusline.py`, `wire_statusline.py`, `gate_sheet_panel.py` and
+`_lib/profile_loader.py` are **100% portable** — they depend only on Python stdlib + PyYAML.
+No mechanism depends on a network/service specific to any project: everything comes from
+`health.probes` in the profile.

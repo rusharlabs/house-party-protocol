@@ -1,8 +1,10 @@
-# Benchmark reproduzível
+[English](BENCHMARK.md) · [Português](BENCHMARK.pt-BR.md)
 
-O benchmark público mede o harness local sem chamar APIs de modelo.
+# Reproducible benchmark
 
-## Executar
+The public benchmark measures the local harness without calling model APIs.
+
+## Run
 
 ```bash
 python -m hpp doctor
@@ -10,25 +12,26 @@ python -m hpp benchmark -k 3
 python -m hpp benchmark -k 3 --json
 ```
 
-## Cenários
+## Scenarios
 
-| Cenário | Controle positivo | Controle negativo | Gate |
+| Scenario | Positive control | Negative control | Gate |
 |---|---|---|---|
-| manifesto | dez módulos resolvidos | integração aponta módulo ausente | validação bloqueia |
-| política | comando seguro | operação destrutiva | enforce retorna 2 |
-| event log | sequência válida chega a verified | verified sem evidência | append é recusado sem criar log |
-| WorkGraph | DAG com duas waves | ciclo A→B→A | compilação falha |
-| Lane Map | lane morta não bloqueia | sobreposição viva | colisão aparece |
-| Monitor Map | sinal fresco | serviço online/dado stale | dimensões separadas |
-| contexto | fonte com hash e orçamento | material semelhante a segredo | compilação recusa |
-| roteamento | trabalho seguro usa economy | alto risco sem frontier | não rebaixa o piso |
-| grafos | mesma entrada duas vezes | projeção vazia | JSON idêntico e não vazio |
+| manifest | ten modules resolved | integration points at a missing module | validation blocks |
+| policy | safe command | destructive operation | enforce returns 2 |
+| event log | valid sequence reaches verified | verified without evidence | append is refused without creating the log |
+| WorkGraph | DAG with two waves | cycle A→B→A | compilation fails |
+| Lane Map | dead lane does not block | live overlap | collision appears |
+| Monitor Map | fresh signal | service online/data stale | separate dimensions |
+| context | source with hash and budget | secret-like material | compilation refuses |
+| routing | safe work uses economy | high risk without frontier | floor is not lowered |
+| graphs | same input twice | empty projection | identical and non-empty JSON |
 
-## Critério
+## Criterion
 
-O benchmark executa cada controle local `k=3`; não usa outcomes replayados como verdade pronta.
-Casos release-critical exigem `pass^k=1.00`. A saída JSON inclui versão, plataforma, hash da
-suite, tentativas e resultado individual. Integridade dos ZIPs é um gate separado da release.
+The benchmark runs each local control `k=3`; it does not use replayed outcomes as ready-made
+truth. Release-critical cases require `pass^k=1.00`. The JSON output includes version, platform,
+suite hash, attempts and individual results. ZIP integrity is a separate release gate.
 
-O benchmark prova somente o checkout, a plataforma e os cenários executados. Não mede qualidade
-geral de um modelo e não transforma um host sem lifecycle hook em enforcement automático.
+The benchmark proves only the checkout, the platform and the scenarios that ran. It does not
+measure the general quality of a model and does not turn a host without lifecycle hooks into
+automatic enforcement.

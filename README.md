@@ -10,272 +10,245 @@
   <img alt="Claude Code and Codex CLI" src="https://img.shields.io/badge/hosts-Claude%20Code%20%7C%20Codex%20CLI-F4F1EB">
 </p>
 
+<p align="center"><sub>English &nbsp;·&nbsp; <a href="README.pt-BR.md">Português (Brasil)</a></sub></p>
+
 # House Party Protocol
 
 **Operate coding agents under evidence, not trust.**
 
-House Party Protocol (HPP) é um **harness local-first, modular e cross-host para agentes de
-código**. Ele envolve o trabalho de Claude Code e Codex CLI com gates executáveis, revisão
-independente, lanes isoladas, continuidade entre sessões, loops governados, avaliação
-determinística, monitores explícitos e uma cadeia de distribuição verificável.
+House Party Protocol (HPP) is a local-first harness for coding agents. It sits around the work
+an agent does in Claude Code or Codex CLI and turns four questions into executable contracts:
+what may run, who may approve, what counts as proof, and where the next step comes from after an
+interruption.
 
-O produto é o harness. O protocol define os invariantes. Os módulos implementam capacidades.
-O marketplace é apenas um canal de distribuição para Claude Code; o instalador por cópia é o
-canal equivalente para Codex CLI.
+The harness is a Python package with no runtime dependencies (`python -m hpp`), a manifest that
+declares the protocol, a set of installable modules, and one distribution channel per host.
+Nothing runs in the background. Every verdict it produces can be re-derived from files on disk.
 
-```text
-intent/spec
-    │
-    ▼
-WorkGraph ──waves──▶ lanes ──execute──▶ evidence
-    │                   │                    │
-    │                   └── Lane Map         ▼
-    └── model policy                  independent checker
-                                              │
-                         monitors ──▶ gate ───┤
-                                              ▼
-                                      verified / blocked
-                                              │
-                                              ▼
-                                      event log + resume
-```
+## The problem
 
-## O que o harness controla
+An agent says "done". The sentence is fluent, the diff looks plausible, and nothing checked it.
+The tests it reports may have run against a stale checkout, or may not have run at all; text in
+a transcript is not an exit code. The approval a reviewer gave yesterday still reads "approved"
+this morning, after the spec changed and three files moved. Nobody re-opened it, because nothing
+tied the approval to the bytes it approved.
 
-| Camada | Capacidade executável |
-|---|---|
-| Integridade epistêmica | `done_gate`, evidência fresca, attestation vinculada aos bytes e controles negativos |
-| Separação de papéis | maker diferente de checker; revisores sem ferramentas de escrita |
-| Segurança operacional | classificação `ALLOW/WARN/BLOCK`, modos `audit` e `enforce`, snapshot e rollback |
-| Coordenação | Lane Map com dono, território, heartbeat, colisão e handoff |
-| Trabalho spec-driven | WorkGraph com dependências, rejeição de ciclos e waves topológicas |
-| Loops | charter, budget, stop conditions, autoprompt e retomada sem aceitar promessa como prova |
-| Avaliação | runner standalone de pass@k e pass^k; determinismo medido em `k` execuções |
-| Observabilidade | Monitor Map; saúde de serviço separada do frescor e da saúde do dado |
-| Memória operacional | falhas recorrentes classificadas, promovidas e reinjetadas com gate humano |
-| Supply chain | build determinístico, lint de IP/PII, checksums e ZIP reaberto antes da release |
+Two sessions share one repository. One rewrites a module while the other reviews it; the review
+lands on a version that no longer exists. Or the agent that wrote the code is the one that
+reviews it, with the same blind spots and a pen in hand: it "fixes and proceeds", and the defect
+in the process never surfaces. A lock left by a session that died at 3 a.m. blocks every other
+session at 9, because a stale lock and a live one look identical.
+
+Then the failures that lie by being technically correct. A service answers 200 while its data is
+from Tuesday. A signal stamped in the future is reported as fresh. A counter returns zero because
+the pattern never matched, and zero is read as "no problems". A loop takes "one more iteration"
+past its budget. A summary restored after a crash is treated as a to-do list, so a finished step
+runs again and overwrites its own result. None of these raise an error. That is what makes them
+expensive.
+
+## How the harness responds
+
+Each failure above has a mechanism in the code, and each mechanism has a command that shows it.
+
+| failure | mechanism | command |
+|---|---|---|
+| "done" without proof | append-only event log; `verified` needs recorded evidence; an out-of-order event is refused before anything is written | `hpp event append` · `hpp status` |
+| stale approval | attestation bound to spec hash, base commit and a full snapshot of tracked and untracked files; any divergence blocks reuse | `hpp attest create` · `hpp attest verify` |
+| author reviewing own work | maker and checker must differ (case-insensitive) or the attestation is refused; module checkers ship without write tools | `hpp attest create --maker a --checker a` → exit 2 |
+| stale lock, territory collision | Lane Map derives `alive` / `suspect` / `dead` from heartbeats; a dead lane never produces a collision | `hpp map lane --now` |
+| service up, data old | Monitor Map separates `healthy`, `stale`, `skew` and `unknown`, with declared freshness and clock tolerance | `hpp map monitor --now` |
+| dangerous command | policy classifier returns `ALLOW`, `MANUAL` or `BLOCK`; `enforce` maps them to exit 0, 1, 2 | `hpp policy check --mode enforce` |
+| parallelism by guesswork | WorkGraph turns declared dependencies into topological waves; a cycle is an error, not an empty wave | `hpp work waves` |
+| context silently truncated | compiler fits whole blocks under a character budget, records a hash per block, and refuses secret-like material | `hpp context compile` |
+| one lucky run | `pass@k` and `pass^k` measured separately over `k` executions | `hpp eval run` · `hpp benchmark` |
+| installer that writes before you read | `hpp init` prints a plan; `--apply` writes one file; host wiring stays a paste | `hpp init` |
 
 ## Quickstart
 
-Requer Python 3.9+ e não adiciona dependência de runtime.
+Requirements: Python 3.10 or newer (`pyproject.toml`), `git` on `PATH` for attestation, no
+third-party packages. CI exercises Python 3.10 to 3.13 on Linux, macOS and Windows
+(`.github/workflows/ci.yml`); older interpreters are not promised because nothing measures them.
 
 ```bash
 git clone https://github.com/rushar-labs/house-party-protocol.git
 cd house-party-protocol
 python -m hpp doctor
-python -m hpp graph --view operational --format mermaid
-python -m hpp benchmark -k 3
+python -m hpp init --target ../your-repo
 ```
 
-Planejamento do bundle de confiabilidade:
+`hpp init` runs six fixed stages and prints a plan. Each boot line completes only when its stage
+has finished; readiness counts checks that ran, and each item carries the command that
+reproduces it. This is the output on a fresh target from the source tree:
 
-```bash
-python -m hpp install --bundle reliable-coding --host codex --target ../meu-repo
+```text
+> detecting host...           ✓ greenfield · 0 existing item(s) preserved
+> checking prerequisites...   ✓ python 3.14.3 · protocol 2.0
+> mounting profile...         ✓ would-write · host=claude-code · bundle=reliable-coding · policy=audit · 3 default(s)
+> loading modules...          ✓ 6 modules · reliable-coding · claude-code
+> wiring suggestions...       ✓ 7 commands to paste · 0 files written
+> verifying evidence...       ✓ policy · graph · events · benchmark
+> protocol online.
+
+  READINESS  every line is a check that ran; the command below it reproduces it
+  █████████████░░░░░░░  7/11 verified · 4 not verified · 0 failed
 ```
 
-Esse comando é deliberadamente read-only. A aplicação real usa o instalador verificado de cada
-módulo, mostrado na seção Codex CLI; o harness não grava um receipt para fingir que copiou bytes.
+The four items not verified in that run are exactly the ones a source checkout cannot prove:
+distribution integrity and module checksums (only the emitted distribution carries
+`marketplace.json` and `CHECKSUMS.txt`), the profile (plan only) and the host wiring (a paste
+you do yourself). Nothing is written until you re-run with `--apply`, and then exactly one file
+is written: `.hpp/profile.json`. `hpp init --json` gives the same report as JSON for CI and
+agents; `--non-interactive`, `--yes` and `--profile` answer the three questions without a prompt.
 
-Para Claude Code, o canal nativo continua disponível:
+After `--apply`, paste the wire block the command printed. For Claude Code that is the native
+plugin channel:
 
 ```text
 /plugin marketplace add rushar-labs/house-party-protocol
 /plugin install operator-kit@house-party-protocol
 ```
 
-## Codex CLI
-
-O Codex recebe cada módulo por cópia verificável, com skills namespaced em `.agents/skills` e
-runtime em `.agents/hpp`. Para instalar um módulo emitido:
+For Codex CLI, and for modules that have no plugin hook on Claude Code, the module installer
+copies each module and runs its declared smokes. It plans first and applies only on a second,
+explicit invocation:
 
 ```bash
 python instaladores/kit-forge-1.4.0/kit_doctor.py install \
-  --kit frameworks-com-plugins/operator-kit-1.4.0 \
-  --host codex --target ../meu-repo --apply
+  --kit frameworks-com-plugins/operator-kit-1.4.0 --host codex --target ../your-repo
+python instaladores/kit-forge-1.4.0/kit_doctor.py install \
+  --kit frameworks-com-plugins/operator-kit-1.4.0 --host codex --target ../your-repo --apply
 ```
 
-Forma compacta: `kit_doctor.py install --kit <módulo> --host codex --target <repo> --apply`.
+The installer ships with the emitted distribution, not with this source tree; `hpp init` says so
+in its wire block when it cannot find it.
 
-O comando executa o plano, copia o runtime e roda os smokes declarados. Hooks de lifecycle do
-Claude Code não são ativados silenciosamente no Codex; o doctor marca essa integração como
-`explicit-command` ou `unsupported`.
+## Harness, protocol, modules, distribution
 
-## Uma superfície, várias projeções
+The product is layered, and the layers are not interchangeable.
 
-O HPP não precisa de um banco de grafo para ser explicável. O CLI projeta arquivos e eventos
-locais em mapas determinísticos:
-
-```bash
-python -m hpp graph --view capability --format json
-python -m hpp graph --view agent --format mermaid
-python -m hpp graph --view evidence --format json
-python -m hpp graph --view operational --format mermaid
+```text
+harness        python -m hpp          the operating surface: doctor, init, event log,
+                                      attestation, maps, WorkGraph, policy, routing, eval
+   │
+protocol       hpp.manifest.json      the invariants: roles, loop transitions and gates,
+                                      exit codes, host coverage, monitors, bundles
+   │
+modules        ten versioned dirs     installable capabilities; each stands alone
+   │
+distribution   marketplace · copy     Claude Code plugin channel · Codex CLI verified copy
 ```
 
-- **Capability Map:** módulos, capacidades, hosts e bundles.
-- **Agent Map:** maker, checker, gate humano, permissões e handoffs.
-- **Lane Map:** sessões vivas, territórios, heartbeats e colisões.
-- **WorkGraph:** unidades derivadas da spec, dependências e waves seguras.
-- **Grafo operacional / Execution/Evidence Graph:** ações, artefatos, medições e vereditos.
-- **Context/Knowledge Map:** fontes incluídas ou omitidas, prioridade, hash e orçamento.
-- **Monitor Map:** probe, alvo, cadência, frescor, severidade e consumidor.
+`hpp doctor` validates the manifest and, when `marketplace.json` sits beside it, cross-checks
+every module path, version and plugin manifest. On this checkout it reports `modules=10`; the
+same command against the emitted distribution reports `distribution: checked, ok, 10 modules`.
 
-O `Code Map` raiz mostra módulos e componentes declarados; não finge ser um grafo AST de chamadas.
-Quando análise semântica de código for necessária, ela entra como fonte/adaptador, não como banco
-obrigatório do produto.
+The protocol's loop is five transitions, each behind a named gate:
 
-Veja [arquitetura](docs/ARCHITECTURE.md) e [modelo de grafos](docs/GRAPH-MODEL.md).
+```text
+planned --work_started--> active --evidence_recorded--> evidenced --check_passed--> checked
+        [scope]                   [fresh-evidence]                 [read-only-checker]
 
-## Spec-driven em waves
-
-Uma spec vira unidades com `id`, dependências, critério de aceite e tier. O WorkGraph rejeita
-ciclos e só coloca na mesma wave itens sem dependência entre si. A barreira fecha uma wave antes
-de abrir a próxima; evidência e review continuam obrigatórios por unidade.
-
-```bash
-python -m hpp work plan examples/reliable-coding/workgraph.json
-python -m hpp work waves examples/reliable-coding/workgraph.json
+checked --human_approved--> approved --verified--> verified
+        [human]                      [closure]
 ```
 
-O roteador escolhe um tier provider-neutral (`economy`, `balanced`, `frontier`) por risco,
-complexidade, contexto e estágio. Ele não chama modelos e não esconde fallback:
+`hpp status` projects the event log onto this machine and names the next step; `hpp resume`
+returns the same answer as JSON. Neither asks a model to remember anything.
 
-```bash
-python -m hpp route \
-  --request examples/reliable-coding/route-request.json \
-  --providers examples/reliable-coding/providers.json \
-  --policy economy
-```
+## What each module solves
 
-Risco, complexidade e tamanho de contexto estabelecem um piso: uma política econômica nunca
-rebaixa trabalho de alto risco. O fallback só pode subir de tier e fica registrado no output.
-
-Contexto também é compilado antes da execução, sob orçamento e com proveniência:
-
-```bash
-python -m hpp context compile examples/reliable-coding/context.json --budget 160
-python -m hpp map context examples/reliable-coding/context.json --budget 160
-```
-
-## Lane Map e Monitor Map
-
-Lane Map deriva ownership e colisões de territórios exclusivos. Quando `--now` é informado, o
-estado `alive/suspect/dead` vem do heartbeat e de limites explícitos; uma lane morta não mantém um
-bloqueio eterno.
-
-```bash
-python -m hpp map lane examples/reliable-coding/lanes.json \
-  --now 1000 --suspect-after 60 --dead-after 300
-python -m hpp map agent
-python -m hpp map monitor examples/reliable-coding/monitors.json --now 1000
-```
-
-Monitor Map não inicia processos. Ele projeta probes declaradas em `healthy`, `stale`, `skew` ou
-`unknown`. `healthy` significa sinal fresco dentro daquela régua — não resultado correto, dado
-atualizado ou operação concluída. `skew` é sinal com timestamp no futuro, além da tolerância
-declarada (`--skew-tolerance`): relógio adiantado ou timestamp fabricado não é frescor.
-
-## Estado, loops e retomada
-
-O event log é append-only. A projeção atual pode ser reconstruída, auditada e resumida sem
-depender da memória de uma conversa.
-
-```bash
-python -m hpp event append --type work_started --data '{"work":"ITEM-1","actor":"maker-a"}'
-python -m hpp event append --type evidence_recorded --data '{"work":"ITEM-1","ref":"pytest.txt"}'
-python -m hpp status --json
-python -m hpp resume
-```
-
-Autoprompt é continuidade; não é autonomia ilimitada. O loop para por sucesso provado, budget,
-bloqueio ou gate humano. Veja [loops](docs/LOOPS.md).
-
-## Attestation de evidência
-
-Uma aprovação pode estar correta e ainda assim ficar obsoleta quando a spec ou o checkout muda.
-O HPP vincula o veredito a `spec hash`, repositório, commit-base, snapshot completo, maker,
-checker e sessão. Arquivos rastreados, staged, removidos e untracked participam do snapshot;
-qualquer divergência posterior bloqueia a reutilização da aprovação.
-
-```bash
-python -m hpp attest create --repo . --spec SPEC.md \
-  --maker maker-a --checker checker-b --session review:001 \
-  --verdict approved --output .hpp/attestation.json
-python -m hpp attest verify .hpp/attestation.json --repo .
-```
-
-O registro guarda somente um hash da identidade remota; URL e caminho pessoal não são gravados.
-Uma resposta vazia, maker igual ao checker ou veredito diferente de `approved` nunca vira prova.
-
-## Avaliação reproduzível
-
-```bash
-python -m hpp eval run examples/reliable-coding/benchmark-suite.json -k 3 --gate both
-```
-
-- `pass@k`: o caso passou ao menos uma vez; mede capacidade.
-- `pass^k`: o caso passou em todas as execuções; mede confiabilidade.
-- release-critical exige `pass^k = 1.00` para o universo declarado.
-
-O [benchmark](docs/BENCHMARK.md) usa controles positivos e negativos e pode ser repetido em
-clone limpo. Resultado sem comando, saída, versão e escopo não é tratado como prova.
-
-## Os módulos
-
-| Módulo | Papel no harness |
-|---|---|
-| `operator-kit` | gates, política, loops, pass@k/pass^k, preflight e checkers |
-| `lane-kit` | Lane Board, territórios, liveness e maker/checker |
-| `continuity-kit` | handoff, anti-replay, pre-compact e retomada |
-| `health-kit` | probes, cache, statusline e separação serviço/dado |
-| `gotcha-memory` | memória de falhas recorrentes com promoção controlada |
-| `kit-forge` | montagem, instalação, IP/PII lint, checksums e verificação |
-| `claude-dev-kit` | construção e validação de skills, hooks e plugins |
-| `dev-squad-kit` | papéis especializados e leitores paralelos com teto |
-| `agent-framework-wizard` | scaffold guiado e validado para novas capacidades |
-| `supabase-pack` | RLS auditável e scaffold de Edge Functions |
-
-Cada módulo continua instalável separadamente. O Capability Map distingue dependência dura de
-integração opcional; modularidade não é tratada como ausência de arquitetura.
-
-## Cobertura por host
-
-| Capacidade | Claude Code | Codex CLI |
+| module | version | one line |
 |---|---|---|
-| skills/instruções | nativa por plugin | cópia em `.agents/skills` |
-| hooks de lifecycle | nativa quando configurada | não disponível; comando explícito |
-| política audit/enforce | hook + CLI | CLI/preflight explícito |
-| event log, attestation, maps, WorkGraph, eval | CLI | CLI |
-| instalação | marketplace ou CLI | CLI por cópia |
+| `operator-kit` | 1.4.0 | done gate with real exit codes, command policy in `audit` or `enforce`, governed loops with charter and stop conditions, standalone `pass@k` / `pass^k` runner, preflight, two read-only checker agents |
+| `lane-kit` | 1.2.0 | a lane board for concurrent sessions: claim, territory, liveness, maker ≠ checker, and a router that picks a checker from a different provider |
+| `continuity-kit` | 1.2.1 | handoff written before a stop or compaction, re-derivation commands instead of remembered state, guards against replaying finished steps |
+| `health-kit` | 1.3.1 | config-driven service probes that write a cache a statusline reads without touching the network; service health kept apart from data health |
+| `gotcha-memory` | 1.0.0 | records failed commands by error family, detects recurrence, injects the lesson before the next run; warn-only, secrets redacted by shape |
+| `kit-forge` | 1.4.0 | assembles modules from source, lints for IP and PII, installs in six stages, writes and verifies `CHECKSUMS.txt`, checks the marketplace |
+| `claude-dev-kit` | 1.3.1 | authoring of skills, hooks and plugins for Claude Code, reversible settings wiring, secret scan on write |
+| `dev-squad-kit` | 1.0.0 | twelve development roles as commands and subagents with explicit tools, plus parallel read-and-consolidate skills |
+| `agent-framework-wizard` | 1.1.1 | six-step scaffold for a new agent or skill project, answerable from a file for non-interactive runs |
+| `supabase-pack` | 1.1.0 | RLS audit through `pg_policies` and advisors instead of a table flag; Edge Function scaffold |
 
-`hpp doctor` reporta `native`, `explicit-command` ou `unsupported`; não converte ausência de hook
-em promessa de enforcement.
+The `reliable-coding` bundle is the first six. Each module installs on its own; `integrates_with`
+in the manifest is optional composition, `requires` is a hard dependency, and today no module
+requires another. Host coverage is declared per module as `native`, `explicit-command` or
+`unsupported`; `claude-dev-kit` is `unsupported` on Codex CLI, and `hpp init` halts rather than
+plan it there.
 
-## Limites honestos
+## Proving an installation
 
-HPP 2.1 é um harness CLI local, não um daemon ou serviço remoto. Ele não agenda tarefas, não
-executa modelos por API, não guarda credenciais, não inicia monitores ocultos e não usa banco de
-grafo. Os mapas são projeções determinísticas de manifestos, eventos e estado local. Essa escolha
-mantém o sistema auditável, portátil e reversível.
-
-## Desenvolvimento e verificação
-
-Os diretórios versionados dos módulos são artefatos emitidos. Mudanças nascem nas fontes,
-recebem teste vermelho→verde e passam pela forja.
-
-Antes de instalar ou concluir trabalho, `preflight.py` verifica os pré-requisitos declarados pelo
-Operator Kit; o doctor raiz verifica o contrato do harness.
+A claim about the harness is accepted only with its command. These are the ones the project runs
+on itself.
 
 ```bash
-python -m pytest -q
+python -m hpp doctor                      # manifest contract; distribution when present
+python -m hpp benchmark -k 3              # ten executable controls, three runs each
+python -m hpp --self-test                 # capability graph non-empty + benchmark gate
+python -m pytest tests -q                 # stdlib-only suite, no network
+python -m hpp policy check --mode enforce --command "rm -rf src"   # exit 2, BLOCK
+python -m hpp graph --view operational --format json | sha256sum   # same hash on every run
+```
+
+The benchmark's ten controls each execute a real mechanism with a positive and a negative case:
+manifest contract, policy enforcement, WorkGraph waves, lane collision, monitor freshness,
+context provenance, routing floor, event/evidence gate, graph determinism and evidence
+attestation. `pass^k = 1.00` is required for the gate to pass. The suite file and its hash are
+in the JSON report (`hpp benchmark -k 3 --json`). See [PROOF.md](docs/PROOF.md) for the claim
+matrix and [BENCHMARK.md](docs/BENCHMARK.md) for the scenarios.
+
+In an emitted distribution, `kit_doctor.py verify <module>` compares every file against
+`CHECKSUMS.txt`, and `kit_doctor.py marketplace .` checks the whole tree.
+
+## Honest limits
+
+- HPP is a CLI. There is no daemon, scheduler, queue, server, database or remote telemetry. If a
+  check did not run, nothing ran it.
+- HPP never calls a model. Routing returns a tier and a provider id from declarations you pass
+  in; it does not pick a vendor, a model name or a price.
+- Maps are projections of manifests, event logs and JSON you provide. The Monitor Map does not
+  probe anything; you supply `last_signal`. The Lane Map does not know your sessions; you supply
+  heartbeats. `--now` is explicit so that no projection depends on the ambient clock.
+- The context budget is measured in characters, not tokens.
+- The policy classifier is a small, explicit rule set (recursive delete in any flag order,
+  force push, push to `main`/`master`, `curl | sh`, `DROP`/`TRUNCATE`, and `MANUAL` for any push
+  or outbound transfer). It never executes the command and it does not claim to catch every
+  destructive form.
+- Attestation requires `git`. It hashes the remote identity and stores the hash, not the URL.
+  It binds a verdict to bytes; it does not judge whether the verdict was right.
+- On Claude Code, lifecycle hooks are native once you paste the wiring. On Codex CLI there are no
+  lifecycle hooks; the same capabilities are explicit commands. `hpp doctor` and the manifest
+  report this as `native`, `explicit-command` or `unsupported`, and no adapter pretends
+  otherwise.
+- `hpp init` writes one file with `--apply` and never edits `settings.json`, hooks or
+  `AGENTS.md`. Enabling hooks remains a human action.
+- The benchmark proves the harness on the checkout and platform where it ran. It says nothing
+  about the quality of any model.
+
+## Reading order
+
+[MANIFESTO.md](MANIFESTO.md) — what the project defends and refuses ·
+[CONCEPTS.md](docs/CONCEPTS.md) — the vocabulary, with what each term is not ·
+[METHOD.md](docs/METHOD.md) — the working method, one command per practice ·
+[ARCHITECTURE.md](docs/ARCHITECTURE.md) — how the pieces fit and what deliberately does not
+exist · [GRAPH-MODEL.md](docs/GRAPH-MODEL.md) · [LOOPS.md](docs/LOOPS.md) ·
+[BENCHMARK.md](docs/BENCHMARK.md) · [PROOF.md](docs/PROOF.md) · [BRAND.md](docs/BRAND.md) ·
+[TIPS.md](docs/TIPS.md) · [manual](docs/MANUAL.html) · [catalogue](docs/CATALOGO.html) ·
+[CHANGELOG.md](CHANGELOG.md) · [AGENTS.md](AGENTS.md) for agents working in this repository.
+
+## Development
+
+Module directories in the distribution are emitted artifacts. Changes start in the sources, get
+a test that fails before the fix and passes after it, and go through the forge. Before declaring
+anything done:
+
+```bash
+python -m pytest tests -q
 python -m hpp doctor
 python -m hpp benchmark -k 3
-python instaladores/kit-forge-1.4.0/kit_doctor.py marketplace .
 ```
 
-Leitura adicional: [manual](docs/MANUAL.html) · [catálogo](docs/CATALOGO.html) ·
-[provas](docs/PROOF.md) · [identidade](docs/BRAND.md) · [dicas](docs/TIPS.md).
+## License and credit
 
-## Licença
-
-MIT. Componentes adaptados preservam os respectivos arquivos `NOTICE` e atribuições.
+MIT. Copyright (c) 2026 Max Parisi, Rushar Labs. Adapted components keep their `NOTICE` files
+and attributions; each module's README names its upstream sources and licenses.

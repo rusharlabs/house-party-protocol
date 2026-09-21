@@ -1,101 +1,106 @@
-# Identidade do House Party Protocol
+[English](BRAND.md) · [Português](BRAND.pt-BR.md)
 
-## Ideia central
+# House Party Protocol identity
 
-Um harness é o que fica **em volta** do trabalho: o que delimita, observa, registra e decide
-quando algo pode avançar. A marca representa isso — um núcleo de luz contido por uma estrutura
-que não se move. Nós indicam agentes, lanes e evidências; portais indicam critérios que o
-trabalho precisa cruzar.
+## Central idea
 
-Tom: preciso, operacional, curioso e direto. O produto fala por mecanismos demonstráveis, nunca
-por adjetivo. Não há personagens nem referência a franquia de terceiro.
+A harness is what sits **around** the work: what bounds, observes, records and decides when
+something may advance. The brand represents that — a core of light held by a structure that does
+not move. Nodes stand for agents, lanes and evidence; portals stand for criteria the work has to
+cross.
 
-## Assinatura
+Tone: precise, operational, curious and direct. The product speaks through demonstrable
+mechanisms, never through adjectives. There are no characters and no reference to third-party
+franchises.
+
+## Signature
 
 **Operate coding agents under evidence, not trust.**
 
-Versão em português para texto corrido: **Opere agentes de código sob evidência, não confiança.**
+Portuguese version for running text: **Opere agentes de código sob evidência, não confiança.**
 
-Linhas de apoio, para abertura, rodapé e release:
+Support lines, for opening, footer and release:
 
 - *Open-source agentic tooling for people who build.*
 - *Open. Modular. Auditable. Composable.*
 - *Built in public. For a more capable tomorrow.*
-- *Welcome to the party.* — fecho da instalação, e só ali.
+- *Welcome to the party.* — the closing line of the installation, and only there.
 
-## As cinco palavras
+## The five words
 
 `AGENTS · EVIDENCE · MEMORY · PROTOCOL · CONTINUITY`
 
-Aparecem em caixa alta, espaçadas, como rótulo — nunca como frase. São as cinco coisas que o
-harness carrega, e a ordem é fixa.
+They appear in upper case, spaced, as a label — never as a sentence. They are the five things the
+harness carries, and the order is fixed.
 
-## Paleta
+## Palette
 
-| Token | Valor | Uso |
+| Token | Value | Use |
 |---|---|---|
-| black | `#000000` | fundo do lockup e do material de marca |
-| charcoal | `#0F1113` | fundo de interface, superfície elevada |
-| warm-white | `#F4F1EB` | texto principal sobre escuro, e o cromo do wordmark |
-| signal-orange | `#FF6A00` | acento único: foco, gate aprovado, o núcleo do símbolo |
+| black | `#000000` | background of the lockup and of brand material |
+| charcoal | `#0F1113` | interface background, elevated surface |
+| warm-white | `#F4F1EB` | primary text on dark, and the chrome of the wordmark |
+| signal-orange | `#FF6A00` | single accent: focus, approved gate, the core of the symbol |
 
-Quatro cores, um acento só. O laranja **não** é decoração: ele marca o ponto de atenção da tela,
-e uma tela com dois pontos de atenção não tem nenhum. Cor nunca carrega significado sozinha —
-rótulo ou ícone sempre acompanha.
+Four colours, one accent. The orange is **not** decoration: it marks the point of attention on the
+screen, and a screen with two points of attention has none. Colour never carries meaning alone —
+a label or an icon always goes with it.
 
-Para estado, a interface usa o vermelho do próprio terminal (a paleta não tem vermelho de
-propósito) e nunca pinta fundo: um terminal claro continua legível.
+For state, the interface uses the terminal's own red (the palette has no red on purpose) and never
+paints a background: a light terminal stays readable.
 
-## Tipografia
+## Typography
 
-| Papel | Pilha |
+| Role | Stack |
 |---|---|
-| display / lockup | desenho próprio (o wordmark é arte, não fonte) |
-| títulos | `Sora`, `Inter`, `Segoe UI`, sans-serif — peso alto, tracking apertado |
-| corpo | `Inter`, `Segoe UI`, `Arial`, sans-serif |
-| código, métrica e rótulo | `JetBrains Mono`, `Cascadia Code`, `Consolas`, monospace |
-| rótulo de interface | caixa alta, `letter-spacing` largo, monospace |
+| display / lockup | custom drawing (the wordmark is artwork, not a font) |
+| headings | `Sora`, `Inter`, `Segoe UI`, sans-serif — heavy weight, tight tracking |
+| body | `Inter`, `Segoe UI`, `Arial`, sans-serif |
+| code, metric and label | `JetBrains Mono`, `Cascadia Code`, `Consolas`, monospace |
+| interface label | upper case, wide `letter-spacing`, monospace |
 
-Nenhum ativo publicado carrega webfont: a pilha é de sistema, e o material self-contained não
-faz requisição externa.
+No published asset carries a webfont: the stack is system-only, and the self-contained material
+makes no external request.
 
-## Ativos
+## Assets
 
-| Arquivo | Uso |
+| File | Use |
 |---|---|
-| `assets/hpp-logo.png` | **o lockup oficial** — cromo sobre preto, com o núcleo em laranja. É a arte aprovada; não redesenhar, não recolorir, não recortar |
-| `assets/hpp-mark.svg` | símbolo compacto para avatar, favicon e ícone de app |
-| `assets/hpp-logo-light.svg` · `-dark.svg` | lockup em linha, para onde o PNG não cabe |
-| `assets/hpp-banner-light.svg` · `-dark.svg` | abertura do README |
+| `assets/hpp-logo.png` | **the official lockup** — chrome on black, with the core in orange. It is the approved artwork; do not redraw, recolour or crop |
+| `assets/hpp-icon-512.png` · `-256` · `-128` · `-64` · `-32` | the badge alone, square — avatar, favicon and app icon. Derived from the lockup by cropping, never redrawn |
+| `assets/hpp-mark.svg` | the symbol as vector, for where raster does not serve (print, large scale) |
+| `assets/hpp-logo-light.svg` and `assets/hpp-logo-dark.svg` | inline lockup, for where raster does not fit |
+| `assets/hpp-banner-light.svg` and `assets/hpp-banner-dark.svg` | horizontal strip for page headers and presentation material — the README opens with the lockup, not with the strip |
 
-O símbolo **não** codifica a quantidade de módulos: o harness pode crescer sem redesenhar a marca.
+The symbol does **not** encode the number of modules: the harness can grow without redrawing the
+brand.
 
-Na CLI, o lockup é reconstruído em blocos de terminal (`█ ▓ ░`) na mesma paleta, com degradação
-declarada: truecolor → 256 cores → 16 cores → sem cor nenhuma quando não há TTY ou quando
-`NO_COLOR` está definido.
+In the CLI, the lockup is rebuilt in terminal blocks (`█ ▓ ░`) in the same palette, with declared
+degradation: truecolor → 256 colours → 16 colours → no colour at all when there is no TTY or when
+`NO_COLOR` is set.
 
-## Arquitetura de mensagem
+## Message architecture
 
-1. **Harness** — o produto.
-2. **Protocol** — as regras executáveis.
-3. **Modules** — as capacidades instaláveis.
-4. **Distribution** — os canais por host.
+1. **Harness** — the product.
+2. **Protocol** — the executable rules.
+3. **Modules** — the installable capabilities.
+4. **Distribution** — the channels per host.
 
-Não abrir uma página com quantidade de módulos. Não chamar distribuição de produto. Não usar
-"autônomo", "determinístico", "aprende" ou "cross-host" sem delimitar mecanismo e escopo.
+Do not open a page with the number of modules. Do not call distribution the product. Do not use
+"autonomous", "deterministic", "learns" or "cross-host" without bounding mechanism and scope.
 
-## Acessibilidade
+## Accessibility
 
-- contraste mínimo WCAG AA;
-- foco visível em `#FF6A00` sobre `#0F1113`, e `#0F1113` sobre `#F4F1EB`;
-- suporte a 320, 375, 768 e 1280 px;
-- `prefers-reduced-motion` desliga toda animação, e a informação continua completa.
+- minimum WCAG AA contrast;
+- visible focus in `#FF6A00` on `#0F1113`, and `#0F1113` on `#F4F1EB`;
+- support for 320, 375, 768 and 1280 px;
+- `prefers-reduced-motion` turns off all animation, and the information stays complete.
 
-## Não usar
+## Do not use
 
-- gradiente como assunto — o degradê existe no lockup e não se repete na interface;
-- cor sem rótulo;
-- ilustração de robô, cérebro ou humanoide;
-- metáfora de franquia, personagem ou filme;
-- número de módulos como manchete;
-- emoji em saída de CLI.
+- gradient as subject — the gradient exists in the lockup and is not repeated in the interface;
+- colour without a label;
+- robot, brain or humanoid illustration;
+- franchise, character or film metaphor;
+- number of modules as a headline;
+- emoji in CLI output.

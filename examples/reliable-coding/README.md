@@ -1,3 +1,5 @@
+[English](README.md) · [Português](README.pt-BR.md)
+
 # Reliable coding example
 
 This fixture is a deterministic, offline benchmark for the harness. Its nine

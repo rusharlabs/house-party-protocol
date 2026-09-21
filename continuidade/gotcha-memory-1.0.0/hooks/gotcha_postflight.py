@@ -16,6 +16,7 @@ Conservador na detecção: só registra falha com sinal CLARO de erro (exit-code
 v1.0.0 — 2026-07-11 (kit gotcha-memory)
 """
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -71,6 +72,29 @@ def _extract_failure(tool_response):
     return False, ""
 
 
+# bloqueio de hook e negacao de permissao nao sao falha de execucao do comando (conservador)
+_NAO_E_FALHA_DE_EXECUCAO = re.compile(r"^(?:Error:\s*)?(?:PreToolUse:|Permission to use\b)")
+
+
+def _extract_failure_event(data: dict):
+    """Detecta falha no payload INTEIRO do hook, seja qual for o evento. Retorna (is_fail, msg).
+
+    # Why: o host emite `PostToolUseFailure` (campo `error`) quando a ferramenta falha e
+    # `PostToolUse` (campo `tool_response`) quando termina bem; um postflight que so' le
+    # `tool_response` nunca ve a falha de Bash — o unico evento que esta memoria existe para
+    # registrar. A forma legada (string "Error: Exit code N" em `tool_response`) continua aceita.
+    """
+    if data.get("hook_event_name") == "PostToolUseFailure":
+        err = data.get("error")
+        if isinstance(err, dict):
+            err = err.get("message") or err.get("error") or json.dumps(err, ensure_ascii=False)
+        err = str(err or "").strip()
+        if _NAO_E_FALHA_DE_EXECUCAO.match(err):
+            return False, ""
+        return True, (err or "tool reported failure")[:500]
+    return _extract_failure(data.get("tool_response"))
+
+
 def main() -> None:
     try:
         raw = sys.stdin.read() or "{}"
@@ -85,7 +109,7 @@ def main() -> None:
     if not cmd:
         sys.exit(0)
 
-    is_fail, err = _extract_failure(data.get("tool_response"))
+    is_fail, err = _extract_failure_event(data)
     if not is_fail:
         sys.exit(0)  # sucesso (ou ambíguo) -> nada a aprender
 
@@ -99,7 +123,10 @@ def main() -> None:
         # Why: truncar antes de redigir pode cortar um token ao meio e deixar o prefixo
         # dele fora do alcance da redacao; a redacao vem primeiro, o corte depois.
         desc = gm.redact_secrets(ti.get("description") or gm.redact_secrets(cmd)[:80])
-        gm.record_failure(desc, err, context={"cmd": gm.redact_secrets(cmd)[:200]})
+        # a mesma chamada de ferramenta (tool_use_id) vira UM registro, por quantos eventos chegar
+        tool_use_id = data.get("tool_use_id")
+        dedupe_key = f"tool_use:{tool_use_id}" if isinstance(tool_use_id, str) and tool_use_id else None
+        gm.record_failure(desc, err, context={"cmd": gm.redact_secrets(cmd)[:200]}, dedupe_key=dedupe_key)
         try:
             # Why: o append era sem teto (1,9 MB / 1.744 linhas em um mes) e o preflight rele o
             # arquivo INTEIRO a cada Bash.
@@ -138,6 +165,16 @@ def _self_test() -> None:
     assert _extract_failure({"error": "failed hard"})[0] is True
     assert _extract_failure({"exit_code": True})[0] is False  # bool não é exit code
     assert _extract_failure({"returncode": 2})[0] is True
+    # o evento de falha do host (PostToolUseFailure) traz `error`, nao `tool_response`
+    falha = {"hook_event_name": "PostToolUseFailure", "error": "Command exited with code 1: boom"}
+    assert _extract_failure_event(falha) == (True, "Command exited with code 1: boom")
+    assert _extract_failure_event({"hook_event_name": "PostToolUseFailure", "error": {"message": "m"}}) == (True, "m")
+    assert _extract_failure_event({"hook_event_name": "PostToolUseFailure"})[0] is True  # falha sem texto ainda e' falha
+    # controles: bloqueio de hook / negacao continuam fora, e a forma legada continua passando
+    assert _extract_failure_event({"hook_event_name": "PostToolUseFailure", "error": "PreToolUse:Bash hook blocked"})[0] is False
+    assert _extract_failure_event({"hook_event_name": "PostToolUseFailure", "error": "Permission to use Bash denied"})[0] is False
+    assert _extract_failure_event({"hook_event_name": "PostToolUse", "tool_response": "Error: Exit code 1\nboom"}) == (True, "boom")
+    assert _extract_failure_event({"tool_response": {"stdout": "ok"}})[0] is False
     # ponta-a-ponta: registrar num store temporário via env (sem tocar o projeto)
     import os
     import tempfile
@@ -148,6 +185,11 @@ def _self_test() -> None:
         ev = gm.record_failure("task:teste", "ETIMEDOUT", store_dir=d)
         assert ev["family"] == "transient"
         assert (Path(d) / "failures.jsonl").exists()
+        # a mesma chamada de ferramenta chegando duas vezes vira UM registro
+        gm.record_failure("task:dup", "boom", store_dir=d, dedupe_key="tool_use:x")
+        gm.record_failure("task:dup", "boom", store_dir=d, dedupe_key="tool_use:x")
+        linhas = (Path(d) / "failures.jsonl").read_text(encoding="utf-8").splitlines()
+        assert sum(1 for l in linhas if '"tool_use:x"' in l) == 1
         _ = os  # (env não usado no teste direto; record_failure recebe store_dir)
     print("self-test OK")
 

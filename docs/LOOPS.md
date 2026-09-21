@@ -1,45 +1,48 @@
-# Loops, autoprompt e waves
+[English](LOOPS.md) · [Português](LOOPS.pt-BR.md)
 
-## Loop governado
+# Loops, autoprompt and waves
 
-Um loop HPP possui:
+## Governed loop
 
-1. objetivo e spec;
-2. estado observável;
-3. próxima ação;
-4. budget de tempo/iterações;
-5. gate de evidência;
+An HPP loop has:
+
+1. objective and spec;
+2. observable state;
+3. next action;
+4. time/iteration budget;
+5. evidence gate;
 6. stop conditions;
-7. escalonamento humano;
-8. feedback persistido.
+7. human escalation;
+8. persisted feedback.
 
-`ralph_gate.py` implementa o stop gate: uma marca textual de conclusão não libera o loop sem que
-o `done_gate` correspondente passe. `autoprompt_resume.py` produz retomada; não altera o veredito.
+`ralph_gate.py` implements the stop gate: a textual completion mark does not release the loop
+unless the corresponding `done_gate` passes. `autoprompt_resume.py` produces resumption; it does
+not change the verdict.
 
-## Autoloop e LoopGraph
+## Autoloop and LoopGraph
 
-Autoloop é o ciclo finito `observe → choose → act → verify → record → stop/continue`. No HPP ele
-não significa autonomia sem teto. O `loop` de `hpp.manifest.json` é o LoopGraph mínimo: estados,
-eventos, gates e transições permitidas. Repetição intencional fica no charter com budget e saída;
-ciclo acidental no WorkGraph é erro.
+Autoloop is the finite cycle `observe → choose → act → verify → record → stop/continue`. In HPP it
+does not mean autonomy without a ceiling. The `loop` in `hpp.manifest.json` is the minimal
+LoopGraph: states, events, gates and allowed transitions. Intentional repetition lives in the
+charter with a budget and an exit; an accidental cycle in the WorkGraph is an error.
 
 ## Spec-driven
 
-A spec é compilada em WorkGraph. Acceptance criteria viajam com cada unidade. Dependências viram
-waves topológicas e cada wave fecha testes e review antes de liberar a próxima.
+The spec is compiled into a WorkGraph. Acceptance criteria travel with each unit. Dependencies
+become topological waves and each wave closes tests and review before releasing the next one.
 
 ## Autoprompt
 
-Autoprompt responde “qual é o próximo passo derivável do estado?”. Ele não decide risco, não
-aprova mudança sensível e não substitui checker. Se o estado é insuficiente, a saída correta é
-declarar o dado faltante.
+Autoprompt answers "what is the next step derivable from the state?". It does not decide risk,
+does not approve a sensitive change and does not replace a checker. If the state is insufficient,
+the correct output is to declare the missing data.
 
-## Memória de falhas
+## Failure memory
 
-Gotcha Memory classifica falhas, mede recorrência e propõe uma lição. A promoção é controlada para
-evitar transformar um incidente isolado ou ambíguo em regra permanente.
+Gotcha Memory classifies failures, measures recurrence and proposes a lesson. Promotion is
+controlled to avoid turning an isolated or ambiguous incident into a permanent rule.
 
-## Avaliação
+## Evaluation
 
-pass@k mede se o sistema consegue; pass^k mede se repete. O loop só trata release-critical como
-estável quando o gate de regressão passa no universo e no `k` declarados.
+pass@k measures whether the system can; pass^k measures whether it repeats. The loop only treats
+release-critical work as stable when the regression gate passes in the declared universe and `k`.
