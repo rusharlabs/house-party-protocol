@@ -12,6 +12,9 @@ __pycache__/
 *.rebuild*.json
 *.build.json
 dist/
+# Python packaging leftovers (`pip install .`, `pip wheel`, setuptools): generated, never versioned
+build/
+*.egg-info/
 
 # 🔴 O ruleset REAL do ip_pii_linter carrega nome de cliente e de infra interna.
 # So o ip-ruleset.example.yaml e publicavel. Esta linha e a diferenca entre publicar

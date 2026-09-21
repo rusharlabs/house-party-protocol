@@ -88,7 +88,7 @@ escreve no máximo um arquivo declarado.
 | `.hpp/events.jsonl` | `hpp event append` | um objeto JSON por linha: `seq`, `id`, `type`, `data`; append-only | o histórico do loop do workspace |
 | `.hpp/profile.json` | `hpp init --apply` | host, bundle, módulos, modo de política, versão do protocol e do produto | até o operador removê-lo |
 | `.hpp/attestation.json` | `hpp attest create --output` | o veredito vinculado; o caminho é escolha sua | até os bytes que ele descreve mudarem |
-| `hpp.manifest.json` | o projeto | o protocol; encontrado subindo a partir do diretório atual, depois na raiz do pacote | versionado com o produto |
+| `hpp.manifest.json` | o projeto | o protocol; encontrado subindo a partir do diretório atual, depois ao lado do pacote-fonte, depois na cópia embarcada no pacote instalado | versionado com o produto |
 | `CHECKSUMS.txt` do módulo | a forja | sha256 por arquivo distribuído | versionado com cada módulo emitido |
 
 Todo o resto que o harness consome é uma entrada que você passa na linha de comando: specs, lanes,

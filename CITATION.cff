@@ -6,7 +6,7 @@ abstract: "Ten installable kits for Claude Code: an agent harness where nothing 
 version: "1.4.0"
 date-released: "2026-09-20"
 license: MIT
-url: "https://rushar.com.br"
+url: "https://rusharlabs.com"
 repository-code: "https://github.com/rushar-labs/house-party-protocol"
 authors:
   - family-names: "Parisi"

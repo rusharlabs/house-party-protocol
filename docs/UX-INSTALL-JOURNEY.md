@@ -1,64 +1,66 @@
-# UX-INSTALL-JOURNEY — a jornada canônica de instalação de um kit, contada na conversa
+[English](UX-INSTALL-JOURNEY.md) · [Português](UX-INSTALL-JOURNEY.pt-BR.md)
 
-> **Versão:** 1.0.0 — camada de apresentação sobre contrato congelado.
-> **Irmão de:** `INSTALL-CONTRACT.md` (a mecânica dos 6 estágios) e `INSTALL-GUIDE-TEMPLATE.md`
-> (o molde do README por-kit). Este documento descreve a EXPERIÊNCIA: como um AGENTE
-> (Claude Code) guia um HUMANO pela instalação, numa conversa.
-> Nada aqui muda a mecânica — se este doc contradisser `INSTALL-CONTRACT.md`, o contrato vence.
+# UX-INSTALL-JOURNEY — the canonical installation journey of a module, told in the conversation
 
-## Princípio
+> **Version:** 1.0.0 — a presentation layer over a frozen contract.
+> **Sibling of:** `INSTALL-CONTRACT.md` (the mechanics of the 6 stages) and
+> `INSTALL-GUIDE-TEMPLATE.md` (the mould of the per-module README); both ship at the root of the
+> emitted distribution. This document describes the EXPERIENCE: how an AGENT (Claude Code) guides
+> a HUMAN through the installation, in a conversation.
+> Nothing here changes the mechanics — if this document contradicts `INSTALL-CONTRACT.md`, the
+> contract wins.
 
-```
-O HUMANO NUNCA VÊ UM PROMPT DE TERMINAL. ELE VÊ UMA CONVERSA.
-O agente roda o plano, traduz o plano em português, e espera o humano dizer
-"pode aplicar" em linguagem natural. Só então re-invoca com --apply.
-Não existe input() em lugar nenhum — o "Confirm" é a dupla invocação.
-```
+## Principle
 
-Três papéis, sem sobreposição:
+**The human never sees a terminal prompt. The human sees a conversation.** The agent runs the
+plan, translates the plan into the human's language, and waits for the human to say "apply it"
+in natural language. Only then does it re-invoke with `--apply`. There is no `input()` anywhere —
+the "Confirm" is the double invocation.
 
-| Papel | Faz | Nunca faz |
+Three roles, with no overlap:
+
+| Role | Does | Never does |
 |---|---|---|
-| **kit_doctor.py** | executa os 6 estágios; em modo plano, zero escrita | pergunta em stdin; escreve settings/hooks |
-| **agente** | roda comandos, traduz o plano, pede confirmação, reporta com saída real | aplica sem confirmação; edita `settings.local.json`/hooks por conta própria |
-| **humano** | lê o plano na conversa, decide, confirma em linguagem natural | precisa decorar flags — o agente carrega o comando |
+| **kit_doctor.py** | runs the 6 stages; in plan mode, zero writes | asks on stdin; writes settings/hooks |
+| **agent** | runs commands, translates the plan, asks for confirmation, reports with real output | applies without confirmation; edits `settings.local.json`/hooks on its own |
+| **human** | reads the plan in the conversation, decides, confirms in natural language | needs to memorise flags — the agent carries the command |
 
-## A jornada em 5 passos (igual nos 4 cenários)
+## The journey in 5 steps (the same in the 4 scenarios)
 
-1. **Plano.** O agente roda `python kit_doctor.py install <kit> --target <projeto> --human`.
-   Modo plano é o default: nenhuma escrita acontece, exit 0.
-2. **Tradução.** O agente cola na conversa o bloco de confirmação (template na seção
-   "Bloco de confirmação" abaixo): o que o `detect` viu, o que o `--apply` faria, o que
-   ficou pendente de decisão, e o resultado do smoke.
-3. **Confirmação humana.** O humano responde em linguagem natural — "pode aplicar",
-   "aplica", "sim". Qualquer coisa que não seja confirmação clara = não aplica.
-   Se o humano quiser mudar uma resposta de pergunta (`questions:`), o agente escreve
-   um arquivo `--answers` e roda o plano DE NOVO antes de pedir confirmação outra vez.
-4. **Apply.** O agente re-invoca o MESMO comando com `--apply`. O instalador aplica
-   profile, roda smoke de verdade e registra a instalação no registry.
-5. **Relato + wiring manual.** O agente mostra a saída real do apply. Se o
-   `wire-sugerido` listou opções (plugin / bloco de settings), o agente apresenta o
-   conteúdo exato e **o humano cola/aciona** — mutar `settings.local.json`/hooks é
-   gate humano, sempre, mesmo depois do `--apply`.
+1. **Plan.** The agent runs `python kit_doctor.py install <kit> --target <project> --human`.
+   Plan mode is the default: nothing is written, exit 0.
+2. **Translation.** The agent pastes the confirmation block into the conversation (template in
+   the "Confirmation block" section below): what `detect` saw, what `--apply` would do, what is
+   still pending a decision, and the smoke result.
+3. **Human confirmation.** The human answers in natural language — "apply it", "go ahead",
+   "yes". Anything that is not a clear confirmation = do not apply.
+   If the human wants to change an answer to a question (`questions:`), the agent writes an
+   `--answers` file and runs the plan AGAIN before asking for confirmation once more.
+4. **Apply.** The agent re-invokes the SAME command with `--apply`. The installer applies the
+   profile, runs the smoke for real and records the installation in the registry.
+5. **Report + manual wiring.** The agent shows the real output of the apply. If `wire-sugerido`
+   listed options (plugin / settings block), the agent presents the exact content and **the human
+   pastes/triggers it** — mutating `settings.local.json`/hooks is a human gate, always, even after
+   `--apply`.
 
-## O que muda entre os 4 cenários
+## What changes between the 4 scenarios
 
-Tudo abaixo usa saída REAL do `kit_doctor.py`. As saídas de
-in-progress/re-run/falha foram capturadas contra uma fixture mínima (`demo-kit`) —
-mesma estrutura de report, kit de exemplo.
+Everything below uses REAL output of `kit_doctor.py`, which prints in Portuguese. The
+in-progress/re-run/failure outputs were captured against a minimal fixture (`demo-kit`) — same
+report structure, example module.
 
-### 1. `greenfield` — projeto novo
+### 1. `greenfield` — new project
 
 ```
   ✓ detect
       classificacao=greenfield · projeto novo — nenhuma config prévia detectada
 ```
 
-O que o agente enfatiza: **não há nada a preservar**; o plano é o caminho feliz.
-A decisão pedida ao humano é uma só: "o que o --apply faria está ok?".
-Exemplo completo end-to-end na última seção.
+What the agent emphasises: **there is nothing to preserve**; the plan is the happy path.
+The human is asked one decision only: "is what `--apply` would do fine?".
+Complete end-to-end example in the last section.
 
-### 2. `in-progress` — projeto com config existente
+### 2. `in-progress` — project with existing config
 
 ```
   ✓ detect
@@ -66,12 +68,12 @@ Exemplo completo end-to-end na última seção.
       já existe (não será tocado): .claude/settings.local.json: statusLine/hooks já configurados
 ```
 
-O que muda na conversa: o agente lista **item por item o que já existe e será
-preservado** — essa é a informação que tira o medo de instalar por cima. O profile
-nunca sobrescreve (`skip-exists` é reportado, não silencioso). Se o humano QUISER
-substituir algo existente, isso é uma ação manual dele, fora do instalador.
+What changes in the conversation: the agent lists **item by item what already exists and will be
+preserved** — that is the information that removes the fear of installing on top. The profile
+never overwrites (`skip-exists` is reported, not silent). If the human WANTS to replace something
+that exists, that is a manual action of theirs, outside the installer.
 
-### 3. `re-run` — mesmo par kit+target já instalado antes
+### 3. `re-run` — the same module+target pair was installed before
 
 ```
   ✓ detect
@@ -82,12 +84,12 @@ substituir algo existente, isso é uma ação manual dele, fora do instalador.
       já existe, preservado: profile.example.yaml -> profile.yaml
 ```
 
-O que muda na conversa: o agente diz explicitamente que **rodar de novo é seguro e
-idempotente** — nada duplica, customização é preservada. Re-run é o jeito normal de
-(a) verificar uma instalação antiga e (b) atualizar após puxar uma versão nova do kit.
-A pergunta ao humano vira: "quer re-aplicar mesmo assim, ou só queria conferir?".
+What changes in the conversation: the agent says explicitly that **running again is safe and
+idempotent** — nothing is duplicated, customisation is preserved. Re-run is the normal way to
+(a) check an old installation and (b) update after pulling a new version of the module.
+The question to the human becomes: "do you want to re-apply anyway, or did you only want to check?".
 
-### 4. Falha de smoke — o kit reprovou no próprio self-test
+### 4. Smoke failure — the module failed its own self-test
 
 ```
   ⚠ smoke  [FAIL]
@@ -98,16 +100,15 @@ RESULTADO: smoke FALHOU — não aplique este kit antes de corrigir os self-test
 Depois de corrigir, rode o plano de novo para confirmar antes do --apply.
 ```
 
-Exit code = 1. O que muda na conversa: **o agente NÃO oferece o --apply.** Ele
-reporta qual script falhou, com exit code, e propõe o próximo passo (investigar o
-script, verificar integridade com `kit_doctor.py verify <kit>`, ou baixar o kit de
-novo). Só volta a oferecer aplicação depois de um plano novo sair limpo. Um humano
-que insiste em aplicar com smoke falhando está por conta própria — o agente registra
-que desaconselhou e por quê.
+Exit code = 1. What changes in the conversation: **the agent does NOT offer `--apply`.** It
+reports which script failed, with its exit code, and proposes the next step (investigate the
+script, check integrity with `kit_doctor.py verify <kit>`, or download the module again). It only
+offers to apply again after a new plan comes out clean. A human who insists on applying with a
+failing smoke is on their own — the agent records that it advised against it, and why.
 
-## Perguntas (`questions:`) na conversa
+## Questions (`questions:`) in the conversation
 
-A maioria dos kits não tem perguntas (por design). Quando tem, o plano mostra:
+Most modules have no questions (by design). When one does, the plan shows:
 
 ```
   ✓ configure
@@ -115,48 +116,53 @@ A maioria dos kits não tem perguntas (por design). Quando tem, o plano mostra:
       para responder de verdade: repetir com --answers <arquivo.json|yaml>
 ```
 
-Fluxo do agente: (1) apresenta cada pergunta pendente com o default em destaque —
-"vou usar `full`, a menos que você prefira `lite`"; (2) se o humano escolher algo
-diferente do default, o agente escreve um `answers.json` e roda o plano de novo com
-`--answers answers.json`; (3) só então pede confirmação. Instalar sem responder nada
-nunca trava — default sempre resolve.
+Agent flow: (1) present each pending question with the default highlighted — "I will use
+`full`, unless you prefer `lite`"; (2) if the human picks something other than the default, the
+agent writes an `answers.json` and runs the plan again with `--answers answers.json`; (3) only
+then ask for confirmation. Installing without answering anything never blocks — the default
+always resolves.
 
-## Bloco de confirmação (template)
+## Confirmation block (template)
 
-O texto que o agente cola na conversa ao apresentar um plano. Placeholders em `{}`.
-As linhas marcadas `[cenário]` só entram no cenário correspondente.
+The text the agent pastes into the conversation when presenting a plan. Placeholders in `{}`.
+Lines marked `[scenario]` only enter in the matching scenario. The template is written in
+English; the agent speaks in the human's language and adapts the wording, not the structure.
 
 ```
-Rodei o instalador do {kit} em modo plano — nada foi escrito ainda. Resumo:
+I ran the {kit} installer in plan mode -- nothing has been written yet. Summary:
 
-**Diagnóstico do projeto** ({target}):
-[greenfield]   Projeto novo — nenhuma config prévia detectada.
-[in-progress]  Projeto em andamento. O instalador detectou e vai PRESERVAR:
-[in-progress]  {lista de existing_config, um por linha}
-[re-run]       Este kit já foi instalado neste projeto antes (consta no registry).
-[re-run]       Re-aplicar é seguro: nada duplica, sua customização é preservada.
+**Project diagnosis** ({target}):
+[greenfield]   New project -- no previous config detected.
+[in-progress]  Project in progress. The installer detected and will PRESERVE:
+[in-progress]  {existing_config list, one per line}
+[re-run]       This module was installed in this project before (it is in the registry).
+[re-run]       Re-applying is safe: nothing is duplicated, your customisation is preserved.
 
-**O que o --apply faria:**
-- {ações do profile: "copiar profile.example.yaml -> profile.yaml" | "nada a copiar (já existe, preservado)"}
-- registrar a instalação em ~/.claude-kits/registry.json
+**What --apply would do:**
+- {profile actions: "copy profile.example.yaml -> profile.yaml" | "nothing to copy (already exists, preserved)"}
+- record the installation in ~/.claude-kits/registry.json
 
-**Perguntas do kit:** {"nenhuma" | "pendentes, usando default: {id}={default} — quer mudar?"}
+**Module questions:** {"none" | "pending, using default: {id}={default} -- want to change it?"}
 
-**Wiring (settings/hooks):** nunca é automático. Depois do apply eu te trago o bloco
-exato ({caminhos sugeridos pelo wire-sugerido}) e VOCÊ decide colar.
+**Wiring (settings/hooks):** never automatic. After the apply I bring you the exact block
+({paths suggested by wire-sugerido}) and YOU decide whether to paste it.
 
-**Smoke (self-tests do kit):** {N} ok, {N} ignorados{" — TODOS passaram" | ver bloco de falha abaixo}.
+**Smoke (module self-tests):** {N} ok, {N} ignored{" -- ALL passed" | see the failure block below}.
 
-[se smoke ok]   Se estiver de acordo, me diga "pode aplicar" e eu rodo:
-[se smoke ok]     python kit_doctor.py install {kit_dir} --target {target_dir} --apply
-[se smoke fail] ⚠ O smoke FALHOU: {arquivo} (exit {N}). NÃO recomendo aplicar.
-[se smoke fail] Próximo passo: {investigar o script | rodar kit_doctor.py verify {kit_dir}}.
-[se smoke fail] Corrigido isso, eu rodo o plano de novo e te trago o resultado.
+[if smoke ok]   If this is fine, say "apply it" and I run:
+[if smoke ok]     python kit_doctor.py install {kit_dir} --target {target_dir} --apply
+[if smoke fail] The smoke FAILED: {file} (exit {N}). I do NOT recommend applying.
+[if smoke fail] Next step: {investigate the script | run kit_doctor.py verify {kit_dir}}.
+[if smoke fail] Once that is fixed, I run the plan again and bring you the result.
 ```
 
-## Exemplo end-to-end (greenfield, execução real)
+## End-to-end example (greenfield, real run)
 
-Kit: `operator-kit-1.1.0`. Comando que o agente rodou (saída real abaixo):
+Module: `operator-kit-1.1.0`. Command the agent ran (real output below). This capture is dated:
+it predates the versioned installer path. In the current distribution the module is
+`operator-kit-1.4.0` and the installer lives at `instaladores/kit-forge-1.4.0/kit_doctor.py`;
+the stages, the flags (`--target`, `--host`, `--answers`, `--apply`, `--human`) and the shape of
+the output are the same.
 
 ```
 $ python instaladores/kit-forge/kit_doctor.py install frameworks-com-plugins/operator-kit-1.1.0 \
@@ -183,45 +189,43 @@ Nada foi modificado. Se o plano está de acordo, aplique com:
   python kit_doctor.py install frameworks-com-plugins\operator-kit-1.1.0 --target frameworks-com-plugins\operator-kit-1.1.0 --apply
 ```
 
-O que o agente diz ao humano (texto exato, seguindo o template):
+What the agent says to the human (exact text, following the template):
 
-> Rodei o instalador do operator-kit-1.1.0 em modo plano — nada foi escrito ainda. Resumo:
+> I ran the operator-kit-1.1.0 installer in plan mode — nothing has been written yet. Summary:
 >
-> **Diagnóstico do projeto:** projeto novo (greenfield) — nenhuma config prévia detectada,
-> nada a preservar.
+> **Project diagnosis:** new project (greenfield) — no previous config detected, nothing to
+> preserve.
 >
-> **O que o --apply faria:**
-> - copiar `profile.example.yaml` -> `profile.yaml` (o profile que você vai customizar)
-> - registrar a instalação em `~/.claude-kits/registry.json`
+> **What --apply would do:**
+> - copy `profile.example.yaml` -> `profile.yaml` (the profile you will customise)
+> - record the installation in `~/.claude-kits/registry.json`
 >
-> **Perguntas do kit:** nenhuma — este kit não tem nada configurável na instalação.
+> **Module questions:** none — this module has nothing configurable at install time.
 >
-> **Wiring (settings/hooks):** nunca é automático. Depois do apply, os caminhos são
-> instalar como plugin (`/plugin marketplace add .` + `/plugin install`) ou seguir o
-> `SETTINGS-WIRE.md` — eu te trago o passo a passo e você decide.
+> **Wiring (settings/hooks):** never automatic. After the apply, the paths are installing as a
+> plugin (`/plugin marketplace add .` + `/plugin install`) or following `SETTINGS-WIRE.md` — I
+> bring you the step by step and you decide.
 >
-> **Smoke (self-tests do kit):** 27 ok, 0 ignorados — todos passaram.
+> **Smoke (module self-tests):** 27 ok, 0 ignored — all passed.
 >
-> Se estiver de acordo, me diga "pode aplicar" e eu rodo o mesmo comando com `--apply`.
+> If this is fine, say "apply it" and I run the same command with `--apply`.
 
-Humano: **"pode aplicar"**
+Human: **"apply it"**
 
-O agente roda o mesmo comando com `--apply`, cola a saída real (header vira
-`INSTALACAO APLICADA — ... (--apply)`, profile vira `copiado:`, rodapé confirma
-`Instalação aplicada e registrada.`) e fecha com o wiring:
+The agent runs the same command with `--apply`, pastes the real output (the header becomes
+`INSTALACAO APLICADA — ... (--apply)`, the profile line becomes `copiado:`, the footer confirms
+`Instalação aplicada e registrada.`) and closes with the wiring:
 
-> Aplicado e registrado. Falta só o wiring, que é seu: quer que eu te mostre o bloco
-> do `SETTINGS-WIRE.md` para você colar no `settings.local.json`, ou prefere o caminho
-> de plugin? Em qualquer um dos dois, quem executa o passo final é você.
+> Applied and recorded. Only the wiring is left, and it is yours: do you want me to show you the
+> block from `SETTINGS-WIRE.md` to paste into `settings.local.json`, or do you prefer the plugin
+> path? In either one, the person who runs the final step is you.
 
-## O que o agente NUNCA faz (checklist de conduta)
+## What the agent NEVER does (conduct checklist)
 
-```
-[ ] NUNCA roda --apply sem confirmação explícita do humano NESTA conversa
-[ ] NUNCA edita settings.local.json / hooks — apresenta o bloco, humano cola
-[ ] NUNCA reporta "instalado" sem colar a saída real do --apply (exit code incluso)
-[ ] NUNCA oferece --apply quando o smoke falhou (exit 1) — corrige primeiro
-[ ] NUNCA responde perguntas do kit sozinho quando o humano expressou preferência —
-    escreve --answers e re-planeja
-[ ] Em re-run, SEMPRE diz que é idempotente antes de pedir confirmação
-```
+- [ ] NEVER runs `--apply` without explicit confirmation from the human IN THIS conversation
+- [ ] NEVER edits `settings.local.json` / hooks — presents the block, the human pastes it
+- [ ] NEVER reports "installed" without pasting the real output of `--apply` (exit code included)
+- [ ] NEVER offers `--apply` when the smoke failed (exit 1) — fix first
+- [ ] NEVER answers the module's questions alone when the human expressed a preference —
+      writes `--answers` and re-plans
+- [ ] On re-run, ALWAYS says it is idempotent before asking for confirmation

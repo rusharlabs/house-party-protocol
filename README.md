@@ -70,10 +70,18 @@ third-party packages. CI exercises Python 3.10 to 3.13 on Linux, macOS and Windo
 (`.github/workflows/ci.yml`); older interpreters are not promised because nothing measures them.
 
 ```bash
+pip install git+https://github.com/rushar-labs/house-party-protocol
+hpp doctor
+hpp init --target ../your-repo
+```
+
+The package has no runtime dependencies and ships its own manifest, so `hpp` answers from any
+directory once installed (`pipx install git+…` works the same way). From a checkout, the CLI is the module:
+
+```bash
 git clone https://github.com/rushar-labs/house-party-protocol.git
 cd house-party-protocol
 python -m hpp doctor
-python -m hpp init --target ../your-repo
 ```
 
 `hpp init` runs six fixed stages and prints a plan. Each boot line completes only when its stage

@@ -1,30 +1,32 @@
-# Segurança
+[English](SECURITY.md) · [Português](SECURITY.pt-BR.md)
 
-## Reportar uma vulnerabilidade
+# Security
 
-**Não abra issue pública** para falha de segurança. Use um dos dois canais:
+## Reporting a vulnerability
 
-1. **GitHub → aba Security → "Report a vulnerability"** (relato privado, o preferido).
-2. E-mail: `atendimento@rushar.com.br` com o assunto `[house-party-protocol] security`.
+**Do not open a public issue** for a security flaw. Use one of two channels:
 
-Inclua: o kit e a versão (`.claude-plugin/plugin.json`), como reproduzir, e o impacto que você
-mediu. Resposta inicial em até 5 dias úteis; correção publicada como nova versão do kit, com a
-nota no `CHANGELOG.md`.
+1. **GitHub → Security tab → "Report a vulnerability"** (private report, the preferred one).
+2. E-mail: `atendimento@rushar.com.br` with the subject `[house-party-protocol] security`.
 
-## O que este projeto considera falha de segurança
+Include: the module and its version (`.claude-plugin/plugin.json`), how to reproduce it, and the
+impact you measured. First response within 5 business days; the fix is published as a new version
+of the module, with the note in `CHANGELOG.md`.
 
-- Um hook ou script de kit que **execute** algo que não está no seu próprio código (download,
-  `curl | bash`, `eval` sobre entrada externa).
-- Um kit que **leia ou envie** credencial, `.env`, token ou dado do projeto para fora da máquina.
-- Um gate que **passe** quando deveria bloquear (o `ip_pii_linter` deixando segredo entrar num
-  kit; o `done_gate` devolvendo verde sem exit 0) — isso é vulnerabilidade, não bug.
+## What this project treats as a security flaw
 
-## O que já está no desenho
+- A module hook or script that **executes** something that is not in its own code (a download,
+  `curl | bash`, `eval` over external input).
+- A module that **reads or sends** a credential, `.env`, token or project data off the machine.
+- A gate that **passes** when it should block (the `ip_pii_linter` letting a secret into a module;
+  the `done_gate` returning green without exit 0) — that is a vulnerability, not a bug.
 
-- Cada kit traz `CHECKSUMS.txt` (sha256 por arquivo) e um `.zip` com os mesmos bytes;
-  `kit_doctor.py verify <kit>` prova a integridade antes de instalar.
-- Todo `.py` de kit tem `--self-test`; o `kit_doctor.py install` roda todos antes de tocar o
-  seu projeto.
-- Hooks são **WARN-only por padrão** — um hook nunca derruba a ferramenta.
-- Nenhum kit contém credencial. O ruleset real do linter de IP/PII nunca é publicado; só o
-  `ip-ruleset.example.yaml` viaja.
+## What is already in the design
+
+- Each module ships `CHECKSUMS.txt` (sha256 per file) and a `.zip` with the same bytes;
+  `kit_doctor.py verify <module>` proves integrity before installing.
+- Every module `.py` has `--self-test`; `kit_doctor.py install` runs all of them before touching
+  your project.
+- Hooks are **WARN-only by default** — a hook never brings the tool down.
+- No module contains a credential. The real IP/PII linter ruleset is never published; only
+  `ip-ruleset.example.yaml` travels.

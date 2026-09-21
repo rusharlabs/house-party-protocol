@@ -4,7 +4,7 @@
   "displayName": "Gotcha Memory",
   "version": "1.0.0",
   "description": "Loop de aprendizado operacional standalone: a falha vira conhecimento. Postflight registra falhas de Bash (classificadas por familia de erro); falha que recorre >=N vezes numa janela vira GOTCHA; preflight injeta a licao no stderr ANTES da proxima execucao da mesma tarefa. Curated gotchas (suas regras) sao always-on por substring. JSONL local, stdlib only, WARN-not-block.",
-  "author": { "name": "Max Parisi", "url": "https://rushar.com.br" },
+  "author": { "name": "Max Parisi", "url": "https://rusharlabs.com" },
   "license": "MIT",
   "keywords": ["gotchas", "learning-loop", "failure-memory", "preflight", "postflight", "portable", "config-driven"],
   "hooks": "./hooks/hooks.json"

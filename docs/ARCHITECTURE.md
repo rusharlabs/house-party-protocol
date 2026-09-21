@@ -88,7 +88,7 @@ files and writes at most one declared file.
 | `.hpp/events.jsonl` | `hpp event append` | one JSON object per line: `seq`, `id`, `type`, `data`; append-only | the workspace's loop history |
 | `.hpp/profile.json` | `hpp init --apply` | host, bundle, modules, policy mode, protocol and product version | until the operator removes it |
 | `.hpp/attestation.json` | `hpp attest create --output` | the bound verdict; the path is yours to choose | until the bytes it describes change |
-| `hpp.manifest.json` | the project | the protocol; found by walking up from the current directory, then the package root | versioned with the product |
+| `hpp.manifest.json` | the project | the protocol; found by walking up from the current directory, then next to the source package, then the copy shipped inside the installed package | versioned with the product |
 | module `CHECKSUMS.txt` | the forge | sha256 per distributed file | versioned with each emitted module |
 
 Everything else the harness consumes is an input you pass on the command line: specs, lanes,

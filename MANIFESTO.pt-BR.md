@@ -41,6 +41,32 @@ proveniência, acrescenta eventos, deriva a retomada e vincula evidência a um v
 Os módulos fornecem os mecanismos especializados. A distribuição os leva ao Claude Code e ao Codex
 CLI sem fingir que os dois hosts oferecem os mesmos hooks de lifecycle.
 
+## A ordem vem da spec, não da conversa
+
+O trabalho entra na casa como uma spec: unidades com um id, as unidades de que dependem, os
+critérios que as decidem e o risco que carregam. O harness a compila, recusa um ciclo com o
+caminho nomeado e devolve waves. Uma dependência que foi discutida mas nunca escrita em
+`depends_on` não existe para o harness, e nenhuma quantidade de contexto num transcript a faz
+existir.
+
+Paralelismo é consequência desse grafo, não meta. Unidades sem aresta entre si caem na mesma
+wave; uma unidade espera a última de suas dependências. Ninguém define um número de agentes em
+paralelo, e ninguém é perguntado se duas unidades "podem" rodar juntas: a ausência de aresta já
+respondeu. Rodar tudo de uma vez ignoraria as arestas; rodar por wave não ignora nada e ainda
+roda junto tudo o que pode.
+
+A barreira é o que torna o progresso legível. Quando uma wave fecha, toda unidade dela cumpriu os
+próprios critérios; uma unidade da wave seguinte que começa cedo constrói sobre uma dependência
+que não passou, e a evidência dela descreve um checkout que pode não sobreviver. "A wave dois
+fechou" é uma frase que um comando consegue checar. "Estamos uns setenta por cento prontos" não é.
+
+O que isto não promete: o harness não descobre dependências. Ele não lê os arquivos que uma
+unidade vai tocar, não deduz que duas unidades colidem a partir do que elas fazem, e não impede um
+operador de começar uma unidade antes da wave dela. Ele compila as dependências que foram
+declaradas, reporta onde está cada barreira, e deixa o declarar e o honrar com as pessoas e os
+agentes que fazem o trabalho. Uma aresta que falta é um defeito na spec, e a spec é onde ele se
+conserta.
+
 ## Por que isto não é burocracia
 
 Processo falha em duas direções. Processo que protege torna o custo de um erro visível antes de o

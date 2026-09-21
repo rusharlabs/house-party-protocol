@@ -1,15 +1,15 @@
 [English](CATALOGO.md) · [Português](CATALOGO.pt-BR.md)
 
-# Catalogue — house-party-protocol
+# Catálogo — house-party-protocol
 
-Derived from the emitted tree: what each kit installs, resource by resource. Regenerate with
+Derivado da árvore emitida: o que cada kit instala, recurso por recurso. Regenerar com
 `python instaladores/kit-forge-*/tools/catalogo_md.py . --write`.
 
-## Shared resources
+## Recursos transversais
 
-Documents that apply to every kit: [`ARCHITECTURE.md`](ARCHITECTURE.md) · [`ARCHITECTURE.pt-BR.md`](ARCHITECTURE.pt-BR.md) · [`BENCHMARK.md`](BENCHMARK.md) · [`BENCHMARK.pt-BR.md`](BENCHMARK.pt-BR.md) · [`BRAND.md`](BRAND.md) · [`BRAND.pt-BR.md`](BRAND.pt-BR.md) · [`CONCEPTS.md`](CONCEPTS.md) · [`CONCEPTS.pt-BR.md`](CONCEPTS.pt-BR.md) · [`GITHUB-DESCRIPTION.txt`](GITHUB-DESCRIPTION.txt) · [`GRAPH-MODEL.md`](GRAPH-MODEL.md) · [`GRAPH-MODEL.pt-BR.md`](GRAPH-MODEL.pt-BR.md) · [`LOOPS.md`](LOOPS.md) · [`LOOPS.pt-BR.md`](LOOPS.pt-BR.md) · [`MANUAL.html`](MANUAL.html) · [`MANUAL.pt-BR.html`](MANUAL.pt-BR.html) · [`METHOD.md`](METHOD.md) · [`METHOD.pt-BR.md`](METHOD.pt-BR.md) · [`PROOF.md`](PROOF.md) · [`PROOF.pt-BR.md`](PROOF.pt-BR.md) · [`TIPS.md`](TIPS.md) · [`TIPS.pt-BR.md`](TIPS.pt-BR.md) · [`UX-INSTALL-JOURNEY.md`](UX-INSTALL-JOURNEY.md) · [`UX-INSTALL-JOURNEY.pt-BR.md`](UX-INSTALL-JOURNEY.pt-BR.md)
+Documentos válidos para todos os kits: [`ARCHITECTURE.md`](ARCHITECTURE.md) · [`ARCHITECTURE.pt-BR.md`](ARCHITECTURE.pt-BR.md) · [`BENCHMARK.md`](BENCHMARK.md) · [`BENCHMARK.pt-BR.md`](BENCHMARK.pt-BR.md) · [`BRAND.md`](BRAND.md) · [`BRAND.pt-BR.md`](BRAND.pt-BR.md) · [`CONCEPTS.md`](CONCEPTS.md) · [`CONCEPTS.pt-BR.md`](CONCEPTS.pt-BR.md) · [`GITHUB-DESCRIPTION.txt`](GITHUB-DESCRIPTION.txt) · [`GRAPH-MODEL.md`](GRAPH-MODEL.md) · [`GRAPH-MODEL.pt-BR.md`](GRAPH-MODEL.pt-BR.md) · [`LOOPS.md`](LOOPS.md) · [`LOOPS.pt-BR.md`](LOOPS.pt-BR.md) · [`MANUAL.html`](MANUAL.html) · [`MANUAL.pt-BR.html`](MANUAL.pt-BR.html) · [`METHOD.md`](METHOD.md) · [`METHOD.pt-BR.md`](METHOD.pt-BR.md) · [`PROOF.md`](PROOF.md) · [`PROOF.pt-BR.md`](PROOF.pt-BR.md) · [`TIPS.md`](TIPS.md) · [`TIPS.pt-BR.md`](TIPS.pt-BR.md) · [`UX-INSTALL-JOURNEY.md`](UX-INSTALL-JOURNEY.md) · [`UX-INSTALL-JOURNEY.pt-BR.md`](UX-INSTALL-JOURNEY.pt-BR.md)
 
-| kit | version | skills | commands | agents | hooks | rules | templates | scripts |
+| kit | versão | skills | commands | agents | hooks | rules | templates | scripts |
 |---|---|---:|---:|---:|---:|---:|---:|---:|
 | [kit-forge](#kit-forge) | 1.4.0 | 0 | 0 | 0 | 1 | 0 | 0 | 0 |
 | [operator-kit](#operator-kit) | 1.4.0 | 13 | 2 | 2 | 8 | 13 | 1 | 17 |
@@ -25,21 +25,21 @@ Documents that apply to every kit: [`ARCHITECTURE.md`](ARCHITECTURE.md) · [`ARC
 
 ## kit-forge
 
-The IP/PII gate plus the kit assembler. ip_pii_linter + kit_assembler (with guard_origins built in) + kit_doctor (verify/install/registry, 6 stages: detect/prereqs/profile/configure/wire-suggest/smoke) + guard_origins + wire_settings + install_git_hook + skill_lint + tools/browse.py (interactive marketplace menu), single exit contract (0 ok/no-op, 1 warn, 2 block, 3 error). No --skip-lint.
+O gate de IP/PII + o montador de kits. ip_pii_linter + kit_assembler (com guard_origins integrado) + kit_doctor (verify/install/registry, 6 estagios: detect/prereqs/profile/configure/wire-suggest/smoke) + guard_origins + wire_settings + install_git_hook + skill_lint + tools/browse.py (menu interativo do marketplace), contrato unico de exit (0 ok/no-op, 1 warn, 2 block, 3 erro). Sem --skip-lint.
 
 **Hooks**
 
-| event | script |
+| evento | script |
 |---|---|
-| (wired by the installer) | `guard_origins.py` |
+| (wiring pelo instalador) | `guard_origins.py` |
 
 ## operator-kit
 
-The harness's operational module: executable gates, governed loops, standalone pass@k/pass^k, audit/enforce policy, preflight, spec-driven planning and two read-only checkers.
+Módulo operacional do harness: gates executáveis, loops governados, pass@k/pass^k standalone, política audit/enforce, preflight, planejamento spec-driven e dois checkers read-only.
 
 **Skills**
 
-| skill | what it does |
+| skill | o que faz |
 |---|---|
 | `adversarial-refuter` | Antes de aceitar "feito/pronto", despacha refutadores read-only que tentam DERRUBAR a claim no disco/fonte viva |
 | `claude-md-from-profile` | Gera o bloco de CLAUDE.md do projeto A PARTIR do operator-profile.yaml — piso primeiro (o que a IA nao decide), depois onde as coisas moram, as regras do pronto e o fluxo. Idempotente, com assinatura; recusa sobrescrever bloco editado a mao |
@@ -61,7 +61,7 @@ The harness's operational module: executable gates, governed loops, standalone p
 
 **Hooks**
 
-| event | script |
+| evento | script |
 |---|---|
 | PreToolUse · `Bash` | `operation_guard_portable.py` |
 | PreToolUse · `Bash` | `snapshot_rollback_gate.py` |
@@ -78,26 +78,26 @@ The harness's operational module: executable gates, governed loops, standalone p
 
 **Scripts** — `audit_plan.py` · `claude_md_from_profile.py` · `debt_ledger.py` · `delta_inventory.py` · `determinism_harness.py` · `distill_corrections.py` · `done_gate.py` · `drift_check.py` · `gate_sheet_panel.py` · `goal_ledger.py` · `goal_review.py` · `health_probe.py` · `live_count.py` · `passk_eval.py` · `preflight.py` · `status_now.py` · `verify_ladder.py`
 
-**Documents and records** — `docs/ANTHROPIC-STANDARDS.md` · `docs/MCP-RUNBOOK.md`
+**Documentos e registros** — `docs/ANTHROPIC-STANDARDS.md` · `docs/MCP-RUNBOOK.md`
 
 ## continuity-kit
 
-Handoff-v1.1: a session survives a stop/clear/crash without losing its next step. Schema with git-block + re_derive_cmd (LC-1) + verify_first_cmd (LC-4), Stop/PreCompact/SessionStart hooks. Includes doc-rollup (history/evolution with built-in degradation) + pre-clear (long-term + short-term).
+Handoff-v1.1: uma sessao sobrevive a parada/clear/crash sem perder o proximo passo. Schema com git-block + re_derive_cmd (LC-1) + verify_first_cmd (LC-4), hooks Stop/PreCompact/SessionStart. Inclui doc-rollup (historico/evolucao com degradacao embutida) + pre-clear (longo-prazo + curto-prazo).
 
 **Skills**
 
-| skill | what it does |
+| skill | o que faz |
 |---|---|
 | `doc-rollup` | Mantém os docs de historico/evolucao do projeto (changelog, timeline narrativa, snapshot de estado, licoes, wrapup de sessao) atualizados apos uma sessao significativa — com degradacao embutida (carimbo em vez de narrativa infinita) desde o dia 1. |
 | `pre-clear` | Antes de um /clear, consolida o LONGO PRAZO (doc-rollup condicional — como chegamos até aqui) e o CURTO PRAZO (handoff — o que vem depois), depois renderiza o BOOT BUNDLE. |
 
 **Hooks**
 
-| event | script |
+| evento | script |
 |---|---|
-| (wired by the installer) | `handoff_guard.py` |
-| (wired by the installer) | `handoff_inject.py` |
-| (wired by the installer) | `session_boot.py` |
+| (wiring pelo instalador) | `handoff_guard.py` |
+| (wiring pelo instalador) | `handoff_inject.py` |
+| (wiring pelo instalador) | `session_boot.py` |
 
 **Templates** — `00-DEPLOY.template.md` · `00-ISOLAMENTO-E-RECUPERACAO.template.md` · `00-LEIA-PRIMEIRO.template.md` · `00-PROCESSES.template.md` · `00-ROLLBACK.template.md` · `00-STATE.template.md` · `00-VISION.template.md` · `LEARNINGS.template.md` · `loop-charter.template.md` · `prd-onda.template.md` · `review-onda.template.md` · `settings-continuidade.template.json`
 
@@ -105,21 +105,21 @@ Handoff-v1.1: a session survives a stop/clear/crash without losing its next step
 
 ## lane-kit
 
-N sessions without collisions. Lane board, cross-model maker!=checker, per-directory lock, git-guard and territory-guard. The checker_router detects Codex, Cursor and Gemini and picks a provider different from the maker's.
+N sessoes sem colisao. Lane board, maker!=checker cross-model, lock por diretorio, git-guard e territory-guard. O checker_router detecta Codex, Cursor e Gemini e escolhe um provider diferente do maker.
 
 **Skills**
 
-| skill | what it does |
+| skill | o que faz |
 |---|---|
 | `lane-coordinator` | Coordena N sessões (lanes) concorrentes sobre o mesmo repo via um quadro-branco com máquina de estados (lane_board.py) — CLAIMED até MERGED, com maker≠checker cross-model enforçado em código, não em disciplina textual. |
 
 **Hooks**
 
-| event | script |
+| evento | script |
 |---|---|
-| (wired by the installer) | `lane_git_guard.py` |
-| (wired by the installer) | `lane_register.py` |
-| (wired by the installer) | `lane_territory_guard.py` |
+| (wiring pelo instalador) | `lane_git_guard.py` |
+| (wiring pelo instalador) | `lane_register.py` |
+| (wiring pelo instalador) | `lane_territory_guard.py` |
 
 **Templates** — `lane-registry.example.json` · `lanes.example.yaml` · `REORIENT-MAILBOX.template.md` · `status-stakeholder.template.html`
 
@@ -127,18 +127,18 @@ N sessions without collisions. Lane board, cross-model maker!=checker, per-direc
 
 ## health-kit
 
-Service health probe (http/cmd) driven by profile.yaml + a statusline segment with per-service detail (api:OK db:DOWN), cache-first (the statusline never touches the network). Embedded doctrine: SERVICE health != DATA health. +dashboard-builder (Grafana/SigNoz, adapted from ECC, MIT).
+Sonda de saude de servicos (http/cmd) config-driven por profile.yaml + segmento de statusline com detalhe por-servico (api:OK db:DOWN), cache-first (statusline nunca toca rede). Doutrina embarcada: health de SERVICO != health de DADO. +dashboard-builder (Grafana/SigNoz, adaptado do ECC MIT).
 
 **Skills**
 
-| skill | what it does |
+| skill | o que faz |
 |---|---|
 | `dashboard-builder` | Constrói dashboards de monitoramento (Grafana, SigNoz e similares) que respondem perguntas reais de operador, não "mostra toda métrica que existe". Use ao transformar uma lista de métricas em dashboard operável de verdade. |
 | `health-check` | Sonda uma lista config-driven de serviços (HTTP ou comando local) e grava um cache JSON que outra ferramenta (ex.: statusline) pode ler sem tocar rede — nunca no próprio caminho quente, só gera o cache. |
 
 **Hooks**
 
-| event | script |
+| evento | script |
 |---|---|
 | SessionStart · `*` | `bash "${CLAUDE_PLUGIN_ROOT}/hooks/pyrun.sh" "${CLAUDE_PLUGIN_ROOT}/scripts/health_probe.py" --quiet` |
 
@@ -146,11 +146,11 @@ Service health probe (http/cmd) driven by profile.yaml + a statusline segment wi
 
 ## claude-dev-kit
 
-Tools for building tools: skill-writer, hookify, plugin-dev, teaching, reversible wiring, secret scan, three skills adapted from ECC (MIT) and an auditable registry of candidate external skills.
+Ferramentas de construir ferramentas: skill-writer, hookify, plugin-dev, teaching, wiring reversivel, secret scan, tres skills adaptadas do ECC MIT e um registro auditavel de skills externas candidatas.
 
 **Skills**
 
-| skill | what it does |
+| skill | o que faz |
 |---|---|
 | `architecture-decision-records` | Captura decisões arquiteturais tomadas durante a sessão como ADRs estruturados (contexto, alternativas consideradas, consequências) em docs/adr/. Use quando o usuário decide entre alternativas significativas (framework, banco, padrão) ou pergunta "por que escolhemos X?". |
 | `claude-dev-setup` | Instala hooks base do Claude Code num projeto novo — wiring de settings idempotente e reversível (nunca sobrescreve config alheia sem --force) + git hook chain-preserving (nunca substitui um hook pre-commit já existente). |
@@ -163,32 +163,32 @@ Tools for building tools: skill-writer, hookify, plugin-dev, teaching, reversibl
 
 **Hooks**
 
-| event | script |
+| evento | script |
 |---|---|
 | PreToolUse · `Edit|Write|MultiEdit` | `secret_scan_on_write.py` |
 
 **Scripts** — `install_git_hook.py` · `wire_settings.py`
 
-**Documents and records** — `docs/hook-template.py` · `docs/SKILL-CANDIDATES.json` · `docs/SKILL-CONTRACT.md` · `docs/skill-template.md`
+**Documentos e registros** — `docs/hook-template.py` · `docs/SKILL-CANDIDATES.json` · `docs/SKILL-CONTRACT.md` · `docs/skill-template.md`
 
 ## supabase-pack
 
-rls-audit (real RLS via pg_policies + get_advisors) + supabase-edge-scaffold (TypeScript Edge Function with deno check).
+rls-audit (RLS de verdade via pg_policies + get_advisors) + supabase-edge-scaffold (Edge Function TS com deno check).
 
 **Skills**
 
-| skill | what it does |
+| skill | o que faz |
 |---|---|
 | `rls-audit` | Audita RLS de um projeto Supabase de verdade — pg_policies por policy anon permissiva + get_advisors, não só a flag relrowsecurity |
 | `supabase-edge-scaffold` | Scaffold de uma Supabase Edge Function com CORS + service-role + tratamento de erro corretos, em vez de copiar boilerplate à mão |
 
 ## agent-framework-wizard
 
-6-step wizard (check_python->check_git->check_deps->configure->validate->generate_and_summary) that scaffolds a new agent/skill. Non-interactive --interview/--answers + --demo; skip-exists with --force.
+Wizard de 6 passos (check_python->check_git->check_deps->configure->validate->generate_and_summary) para gerar o esqueleto de um agente/skill novo. --interview/--answers nao-interativos + --demo; skip-exists com --force.
 
 **Skills**
 
-| skill | what it does |
+| skill | o que faz |
 |---|---|
 | `agent-framework-scaffold` | Roda o wizard de 6 passos que gera o esqueleto de um projeto novo (operator-profile.yaml + templates do TEMPLATE-SET escolhidos) — método genérico (check ambiente → configurar → validar → gerar), reescrito do zero. |
 
@@ -196,11 +196,11 @@ rls-audit (real RLS via pg_policies + get_advisors) + supabase-edge-scaffold (Ty
 
 ## dev-squad-kit
 
-A squad of 12 roles available as slash commands and real subagents, with explicit tools and read-only QA, plus 3 token-safe parallel reading/consolidation skills. Does not include the proprietary tasks/templates tree.
+Squad com 12 papéis disponíveis como slash commands e subagents reais, tools explícitos e QA read-only, mais 3 skills de leitura/consolidação paralela token-safe. Não inclui árvore proprietária de tasks/templates.
 
 **Skills**
 
-| skill | what it does |
+| skill | o que faz |
 |---|---|
 | `pp-consolidate` | Parallel Process Consolidate - consolida outputs de sessoes/agentes paralelos em um veredito unico, deduplicado e verificavel |
 | `pp-discovery` | Parallel Process Discovery - inventario token-safe de repositorios, pastas e artefatos grandes antes de analise profunda |
@@ -212,17 +212,17 @@ A squad of 12 roles available as slash commands and real subagents, with explici
 
 ## gotcha-memory
 
-Standalone operational learning loop: a failure becomes knowledge. After every Bash command that fails, the postflight records the event classified by error family; when the same type recurs N times within a window it becomes a GOTCHA -- an actionable lesson the preflight injects BEFORE the next run of the same task. Curated gotchas (your rules) are always-on. Conservative detection: only a clear error signal counts, ambiguous is not a failure. Two WARN-only hooks (always exit 0) -- the learning loop never blocks the flow. stdlib only.
+Loop de aprendizado operacional standalone: a falha vira conhecimento. Depois de cada comando Bash que falha, o postflight registra o evento classificado por familia de erro; quando o mesmo tipo recorre N vezes numa janela, vira um GOTCHA -- uma licao acionavel que o preflight injeta ANTES da proxima execucao da mesma tarefa. Gotchas curated (suas regras) sao always-on. Deteccao conservadora: so sinal claro de erro conta, ambiguo nao e falha. Dois hooks WARN-only (exit 0 sempre) -- o loop de aprendizado jamais bloqueia o fluxo. stdlib only.
 
 **Skills**
 
-| skill | what it does |
+| skill | o que faz |
 |---|---|
 | `gotcha-memory` | Loop de aprendizado operacional — registra falhas de comandos, detecta recorrência e injeta a lição como preâmbulo antes da próxima execução da mesma tarefa. Use para consultar/seedar/depurar a memória de gotchas do projeto. |
 
 **Hooks**
 
-| event | script |
+| evento | script |
 |---|---|
 | PreToolUse · `Bash` | `gotcha_preflight.py` |
 | PostToolUse · `Bash` | `gotcha_postflight.py` |
