@@ -5,6 +5,59 @@ Todas as mudanças relevantes do harness são registradas aqui. O formato segue
 [SemVer](https://semver.org/lang/pt-BR/). A versão do produto descreve o contrato do harness;
 cada módulo mantém sua própria versão no `plugin.json` e no `marketplace.json`.
 
+## [2.2.0] — 2026-09-21
+
+### Adicionado
+
+- Suíte de testes própria do harness (`tests/`, 106 casos, stdlib-only, sem rede): contrato do
+  CLI derivado do manifesto, coerência de versão entre manifesto/pacote/módulo, classificação de
+  comando destrutivo, event log append-only e retomada, ciclo e waves do WorkGraph, orçamento de
+  contexto, e conferência de `CHECKSUMS.txt`. Cada arquivo carrega ao menos um controle que prova
+  que o teste sabe reprovar.
+- Integração contínua em 12 combinações (Linux, macOS e Windows × Python 3.10–3.13), executando a
+  suíte, `hpp doctor` e `hpp benchmark -k 3` — os controles do próprio produto, pelo CLI real.
+  Permissões mínimas de leitura e sem passo mascarado por `continue-on-error`.
+- Estado `skew` no Monitor Map, com tolerância declarada e publicada (`--skew-tolerance`).
+
+### Corrigido
+
+Sete defeitos reproduzidos antes do conserto, cada um com teste que falha antes e passa depois:
+
+- **Política de comandos ignorava a ordem das flags.** `rm -rf` era bloqueado, mas `rm -fr`,
+  `rm -r -f`, `rm --recursive --force` e a forma com `sudo` passavam como permitidas. A
+  classificação agora lê o conjunto de opções de cada invocação, para em `--` e segmenta por
+  `| ; &` — sem transformar `rm arquivo.txt`, `grep -rf padroes.txt` ou `cp -rf a b` em bloqueio.
+- **Orçamento de contexto não cobrava o separador entre blocos**, então o número publicado era
+  menor que o texto entregue e o teto podia ser estourado. `used` passa a ser o tamanho real.
+- **Sinal de monitor com timestamp no futuro era reportado como saudável** — relógio adiantado ou
+  timestamp fabricado viravam frescor.
+- **Memória de falhas persistia segredo em texto claro** e o devolvia no relato. Toda entrada passa
+  por redaction por forma (chave privada, credencial em URL, `Bearer`/`Basic`, prefixos de
+  provedor, JWT, `chave=valor`, blob de alta entropia), registrando tipo e comprimento — nunca o
+  valor. Erro sem segredo continua legível.
+- **A escrita de `settings.json` não era atômica** nos três instaladores que a fazem: uma queda no
+  meio truncava o arquivo e um update concorrente era perdido em silêncio. Agora é temporário no
+  mesmo diretório, `fsync` e `os.replace`, com comparação byte a byte antes de trocar — divergência
+  recusa a escrita (saída `2`) em vez de sobrescrever.
+- **O scanner de segredo suprimia a linha inteira** quando ela continha um exemplo permitido: um
+  valor real na mesma linha passava. A supressão passou a valer para a ocorrência, não para a linha.
+- **A verificação de `CHECKSUMS.txt` aceitava inventário vazio como sucesso** e caminho que escapa
+  do módulo (`../fora.txt`, caminho absoluto). As três formas agora reprovam com saída `2`.
+
+## [2.1.0] — 2026-09-20
+
+### Adicionado
+
+- Attestation provider-neutral que vincula aprovação a spec, identidade do repositório,
+  commit-base, snapshot completo, maker, checker e identificador de revisão.
+- `hpp attest create` e `hpp attest verify`, com bloqueio quando conteúdo rastreado, staged,
+  removido ou untracked diverge após a inspeção.
+- Controle executável no benchmark para provar aprovação válida e invalidação após mutação.
+
+### Corrigido
+
+- URLs de clone, marketplace e releases apontam para a conta canônica `rushar-labs`.
+
 ## [2.0.0] — 2026-09-20
 
 ### Adicionado
@@ -88,6 +141,8 @@ publicar.
 - Hooks resolvem `.venv`, `python3` ou `python` por `hooks/pyrun.sh`.
 - Kits são emitidos em LF e levam checksums dos bytes distribuídos.
 
-[1.5.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v1.5.0
-[1.4.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v1.4.0
-[2.0.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.0.0
+[1.4.0]: https://github.com/rushar-labs/house-party-protocol/releases/tag/v1.4.0
+[1.5.0]: https://github.com/rushar-labs/house-party-protocol/releases/tag/v1.5.0
+[2.0.0]: https://github.com/rushar-labs/house-party-protocol/releases/tag/v2.0.0
+[2.1.0]: https://github.com/rushar-labs/house-party-protocol/releases/tag/v2.1.0
+[2.2.0]: https://github.com/rushar-labs/house-party-protocol/releases/tag/v2.2.0

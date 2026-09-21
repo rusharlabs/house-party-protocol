@@ -10,6 +10,7 @@
     {"id": "context-provenance", "runner": "hpp-control"},
     {"id": "routing-risk-floor", "runner": "hpp-control"},
     {"id": "event-evidence-gate", "runner": "hpp-control"},
-    {"id": "graph-determinism", "runner": "hpp-control"}
+    {"id": "graph-determinism", "runner": "hpp-control"},
+    {"id": "evidence-attestation", "runner": "hpp-control"}
   ]
 }

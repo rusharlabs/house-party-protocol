@@ -2,9 +2,11 @@
 from __future__ import annotations
 
 import copy
+import subprocess
 import tempfile
 from pathlib import Path
 
+from hpp.attest import create_attestation, verify_attestation
 from hpp.context import ContextError, compile_context
 from hpp.graph import build_graph
 from hpp.manifest import ManifestError, load_manifest, validate_manifest
@@ -122,6 +124,36 @@ def _graph_determinism() -> bool:
     return first == second and bool(first["nodes"]) and bool(first["edges"])
 
 
+def _evidence_attestation() -> bool:
+    with tempfile.TemporaryDirectory(prefix="hpp-attestation-control-") as temp:
+        repo = Path(temp)
+        commands = (
+            ("init", "-q"),
+            ("config", "user.name", "HPP Control"),
+            ("config", "user.email", "hpp@example.invalid"),
+        )
+        for command in commands:
+            result = subprocess.run(["git", *command], cwd=repo, capture_output=True)
+            if result.returncode != 0:
+                return False
+        (repo / ".gitignore").write_text(".hpp/\n", encoding="utf-8")
+        spec = repo / "SPEC.md"
+        spec.write_text("bounded change\n", encoding="utf-8")
+        target = repo / "target.txt"
+        target.write_text("stable\n", encoding="utf-8")
+        for command in (("add", ".gitignore", "SPEC.md", "target.txt"), ("commit", "-q", "-m", "fixture")):
+            result = subprocess.run(["git", *command], cwd=repo, capture_output=True)
+            if result.returncode != 0:
+                return False
+        output = repo / ".hpp" / "attestation.json"
+        create_attestation(repo, spec, output, "maker-a", "checker-b", "control:001", "approved")
+        if verify_attestation(output, repo)["status"] != "valid":
+            return False
+        target.write_text("mutated\n", encoding="utf-8")
+        blocked = verify_attestation(output, repo)
+        return blocked["status"] == "blocked" and "snapshot_digest" in blocked["mismatches"]
+
+
 _CONTROLS = {
     "manifest-contract": _manifest_contract,
     "policy-enforcement": _policy_enforcement,
@@ -132,6 +164,7 @@ _CONTROLS = {
     "routing-risk-floor": _routing_floor,
     "event-evidence-gate": _event_evidence_gate,
     "graph-determinism": _graph_determinism,
+    "evidence-attestation": _evidence_attestation,
 }
 
 

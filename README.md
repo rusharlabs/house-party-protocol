@@ -45,7 +45,7 @@ WorkGraph ──waves──▶ lanes ──execute──▶ evidence
 
 | Camada | Capacidade executável |
 |---|---|
-| Integridade epistêmica | `done_gate`, evidência fresca, parcial declarado e controles negativos |
+| Integridade epistêmica | `done_gate`, evidência fresca, attestation vinculada aos bytes e controles negativos |
 | Separação de papéis | maker diferente de checker; revisores sem ferramentas de escrita |
 | Segurança operacional | classificação `ALLOW/WARN/BLOCK`, modos `audit` e `enforce`, snapshot e rollback |
 | Coordenação | Lane Map com dono, território, heartbeat, colisão e handoff |
@@ -61,7 +61,7 @@ WorkGraph ──waves──▶ lanes ──execute──▶ evidence
 Requer Python 3.9+ e não adiciona dependência de runtime.
 
 ```bash
-git clone https://github.com/rusharlabs/house-party-protocol.git
+git clone https://github.com/rushar-labs/house-party-protocol.git
 cd house-party-protocol
 python -m hpp doctor
 python -m hpp graph --view operational --format mermaid
@@ -80,7 +80,7 @@ módulo, mostrado na seção Codex CLI; o harness não grava um receipt para fin
 Para Claude Code, o canal nativo continua disponível:
 
 ```text
-/plugin marketplace add rusharlabs/house-party-protocol
+/plugin marketplace add rushar-labs/house-party-protocol
 /plugin install operator-kit@house-party-protocol
 ```
 
@@ -171,9 +171,10 @@ python -m hpp map agent
 python -m hpp map monitor examples/reliable-coding/monitors.json --now 1000
 ```
 
-Monitor Map não inicia processos. Ele projeta probes declaradas em `healthy`, `stale` ou
+Monitor Map não inicia processos. Ele projeta probes declaradas em `healthy`, `stale`, `skew` ou
 `unknown`. `healthy` significa sinal fresco dentro daquela régua — não resultado correto, dado
-atualizado ou operação concluída.
+atualizado ou operação concluída. `skew` é sinal com timestamp no futuro, além da tolerância
+declarada (`--skew-tolerance`): relógio adiantado ou timestamp fabricado não é frescor.
 
 ## Estado, loops e retomada
 
@@ -189,6 +190,23 @@ python -m hpp resume
 
 Autoprompt é continuidade; não é autonomia ilimitada. O loop para por sucesso provado, budget,
 bloqueio ou gate humano. Veja [loops](docs/LOOPS.md).
+
+## Attestation de evidência
+
+Uma aprovação pode estar correta e ainda assim ficar obsoleta quando a spec ou o checkout muda.
+O HPP vincula o veredito a `spec hash`, repositório, commit-base, snapshot completo, maker,
+checker e sessão. Arquivos rastreados, staged, removidos e untracked participam do snapshot;
+qualquer divergência posterior bloqueia a reutilização da aprovação.
+
+```bash
+python -m hpp attest create --repo . --spec SPEC.md \
+  --maker maker-a --checker checker-b --session review:001 \
+  --verdict approved --output .hpp/attestation.json
+python -m hpp attest verify .hpp/attestation.json --repo .
+```
+
+O registro guarda somente um hash da identidade remota; URL e caminho pessoal não são gravados.
+Uma resposta vazia, maker igual ao checker ou veredito diferente de `approved` nunca vira prova.
 
 ## Avaliação reproduzível
 
@@ -228,7 +246,7 @@ integração opcional; modularidade não é tratada como ausência de arquitetur
 | skills/instruções | nativa por plugin | cópia em `.agents/skills` |
 | hooks de lifecycle | nativa quando configurada | não disponível; comando explícito |
 | política audit/enforce | hook + CLI | CLI/preflight explícito |
-| event log, maps, WorkGraph, eval | CLI | CLI |
+| event log, attestation, maps, WorkGraph, eval | CLI | CLI |
 | instalação | marketplace ou CLI | CLI por cópia |
 
 `hpp doctor` reporta `native`, `explicit-command` ou `unsupported`; não converte ausência de hook
@@ -236,7 +254,7 @@ em promessa de enforcement.
 
 ## Limites honestos
 
-HPP 2.0 é um harness CLI local, não um daemon ou serviço remoto. Ele não agenda tarefas, não
+HPP 2.1 é um harness CLI local, não um daemon ou serviço remoto. Ele não agenda tarefas, não
 executa modelos por API, não guarda credenciais, não inicia monitores ocultos e não usa banco de
 grafo. Os mapas são projeções determinísticas de manifestos, eventos e estado local. Essa escolha
 mantém o sistema auditável, portátil e reversível.

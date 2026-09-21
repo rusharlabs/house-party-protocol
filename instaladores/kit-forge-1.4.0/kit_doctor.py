@@ -42,7 +42,7 @@ import os
 import subprocess
 import sys
 from datetime import datetime, timedelta, timezone
-from pathlib import Path
+from pathlib import Path, PurePosixPath, PureWindowsPath
 
 try:
     import yaml
@@ -100,15 +100,47 @@ def parse_checksums(text: str) -> dict:
     return entries
 
 
+def _relpath_seguro(kit_dir: Path, relpath: str) -> bool:
+    """Entrada do inventário tem de apontar para DENTRO do kit: relativa, sem `..`, sem drive/raiz.
+
+    # Why: `kit_dir / relpath` aceita `../fora` e caminho absoluto (o join descarta a base),
+    # e o verificador passava a atestar um arquivo que nao esta no kit.
+    """
+    if not relpath:
+        return False
+    pw = PureWindowsPath(relpath)
+    if pw.drive or pw.root or PurePosixPath(relpath).is_absolute():
+        return False
+    if ".." in relpath.replace("\\", "/").split("/"):
+        return False
+    try:
+        (kit_dir / relpath).resolve().relative_to(kit_dir.resolve())
+    except ValueError:
+        return False
+    return True
+
+
 def check_kit(kit_dir: Path) -> dict:
     checksums_path = kit_dir / "CHECKSUMS.txt"
     if not checksums_path.exists():
         return {"status": "error", "errors": [f"CHECKSUMS.txt ausente em {kit_dir}"]}
 
     expected = parse_checksums(checksums_path.read_text(encoding="utf-8"))
+    if not expected:
+        # Why: inventario vazio nao atesta arquivo nenhum — tratar como integro faria o
+        # verificador aprovar um kit cujo CHECKSUMS.txt foi esvaziado.
+        return {
+            "status": "corrupt", "kit_dir": str(kit_dir), "total_tracked": 0,
+            "mismatches": [], "missing": [], "extras": [], "unsafe_paths": [],
+            "errors": ["CHECKSUMS.txt sem nenhuma entrada — inventário vazio não atesta nada"],
+        }
     mismatches = []
     missing = []
+    unsafe = []
     for relpath, expected_hash in expected.items():
+        if not _relpath_seguro(kit_dir, relpath):
+            unsafe.append(relpath)
+            continue
         f = kit_dir / relpath
         if not f.exists():
             missing.append(relpath)
@@ -123,7 +155,7 @@ def check_kit(kit_dir: Path) -> dict:
             actual_files.add(p.relative_to(kit_dir).as_posix())
     extras = sorted(actual_files - set(expected.keys()))
 
-    if mismatches or missing:
+    if mismatches or missing or unsafe:
         status = "corrupt"
     elif extras:
         status = "warn"
@@ -137,6 +169,8 @@ def check_kit(kit_dir: Path) -> dict:
         "mismatches": mismatches,
         "missing": missing,
         "extras": extras,
+        "unsafe_paths": unsafe,
+        "errors": [f"caminho fora do kit no inventário: {p}" for p in unsafe],
     }
 
 
@@ -812,6 +846,25 @@ def _self_test() -> int:
         no_checksums_dir.mkdir()
         report_error = check_kit(no_checksums_dir)
         assert report_error["status"] == "error" and _verify_exit(report_error) == 3
+
+        # inventário VAZIO não atesta nada -> corrupt (exit 2), com mensagem
+        vazio_dir = tmp / "inventario-vazio"
+        vazio_dir.mkdir()
+        (vazio_dir / "CHECKSUMS.txt").write_text("\n", encoding="utf-8")
+        report_vazio = check_kit(vazio_dir)
+        assert report_vazio["status"] == "corrupt" and _verify_exit(report_vazio) == 2 and report_vazio["errors"], report_vazio
+
+        # caminho que escapa do kit (`../` e absoluto) -> corrupt, listado em unsafe_paths
+        fora = tmp / "fora.txt"
+        fora.write_text("fora do kit\n", encoding="utf-8")
+        escape_dir = tmp / "escape-kit"
+        escape_dir.mkdir()
+        (escape_dir / "CHECKSUMS.txt").write_text(
+            f"{_sha256(fora)}  ../fora.txt\n{_sha256(fora)}  {fora.as_posix()}\n", encoding="utf-8"
+        )
+        report_escape = check_kit(escape_dir)
+        assert report_escape["status"] == "corrupt" and _verify_exit(report_escape) == 2, report_escape
+        assert sorted(report_escape["unsafe_paths"]) == sorted(["../fora.txt", fora.as_posix()]), report_escape
 
         # --- compatibilidade posicional: kit_doctor.py <dir> == verify <dir> ---
         assert _normalize_argv([str(kit_dir)]) == ["verify", str(kit_dir)]

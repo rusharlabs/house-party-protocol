@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from hpp import __version__
+from hpp.attest import AttestationError, create_attestation, verify_attestation
 from hpp.context import compile_context
 from hpp.evals import EvalError, exit_for as eval_exit_for, run_suite
 from hpp.graph import build_graph, to_mermaid
@@ -132,6 +133,24 @@ def command_benchmark(args: argparse.Namespace) -> int:
     return eval_exit_for(report)
 
 
+def command_attest(args: argparse.Namespace) -> int:
+    if args.attest_command == "create":
+        record = create_attestation(
+            repo=Path(args.repo),
+            spec=Path(args.spec),
+            output=Path(args.output),
+            maker=args.maker,
+            checker=args.checker,
+            session=args.session,
+            verdict=args.verdict,
+        )
+        _json({"status": "recorded", **record})
+        return 0 if record["verdict"] == "approved" else 2
+    report = verify_attestation(Path(args.attestation), Path(args.repo))
+    _json(report)
+    return 0 if report["status"] == "valid" else 2
+
+
 def command_work(args: argparse.Namespace) -> int:
     compiled = compile_workgraph(_read_json(args.spec, dict))
     if args.work_command == "waves":
@@ -166,7 +185,7 @@ def command_map(args: argparse.Namespace) -> int:
             dead_after=args.dead_after,
         )
     elif args.map_view == "monitor":
-        projection = build_monitor_map(_read_json(args.source, list), args.now)
+        projection = build_monitor_map(_read_json(args.source, list), args.now, skew_tolerance=args.skew_tolerance)
     elif args.map_view == "context":
         projection = build_context_map(_read_json(args.source, list), args.budget)
     else:
@@ -254,6 +273,22 @@ def build_parser() -> argparse.ArgumentParser:
     benchmark.add_argument("--json", action="store_true")
     benchmark.set_defaults(func=command_benchmark)
 
+    attest = sub.add_parser("attest")
+    attest_sub = attest.add_subparsers(dest="attest_command", required=True)
+    attest_create = attest_sub.add_parser("create")
+    attest_create.add_argument("--repo", default=".")
+    attest_create.add_argument("--spec", required=True)
+    attest_create.add_argument("--output", required=True)
+    attest_create.add_argument("--maker", required=True)
+    attest_create.add_argument("--checker", required=True)
+    attest_create.add_argument("--session", required=True)
+    attest_create.add_argument("--verdict", choices=["approved", "revise", "blocked"], required=True)
+    attest_create.set_defaults(func=command_attest)
+    attest_verify = attest_sub.add_parser("verify")
+    attest_verify.add_argument("attestation")
+    attest_verify.add_argument("--repo", default=".")
+    attest_verify.set_defaults(func=command_attest)
+
     work = sub.add_parser("work")
     work_sub = work.add_subparsers(dest="work_command", required=True)
     plan = work_sub.add_parser("plan")
@@ -293,6 +328,8 @@ def build_parser() -> argparse.ArgumentParser:
     monitor.add_argument("source")
     monitor.add_argument("--now", required=True, type=int,
                          help="explicit Unix timestamp; avoids ambient-clock projections")
+    monitor.add_argument("--skew-tolerance", type=int, default=5,
+                         help="seconds a signal may sit after --now before it is reported as skew")
     monitor.set_defaults(func=command_map)
     context_map = map_sub.add_parser("context")
     context_map.add_argument("source")
@@ -309,7 +346,7 @@ def main(argv: list[str] | None = None) -> int:
             return self_test()
         args = parser.parse_args(arguments)
         return args.func(args)
-    except (ManifestError, InstallError, StateError, EvalError, ValueError, json.JSONDecodeError) as exc:
+    except (AttestationError, ManifestError, InstallError, StateError, EvalError, ValueError, json.JSONDecodeError) as exc:
         print(f"hpp: {exc}", file=sys.stderr)
         return 2
     except Exception as exc:

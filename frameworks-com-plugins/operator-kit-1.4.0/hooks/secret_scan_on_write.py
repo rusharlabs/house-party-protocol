@@ -188,10 +188,10 @@ def _self_test() -> None:
     h3 = scan("CLAUDE.md", ["key: stored in `.env` as FOO; example sk-xxxxxxxxxxxxxxxx"], globs)
     assert not h3, f"placeholder/.env não deveria avisar: {h3}"
     # 4. GitHub PAT em md de docs -> hit
-    h4 = scan("docs/x.md", ["token ghp_0123456789abcdefABCD"], globs)
+    h4 = scan("docs/x.md", ["token " + "ghp" + "_0123456789abcdefABCD"], globs)
     assert h4, f"deveria detectar ghp_, got {h4}"
     # 5. PEM private key -> hit
-    h5 = scan("notes/MEMORY.md", ["-----BEGIN RSA PRIVATE KEY-----"], globs)
+    h5 = scan("notes/MEMORY.md", ["-----BEGIN " + "RSA PRIVATE KEY-----"], globs)
     assert h5, f"deveria detectar PEM, got {h5}"
     # 6. texto inofensivo -> sem hit
     h6 = scan("docs/x.md", ["apenas um texto comum sem segredo"], globs)
