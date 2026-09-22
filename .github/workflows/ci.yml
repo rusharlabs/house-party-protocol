@@ -39,12 +39,17 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      # Why (CI runs of 2026-09-21/22, 12 of 12 jobs red with `No module named pytest`): the
+      # package has zero third-party dependencies (`dependencies = []`), but the test runner
+      # is not part of the package and GitHub runners do not ship it. This is the only install
+      # step, and it installs the runner alone — `tests/test_stdlib_only.py` keeps it that way.
+      - name: Install the test runner (the package itself needs nothing)
+        run: python -m pip install --disable-pip-version-check pytest
+
       # Why: `python -m pytest` (as opposed to a bare `pytest`) puts the current
       # working directory on sys.path[0], which is what lets `import hpp`
       # resolve without an install step; tests/conftest.py adds a defensive
-      # fallback for any invocation that skips that. No `pip install` needed:
-      # the package has zero third-party dependencies (pyproject.toml
-      # `dependencies = []`).
+      # fallback for any invocation that skips that.
       - name: Run test suite (pytest, stdlib-only)
         run: python -m pytest tests -q -p no:cacheprovider
 

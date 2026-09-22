@@ -189,12 +189,19 @@ jobs:
         shell: python
         env:
           EXPECTED_VERSION: ${{ needs.verify.outputs.version }}
+          # Why (release run of v2.4.3, 2026-09-22): the harness prints a check mark; on windows-latest
+          # the driver's own stdout was cp1252 and `print(result.stdout)` raised UnicodeEncodeError
+          # after every command had passed. The child already ran in UTF-8; the parent did not.
+          PYTHONUTF8: "1"
+          PYTHONIOENCODING: "utf-8"
         run: |
           import os
           import pathlib
           import subprocess
           import sys
           import tempfile
+
+          sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
           wheels = sorted(pathlib.Path("dist").glob("*.whl"))
           assert len(wheels) == 1, wheels
