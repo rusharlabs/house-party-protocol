@@ -1,0 +1,86 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "manifest.schema.json",
+  "title": "Kit Assembler Manifest v1",
+  "description": "Contract of the manifest that kit_assembler.py consumes to assemble a distributable kit from a source_root. See installers/kit-forge/kit_assembler.py.",
+  "type": "object",
+  "required": ["kit", "include"],
+  "additionalProperties": false,
+  "properties": {
+    "kit": {
+      "type": "object",
+      "required": ["name", "version", "license", "author", "source_root"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+        "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+([-+].*)?$" },
+        "license": { "type": "string" },
+        "author": { "type": "string" },
+        "year": { "type": "integer" },
+        "source_root": { "type": "string", "description": "Path relative to the root of the source repo (e.g. staging/operator-kit)." },
+        "description": { "type": "string" },
+        "third_party": {
+          "type": "array",
+          "description": "Embedded third-party code (generates THIRD-PARTY-LICENSES.md).",
+          "items": {
+            "type": "object",
+            "required": ["name", "license", "url"],
+            "properties": {
+              "name": { "type": "string" },
+              "license": { "type": "string" },
+              "url": { "type": "string" },
+              "copyright": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "include": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string" },
+      "description": "Globs relative to kit.source_root."
+    },
+    "exclude": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Globs that ALWAYS win over include."
+    },
+    "sanitize": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "replaces": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["files", "find", "replace"],
+            "properties": {
+              "files": { "type": "array", "items": { "type": "string" } },
+              "find": { "type": "string" },
+              "replace": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "generate": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "license": { "type": "boolean" },
+        "sanitizacao_md": { "type": "boolean" },
+        "checksums": { "type": "boolean" },
+        "zip": { "type": "boolean" }
+      }
+    },
+    "lint": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ruleset": { "type": "string" },
+        "fail_on": { "type": "string", "enum": ["block", "warn"] }
+      }
+    }
+  }
+}

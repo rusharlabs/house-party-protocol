@@ -80,7 +80,7 @@ nenhum pacote de terceiro. A CI exercita Python 3.10 a 3.13 em Linux, macOS e Wi
 (`.github/workflows/ci.yml`); interpretadores mais antigos não são prometidos porque nada os mede.
 
 ```bash
-pip install git+https://github.com/rushar-labs/house-party-protocol@v2.4.3
+pip install git+https://github.com/rushar-labs/house-party-protocol@v2.5.0
 hpp doctor
 hpp init --target ../your-repo
 ```
@@ -112,7 +112,7 @@ distribuição emitida — harness, manifesto, os dez diretórios de módulo com
 
 ```text
 > detecting host...           ✓ greenfield · 0 existing item(s) preserved
-> checking prerequisites...   ✓ python 3.14.3 · protocol 2.0
+> checking prerequisites...   ✓ python 3.14.3 · protocol 2.1
 > mounting profile...         ✓ would-write · host=claude-code · bundle=reliable-coding · policy=audit · 3 default(s)
 > loading modules...          ✓ 6 modules · reliable-coding · claude-code · 6/6 checksums verified
 > wiring suggestions...       ✓ 7 commands to paste · 0 files written
@@ -131,7 +131,7 @@ vazio, mostra:
 
 ```text
 > detecting host...           ✓ greenfield · 0 existing item(s) preserved
-> checking prerequisites...   ✓ python 3.14.3 · protocol 2.0
+> checking prerequisites...   ✓ python 3.14.3 · protocol 2.1
 > mounting profile...         ✓ would-write · host=claude-code · bundle=reliable-coding · policy=audit · 3 default(s)
 > loading modules...          ✓ 6 modules · reliable-coding · claude-code
 > wiring suggestions...       ✓ 7 commands to paste · 0 files written
@@ -162,13 +162,13 @@ módulo mostra a linha `cp -r`) e o instalador detecta, liga e verifica. Nos doi
 primeiro e aplica só numa segunda invocação explícita:
 
 ```bash
-python instaladores/kit-forge-1.4.0/kit_doctor.py install \
-  --kit frameworks-com-plugins/operator-kit-1.4.0 --host codex --target ../your-repo
-python instaladores/kit-forge-1.4.0/kit_doctor.py install \
-  --kit frameworks-com-plugins/operator-kit-1.4.0 --host codex --target ../your-repo --apply
+python installers/kit-forge-1.4.1/kit_doctor.py install \
+  --kit frameworks/operator-kit-1.5.0 --host codex --target ../your-repo
+python installers/kit-forge-1.4.1/kit_doctor.py install \
+  --kit frameworks/operator-kit-1.5.0 --host codex --target ../your-repo --apply
 ```
 
-O instalador faz parte deste repositório, em `instaladores/kit-forge-1.4.0/kit_doctor.py`, ao
+O instalador faz parte deste repositório, em `installers/kit-forge-1.4.1/kit_doctor.py`, ao
 lado dos diretórios de módulo a partir dos quais ele instala. Uma instalação por pip não carrega
 nem um nem outro, e o `hpp init` avisa isso no bloco de wiring quando não encontra o instalador
 ao lado do manifesto.
@@ -214,16 +214,16 @@ mesma resposta em JSON. Nenhum dos dois pede a um modelo que lembre de alguma co
 
 | módulo | versão | uma linha |
 |---|---|---|
-| `operator-kit` | 1.4.0 | done gate com exit code real, política de comando em `audit` ou `enforce`, loops governados com charter e condições de parada, runner standalone de `pass@k` / `pass^k`, preflight, dois agentes checkers read-only |
-| `lane-kit` | 1.2.0 | um quadro de lanes para sessões concorrentes: claim, território, liveness, maker ≠ checker, e um roteador que escolhe checker de outro provedor |
-| `continuity-kit` | 1.2.1 | handoff escrito antes de parada ou compactação, comandos de re-derivação em vez de estado lembrado, guardas contra replay de passo concluído |
-| `health-kit` | 1.3.1 | sondas de serviço config-driven que gravam um cache que a statusline lê sem tocar a rede; saúde de serviço separada de saúde de dado |
-| `gotcha-memory` | 1.0.0 | registra comandos que falharam por família de erro, detecta recorrência, injeta a lição antes da próxima execução; warn-only, segredo redigido por forma |
-| `kit-forge` | 1.4.0 | monta módulos a partir das fontes, faz lint de IP e PII, instala em seis estágios, escreve e verifica `CHECKSUMS.txt`, confere o marketplace |
-| `claude-dev-kit` | 1.3.1 | autoria de skills, hooks e plugins para Claude Code, wiring reversível de settings, secret scan na escrita |
-| `dev-squad-kit` | 1.0.0 | doze papéis de desenvolvimento como comandos e subagents com tools explícitos, mais skills de leitura e consolidação paralelas |
-| `agent-framework-wizard` | 1.1.1 | scaffold em seis passos para um projeto novo de agente ou skill, respondível por arquivo em execução não interativa |
-| `supabase-pack` | 1.1.0 | auditoria de RLS por `pg_policies` e advisors em vez de flag de tabela; scaffold de Edge Function |
+| `operator-kit` | 1.5.0 | done gate com exit code real, política de comando em `audit` ou `enforce`, loops governados com charter e condições de parada, runner standalone de `pass@k` / `pass^k`, preflight, dois agentes checkers read-only |
+| `lane-kit` | 1.3.0 | um quadro de lanes para sessões concorrentes: claim, território, liveness, maker ≠ checker, e um roteador que escolhe checker de outro provedor |
+| `continuity-kit` | 1.3.0 | handoff escrito antes de parada ou compactação, comandos de re-derivação em vez de estado lembrado, guardas contra replay de passo concluído |
+| `health-kit` | 1.3.2 | sondas de serviço config-driven que gravam um cache que a statusline lê sem tocar a rede; saúde de serviço separada de saúde de dado |
+| `gotcha-memory` | 1.0.1 | registra comandos que falharam por família de erro, detecta recorrência, injeta a lição antes da próxima execução; warn-only, segredo redigido por forma |
+| `kit-forge` | 1.4.1 | monta módulos a partir das fontes, faz lint de IP e PII, instala em seis estágios, escreve e verifica `CHECKSUMS.txt`, confere o marketplace |
+| `claude-dev-kit` | 1.3.2 | autoria de skills, hooks e plugins para Claude Code, wiring reversível de settings, secret scan na escrita |
+| `dev-squad-kit` | 1.0.1 | doze papéis de desenvolvimento como comandos e subagents com tools explícitos, mais skills de leitura e consolidação paralelas |
+| `agent-framework-wizard` | 1.2.0 | scaffold em seis passos para um projeto novo de agente ou skill, respondível por arquivo em execução não interativa |
+| `supabase-pack` | 1.1.1 | auditoria de RLS por `pg_policies` e advisors em vez de flag de tabela; scaffold de Edge Function |
 
 O bundle `reliable-coding` são os seis primeiros. Cada módulo instala sozinho; `integrates_with`
 no manifesto é composição opcional, `requires` é dependência dura, e hoje nenhum módulo requer
@@ -252,9 +252,9 @@ grafo e attestation de evidência. `pass^k = 1.00` é exigido para o gate passar
 e o hash dele estão no relatório JSON (`hpp benchmark -k 3 --json`). Veja [PROOF.pt-BR.md](docs/PROOF.pt-BR.md)
 para a matriz de claims e [BENCHMARK.pt-BR.md](docs/BENCHMARK.pt-BR.md) para os cenários.
 
-Neste repositório, `python instaladores/kit-forge-1.4.0/kit_doctor.py verify <dir-do-módulo>`
+Neste repositório, `python installers/kit-forge-1.4.1/kit_doctor.py verify <dir-do-módulo>`
 compara cada arquivo de um módulo com o seu `CHECKSUMS.txt`, e
-`python instaladores/kit-forge-1.4.0/kit_doctor.py marketplace .` confere a árvore inteira.
+`python installers/kit-forge-1.4.1/kit_doctor.py marketplace .` confere a árvore inteira.
 
 ## Limites honestos
 
