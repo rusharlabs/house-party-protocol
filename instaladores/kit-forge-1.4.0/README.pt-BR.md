@@ -27,7 +27,7 @@ Serviços externos: **nenhum — stdlib + PyYAML, só toca filesystem local.**
 
 ## Instalar via plugin
 
-O Kit Forge **é** um plugin: o `.claude-plugin/plugin.json` (793 B no módulo emitido)
+O Kit Forge **é** um plugin: o `.claude-plugin/plugin.json` viaja no módulo emitido
 declara nome, versão, descrição e keywords, e o `marketplace.json` da raiz da distribuição
 o lista em `installers`.
 

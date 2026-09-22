@@ -1,0 +1,11 @@
+# Why: the product has zero runtime dependencies (pyproject.toml `dependencies = []`), so the
+# only third-party code this repository executes is the set of GitHub Actions pinned by SHA in
+# .github/workflows/. Dependabot keeps those pins current; there is no pip ecosystem to watch.
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "ci"

@@ -1,40 +1,40 @@
 # 00-ROLLBACK — {{project_name}} / {{mudanca_nome}}
 
-> Rollback é ARTEFATO aqui, não doutrina espalhada em prosa: toda mudança que muta
-> runtime/produção/dado vivo ganha ESTE documento ANTES de ser aplicada, com o comando
-> literal de volta já escrito (não "dá pra reverter se precisar" — o comando existe).
+> Rollback is an ARTIFACT here, not doctrine scattered in prose: every change that mutates
+> runtime/production/live data gets THIS document BEFORE being applied, with the literal
+> command back already written (not "it can be reverted if needed" — the command exists).
 
-## Classificação da mudança
+## Classification of the change
 
-- [ ] **Aditiva** (novo arquivo/rota/coluna — reversível por remoção simples)
-- [ ] **Destrutiva** (substitui/remove algo vivo — reversível só com backup prévio)
-- [ ] **Migração de dado** (schema/formato — reversível só com dump prévio)
+- [ ] **Additive** (new file/route/column — reversible by simple removal)
+- [ ] **Destructive** (replaces/removes something live — reversible only with a prior backup)
+- [ ] **Data migration** (schema/format — reversible only with a prior dump)
 
-## Snapshot ANTES (obrigatório para destrutiva/migração)
+## Snapshot BEFORE (mandatory for destructive/migration)
 
 ```bash
 {{comando_de_backup_ou_snapshot}}
 ```
 
-## O comando EXATO de volta (escrito ANTES de aplicar a mudança)
+## The EXACT command back (written BEFORE applying the change)
 
 ```bash
 {{comando_literal_de_rollback}}
 ```
 
-## Verify pós-rollback (prova que voltou, não presume)
+## Post-rollback verify (proves it went back, does not presume)
 
 ```bash
 {{comando_que_confirma_estado_anterior}}
 ```
 
-## Lição embutida (LC-1 · deploy/routing)
+## Built-in lesson (LC-1 · deploy/routing)
 
-Ao verificar que um deploy/rollback funcionou, confirme que o **BACKEND trocou de verdade**
-(rota exclusiva do novo/antigo + marca de build) — nunca só o status do processo nem o gate
-de auth (ambos podem ficar iguais entre a versão nova e a antiga). Se há proxy/tunnel no
-caminho, confirme CADA hop, não só a ponta.
+When verifying that a deploy/rollback worked, confirm that the **BACKEND really switched**
+(a route exclusive to the new/old one + build marker) — never just the process status nor the
+auth gate (both can stay identical between the new version and the old one). If there is a proxy/tunnel
+in the path, confirm EACH hop, not just the end.
 
-## Quem autoriza a aplicação
+## Who authorises applying it
 
-{{quem_aprova_esta_mudanca}} — gate humano se a mudança tocar produção/dado real.
+{{quem_aprova_esta_mudanca}} — human gate if the change touches production/real data.

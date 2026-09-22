@@ -1,35 +1,35 @@
 ---
-status: PARA APROVAÇÃO — {{aprovador_humano}}
+status: FOR APPROVAL — {{aprovador_humano}}
 last_reviewed: {{data}}
 ---
 
 # 00-VISION — {{project_name}}
 
-> Lido no boot de toda sessão (via `{{state_doc}}` §Agora ou o `00-LEIA-PRIMEIRO`).
-> Muda RARAMENTE — nunca escrito por automação. Só o humano (`{{aprovador_humano}}`)
-> edita ou aprova mudanças aqui.
+> Read at the boot of every session (via `{{state_doc}}` §Agora or the `00-LEIA-PRIMEIRO`).
+> Changes RARELY — never written by automation. Only the human (`{{aprovador_humano}}`)
+> edits or approves changes here.
 
-## Por que este projeto existe (1 parágrafo)
+## Why this project exists (1 paragraph)
 
 {{visao_1_paragrafo}}
 
-## O que é sucesso (mensurável)
+## What success is (measurable)
 
 - {{metrica_de_sucesso_1}}
 - {{metrica_de_sucesso_2}}
 
-## O que está explicitamente FORA de escopo
+## What is explicitly OUT of scope
 
 - {{fora_de_escopo_1}}
 - {{fora_de_escopo_2}}
 
-## Restrições inegociáveis
+## Non-negotiable constraints
 
 - {{restricao_1}}
 - {{restricao_2}}
 
 ## Stakeholders
 
-| Papel | Quem | O que decide |
+| Role | Who | What they decide |
 |---|---|---|
 | {{papel_1}} | {{pessoa_1}} | {{decisao_1}} |

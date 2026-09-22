@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="474" height="116" viewBox="0 0 474 116" role="img" aria-label="python -m hpp doctor — measured output, 2026-09-21" font-family="ui-monospace, Menlo, Consolas, 'Liberation Mono', monospace" font-size="13">
+  <title>python -m hpp doctor — measured output, 2026-09-21</title>
+  <desc>Rendered from the command's real stdout by scripts/render_terminal_svg.py; no image was edited by hand.</desc>
+  <rect width="474" height="116" rx="10" fill="#0F1113"/>
+  <path d="M0 10a10 10 0 0 1 10-10h454a10 10 0 0 1 10 10v30H0z" fill="#16191C"/>
+  <circle cx="22" cy="20" r="5" fill="#FF6A00"/><circle cx="40" cy="20" r="5" fill="#8E8A83"/><circle cx="58" cy="20" r="5" fill="#8E8A83"/>
+  <text x="237" y="25" text-anchor="middle" fill="#8E8A83" font-size="12">python -m hpp doctor</text>
+  <text x="24" y="64" xml:space="preserve"><tspan fill="#FF6A00" font-weight="bold">$ </tspan><tspan fill="#F4F1EB" font-weight="bold">python -m hpp doctor</tspan></text>
+  <text x="24" y="84" xml:space="preserve"><tspan fill="#F4F1EB">HPP doctor: ok · modules=10 · hosts=claude-code, codex</tspan></text>
+</svg>

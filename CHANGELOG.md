@@ -9,6 +9,71 @@ keeps its own version in `plugin.json` and in `marketplace.json`.
 
 ## [Unreleased]
 
+## [2.4.3] — 2026-09-21
+
+### Added
+
+- **Community files for the public repository.** `CODE_OF_CONDUCT.md` (Contributor Covenant 2.1,
+  contact `atendimento@rushar.com.br`) in both languages; `.github/CODEOWNERS`,
+  `.github/dependabot.yml` (GitHub Actions only, weekly), three issue forms (`problem`,
+  `feedback`, `idea`) with a `config.yml` that routes security reports to the private channel,
+  a pull request template with the proof and bilingual checklist, and `.github/labels.json`
+  (12 labels, applied with `gh label create` at opening). Issue and PR templates are GitHub UI
+  files and stay in English.
+- **Release workflow** (`.github/workflows/release.yml`): a `vX.Y.Z` tag runs version-sources ==
+  tag (`pyproject.toml`, `hpp/__init__.py`, `hpp.manifest.json`, `CITATION.cff`), refuses a tag
+  without a non-empty section in both CHANGELOG files, builds wheel and sdist with `pip wheel
+  --no-deps` and the setuptools PEP 517 hook, installs the wheel offline on Linux, macOS and
+  Windows and runs `hpp --version`, `doctor`, `benchmark -k 3` and `init` from an empty
+  directory, then creates the GitHub Release with the wheel, the sdist, `SHA256SUMS` and the
+  CHANGELOG section as notes.
+- **Two gates that were prose become tests.** `tests/test_no_personal_paths.py` fails on any
+  drive-letter, macOS or Linux home path in a text file of the distribution;
+  `tests/test_stdlib_only.py` fails on any import outside the standard library in `hpp/` (the
+  suite may add only `pytest`) and on a non-empty `dependencies` in `pyproject.toml`. Both
+  carry the planted case that proves they discriminate.
+- **`scripts/repo_readiness.py`**: a dated table — community files, workflow pins and
+  `persist-credentials`, version sources, README quick-start tag, personal paths, stdlib-only,
+  en/pt-BR pairs, README module table against `marketplace.json` — reusing the two gates above;
+  exit 1 on any failing row.
+- **Measured terminal captures instead of screenshots.** `assets/terminal/hpp-doctor.svg` and
+  `assets/terminal/hpp-init.svg` are the real stdout of the two commands rendered as text by
+  `scripts/render_terminal_svg.py` (brand palette, system monospace, no font embedded, target
+  named `your-repo` so no machine path travels); both READMEs show them under the quick start.
+- **`SECURITY.md`** gains the supported-versions table (2.4.x only) and the list of official
+  surfaces; the README quick start opens with a GitHub `[!WARNING]` alert naming them.
+- **`docs/GITHUB-DESCRIPTION.txt`** carries the homepage and the topics for the repository
+  settings, next to the description.
+
+### Changed
+
+- **CI pins its actions by commit SHA** (`actions/checkout` 4.4.0, `actions/setup-python`
+  5.6.0) with the version as a comment, and checks out with `persist-credentials: false`.
+- **The README quick start installs from the release tag** (`pip install git+…@v2.4.3`)
+  instead of the moving default branch; `repo_readiness.py` reports when the tag and the
+  package version disagree.
+- **The last Portuguese-only Markdown in the modules is gone.** The ten module `AGENTS.md` and the
+  scaffold templates (`continuity-kit`, `agent-framework-wizard`, `lane-kit`, `operator-kit`) — files
+  an agent reads or copies into a project — are English-only; the module guides `RALPH-GATE`,
+  `SETTINGS-WIRE`, `LANE-KIT`, `docs/MCP-RUNBOOK`, `docs/ANTHROPIC-STANDARDS` and
+  `docs/skill-template` ship in English with a Portuguese pair, under the same pair gate.
+- **The README banner names the discipline.** Under the five-word signature a second line reads
+  `spec-driven · wave-driven · lane-isolated`, and the opening paragraph says how the three connect:
+  a spec compiles into a WorkGraph, the graph runs in topological waves, parallel sessions work in
+  isolated lanes, and every wave closes on evidence.
+
+### Fixed
+
+- Three module READMEs quoted `skill_lint` output as `(de N)`; the tool prints `(of N)`.
+- `ARCHITECTURE` said the whole suite runs in this repository; one test skips by design here.
+- The kit-forge README pinned a byte size for `plugin.json` that had already changed.
+
+### Known limitation
+
+- Hooks and scripts still print Portuguese messages (72 of 113 scripts, 280 strings measured on
+  2026-09-21), and four skills quote those outputs verbatim. Scheduled for 2.5.0, together with
+  English names for the files the modules generate in a project.
+
 ## [2.4.2] — 2026-09-21
 
 ### Added
@@ -81,7 +146,7 @@ keeps its own version in `plugin.json` and in `marketplace.json`.
 - **`.gitignore` covers `.hpp/`**, the directory the README's own `hpp event append` and
   `hpp init --apply` examples create inside a checkout.
 - **`CITATION.cff` described version 1.4.0**, with a "ten kits for Claude Code" abstract and no
-  Codex keyword; it now describes 2.4.1, dated 2026-09-21, with the README's opening paragraph and
+  Codex keyword; it now describes the package version (a test ties it to `hpp.__version__`), dated 2026-09-21, with the README's opening paragraph and
   `codex-cli` among the keywords.
 - **The manual's measurement stamp said 2.4.0** while its header said 2.4.1; it now stamps the
   date and the version the quoted outputs were measured against.

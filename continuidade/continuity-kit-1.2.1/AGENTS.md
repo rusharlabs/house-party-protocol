@@ -1,14 +1,14 @@
 # AGENTS.md — continuity-kit
 
-Este kit preserva estado de retomada e exige rederivação antes de repetir trabalho.
+This kit preserves resume state and requires re-derivation before repeating work.
 
 ## Codex CLI
 
-- Instale por cópia com `kit_doctor.py install --kit <continuity-kit> --host codex --target <repo> --apply`.
-- Templates e scripts ficam em `.agents/hpp/continuity-kit/`.
-- Hooks de lifecycle do Claude Code não são ativados no Codex; invoque os scripts no fluxo da sessão.
+- Install by copy with `kit_doctor.py install --kit <continuity-kit> --host codex --target <repo> --apply`.
+- Templates and scripts live in `.agents/hpp/continuity-kit/`.
+- Claude Code lifecycle hooks are not activated on Codex; invoke the scripts in the session flow.
 
-## Verificação
+## Verification
 
 ```bash
 python scripts/doc_rollup.py --self-test

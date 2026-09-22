@@ -78,7 +78,7 @@ Módulo operacional do harness: gates executáveis, loops governados, pass@k/pas
 
 **Scripts** — `audit_plan.py` · `claude_md_from_profile.py` · `debt_ledger.py` · `delta_inventory.py` · `determinism_harness.py` · `distill_corrections.py` · `done_gate.py` · `drift_check.py` · `gate_sheet_panel.py` · `goal_ledger.py` · `goal_review.py` · `health_probe.py` · `live_count.py` · `passk_eval.py` · `preflight.py` · `status_now.py` · `verify_ladder.py`
 
-**Documentos e registros** — `docs/ANTHROPIC-STANDARDS.md` · `docs/MCP-RUNBOOK.md`
+**Documentos e registros** — `docs/ANTHROPIC-STANDARDS.md` · `docs/ANTHROPIC-STANDARDS.pt-BR.md` · `docs/MCP-RUNBOOK.md` · `docs/MCP-RUNBOOK.pt-BR.md`
 
 ## continuity-kit
 
@@ -170,7 +170,7 @@ Ferramentas de construir ferramentas: skill-writer, hookify, plugin-dev, teachin
 
 **Scripts** — `install_git_hook.py` · `wire_settings.py`
 
-**Documentos e registros** — `docs/hook-template.py` · `docs/SKILL-CANDIDATES.json` · `docs/SKILL-CONTRACT.md` · `docs/SKILL-CONTRACT.pt-BR.md` · `docs/skill-template.md`
+**Documentos e registros** — `docs/hook-template.py` · `docs/SKILL-CANDIDATES.json` · `docs/SKILL-CONTRACT.md` · `docs/SKILL-CONTRACT.pt-BR.md` · `docs/skill-template.md` · `docs/skill-template.pt-BR.md`
 
 ## supabase-pack
 

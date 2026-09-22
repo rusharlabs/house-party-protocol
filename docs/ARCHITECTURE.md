@@ -191,8 +191,9 @@ remaining stages when a stage fails with a blocking hint.
 ## Tests and CI
 
 The suite under `tests/` is stdlib-only and runs without network. Each test file carries at least
-one test named `CONTROLE` that proves the file can fail. In this repository the whole suite runs;
-the harness source tree, which has no `marketplace.json`, skips the two tests that need it. CI runs the suite,
+one test named `CONTROLE` that proves the file can fail. In this repository one test skips by
+design (the emitted copy is covered by the next test); the harness source tree, which has no
+`marketplace.json`, skips the two tests that need it. CI runs the suite,
 `hpp doctor` and `hpp benchmark -k 3` on Linux, macOS and Windows across Python 3.10 to 3.13,
 with read-only permissions and no step allowed to fail silently.
 

@@ -1,0 +1,68 @@
+name: Problem
+description: Something the harness or a module did that does not match what it documents.
+title: "[problem] "
+labels: ["problem", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A problem report is accepted with its command. Paste what you ran and what came back;
+        the maintainers re-run it before anything else.
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Output of `hpp --version` (or `python -m hpp --version`), plus the module version from its `plugin.json` when a module is involved.
+      placeholder: "2.4.3 · operator-kit 1.4.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: host
+    attributes:
+      label: Host
+      options:
+        - Claude Code
+        - Codex CLI
+        - Both
+        - Not host-specific (CLI only)
+    validations:
+      required: true
+  - type: input
+    id: platform
+    attributes:
+      label: Platform
+      description: Operating system and Python version (`python --version`).
+      placeholder: "macOS 15.1 · Python 3.12.6"
+    validations:
+      required: true
+  - type: textarea
+    id: command
+    attributes:
+      label: Command and output
+      description: The exact command, its exit code, and the full output. Redact secrets and personal paths.
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What the documentation says should happen
+      description: Quote the README, a `docs/` page or a module README, with the file name.
+    validations:
+      required: true
+  - type: textarea
+    id: doctor
+    attributes:
+      label: Output of `python -m hpp doctor --json`
+      render: json
+    validations:
+      required: false
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before opening
+      options:
+        - label: I ran the command from a clean checkout or a fresh `pip install` and the problem is still there.
+          required: true
+        - label: This is not a security flaw (those go through the private channel named in SECURITY.md).
+          required: true

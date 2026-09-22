@@ -1,0 +1,42 @@
+name: Idea
+description: A capability, module or contract the harness should have.
+title: "[idea] "
+labels: ["idea"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The project accepts what it can prove and refuses what it cannot (see MANIFESTO.md).
+        An idea lands faster when it names the failure it removes and the command that would
+        show it working.
+  - type: textarea
+    id: failure
+    attributes:
+      label: The failure this removes
+      description: What goes wrong today, and how you notice it.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: The proposal
+      description: What the harness or a module would do differently.
+    validations:
+      required: true
+  - type: textarea
+    id: proof
+    attributes:
+      label: How it would be proven
+      description: The command or test that would show the mechanism working, and the negative case that would show it refusing.
+    validations:
+      required: true
+  - type: checkboxes
+    id: limits
+    attributes:
+      label: Honest limits
+      description: The harness keeps these (README, "Honest limits"). Confirm the idea fits them, or say which one it would change and why.
+      options:
+        - label: No daemon, scheduler, queue, server, database or remote telemetry.
+        - label: Never calls a model.
+        - label: Zero third-party runtime dependencies (stdlib only).
+        - label: Writes nothing to the host's settings or hooks; wiring stays a human paste.

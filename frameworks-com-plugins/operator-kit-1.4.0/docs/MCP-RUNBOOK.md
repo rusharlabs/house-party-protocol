@@ -1,69 +1,71 @@
-# Runbook MCP
+[English](MCP-RUNBOOK.md) · [Português](MCP-RUNBOOK.pt-BR.md)
 
-Roteiro para descobrir, testar e diagnosticar servidores MCP sem confundir
-"configurado" com "operacional". Execute o preflight antes do done gate:
+# MCP Runbook
+
+A script for discovering, testing and diagnosing MCP servers without confusing
+"configured" with "operational". Run the preflight before the done gate:
 
 ```bash
 python scripts/preflight.py --project .
-python scripts/done_gate.py "<critério verificável>"
+python scripts/done_gate.py "<verifiable criterion>"
 ```
 
-## 1. Inventário por host
+## 1. Inventory per host
 
 ```bash
 claude mcp list
 codex mcp list
 ```
 
-Registre host, escopo da configuração, nome do servidor e transporte. Uma
-entrada na lista comprova configuração, não autenticação nem resposta útil.
+Record host, configuration scope, server name and transport. An entry
+in the list proves configuration, not authentication nor a useful response.
 
-## 2. Identidade e segredo
+## 2. Identity and secret
 
-Leia qual conta ou workspace está ativo antes de chamar uma ferramenta. Segredo
-fica em variável de ambiente ou cofre do host; nunca cole valor em JSON, comando,
-documento ou log.
+Read which account or workspace is active before calling a tool. A secret
+lives in an environment variable or the host's vault; never paste a value into JSON, a command,
+a document or a log.
 
 ```bash
 python -c "import os; print('CONFIGURADA' if os.getenv('SERVICE_API_KEY') else 'AUSENTE')"
 ```
 
-Esse comando prova somente presença da variável de ambiente, não validade da
-credencial.
+That command proves only the presence of the environment variable, not the validity of the
+credential.
 
-## 3. Controle positivo
+## 3. Positive control
 
-Escolha uma operação read-only conhecida como viva, por exemplo listar um
-recurso público ou ler um item estável. Anote request, exit code, tempo e
-resposta. Só depois teste o caso investigado com o mesmo instrumento.
+Pick a read-only operation known to be alive, for example listing a
+public resource or reading a stable item. Note request, exit code, time and
+response. Only then test the case under investigation with the same instrument.
 
 ```bash
 claude --debug
 codex --help
 ```
 
-Se o controle também falhar, classifique o instrumento como não discriminante;
-não declare o serviço morto.
+If the control also fails, classify the instrument as non-discriminating;
+do not declare the service dead.
 
-## 4. Diagnóstico em camadas
+## 4. Layered diagnosis
 
 ```bash
 python -c "import socket; print(socket.getaddrinfo('example.com', 443)[0][4])"
 ```
 
-Verifique, nesta ordem: processo/CLI, resolução DNS, transporte, autenticação,
-autorização, schema da ferramenta e resultado no destino. Preserve o primeiro
-erro causal; não o substitua por um fallback vazio.
+Check, in this order: process/CLI, DNS resolution, transport, authentication,
+authorization, tool schema and result at the destination. Preserve the first
+causal error; do not replace it with an empty fallback.
 
-## 5. Fechamento
+## 5. Closure
 
-Reporte `configurado · conectado · autorizado · operação positiva · caso alvo`
-como cinco estados separados. Inclua gaps que dependam de conta, credencial ou
-gate humano.
+Report `configured · connected · authorized · positive operation · target case`
+as five separate states. Include gaps that depend on an account, a credential or
+a human gate.
 
-## Proveniência
+## Provenance
 
-Estrutura inspirada no inventário de práticas do repositório
-`shanraisshan/claude-code-best-practice`, licença MIT, commit
-`bde3f03174714fff4145d21cfda41ddd2ffffb28`. O procedimento e os comandos acima
-são uma implementação original do House Party Protocol.
+Structure inspired by the practice inventory of the repository
+`shanraisshan/claude-code-best-practice`, MIT license, commit
+`bde3f03174714fff4145d21cfda41ddd2ffffb28`. The procedure and the commands above
+are an original implementation of House Party Protocol.

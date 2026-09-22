@@ -1,14 +1,14 @@
 # AGENTS.md — claude-dev-kit
 
-Este kit constrói e valida skills, hooks e plugins; o nome histórico não limita o uso das skills no Codex.
+This kit builds and validates skills, hooks and plugins; the historical name does not limit the use of the skills on Codex.
 
 ## Codex CLI
 
-- Instale por cópia com `kit_doctor.py install --kit <claude-dev-kit> --host codex --target <repo> --apply`.
-- Skills são geradas em `.agents/skills`; ferramentas ficam em `.agents/hpp/claude-dev-kit/`.
-- `wire_settings.py`, `hooks.json` e plugins `.claude-plugin` continuam específicos do Claude Code.
+- Install by copy with `kit_doctor.py install --kit <claude-dev-kit> --host codex --target <repo> --apply`.
+- Skills are generated in `.agents/skills`; tools live in `.agents/hpp/claude-dev-kit/`.
+- `wire_settings.py`, `hooks.json` and `.claude-plugin` plugins remain Claude Code specific.
 
-## Verificação
+## Verification
 
 ```bash
 python tools/skill_lint.py --self-test

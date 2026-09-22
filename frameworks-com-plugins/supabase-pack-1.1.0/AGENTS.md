@@ -1,14 +1,14 @@
 # AGENTS.md — supabase-pack
 
-Este kit contém workflows de auditoria RLS e scaffold de Edge Functions.
+This kit contains RLS audit workflows and Edge Function scaffolding.
 
 ## Codex CLI
 
-- Instale por cópia com `kit_doctor.py install --kit <supabase-pack> --host codex --target <repo> --apply`.
-- Skills ficam em `.agents/skills`; nenhuma credencial é copiada ou escrita pelo instalador.
-- Operações em projeto Supabase continuam gate de conta e autorização humana.
+- Install by copy with `kit_doctor.py install --kit <supabase-pack> --host codex --target <repo> --apply`.
+- Skills live in `.agents/skills`; no credential is copied or written by the installer.
+- Operations on a Supabase project remain an account gate and require human authorization.
 
-## Verificação
+## Verification
 
 ```bash
 python <marketplace>/instaladores/kit-forge-*/tools/skill_lint.py --all skills
