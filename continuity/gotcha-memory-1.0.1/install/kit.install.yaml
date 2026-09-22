@@ -1,0 +1,27 @@
+kit: gotcha-memory
+requires:
+  python: ">=3.8"
+  pyyaml: false   # optional — only for the profile and the seed in YAML; the core (JSONL) is pure stdlib
+  external_services: []
+questions:
+  - id: seedar_curated_agora
+    prompt: "Seed the initial curated lessons now from curated.seed.example.yaml? (no = starts empty; you seed later with --seed — that is the default; edit the example first, it is generic)"
+    type: bool
+    options: [true, false]
+    default: false
+verification:
+  - "python _lib/error_strategy.py --self-test"
+  - "python _lib/gotchas_memory.py --self-test"
+  - "python hooks/gotcha_preflight.py --self-test"
+  - "python hooks/gotcha_postflight.py --self-test"
+hosts:
+  claude-code:
+    plugin: true
+    manual_gates: [hooks, PreToolUse, PostToolUse, PostToolUseFailure]
+  codex:
+    plugin: false
+    agents: AGENTS.md
+    skills_path: .agents/skills
+    runtime_path: .agents/hpp/gotcha-memory
+    manual_gates: [hooks, PreToolUse, PostToolUse, PostToolUseFailure]
+docs: README.md

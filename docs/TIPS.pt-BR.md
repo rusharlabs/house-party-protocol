@@ -68,49 +68,49 @@ python scripts/done_gate.py "python -m pytest -q" --declare-partial "falta valid
 ### 11. Instale um kit primeiro em modo plano
 
 ```bash
-python instaladores/kit-forge-*/kit_doctor.py install --kit <kit> --target . --host claude-code
+python installers/kit-forge-*/kit_doctor.py install --kit <kit> --target . --host claude-code
 ```
 
 ### 12. Aplique a instalação somente após ler o plano
 
 ```bash
-python instaladores/kit-forge-*/kit_doctor.py install --kit <kit> --target . --host claude-code --apply
+python installers/kit-forge-*/kit_doctor.py install --kit <kit> --target . --host claude-code --apply
 ```
 
 ### 13. Instale skills namespaced no Codex
 
 ```bash
-python instaladores/kit-forge-*/kit_doctor.py install --kit <kit> --target . --host codex --apply
+python installers/kit-forge-*/kit_doctor.py install --kit <kit> --target . --host codex --apply
 ```
 
 ### 14. Verifique integridade de um kit emitido
 
 ```bash
-python instaladores/kit-forge-*/kit_doctor.py verify <kit>
+python installers/kit-forge-*/kit_doctor.py verify <kit>
 ```
 
 ### 15. Liste instalações registradas
 
 ```bash
-python instaladores/kit-forge-*/kit_doctor.py registry
+python installers/kit-forge-*/kit_doctor.py registry
 ```
 
 ### 16. Escolha checker de outro provider
 
 ```bash
-python multi-sessao/lane-kit-*/scripts/checker_router.py --maker claude --require
+python multi-session/lane-kit-*/scripts/checker_router.py --maker claude --require
 ```
 
 ### 17. Veja as lanes sem editar o registry
 
 ```bash
-python multi-sessao/lane-kit-*/scripts/lane_board.py --help
+python multi-session/lane-kit-*/scripts/lane_board.py --help
 ```
 
 ### 18. Conte itens com uma régua explícita
 
 ```bash
-python instaladores/operator-kit-*/scripts/live_count.py --help
+python frameworks/operator-kit-*/scripts/live_count.py --help
 ```
 
 ### 19. Procure erros silenciosos comuns
@@ -140,13 +140,13 @@ claude mcp list && codex mcp list
 ### 23. Gere o catálogo a partir da árvore
 
 ```bash
-python instaladores/kit-forge-*/tools/catalogo_md.py . --write
+python installers/kit-forge-*/tools/catalogo_md.py . --write
 ```
 
 ### 24. Valide todas as skills publicadas
 
 ```bash
-find . -type d -name skills -exec python instaladores/kit-forge-*/tools/skill_lint.py --all {} \;
+find . -type d -name skills -exec python installers/kit-forge-*/tools/skill_lint.py --all {} \;
 ```
 
 ## Proveniência

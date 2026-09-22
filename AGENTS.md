@@ -23,7 +23,7 @@ harness; the marketplace is only a distribution channel.
 
 ## Codex CLI
 
-Use `instaladores/kit-forge-1.4.0/kit_doctor.py install --kit <kit> --host codex --target <repo> --apply`.
+Use `installers/kit-forge-1.4.1/kit_doctor.py install --kit <kit> --host codex --target <repo> --apply`.
 Skills go to `.agents/skills`; the full runtime goes to `.agents/hpp`. Hooks declared in
 `hooks.json` belong to Claude Code and are not activated automatically on Codex.
 

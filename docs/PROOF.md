@@ -11,7 +11,7 @@ A public claim only enters here with a reproduction.
 | deterministic graphs | `python -m hpp graph --view operational --format json` twice | identical hashes |
 | standalone eval | `python -m hpp eval run examples/reliable-coding/benchmark-suite.json -k 3 --gate both` | ten executable controls, no pre-approved replay |
 | stable benchmark | `python -m hpp benchmark -k 3 --json` | pass^k 1.00 on the critical cases |
-| intact artifacts | `python instaladores/kit-forge-1.4.0/kit_doctor.py marketplace .` | status ok |
+| intact artifacts | `python installers/kit-forge-1.4.1/kit_doctor.py marketplace .` | status ok |
 
 Dated results belong to the release log, not to this living document.
 

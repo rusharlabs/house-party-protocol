@@ -80,7 +80,7 @@ third-party packages. CI exercises Python 3.10 to 3.13 on Linux, macOS and Windo
 (`.github/workflows/ci.yml`); older interpreters are not promised because nothing measures them.
 
 ```bash
-pip install git+https://github.com/rushar-labs/house-party-protocol@v2.4.3
+pip install git+https://github.com/rushar-labs/house-party-protocol@v2.5.0
 hpp doctor
 hpp init --target ../your-repo
 ```
@@ -112,7 +112,7 @@ distribution — harness, manifest, the ten module directories with their `CHECK
 
 ```text
 > detecting host...           ✓ greenfield · 0 existing item(s) preserved
-> checking prerequisites...   ✓ python 3.14.3 · protocol 2.0
+> checking prerequisites...   ✓ python 3.14.3 · protocol 2.1
 > mounting profile...         ✓ would-write · host=claude-code · bundle=reliable-coding · policy=audit · 3 default(s)
 > loading modules...          ✓ 6 modules · reliable-coding · claude-code · 6/6 checksums verified
 > wiring suggestions...       ✓ 7 commands to paste · 0 files written
@@ -131,7 +131,7 @@ empty target, reads:
 
 ```text
 > detecting host...           ✓ greenfield · 0 existing item(s) preserved
-> checking prerequisites...   ✓ python 3.14.3 · protocol 2.0
+> checking prerequisites...   ✓ python 3.14.3 · protocol 2.1
 > mounting profile...         ✓ would-write · host=claude-code · bundle=reliable-coding · policy=audit · 3 default(s)
 > loading modules...          ✓ 6 modules · reliable-coding · claude-code
 > wiring suggestions...       ✓ 7 commands to paste · 0 files written
@@ -162,13 +162,13 @@ README shows the `cp -r` line) and the installer detects, wires and verifies it.
 plans first and applies only on a second, explicit invocation:
 
 ```bash
-python instaladores/kit-forge-1.4.0/kit_doctor.py install \
-  --kit frameworks-com-plugins/operator-kit-1.4.0 --host codex --target ../your-repo
-python instaladores/kit-forge-1.4.0/kit_doctor.py install \
-  --kit frameworks-com-plugins/operator-kit-1.4.0 --host codex --target ../your-repo --apply
+python installers/kit-forge-1.4.1/kit_doctor.py install \
+  --kit frameworks/operator-kit-1.5.0 --host codex --target ../your-repo
+python installers/kit-forge-1.4.1/kit_doctor.py install \
+  --kit frameworks/operator-kit-1.5.0 --host codex --target ../your-repo --apply
 ```
 
-The installer is part of this repository, at `instaladores/kit-forge-1.4.0/kit_doctor.py`, next
+The installer is part of this repository, at `installers/kit-forge-1.4.1/kit_doctor.py`, next
 to the module directories it installs from. A pip install carries neither, and `hpp init` says
 so in its wire block when it cannot find the installer beside the manifest.
 
@@ -213,16 +213,16 @@ returns the same answer as JSON. Neither asks a model to remember anything.
 
 | module | version | one line |
 |---|---|---|
-| `operator-kit` | 1.4.0 | done gate with real exit codes, command policy in `audit` or `enforce`, governed loops with charter and stop conditions, standalone `pass@k` / `pass^k` runner, preflight, two read-only checker agents |
-| `lane-kit` | 1.2.0 | a lane board for concurrent sessions: claim, territory, liveness, maker ≠ checker, and a router that picks a checker from a different provider |
-| `continuity-kit` | 1.2.1 | handoff written before a stop or compaction, re-derivation commands instead of remembered state, guards against replaying finished steps |
-| `health-kit` | 1.3.1 | config-driven service probes that write a cache a statusline reads without touching the network; service health kept apart from data health |
-| `gotcha-memory` | 1.0.0 | records failed commands by error family, detects recurrence, injects the lesson before the next run; warn-only, secrets redacted by shape |
-| `kit-forge` | 1.4.0 | assembles modules from source, lints for IP and PII, installs in six stages, writes and verifies `CHECKSUMS.txt`, checks the marketplace |
-| `claude-dev-kit` | 1.3.1 | authoring of skills, hooks and plugins for Claude Code, reversible settings wiring, secret scan on write |
-| `dev-squad-kit` | 1.0.0 | twelve development roles as commands and subagents with explicit tools, plus parallel read-and-consolidate skills |
-| `agent-framework-wizard` | 1.1.1 | six-step scaffold for a new agent or skill project, answerable from a file for non-interactive runs |
-| `supabase-pack` | 1.1.0 | RLS audit through `pg_policies` and advisors instead of a table flag; Edge Function scaffold |
+| `operator-kit` | 1.5.0 | done gate with real exit codes, command policy in `audit` or `enforce`, governed loops with charter and stop conditions, standalone `pass@k` / `pass^k` runner, preflight, two read-only checker agents |
+| `lane-kit` | 1.3.0 | a lane board for concurrent sessions: claim, territory, liveness, maker ≠ checker, and a router that picks a checker from a different provider |
+| `continuity-kit` | 1.3.0 | handoff written before a stop or compaction, re-derivation commands instead of remembered state, guards against replaying finished steps |
+| `health-kit` | 1.3.2 | config-driven service probes that write a cache a statusline reads without touching the network; service health kept apart from data health |
+| `gotcha-memory` | 1.0.1 | records failed commands by error family, detects recurrence, injects the lesson before the next run; warn-only, secrets redacted by shape |
+| `kit-forge` | 1.4.1 | assembles modules from source, lints for IP and PII, installs in six stages, writes and verifies `CHECKSUMS.txt`, checks the marketplace |
+| `claude-dev-kit` | 1.3.2 | authoring of skills, hooks and plugins for Claude Code, reversible settings wiring, secret scan on write |
+| `dev-squad-kit` | 1.0.1 | twelve development roles as commands and subagents with explicit tools, plus parallel read-and-consolidate skills |
+| `agent-framework-wizard` | 1.2.0 | six-step scaffold for a new agent or skill project, answerable from a file for non-interactive runs |
+| `supabase-pack` | 1.1.1 | RLS audit through `pg_policies` and advisors instead of a table flag; Edge Function scaffold |
 
 The `reliable-coding` bundle is the first six. Each module installs on its own; `integrates_with`
 in the manifest is optional composition, `requires` is a hard dependency, and today no module
@@ -251,9 +251,9 @@ attestation. `pass^k = 1.00` is required for the gate to pass. The suite file an
 in the JSON report (`hpp benchmark -k 3 --json`). See [PROOF.md](docs/PROOF.md) for the claim
 matrix and [BENCHMARK.md](docs/BENCHMARK.md) for the scenarios.
 
-In this repository, `python instaladores/kit-forge-1.4.0/kit_doctor.py verify <module-dir>`
+In this repository, `python installers/kit-forge-1.4.1/kit_doctor.py verify <module-dir>`
 compares every file of a module against its `CHECKSUMS.txt`, and
-`python instaladores/kit-forge-1.4.0/kit_doctor.py marketplace .` checks the whole tree.
+`python installers/kit-forge-1.4.1/kit_doctor.py marketplace .` checks the whole tree.
 
 ## Honest limits
 

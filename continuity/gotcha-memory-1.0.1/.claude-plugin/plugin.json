@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "gotcha-memory",
+  "displayName": "Gotcha Memory",
+  "version": "1.0.1",
+  "description": "Standalone operational learning loop: a failure becomes knowledge. The postflight records Bash failures (classified by error family); a failure that recurs >=N times within a window becomes a GOTCHA; the preflight injects the lesson into stderr BEFORE the next run of the same task. Curated gotchas (your rules) are always-on by substring. Local JSONL, stdlib only, WARN-not-block.",
+  "author": { "name": "Max Parisi", "url": "https://rusharlabs.com" },
+  "license": "MIT",
+  "keywords": ["gotchas", "learning-loop", "failure-memory", "preflight", "postflight", "portable", "config-driven"],
+  "hooks": "./hooks/hooks.json"
+}

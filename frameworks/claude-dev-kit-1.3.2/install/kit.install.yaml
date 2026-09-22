@@ -1,0 +1,30 @@
+kit: claude-dev-kit
+requires:
+  python: ">=3.8"
+  pyyaml: true
+  external_services: []
+# No 'questions:' — this kit has no profile.example.* and no user-configurable
+# parameter (YAGNI: wire_settings.py/install_git_hook.py are invoked with CLI
+# flags at the moment of use, not through install questions).
+verification:
+  - "python scripts/wire_settings.py --self-test"
+  - "python scripts/install_git_hook.py --self-test"
+  - "python tools/skill_lint.py --self-test"
+  - "python docs/hook-template.py --self-test"
+  - "python hooks/secret_scan_on_write.py --self-test"
+hosts:
+  claude-code:
+    plugin: true
+    wiring_spec: hooks/wiring-spec.yaml
+    # wiring_spec here is PROGRAMMATIC (consumed by scripts/wire_settings.py --spec),
+    # unlike the human-paste wiring.settings.jsonc of the other kits in this marketplace.
+    manual_gates:
+      - "settings.local.json hooks (PreToolUse Edit|Write|MultiEdit -> secret_scan_on_write): via `/plugin install` (the official route, auto-wired by Claude Code itself) OR via `python scripts/wire_settings.py --spec hooks/wiring-spec.yaml --target .claude/settings.local.json` -- the wire never runs on its own at install; the human gate is whoever invokes the command (the tool is idempotent and programmatic, not autonomous)"
+      - "git hook .git/hooks/pre-commit: via `python scripts/install_git_hook.py --repo . --hook-name pre-commit --payload <payload.sh>` -- chain-preserving (chains with a pre-existing foreign pre-commit, never replaces it); it also only runs when the human invokes the command"
+  codex:
+    plugin: false
+    agents: AGENTS.md
+    skills_path: .agents/skills
+    runtime_path: .agents/hpp/claude-dev-kit
+    manual_gates: [hooks, PreToolUse, git-pre-commit]
+docs: docs/SKILL-CONTRACT.md
