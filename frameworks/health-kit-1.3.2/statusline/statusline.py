@@ -40,7 +40,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # .../operator-kit
 try:
     from _lib.profile_loader import load_profile, get, profile_path
-except Exception:  # noqa: BLE001
+except Exception:  # noqa: BLE001 -- Why (2026-09-22): a statusline that raises replaces the bar with an error on every prompt. A partial install, a hand-edited loader or a missing PyYAML must degrade to the defaults below, silently.
     load_profile = None  # type: ignore[assignment]
 
     def get(_p, _k, default=None):  # type: ignore[misc]
@@ -60,7 +60,7 @@ try:
     from _lib import profile_loader as _profile_loader  # type: ignore[import-not-found]
 
     _profile_loader.QUIET_DEPRECATION = _QUIET_FALLBACK
-except Exception:  # noqa: BLE001 -- no loader, nothing to mute
+except Exception:  # noqa: BLE001 -- Why (2026-09-22): with no loader there is nothing to mute, and raising here would kill the prompt line over a cosmetic setting.
     pass
 
 
