@@ -145,7 +145,7 @@ def load_ruleset(path: Path) -> dict:
     return data
 
 
-_DIRS_FORA_DO_UNIVERSO = {".git"}
+_DIRS_OUTSIDE_UNIVERSE = {".git"}
 
 
 def iter_target_files(target: Path):
@@ -154,7 +154,7 @@ def iter_target_files(target: Path):
     # publishes, not a lint finding. The universe is declared here, not via a flag, so the number is
     # reproducible.
     for p in sorted(target.rglob("*")):
-        if p.is_file() and not (_DIRS_FORA_DO_UNIVERSO & set(p.relative_to(target).parts[:-1])):
+        if p.is_file() and not (_DIRS_OUTSIDE_UNIVERSE & set(p.relative_to(target).parts[:-1])):
             yield p
 
 
@@ -202,7 +202,7 @@ def _term_matcher(term: str):
     tl = term.lower()
     if tl and tl[0].isalnum() and tl[-1].isalnum():
         return re.compile("(?<![0-9a-z])" + re.escape(tl) + "(?![0-9a-z])")
-    return None  # None = usar substring cru
+    return None  # None = use raw substring
 
 
 def _term_hit(matcher, term_lower: str, line_lower: str) -> bool:

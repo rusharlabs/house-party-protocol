@@ -180,7 +180,7 @@ def _self_test() -> int:
         _lane_io.CONFIG_PATH = _lane_io._LANES_DIR / "lanes.yaml"
 
         os.environ["CLAUDE_LANE_ID"] = "exec-a"
-        os.environ["CLAUDE_LANE_ROLE"] = "executora"
+        os.environ["CLAUDE_LANE_ROLE"] = "executor"
         os.environ["CLAUDE_LANE_MODEL"] = "claude-opus-4-8"
         try:
             # 1. register creates the entry + additionalContext with the correct hookEventName
@@ -199,7 +199,7 @@ def _self_test() -> int:
             from datetime import datetime, timezone
             dead_ts = datetime.fromtimestamp(datetime.now(timezone.utc).timestamp() - 35 * 60, tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%S")
             reg = _lane_io._read_registry()
-            reg["lanes"]["exec-old"] = {"role": "executora", "session_id": "x", "model": "y", "branch": "",
+            reg["lanes"]["exec-old"] = {"role": "executor", "session_id": "x", "model": "y", "branch": "",
                                           "started_at": dead_ts, "heartbeat_at": dead_ts,
                                           "territory": {"paths": [], "exclusive": []}, "status": "active"}
             _lane_io._write_registry(reg)
@@ -218,7 +218,7 @@ def _self_test() -> int:
             # 5. mailbox: message addressed to exec-b shows up; moved to _read/ it disappears
             mailbox = _lane_io._LANES_DIR / "mailbox"
             mailbox.mkdir(parents=True)
-            (mailbox / "msg1.md").write_text("## Para: exec-b\n## De: exec-a (executora)\n", encoding="utf-8")
+            (mailbox / "msg1.md").write_text("## Para: exec-b\n## De: exec-a (executor)\n", encoding="utf-8")
             os.environ["CLAUDE_LANE_ID"] = "exec-b"
             out5 = handle_register({"session_id": "s2"})
             assert "mailbox" in out5["hookSpecificOutput"]["additionalContext"]

@@ -120,9 +120,9 @@ def _occurrence_is_placeholder(line: str, m: re.Match) -> bool:
     frag = m.group(0).lower()
     if any(tok in frag for tok in _PLACEHOLDER_TOKENS):
         return True
-    antes = line[max(0, m.start() - 2):m.start()]
-    depois = line[m.end():m.end() + 2]
-    return antes.endswith(("<", "${", "{{")) or depois.startswith((">", "}"))
+    before = line[max(0, m.start() - 2):m.start()]
+    after = line[m.end():m.end() + 2]
+    return before.endswith(("<", "${", "{{")) or after.startswith((">", "}"))
 
 
 def scan(file_path: str, texts: list[str], globs: list[str]) -> list[str]:

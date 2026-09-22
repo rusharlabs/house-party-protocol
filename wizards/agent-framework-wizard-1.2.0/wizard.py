@@ -20,7 +20,7 @@ The 6 steps:
 Usage:
     python wizard.py --interview                        # prints the question schema (JSON), exits 0
     python wizard.py --demo --out <dir>                  # non-interactive scaffold with defaults
-    python wizard.py --answers respostas.json --out <dir>  # scaffold from ready-made answers
+    python wizard.py --answers answers.json --out <dir>    # scaffold from ready-made answers
     python wizard.py --demo --out <dir> --force          # overwrites customization on purpose
     python wizard.py --self-test
 
@@ -51,12 +51,17 @@ except ImportError:
 _HERE = Path(__file__).resolve().parent
 _TEMPLATES_DIR = _HERE / "templates"
 
-_ESCADA_DEFAULT = [
-    {"nivel": "R0", "nome": "Declared", "certifica": "the maker's word"},
-    {"nivel": "R1", "nome": "Self-verified", "certifica": "--self-test/pytest exit 0"},
-    {"nivel": "R2", "nome": "Gate", "certifica": "done_gate.py exit 0"},
-    {"nivel": "R3", "nome": "Reviewed", "certifica": "goal_review.py + cross-model checker"},
-    {"nivel": "R4", "nome": "Accepted", "certifica": "human gate / production"},
+# Why the key is `evidence_levels` and not `ladder`: the operator-kit profile ALREADY has
+# `verification.ladder`, and it is a different thing - a map of step -> command that
+# `verify_ladder.py` runs. This one is the R0-R4 scale of how strong the evidence is. Renaming
+# the Portuguese `escada` to `ladder` would have merged two unrelated concepts under one key,
+# and the collision would only show up when a project used both kits.
+_EVIDENCE_LEVELS_DEFAULT = [
+    {"level": "R0", "name": "Declared", "certifies": "the maker's word"},
+    {"level": "R1", "name": "Self-verified", "certifies": "--self-test/pytest exit 0"},
+    {"level": "R2", "name": "Gate", "certifies": "done_gate.py exit 0"},
+    {"level": "R3", "name": "Reviewed", "certifies": "goal_review.py + cross-model checker"},
+    {"level": "R4", "name": "Accepted", "certifies": "human gate / production"},
 ]
 
 _DEFAULT_TEMPLATES = ["00-READ-FIRST", "00-STATE", "00-VISION", "00-PROCESSES"]
@@ -143,7 +148,7 @@ def configure(demo: bool, project_name: str | None, templates: list | None, answ
     if demo:
         return {
             "project_name": project_name or "agente-teste",
-            "escada": _ESCADA_DEFAULT,
+            "evidence_levels": _EVIDENCE_LEVELS_DEFAULT,
             "templates": _resolve_template_names(templates or list(_DEFAULT_TEMPLATES)),
         }
     if answers is not None:
@@ -151,7 +156,7 @@ def configure(demo: bool, project_name: str | None, templates: list | None, answ
         defaults = {q["id"]: q["default"] for q in questions()}
         return {
             "project_name": answers.get("project_name") or project_name or defaults["project_name"],
-            "escada": _ESCADA_DEFAULT,
+            "evidence_levels": _EVIDENCE_LEVELS_DEFAULT,
             "templates": _resolve_template_names(answers.get("templates") or templates or list(defaults["templates"])),
         }
     # Neither --demo nor --answers: with no real stdin there is no way to resolve. Use --interview
@@ -163,8 +168,8 @@ def validate(config: dict) -> list:
     errors = []
     if not config.get("project_name"):
         errors.append("project_name missing")
-    escada = config.get("escada", [])
-    if len(escada) != 5 or {e["nivel"] for e in escada} != {"R0", "R1", "R2", "R3", "R4"}:
+    levels = config.get("evidence_levels", [])
+    if len(levels) != 5 or {e["level"] for e in levels} != {"R0", "R1", "R2", "R3", "R4"}:
         errors.append("the ladder must have exactly the levels R0-R4")
     if not config.get("templates"):
         errors.append("no template selected")
@@ -201,7 +206,7 @@ def generate_and_summary(config: dict, out_dir: Path, force: bool = False) -> di
 
     profile = {
         "project_name": config["project_name"],
-        "verificacao": {"escada": config["escada"]},
+        "verification": {"evidence_levels": config["evidence_levels"]},
     }
     if yaml is not None:
         profile_content = yaml.safe_dump(profile, allow_unicode=True, sort_keys=False)
@@ -282,7 +287,7 @@ def _self_test() -> int:
         code2, r2 = run_wizard(demo=True, out_dir=out_dir)
         assert code2 == 0 and r2["no_op"], f"the 2nd run should be a no-op (identical content): {r2}"
 
-        bad_config = {"project_name": "", "escada": [], "templates": []}
+        bad_config = {"project_name": "", "evidence_levels": [], "templates": []}
         errs = validate(bad_config)
         assert len(errs) >= 2, f"an empty config should accumulate errors: {errs}"
 

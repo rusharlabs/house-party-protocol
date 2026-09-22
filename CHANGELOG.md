@@ -9,6 +9,58 @@ keeps its own version in `plugin.json` and in `marketplace.json`.
 
 ## [Unreleased]
 
+## [2.5.3] — 2026-09-22
+
+The last Portuguese in the product was in the NAMES: functions, variables, config keys, and one
+file format. This release finishes what 2.5.2 started, and the interesting part is not the renames
+— it is what measuring them found.
+
+### Changed
+
+- **The handoff format is `handoff-v2.0`, and every property name in it is English**: `state`,
+  `summary`, `numbers`/`metric`/`value`/`measured_at`, `decisions`/`decision`/`reason`/`evidence`,
+  `open_gates`/`owner`/`description`/`blocks`/`unblock_cmd`, `prohibitions`,
+  `already_done`/`action`/`never_repeat`, `next_step`/`order`/`idempotent`, `evidence`/`type`.
+  **There is no compatibility path with v1.1 and none was needed**: the format had zero files
+  anywhere — this repository, the product repository, the author's machine — so a dual read would
+  have been code that is dead the day it is born. `schema_version` is the honest signal.
+- **The lane board and registry speak English too**: `state`, `evidence` (the field AND the
+  `--evidence` flag), `red_zones`, and the role values `executor`/`planner`/`reviewer`. Same
+  measurement, same reasoning: no board and no registry existed anywhere.
+- **The five seeded example lessons of `gotcha-memory` are English.** They were the author's own
+  learned corrections, kept in the language they were written in; an `.example` file is what a user
+  copies, so they now read as a SHAPE to replace rather than a prescription in another language.
+- **`pp-raiox` is `pp-xray`.** It was our own coined name, not a third party's. Renaming it also
+  retired five declared exceptions in the IP ruleset that existed only because "raio-x" contains a
+  substring the identity matcher flags — and the publication gate was re-run WITHOUT them to prove
+  they were dead rather than assume it.
+- **76 of the 106 Portuguese identifiers** across the ten modules, plus
+  `tools/catalogo_md.py` -> `tools/catalog_md.py`, the published `docs/CATALOGO.*` ->
+  `docs/CATALOG.*`, and `live_count.py`'s default section `counts` with its `agents` key.
+  **The 30 that stayed are named, not forgotten:** three are legacy values a dual-read table
+  must keep until 2.7.0 (`done_criterios`, `verificacao`, `rm-rf-codigo-vivo`), and the rest are
+  keys of a `--json` output or of a user-authored YAML - a published shape, which is a different
+  decision from an internal name and is left for its own release.
+
+### Fixed
+
+- 🔴 **The wizard was scaffolding a profile the operator kit could not read.** 2.5.1 renamed the
+  profile keys and moved the READER (`claude_md_from_profile.py` reads `verification.*`); the
+  WRITER was missed, so `wizard.py` kept emitting `verificacao.escada` and every freshly scaffolded
+  project started life with a ladder nothing consumed. The new key is
+  `verification.evidence_levels` and **deliberately not `verification.ladder`**: that name already
+  exists in the profile and means something else (a map of step -> command that `verify_ladder.py`
+  runs). Renaming to the obvious word would have merged two unrelated concepts under one key, and
+  the collision would only have surfaced in a project that used both modules.
+
+### A note on how the count was reached
+
+The first ruler said ~44 identifiers. It was a floor, not a value, and it was published as such.
+The second said 1,460 — a ceiling, because "not English" includes every abbreviation and library
+name. Cross-referencing the two gave 106, and a one-pass read of the residue's vocabulary found 18
+more the positive list had missed. Three rulers, three different answers, and the honest number
+came from disagreeing with all of them.
+
 ## [2.5.2] — 2026-09-22
 
 The release that makes "English-first" true of the code and not only of the documents. Three

@@ -80,7 +80,7 @@ third-party packages. CI exercises Python 3.10 to 3.13 on Linux, macOS and Windo
 (`.github/workflows/ci.yml`); older interpreters are not promised because nothing measures them.
 
 ```bash
-pip install git+https://github.com/rushar-labs/house-party-protocol@v2.5.2
+pip install git+https://github.com/rushar-labs/house-party-protocol@v2.5.3
 hpp doctor
 hpp init --target ../your-repo
 ```
@@ -288,7 +288,7 @@ compares every file of a module against its `CHECKSUMS.txt`, and
 [ARCHITECTURE.md](docs/ARCHITECTURE.md) — how the pieces fit and what deliberately does not
 exist · [GRAPH-MODEL.md](docs/GRAPH-MODEL.md) · [LOOPS.md](docs/LOOPS.md) ·
 [BENCHMARK.md](docs/BENCHMARK.md) · [PROOF.md](docs/PROOF.md) · [BRAND.md](docs/BRAND.md) ·
-[TIPS.md](docs/TIPS.md) · [manual](docs/MANUAL.html) · [catalogue](docs/CATALOGO.html) ·
+[TIPS.md](docs/TIPS.md) · [manual](docs/MANUAL.html) · [catalogue](docs/CATALOG.html) ·
 [CHANGELOG.md](CHANGELOG.md) · [AGENTS.md](AGENTS.md) for agents working in this repository.
 
 ## Development

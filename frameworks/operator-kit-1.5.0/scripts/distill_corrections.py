@@ -56,13 +56,13 @@ _DEF_K = 3
 
 # Heuristic markers of an operator correction (case-insensitive).
 # Includes the feedback/emphasis ones + explicit correction verbs.
-_MARCADORES = (
+_MARKERS = (
     "nunca", "sempre", "na verdade", "errado", "errei", "corrige", "corrigir",
     "corrija", "pare de", "para de", "ja falei", "ja te falei", "toda vez",
     "nao faca", "nao faz", "nao e", "deixa de", "exijo", "odeio",
     "voce errou", "ta errado", "esta errado", "isso nao", "de novo",
 )
-_MARCADOR_RE = re.compile("|".join(re.escape(m) for m in _MARCADORES), re.IGNORECASE)
+_MARKER_RE = re.compile("|".join(re.escape(m) for m in _MARKERS), re.IGNORECASE)
 
 # pt-BR stopwords for the grouping key (reduces noise in the similarity).
 _STOP = {
@@ -109,7 +109,7 @@ def _is_correction(line: str) -> bool:
     """True if the line looks like a correction (has a marker and is short enough to be an instruction)."""
     if not (3 < len(line) <= 400):
         return False
-    return bool(_MARCADOR_RE.search(line))
+    return bool(_MARKER_RE.search(line))
 
 
 def _session_files(logs_dir: Path, n: int) -> list[Path]:
@@ -171,7 +171,7 @@ def distill(logs_dir: Path, n: int, k: int, ledger_keys: set[str] | None = None)
     ledger_keys = ledger_keys or set()
     files = _session_files(logs_dir, n)
     # key -> {sessoes:set, exemplo:str, ocorrencias:int}
-    grupos: dict[str, dict] = {}
+    groups: dict[str, dict] = {}
     for f in files:
         sess_name = f.name
         seen_in_file: set[str] = set()
@@ -179,7 +179,7 @@ def distill(logs_dir: Path, n: int, k: int, ledger_keys: set[str] | None = None)
             key = _key(corr)
             if not key:
                 continue
-            g = grupos.setdefault(key, {"sessoes": set(), "exemplo": corr, "ocorrencias": 0})
+            g = groups.setdefault(key, {"sessoes": set(), "exemplo": corr, "ocorrencias": 0})
             g["ocorrencias"] += 1
             g["sessoes"].add(sess_name)
             # keeps the shortest exemplo (tends to be the cleanest instruction)
@@ -187,21 +187,21 @@ def distill(logs_dir: Path, n: int, k: int, ledger_keys: set[str] | None = None)
                 g["exemplo"] = corr
             seen_in_file.add(key)
 
-    candidatas: list[dict] = []
-    for key, g in grupos.items():
+    candidates: list[dict] = []
+    for key, g in groups.items():
         if key in ledger_keys:
             continue
-        n_sessoes = len(g["sessoes"])
-        if n_sessoes >= k:
-            candidatas.append({
+        session_count = len(g["sessoes"])
+        if session_count >= k:
+            candidates.append({
                 "key": key,
                 "exemplo": g["exemplo"],
-                "n_sessoes": n_sessoes,
+                "n_sessoes": session_count,
                 "sessoes": sorted(g["sessoes"]),
                 "ocorrencias": g["ocorrencias"],
             })
-    candidatas.sort(key=lambda c: (c["n_sessoes"], c["ocorrencias"]), reverse=True)
-    return candidatas
+    candidates.sort(key=lambda c: (c["n_sessoes"], c["ocorrencias"]), reverse=True)
+    return candidates
 
 
 def _ensure_ledger(ledger: Path) -> None:
@@ -264,7 +264,7 @@ def main(argv) -> int:
 
     _ensure_ledger(ledger)
     ledger_keys = _load_ledger_keys(ledger)
-    candidatas = distill(logs_dir, n=n, k=k, ledger_keys=ledger_keys)
+    candidates = distill(logs_dir, n=n, k=k, ledger_keys=ledger_keys)
 
     now = datetime.now(_BRT).strftime("%Y-%m-%d %H:%M BRT")
     if args.json:
@@ -274,7 +274,7 @@ def main(argv) -> int:
             "janela_n": n,
             "limiar_k": k,
             "rejeitadas_no_ledger": len(ledger_keys),
-            "candidatas": candidatas,
+            "candidatas": candidates,
         }, ensure_ascii=False, indent=2))
         return 0
 
@@ -284,11 +284,11 @@ def main(argv) -> int:
     if not logs_dir.exists():
         print(f"\n(no session directory at {logs_dir} — nothing to distill)")
         return 0
-    if not candidatas:
+    if not candidates:
         print(f"\n(no correction recurred in >= {k} distinct sessions — nothing to propose)")
         return 0
-    print(f"\n{len(candidatas)} rule candidate(s) (recurrence >= {k}):\n")
-    for i, c in enumerate(candidatas, 1):
+    print(f"\n{len(candidates)} rule candidate(s) (recurrence >= {k}):\n")
+    for i, c in enumerate(candidates, 1):
         print(f"{i}. [{c['n_sessoes']} sessions / {c['ocorrencias']} occurrences] {c['exemplo']}")
         print(f"   evidence: {', '.join(c['sessoes'])}")
         print(f"   <!-- key: {c['key']} -->  (paste into the ledger to reject)")

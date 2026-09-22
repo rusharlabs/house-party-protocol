@@ -38,7 +38,7 @@ run_round() {
   STDERR_TMP="$(mktemp)"
   mkdir -p "$WORK/scripts/vm" "$WORK/scripts/other" "$WORK/.claude" "$WORK/deep/nested"
 
-  python "$LANE_IO" register --lane exec-a --role executora --session s1 --model claude-opus-4-8 \
+  python "$LANE_IO" register --lane exec-a --role executor --session s1 --model claude-opus-4-8 \
     --exclusive "scripts/vm/**" >/dev/null
 
   export CLAUDE_LANE_ID="exec-b"

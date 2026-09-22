@@ -10,7 +10,7 @@ source, with `guard_origins` built in — aborts if the source changes mid-assem
 the whole marketplace, 6 stages), `wire_settings.py` (idempotent merge into
 `settings.local.json`), `install_git_hook.py` (chains with someone else's `pre-commit`),
 `tools/skill_lint.py` (the linter that enforces the SKILL-CONTRACT on other kits' skills),
-`tools/browse.py` (interactive marketplace menu), `tools/catalogo_md.py` (bilingual module
+`tools/browse.py` (interactive marketplace menu), `tools/catalog_md.py` (bilingual module
 catalogue derived from the emitted tree) and `tools/codex_skills.py` (installs a kit in the
 layout Codex CLI discovers). A single exit contract everywhere: `0 ok/no-op`, `1 warn`,
 `2 block`, `3 error`. No `--skip-lint` in any tool — the IP/PII gate is always mandatory.

@@ -19,7 +19,7 @@ Turn several parallel answers or artifacts into a single traceable decision. The
 
 - There are not yet multiple outputs or artifacts to consolidate.
 - The request is to inventory a repo/folder before the analysis; use `pp-discovery`.
-- The request is a deep read of a single target; use `pp-raiox`.
+- The request is a deep read of a single target; use `pp-xray`.
 - The consolidation would require running operational actions; produce the verdict and route it to your operational executor.
 
 ## Process

@@ -13,8 +13,8 @@ States: CLAIMED -> BUILDING -> CHECKPOINT-READY -> UNDER-REVIEW -> VERIFIED|NEED
 
 Usage:
     python lane_board.py claim <item_id> --lane <id> --role <role> --model <model> [--tag green|red]
-    python lane_board.py --set <item_id> <estado> --lane <id> --role <role> --model <model>
-                          [--evidencia "..."] [--verdict-by-lane <id>] [--verdict-by-model <m>]
+    python lane_board.py --set <item_id> <state> --lane <id> --role <role> --model <model>
+                          [--evidence "..."] [--verdict-by-lane <id>] [--verdict-by-model <m>]
                           [--checker-indisponivel] [--human-approved]
     python lane_board.py status [<item_id>]
     python lane_board.py render
@@ -136,11 +136,11 @@ def _append_event(event: dict) -> None:
 
 
 def _validate_transition(item_id: str, new_state: str, lane_id: str, role: str, model: str,
-                          evidencia: str = "", verdict_by_lane: str = "", verdict_by_model: str = "",
+                          evidence: str = "", verdict_by_lane: str = "", verdict_by_model: str = "",
                           checker_indisponivel: bool = False, human_approved: bool = False, tag: str = "green") -> str | None:
     """Returns None if valid, or the error message."""
     current = _latest_state(item_id)
-    cur_state = current["estado"] if current else None
+    cur_state = current["state"] if current else None
 
     allowed = _TRANSITIONS.get(cur_state, set())
     if new_state not in allowed:
@@ -152,18 +152,18 @@ def _validate_transition(item_id: str, new_state: str, lane_id: str, role: str, 
 
     if new_state == "CHECKPOINT-READY":
         builder = current  # the most recent BUILDING/CLAIMED event is the "owner"
-        if role != "executora":
-            return f"CHECKPOINT-READY only with role=executora (got: {role})"
+        if role != "executor":
+            return f"CHECKPOINT-READY only with role=executor (got: {role})"
         if not builder or builder.get("lane_id") != lane_id:
             return f"CHECKPOINT-READY only from the lane that claimed the item (owner: {builder.get('lane_id') if builder else '?'}, got: {lane_id})"
-        if not evidencia:
+        if not evidence:
             return "CHECKPOINT-READY requires non-empty evidence (pasted hash/exit code, never 'I ran it')"
 
     if new_state in ("VERIFIED", "NEEDS-FIX"):
-        if role != "revisora":
-            return f"{new_state} only with role=revisora (got: {role})"
+        if role != "reviewer":
+            return f"{new_state} only with role=reviewer (got: {role})"
         # find the original builder (CLAIMED event)
-        claimed = next((e for e in reversed(_read_events(item_id)) if e["estado"] == "CLAIMED"), None)
+        claimed = next((e for e in reversed(_read_events(item_id)) if e["state"] == "CLAIMED"), None)
         builder_lane = claimed.get("lane_id") if claimed else None
         builder_model = claimed.get("model") if claimed else None
         if checker_indisponivel:
@@ -177,7 +177,7 @@ def _validate_transition(item_id: str, new_state: str, lane_id: str, role: str, 
         return "DEFERRED only with --checker-indisponivel"
 
     if new_state == "MERGED":
-        verified = next((e for e in reversed(_read_events(item_id)) if e["estado"] == "VERIFIED"), None)
+        verified = next((e for e in reversed(_read_events(item_id)) if e["state"] == "VERIFIED"), None)
         if not verified:
             return "MERGED requires a previous VERIFIED in the item history"
         if tag == "red" and not human_approved:
@@ -197,11 +197,11 @@ def _reserve_effect(item_id: str, new_state: str) -> str:
     if lane_effects is None or new_state not in _VERDICTS_WITH_EFFECT:
         return ""
     events = _read_events(item_id)
-    claimed = next((e for e in reversed(events) if e["estado"] == "CLAIMED"), None)
+    claimed = next((e for e in reversed(events) if e["state"] == "CLAIMED"), None)
     target = (claimed or {}).get("lane_id", "")
     if not target:
         return ""
-    round_key = str(sum(1 for e in events if e["estado"] in _VERDICTS_WITH_EFFECT))
+    round_key = str(sum(1 for e in events if e["state"] in _VERDICTS_WITH_EFFECT))
     try:
         ok, record = lane_effects.reserve(item_id, new_state, target, round_key=round_key)
         if not ok:
@@ -224,13 +224,13 @@ def set_state(item_id: str, new_state: str, lane_id: str, role: str, model: str,
             event = {
                 "ts": time.strftime("%Y-%m-%dT%H:%M:%S"),
                 "item_id": item_id,
-                "estado": new_state,
+                "state": new_state,
                 "lane_id": lane_id,
                 "role": role,
                 "model": model,
             }
-            if kwargs.get("evidencia"):
-                event["evidencia"] = kwargs["evidencia"]
+            if kwargs.get("evidence"):
+                event["evidence"] = kwargs["evidence"]
             if kwargs.get("verdict_by_lane"):
                 event["verdict_by"] = {"lane": kwargs["verdict_by_lane"], "model": kwargs.get("verdict_by_model", "")}
             if kwargs.get("tag"):
@@ -273,11 +273,11 @@ def render() -> str:
     lines = ["# LANE-BOARD.md (generated by lane_board.py render — do not edit by hand)", ""]
     for item_id, events in sorted(items.items()):
         last = events[-1]
-        lines.append(f"## {item_id} — {last['estado']}")
+        lines.append(f"## {item_id} — {last['state']}")
         for e in events:
-            evid = f" · evidence: {e['evidencia']}" if e.get("evidencia") else ""
+            evid = f" · evidence: {e['evidence']}" if e.get("evidence") else ""
             verdict = f" · verdict_by: {e['verdict_by']}" if e.get("verdict_by") else ""
-            lines.append(f"- {e['ts']} · {e['estado']} · lane={e['lane_id']} role={e['role']}{evid}{verdict}")
+            lines.append(f"- {e['ts']} · {e['state']} · lane={e['lane_id']} role={e['role']}{evid}{verdict}")
         lines.append("")
     outstanding = []
     if lane_effects is not None:
@@ -316,31 +316,31 @@ def _self_test() -> int:
             lane_effects._LANES_DIR = _LANES_DIR
             lane_effects.EFFECTS_PATH = _LANES_DIR / "effects.json"
 
-        ok1, r1 = set_state("ITEM-1", "CLAIMED", "exec-a", "executora", "claude-opus-4-8")
+        ok1, r1 = set_state("ITEM-1", "CLAIMED", "exec-a", "executor", "claude-opus-4-8")
         assert ok1, f"CLAIMED should pass: {r1}"
 
-        ok2, r2 = set_state("ITEM-1", "BUILDING", "exec-a", "executora", "claude-opus-4-8")
+        ok2, r2 = set_state("ITEM-1", "BUILDING", "exec-a", "executor", "claude-opus-4-8")
         assert ok2, f"BUILDING should pass: {r2}"
 
-        ok3, r3 = set_state("ITEM-1", "CHECKPOINT-READY", "exec-b", "executora", "claude-opus-4-8", evidencia="exit=0")
+        ok3, r3 = set_state("ITEM-1", "CHECKPOINT-READY", "exec-b", "executor", "claude-opus-4-8", evidence="exit=0")
         assert not ok3 and "owner" in r3, f"CHECKPOINT-READY from the wrong lane should be refused: {r3}"
 
-        ok4, r4 = set_state("ITEM-1", "CHECKPOINT-READY", "exec-a", "executora", "claude-opus-4-8")
+        ok4, r4 = set_state("ITEM-1", "CHECKPOINT-READY", "exec-a", "executor", "claude-opus-4-8")
         assert not ok4 and "evidence" in r4, f"CHECKPOINT-READY without evidence should be refused: {r4}"
 
-        ok5, r5 = set_state("ITEM-1", "CHECKPOINT-READY", "exec-a", "executora", "claude-opus-4-8", evidencia="exit=0 sha=abc")
+        ok5, r5 = set_state("ITEM-1", "CHECKPOINT-READY", "exec-a", "executor", "claude-opus-4-8", evidence="exit=0 sha=abc")
         assert ok5, f"a valid CHECKPOINT-READY should pass: {r5}"
 
-        ok6, r6 = set_state("ITEM-1", "UNDER-REVIEW", "exec-a", "executora", "claude-opus-4-8")
+        ok6, r6 = set_state("ITEM-1", "UNDER-REVIEW", "exec-a", "executor", "claude-opus-4-8")
         assert ok6, f"UNDER-REVIEW should pass: {r6}"
 
-        ok7, r7 = set_state("ITEM-1", "VERIFIED", "exec-a", "revisora", "claude-opus-4-8", verdict_by_lane="exec-a", verdict_by_model="claude-opus-4-8")
+        ok7, r7 = set_state("ITEM-1", "VERIFIED", "exec-a", "reviewer", "claude-opus-4-8", verdict_by_lane="exec-a", verdict_by_model="claude-opus-4-8")
         assert not ok7 and "SAME lane" in r7, f"maker=checker (same lane) should be refused: {r7}"
 
-        ok8, r8 = set_state("ITEM-1", "VERIFIED", "exec-a", "revisora", "claude-opus-4-8", verdict_by_lane="rev-a", verdict_by_model="claude-opus-4-8")
+        ok8, r8 = set_state("ITEM-1", "VERIFIED", "exec-a", "reviewer", "claude-opus-4-8", verdict_by_lane="rev-a", verdict_by_model="claude-opus-4-8")
         assert not ok8 and "SAME model family" in r8, f"maker=checker (same model family) should be refused: {r8}"
 
-        ok9, r9 = set_state("ITEM-1", "VERIFIED", "exec-a", "revisora", "claude-opus-4-8", verdict_by_lane="rev-a", verdict_by_model="gpt-5.6")
+        ok9, r9 = set_state("ITEM-1", "VERIFIED", "exec-a", "reviewer", "claude-opus-4-8", verdict_by_lane="rev-a", verdict_by_model="gpt-5.6")
         assert ok9, f"a reviewer on another lane + another family should pass: {r9}"
 
         # the verdict owes an effect: decided (accepted) and NOT yet delivered
@@ -354,26 +354,26 @@ def _self_test() -> int:
             lane_effects.deliver(rid, evidence="mailbox/proof.md")
             assert lane_effects.pending_effects() == [], "delivering did not clear the outstanding list"
 
-        ok10, r10 = set_state("ITEM-1", "MERGED", "rev-a", "revisora", "gpt-5.6")
+        ok10, r10 = set_state("ITEM-1", "MERGED", "rev-a", "reviewer", "gpt-5.6")
         assert ok10, f"MERGED after VERIFIED (default green tag) should pass: {r10}"
 
-        ok11, r11 = set_state("ITEM-2", "CLAIMED", "exec-a", "executora", "claude-opus-4-8", tag="red")
-        set_state("ITEM-2", "BUILDING", "exec-a", "executora", "claude-opus-4-8")
-        set_state("ITEM-2", "CHECKPOINT-READY", "exec-a", "executora", "claude-opus-4-8", evidencia="exit=0")
-        set_state("ITEM-2", "UNDER-REVIEW", "exec-a", "executora", "claude-opus-4-8")
-        set_state("ITEM-2", "VERIFIED", "exec-a", "revisora", "gpt-5.6", verdict_by_lane="rev-a", verdict_by_model="gpt-5.6")
-        ok12, r12 = set_state("ITEM-2", "MERGED", "rev-a", "revisora", "gpt-5.6", tag="red")
+        ok11, r11 = set_state("ITEM-2", "CLAIMED", "exec-a", "executor", "claude-opus-4-8", tag="red")
+        set_state("ITEM-2", "BUILDING", "exec-a", "executor", "claude-opus-4-8")
+        set_state("ITEM-2", "CHECKPOINT-READY", "exec-a", "executor", "claude-opus-4-8", evidence="exit=0")
+        set_state("ITEM-2", "UNDER-REVIEW", "exec-a", "executor", "claude-opus-4-8")
+        set_state("ITEM-2", "VERIFIED", "exec-a", "reviewer", "gpt-5.6", verdict_by_lane="rev-a", verdict_by_model="gpt-5.6")
+        ok12, r12 = set_state("ITEM-2", "MERGED", "rev-a", "reviewer", "gpt-5.6", tag="red")
         assert not ok12 and "human gate" in r12, f"a red item without --human-approved should be refused MERGED: {r12}"
-        ok13, r13 = set_state("ITEM-2", "MERGED", "rev-a", "revisora", "gpt-5.6", tag="red", human_approved=True)
+        ok13, r13 = set_state("ITEM-2", "MERGED", "rev-a", "reviewer", "gpt-5.6", tag="red", human_approved=True)
         assert ok13, f"a red item with --human-approved should pass: {r13}"
 
-        ok14, r14 = set_state("ITEM-3", "CLAIMED", "exec-a", "executora", "claude-opus-4-8")
-        set_state("ITEM-3", "BUILDING", "exec-a", "executora", "claude-opus-4-8")
-        set_state("ITEM-3", "CHECKPOINT-READY", "exec-a", "executora", "claude-opus-4-8", evidencia="x")
-        set_state("ITEM-3", "UNDER-REVIEW", "exec-a", "executora", "claude-opus-4-8")
-        ok15, r15 = set_state("ITEM-3", "VERIFIED", "exec-a", "revisora", "claude-opus-4-8", checker_indisponivel=True, verdict_by_lane="rev-a", verdict_by_model="gpt-5.6")
+        ok14, r14 = set_state("ITEM-3", "CLAIMED", "exec-a", "executor", "claude-opus-4-8")
+        set_state("ITEM-3", "BUILDING", "exec-a", "executor", "claude-opus-4-8")
+        set_state("ITEM-3", "CHECKPOINT-READY", "exec-a", "executor", "claude-opus-4-8", evidence="x")
+        set_state("ITEM-3", "UNDER-REVIEW", "exec-a", "executor", "claude-opus-4-8")
+        ok15, r15 = set_state("ITEM-3", "VERIFIED", "exec-a", "reviewer", "claude-opus-4-8", checker_indisponivel=True, verdict_by_lane="rev-a", verdict_by_model="gpt-5.6")
         assert not ok15 and "DEFERRED" in r15, f"an unavailable checker only accepts DEFERRED: {r15}"
-        ok16, r16 = set_state("ITEM-3", "DEFERRED", "exec-a", "revisora", "claude-opus-4-8", checker_indisponivel=True)
+        ok16, r16 = set_state("ITEM-3", "DEFERRED", "exec-a", "reviewer", "claude-opus-4-8", checker_indisponivel=True)
         assert ok16, f"DEFERRED with an unavailable checker should pass: {r16}"
 
         rendered = render()
@@ -406,17 +406,17 @@ def build_parser() -> argparse.ArgumentParser:
     c = sub.add_parser("claim")
     c.add_argument("item_id")
     c.add_argument("--lane", required=True)
-    c.add_argument("--role", default="executora")
+    c.add_argument("--role", default="executor")
     c.add_argument("--model", required=True)
     c.add_argument("--tag", default="green", choices=["green", "red"])
 
     s = sub.add_parser("set")
     s.add_argument("item_id")
-    s.add_argument("estado")
+    s.add_argument("state")
     s.add_argument("--lane", required=True)
     s.add_argument("--role", required=True)
     s.add_argument("--model", required=True)
-    s.add_argument("--evidencia", default="")
+    s.add_argument("--evidence", default="")
     s.add_argument("--verdict-by-lane", default="")
     s.add_argument("--verdict-by-model", default="")
     s.add_argument("--checker-indisponivel", action="store_true")
@@ -441,8 +441,8 @@ def main(argv) -> int:
         ok, result = set_state(args.item_id, "CLAIMED", args.lane, args.role, args.model, tag=args.tag)
     elif args.cmd == "set":
         ok, result = set_state(
-            args.item_id, args.estado, args.lane, args.role, args.model,
-            evidencia=args.evidencia, verdict_by_lane=args.verdict_by_lane, verdict_by_model=args.verdict_by_model,
+            args.item_id, args.state, args.lane, args.role, args.model,
+            evidence=args.evidence, verdict_by_lane=args.verdict_by_lane, verdict_by_model=args.verdict_by_model,
             checker_indisponivel=args.checker_indisponivel, human_approved=args.human_approved, tag=args.tag,
         )
     elif args.cmd == "status":

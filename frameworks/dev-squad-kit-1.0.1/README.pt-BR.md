@@ -8,7 +8,7 @@ Um squad de 12 agentes de papel via slash-command (`*master`, `*analyst`, `*arch
 `*data-engineer`, `*dev`, `*devops`, `*pm`, `*po`, `*qa`, `*sm`, `*squad-creator`,
 `*ux-design-expert`) — cada um com persona própria, comandos numerados e checklist de
 colaboração com os outros — mais 3 skills de leitura/consolidação paralela token-safe
-(`pp-discovery`, `pp-raiox`, `pp-consolidate`).
+(`pp-discovery`, `pp-xray`, `pp-consolidate`).
 
 **O que este kit NÃO faz:** não inclui a árvore proprietária de tasks/templates/checklists
 que os comandos `*create`, `*task`, `*workflow`, `*execute-checklist` esperam encontrar em

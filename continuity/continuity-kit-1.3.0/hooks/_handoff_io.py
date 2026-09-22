@@ -39,7 +39,7 @@ _HANDOFF_DIR = _PROJECT_ROOT / ".claude" / "handoff"
 LEDGER_PATH = _HANDOFF_DIR / "HANDOFF-LEDGER.jsonl"
 
 _MAX_BYTES = 65536
-_REQUIRED_TOP = ("schema_version", "handoff_id", "created_at", "trigger", "quality", "session", "estado", "git", "valid_until")
+_REQUIRED_TOP = ("schema_version", "handoff_id", "created_at", "trigger", "quality", "session", "state", "git", "valid_until")
 
 # Secret patterns -- same spirit as ip_pii_linter.py (kit-forge), local copy: each kit
 # in this marketplace is self-contained (C5 SKILL-CONTRACT), no cross-kit import.
@@ -101,7 +101,7 @@ def validate(data: dict) -> list:
     for field in _REQUIRED_TOP:
         if field not in data:
             errors.append(f"required field missing: {field}")
-    if data.get("schema_version") not in ("1.1",):
+    if data.get("schema_version") not in ("2.0",):
         errors.append(f"schema_version must be '1.1' (got: {data.get('schema_version')!r})")
 
     session = data.get("session", {}) or {}
@@ -117,16 +117,16 @@ def validate(data: dict) -> list:
     if data.get("quality") == "degraded-auto" and "porcelain" not in git:
         errors.append("quality=degraded-auto requires git.porcelain (v1.1 fix) — even when empty (clean tree), the KEY must exist")
 
-    estado = data.get("estado", {}) or {}
-    if not estado.get("resumo"):
-        errors.append("estado.resumo missing")
-    for i, n in enumerate(estado.get("numeros", []) or []):
+    state = data.get("state", {}) or {}
+    if not state.get("summary"):
+        errors.append("state.summary missing")
+    for i, n in enumerate(state.get("numbers", []) or []):
         if not n.get("re_derive_cmd"):
-            errors.append(f"estado.numeros[{i}] without re_derive_cmd (LC-1: every number needs a re-derivation command)")
+            errors.append(f"state.numbers[{i}] without re_derive_cmd (LC-1: every number needs a re-derivation command)")
 
-    for i, p in enumerate(data.get("proximo_passo", []) or []):
+    for i, p in enumerate(data.get("next_step", []) or []):
         if not p.get("verify_first_cmd"):
-            errors.append(f"proximo_passo[{i}] without verify_first_cmd (LC-4: next step without an idempotency check)")
+            errors.append(f"next_step[{i}] without verify_first_cmd (LC-4: next step without an idempotency check)")
 
     text_dump = json.dumps(data, ensure_ascii=False)
     secrets = scan_secrets(text_dump)
@@ -209,25 +209,25 @@ def render(h: dict, cap_bytes: int = 4096) -> str:
     lines = ["⚠️ RESTORED CONTEXT = HISTORICAL REFERENCE, NOT A QUEUE (LC-4)"]
     lines.append(f"HANDOFF {h.get('handoff_id')} · {h.get('quality')} · lane={h.get('session', {}).get('lane_id')}")
     if stale:
-        lines.append(f"⚠️ STALE ({reason}) — re-derive everything via re_derive_cmd; proximo_passo is NOT actionable.")
+        lines.append(f"⚠️ STALE ({reason}) — re-derive everything via re_derive_cmd; next_step is NOT actionable.")
     else:
-        estado = h.get("estado", {})
-        lines.append(f"STATE: {estado.get('resumo', '')}")
-        for n in estado.get("numeros", []) or []:
-            lines.append(f"  · {n['metrica']}={n['valor']} (re-derive: {n['re_derive_cmd']})")
-        ja = h.get("ja_executado", []) or []
+        state = h.get("state", {})
+        lines.append(f"STATE: {state.get('summary', '')}")
+        for n in state.get("numbers", []) or []:
+            lines.append(f"  · {n['metric']}={n['value']} (re-derive: {n['re_derive_cmd']})")
+        ja = h.get("already_done", []) or []
         if ja:
-            lines.append("ALREADY EXECUTED — NEVER REPEAT: " + "; ".join(j["acao"] for j in ja))
-        gates = h.get("gates_abertos", []) or []
+            lines.append("ALREADY EXECUTED — NEVER REPEAT: " + "; ".join(j["action"] for j in ja))
+        gates = h.get("open_gates", []) or []
         if gates:
-            lines.append("OPEN GATES: " + "; ".join(g["descricao"] for g in gates))
-        proib = h.get("proibicoes", []) or []
+            lines.append("OPEN GATES: " + "; ".join(g["description"] for g in gates))
+        proib = h.get("prohibitions", []) or []
         if proib:
             lines.append("PROHIBITIONS: " + "; ".join(proib))
-        passos = sorted(h.get("proximo_passo", []) or [], key=lambda p: p.get("ordem", 0))
+        passos = sorted(h.get("next_step", []) or [], key=lambda p: p.get("order", 0))
         if passos:
             p0 = passos[0]
-            lines.append(f"NEXT STEP {p0.get('ordem')}: {p0.get('descricao')}")
+            lines.append(f"NEXT STEP {p0.get('order')}: {p0.get('description')}")
             lines.append(f"  → BEFORE EXECUTING, RUN: {p0.get('verify_first_cmd')} (if already done: skip and record it)")
     lines.append(f"Full file: {current_path(h.get('session', {}).get('lane_id', 'solo'))}")
     text = "\n".join(lines)
@@ -245,19 +245,19 @@ def degraded_auto_aggregate(lane_id: str = "solo", session_id: str = "",
     ts_id = datetime.now().strftime("%Y%m%d-%H%M")
     log = _git(["log", "--oneline", "-5"])
     return {
-        "schema_version": "1.1",
+        "schema_version": "2.0",
         "handoff_id": f"HO-{ts_id}-{lane_id}",
         "created_at": now,
         "trigger": "degraded-auto",
         "quality": "degraded-auto",
         "session": {"session_id": session_id, "lane_id": lane_id},
-        "estado": {"resumo": "Session ended without /pre-clear — degraded handoff, automatic aggregation.", "numeros": []},
+        "state": {"summary": "Session ended without /pre-clear — degraded handoff, automatic aggregation.", "numbers": []},
         "git": git_block(checkpoint_ref=checkpoint_ref, checkpoint_commit=checkpoint_commit),
-        "ja_executado": [],
-        "proximo_passo": [],
-        "gates_abertos": [],
-        "proibicoes": ["NEVER treat this degraded handoff as full coverage — reconfirm everything at the live source (LC-1)."],
-        "evidencias": [{"tipo": "cmd", "ref": "git log --oneline -5", "valor": log}],
+        "already_done": [],
+        "next_step": [],
+        "open_gates": [],
+        "prohibitions": ["NEVER treat this degraded handoff as full coverage — reconfirm everything at the live source (LC-1)."],
+        "evidence": [{"type": "cmd", "ref": "git log --oneline -5", "value": log}],
         "valid_until": (datetime.now(timezone(timedelta(hours=-3))) + timedelta(days=1)).strftime("%Y-%m-%dT%H:%M:%S-03:00"),
         "boot_docs": [],
     }
@@ -267,21 +267,21 @@ def _demo_handoff(lane_id: str = "solo") -> dict:
     now = _now_iso()
     ts_id = datetime.now().strftime("%Y%m%d-%H%M")
     return {
-        "schema_version": "1.1",
+        "schema_version": "2.0",
         "handoff_id": f"HO-{ts_id}-{lane_id}",
         "created_at": now,
         "trigger": "manual",
         "quality": "full",
         "session": {"session_id": "demo-session", "lane_id": lane_id, "role": "solo"},
-        "estado": {
-            "resumo": "Demo handoff generated by --demo.",
-            "numeros": [{"metrica": "example", "valor": "1", "medido_em": now, "re_derive_cmd": "echo 1"}],
+        "state": {
+            "summary": "Demo handoff generated by --demo.",
+            "numbers": [{"metric": "example", "value": "1", "measured_at": now, "re_derive_cmd": "echo 1"}],
         },
         "git": git_block(),
-        "ja_executado": [{"acao": "generated the demo", "evidencia": "this very file", "nunca_repetir": True}],
-        "proximo_passo": [{"ordem": 1, "descricao": "nothing — it is a demo", "verify_first_cmd": "echo verified"}],
-        "gates_abertos": [],
-        "proibicoes": [],
+        "already_done": [{"action": "generated the demo", "evidence": "this very file", "never_repeat": True}],
+        "next_step": [{"order": 1, "description": "nothing — it is a demo", "verify_first_cmd": "echo verified"}],
+        "open_gates": [],
+        "prohibitions": [],
         "valid_until": (datetime.now(timezone(timedelta(hours=-3))) + timedelta(days=7)).strftime("%Y-%m-%dT%H:%M:%S-03:00"),
         "boot_docs": [],
     }
@@ -300,12 +300,12 @@ def _self_test() -> int:
         LEDGER_PATH = _HANDOFF_DIR / "HANDOFF-LEDGER.jsonl"
 
         good = {
-            "schema_version": "1.1", "handoff_id": "HO-20260710-1500-solo",
+            "schema_version": "2.0", "handoff_id": "HO-20260710-1500-solo",
             "created_at": "2026-07-10T15:00:00-03:00", "trigger": "manual", "quality": "full",
             "session": {"session_id": "s1", "lane_id": "solo"},
-            "estado": {"resumo": "test", "numeros": [{"metrica": "x", "valor": "1", "medido_em": "2026-07-10T15:00:00-03:00", "re_derive_cmd": "echo 1"}]},
+            "state": {"summary": "test", "numbers": [{"metric": "x", "value": "1", "measured_at": "2026-07-10T15:00:00-03:00", "re_derive_cmd": "echo 1"}]},
             "git": {"head": "abc123", "branch": "main", "dirty": False, "untracked": 0},
-            "proximo_passo": [{"ordem": 1, "descricao": "do x", "verify_first_cmd": "test -f x"}],
+            "next_step": [{"order": 1, "description": "do x", "verify_first_cmd": "test -f x"}],
             "valid_until": "2099-01-01T00:00:00-03:00",
         }
         ok, result = write(good)
@@ -315,15 +315,15 @@ def _self_test() -> int:
         ledger_lines = LEDGER_PATH.read_text(encoding="utf-8").splitlines()
         assert any(json.loads(l)["event"] == "written" for l in ledger_lines), "ledger has no written event"
 
-        no_verify = dict(good, handoff_id="HO-20260710-1501-solo", proximo_passo=[{"ordem": 1, "descricao": "no verify"}])
+        no_verify = dict(good, handoff_id="HO-20260710-1501-solo", next_step=[{"order": 1, "description": "no verify"}])
         ok2, errs2 = write(no_verify)
         assert not ok2 and any("verify_first_cmd" in e for e in errs2), f"should reject without verify_first_cmd: {errs2}"
 
-        no_derive = dict(good, handoff_id="HO-20260710-1502-solo", estado={"resumo": "x", "numeros": [{"metrica": "y", "valor": "2", "medido_em": "2026-07-10T15:00:00-03:00"}]})
+        no_derive = dict(good, handoff_id="HO-20260710-1502-solo", state={"summary": "x", "numbers": [{"metric": "y", "value": "2", "measured_at": "2026-07-10T15:00:00-03:00"}]})
         ok3, errs3 = write(no_derive)
         assert not ok3 and any("re_derive_cmd" in e for e in errs3), f"should reject without re_derive_cmd: {errs3}"
 
-        with_secret = dict(good, handoff_id="HO-20260710-1503-solo", estado={"resumo": "token = \"sk-ant-1234567890abcdef1234\"", "numeros": []})
+        with_secret = dict(good, handoff_id="HO-20260710-1503-solo", state={"summary": "token = \"sk-ant-1234567890abcdef1234\"", "numbers": []})
         ok4, errs4 = write(with_secret)
         assert not ok4 and any("secret" in e for e in errs4), f"should reject with a secret: {errs4}"
 

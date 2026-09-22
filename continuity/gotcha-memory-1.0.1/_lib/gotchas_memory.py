@@ -206,7 +206,7 @@ _KEYWORDS = (
     r"(?:api[_-]?key|access[_-]?key|secret(?:[_-]?key)?|client[_-]?secret|password|passwd"
     r"|token|auth[_-]?token|private[_-]?key)"
 )
-_VALOR = r"[^\s\"'&;,]"
+_VALUE = r"[^\s\"'&;,]"
 # (type, regex, group that carries the value to redact)
 _REDACT_RULES: list[tuple[str, re.Pattern[str], int]] = [
     ("private-key", re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----.*?(?:-----END [A-Z ]*PRIVATE KEY-----|\Z)", re.DOTALL), 0),
@@ -218,10 +218,10 @@ _REDACT_RULES: list[tuple[str, re.Pattern[str], int]] = [
         r"|github_pat_[A-Za-z0-9_]{20,}|glpat-[A-Za-z0-9_\-]{20,}|xox[baprs]-[A-Za-z0-9\-]{8,}"
         r"|AKIA[0-9A-Z]{12,}|AIza[0-9A-Za-z_\-]{20,})"), 0),
     ("jwt", re.compile(r"\beyJ[A-Za-z0-9_\-]{8,}\.[A-Za-z0-9_\-]{8,}\.[A-Za-z0-9_\-]{8,}"), 0),
-    ("assignment", re.compile(r"(?i)\b" + _KEYWORDS + r"[\"']?\s*=\s*[\"']?(" + _VALOR + r"{4,})"), 1),
+    ("assignment", re.compile(r"(?i)\b" + _KEYWORDS + r"[\"']?\s*=\s*[\"']?(" + _VALUE + r"{4,})"), 1),
     # the `key: value` shape only when the value looks like a credential (digit/symbol, >= 8),
     # so it doesn't erase prose like "token: expired".
-    ("assignment", re.compile(r"(?i)\b" + _KEYWORDS + r"[\"']?\s*:\s*[\"']?((?=" + _VALOR + r"*[0-9_\-+/=.!@#$%^*~])" + _VALOR + r"{8,})"), 1),
+    ("assignment", re.compile(r"(?i)\b" + _KEYWORDS + r"[\"']?\s*:\s*[\"']?((?=" + _VALUE + r"*[0-9_\-+/=.!@#$%^*~])" + _VALUE + r"{8,})"), 1),
     ("high-entropy", re.compile(r"(?<![A-Za-z0-9+=_\-])[A-Za-z0-9+=_\-]{32,}(?![A-Za-z0-9+=_\-])"), 0),
 ]
 
@@ -569,9 +569,9 @@ def _self_test() -> None:
             "task:auth", "401 Bearer " + "sk-" + "ant-EXEMPLO0000000000000000 token=" + "ghp" + "_EXEMPLOEXEMPLOEXEMPLOEXEMPLO12",
             context={"cmd": "curl -u user:SENHA-EXEMPLO-1 https://x"}, store_dir=store, now=t0,
         )
-        bruto = (store / "failures.jsonl").read_text(encoding="utf-8")
-        assert "EXEMPLO" not in bruto, "secret was persisted in the clear"
-        assert "[REDACTED:auth-header:30]" in bruto and "[REDACTED:basic-credential:20]" in bruto, bruto
+        raw = (store / "failures.jsonl").read_text(encoding="utf-8")
+        assert "EXEMPLO" not in raw, "secret was persisted in the clear"
+        assert "[REDACTED:auth-header:30]" in raw and "[REDACTED:basic-credential:20]" in raw, raw
         assert redact_secrets("ETIMEDOUT em api.example.com:443") == "ETIMEDOUT em api.example.com:443"
         print("self-test OK ✓")
 

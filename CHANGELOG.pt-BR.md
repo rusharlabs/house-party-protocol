@@ -9,6 +9,58 @@ cada módulo mantém sua própria versão no `plugin.json` e no `marketplace.jso
 
 ## [Unreleased]
 
+## [2.5.3] — 2026-09-22
+
+O último português do produto estava nos NOMES: funções, variáveis, chaves de config e um formato
+de arquivo. Esta release termina o que a 2.5.2 começou, e a parte interessante não são os renames —
+é o que medi-los descobriu.
+
+### Changed
+
+- **O formato de handoff é `handoff-v2.0`, e todo nome de propriedade nele está em inglês**:
+  `state`, `summary`, `numbers`/`metric`/`value`/`measured_at`,
+  `decisions`/`decision`/`reason`/`evidence`,
+  `open_gates`/`owner`/`description`/`blocks`/`unblock_cmd`, `prohibitions`,
+  `already_done`/`action`/`never_repeat`, `next_step`/`order`/`idempotent`, `evidence`/`type`.
+  **Não há caminho de compatibilidade com a v1.1 e nenhum era necessário**: o formato tinha zero
+  arquivos em lugar nenhum — neste repositório, no repositório do produto, na máquina do autor —
+  então a leitura dupla seria código morto no dia em que nasce. O `schema_version` é o sinal honesto.
+- **O board e o registry de lane também falam inglês**: `state`, `evidence` (o campo E a flag
+  `--evidence`), `red_zones`, e os valores de papel `executor`/`planner`/`reviewer`. Mesma medição,
+  mesma razão: não existia board nem registry em lugar nenhum.
+- **As cinco lições de exemplo seedadas do `gotcha-memory` estão em inglês.** Eram as correções
+  reais do autor, guardadas no idioma em que foram escritas; um arquivo `.example` é o que o usuário
+  copia, então agora elas se leem como FORMA a substituir, não como prescrição em outra língua.
+- **`pp-raiox` virou `pp-xray`.** Era nome nosso, não de terceiro. O rename também aposentou cinco
+  exceções declaradas do IP ruleset que existiam só porque "raio-x" contém uma substring que o
+  matcher de identidade acusa — e o gate de publicação foi re-rodado SEM elas para provar que
+  estavam mortas em vez de supor.
+- **76 dos 106 identificadores em português** nos dez módulos, mais
+  `tools/catalogo_md.py` -> `tools/catalog_md.py`, o publicado `docs/CATALOGO.*` ->
+  `docs/CATALOG.*`, e a seção default `counts` do `live_count.py` com a chave `agents`.
+  **Os 30 que ficaram estão nomeados, não esquecidos:** três são valores legados que uma tabela
+  de leitura dupla precisa manter até a 2.7.0 (`done_criterios`, `verificacao`,
+  `rm-rf-codigo-vivo`), e o resto são chaves de saída `--json` ou de YAML escrito pelo usuário -
+  forma publicada, que é uma decisão diferente de um nome interno e fica para a release dela.
+
+### Fixed
+
+- 🔴 **O wizard instalava um profile que o operator kit não conseguia ler.** A 2.5.1 renomeou as
+  chaves do profile e moveu o LEITOR (`claude_md_from_profile.py` lê `verification.*`); o ESCRITOR
+  passou batido, então o `wizard.py` seguia emitindo `verificacao.escada` e todo projeto
+  recém-instalado nascia com uma escada que ninguém consumia. A chave nova é
+  `verification.evidence_levels` e **deliberadamente não `verification.ladder`**: esse nome já
+  existe no profile e significa outra coisa (um mapa passo -> comando que o `verify_ladder.py`
+  roda). Renomear para a palavra óbvia teria fundido dois conceitos sob uma chave, e a colisão só
+  apareceria num projeto que usasse os dois módulos.
+
+### Nota sobre como o número foi obtido
+
+A primeira régua disse ~44 identificadores. Era piso, não valor, e foi publicada como tal. A
+segunda disse 1.460 — teto, porque "não-inglês" inclui toda sigla e nome de biblioteca. Cruzar as
+duas deu 106, e uma leitura única do vocabulário do resto achou 18 que a lista positiva perdera.
+Três réguas, três respostas diferentes, e o número honesto saiu de discordar de todas.
+
 ## [2.5.2] — 2026-09-22
 
 A release que torna "English-first" verdade sobre o código, e não apenas sobre os documentos.

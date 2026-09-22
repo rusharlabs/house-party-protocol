@@ -180,7 +180,7 @@ def _self_test() -> int:
         assert verify(before, tmp, files) == [], "no change -> no drift"
 
         time.sleep(0.05)
-        (tmp / "a.txt").write_text("A-MUDOU", encoding="utf-8")
+        (tmp / "a.txt").write_text("A-CHANGED", encoding="utf-8")
         drift = verify(before, tmp, files)
         assert drift == ["a.txt"], f"should detect drift in a.txt: {drift}"
 
@@ -197,20 +197,20 @@ def _self_test() -> int:
         shutil.rmtree(tmp, ignore_errors=True)
 
     # --- --hook mode ---
-    origins = ["Desktop/FONTE-VIVA"]
-    code1, msg1 = decide({"tool_name": "Write", "tool_input": {"file_path": "Desktop/FONTE-VIVA/x.py"}}, origins)
+    origins = ["Desktop/LIVE-SOURCE"]
+    code1, msg1 = decide({"tool_name": "Write", "tool_input": {"file_path": "Desktop/LIVE-SOURCE/x.py"}}, origins)
     assert code1 == 2 and "BLOCKED" in msg1, (code1, msg1)
 
-    code2, msg2 = decide({"tool_name": "Write", "tool_input": {"file_path": "Desktop/OUTRO-REPO/x.py"}}, origins)
+    code2, msg2 = decide({"tool_name": "Write", "tool_input": {"file_path": "Desktop/OTHER-REPO/x.py"}}, origins)
     assert code2 == 0 and msg2 == "", (code2, msg2)
 
-    code3, msg3 = decide({"tool_name": "Bash", "tool_input": {"command": "rm -rf Desktop/FONTE-VIVA/tmp"}}, origins)
+    code3, msg3 = decide({"tool_name": "Bash", "tool_input": {"command": "rm -rf Desktop/LIVE-SOURCE/tmp"}}, origins)
     assert code3 == 2, (code3, msg3)
 
-    code4, msg4 = decide({"tool_name": "Bash", "tool_input": {"command": "ls Desktop/FONTE-VIVA"}}, origins)
+    code4, msg4 = decide({"tool_name": "Bash", "tool_input": {"command": "ls Desktop/LIVE-SOURCE"}}, origins)
     assert code4 == 0, (code4, msg4)  # ls is not destructive -> passes even when aimed at the origin
 
-    code5, _ = decide({"tool_name": "Write", "tool_input": {"file_path": "Desktop/FONTE-VIVA/x.py"}}, [])
+    code5, _ = decide({"tool_name": "Write", "tool_input": {"file_path": "Desktop/LIVE-SOURCE/x.py"}}, [])
     assert code5 == 0, "no origins configured -> fail-open (never blocks)"
 
     print("self-test OK — library (sweep/verify: stable/drift/vanished/absent) + hook (blocks write/destructive, allows the rest, fail-open without config)")

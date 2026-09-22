@@ -1,4 +1,4 @@
-[English](CATALOGO.md) · [Português](CATALOGO.pt-BR.md)
+[English](CATALOG.md) · [Português](CATALOG.pt-BR.md)
 
 # Catalogue — house-party-protocol
 
@@ -207,7 +207,7 @@ A squad of 12 roles available as slash commands and real subagents, with explici
 |---|---|
 | `pp-consolidate` | Parallel Process Consolidate - consolidates the outputs of parallel sessions/agents into a single, deduplicated, verifiable verdict |
 | `pp-discovery` | Parallel Process Discovery - token-safe inventory of repositories, folders and large artifacts before deep analysis |
-| `pp-raiox` | Parallel Process X-Ray - line-by-line reading of an external module/repo with evidence, risks and calls for the next investigation |
+| `pp-xray` | Parallel Process X-Ray - line-by-line reading of an external module/repo with evidence, risks and calls for the next investigation |
 
 **Commands** — `/analyst` · `/architect` · `/data-engineer` · `/dev` · `/devops` · `/master` · `/pm` · `/po` · `/qa` · `/sm` · `/squad-creator` · `/ux-design-expert`
 

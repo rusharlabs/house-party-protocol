@@ -1,15 +1,15 @@
 ---
-name: pp-raiox
+name: pp-xray
 description: "Parallel Process X-Ray - line-by-line reading of an external module/repo with evidence, risks and calls for the next investigation"
 type: skill
 ---
 
 > **Auto-Trigger:** When the user asks for a technical x-ray, a line-by-line audit, a deep read of an external module or an explanation backed by file evidence.
-> **Keywords:** "pp-raiox", "x-ray", "line by line", "deep audit", "external repo", "read everything", "end-to-end map"
+> **Keywords:** "pp-xray", "x-ray", "line by line", "deep audit", "external repo", "read everything", "end-to-end map"
 > **Priority:** HIGH
 > **Tools:** Bash, Read, Grep, Glob
 
-# pp-raiox - x-ray with evidence
+# pp-xray - x-ray with evidence
 
 ## Goal
 

@@ -8,7 +8,7 @@ VERIFIED/NEEDS-FIX → MERGED`) with cross-model maker≠checker **enforced in c
 (not only by convention), a registry of live lanes with heartbeat/liveness, a git guard
 (blocks `commit -a`/`add -A`/`reset --hard` while another lane is alive) and a territory
 guard (red zones + exclusive territory per lane). **Depends on the `continuity-kit`**
-(uses the `lane_id` field of handoff-v1.1) — install that one first. It does not do the
+(uses the `lane_id` field of handoff-v2.0) — install that one first. It does not do the
 session handoff itself — that is the `continuity-kit`.
 
 ## Prerequisites + external APIs
@@ -17,7 +17,7 @@ session handoff itself — that is the `continuity-kit`.
 |---|---|---|
 | Python | 3.9 | yes |
 | PyYAML | any | yes |
-| `continuity-kit` | 1.1.0+ | yes — lane-kit reads `lane_id` from its handoff-v1.1 schema |
+| `continuity-kit` | 1.1.0+ | yes — lane-kit reads `lane_id` from its handoff-v2.0 schema |
 
 External services: **none — stdlib + PyYAML, touches only the local filesystem + the target project's git.**
 

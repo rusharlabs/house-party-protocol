@@ -19,7 +19,7 @@ Use it while the request is still broad. If the question already demands a thesi
 
 ## When NOT to Activate
 
-- Small scope, already delimited for line-by-line reading; use `pp-raiox`.
+- Small scope, already delimited for line-by-line reading; use `pp-xray`.
 - Consolidation of parallel outputs that already exist; use `pp-consolidate`.
 - External research with web/citations; use the appropriate research flow.
 - Operational execution in your executor; use dispatch/executor skills.

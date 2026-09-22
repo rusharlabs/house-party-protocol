@@ -6,7 +6,7 @@ WARN-only (house doctrine: never emits `decision`, never blocks, always exit 0) 
 pattern as `snapshot_rollback_gate.py`/`external_send_draft_gate.py` from the operator-kit. Two
 kinds of warning, both independent of whether another lane is alive:
 
-  1. Red zone (`lanes.yaml -> zonas_vermelhas`): sensitive paths that deserve attention
+  1. Red zone (`lanes.yaml -> red_zones`): sensitive paths that deserve attention
      even in a solo session (e.g.: harness settings, shared memory file).
   2. Exclusive territory: another ALIVE (or suspect) lane has already claimed this path via
      `_lane_io.register(..., territory=...)` -- coordinate via lane_board/REORIENT-MAILBOX
@@ -31,7 +31,7 @@ _DEFAULT_RED_ZONES = [".claude/settings*.json", "**/MEMORY.md"]
 
 def _red_zone_hit(rel_path: str, cfg: dict) -> str | None:
     zones = list(_DEFAULT_RED_ZONES)
-    extra = _lane_io.get(cfg, "zonas_vermelhas", None)
+    extra = _lane_io.get(cfg, "red_zones", None)
     if isinstance(extra, list):
         for z in extra:
             if z not in zones:
@@ -110,7 +110,7 @@ def _self_test() -> int:
         _lane_io.CONFIG_PATH = _lane_io._LANES_DIR / "lanes.yaml"
 
         os.environ["CLAUDE_LANE_ID"] = "exec-b"
-        _lane_io.register("exec-a", "executora", "s1", "claude-opus-4-8",
+        _lane_io.register("exec-a", "executor", "s1", "claude-opus-4-8",
                            territory={"paths": [], "exclusive": ["scripts/vm/**"]})
 
         # 1. exec-b editing exec-a's exclusive territory -> warns

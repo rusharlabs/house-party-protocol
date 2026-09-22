@@ -49,7 +49,7 @@ _LOCK_SPIN_SECONDS = 2.0
 
 _DEFAULTS = {
     "liveness": {"alive_minutes": 10, "dead_minutes": 30, "heartbeat_throttle_seconds": 60},
-    "zonas_vermelhas": [".claude/settings*.json", "**/MEMORY.md"],
+    "red_zones": [".claude/settings*.json", "**/MEMORY.md"],
     "territories": {},
 }
 
@@ -368,7 +368,7 @@ def _self_test() -> int:
         CONFIG_PATH = _LANES_DIR / "lanes.yaml"
 
         # 1. register creates a valid registry.json
-        ok1, e1 = register("exec-a", "executora", "s1", "claude-opus-4-8", branch="main",
+        ok1, e1 = register("exec-a", "executor", "s1", "claude-opus-4-8", branch="main",
                             territory={"paths": ["src/**"], "exclusive": ["src/api/**"]})
         assert ok1 and REGISTRY_PATH.exists(), f"register should create the registry: {e1}"
         reg = json.loads(REGISTRY_PATH.read_text(encoding="utf-8"))
@@ -401,13 +401,13 @@ def _self_test() -> int:
         # 4. register evicts dead lanes
         reg3 = _read_registry()
         reg3["lanes"]["exec-old"] = {
-            "role": "executora", "session_id": "old", "model": "x", "branch": "",
+            "role": "executor", "session_id": "old", "model": "x", "branch": "",
             "started_at": e_dead["heartbeat_at"], "heartbeat_at": e_dead["heartbeat_at"],
             "territory": {"paths": [], "exclusive": []}, "worktree": "/somewhere/old", "status": "active",
         }
         _write_registry(reg3)
         evicted: list = []
-        register("exec-b", "executora", "s2", "gpt-5.6", evicted_out=evicted)
+        register("exec-b", "executor", "s2", "gpt-5.6", evicted_out=evicted)
         assert [lid for lid, _ in evicted] == ["exec-old"], f"eviction must be reported to the caller: {evicted}"
         assert evicted[0][1]["worktree"] == "/somewhere/old", "the evicted entry must keep its worktree (rescue)"
         reg4 = _read_registry()
@@ -424,7 +424,7 @@ def _self_test() -> int:
         # a dead lane should not show up in who_owns
         reg5 = _read_registry()
         reg5["lanes"]["exec-dead-territory"] = {
-            "role": "executora", "session_id": "d", "model": "x", "branch": "",
+            "role": "executor", "session_id": "d", "model": "x", "branch": "",
             "started_at": e_dead["heartbeat_at"], "heartbeat_at": e_dead["heartbeat_at"],
             "territory": {"paths": [], "exclusive": ["deadzone/**"]}, "status": "active",
         }
@@ -442,18 +442,18 @@ def _self_test() -> int:
         lock_dir = _LANES_DIR / ".registry.lock"
         lock_dir.mkdir(exist_ok=True)
         start = time.monotonic()
-        ok_locked, msg_locked = register("exec-c", "executora", "s3", "claude-opus-4-8")
+        ok_locked, msg_locked = register("exec-c", "executor", "s3", "claude-opus-4-8")
         elapsed = time.monotonic() - start
         assert not ok_locked and elapsed < 3.0, f"lock contention should fail fast: {elapsed}s, {msg_locked}"
         lock_dir.rmdir()
-        ok_after, _ = register("exec-c", "executora", "s3", "claude-opus-4-8")
+        ok_after, _ = register("exec-c", "executor", "s3", "claude-opus-4-8")
         assert ok_after, "register should work once the lock is released"
 
         # 8. corrupt registry degrades to empty, next register rewrites it clean
         REGISTRY_PATH.write_text("{ isto nao e json valido", encoding="utf-8")
         reg_corrupt = _read_registry()
         assert reg_corrupt == {"schema_version": "1.0", "lanes": {}}
-        register("exec-d", "executora", "s4", "claude-opus-4-8")
+        register("exec-d", "executor", "s4", "claude-opus-4-8")
         reg_clean = json.loads(REGISTRY_PATH.read_text(encoding="utf-8"))
         assert "exec-d" in reg_clean["lanes"]
         assert not REGISTRY_PATH.with_suffix(".json.tmp").exists(), "no .tmp should be left behind"

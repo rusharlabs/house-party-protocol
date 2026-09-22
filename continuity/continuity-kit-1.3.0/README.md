@@ -3,7 +3,7 @@
 # Continuity Kit
 
 An agent session survives a stop/`/clear`/crash without losing the next step. The
-handoff (schema `handoff-v1.1`) records a git block (branch/commit/staged) + a
+handoff (schema `handoff-v2.0`) records a git block (branch/commit/staged) + a
 `re_derive_cmd` (LC-1 — re-derive the state live, never trust what was left written)
 + a `verify_first_cmd` (LC-4 — before continuing an action the handoff describes,
 check whether it was already done, never re-fire blindly). It also includes **doc-rollup**

@@ -96,8 +96,8 @@ def _bullets(items: list) -> str:
     return "\n".join(f"- {i}" for i in items) if items else "- (none recorded)"
 
 
-def _metricas_table(metricas: list) -> str:
-    rows = [m for m in (metricas or []) if isinstance(m, dict)]
+def _metrics_table(metrics: list) -> str:
+    rows = [m for m in (metrics or []) if isinstance(m, dict)]
     if not rows:
         return "_(no metrics this session)_"
     lines = ["| Metric | Before | After | Re-derive |", "|---|---|---|---|"]
@@ -111,7 +111,7 @@ def render_template(template: str, payload: dict) -> str:
         "date": payload.get("date") or _brt_today(),
         "resumo": payload.get("resumo", ""),
         "shipments_bullets": _bullets(payload.get("shipments")),
-        "metricas_table": _metricas_table(payload.get("metricas")),
+        "metricas_table": _metrics_table(payload.get("metricas")),
         "decisoes_bullets": _bullets(payload.get("decisoes")),
         "aprendizados_bullets": _bullets(payload.get("aprendizados")),
     }

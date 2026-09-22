@@ -239,7 +239,7 @@ def _self_test() -> int:
         assert out_solo == {}, f"solo with no other lanes should release: {out_solo}"
 
         # registers a live rival
-        _lane_io.register("exec-a", "executora", "s1", "claude-opus-4-8")
+        _lane_io.register("exec-a", "executor", "s1", "claude-opus-4-8")
         os.environ["CLAUDE_LANE_ID"] = "exec-b"
 
         os.environ["LANE_GIT_GUARD_MODE"] = "warn"

@@ -8,7 +8,7 @@ VERIFIED/NEEDS-FIX → MERGED`) com maker≠checker cross-model **enforçado em 
 (não apenas convenção), registry de lanes vivas com heartbeat/liveness, guard de git
 (bloqueia `commit -a`/`add -A`/`reset --hard` enquanto outra lane está viva) e guard de
 território (zonas vermelhas + território exclusivo por lane). **Depende do
-`continuity-kit`** (usa o campo `lane_id` do handoff-v1.1) — instale aquele primeiro.
+`continuity-kit`** (usa o campo `lane_id` do handoff-v2.0) — instale aquele primeiro.
 Não faz o handoff de sessão em si — isso é o `continuity-kit`.
 
 ## Pré-requisitos + APIs externas
@@ -17,7 +17,7 @@ Não faz o handoff de sessão em si — isso é o `continuity-kit`.
 |---|---|---|
 | Python | 3.9 | sim |
 | PyYAML | qualquer | sim |
-| `continuity-kit` | 1.1.0+ | sim — lane-kit lê `lane_id` do schema handoff-v1.1 dele |
+| `continuity-kit` | 1.1.0+ | sim — lane-kit lê `lane_id` do schema handoff-v2.0 dele |
 
 Serviços externos: **nenhum — stdlib + PyYAML, só toca filesystem local + git do projeto-alvo.**
 
@@ -69,7 +69,7 @@ re-run        -> this kit+target pair is already in the registry (~/.claude-kits
 
 ## O que é seguro rodar de novo
 
-`lanes.yaml` (config real, git-tracked por design — diferente do estado runtime abaixo)
+`lanes.yaml` (config real, git-tracked por design — diferente do state runtime abaixo)
 nunca é tocado pelo instalador. Estado runtime é sempre regenerável e NUNCA deve ser
 versionado:
 ```

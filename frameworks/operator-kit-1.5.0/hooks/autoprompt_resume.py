@@ -43,13 +43,13 @@ _LEGACY_STATE = "docs/plans/execucao/00-STATE.md"
 # only either misses the state doc or reads nothing and says nothing. New name wins; the legacy is
 # accepted for one version, with a single line on stderr; an explicit path from the profile is
 # never rewritten.
-def _resolve_state(rel: str, root: Path, quem: str) -> str:
+def _resolve_state(rel: str, root: Path, who: str) -> str:
     if rel != _DEF_STATE:
         return rel
     if (root / _DEF_STATE).exists():
         return _DEF_STATE
     if (root / _LEGACY_STATE).exists():
-        print(f"[{quem}] deprecated: read '{_LEGACY_STATE}'; rename it to '{_DEF_STATE}' — "
+        print(f"[{who}] deprecated: read '{_LEGACY_STATE}'; rename it to '{_DEF_STATE}' — "
               "the old spelling is accepted for one version only.", file=sys.stderr)
         return _LEGACY_STATE
     return _DEF_STATE
@@ -92,7 +92,7 @@ def _cfg(root: Path):
     return (root / state, root / boot, root / pointer, lang)
 
 
-def _open_pendencias(state: Path, limit: int = 25) -> list[str]:
+def _open_pending_items(state: Path, limit: int = 25) -> list[str]:
     """Lines '- [ ]' (open pending items) from the SSoT. [] if absent/error."""
     if not state.exists():
         return []
@@ -126,7 +126,7 @@ def _build() -> str:
     root = _project_root()
     state, boot, _pointer, _lang = _cfg(root)
     now = datetime.now(_BRT).strftime("%Y-%m-%d %H:%M BRT")
-    pend = _open_pendencias(state)
+    pend = _open_pending_items(state)
     commits = _recent_commits(root)
     boot_rel = boot.relative_to(root) if boot.is_relative_to(root) else boot
     state_rel = state.relative_to(root) if state.is_relative_to(root) else state

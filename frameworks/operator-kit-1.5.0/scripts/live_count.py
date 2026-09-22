@@ -8,11 +8,11 @@ value labeled 'live @ HH:MM'. Anti-hallucination: if there is no command, it say
 never makes one up.
 
 sources.yaml (see skills/live-source-prover/sources.example.yaml) has sections
-domain -> { key: "shell command" }. live_count runs one section (default 'contagens').
+domain -> { key: "shell command" }. live_count runs one section (default 'counts').
 
 CLI:
-  live_count.py [--sources <path>] [--section contagens] [--json]
-  live_count.py --key agentes            # just one key
+  live_count.py [--sources <path>] [--section counts] [--json]
+  live_count.py --key agents            # just one key
 Resolving sources.yaml: --sources > profile paths.sources_yaml > <root>/sources.yaml.
 exit 0 always. stdlib + PyYAML. --self-test in a tmp dir (no network).
 v1.0.0 -- 2026-06-19 (Operator Kit -- Tier 2)
@@ -109,7 +109,7 @@ def main(argv) -> int:
     except Exception as e:  # noqa: BLE001
         print(f"live_count: invalid sources.yaml: {e}", file=sys.stderr)
         return 0
-    section = argv[argv.index("--section") + 1] if "--section" in argv and argv.index("--section") + 1 < len(argv) else "contagens"
+    section = argv[argv.index("--section") + 1] if "--section" in argv and argv.index("--section") + 1 < len(argv) else "counts"
     only = argv[argv.index("--key") + 1] if "--key" in argv and argv.index("--key") + 1 < len(argv) else None
     res = count_section(data, section, root, only)
     ts = datetime.now(_BRT).strftime("%Y-%m-%d %H:%M BRT")
@@ -133,15 +133,15 @@ def _self_test() -> None:
             # Why: the fixture uses the live interpreter (plain `python` doesn't exist on macOS), in a
             # single-quoted YAML scalar (a Windows path's backslash doesn't become an escape) and with
             # the path quoted (a .venv in a folder with a space used to split the command in two).
-            f"contagens:\n  dois: '\"{sys.executable.replace(chr(92), '/')}\" -c \"print(1+1)\"'\n  vazio: \"\"\n",
+            f"counts:\n  dois: '\"{sys.executable.replace(chr(92), '/')}\" -c \"print(1+1)\"'\n  vazio: \"\"\n",
             encoding="utf-8",
         )
         data = yaml.safe_load((root / "sources.yaml").read_text(encoding="utf-8"))
-        res = count_section(data, "contagens", root)
+        res = count_section(data, "counts", root)
         assert res["dois"]["ok"] and res["dois"]["value"] == "2", res
         assert res["vazio"]["ok"] is False and "not verified" in res["vazio"]["value"], res
         assert count_section(data, "inexistente", root) == {}
-        only = count_section(data, "contagens", root, only_key="dois")
+        only = count_section(data, "counts", root, only_key="dois")
         assert set(only.keys()) == {"dois"}, only
     print("self-test OK")
 

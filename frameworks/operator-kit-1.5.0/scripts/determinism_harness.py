@@ -47,9 +47,9 @@ except Exception:  # noqa: BLE001 -- without the loader, uses the default runs; 
 DEFAULT_RUNS = 5
 
 
-def _hash(texto: str) -> str:
+def _hash(text: str) -> str:
     """SHA-256 (12 chars) of the normalized stdout (unified newlines)."""
-    norm = (texto or "").replace("\r\n", "\n").replace("\r", "\n")
+    norm = (text or "").replace("\r\n", "\n").replace("\r", "\n")
     return hashlib.sha256(norm.encode("utf-8", "replace")).hexdigest()[:12]
 
 
@@ -69,29 +69,29 @@ def run_once(cmd: str, cwd: str | None = None, timeout: int = 600) -> dict:
 
 
 # Why: `cwd` keeps the kit configurable for external consumers; the local flow uses the default.
-def harness(validador: str, runs: int = DEFAULT_RUNS, negative: str | None = None,
+def harness(validator: str, runs: int = DEFAULT_RUNS, negative: str | None = None,
             cwd: str | None = None, timeout: int = 600) -> dict:
     """Runs the whole protocol. Returns a structured report with the verdict.
 
-    - Runs `validador` `runs` times; collects hashes and exit codes.
+    - Runs `validator` `runs` times; collects hashes and exit codes.
     - deterministic = a single hash across all runs.
     - all_exit_zero = all runs with exit 0.
     - If `negative`: runs it once; negative_ok = exit != 0 (MUST fail).
     - passed = deterministic AND all_exit_zero AND (negative_ok if there is a negative).
     """
     runs = max(1, int(runs))
-    resultados = [run_once(validador, cwd=cwd, timeout=timeout) for _ in range(runs)]
-    hashes = [r["stdout_hash"] for r in resultados]
-    hashes_unicos = sorted(set(hashes))
-    deterministic = len(hashes_unicos) == 1
-    all_exit_zero = all(r["exit_code"] == 0 for r in resultados)
+    results = [run_once(validator, cwd=cwd, timeout=timeout) for _ in range(runs)]
+    hashes = [r["stdout_hash"] for r in results]
+    unique_hashes = sorted(set(hashes))
+    deterministic = len(unique_hashes) == 1
+    all_exit_zero = all(r["exit_code"] == 0 for r in results)
 
-    razao = []
+    reasons = []
     if not deterministic:
-        razao.append(f"flaky: {len(hashes_unicos)} hashes distintos em {runs} runs ({hashes_unicos})")
+        reasons.append(f"flaky: {len(unique_hashes)} hashes distintos em {runs} runs ({unique_hashes})")
     if not all_exit_zero:
-        codes = sorted({r["exit_code"] for r in resultados})
-        razao.append(f"validador nao saiu 0 em todos os runs (exit codes: {codes})")
+        codes = sorted({r["exit_code"] for r in results})
+        reasons.append(f"validador nao saiu 0 em todos os runs (exit codes: {codes})")
 
     negative_result = None
     negative_ok = True
@@ -99,7 +99,7 @@ def harness(validador: str, runs: int = DEFAULT_RUNS, negative: str | None = Non
         negative_result = run_once(negative, cwd=cwd, timeout=timeout)
         negative_ok = negative_result["exit_code"] != 0
         if not negative_ok:
-            razao.append("CONTROLE NEGATIVO PASSOU (exit 0) — gate quebrado/permissivo demais")
+            reasons.append("CONTROLE NEGATIVO PASSOU (exit 0) — gate quebrado/permissivo demais")
 
     passed = deterministic and all_exit_zero and negative_ok
     return {
@@ -107,13 +107,13 @@ def harness(validador: str, runs: int = DEFAULT_RUNS, negative: str | None = Non
         "runs": runs,
         "deterministic": deterministic,
         "all_exit_zero": all_exit_zero,
-        "hashes_unicos": hashes_unicos,
+        "hashes_unicos": unique_hashes,
         "hashes": hashes,
-        "results": resultados,
+        "results": results,
         "negative": negative,
         "negative_ok": negative_ok,
         "negative_result": negative_result,
-        "razao": razao,
+        "razao": reasons,
     }
 
 
@@ -130,19 +130,19 @@ def runs_from_profile() -> int:
 
 
 def _render(report: dict) -> str:
-    linhas = []
+    lines = []
     det = "SIM" if report["deterministic"] else "NAO"
     z = "SIM" if report["all_exit_zero"] else "NAO"
-    linhas.append(f"  runs={report['runs']}  deterministico={det}  exit0_em_todos={z}")
-    linhas.append(f"  hashes unicos: {report['hashes_unicos']}")
+    lines.append(f"  runs={report['runs']}  deterministico={det}  exit0_em_todos={z}")
+    lines.append(f"  hashes unicos: {report['hashes_unicos']}")
     if report["negative"] is not None:
         ok = "OK (falhou como esperado)" if report["negative_ok"] else "FALHA (passou!)"
-        linhas.append(f"  controle negativo: {ok}  -> {report['negative']}")
-    veredito = "PASS" if report["passed"] else "FAIL"
-    linhas.append(f"\nDETERMINISM: {veredito}")
+        lines.append(f"  controle negativo: {ok}  -> {report['negative']}")
+    verdict = "PASS" if report["passed"] else "FAIL"
+    lines.append(f"\nDETERMINISM: {verdict}")
     if report["razao"]:
-        linhas.append("  motivo: " + "; ".join(report["razao"]))
-    return "\n".join(linhas)
+        lines.append("  motivo: " + "; ".join(report["razao"]))
+    return "\n".join(lines)
 
 
 def _self_test() -> None:
@@ -186,8 +186,8 @@ def main(argv) -> int:
     as_json = "--json" in argv
     argv = [a for a in argv if a != "--json"]
 
-    # simple flag parsing (--negative VAL, --runs N) + positional (validador)
-    validador = None
+    # simple flag parsing (--negative VAL, --runs N) + positional (validator)
+    validator = None
     negative = None
     runs = None
     i = 0
@@ -209,14 +209,14 @@ def main(argv) -> int:
                 print("determinism_harness: --runs deve ser inteiro", file=sys.stderr)
                 return 2
             i += 2
-        elif validador is None:
-            validador = a
+        elif validator is None:
+            validator = a
             i += 1
         else:
             print(f"determinism_harness: argumento inesperado '{a}'", file=sys.stderr)
             return 2
 
-    if not validador:
+    if not validator:
         print('uso: determinism_harness.py "<validador>" [--negative "<cmd-que-deve-falhar>"] '
               '[--runs N] [--json]', file=sys.stderr)
         return 2
@@ -224,7 +224,7 @@ def main(argv) -> int:
     if runs is None:
         runs = runs_from_profile()
 
-    report = harness(validador, runs=runs, negative=negative)
+    report = harness(validator, runs=runs, negative=negative)
     if as_json:
         print(json.dumps(report, ensure_ascii=False, indent=2))
     else:

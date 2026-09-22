@@ -22,7 +22,7 @@ liveness:
                               # between alive_minutes and dead_minutes = SUSPECT (guards degrade to warn)
   heartbeat_throttle_seconds: 60   # heartbeats more frequent than this are a no-op (cheap on the hot path)
 
-zonas_vermelhas:              # WARN on EDITS to these paths, even for a solo lane
+red_zones:              # WARN on EDITS to these paths, even for a solo lane
   - ".claude/settings*.json"
   - "**/MEMORY.md"
   # - "docs/plans/execution/00-STATE.md"   # example: the single-writer state doc, if your project has one

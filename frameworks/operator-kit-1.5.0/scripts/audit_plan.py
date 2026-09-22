@@ -91,15 +91,15 @@ def extract_deliverables(text: str, extra_regexes=None) -> list[dict]:
     items: list[dict] = []
     seen: set[tuple] = set()
 
-    def add(tipo: str, texto: str, path: str | None = None, checked=None) -> None:
-        texto = (texto or "").strip()
-        key = (tipo, (path or texto).lower())
-        if not texto and not path:
+    def add(kind: str, text: str, path: str | None = None, checked=None) -> None:
+        text = (text or "").strip()
+        key = (kind, (path or text).lower())
+        if not text and not path:
             return
         if key in seen:
             return
         seen.add(key)
-        items.append({"tipo": tipo, "texto": texto, "path": path, "checked": checked})
+        items.append({"tipo": kind, "texto": text, "path": path, "checked": checked})
 
     for raw in text.splitlines():
         line = raw.rstrip("\n")
@@ -231,15 +231,15 @@ def audit(plan_path: Path, repo_root: Path, use_git: bool = True,
     text = plan_path.read_text(encoding="utf-8", errors="replace")
     items = extract_deliverables(text, extra_regexes=extra_regexes)
     rows = [classify(it, repo_root, use_git) for it in items]
-    resumo = {"FEITO": 0, "PARCIAL": 0, "AUSENTE": 0}
+    summary = {"FEITO": 0, "PARCIAL": 0, "AUSENTE": 0}
     for r in rows:
-        resumo[r["status"]] = resumo.get(r["status"], 0) + 1
+        summary[r["status"]] = summary.get(r["status"], 0) + 1
     return {
         "plano": str(plan_path),
         "repo": str(repo_root),
         "git_consultado": use_git,
         "total": len(rows),
-        "resumo": resumo,
+        "resumo": summary,
         "itens": rows,
     }
 
@@ -262,13 +262,13 @@ def render_markdown(result: dict) -> str:
     out.append("| Status | Type | Deliverable | Disk | Git |")
     out.append("|--------|------|-------------|:----:|:---:|")
     for it in result["itens"]:
-        alvo = it.get("path") or it.get("texto") or ""
-        alvo = alvo.replace("|", "\\|")
-        if len(alvo) > 70:
-            alvo = alvo[:67] + "..."
-        disco = "yes" if it["on_disk"] else "—"
+        target = it.get("path") or it.get("texto") or ""
+        target = target.replace("|", "\\|")
+        if len(target) > 70:
+            target = target[:67] + "..."
+        disk = "yes" if it["on_disk"] else "—"
         gitm = "yes" if it["in_git"] else "—"
-        out.append(f"| {it['status']} | {it['tipo']} | {alvo} | {disco} | {gitm} |")
+        out.append(f"| {it['status']} | {it['tipo']} | {target} | {disk} | {gitm} |")
     return "\n".join(out)
 
 
@@ -329,7 +329,7 @@ def _detect_repo_root(plan_path: Path) -> Path:
 def _self_test() -> None:
     import tempfile
 
-    plano = (
+    plan_text = (
         "# Fixture plan\n"
         "\n"
         "## Phase 1\n"
@@ -343,7 +343,7 @@ def _self_test() -> None:
     )
 
     # extraction
-    items = extract_deliverables(plano)
+    items = extract_deliverables(plan_text)
     paths = [it["path"] for it in items if it["path"]]
     assert "existe_no_disco.py" in paths, "should extract the checkbox path"
     assert "nao_existe_jamais_xyz.py" in paths, "should extract the 2nd checkbox path"
@@ -363,7 +363,7 @@ def _self_test() -> None:
         sub.mkdir()
         (sub / "profundo.txt").write_text("y", encoding="utf-8")
         plan_file = root / "plano.md"
-        plan_file.write_text(plano, encoding="utf-8")
+        plan_file.write_text(plan_text, encoding="utf-8")
 
         res = audit(plan_file, root, use_git=False)
         by_path = {it["path"]: it for it in res["itens"] if it["path"]}
@@ -381,9 +381,9 @@ def _self_test() -> None:
         assert "Plan audit" in md and "| Status |" in md
 
         # a plan with no deliverables does not crash
-        vazio = root / "vazio.md"
-        vazio.write_text("# nothing here\nplain text\n", encoding="utf-8")
-        rv = audit(vazio, root, use_git=False)
+        empty = root / "vazio.md"
+        empty.write_text("# nothing here\nplain text\n", encoding="utf-8")
+        rv = audit(empty, root, use_git=False)
         assert rv["total"] == 0
         assert "No deliverable" in render_markdown(rv)
 

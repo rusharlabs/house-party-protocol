@@ -2,9 +2,9 @@
 
 # Gotcha Memory
 
-Loop de aprendizado operacional **standalone**: a falha vira conhecimento. Depois de
+Loop de aprendizado operacional **standalone**: a failure vira conhecimento. Depois de
 cada comando Bash que FALHA, o `gotcha_postflight.py` registra o evento (classificado
-por família de erro via `error_strategy`). Quando o MESMO tipo de falha recorre
+por família de erro via `error_strategy`). Quando o MESMO tipo de failure recorre
 **>= N vezes** numa janela de tempo, vira um **GOTCHA** — uma lição acionável que o
 `gotcha_preflight.py` injeta no stderr ANTES da próxima execução da mesma tarefa.
 Gotchas **curated** (regras suas, seedadas de arquivo) são always-on quando a chave
@@ -12,9 +12,9 @@ casa por substring. Dois hooks, uma fronteira clara: **preflight LÊ as lições
 postflight ESCREVE as falhas.** Tudo WARN-only (exit 0 sempre) — o loop de
 aprendizado jamais bloqueia o fluxo.
 
-**Doutrina embarcada:** detecção CONSERVADORA — só sinal claro de erro conta
-(exit != 0, `is_error`, campo `error`); ambíguo = não-falha. O sistema nunca
-inventa uma falha para "parecer que aprendeu".
+**Doutrina embarcada:** detecção CONSERVADORA — só signal claro de erro conta
+(exit != 0, `is_error`, campo `error`); ambíguo = não-failure. O sistema nunca
+inventa uma failure para "parecer que aprendeu".
 
 ## Pré-requisitos + APIs externas
 
@@ -60,8 +60,8 @@ gotcha-memory/
 
 Instala os hooks (`PreToolUse` → preflight; `PostToolUse` **e** `PostToolUseFailure` →
 postflight, matcher `Bash`) via `${CLAUDE_PLUGIN_ROOT}` — nenhum path relativo hardcoded.
-O host emite `PostToolUseFailure` quando o Bash falha; ouvir só `PostToolUse` deixaria a
-memória cega para a falha. A mesma chamada (`tool_use_id`) vira **um** registro, por
+O host emite `PostToolUseFailure` quando o Bash failure; ouvir só `PostToolUse` deixaria a
+memória cega para a failure. A mesma chamada (`tool_use_id`) vira **um** registro, por
 quantos eventos chegar.
 
 ## Instalar por cópia (wire manual)

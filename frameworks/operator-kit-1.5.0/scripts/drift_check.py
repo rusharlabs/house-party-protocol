@@ -64,7 +64,7 @@ try:
 except Exception:  # noqa: BLE001
     yaml = None  # type: ignore[assignment]
 
-_TIPOS = ("cmd", "http", "glob")
+_TYPES = ("cmd", "http", "glob")
 
 
 # ── probe execution ─────────────────────────────────────────────────────────
@@ -130,15 +130,15 @@ def run_probe(sonda: dict, repo_root: Path | None = None) -> dict:
     else:
         res = {"real": False, "detalhe": f"invalid type: {tipo!r}", "tail": ""}
 
-    rotulo = rotular(espera, res["real"])
+    label = label_for(espera, res["real"])
     return {
         "nome": nome, "tipo": tipo, "alvo": alvo, "espera": espera,
-        "real": res["real"], "rotulo": rotulo,
+        "real": res["real"], "rotulo": label,
         "detalhe": res["detalhe"], "tail": res.get("tail", ""),
     }
 
 
-def rotular(espera: bool, real: bool) -> str:
+def label_for(espera: bool, real: bool) -> str:
     """
     espera (does the doc claim it works?) x real (did the probe confirm it?):
         espera=True,  real=True   -> by-design   (doc matches reality)
@@ -179,8 +179,8 @@ def parse_inline(spec: str) -> dict:
         if val in ("true", "false", "1", "0", "yes", "no"):
             espera = val in ("true", "1", "yes")
             alvo = alvo[:idx]
-    if tipo not in _TIPOS:
-        raise ValueError(f"invalid type {tipo!r} in {spec!r} (use {_TIPOS})")
+    if tipo not in _TYPES:
+        raise ValueError(f"invalid type {tipo!r} in {spec!r} (use {_TYPES})")
     return {"nome": nome.strip(), "tipo": tipo, "alvo": alvo.strip(), "espera": espera}
 
 
@@ -214,26 +214,26 @@ def drift_check(doc_path: Path | None, sondas: list[dict],
                 repo_root: Path | None = None) -> dict:
     """Runs all probes and aggregates the drift label."""
     rows = [run_probe(s, repo_root) for s in sondas]
-    resumo = {"bug": 0, "by-design": 0, "aspiracional": 0}
+    summary = {"bug": 0, "by-design": 0, "aspiracional": 0}
     for r in rows:
-        resumo[r["rotulo"]] = resumo.get(r["rotulo"], 0) + 1
+        summary[r["rotulo"]] = summary.get(r["rotulo"], 0) + 1
     return {
         "doc": str(doc_path) if doc_path else None,
         "total": len(rows),
-        "drift": resumo["bug"] > 0,
-        "resumo": resumo,
+        "drift": summary["bug"] > 0,
+        "resumo": summary,
         "sondas": rows,
     }
 
 
 def render_markdown(result: dict) -> str:
     out: list[str] = []
-    titulo = Path(result["doc"]).name if result.get("doc") else "(sem doc)"
-    out.append(f"# Drift check — {titulo}")
+    title = Path(result["doc"]).name if result.get("doc") else "(sem doc)"
+    out.append(f"# Drift check — {title}")
     out.append("")
     r = result["resumo"]
-    veredito = "DRIFT (bug present)" if result["drift"] else "no drift"
-    out.append(f"Probes: **{result['total']}** · {veredito} · "
+    verdict = "DRIFT (bug present)" if result["drift"] else "no drift"
+    out.append(f"Probes: **{result['total']}** · {verdict} · "
                f"bug {r.get('bug', 0)} · by-design {r.get('by-design', 0)} · "
                f"aspiracional {r.get('aspiracional', 0)}")
     out.append("")
@@ -287,11 +287,11 @@ def main(argv) -> int:
         if not sondas_yaml.exists():
             print(f"drift_check: --sondas not found: {sondas_yaml}", file=sys.stderr)
             return 2
-        carregadas = load_sondas_yaml(sondas_yaml)
-        if not carregadas and yaml is None:
+        loaded = load_sondas_yaml(sondas_yaml)
+        if not loaded and yaml is None:
             print("drift_check: PyYAML missing — --sondas YAML unavailable", file=sys.stderr)
             return 2
-        sondas.extend(carregadas)
+        sondas.extend(loaded)
 
     if not sondas:
         print('usage: drift_check.py [doc.md] --sondas <yaml> | --sonda "name=TYPE:TARGET[:espera=bool]" [...]',
@@ -324,10 +324,10 @@ def _self_test() -> None:
     import tempfile
 
     # labeling (espera x real matrix)
-    assert rotular(True, True) == "by-design"
-    assert rotular(True, False) == "bug"
-    assert rotular(False, False) == "aspiracional"
-    assert rotular(False, True) == "by-design"
+    assert label_for(True, True) == "by-design"
+    assert label_for(True, False) == "bug"
+    assert label_for(False, False) == "aspiracional"
+    assert label_for(False, True) == "by-design"
 
     # inline parse
     s = parse_inline("health=http:http://127.0.0.1:8080/health")
@@ -382,9 +382,9 @@ def _self_test() -> None:
         assert "Drift check" in md and "| Label |" in md
 
         # no probes: render warns, doesn't crash
-        vazio = drift_check(None, [], repo_root=root)
-        assert vazio["total"] == 0 and vazio["drift"] is False
-        assert "No probe" in render_markdown(vazio)
+        empty = drift_check(None, [], repo_root=root)
+        assert empty["total"] == 0 and empty["drift"] is False
+        assert "No probe" in render_markdown(empty)
 
     print("self-test OK")
 

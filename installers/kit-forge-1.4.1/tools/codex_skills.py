@@ -273,19 +273,19 @@ def _self_test() -> int:
         # name that would escape the target -> error 3, nothing written
         escape = tmp / "escape-kit"
         (escape / ".claude-plugin").mkdir(parents=True)
-        (escape / ".claude-plugin" / "plugin.json").write_text('{"name":"../../fora"}\n', encoding="utf-8")
+        (escape / ".claude-plugin" / "plugin.json").write_text('{"name":"../../outside"}\n', encoding="utf-8")
         rep_escape, rc_escape = build_plan(escape, target, apply=True)
         assert rc_escape == 3 and rep_escape["status"] == "error", rep_escape
-        assert not (tmp / "fora").exists()
+        assert not (tmp / "outside").exists()
 
         # two skills that collapse into the same slug -> explicit error 3
-        colisao = tmp / "colisao-kit"
-        (colisao / ".claude-plugin").mkdir(parents=True)
-        (colisao / ".claude-plugin" / "plugin.json").write_text('{"name":"colisao"}\n', encoding="utf-8")
-        for nome in ("a_b", "a-b"):
-            (colisao / "skills" / nome).mkdir(parents=True)
-            (colisao / "skills" / nome / "SKILL.md").write_text(f"---\nname: {nome}\n---\n", encoding="utf-8")
-        rep_col, rc_col = build_plan(colisao, target, apply=True)
+        collision = tmp / "collision-kit"
+        (collision / ".claude-plugin").mkdir(parents=True)
+        (collision / ".claude-plugin" / "plugin.json").write_text('{"name":"collision"}\n', encoding="utf-8")
+        for name in ("a_b", "a-b"):
+            (collision / "skills" / name).mkdir(parents=True)
+            (collision / "skills" / name / "SKILL.md").write_text(f"---\nname: {name}\n---\n", encoding="utf-8")
+        rep_col, rc_col = build_plan(collision, target, apply=True)
         assert rc_col == 3 and "a_b" in rep_col["detail"] and "a-b" in rep_col["detail"], rep_col
 
         print("self-test OK — the plan writes nothing; runtime and namespaced skill copied; rerun idempotent; "

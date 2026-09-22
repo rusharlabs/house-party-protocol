@@ -1,13 +1,13 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "handoff-v1.1.schema.json",
-  "title": "Handoff v1.1",
-  "description": "Contract of the handoff artifact between sessions (continuity-kit). v1.1 over v1.0: mandatory git block, stale_when.head_moved, degraded-auto with git status --porcelain, FORMAL schema (max_bytes:65536).",
+  "$id": "handoff-v2.0.schema.json",
+  "title": "Handoff v2.0",
+  "description": "Contract of the handoff artifact between sessions (continuity-kit). v2.0 over v1.1: every property name is English. There is NO dual read for v1.1 and none is needed - the format had zero files anywhere when it was renamed (measured 2026-09-22 across this repo, the product repo and the operator's Mac), so a compatibility path would have been code that is dead on the day it is born. What v1.1 brought and v2.0 keeps: mandatory git block, stale_when.head_moved, degraded-auto with git status --porcelain, FORMAL schema (max_bytes:65536).",
   "type": "object",
-  "required": ["schema_version", "handoff_id", "created_at", "trigger", "quality", "session", "estado", "git", "valid_until"],
+  "required": ["schema_version", "handoff_id", "created_at", "trigger", "quality", "session", "state", "git", "valid_until"],
   "additionalProperties": false,
   "properties": {
-    "schema_version": { "const": "1.1" },
+    "schema_version": { "const": "2.0" },
     "handoff_id": { "type": "string", "pattern": "^HO-\\d{8}-\\d{4}-[a-z0-9-]+$" },
     "created_at": { "type": "string", "format": "date-time" },
     "trigger": { "type": "string", "enum": ["pre-clear", "precompact", "stop", "manual", "degraded-auto"] },
@@ -20,7 +20,7 @@
       "properties": {
         "session_id": { "type": "string" },
         "lane_id": { "type": "string", "default": "solo" },
-        "role": { "type": "string", "enum": ["executora", "planejadora", "revisora", "solo"] },
+        "role": { "type": "string", "enum": ["executor", "planner", "reviewer", "solo"] },
         "model": { "type": "string" },
         "branch": { "type": "string" },
         "cwd": { "type": "string" }
@@ -45,7 +45,7 @@
 
     "stale_when": {
       "type": "object",
-      "description": "v1.1 correction — staleness by commit delta, not only by clock: the tree moved = proximo_passo is not actionable even inside valid_until.",
+      "description": "v1.1 correction — staleness by commit delta, not only by clock: the tree moved = next_step is not actionable even inside valid_until.",
       "additionalProperties": false,
       "properties": {
         "head_moved": { "type": "boolean", "description": "true if the current HEAD != git.head at injection time (computed at runtime by handoff_inject.py, not stored at write time)" },
@@ -53,22 +53,22 @@
       }
     },
 
-    "estado": {
+    "state": {
       "type": "object",
-      "required": ["resumo"],
+      "required": ["summary"],
       "additionalProperties": false,
       "properties": {
-        "resumo": { "type": "string", "minLength": 1 },
-        "fase": { "type": "string" },
-        "numeros": {
+        "summary": { "type": "string", "minLength": 1 },
+        "phase": { "type": "string" },
+        "numbers": {
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["metrica", "valor", "medido_em", "re_derive_cmd"],
+            "required": ["metric", "value", "measured_at", "re_derive_cmd"],
             "properties": {
-              "metrica": { "type": "string" },
-              "valor": { "type": "string" },
-              "medido_em": { "type": "string", "format": "date-time" },
+              "metric": { "type": "string" },
+              "value": { "type": "string" },
+              "measured_at": { "type": "string", "format": "date-time" },
               "re_derive_cmd": { "type": "string", "minLength": 1 }
             }
           }
@@ -76,74 +76,74 @@
       }
     },
 
-    "decisoes": {
+    "decisions": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["id", "decisao"],
+        "required": ["id", "decision"],
         "properties": {
           "id": { "type": "string" },
-          "decisao": { "type": "string" },
-          "motivo": { "type": "string" },
-          "evidencia": { "type": "string" }
+          "decision": { "type": "string" },
+          "reason": { "type": "string" },
+          "evidence": { "type": "string" }
         }
       }
     },
 
-    "gates_abertos": {
+    "open_gates": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["id", "dono", "descricao"],
+        "required": ["id", "owner", "description"],
         "properties": {
           "id": { "type": "string" },
-          "dono": { "type": "string" },
-          "descricao": { "type": "string" },
-          "bloqueia": { "type": "string" },
-          "comando_destrava": { "type": "string" }
+          "owner": { "type": "string" },
+          "description": { "type": "string" },
+          "blocks": { "type": "string" },
+          "unblock_cmd": { "type": "string" }
         }
       }
     },
 
-    "proibicoes": { "type": "array", "items": { "type": "string" } },
+    "prohibitions": { "type": "array", "items": { "type": "string" } },
 
-    "ja_executado": {
+    "already_done": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["acao", "evidencia"],
+        "required": ["action", "evidence"],
         "properties": {
-          "acao": { "type": "string" },
-          "evidencia": { "type": "string" },
-          "nunca_repetir": { "type": "boolean", "default": true }
+          "action": { "type": "string" },
+          "evidence": { "type": "string" },
+          "never_repeat": { "type": "boolean", "default": true }
         }
       }
     },
 
-    "proximo_passo": {
+    "next_step": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["ordem", "descricao", "verify_first_cmd"],
+        "required": ["order", "description", "verify_first_cmd"],
         "properties": {
-          "ordem": { "type": "integer", "minimum": 1 },
-          "descricao": { "type": "string" },
+          "order": { "type": "integer", "minimum": 1 },
+          "description": { "type": "string" },
           "done_predicate": { "type": "string" },
           "verify_first_cmd": { "type": "string", "minLength": 1, "description": "command that proves whether it was ALREADY done (LC-4) — mandatory" },
-          "idempotente": { "type": "boolean", "default": false }
+          "idempotent": { "type": "boolean", "default": false }
         }
       }
     },
 
-    "evidencias": {
+    "evidence": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["tipo", "ref"],
+        "required": ["type", "ref"],
         "properties": {
-          "tipo": { "type": "string", "enum": ["commit", "arquivo", "http", "cmd"] },
+          "type": { "type": "string", "enum": ["commit", "file", "http", "cmd"] },
           "ref": { "type": "string" },
-          "valor": { "type": "string" }
+          "value": { "type": "string" }
         }
       }
     },

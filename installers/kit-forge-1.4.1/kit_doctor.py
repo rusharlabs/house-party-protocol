@@ -107,7 +107,7 @@ def parse_checksums(text: str) -> dict:
     return entries
 
 
-def _relpath_seguro(kit_dir: Path, relpath: str) -> bool:
+def _relpath_safe(kit_dir: Path, relpath: str) -> bool:
     """An inventory entry must point to INSIDE the kit: relative, no `..`, no drive/root.
 
     # Why: `kit_dir / relpath` accepts `../outside` and an absolute path (the join drops
@@ -145,7 +145,7 @@ def check_kit(kit_dir: Path) -> dict:
     missing = []
     unsafe = []
     for relpath, expected_hash in expected.items():
-        if not _relpath_seguro(kit_dir, relpath):
+        if not _relpath_safe(kit_dir, relpath):
             unsafe.append(relpath)
             continue
         f = kit_dir / relpath
@@ -216,7 +216,7 @@ def check_marketplace(root: Path) -> dict:
     `.claude-plugin/` (the official one uses `./plugins/<x>` and the directory is at the root).
     """
     root = Path(root)
-    rel: dict = {
+    report: dict = {
         "tool": "kit_doctor.marketplace",
         "root": str(root),
         "checked_at": _brt_now_iso(),
@@ -226,93 +226,93 @@ def check_marketplace(root: Path) -> dict:
         "status": "ok",
     }
 
-    def _achado(code: str, detalhe: str, severidade: str = "fail") -> None:
-        rel["achados"].append({"code": code, "detalhe": detalhe, "severidade": severidade})
+    def _finding(code: str, detail: str, severity: str = "fail") -> None:
+        report["achados"].append({"code": code, "detalhe": detail, "severidade": severity})
 
     if not root.is_dir():
-        rel["status"] = "error"
-        _achado("raiz-nao-existe", f"{root} is not a directory")
-        return rel
+        report["status"] = "error"
+        _finding("raiz-nao-existe", f"{root} is not a directory")
+        return report
 
-    canonico = root / _MARKETPLACE_REL
-    na_raiz = root / "marketplace.json"
+    canonical = root / _MARKETPLACE_REL
+    at_root = root / "marketplace.json"
 
-    if not canonico.exists():
-        rel["status"] = "fail"
-        onde = "at the root only" if na_raiz.exists() else "nowhere"
-        _achado(
+    if not canonical.exists():
+        report["status"] = "fail"
+        where = "at the root only" if at_root.exists() else "nowhere"
+        _finding(
             "manifesto-fora-do-lugar",
-            f"{_MARKETPLACE_REL.as_posix()} missing ({onde}) — "
+            f"{_MARKETPLACE_REL.as_posix()} missing ({where}) — "
             "`/plugin marketplace add` cannot find the catalogue",
         )
-        return rel
+        return report
 
-    rel["manifest"] = str(canonico)
+    report["manifest"] = str(canonical)
     try:
-        doc = json.loads(canonico.read_text(encoding="utf-8"))
+        doc = json.loads(canonical.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as e:  # noqa: BLE001 -- the error becomes a finding, not silence
-        rel["status"] = "error"
-        _achado("manifesto-ilegivel", f"{canonico}: {e}")
-        return rel
+        report["status"] = "error"
+        _finding("manifesto-ilegivel", f"{canonical}: {e}")
+        return report
 
     # Mode 4 -- two copies of the same manifest that are no longer the same thing.
     # The IDENTICAL copy passes on purpose: it is the real state of the marketplace today.
-    if na_raiz.exists() and _sha256(na_raiz) != _sha256(canonico):
-        _achado(
+    if at_root.exists() and _sha256(at_root) != _sha256(canonical):
+        _finding(
             "copia-da-raiz-derivou",
             f"the root marketplace.json diverges from {_MARKETPLACE_REL.as_posix()} "
             "— two sources of truth for the same catalogue",
         )
 
     plugins = doc.get("plugins") or []
-    rel["plugins"] = len(plugins)
+    report["plugins"] = len(plugins)
     if not plugins:
-        _achado("catalogo-vazio", "the manifest declares no plugin at all")
+        _finding("catalogo-vazio", "the manifest declares no plugin at all")
 
     for entry in plugins:
-        nome = entry.get("name", "<unnamed>")
+        name = entry.get("name", "<unnamed>")
         source = entry.get("source")
         if not isinstance(source, str):
             continue  # remote source (git-subdir etc.) -- not ours to resolve
-        alvo = (root / source).resolve()
-        if not alvo.is_dir():
-            _achado("source-nao-resolve", f"{nome}: source `{source}` does not exist")
+        target = (root / source).resolve()
+        if not target.is_dir():
+            _finding("source-nao-resolve", f"{name}: source `{source}` does not exist")
             continue
-        pj = alvo / ".claude-plugin" / "plugin.json"
+        pj = target / ".claude-plugin" / "plugin.json"
         if not pj.exists():
             # Why: in Anthropic's official catalogue (sep/2026), 14 of the 291 entries (the `*-lsp`
             # ones) are dirs with only LICENSE+README -- the entire metadata lives in the marketplace
             # entry. Failing this would fail the reference implementation at 4.8%, and a gate that
             # yells at the innocent gets turned off before it is ever right. WARN: the version cannot be cross-checked.
-            _achado(
+            _finding(
                 "kit-sem-plugin-json",
-                f"{nome}: {source} has no .claude-plugin/plugin.json — version not cross-checkable",
-                severidade="warn",
+                f"{name}: {source} has no .claude-plugin/plugin.json — version not cross-checkable",
+                severity="warn",
             )
             continue
         try:
             v_kit = json.loads(pj.read_text(encoding="utf-8")).get("version")
         except (OSError, json.JSONDecodeError) as e:  # noqa: BLE001
-            _achado("plugin-json-ilegivel", f"{nome}: {e}")
+            _finding("plugin-json-ilegivel", f"{name}: {e}")
             continue
         # Why: `version` is OPTIONAL in the entry -- only 14 of the 291 entries in Anthropic's
         # official marketplace declare it (sep/2026). Comparing `None != "1.2.1"` would fail the
         # whole catalogue. Whoever does not declare it cannot diverge: there the plugin.json is the single source.
         v_mk = entry.get("version")
         if v_mk is not None and v_mk != v_kit:
-            _achado(
+            _finding(
                 "versao-divergente",
-                f"{nome}: the catalogue says {v_mk} and the plugin.json says {v_kit}",
+                f"{name}: the catalogue says {v_mk} and the plugin.json says {v_kit}",
             )
 
-    if rel["status"] == "ok" and rel["achados"]:
-        rel["status"] = "fail" if any(a["severidade"] == "fail" for a in rel["achados"]) else "warn"
-    return rel
+    if report["status"] == "ok" and report["achados"]:
+        report["status"] = "fail" if any(a["severidade"] == "fail" for a in report["achados"]) else "warn"
+    return report
 
 
-def _marketplace_exit(rel: dict) -> int:
+def _marketplace_exit(report: dict) -> int:
     """Same convention as `verify`: 0 ok - 1 warn - 2 contract breach - 3 error."""
-    status = rel.get("status")
+    status = report.get("status")
     if status == "error":
         return 3
     if status == "fail":
@@ -897,11 +897,11 @@ def main(argv) -> int:
         return 0
 
     if args.cmd == "marketplace":
-        rel = check_marketplace(Path(args.root))
+        report = check_marketplace(Path(args.root))
         if args.json_out:
-            Path(args.json_out).write_text(json.dumps(rel, ensure_ascii=False, indent=2), encoding="utf-8")
-        print(json.dumps(rel, ensure_ascii=False, indent=2))
-        return _marketplace_exit(rel)
+            Path(args.json_out).write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+        print(json.dumps(report, ensure_ascii=False, indent=2))
+        return _marketplace_exit(report)
 
     print(
         "usage: kit_doctor.py {verify|install|registry|marketplace} ... "
@@ -949,23 +949,23 @@ def _self_test() -> int:
         assert report_error["status"] == "error" and _verify_exit(report_error) == 3
 
         # an EMPTY inventory attests to nothing -> corrupt (exit 2), with a message
-        vazio_dir = tmp / "inventario-vazio"
-        vazio_dir.mkdir()
-        (vazio_dir / "CHECKSUMS.txt").write_text("\n", encoding="utf-8")
-        report_vazio = check_kit(vazio_dir)
-        assert report_vazio["status"] == "corrupt" and _verify_exit(report_vazio) == 2 and report_vazio["errors"], report_vazio
+        empty_dir = tmp / "empty-inventory"
+        empty_dir.mkdir()
+        (empty_dir / "CHECKSUMS.txt").write_text("\n", encoding="utf-8")
+        report_empty = check_kit(empty_dir)
+        assert report_empty["status"] == "corrupt" and _verify_exit(report_empty) == 2 and report_empty["errors"], report_empty
 
         # path that escapes the kit (`../` and absolute) -> corrupt, listed in unsafe_paths
-        fora = tmp / "fora.txt"
-        fora.write_text("outside the kit\n", encoding="utf-8")
+        outside = tmp / "outside.txt"
+        outside.write_text("outside the kit\n", encoding="utf-8")
         escape_dir = tmp / "escape-kit"
         escape_dir.mkdir()
         (escape_dir / "CHECKSUMS.txt").write_text(
-            f"{_sha256(fora)}  ../fora.txt\n{_sha256(fora)}  {fora.as_posix()}\n", encoding="utf-8"
+            f"{_sha256(outside)}  ../outside.txt\n{_sha256(outside)}  {outside.as_posix()}\n", encoding="utf-8"
         )
         report_escape = check_kit(escape_dir)
         assert report_escape["status"] == "corrupt" and _verify_exit(report_escape) == 2, report_escape
-        assert sorted(report_escape["unsafe_paths"]) == sorted(["../fora.txt", fora.as_posix()]), report_escape
+        assert sorted(report_escape["unsafe_paths"]) == sorted(["../outside.txt", outside.as_posix()]), report_escape
 
         # --- positional compatibility: kit_doctor.py <dir> == verify <dir> ---
         assert _normalize_argv([str(kit_dir)]) == ["verify", str(kit_dir)]
@@ -1059,7 +1059,7 @@ def _self_test() -> int:
         script_bad.unlink()
 
         # --- registry: registers/updates without duplicating, keyed by (kit_dir, target_dir) ---
-        assert list_installs(tmp / "registry-vazio.json") == []
+        assert list_installs(tmp / "registry-empty.json") == []
         installs = list_installs(reg_path)
         assert len(installs) == 1 and installs[0]["kit_dir"] == str(install_kit.resolve())
         register_install(install_kit, install_kit, reg_path, {"status": "warn"})
@@ -1084,21 +1084,21 @@ def _self_test() -> int:
         }
         (mk / "marketplace.json").write_text(json.dumps(doc_mk), encoding="utf-8")
 
-        rel_fora = check_marketplace(mk)  # manifest ONLY at the root -> mode #1
-        assert rel_fora["status"] == "fail" and _marketplace_exit(rel_fora) == 2
-        assert any(a["code"] == "manifesto-fora-do-lugar" for a in rel_fora["achados"])
+        report_outside = check_marketplace(mk)  # manifest ONLY at the root -> mode #1
+        assert report_outside["status"] == "fail" and _marketplace_exit(report_outside) == 2
+        assert any(a["code"] == "manifesto-fora-do-lugar" for a in report_outside["achados"])
 
         (mk / ".claude-plugin").mkdir()
         (mk / ".claude-plugin" / "marketplace.json").write_text(json.dumps(doc_mk), encoding="utf-8")
-        rel_ok = check_marketplace(mk)  # CONTROL: in the right place + identical copy -> silence
-        assert rel_ok["status"] == "ok" and rel_ok["achados"] == [], rel_ok["achados"]
-        assert rel_ok["plugins"] == 1
+        report_ok = check_marketplace(mk)  # CONTROL: in the right place + identical copy -> silence
+        assert report_ok["status"] == "ok" and report_ok["achados"] == [], report_ok["achados"]
+        assert report_ok["plugins"] == 1
 
         (kit_pub / ".claude-plugin" / "plugin.json").write_text(
             json.dumps({"name": "fixture-kit", "version": "9.9.9"}), encoding="utf-8"
         )
-        rel_drift = check_marketplace(mk)  # the defect from item 1, one layer up
-        assert any(a["code"] == "versao-divergente" for a in rel_drift["achados"])
+        report_drift = check_marketplace(mk)  # the defect from item 1, one layer up
+        assert any(a["code"] == "versao-divergente" for a in report_drift["achados"])
 
         assert _marketplace_exit(check_marketplace(tmp / "does-not-exist")) == 3
 

@@ -199,11 +199,11 @@ def _self_test() -> int:
         assert bytes_after_run3 == bytes_after_run1, "the 3rd run should be byte-stable"
 
         conflict_target = tmp / "conflict.json"
-        conflict_target.write_text(json.dumps({"statusLine": {"command": "outro_dono"}, "hooks": {}}), encoding="utf-8")
+        conflict_target.write_text(json.dumps({"statusLine": {"command": "other_owner"}, "hooks": {}}), encoding="utf-8")
         code4, report4 = wire(conflict_target, spec, force=False)
         assert code4 == 1 and report4["warnings"], f"a conflict without --force should report a warning: {report4}"
         conflict_data = json.loads(conflict_target.read_text(encoding="utf-8"))
-        assert conflict_data["statusLine"]["command"] == "outro_dono", "it overwrote someone else's statusLine without --force!"
+        assert conflict_data["statusLine"]["command"] == "other_owner", "it overwrote someone else's statusLine without --force!"
 
         code5, report5 = wire(conflict_target, spec, force=True)
         assert code5 == 0 and report5["status"] == "wired", f"--force should overwrite: {report5}"
@@ -216,16 +216,16 @@ def _self_test() -> int:
 
         # Crash mid-write: the target must NOT be left truncated
         crash_target = tmp / "crash.json"
-        crash_target.write_text(json.dumps({"hooks": {}, "dono": "eu"}), encoding="utf-8")
-        antes = crash_target.read_bytes()
+        crash_target.write_text(json.dumps({"hooks": {}, "owner": "me"}), encoding="utf-8")
+        before = crash_target.read_bytes()
         _orig_write_text = Path.write_text
 
-        def _cai_no_meio(self, data, *a, **k):
+        def _crash_midway(self, data, *a, **k):
             with open(self, "w", encoding="utf-8") as f:
                 f.write(data[: len(data) // 2])
             raise OSError("simulated crash")
 
-        Path.write_text = _cai_no_meio  # type: ignore[method-assign]
+        Path.write_text = _crash_midway  # type: ignore[method-assign]
         try:
             try:
                 wire(crash_target, spec, force=False)
@@ -233,26 +233,26 @@ def _self_test() -> int:
                 pass
         finally:
             Path.write_text = _orig_write_text  # type: ignore[method-assign]
-        assert crash_target.read_bytes() == antes, "a crash mid-write truncated the target"
+        assert crash_target.read_bytes() == before, "a crash mid-write truncated the target"
 
         # Someone else's write between the read and the write: refuses (exit 2) and does not overwrite
         race_target = tmp / "race.json"
         race_target.write_text(json.dumps({"hooks": {}}), encoding="utf-8")
         _orig_apply = globals()["apply_spec"]
 
-        def _apply_com_intruso(data, spec_, force_):
+        def _apply_with_intruder(data, spec_, force_):
             cur = json.loads(race_target.read_text(encoding="utf-8"))
-            cur["alheio"] = 1
+            cur["intruder"] = 1
             race_target.write_text(json.dumps(cur), encoding="utf-8")
             return _orig_apply(data, spec_, force_)
 
-        globals()["apply_spec"] = _apply_com_intruso
+        globals()["apply_spec"] = _apply_with_intruder
         try:
             code6, report6 = wire(race_target, spec, force=False)
         finally:
             globals()["apply_spec"] = _orig_apply
         assert code6 == 2 and report6["status"] == "conflict", f"a concurrent write should be refused: {report6}"
-        assert json.loads(race_target.read_text(encoding="utf-8")).get("alheio") == 1, "someone else's update was lost"
+        assert json.loads(race_target.read_text(encoding="utf-8")).get("intruder") == 1, "someone else's update was lost"
 
         print("self-test OK — wire idempotent, conflict without --force preserved, --force overwrites, --undo byte-identical, "
               "a crash mid-write does not truncate, a concurrent write is refused (exit 2)")

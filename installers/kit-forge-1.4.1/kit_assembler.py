@@ -178,7 +178,7 @@ def write_checksums(staging: Path, files: list) -> Path:
         digest = sha256_file(staging / rel)
         lines.append(f"{digest}  {rel}")
     out = staging / "CHECKSUMS.txt"
-    _escreve_lf(out, "\n".join(lines) + "\n")
+    _write_lf(out, "\n".join(lines) + "\n")
     return out
 
 
@@ -228,13 +228,13 @@ _ZIP_PROIBIDO = (
 )
 
 
-def _entrada_proibida(nome: str) -> str | None:
+def _entrada_proibida(name: str) -> str | None:
     """Returns the pattern that fails the entry, or None. Matches the BASENAME and each
     directory component -- `a/__pycache__/b.txt` fails via the directory."""
     import fnmatch
 
-    partes = nome.split("/")
-    base = partes[-1]
+    parts = name.split("/")
+    base = parts[-1]
     # Why: the distribution .gitignore negates .env.example on purpose; the check has
     # to negate it too, or the gate fails the file it wants to exist.
     if base.endswith(".example"):
@@ -242,10 +242,10 @@ def _entrada_proibida(nome: str) -> str | None:
     # Why: fnmatch.fnmatch is case-insensitive only on Windows -- "X.BAK" would fail the zip here
     # and pass on macOS. The check for the artifact that travels cannot depend on the emitter's
     # OS: fnmatchcase over lowercase, always.
-    for padrao in _ZIP_PROIBIDO:
-        for parte in partes:
-            if fnmatch.fnmatchcase(parte.lower(), padrao.lower()):
-                return padrao
+    for pattern in _ZIP_PROIBIDO:
+        for part in parts:
+            if fnmatch.fnmatchcase(part.lower(), pattern.lower()):
+                return pattern
     return None
 
 
@@ -265,55 +265,55 @@ def verify_zip(zip_path: Path, source_dir: Path, expected: list) -> dict:
     Never raises -- returns {"ok", "entries", "errors"} for the caller to decide.
     """
     errors: list = []
-    nomes: list = []
+    names: list = []
 
     if not zip_path.exists():
         return {"ok": False, "entries": 0, "errors": [f"zip does not exist: {zip_path}"]}
 
     try:
         with zipfile.ZipFile(zip_path) as zf:
-            corrompido = zf.testzip()
-            if corrompido is not None:
-                errors.append(f"invalid CRC (corrupt zip) at: {corrompido}")
+            corrupted = zf.testzip()
+            if corrupted is not None:
+                errors.append(f"invalid CRC (corrupt zip) at: {corrupted}")
 
-            nomes = zf.namelist()
-            for nome in nomes:
+            names = zf.namelist()
+            for name in names:
                 # 3 - STRUCTURE. An entry that escapes the extraction directory
                 # overwrites a file belonging to whoever installs it. This is not hygiene, it is security.
-                if nome.startswith("/") or (len(nome) > 1 and nome[1] == ":"):
-                    errors.append(f"absolute path in zip: {nome}")
+                if name.startswith("/") or (len(name) > 1 and name[1] == ":"):
+                    errors.append(f"absolute path in zip: {name}")
                     continue
-                if ".." in nome.split("/"):
-                    errors.append(f"directory traversal in zip: {nome}")
+                if ".." in name.split("/"):
+                    errors.append(f"directory traversal in zip: {name}")
                     continue
-                if chr(92) in nome:
+                if chr(92) in name:
                     # Why: chr(92) is the backslash. Written literally, the backslash-b sequence could turn
                     # into the 0x08 byte (backspace) and the gate would stop matching everything, including
                     # true positives. Written this way, it has no way of getting lost.
-                    errors.append(f"Windows separator in zip: {nome}")
+                    errors.append(f"Windows separator in zip: {name}")
                     continue
 
                 # 4 - HYGIENE
-                padrao = _entrada_proibida(nome)
-                if padrao is not None:
-                    errors.append(f"forbidden entry in zip: {nome} (matches {padrao})")
+                pattern = _entrada_proibida(name)
+                if pattern is not None:
+                    errors.append(f"forbidden entry in zip: {name} (matches {pattern})")
 
                 # 2 - FIDELITY
-                disco = source_dir / nome
-                if not disco.exists():
-                    errors.append(f"zip entry with no counterpart on disk: {nome}")
+                on_disk = source_dir / name
+                if not on_disk.exists():
+                    errors.append(f"zip entry with no counterpart on disk: {name}")
                     continue
-                if hashlib.sha256(zf.read(nome)).hexdigest() != sha256_file(disco):
-                    errors.append(f"zip content diverges from disk: {nome}")
+                if hashlib.sha256(zf.read(name)).hexdigest() != sha256_file(on_disk):
+                    errors.append(f"zip content diverges from disk: {name}")
 
-            presentes = set(nomes)
+            present = set(names)
             for rel in sorted(expected):
-                if rel not in presentes:
+                if rel not in present:
                     errors.append(f"manifest file missing from zip: {rel}")
     except zipfile.BadZipFile as exc:
         return {"ok": False, "entries": 0, "errors": [f"unreadable zip: {exc}"]}
 
-    return {"ok": not errors, "entries": len(nomes), "errors": errors}
+    return {"ok": not errors, "entries": len(names), "errors": errors}
 
 
 # --- STRUCTURE-AWARE SANITIZATION (A12) ------------------------------
@@ -332,11 +332,11 @@ def verify_zip(zip_path: Path, source_dir: Path, expected: list) -> dict:
 _SANITIZE_MODOS = ("word", "literal", "regex")
 
 
-def _compila_replace(find: str, modo: str):
+def _compile_replace(find: str, mode: str):
     """Returns the compiled pattern, or None for a raw substring."""
-    if modo == "regex":
+    if mode == "regex":
         return re.compile(find)
-    if modo == "literal":
+    if mode == "literal":
         return None
     # "word" -- the DEFAULT, and the reason this function exists.
     # The boundary only looks at the ENDS: the middle can have a dot, space or
@@ -347,7 +347,7 @@ def _compila_replace(find: str, modo: str):
     return None
 
 
-def _le_preservando_quebra(path: Path) -> str:
+def _read_preserving_linebreak(path: Path) -> str:
     # Why: read_text/write_text translate line breaks. In a checkout with CRLF files,
     # rewriting a whole file because of ONE substitution would silently convert the
     # entire file -- and `git diff --numstat` is blind to it.
@@ -355,18 +355,18 @@ def _le_preservando_quebra(path: Path) -> str:
         return fh.read()
 
 
-def _escreve_preservando_quebra(path: Path, texto: str) -> None:
+def _write_preserving_linebreak(path: Path, text: str) -> None:
     with open(path, "w", encoding="utf-8", newline="") as fh:
-        fh.write(texto)
+        fh.write(text)
 
 
-def _escreve_lf(path: Path, texto: str) -> None:
+def _write_lf(path: Path, text: str) -> None:
     """A file GENERATED by the assembler always comes out in LF -- on any OS."""
     with open(path, "w", encoding="utf-8", newline="\n") as fh:
-        fh.write(texto)
+        fh.write(text)
 
 
-def _copia_normalizando_eol(src: Path, dst: Path) -> None:
+def _copy_normalizing_eol(src: Path, dst: Path) -> None:
     """Copies to staging normalizing text to LF; binary goes byte for byte.
 
     # Why: a kit emitted on Windows used to carry CRLF files (LICENSE/CHECKSUMS/SANITIZATION
@@ -376,104 +376,104 @@ def _copia_normalizando_eol(src: Path, dst: Path) -> None:
     # the zip stops being deterministic across OSes. LF in the copy closes both things.
     """
     raw = src.read_bytes()
-    if b"\x00" in raw[:8000] or src.suffix.lower() in _BINARIOS:
+    if b"\x00" in raw[:8000] or src.suffix.lower() in _BINARY_EXTS:
         shutil.copy2(src, dst)
         return
     dst.write_bytes(raw.replace(b"\r\n", b"\n"))
     shutil.copystat(src, dst)
 
 
-_BINARIOS = {".png", ".jpg", ".jpeg", ".gif", ".ico", ".pdf", ".zip", ".woff", ".woff2", ".ttf", ".pyc"}
+_BINARY_EXTS = {".png", ".jpg", ".jpeg", ".gif", ".ico", ".pdf", ".zip", ".woff", ".woff2", ".ttf", ".pyc"}
 
 
-def apply_replaces(staging: Path, regras: list) -> tuple[list, list, list]:
-    """Applies the manifest's substitutions. Returns (aplicadas, avisos, erros).
+def apply_replaces(staging: Path, rules: list) -> tuple[list, list, list]:
+    """Applies the manifest's substitutions. Returns (applied, warnings, errors).
 
-    Never raises: a manifest error becomes an item in `erros` and the caller decides.
+    Never raises: a manifest error becomes an item in `errors` and the caller decides.
     """
-    aplicadas: list = []
-    avisos: list = []
-    erros: list = []
+    applied: list = []
+    warnings: list = []
+    errors: list = []
 
-    for i, rule in enumerate(regras):
+    for i, rule in enumerate(rules):
         find = rule.get("find")
         repl = rule.get("replace")
-        modo = rule.get("mode", "word")
-        arquivos = rule.get("files") or []
+        mode = rule.get("mode", "word")
+        files = rule.get("files") or []
 
         if not find:
-            erros.append(
+            errors.append(
                 f"sanitize.replaces[{i}]: empty 'find' — an empty find inserts the "
                 "replace BETWEEN EVERY CHARACTER of the file"
             )
             continue
         if repl is None:
-            erros.append(f"sanitize.replaces[{i}]: 'replace' missing")
+            errors.append(f"sanitize.replaces[{i}]: 'replace' missing")
             continue
-        if modo not in _SANITIZE_MODOS:
-            erros.append(
-                f"sanitize.replaces[{i}]: invalid mode '{modo}' "
+        if mode not in _SANITIZE_MODOS:
+            errors.append(
+                f"sanitize.replaces[{i}]: invalid mode '{mode}' "
                 f"(use one of: {', '.join(_SANITIZE_MODOS)})"
             )
             continue
-        if not arquivos:
-            erros.append(f"sanitize.replaces[{i}]: empty 'files' — the rule has no target")
+        if not files:
+            errors.append(f"sanitize.replaces[{i}]: empty 'files' — the rule has no target")
             continue
         try:
-            padrao = _compila_replace(find, modo)
+            pattern = _compile_replace(find, mode)
         except re.error as exc:
-            erros.append(f"sanitize.replaces[{i}]: invalid regex: {exc}")
+            errors.append(f"sanitize.replaces[{i}]: invalid regex: {exc}")
             continue
 
-        if modo == "word" and padrao is None:
+        if mode == "word" and pattern is None:
             # Why: a find with a non-alphanumeric end ("-core", "/x/", "@org/") has no possible
             # boundary and falls back to a raw substring -- and the report still said mode "word".
             # The report says what HAPPENED.
-            avisos.append(
+            warnings.append(
                 f"sanitize.replaces[{i}]: mode 'word' requested, but the 'find' starts or ends in a "
                 "non-alphanumeric — no word boundary is possible; applied as 'literal' "
                 "(substring). Declare mode: literal if that is what you want."
             )
-        if modo != "regex" and find in repl:
-            avisos.append(
+        if mode != "regex" and find in repl:
+            warnings.append(
                 f"sanitize.replaces[{i}]: the 'replace' CONTAINS the 'find' — "
                 "the rule stops being idempotent and the 2nd build re-substitutes"
             )
 
         total = 0
-        for rel_file in arquivos:
+        for rel_file in files:
             target = staging / rel_file
             if not target.exists():
-                avisos.append(f"sanitize.replaces[{i}]: file missing from staging: {rel_file}")
+                warnings.append(f"sanitize.replaces[{i}]: file missing from staging: {rel_file}")
                 continue
-            text = _le_preservando_quebra(target)
-            if padrao is None:
-                novo = text.replace(find, repl)
+            text = _read_preserving_linebreak(target)
+            if pattern is None:
+                new_text = text.replace(find, repl)
                 n = text.count(find)
-            elif modo == "regex":
+            elif mode == "regex":
                 # backreference allowed -- whoever asked for regex asked for this
-                novo, n = padrao.subn(repl, text)
+                new_text, n = pattern.subn(repl, text)
             else:
                 # substitution function: the text goes in VERBATIM, without re
                 # interpreting any escape inside it
-                novo, n = padrao.subn(lambda _m: repl, text)
+                new_text, n = pattern.subn(lambda _m: repl, text)
             if n:
-                _escreve_preservando_quebra(target, novo)
-                aplicadas.append(
+                _write_preserving_linebreak(target, new_text)
+                applied.append(
                     {"file": rel_file, "find": find, "replace": repl,
                      # Why: the report records the mode that was applied, not just the one requested.
-                     "mode": ("literal (degraded from word)" if modo == "word" and padrao is None else modo),
+                     "mode": ("literal (degraded from word)" if mode == "word" and pattern is None else mode),
                      "hits": n}
                 )
                 total += n
 
         if total == 0:
-            avisos.append(
-                f"sanitize.replaces[{i}]: ZERO occurrences in {len(arquivos)} file(s) — "
+            warnings.append(
+                f"sanitize.replaces[{i}]: ZERO occurrences in {len(files)} file(s) — "
                 "VACUOUS rule, it was written for a reason and did nothing"
             )
 
-    return aplicadas, avisos, erros
+    return applied, warnings, errors
 
 
 def run_pipeline(manifest: dict, manifest_dir: Path, out_dir: Path, dry_run: bool, strict: bool, plugin_json: dict | None = None):
@@ -531,7 +531,7 @@ def run_pipeline(manifest: dict, manifest_dir: Path, out_dir: Path, dry_run: boo
         for rel in files:
             dst = staging / rel
             dst.parent.mkdir(parents=True, exist_ok=True)
-            _copia_normalizando_eol(source_root / rel, dst)
+            _copy_normalizing_eol(source_root / rel, dst)
 
         if _go_verify and origin_snapshot is not None:
             drift = _go_verify(origin_snapshot, source_root, files)
@@ -542,16 +542,16 @@ def run_pipeline(manifest: dict, manifest_dir: Path, out_dir: Path, dry_run: boo
                 ]}
 
         sanitize = manifest.get("sanitize", {}) or {}
-        applied_replaces, sanitize_avisos, sanitize_erros = apply_replaces(
+        applied_replaces, sanitize_warnings, sanitize_errors = apply_replaces(
             staging, sanitize.get("replaces", []) or []
         )
-        if sanitize_erros:
+        if sanitize_errors:
             shutil.rmtree(staging, ignore_errors=True)
-            return 3, {"status": "error", "errors": sanitize_erros}
+            return 3, {"status": "error", "errors": sanitize_errors}
 
         generate = manifest.get("generate", {}) or {}
         if generate.get("license", True):
-            _escreve_lf(staging / "LICENSE", _LICENSE_MIT.format(year=kit.get("year", 2026), author=kit["author"]))
+            _write_lf(staging / "LICENSE", _LICENSE_MIT.format(year=kit.get("year", 2026), author=kit["author"]))
 
         lint_conf = manifest.get("lint", {}) or {}
         ruleset_path = lint_conf.get("ruleset")
@@ -594,7 +594,7 @@ def run_pipeline(manifest: dict, manifest_dir: Path, out_dir: Path, dry_run: boo
                          t["exclude"].format(n=len(exclude)),
                          t["replaces"].format(n=len(applied_replaces)),
                          "", t["lint_h"], f"- status: {lint_status}", f"- counts: {lint_report.get('counts', {})}"]
-                _escreve_lf(staging / fname, "\n".join(lines) + "\n")
+                _write_lf(staging / fname, "\n".join(lines) + "\n")
 
         emitted_files = files + (["LICENSE"] if generate.get("license", True) else [])
         if generate.get("sanitizacao_md", True):
@@ -635,17 +635,17 @@ def run_pipeline(manifest: dict, manifest_dir: Path, out_dir: Path, dry_run: boo
             if not zip_check["ok"]:
                 # Halted, not deleted: a zip that failed is EVIDENCE. But it
                 # cannot keep the name of the good artifact, or someone will install it.
-                invalido = zip_path.parent / (zip_path.name + ".INVALIDO")
-                if invalido.exists():
-                    invalido.unlink()
-                zip_path.rename(invalido)
+                invalid = zip_path.parent / (zip_path.name + ".INVALIDO")
+                if invalid.exists():
+                    invalid.unlink()
+                zip_path.rename(invalid)
                 return 2, {
                     "status": "zip-reprovado",
                     "kit": name,
                     "version": version,
                     "out": str(final_dir),
                     "zip": None,
-                    "zip_parado_em": str(invalido),
+                    "zip_parado_em": str(invalid),
                     "files": len(emitted_files),
                     "lint": lint_report,
                     "zip_errors": zip_check["errors"],
@@ -668,7 +668,7 @@ def run_pipeline(manifest: dict, manifest_dir: Path, out_dir: Path, dry_run: boo
                     {"file": a["file"], "mode": a["mode"], "hits": a["hits"]}
                     for a in applied_replaces
                 ],
-                "avisos": sanitize_avisos,
+                "avisos": sanitize_warnings,
             },
         }
         return (1 if lint_status == "warn" else 0), report

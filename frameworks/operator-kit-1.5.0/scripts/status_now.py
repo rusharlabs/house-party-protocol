@@ -47,7 +47,7 @@ _RE_DONE_TODO = re.compile(r"^\s*[-*]\s+\[[xX]\]\s")
 # labels that usually carry the current stage/phase.
 # Captures the WHOLE phrase starting at the label (including the word "Fase"/"Etapa"),
 # tolerating a markdown heading (#) and an optional ':' right after the label.
-_RE_ETAPA_LABEL = re.compile(
+_RE_STAGE_LABEL = re.compile(
     r"^\s*#{0,6}\s*((?:etapa|fase|stage|phase|sprint|milestone)\b\s*:?\s*.*\S)",
     re.IGNORECASE,
 )
@@ -78,36 +78,36 @@ def _resolve_ssot_path(profile: dict, base: Path) -> Path | None:
 
 def extract_status(text: str) -> dict:
     """Extracts stage/%/blockers/next-action from the SSoT markdown. Missing fields => _NA + note."""
-    etapa = _NA
+    stage = _NA
     pct = _NA
     open_todos: list[str] = []
-    notas: list[str] = []
+    notes: list[str] = []
 
     lines = text.splitlines()
 
     # STAGE: first explicit label (Etapa:/Fase:/##Fase...) with content; otherwise the 1st non-empty heading
     for ln in lines:
-        m = _RE_ETAPA_LABEL.match(ln)
+        m = _RE_STAGE_LABEL.match(ln)
         if m and (m.group(1) or "").strip():
-            etapa = re.sub(r"\s+", " ", m.group(1).strip())
+            stage = re.sub(r"\s+", " ", m.group(1).strip())
             break
-    if etapa is _NA:
+    if stage is _NA:
         for ln in lines:
             s = ln.strip()
             if s.startswith("#"):
                 h = s.lstrip("#").strip()
                 if h:
-                    etapa = h
+                    stage = h
                     break
-    if etapa is _NA:
-        notas.append("stage not found in the SSoT (no heading/label Fase|Etapa|Stage|Phase)")
+    if stage is _NA:
+        notes.append("stage not found in the SSoT (no heading/label Fase|Etapa|Stage|Phase)")
 
     # PROGRESS %: first occurrence of 'NN%'
     mpct = _RE_PCT.search(text)
     if mpct:
         pct = f"{int(mpct.group(1))}%"
     else:
-        notas.append("progress % not found in the SSoT")
+        notes.append("progress % not found in the SSoT")
 
     # BLOCKERS / NEXT ACTION: open pending items '- [ ]'
     for ln in lines:
@@ -115,17 +115,17 @@ def extract_status(text: str) -> dict:
         if m:
             open_todos.append((m.group(1) or "(no description)").strip())
 
-    proxima = open_todos[0] if open_todos else _NA
+    next_action = open_todos[0] if open_todos else _NA
     if not open_todos:
-        notas.append("no open '- [ ]' item in the SSoT (next action undefined)")
+        notes.append("no open '- [ ]' item in the SSoT (next action undefined)")
 
     return {
-        "etapa": etapa,
+        "etapa": stage,
         "progresso": pct,
         "bloqueios_abertos": len(open_todos),
-        "proxima_acao": proxima,
+        "proxima_acao": next_action,
         "todos_abertos": open_todos,
-        "notas": notas,
+        "notas": notes,
     }
 
 
@@ -172,30 +172,30 @@ def build_status(start: Path | None = None) -> dict:
 def render_template(data: dict) -> str:
     """Renders the fixed 'where are we?' template."""
     proj = data.get("projeto", _NA)
-    etapa = data.get("etapa", _NA)
+    stage = data.get("etapa", _NA)
     pct = data.get("progresso", _NA)
-    blq = data.get("bloqueios_abertos", _NA)
-    prox = data.get("proxima_acao", _NA)
+    blockers = data.get("bloqueios_abertos", _NA)
+    next_action = data.get("proxima_acao", _NA)
     ssot = data.get("ssot_rel", _NA)
-    notas = data.get("notas", []) or []
+    notes = data.get("notas", []) or []
 
-    linhas = [
+    lines = [
         "+-----------------------------------------------------------+",
         "|  WHERE ARE WE?                                            |",
         "+-----------------------------------------------------------+",
         f"  PROJECT     : {proj}",
-        f"  STAGE       : {etapa}",
+        f"  STAGE       : {stage}",
         f"  PROGRESS    : {pct}",
-        f"  BLOCKERS    : {blq} open item(s)" if blq != _NA else f"  BLOCKERS    : {_NA}",
-        f"  NEXT ACTION : {prox}",
+        f"  BLOCKERS    : {blockers} open item(s)" if blockers != _NA else f"  BLOCKERS    : {_NA}",
+        f"  NEXT ACTION : {next_action}",
         f"  SOURCE (SSoT): {ssot}",
     ]
-    if notas:
-        linhas.append("  ---")
-        linhas.append("  NOTES (fields '--' = not found, NOT invented):")
-        for n in notas:
-            linhas.append(f"    - {n}")
-    return "\n".join(linhas)
+    if notes:
+        lines.append("  ---")
+        lines.append("  NOTES (fields '--' = not found, NOT invented):")
+        for n in notes:
+            lines.append(f"    - {n}")
+    return "\n".join(lines)
 
 
 def _self_test() -> None:

@@ -39,8 +39,8 @@ _CHECKPOINT_BUDGET_SECONDS = 12.0
 
 _PEDIDO_PRECOMPACT = (
     "⚠️ handoff_guard: context is about to compact without a fresh handoff. Write one BEFORE "
-    "compaction — schema in schemas/handoff-v1.1.schema.json (fields: estado.resumo, "
-    "proximo_passo[].verify_first_cmd). `python hooks/_handoff_io.py write --stdin`."
+    "compaction — schema in schemas/handoff-v2.0.schema.json (fields: state.summary, "
+    "next_step[].verify_first_cmd). `python hooks/_handoff_io.py write --stdin`."
 )
 _PEDIDO_STOP = (
     "⚠️ handoff_guard: no fresh handoff (<15min) from this session. Run /pre-clear (express) "

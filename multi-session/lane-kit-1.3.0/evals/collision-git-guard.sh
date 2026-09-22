@@ -40,7 +40,7 @@ run_round() {
       && echo "seed" > seed.txt && git add seed.txt && git commit -qm "seed" )
 
   # register a live rival (exec-a) as "the other lane"
-  python "$LANE_IO" register --lane exec-a --role executora --session s1 --model claude-opus-4-8 >/dev/null
+  python "$LANE_IO" register --lane exec-a --role executor --session s1 --model claude-opus-4-8 >/dev/null
 
   export CLAUDE_LANE_ID="exec-b"
   unset LANE_GIT_GUARD_BYPASS
@@ -75,7 +75,7 @@ run_round() {
     || report 1 "round$round G2b failed: OUT=$OUT"
 
   # G2c - a lane with a 35min heartbeat (dead) = zero false positives
-  python "$LANE_IO" register --lane exec-a --role executora --session s1 --model claude-opus-4-8 >/dev/null
+  python "$LANE_IO" register --lane exec-a --role executor --session s1 --model claude-opus-4-8 >/dev/null
   python -c "
 import json, time
 from pathlib import Path
@@ -96,7 +96,7 @@ p.write_text(json.dumps(reg), encoding='utf-8')
     if [ $((i % 2)) -eq 0 ]; then
       python "$LANE_IO" heartbeat --lane exec-a --throttle 0 >/dev/null 2>&1 &
     else
-      python "$LANE_IO" register --lane "rider-$i" --role executora --session "s$i" --model claude-opus-4-8 >/dev/null 2>&1 &
+      python "$LANE_IO" register --lane "rider-$i" --role executor --session "s$i" --model claude-opus-4-8 >/dev/null 2>&1 &
     fi
     pids+=("$!")
   done

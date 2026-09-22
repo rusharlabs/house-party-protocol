@@ -7,7 +7,7 @@
 
 ## LANE-ENGINE — registry de lanes vivas + guards de concorrência
 
-Além do board (estado por-item), o lane-kit mantém um **registry de lanes vivas**
+Além do board (state por-item), o lane-kit mantém um **registry de lanes vivas**
 (`.claude/lanes/registry.json`, runtime — nunca versionado) e dois guards que consultam
 esse registry antes de uma ação arriscada:
 
@@ -51,9 +51,9 @@ via `Bash` escopado). Bloco de referência (aplicar no perfil/allowedTools da se
 não em settings.json global — é config por-sessão, não gate humano):
 
 ```yaml
-papel: revisora
+role: reviewer
 allowedTools: ["Read", "Glob", "Grep", "Bash(python scripts/lane_board.py set * VERIFIED:*)", "Bash(python scripts/lane_board.py set * NEEDS-FIX:*)", "Bash(python scripts/lane_board.py set * DEFERRED:*)"]
-# NUNCA: Write, Edit, MultiEdit — reforça em código o "revisora não edita nada" da tabela §2.1
+# NEVER: Write, Edit, MultiEdit - enforces in code the "a reviewer edits nothing" of table 2.1
 ```
 
 Zonas vermelhas (WARN para TODAS as lanes, qualquer papel): `.claude/settings*.json`,

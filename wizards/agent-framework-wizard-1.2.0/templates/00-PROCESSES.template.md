@@ -1,6 +1,6 @@
 # 00-PROCESSES — verification ladder + authority matrix — {{project_name}}
 
-## The R0→R4 ladder (config in `verificacao.escada` of the profile)
+## The R0→R4 ladder (config in `verification.evidence_levels` of the profile)
 
 Nobody declares readiness above what the evidence supports. `goal_ledger.py --readiness <id> <RN> --evidence <ref>`
 refuses (exit 2) if the evidence does not match the level.
@@ -31,4 +31,4 @@ merely suggested in prose).
 ## Red zones (WARN for ALL lanes, always — even solo)
 
 `.claude/settings*.json` · `**/MEMORY.md` · `{{state_doc}}` (outside the single-writer flow) ·
-any path listed in `lanes.yaml → zonas_vermelhas`.
+any path listed in `lanes.yaml → red_zones`.

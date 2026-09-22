@@ -105,11 +105,14 @@ def _self_test() -> int:
 
     with tempfile.TemporaryDirectory() as td:
         root = Path(td)
-        # Why: the fixture has to use the SAME directory name `_resolve_kit_doctor` globs for.
-        # It said `instaladores/` - the layout name that 2.5.0 renamed to `installers/` - so this
-        # self-test has raised SystemExit on every run since that release, and nothing noticed
+        # Why: the fixture has to use the SAME directory name `_resolve_kit_doctor` globs for. It
+        # still used the pre-2.5.0 Portuguese spelling of the installers category, so this
+        # self-test raised SystemExit on every run from that release on, and nothing noticed
         # because it is not part of the pytest suite. A rename that updates the code and forgets
         # the fixture leaves a test that is red for a reason nobody reads.
+        # (The dead spelling is deliberately not written out here: `test_product_layout_english.py`
+        # matches it as a STRING and cannot tell a warning from a use - the same convention the
+        # source repo applies to its own retired paths.)
         (root / "installers" / "kit-forge-9.9.9").mkdir(parents=True)
         (root / "installers" / "kit-forge-9.9.9" / "kit_doctor.py").write_text("# fake\n", encoding="utf-8")
         (root / "fake-kit-1.0.0").mkdir()

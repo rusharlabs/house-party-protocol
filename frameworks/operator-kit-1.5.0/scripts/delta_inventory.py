@@ -58,19 +58,19 @@ def snapshot(patterns, root: str | Path | None = None) -> dict:
 def compute_delta(baseline: dict, current: dict) -> list[dict]:
     """Crosses baseline x current by glob. Returns rows {`glob`, `antes`, `depois`, `delta`}."""
     keys = list(dict.fromkeys([*baseline.keys(), *current.keys()]))  # union preserving order
-    linhas = []
+    rows = []
     for k in keys:
-        antes = int(baseline.get(k, 0) or 0)
-        depois = int(current.get(k, 0) or 0)
-        linhas.append({"glob": k, "antes": antes, "depois": depois, "delta": depois - antes})
-    return linhas
+        before_count = int(baseline.get(k, 0) or 0)
+        after_count = int(current.get(k, 0) or 0)
+        rows.append({"glob": k, "antes": before_count, "depois": after_count, "delta": after_count - before_count})
+    return rows
 
 
-def render_table(linhas: list[dict]) -> str:
+def render_table(rows: list[dict]) -> str:
     """Renders the BEFORE | AFTER | DELTA table + totals (pure ASCII)."""
-    if not linhas:
+    if not rows:
         return "DELTA INVENTORY: (no glob given)"
-    glob_w = max([len("GLOB"), *[len(l["glob"]) for l in linhas]])
+    glob_w = max([len("GLOB"), *[len(l["glob"]) for l in rows]])
     glob_w = min(glob_w, 60)
 
     def fmt_delta(d: int) -> str:
@@ -83,19 +83,19 @@ def render_table(linhas: list[dict]) -> str:
         f"| {'GLOB'.ljust(glob_w)} | {'BEFORE'.rjust(7)} | {'AFTER'.rjust(7)} | {'DELTA'.rjust(7)} |",
         sep,
     ]
-    t_antes = t_depois = 0
-    for l in linhas:
+    t_before = t_after = 0
+    for l in rows:
         g = l["glob"] if len(l["glob"]) <= glob_w else (l["glob"][: glob_w - 1] + "~")
         out.append(
             f"| {g.ljust(glob_w)} | {str(l['antes']).rjust(7)} | "
             f"{str(l['depois']).rjust(7)} | {fmt_delta(l['delta']).rjust(7)} |"
         )
-        t_antes += l["antes"]
-        t_depois += l["depois"]
+        t_before += l["antes"]
+        t_after += l["depois"]
     out.append(sep)
     out.append(
-        f"| {'TOTAL'.ljust(glob_w)} | {str(t_antes).rjust(7)} | "
-        f"{str(t_depois).rjust(7)} | {fmt_delta(t_depois - t_antes).rjust(7)} |"
+        f"| {'TOTAL'.ljust(glob_w)} | {str(t_before).rjust(7)} | "
+        f"{str(t_after).rjust(7)} | {fmt_delta(t_after - t_before).rjust(7)} |"
     )
     out.append(sep)
     return "\n".join(out)
@@ -135,8 +135,8 @@ def _self_test() -> None:
         (root / "agents" / "z.md").unlink()
 
         current = snapshot(["docs/*.md", "agents/*.md", "missing/*.txt"], root=root)
-        linhas = compute_delta(_load_baseline(baseline_path), current)
-        by = {l["glob"]: l for l in linhas}
+        rows = compute_delta(_load_baseline(baseline_path), current)
+        by = {l["glob"]: l for l in rows}
         assert by["docs/*.md"]["delta"] == 1, by["docs/*.md"]
         assert by["agents/*.md"]["delta"] == -1, by["agents/*.md"]
         assert by["missing/*.txt"]["delta"] == 0
@@ -147,7 +147,7 @@ def _self_test() -> None:
         assert count_glob("docs/**/*.md", root=root) == 4, count_glob("docs/**/*.md", root=root)
 
         # render never crashes + contains totals
-        tbl = render_table(linhas)
+        tbl = render_table(rows)
         assert "DELTA INVENTORY" in tbl and "TOTAL" in tbl
 
         # missing baseline => {} (degrade)
@@ -202,23 +202,23 @@ def main(argv) -> int:
         baseline = _load_baseline(argv[1])
         patterns = argv[2:]
         current = snapshot(patterns)
-        linhas = compute_delta(baseline, current)
+        rows = compute_delta(baseline, current)
         if as_json:
-            total_antes = sum(l["antes"] for l in linhas)
-            total_depois = sum(l["depois"] for l in linhas)
+            total_before = sum(l["antes"] for l in rows)
+            total_after = sum(l["depois"] for l in rows)
             print(json.dumps(
                 {
                     "baseline": argv[1],
-                    "linhas": linhas,
-                    "total": {"antes": total_antes, "depois": total_depois,
-                              "delta": total_depois - total_antes},
+                    "linhas": rows,
+                    "total": {"antes": total_before, "depois": total_after,
+                              "delta": total_after - total_before},
                 },
                 ensure_ascii=False, indent=2,
             ))
         else:
             if not baseline:
                 print(f"(warning: baseline '{argv[1]}' missing/empty — BEFORE=0 on every row)")
-            print(render_table(linhas))
+            print(render_table(rows))
         return 0
 
     print(f"delta_inventory: unknown mode '{mode}' (use snapshot | report)", file=sys.stderr)

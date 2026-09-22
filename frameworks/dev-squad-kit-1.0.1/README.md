@@ -8,7 +8,7 @@ A squad of 12 role agents via slash-command (`*master`, `*analyst`, `*architect`
 `*data-engineer`, `*dev`, `*devops`, `*pm`, `*po`, `*qa`, `*sm`, `*squad-creator`,
 `*ux-design-expert`) — each with its own persona, numbered commands and a collaboration
 checklist with the others — plus 3 token-safe parallel reading/consolidation skills
-(`pp-discovery`, `pp-raiox`, `pp-consolidate`).
+(`pp-discovery`, `pp-xray`, `pp-consolidate`).
 
 **What this kit does NOT do:** it does not include the proprietary tree of
 tasks/templates/checklists that the `*create`, `*task`, `*workflow`, `*execute-checklist`

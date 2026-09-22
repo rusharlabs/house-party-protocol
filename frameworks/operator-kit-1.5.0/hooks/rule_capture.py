@@ -40,7 +40,7 @@ _BRT = timezone(timedelta(hours=-3))
 
 _DEF_MEMORY_DIR = ".claude/memory/"
 _DEF_CAPTURE_FILE = "_captured-rules.md"
-_DEF_MARCADORES = ["SEMPRE", "NUNCA", "ja falei", "toda vez", "pare de"]
+_DEF_MARKERS = ["SEMPRE", "NUNCA", "ja falei", "toda vez", "pare de"]
 
 
 def _read_prompt_from_stdin() -> str:
@@ -63,10 +63,10 @@ def _read_prompt_from_stdin() -> str:
     return ""
 
 
-def detect_markers(prompt: str, marcadores) -> list[str]:
+def detect_markers(prompt: str, markers) -> list[str]:
     """Which emphasis markers appear in the prompt (case-insensitive). Order from the profile."""
     low = prompt.lower()
-    return [m for m in marcadores if str(m).strip() and str(m).lower() in low]
+    return [m for m in markers if str(m).strip() and str(m).lower() in low]
 
 
 def _already_captured(capture_file: Path, prompt: str) -> bool:
@@ -106,11 +106,11 @@ def _ensure_header(capture_file: Path) -> None:
 def _resolve(root: Path):
     prof = load_profile() if load_profile is not None else {}
     mem_dir = get(prof, "paths.memory_dir", _DEF_MEMORY_DIR) if (prof and get) else _DEF_MEMORY_DIR
-    marcadores = get(prof, "memory.emphasis_markers", _DEF_MARCADORES) if (prof and get) else _DEF_MARCADORES
-    ativo = get(prof, "memory.rule_capture", "on") if (prof and get) else "on"
-    if not isinstance(marcadores, list) or not marcadores:
-        marcadores = _DEF_MARCADORES
-    return (root / mem_dir / _DEF_CAPTURE_FILE, marcadores, str(ativo).lower() not in ("off", "false", "0", "no"))
+    markers = get(prof, "memory.emphasis_markers", _DEF_MARKERS) if (prof and get) else _DEF_MARKERS
+    active = get(prof, "memory.rule_capture", "on") if (prof and get) else "on"
+    if not isinstance(markers, list) or not markers:
+        markers = _DEF_MARKERS
+    return (root / mem_dir / _DEF_CAPTURE_FILE, markers, str(active).lower() not in ("off", "false", "0", "no"))
 
 
 def _project_root() -> Path:
@@ -132,14 +132,14 @@ def _project_root() -> Path:
     return cur
 
 
-def capture(prompt: str, capture_file: Path, marcadores) -> list[str]:
+def capture(prompt: str, capture_file: Path, markers) -> list[str]:
     """
     Detects markers; if there are any, appends the entry. Returns the list of matched markers
     (empty = nothing captured). Does not write an exact duplicate. Best-effort (error -> []).
     """
     if not prompt.strip():
         return []
-    hits = detect_markers(prompt, marcadores)
+    hits = detect_markers(prompt, markers)
     if not hits:
         return []
     try:
@@ -159,9 +159,9 @@ def main() -> None:
         prompt = _read_prompt_from_stdin()
         if prompt:
             root = _project_root()
-            capture_file, marcadores, ativo = _resolve(root)
-            if ativo:
-                hits = capture(prompt, capture_file, marcadores)
+            capture_file, markers, active = _resolve(root)
+            if active:
+                hits = capture(prompt, capture_file, markers)
                 if hits:
                     print(
                         f"[rule_capture] emphatic instruction captured (markers: {', '.join(hits)}) "
@@ -179,7 +179,7 @@ def main() -> None:
 def _self_test() -> None:
     import tempfile
 
-    marc = list(_DEF_MARCADORES)
+    marc = list(_DEF_MARKERS)
     assert detect_markers("NUNCA faca X", marc) == ["NUNCA"]
     assert detect_markers("nunca mais (lowercase)", marc) == ["NUNCA"]
     assert detect_markers("processar batch 3", marc) == [], "without a marker it must not detect"
@@ -202,9 +202,9 @@ def _self_test() -> None:
         assert body2.count("> NUNCA faca git push direto na main") == 1, "should not duplicate"
 
         # a prompt with no marker writes nothing new
-        n_antes = len(cap.read_text(encoding="utf-8"))
+        n_before = len(cap.read_text(encoding="utf-8"))
         assert capture("apenas continue o trabalho normal", cap, marc) == []
-        assert len(cap.read_text(encoding="utf-8")) == n_antes, "no marker, no write"
+        assert len(cap.read_text(encoding="utf-8")) == n_before, "no marker, no write"
 
         # build_entry preserves line breaks verbatim
         entry = build_entry("linha1\nNUNCA linha2", ["NUNCA"], "2026-06-19 10:00 BRT")

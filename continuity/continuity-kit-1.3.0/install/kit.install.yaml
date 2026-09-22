@@ -29,7 +29,7 @@ requires:
 #     is manual config editing, not a question with a discrete answer —
 #     there is no sensible choice/bool/string for "which history documents
 #     does this project have".
-#   - `session.lane_id` (default "solo" in the handoff-v1.1 schema and in every
+#   - `session.lane_id` (default "solo" in the handoff-v2.0 schema and in every
 #     hook — see `_lane_id()` in handoff_guard.py) is resolved at RUNTIME
 #     from the hook/harness payload on every session, not an install-time
 #     decision — asking it in `kit_doctor.py install` would change

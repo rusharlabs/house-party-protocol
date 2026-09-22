@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "lanes": {
     "exec-a": {
-      "role": "executora",
+      "role": "executor",
       "session_id": "REPLACE-ME",
       "model": "claude-opus-4-8",
       "branch": "feat/exemplo",
@@ -15,7 +15,7 @@
       "status": "active"
     },
     "rev-a": {
-      "role": "revisora",
+      "role": "reviewer",
       "session_id": "REPLACE-ME",
       "model": "gpt-5.6",
       "branch": "feat/exemplo",

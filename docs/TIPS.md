@@ -140,7 +140,7 @@ claude mcp list && codex mcp list
 ### 23. Generate the catalogue from the tree
 
 ```bash
-python installers/kit-forge-*/tools/catalogo_md.py . --write
+python installers/kit-forge-*/tools/catalog_md.py . --write
 ```
 
 ### 24. Validate every published skill

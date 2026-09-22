@@ -10,7 +10,7 @@ montagem), `kit_doctor.py` (verify/install/registry/marketplace — o motor úni
 instalação de todo o marketplace, 6 estágios), `wire_settings.py` (merge idempotente em
 `settings.local.json`), `install_git_hook.py` (encadeia com `pre-commit` alheio),
 `tools/skill_lint.py` (o linter que cobra o SKILL-CONTRACT das skills de outros kits),
-`tools/browse.py` (menu interativo do marketplace), `tools/catalogo_md.py` (catálogo
+`tools/browse.py` (menu interativo do marketplace), `tools/catalog_md.py` (catálogo
 bilíngue de módulos derivado da árvore emitida) e `tools/codex_skills.py` (instala um kit
 no layout que o Codex CLI descobre). Contrato único de exit em tudo: `0 ok/no-op`,
 `1 warn`, `2 block`, `3 erro`. Sem `--skip-lint` em nenhuma ferramenta — o gate de IP/PII

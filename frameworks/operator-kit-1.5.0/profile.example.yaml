@@ -2,7 +2,7 @@
 # Copy to `operator-profile.yaml` and adjust per project. Every mechanism reads from here.
 # Stdlib + PyYAML. Paths are relative to the root of the project where the profile lives.
 
-project: "nome-do-projeto"
+project: "your-project-name"
 language: pt-BR                    # labels, messages, output-style (pt-BR | en | es)
 register: neutro                  # neutro | formal (opt-in)
 

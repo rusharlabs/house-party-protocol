@@ -50,12 +50,12 @@ run_round() {
   python -c "
 import json, sys
 data = {
-    'schema_version': '1.1', 'handoff_id': 'HO-STALE-solo', 'created_at': '2020-01-01T00:00:00-03:00',
+    'schema_version': '2.0', 'handoff_id': 'HO-STALE-solo', 'created_at': '2020-01-01T00:00:00-03:00',
     'trigger': 'manual', 'quality': 'full',
     'session': {'session_id': 's1', 'lane_id': 'solo'},
-    'estado': {'resumo': 'stale test', 'numeros': []},
+    'state': {'summary': 'stale test', 'numbers': []},
     'git': {'head': '', 'branch': '', 'dirty': False, 'untracked': 0},
-    'proximo_passo': [{'ordem': 1, 'descricao': 'should not appear', 'verify_first_cmd': 'echo x'}],
+    'next_step': [{'order': 1, 'description': 'should not appear', 'verify_first_cmd': 'echo x'}],
     'valid_until': '2020-01-01T00:00:00-03:00',
 }
 print(json.dumps(data))
@@ -95,13 +95,13 @@ import json, os
 nonce = os.environ['NONCE_PATH']
 verify_cmd = 'python -c \"import sys,os; sys.exit(0 if os.path.exists(' + repr(nonce) + ') else 1)\"'
 data = {
-    'schema_version': '1.1', 'handoff_id': 'HO-LC4-solo', 'created_at': '2026-07-10T15:00:00-03:00',
+    'schema_version': '2.0', 'handoff_id': 'HO-LC4-solo', 'created_at': '2026-07-10T15:00:00-03:00',
     'trigger': 'manual', 'quality': 'full',
     'session': {'session_id': 's1', 'lane_id': 'solo'},
-    'estado': {'resumo': 'LC-4 test', 'numeros': []},
+    'state': {'summary': 'LC-4 test', 'numbers': []},
     'git': {'head': '', 'branch': '', 'dirty': False, 'untracked': 0},
-    'ja_executado': [{'acao': 'created nonce', 'evidencia': 'nonce.txt', 'nunca_repetir': True}],
-    'proximo_passo': [{'ordem': 1, 'descricao': 'nothing', 'verify_first_cmd': verify_cmd}],
+    'already_done': [{'action': 'created nonce', 'evidence': 'nonce.txt', 'never_repeat': True}],
+    'next_step': [{'order': 1, 'description': 'nothing', 'verify_first_cmd': verify_cmd}],
     'valid_until': '2099-01-01T00:00:00-03:00',
 }
 print(json.dumps(data))
@@ -118,7 +118,7 @@ print(json.dumps(data))
 import json
 with open(r'$HANDOFF_JSON', encoding='utf-8') as f:
     data = json.load(f)
-print(data['proximo_passo'][0]['verify_first_cmd'])
+print(data['next_step'][0]['verify_first_cmd'])
 ")
   # confirma tambem que o texto injetado contem o marcador (ASCII-safe, sem depender de acento)
   echo "$OUT4" | grep -q "BEFORE EXECUTING, RUN" || VERIFY_CMD=""
@@ -131,7 +131,7 @@ print(data['proximo_passo'][0]['verify_first_cmd'])
   if [ "$HAS_JA_EXECUTADO" = "1" ] && [ "$RAN_OK" = "1" ]; then
     report 0 "round$round C4: ALREADY-EXECUTED block present + verify_first_cmd extracted and executed (exit 0)"
   else
-    report 1 "round$round C4 failed: ja_executado=$HAS_JA_EXECUTADO verify_cmd=[$VERIFY_CMD] ran_ok=$RAN_OK OUT4=$OUT4"
+    report 1 "round$round C4 failed: already_done=$HAS_JA_EXECUTADO verify_cmd=[$VERIFY_CMD] ran_ok=$RAN_OK OUT4=$OUT4"
   fi
 
   rm -rf "$WORK" 2>/dev/null

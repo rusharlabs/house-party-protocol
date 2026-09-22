@@ -122,11 +122,11 @@ def wire(target: Path, force: bool) -> tuple:
         status = "warn" if warning else "no-op"
         return (1 if warning else 0), {"status": status, "warnings": [warning] if warning else []}
 
-    resultado = _write_json_atomic(target, new_data, backup, expected_bytes=raw_bytes)
-    if resultado == "conflict":
+    result = _write_json_atomic(target, new_data, backup, expected_bytes=raw_bytes)
+    if result == "conflict":
         return 2, {"status": "conflict", "errors": [
             f"{target} changed between the read and the write — nothing was written. Run it again."]}
-    if resultado != "ok":
+    if result != "ok":
         return 3, {"status": "error", "errors": ["serialization did not produce valid JSON — nothing was written"]}
 
     undo_state = target.with_name(target.name + ".wire-undo.json")

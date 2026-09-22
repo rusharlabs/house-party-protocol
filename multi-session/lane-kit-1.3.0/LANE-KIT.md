@@ -51,9 +51,9 @@ via scoped `Bash`). Reference block (apply in the profile/allowedTools of the re
 not in the global settings.json — it is per-session config, not a human gate):
 
 ```yaml
-papel: revisora
+role: reviewer
 allowedTools: ["Read", "Glob", "Grep", "Bash(python scripts/lane_board.py set * VERIFIED:*)", "Bash(python scripts/lane_board.py set * NEEDS-FIX:*)", "Bash(python scripts/lane_board.py set * DEFERRED:*)"]
-# NUNCA: Write, Edit, MultiEdit — reforça em código o "revisora não edita nada" da tabela §2.1
+# NEVER: Write, Edit, MultiEdit - enforces in code the "a reviewer edits nothing" of table 2.1
 ```
 
 Red zones (WARN for ALL lanes, any role): `.claude/settings*.json`,

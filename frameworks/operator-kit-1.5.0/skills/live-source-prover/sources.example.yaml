@@ -3,12 +3,12 @@
 # The skill runs the command, pastes the output and labels it "live @ HH:MM + source".
 # NEVER use curl/wget if they are on the deny-list - prefer python -c urllib.
 
-# NOTE: "contagens" (section name) and "agentes" (key) below are kept as-is on purpose -
-# they are the literal default section name and the --key example hardcoded in
-# scripts/live_count.py; renaming them here without also touching that script would break
-# the documented default (`live_count.py [--section contagens]`, `--key agentes`).
-contagens:
-  agentes: "grep -rL 'status:.*draft' agents --include=AGENT.md | wc -l"
+# NOTE: `counts` is the default section `live_count.py` reads when `--section` is omitted, and
+# `agents` is the key its usage line shows as the `--key` example. The two were Portuguese until
+# 2.5.3 and were renamed TOGETHER with the script - renaming the example alone would have broken
+# the documented default silently, which is why an earlier pass deliberately left them.
+counts:
+  agents: "grep -rL 'status:.*draft' agents --include=AGENT.md | wc -l"
   skills:  "ls -1d .claude/skills/*/ | wc -l"
   hooks:   "ls -1 .claude/hooks/*.py | wc -l"
   tests:   "python -m pytest --collect-only -q tests | tail -1"

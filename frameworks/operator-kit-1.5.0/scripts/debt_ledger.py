@@ -72,14 +72,14 @@ def _parse_marker(raw: str) -> dict:
     parts = raw.split(",", 1)
     if len(parts) != 2 or not parts[1].strip():
         return {"teto": raw.strip(), "upgrade": "", "malformed": True, "vencido": False}
-    teto_raw, upgrade = parts[0].strip(), parts[1].strip()
-    vencido = False
+    deadline_raw, upgrade = parts[0].strip(), parts[1].strip()
+    expired = False
     try:
-        teto_date = date.fromisoformat(teto_raw)
-        vencido = teto_date < date.today()
+        deadline_date = date.fromisoformat(deadline_raw)
+        expired = deadline_date < date.today()
     except ValueError:
         pass  # textual condition -- not automatically checkable, doesn't count as expired
-    return {"teto": teto_raw, "upgrade": upgrade, "malformed": False, "vencido": vencido}
+    return {"teto": deadline_raw, "upgrade": upgrade, "malformed": False, "vencido": expired}
 
 
 def scan(root: Path) -> list:
@@ -120,9 +120,9 @@ def render_markdown(entries: list) -> str:
     lines.append("| File | Line | Deadline | Upgrade | Git-age |")
     lines.append("|---|---|---|---|---|")
     for e in entries:
-        teto = e["teto"] + (" ⚠️ EXPIRED" if e["vencido"] else "")
+        deadline = e["teto"] + (" ⚠️ EXPIRED" if e["vencido"] else "")
         upgrade = e["upgrade"] if not e["malformed"] else "⚠️ MALFORMED MARKER (missing `, <upgrade>`)"
-        lines.append(f"| {e['file']} | {e['line']} | {teto} | {upgrade} | {e['git_age']} |")
+        lines.append(f"| {e['file']} | {e['line']} | {deadline} | {upgrade} | {e['git_age']} |")
     return "\n".join(lines) + "\n"
 
 
@@ -208,7 +208,7 @@ def main(argv) -> int:
 
     entries = scan(root)
     any_malformed = any(e["malformed"] for e in entries)
-    any_vencido = any(e["vencido"] for e in entries)
+    any_expired = any(e["vencido"] for e in entries)
 
     if args.json:
         print(json.dumps({"entries": entries, "malformed_count": sum(1 for e in entries if e["malformed"]),
@@ -223,7 +223,7 @@ def main(argv) -> int:
             out_path.write_text(md, encoding="utf-8")
             print(f"debt_ledger: {len(entries)} marker(s) -> {out_path}")
 
-    return 1 if (any_malformed or any_vencido) else 0
+    return 1 if (any_malformed or any_expired) else 0
 
 
 if __name__ == "__main__":

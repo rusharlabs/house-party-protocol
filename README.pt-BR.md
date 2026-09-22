@@ -80,7 +80,7 @@ nenhum pacote de terceiro. A CI exercita Python 3.10 a 3.13 em Linux, macOS e Wi
 (`.github/workflows/ci.yml`); interpretadores mais antigos não são prometidos porque nada os mede.
 
 ```bash
-pip install git+https://github.com/rushar-labs/house-party-protocol@v2.5.2
+pip install git+https://github.com/rushar-labs/house-party-protocol@v2.5.3
 hpp doctor
 hpp init --target ../your-repo
 ```
@@ -290,7 +290,7 @@ a versão em português. [MANIFESTO.pt-BR.md](MANIFESTO.pt-BR.md) — o que o pr
 [ARCHITECTURE.pt-BR.md](docs/ARCHITECTURE.pt-BR.md) — como as peças se encaixam e o que deliberadamente não
 existe · [GRAPH-MODEL.pt-BR.md](docs/GRAPH-MODEL.pt-BR.md) · [LOOPS.pt-BR.md](docs/LOOPS.pt-BR.md) ·
 [BENCHMARK.pt-BR.md](docs/BENCHMARK.pt-BR.md) · [PROOF.pt-BR.md](docs/PROOF.pt-BR.md) · [BRAND.pt-BR.md](docs/BRAND.pt-BR.md) ·
-[TIPS.pt-BR.md](docs/TIPS.pt-BR.md) · [manual](docs/MANUAL.html) · [catálogo](docs/CATALOGO.pt-BR.html) ·
+[TIPS.pt-BR.md](docs/TIPS.pt-BR.md) · [manual](docs/MANUAL.html) · [catálogo](docs/CATALOG.pt-BR.html) ·
 [CHANGELOG.pt-BR.md](CHANGELOG.pt-BR.md) · [AGENTS.pt-BR.md](AGENTS.pt-BR.md) para agentes trabalhando neste
 repositório.
 

@@ -69,7 +69,7 @@ except Exception:  # noqa: BLE001 -- Why: with no loader there is nothing to mut
 # only either misses the state doc or reads nothing and says nothing. New name wins; the legacy is
 # accepted for one version, with a single line on stderr; an explicit path from the profile is
 # never rewritten.
-def _resolve_state(rel: str, root: Path, quem: str) -> str:
+def _resolve_state(rel: str, root: Path, who: str) -> str:
     if rel != _DEF_STATE:
         return rel
     if (root / _DEF_STATE).exists():
@@ -81,7 +81,7 @@ def _resolve_state(rel: str, root: Path, quem: str) -> str:
         # (`autoprompt_resume`, `session_boot`) already say it once per session, which is where a
         # notice belongs; here the fallback stays silent and simply works.
         if not _QUIET_FALLBACK:
-            print(f"[{quem}] deprecated: read '{_LEGACY_STATE}'; rename it to '{_DEF_STATE}' — "
+            print(f"[{who}] deprecated: read '{_LEGACY_STATE}'; rename it to '{_DEF_STATE}' — "
                   "the old spelling is accepted for one version only.", file=sys.stderr)
         return _LEGACY_STATE
     return _DEF_STATE

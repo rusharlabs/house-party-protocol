@@ -41,7 +41,7 @@ description: Operational learning loop — records command failures, detects rec
    ```
 3. **Query what the system has learned** about a task:
    ```bash
-   python "${CLAUDE_PLUGIN_ROOT}/_lib/gotchas_memory.py" --preamble "rodar o deploy do site"
+   python "${CLAUDE_PLUGIN_ROOT}/_lib/gotchas_memory.py" --preamble "run the site deploy"
    ```
 4. **See the whole loop working** (demo with a temporary store, zero effect on the project):
    ```bash
@@ -78,9 +78,9 @@ project's setup and running it in every session.
 **3 · Query what the system knows about a task:**
 
 ```
-$ GOTCHA_STORE_DIR=<store> python "${CLAUDE_PLUGIN_ROOT}/_lib/gotchas_memory.py" --preamble "rodar o deploy do site"
+$ GOTCHA_STORE_DIR=<store> python "${CLAUDE_PLUGIN_ROOT}/_lib/gotchas_memory.py" --preamble "run the site deploy"
 ⚠️ GOTCHAS (do not repeat these — learned from earlier failures):
-  • [rule] Deploy/routing: verifique que o BACKEND trocou (rota exclusiva da versão nova + marca de build), não só o gate de auth ou o status do processo.
+  • [rule] Deploy/routing: prove the BACKEND changed (a route exclusive to the new version + a build marker), not just the auth gate or the process status.
 $ echo $?
 0
 ```

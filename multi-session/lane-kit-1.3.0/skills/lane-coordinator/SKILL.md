@@ -15,7 +15,7 @@ description: Coordinates N concurrent sessions (lanes) over the same repo throug
 
 ## Contract
 
-**INPUT:** `item_id` + role (`executora`/`revisora`) + `lane_id` + `model` + (depending on the state) evidence or verdict.
+**INPUT:** `item_id` + role (`executor`/`reviewer`) + `lane_id` + `model` + (depending on the state) evidence or verdict.
 
 **OUTPUT:** 1 append-only event in `.claude/lanes/board.jsonl` + (via `render`) a readable snapshot in `docs/plans/execution/LANE-BOARD.md`.
 
@@ -42,33 +42,33 @@ CLAIMED → BUILDING → CHECKPOINT-READY → UNDER-REVIEW → VERIFIED | NEEDS-
                                                        ↘ DEFERRED (checker indisponível) ↗
 ```
 
-- **CHECKPOINT-READY**: only `role=executora`, only the lane that did `CLAIMED`, and requires a non-empty `--evidencia` (pasted hash/exit code — never "I ran it").
-- **VERIFIED/NEEDS-FIX**: only `role=revisora`, with `--verdict-by-lane` DIFFERENT from the lane that built AND `--verdict-by-model` from a DIFFERENT family (cross-model maker≠checker, in code — cannot be bypassed).
+- **CHECKPOINT-READY**: only `role=executor`, only the lane that did `CLAIMED`, and requires a non-empty `--evidence` (pasted hash/exit code — never "I ran it").
+- **VERIFIED/NEEDS-FIX**: only `role=reviewer`, with `--verdict-by-lane` DIFFERENT from the lane that built AND `--verdict-by-model` from a DIFFERENT family (cross-model maker≠checker, in code — cannot be bypassed).
 - **Checker unavailable** (`--checker-indisponivel`): only `DEFERRED` is accepted — never `VERIFIED`.
 - **MERGED**: requires a `VERIFIED` in the item's history; if `--tag red`, also requires `--human-approved` (literal human gate).
 
 ## Process
 
-1. **Claim the item** (you become the owner, role executora):
+1. **Claim the item** (you become the owner, role executor):
    ```bash
    python ${CLAUDE_PLUGIN_ROOT}/scripts/lane_board.py claim ITEM-1 --lane exec-a --model claude-opus-4-8
    ```
 2. **Advance to BUILDING** while you work:
    ```bash
-   python ${CLAUDE_PLUGIN_ROOT}/scripts/lane_board.py set ITEM-1 BUILDING --lane exec-a --role executora --model claude-opus-4-8
+   python ${CLAUDE_PLUGIN_ROOT}/scripts/lane_board.py set ITEM-1 BUILDING --lane exec-a --role executor --model claude-opus-4-8
    ```
 3. **When done, CHECKPOINT-READY with real evidence** (command + output pasted, not "done"):
    ```bash
-   python ${CLAUDE_PLUGIN_ROOT}/scripts/lane_board.py set ITEM-1 CHECKPOINT-READY --lane exec-a --role executora --model claude-opus-4-8 --evidencia "pytest -q: 42 passed, exit=0"
+   python ${CLAUDE_PLUGIN_ROOT}/scripts/lane_board.py set ITEM-1 CHECKPOINT-READY --lane exec-a --role executor --model claude-opus-4-8 --evidence "pytest -q: 42 passed, exit=0"
    ```
 4. **The reviewer (another lane, another model family) takes over and genuinely verifies** — NEVER accept "it's ready" without running:
    ```bash
-   python ${CLAUDE_PLUGIN_ROOT}/scripts/lane_board.py set ITEM-1 UNDER-REVIEW --lane exec-a --role executora --model claude-opus-4-8
-   python ${CLAUDE_PLUGIN_ROOT}/scripts/lane_board.py set ITEM-1 VERIFIED --lane exec-a --role revisora --model gpt-5.6 --verdict-by-lane rev-a --verdict-by-model gpt-5.6
+   python ${CLAUDE_PLUGIN_ROOT}/scripts/lane_board.py set ITEM-1 UNDER-REVIEW --lane exec-a --role executor --model claude-opus-4-8
+   python ${CLAUDE_PLUGIN_ROOT}/scripts/lane_board.py set ITEM-1 VERIFIED --lane exec-a --role reviewer --model gpt-5.6 --verdict-by-lane rev-a --verdict-by-model gpt-5.6
    ```
 5. **Merge** (human gate if `--tag red`):
    ```bash
-   python ${CLAUDE_PLUGIN_ROOT}/scripts/lane_board.py set ITEM-1 MERGED --lane rev-a --role revisora --model gpt-5.6
+   python ${CLAUDE_PLUGIN_ROOT}/scripts/lane_board.py set ITEM-1 MERGED --lane rev-a --role reviewer --model gpt-5.6
    ```
 6. **Render the snapshot** whenever you want to see the whole board:
    ```bash
@@ -79,15 +79,15 @@ CLAIMED → BUILDING → CHECKPOINT-READY → UNDER-REVIEW → VERIFIED | NEEDS-
 
 ```console
 $ python scripts/lane_board.py claim ITEM-1 --lane exec-a --model claude-opus-4-8
-{"ts": "2026-07-10T15:56:30", "item_id": "ITEM-1", "estado": "CLAIMED", "lane_id": "exec-a", "role": "executora", "model": "claude-opus-4-8", "tag": "green"}
+{"ts": "2026-07-10T15:56:30", "item_id": "ITEM-1", "state": "CLAIMED", "lane_id": "exec-a", "role": "executor", "model": "claude-opus-4-8", "tag": "green"}
 ```
 <!-- executed: 2026-09-22 · exit=0 -->
 
 ```console
-$ python scripts/lane_board.py set ITEM-1 BUILDING --lane exec-a --role executora --model claude-opus-4-8
-$ python scripts/lane_board.py set ITEM-1 CHECKPOINT-READY --lane exec-a --role executora --model claude-opus-4-8 --evidencia "pytest -q: 42 passed"
-$ python scripts/lane_board.py set ITEM-1 UNDER-REVIEW --lane exec-a --role executora --model claude-opus-4-8
-$ python scripts/lane_board.py set ITEM-1 VERIFIED --lane exec-a --role revisora --model claude-opus-4-8 --verdict-by-lane exec-a --verdict-by-model claude-opus-4-8
+$ python scripts/lane_board.py set ITEM-1 BUILDING --lane exec-a --role executor --model claude-opus-4-8
+$ python scripts/lane_board.py set ITEM-1 CHECKPOINT-READY --lane exec-a --role executor --model claude-opus-4-8 --evidence "pytest -q: 42 passed"
+$ python scripts/lane_board.py set ITEM-1 UNDER-REVIEW --lane exec-a --role executor --model claude-opus-4-8
+$ python scripts/lane_board.py set ITEM-1 VERIFIED --lane exec-a --role reviewer --model claude-opus-4-8 --verdict-by-lane exec-a --verdict-by-model claude-opus-4-8
 lane_board: refused — maker≠checker violated: reviewer (exec-a) is the SAME lane as the builder (exec-a)
 ```
 <!-- executed: 2026-09-22 · exit=1 -->

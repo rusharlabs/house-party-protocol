@@ -47,8 +47,8 @@ def _extract_failure(tool_response):
         import re
         m = re.match(r"Error: Exit code (\d+)\s*\n?(.*)", tool_response, re.DOTALL)
         if m:
-            corpo = m.group(2).strip()
-            return True, (corpo or f"exit {m.group(1)}")[:500]
+            body = m.group(2).strip()
+            return True, (body or f"exit {m.group(1)}")[:500]
         return False, ""
     if not isinstance(tool_response, dict):
         return False, ""
@@ -166,8 +166,8 @@ def _self_test() -> None:
     assert _extract_failure({"exit_code": True})[0] is False  # bool is not an exit code
     assert _extract_failure({"returncode": 2})[0] is True
     # the host's failure event (PostToolUseFailure) carries `error`, not `tool_response`
-    falha = {"hook_event_name": "PostToolUseFailure", "error": "Command exited with code 1: boom"}
-    assert _extract_failure_event(falha) == (True, "Command exited with code 1: boom")
+    failure = {"hook_event_name": "PostToolUseFailure", "error": "Command exited with code 1: boom"}
+    assert _extract_failure_event(failure) == (True, "Command exited with code 1: boom")
     assert _extract_failure_event({"hook_event_name": "PostToolUseFailure", "error": {"message": "m"}}) == (True, "m")
     assert _extract_failure_event({"hook_event_name": "PostToolUseFailure"})[0] is True  # a failure with no text is still a failure
     # controls: hook block / denial stay out, and the legacy form keeps passing
@@ -188,8 +188,8 @@ def _self_test() -> None:
         # the same tool call arriving twice becomes ONE record
         gm.record_failure("task:dup", "boom", store_dir=d, dedupe_key="tool_use:x")
         gm.record_failure("task:dup", "boom", store_dir=d, dedupe_key="tool_use:x")
-        linhas = (Path(d) / "failures.jsonl").read_text(encoding="utf-8").splitlines()
-        assert sum(1 for l in linhas if '"tool_use:x"' in l) == 1
+        lines = (Path(d) / "failures.jsonl").read_text(encoding="utf-8").splitlines()
+        assert sum(1 for l in lines if '"tool_use:x"' in l) == 1
         _ = os  # (env not used in the direct test; record_failure receives store_dir)
     print("self-test OK")
 

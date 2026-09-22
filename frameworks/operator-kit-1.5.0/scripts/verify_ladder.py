@@ -43,10 +43,10 @@ except Exception:  # noqa: BLE001 -- without the loader, profile mode is unavail
     get = None  # type: ignore[assignment]
 
 # Canonical order of the 6 levels.
-NIVEIS_CANONICOS = ["lint", "test", "build", "visual", "staging", "security"]
+CANONICAL_LEVELS = ["lint", "test", "build", "visual", "staging", "security"]
 
 
-def run_nivel(nivel: str, cmd: str, cwd: str | None = None, timeout: int = 600) -> dict:
+def run_level(level: str, cmd: str, cwd: str | None = None, timeout: int = 600) -> dict:
     """Runs one ladder level. No command -> SKIPPED status (never a false green).
 
     Returns dict {nivel, cmd, status, passed, exit_code, tail}.
@@ -54,7 +54,7 @@ def run_nivel(nivel: str, cmd: str, cwd: str | None = None, timeout: int = 600) 
     """
     cmd = (cmd or "").strip()
     if not cmd:
-        return {"nivel": nivel, "cmd": "", "status": "SKIPPED",
+        return {"nivel": level, "cmd": "", "status": "SKIPPED",
                 "passed": False, "exit_code": None, "tail": "sem comando configurado"}
     try:
         r = subprocess.run(
@@ -63,13 +63,13 @@ def run_nivel(nivel: str, cmd: str, cwd: str | None = None, timeout: int = 600) 
         )
         tail = ((r.stdout or "") + (r.stderr or "")).strip()[-400:]
         passed = r.returncode == 0
-        return {"nivel": nivel, "cmd": cmd, "status": "PASS" if passed else "FAIL",
+        return {"nivel": level, "cmd": cmd, "status": "PASS" if passed else "FAIL",
                 "passed": passed, "exit_code": r.returncode, "tail": tail}
     except subprocess.TimeoutExpired:
-        return {"nivel": nivel, "cmd": cmd, "status": "FAIL",
+        return {"nivel": level, "cmd": cmd, "status": "FAIL",
                 "passed": False, "exit_code": 124, "tail": f"timeout {timeout}s"}
     except Exception as e:  # noqa: BLE001 -- the ladder never crashes; error = failed level
-        return {"nivel": nivel, "cmd": cmd, "status": "FAIL",
+        return {"nivel": level, "cmd": cmd, "status": "FAIL",
                 "passed": False, "exit_code": 1, "tail": f"erro: {e}"}
 
 
@@ -77,7 +77,7 @@ def evaluate(ladder: dict, obrigatorios=None, score_minimo: int = 1,
              cwd: str | None = None, timeout: int = 600) -> dict:
     """Runs the whole ladder and evaluates overall PASS/FAIL.
 
-    ladder: dict {nivel: comando}. Levels follow NIVEIS_CANONICOS when present,
+    ladder: dict {nivel: comando}. Levels follow CANONICAL_LEVELS when present,
             extras (if any) run at the end in alphabetical order.
     obrigatorios: list of levels that MUST pass (default []).
     score_minimo: minimum number of PASS levels to not fail on score.
@@ -86,18 +86,18 @@ def evaluate(ladder: dict, obrigatorios=None, score_minimo: int = 1,
     """
     obrigatorios = list(obrigatorios or [])
     # Sorts: canonical first (in the fixed order), then alphabetical extras.
-    chaves = [n for n in NIVEIS_CANONICOS if n in ladder]
-    chaves += sorted(k for k in ladder if k not in NIVEIS_CANONICOS)
+    keys = [n for n in CANONICAL_LEVELS if n in ladder]
+    keys += sorted(k for k in ladder if k not in CANONICAL_LEVELS)
 
-    results = [run_nivel(n, ladder.get(n, ""), cwd=cwd, timeout=timeout) for n in chaves]
+    results = [run_level(n, ladder.get(n, ""), cwd=cwd, timeout=timeout) for n in keys]
 
-    com_comando = [r for r in results if r["status"] != "SKIPPED"]
-    total = len(com_comando)                                  # N = levels with a real command
-    score = sum(1 for r in com_comando if r["passed"])        # X = levels that passed
+    with_command = [r for r in results if r["status"] != "SKIPPED"]
+    total = len(with_command)                                  # N = levels with a real command
+    score = sum(1 for r in with_command if r["passed"])        # X = levels that passed
 
     # A mandatory level is satisfied ONLY if status == PASS (SKIPPED or FAIL don't count).
-    status_por_nivel = {r["nivel"]: r["status"] for r in results}
-    obrig_falhos = [n for n in obrigatorios if status_por_nivel.get(n) != "PASS"]
+    status_by_level = {r["nivel"]: r["status"] for r in results}
+    obrig_falhos = [n for n in obrigatorios if status_by_level.get(n) != "PASS"]
 
     ok = (not obrig_falhos) and (score >= score_minimo)
     razao = []
@@ -131,31 +131,31 @@ def ladder_from_profile() -> tuple[dict, list, int]:
     ladder = get(prof, "verification.ladder", {}) or {}
     if not isinstance(ladder, dict):
         ladder = {}
-    obrig = get(prof, "verification.ladder_required", []) or []
-    obrig = [str(x) for x in obrig] if isinstance(obrig, list) else []
-    minimo = get(prof, "verification.ladder_min_score", 1)
+    required = get(prof, "verification.ladder_required", []) or []
+    required = [str(x) for x in required] if isinstance(required, list) else []
+    minimum = get(prof, "verification.ladder_min_score", 1)
     try:
-        minimo = int(minimo)
+        minimum = int(minimum)
     except (TypeError, ValueError):
-        minimo = 1
-    return {k: str(v or "") for k, v in ladder.items()}, obrig, minimo
+        minimum = 1
+    return {k: str(v or "") for k, v in ladder.items()}, required, minimum
 
 
 def _render(report: dict) -> str:
     """Renders the human report (text). Shows the tail per level, score and verdict."""
-    linhas = []
+    lines = []
     for r in report["results"]:
         mark = {"PASS": "OK  ", "FAIL": "FAIL", "SKIPPED": "SKIP"}[r["status"]]
         ec = "" if r["exit_code"] is None else f" exit {r['exit_code']}"
-        linhas.append(f"  [{mark}] {r['nivel']:<9}{ec}  {r['cmd'] or '(no command)'}")
+        lines.append(f"  [{mark}] {r['nivel']:<9}{ec}  {r['cmd'] or '(no command)'}")
         if r["status"] == "FAIL" and r["tail"]:
-            linhas.append(f"          ^ {r['tail'][-200:]}")
-    veredito = "PASS" if report["passed"] else "FAIL"
-    linhas.append(f"\nLADDER: {veredito}  (score {report['score']}/{report['total']}, "
+            lines.append(f"          ^ {r['tail'][-200:]}")
+    verdict = "PASS" if report["passed"] else "FAIL"
+    lines.append(f"\nLADDER: {verdict}  (score {report['score']}/{report['total']}, "
                   f"minimum {report['score_minimo']})")
     if report["razao"]:
-        linhas.append("  reason: " + "; ".join(report["razao"]))
-    return "\n".join(linhas)
+        lines.append("  reason: " + "; ".join(report["razao"]))
+    return "\n".join(lines)
 
 
 def _self_test() -> None:
@@ -191,8 +191,8 @@ def _self_test() -> None:
 
     # 6) Canonical order respected when present.
     rep6 = evaluate({"security": ok_cmd, "lint": ok_cmd}, obrigatorios=[], score_minimo=1)
-    ordem = [r["nivel"] for r in rep6["results"]]
-    assert ordem == ["lint", "security"], f"wrong canonical order: {ordem}"
+    order = [r["nivel"] for r in rep6["results"]]
+    assert order == ["lint", "security"], f"wrong canonical order: {order}"
 
     print("self-test OK")
 
@@ -203,7 +203,7 @@ def main(argv) -> int:
         return 0
     as_json = "--json" in argv
 
-    ladder, obrig, minimo = ladder_from_profile()
+    ladder, required, minimum = ladder_from_profile()
     if not ladder:
         msg = "verify_ladder: no ladder in verification.ladder of operator-profile.yaml " \
               "(or profile/PyYAML missing) — nothing to verify"
@@ -214,7 +214,7 @@ def main(argv) -> int:
             print(msg, file=sys.stderr)
         return 2
 
-    report = evaluate(ladder, obrigatorios=obrig, score_minimo=minimo)
+    report = evaluate(ladder, obrigatorios=required, score_minimo=minimum)
     if as_json:
         print(json.dumps(report, ensure_ascii=False, indent=2))
     else:

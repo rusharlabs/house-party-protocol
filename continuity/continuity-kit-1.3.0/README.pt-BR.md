@@ -3,8 +3,8 @@
 # Continuity Kit
 
 Uma sessão de agente sobrevive a parada/`/clear`/crash sem perder o próximo passo. O
-handoff (schema `handoff-v1.1`) grava um bloco git (branch/commit/staged) + um
-`re_derive_cmd` (LC-1 — re-derivar o estado ao vivo, nunca confiar no que ficou escrito)
+handoff (schema `handoff-v2.0`) grava um bloco git (branch/commit/staged) + um
+`re_derive_cmd` (LC-1 — re-derivar o state ao vivo, nunca confiar no que ficou escrito)
 + um `verify_first_cmd` (LC-4 — antes de continuar uma ação que o handoff descreve,
 verificar se ela já foi feita, nunca re-disparar cego). Inclui também **doc-rollup**
 (histórico/evolução do projeto que se consolida sozinho, com degradação embutida acima

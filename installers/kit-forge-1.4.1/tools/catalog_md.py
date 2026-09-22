@@ -6,10 +6,10 @@ frontmatter description), commands, agents, hooks (event -> script), rules, temp
 and documents. ONE pass over the tree feeds FOUR derived files — none of them hand-written, so
 re-emit the kits, run this again, and the catalogue follows:
 
-    docs/CATALOGO.md          English Markdown (the source-of-truth language)
-    docs/CATALOGO.pt-BR.md    Portuguese Markdown — same headings order, same tables, same code
-    docs/CATALOGO.html        English HTML page: the four brand tokens, zero external requests
-    docs/CATALOGO.pt-BR.html  Portuguese HTML page, language switch + hreflang like MANUAL.html
+    docs/CATALOG.md          English Markdown (the source-of-truth language)
+    docs/CATALOG.pt-BR.md    Portuguese Markdown — same headings order, same tables, same code
+    docs/CATALOG.html        English HTML page: the four brand tokens, zero external requests
+    docs/CATALOG.pt-BR.html  Portuguese HTML page, language switch + hreflang like MANUAL.html
 
 Kit descriptions come from `marketplace.json`: `plugins[].description` — the field Claude Code's
 `/plugin` UI shows, so it is English — feeds the English side and `plugins[].description_pt` the
@@ -43,8 +43,8 @@ LANGS = ("en", "pt-BR")
 # Why: the four outputs are the catalogue itself — they never appear in their own "shared
 # resources" list, otherwise every re-run would grow the list by one self-reference.
 OUTPUTS = {
-    "en": {"md": "CATALOGO.md", "html": "CATALOGO.html"},
-    "pt-BR": {"md": "CATALOGO.pt-BR.md", "html": "CATALOGO.pt-BR.html"},
+    "en": {"md": "CATALOG.md", "html": "CATALOG.html"},
+    "pt-BR": {"md": "CATALOG.pt-BR.md", "html": "CATALOG.pt-BR.html"},
 }
 OWN_FILES = frozenset(name for lang in OUTPUTS.values() for name in lang.values())
 # Why: BRAND.md declares exactly four tokens; any other hex in the page is palette drift.
@@ -140,32 +140,32 @@ def _hooks(kit: Path) -> list[tuple[str | None, str | None, str]]:
     except (OSError, json.JSONDecodeError):
         return []
     rows: list[tuple[str | None, str | None, str]] = []
-    for evento, blocos in (data.get("hooks") or {}).items():
-        for bloco in blocos or []:
-            for h in bloco.get("hooks") or []:
+    for event, blocks in (data.get("hooks") or {}).items():
+        for block in blocks or []:
+            for h in block.get("hooks") or []:
                 cmd = h.get("command", "")
                 # Why: the last `hooks/<name>.py|.sh` in the command is the hook (the first may be
                 # the pyrun.sh shim), and whatever follows it is an explicit argument that belongs
                 # in the listing — lane-kit wires `lane_register.py --heartbeat`. An end-anchored
                 # regex missed that command and printed the whole shell line instead.
-                achados = list(_HOOK_SCRIPT.finditer(cmd))
-                nome = (achados[-1].group(1) + cmd[achados[-1].end():].rstrip()) if achados else cmd
-                rows.append((evento, bloco.get("matcher") or "*", nome))
+                matches = list(_HOOK_SCRIPT.finditer(cmd))
+                name = (matches[-1].group(1) + cmd[matches[-1].end():].rstrip()) if matches else cmd
+                rows.append((event, block.get("matcher") or "*", name))
     return rows
 
 
-def _lista(kit: Path, rel: str, padrao: str) -> list[Path]:
-    return sorted((kit / rel).glob(padrao)) if (kit / rel).is_dir() else []
+def _lista(kit: Path, rel: str, pattern: str) -> list[Path]:
+    return sorted((kit / rel).glob(pattern)) if (kit / rel).is_dir() else []
 
 
-def _documentos(kit: Path) -> list[Path]:
+def _documents(kit: Path) -> list[Path]:
     docs = kit / "docs"
     return sorted(path for path in docs.rglob("*") if path.is_file()) if docs.is_dir() else []
 
 
-def _lockup(raiz: Path, display: str) -> str:
+def _lockup(root: Path, display: str) -> str:
     """The `<img>` MANUAL.html opens with; without a MANUAL, the same asset with the plain name."""
-    manual = raiz / "docs" / "MANUAL.html"
+    manual = root / "docs" / "MANUAL.html"
     if manual.is_file():
         m = _LOCKUP.search(manual.read_text(encoding="utf-8", errors="replace"))
         if m:
@@ -173,17 +173,17 @@ def _lockup(raiz: Path, display: str) -> str:
     return f'<img src="{LOCKUP_SRC}" alt="{html.escape(display)}">'
 
 
-def build_model(raiz: Path) -> dict:
+def build_model(root: Path) -> dict:
     """Everything the four renderers need, read once. Language-neutral except `description`."""
-    mk = json.loads((raiz / "marketplace.json").read_text(encoding="utf-8"))
+    mk = json.loads((root / "marketplace.json").read_text(encoding="utf-8"))
     shared = sorted(
-        path.name for path in (raiz / "docs").glob("*")
+        path.name for path in (root / "docs").glob("*")
         if path.is_file() and path.name not in OWN_FILES
-    ) if (raiz / "docs").is_dir() else []
+    ) if (root / "docs").is_dir() else []
     kits: list[dict] = []
     totals = dict.fromkeys(COUNT_KEYS, 0)
     for pl in mk.get("plugins", []):
-        kit = raiz / pl["source"].lstrip("./")
+        kit = root / pl["source"].lstrip("./")
         skills = [(fm.get("name", s.parent.name), fm.get("description", ""))
                   for s in _lista(kit, "skills", "*/SKILL.md") for fm in (_frontmatter(s),)]
         entry = {
@@ -202,7 +202,7 @@ def build_model(raiz: Path) -> dict:
             "rules": [r.stem for r in _lista(kit, "rules", "*.md")],
             "templates": [t.name for t in _lista(kit, "templates", "*")],
             "scripts": [s.name for s in _lista(kit, "scripts", "*.py")],
-            "documents": [doc.relative_to(kit).as_posix() for doc in _documentos(kit)],
+            "documents": [doc.relative_to(kit).as_posix() for doc in _documents(kit)],
         }
         entry["counts"] = {k: len(entry[k]) for k in COUNT_KEYS}
         for k, v in entry["counts"].items():
@@ -213,7 +213,7 @@ def build_model(raiz: Path) -> dict:
     return {
         "name": name,
         "display": display,
-        "lockup": _lockup(raiz, display),
+        "lockup": _lockup(root, display),
         "shared": shared,
         "kits": kits,
         "totals": totals,
@@ -224,8 +224,8 @@ def build_model(raiz: Path) -> dict:
 
 def render_md(model: dict, lang: str) -> str:
     t = _T[lang]
-    linhas: list[str] = []
-    w = linhas.append
+    lines: list[str] = []
+    w = lines.append
     w(PAIR_LINKS)
     w("")
     w("# " + str(t["title"]).format(name=model["name"]))
@@ -255,8 +255,8 @@ def render_md(model: dict, lang: str) -> str:
             w("")
             w("| " + " | ".join(t["skills_th"]) + " |")
             w("|---|---|")
-            for nome, desc in kit["skills"]:
-                w(f"| `{nome}` | {desc} |")
+            for name, desc in kit["skills"]:
+                w(f"| `{name}` | {desc} |")
             w("")
         if kit["commands"]:
             w(f"**{t['commands_h']}** — " + " · ".join(f"`/{c}`" for c in kit["commands"]))
@@ -269,8 +269,8 @@ def render_md(model: dict, lang: str) -> str:
             w("")
             w("| " + " | ".join(t["hooks_th"]) + " |")
             w("|---|---|")
-            for evento, matcher, script in kit["hooks"]:
-                ev = str(t["wiring"]) if evento is None else f"{evento} · `{matcher}`"
+            for event, matcher, script in kit["hooks"]:
+                ev = str(t["wiring"]) if event is None else f"{event} · `{matcher}`"
                 w(f"| {ev} | `{script}` |")
             w("")
         if kit["rules"]:
@@ -285,7 +285,7 @@ def render_md(model: dict, lang: str) -> str:
         if kit["documents"]:
             w(f"**{t['docs_h']}** — " + " · ".join(f"`{d}`" for d in kit["documents"]))
             w("")
-    return "\n".join(linhas).rstrip() + "\n"
+    return "\n".join(lines).rstrip() + "\n"
 
 
 # ----------------------------------------------------------------------------- html
@@ -348,8 +348,8 @@ def render_html(model: dict, lang: str) -> str:
     other = "pt-BR" if lang == "en" else "en"
     esc = html.escape
     display = model["display"]
-    linhas: list[str] = []
-    w = linhas.append
+    lines: list[str] = []
+    w = lines.append
     w("<!doctype html>")
     w(f'<html lang="{lang}">')
     w("<head>")
@@ -412,8 +412,8 @@ def render_html(model: dict, lang: str) -> str:
             w("      <table>")
             w("        <thead><tr>" + "".join(f"<th>{esc(h)}</th>" for h in t["skills_th"]) + "</tr></thead>")
             w("        <tbody>")
-            for nome, desc in kit["skills"]:
-                w(f"          <tr><td><code>{esc(nome)}</code></td><td>{_inline(desc)}</td></tr>")
+            for name, desc in kit["skills"]:
+                w(f"          <tr><td><code>{esc(name)}</code></td><td>{_inline(desc)}</td></tr>")
             w("        </tbody>")
             w("      </table>")
         if kit["commands"]:
@@ -427,8 +427,8 @@ def render_html(model: dict, lang: str) -> str:
             w("      <table>")
             w("        <thead><tr>" + "".join(f"<th>{esc(h)}</th>" for h in t["hooks_th"]) + "</tr></thead>")
             w("        <tbody>")
-            for evento, matcher, script in kit["hooks"]:
-                ev = esc(str(t["wiring"])) if evento is None else f"{esc(evento)} · <code>{esc(matcher or '*')}</code>"
+            for event, matcher, script in kit["hooks"]:
+                ev = esc(str(t["wiring"])) if event is None else f"{esc(event)} · <code>{esc(matcher or '*')}</code>"
                 w(f"          <tr><td>{ev}</td><td><code>{esc(script)}</code></td></tr>")
             w("        </tbody>")
             w("      </table>")
@@ -448,12 +448,12 @@ def render_html(model: dict, lang: str) -> str:
     w("  </div></footer>")
     w("</body>")
     w("</html>")
-    return "\n".join(linhas) + "\n"
+    return "\n".join(lines) + "\n"
 
 
-def render_all(raiz: Path) -> dict[str, str]:
+def render_all(root: Path) -> dict[str, str]:
     """{file name: content} for the four outputs, from one read of the tree."""
-    model = build_model(raiz)
+    model = build_model(root)
     out: dict[str, str] = {}
     for lang in LANGS:
         out[OUTPUTS[lang]["md"]] = render_md(model, lang)
@@ -463,12 +463,12 @@ def render_all(raiz: Path) -> dict[str, str]:
 
 # ----------------------------------------------------------------------------- self-test
 
-def write_fixture_tree(raiz: Path) -> None:
+def write_fixture_tree(root: Path) -> None:
     """A two-kit marketplace with every resource kind — shared by the self-test and the suite.
 
     `demo-kit` carries `description_pt`; `lone-kit` does not, so the fallback is observable.
     `demo-kit` also wires one hook with an argument after the script (`beat.py --heartbeat`)."""
-    kit = raiz / "cat" / "demo-kit-1.0.0"
+    kit = root / "cat" / "demo-kit-1.0.0"
     (kit / "skills" / "ola").mkdir(parents=True)
     (kit / "skills" / "ola" / "SKILL.md").write_text("---\nname: ola\ndescription: diz ola\n---\n# ola\n", encoding="utf-8")
     (kit / "hooks").mkdir()
@@ -485,7 +485,7 @@ def write_fixture_tree(raiz: Path) -> None:
     (kit / "agents" / "NOTICE-ECC.md").write_text("# notice\n", encoding="utf-8")
     (kit / "docs").mkdir()
     (kit / "docs" / "RUNBOOK.md").write_text("# runbook\n", encoding="utf-8")
-    lone = raiz / "cat" / "lone-kit-0.1.0"
+    lone = root / "cat" / "lone-kit-0.1.0"
     (lone / "hooks").mkdir(parents=True)
     (lone / "hooks" / "wired_by_installer.py").write_text("print('hi')\n", encoding="utf-8")
     (lone / "commands").mkdir()
@@ -494,16 +494,16 @@ def write_fixture_tree(raiz: Path) -> None:
     (lone / "templates" / "t.md").write_text("# t\n", encoding="utf-8")
     (lone / "scripts").mkdir()
     (lone / "scripts" / "s.py").write_text("x = 1\n", encoding="utf-8")
-    (raiz / "docs").mkdir()
-    (raiz / "docs" / "TIPS.md").write_text("# tips\n", encoding="utf-8")
+    (root / "docs").mkdir()
+    (root / "docs" / "TIPS.md").write_text("# tips\n", encoding="utf-8")
     # Why: a stale copy of the catalogue itself must not be listed as a shared resource.
-    (raiz / "docs" / "CATALOGO.html").write_text("<!doctype html>\n", encoding="utf-8")
+    (root / "docs" / "CATALOG.html").write_text("<!doctype html>\n", encoding="utf-8")
     # the MANUAL the catalogue borrows its header from — the alt text is the MANUAL's, not ours
-    (raiz / "docs" / "MANUAL.html").write_text(
+    (root / "docs" / "MANUAL.html").write_text(
         '<!doctype html>\n<header class="hero"><div class="wrap">\n'
         f'      <img src="{LOCKUP_SRC}" alt="Demo Market — the approved art">\n'
         "      <h1>Manual</h1>\n</div></header>\n", encoding="utf-8")
-    (raiz / "marketplace.json").write_text(json.dumps({"name": "demo-market", "plugins": [
+    (root / "marketplace.json").write_text(json.dumps({"name": "demo-market", "plugins": [
         {"name": "demo-kit", "version": "1.0.0", "source": "./cat/demo-kit-1.0.0",
          "description": "test kit <with> & signs", "description_pt": "kit de teste <com> & sinais"},
         {"name": "lone-kit", "version": "0.1.0", "source": "./cat/lone-kit-0.1.0",
@@ -513,11 +513,11 @@ def write_fixture_tree(raiz: Path) -> None:
 
 def _self_test() -> int:
     with tempfile.TemporaryDirectory() as tmp:
-        raiz = Path(tmp)
-        write_fixture_tree(raiz)
-        out = render_all(raiz)
+        root = Path(tmp)
+        write_fixture_tree(root)
+        out = render_all(root)
         assert set(out) == OWN_FILES, sorted(out)
-        pt, en = out["CATALOGO.pt-BR.md"], out["CATALOGO.md"]
+        pt, en = out["CATALOG.pt-BR.md"], out["CATALOG.md"]
         for md in (pt, en):
             assert md.startswith(PAIR_LINKS + "\n\n# "), md[:80]
             assert "| [demo-kit](#demo-kit) | 1.0.0 | 1 | 0 | 1 | 2 | 1 | 0 | 0 |" in md, md
@@ -525,7 +525,7 @@ def _self_test() -> int:
             assert "| `ola` | diz ola |" in md and "| PreToolUse · `Bash` | `guard.py` |" in md and "`r1`" in md, md
             # the argument after the script survives; the shim never shows as the hook
             assert "| PostToolUse · `*` | `beat.py --heartbeat` |" in md and "`pyrun.sh`" not in md, md
-            assert "`TIPS.md`" in md and "`CATALOGO.html`" not in md, md
+            assert "`TIPS.md`" in md and "`CATALOG.html`" not in md, md
             assert "`checker`" in md and "NOTICE-ECC" not in md
             assert "`docs/RUNBOOK.md`" in md and "`/go`" in md and "`t.md`" in md and "`s.py`" in md, md
         assert "## Recursos transversais" in pt and "**Documentos e registros**" in pt and "(wiring pelo instalador)" in pt
@@ -543,7 +543,7 @@ def _self_test() -> int:
             page = out[OUTPUTS[lang]["html"]]
             assert page.startswith("<!doctype html>\n<html lang=\"" + lang + '">'), page[:60]
             assert set(re.findall(r"#[0-9A-Fa-f]{6}", page)) == set(BRAND.values()), re.findall(r"#[0-9A-Fa-f]{6}", page)
-            assert 'hreflang="en" href="CATALOGO.html"' in page and 'hreflang="pt-BR" href="CATALOGO.pt-BR.html"' in page
+            assert 'hreflang="en" href="CATALOG.html"' in page and 'hreflang="pt-BR" href="CATALOG.pt-BR.html"' in page
             assert not re.search(r'(?:src|href)="[a-z]+://', page) and "<script" not in page and "@import" not in page, "external request"
             assert "test kit &lt;with&gt; &amp; signs" in page or "kit de teste &lt;com&gt; &amp; sinais" in page
             assert 'id="demo-kit"' in page and 'href="#lone-kit"' in page and "Demo Market" in page
@@ -553,15 +553,15 @@ def _self_test() -> int:
             assert page.count(lockup) == 1 and page.index(lockup) < page.index("<h1>") and FIVE_WORDS in page
             assert re.findall(r'<img\s[^>]*src="([^"]*)"', page) == [LOCKUP_SRC]
         # control: without a MANUAL the header still opens with the asset, under the plain name
-        (raiz / "docs" / "MANUAL.html").unlink()
-        page = render_all(raiz)["CATALOGO.html"]
+        (root / "docs" / "MANUAL.html").unlink()
+        page = render_all(root)["CATALOG.html"]
         assert f'<img src="{LOCKUP_SRC}" alt="Demo Market">' in page and "approved art" not in page
         # control: an absolute URL in the MANUAL is not imported as a request into the catalogue
-        (raiz / "docs" / "MANUAL.html").write_text('<img src="https://cdn.example/logo.svg" alt="x">\n', encoding="utf-8")
-        page = render_all(raiz)["CATALOGO.html"]
+        (root / "docs" / "MANUAL.html").write_text('<img src="https://cdn.example/logo.svg" alt="x">\n', encoding="utf-8")
+        page = render_all(root)["CATALOG.html"]
         assert "cdn.example" not in page and f'<img src="{LOCKUP_SRC}" alt="Demo Market">' in page
-        assert 'aria-current="page" hreflang="en"' in out["CATALOGO.html"]
-        assert 'aria-current="page" hreflang="pt-BR"' in out["CATALOGO.pt-BR.html"]
+        assert 'aria-current="page" hreflang="en"' in out["CATALOG.html"]
+        assert 'aria-current="page" hreflang="pt-BR"' in out["CATALOG.pt-BR.html"]
     print("self-test OK")
     return 0
 
@@ -574,17 +574,17 @@ def main(argv: list[str]) -> int:
     if not argv or argv[0].startswith("-"):
         print(__doc__)
         return 2
-    raiz = Path(argv[0]).resolve()
-    if not (raiz / "marketplace.json").exists():
-        print(f"catalogo_md: no marketplace.json in {raiz}", file=sys.stderr)
+    root = Path(argv[0]).resolve()
+    if not (root / "marketplace.json").exists():
+        print(f"catalogo_md: no marketplace.json in {root}", file=sys.stderr)
         return 2
     try:
-        out = render_all(raiz)
+        out = render_all(root)
     except Exception as exc:  # noqa: BLE001 -- Why: a read error becomes exit 3 with its cause, never a half catalogue
         print(f"catalogo_md: error: {exc}", file=sys.stderr)
         return 3
     if "--write" in argv:
-        docs = raiz / "docs"
+        docs = root / "docs"
         docs.mkdir(exist_ok=True)
         total = 0
         for name, text in out.items():

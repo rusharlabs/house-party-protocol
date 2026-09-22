@@ -35,7 +35,7 @@ description: Before a /clear, consolidates the LONG TERM (conditional doc-rollup
 | `rollup.yaml` + history targets (via `doc_rollup.py`) | Reads+Writes (conditional) | long term — how we got here |
 | `.claude/handoff/HANDOFF-CURRENT-<lane>.json` | Writes (atomic) | short term — this lane's live handoff |
 | `.claude/handoff/HANDOFF-LEDGER.jsonl` | Writes (append) | `written` event |
-| `schemas/handoff-v1.1.schema.json` | Reads (implicitly via validation) | the handoff contract |
+| `schemas/handoff-v2.0.schema.json` | Reads (implicitly via validation) | the handoff contract |
 
 ## Process
 
@@ -46,7 +46,7 @@ description: Before a /clear, consolidates the LONG TERM (conditional doc-rollup
    echo '<payload-rollup>' | python ${CLAUDE_PLUGIN_ROOT}/scripts/doc_rollup.py apply --stdin --config rollup.yaml
    ```
    Read the report — `skipped-collision`/`skipped-passive`/`applied:stamp-degrade` are guardrails working, not errors (see the `doc-rollup` SKILL.md).
-3. **Assemble the handoff JSON** (short term) — only the model knows this session's real decisions/gates/next step. Minimum fields: `session.lane_id`, `estado.resumo`, `git` (head/branch/dirty/untracked — run `git status --porcelain` and `git rev-parse --short HEAD` first), `proximo_passo[].verify_first_cmd`, `valid_until`.
+3. **Assemble the handoff JSON** (short term) — only the model knows this session's real decisions/gates/next step. Minimum fields: `session.lane_id`, `state.summary`, `git` (head/branch/dirty/untracked — run `git status --porcelain` and `git rev-parse --short HEAD` first), `next_step[].verify_first_cmd`, `valid_until`.
 4. **Write via the command** (never write the file by hand — the secret/LC-1/LC-4 validation only runs through the command):
    ```bash
    echo '<json>' | python ${CLAUDE_PLUGIN_ROOT}/hooks/_handoff_io.py write --stdin
@@ -61,16 +61,16 @@ description: Before a /clear, consolidates the LONG TERM (conditional doc-rollup
 ## Executed examples
 
 ```console
-$ echo '{"schema_version":"1.1","handoff_id":"HO-20260710-1600-solo","created_at":"2026-07-10T16:00:00-03:00","trigger":"manual","quality":"full","session":{"session_id":"s1","lane_id":"solo"},"estado":{"resumo":"closed PHASE 5","numeros":[]},"git":{"head":"637561f5","branch":"feat/codex-migration","dirty":true,"untracked":5},"proximo_passo":[{"ordem":1,"descricao":"start PHASE 6","verify_first_cmd":"test -d lane-kit"}],"valid_until":"2026-07-17T00:00:00-03:00"}' | python hooks/_handoff_io.py write --stdin
+$ echo '{"schema_version":"2.0","handoff_id":"HO-20260710-1600-solo","created_at":"2026-07-10T16:00:00-03:00","trigger":"manual","quality":"full","session":{"session_id":"s1","lane_id":"solo"},"state":{"summary":"closed PHASE 5","numbers":[]},"git":{"head":"637561f5","branch":"feat/codex-migration","dirty":true,"untracked":5},"next_step":[{"order":1,"description":"start PHASE 6","verify_first_cmd":"test -d lane-kit"}],"valid_until":"2027-01-31T00:00:00-03:00"}' | python hooks/_handoff_io.py write --stdin
 _handoff_io: written to .claude/handoff/HANDOFF-CURRENT-solo.json
 ```
-<!-- executed: 2026-09-21 · exit=0 -->
+<!-- executed: 2026-09-22 · exit=0 -->
 
 ```console
-$ echo '{"schema_version":"1.1","handoff_id":"HO-x","created_at":"2026-07-10T16:00:00-03:00","trigger":"manual","quality":"full","session":{"session_id":"s1","lane_id":"solo"},"estado":{"resumo":"x"},"git":{"head":"a","branch":"m","dirty":false,"untracked":0},"proximo_passo":[{"ordem":1,"descricao":"no verify"}],"valid_until":"2026-07-17T00:00:00-03:00"}' | python hooks/_handoff_io.py write --stdin
-  [REJECTED] proximo_passo[0] without verify_first_cmd (LC-4: next step without an idempotency check)
+$ echo '{"schema_version":"2.0","handoff_id":"HO-x","created_at":"2026-07-10T16:00:00-03:00","trigger":"manual","quality":"full","session":{"session_id":"s1","lane_id":"solo"},"state":{"summary":"x"},"git":{"head":"a","branch":"m","dirty":false,"untracked":0},"next_step":[{"order":1,"description":"no verify"}],"valid_until":"2027-01-31T00:00:00-03:00"}' | python hooks/_handoff_io.py write --stdin
+  [REJECTED] next_step[0] without verify_first_cmd (LC-4: next step without an idempotency check)
 ```
-<!-- executed: 2026-09-21 · exit=1 -->
+<!-- executed: 2026-09-22 · exit=1 -->
 (a handoff without `verify_first_cmd` is REJECTED — the next session never inherits a step with no way to check whether it was already done.)
 
 ```console
@@ -82,7 +82,7 @@ NEXT STEP 1: start PHASE 6
   → BEFORE EXECUTING, RUN: test -d lane-kit (if already done: skip and record it)
 Full file: .claude/handoff/HANDOFF-CURRENT-solo.json
 ```
-<!-- executed: 2026-09-21 · exit=0 -->
+<!-- executed: 2026-09-22 · exit=0 -->
 
 (examples of the conditional rollup step: see the `doc-rollup` SKILL.md — the same payloads/exit codes apply when called from here.)
 

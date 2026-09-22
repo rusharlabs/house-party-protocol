@@ -108,9 +108,9 @@ def scan(ledger_path: Path, store_path: Path) -> dict:
     by cmd and increments the count in the store. Idempotent: re-scan with no new line = no effect.
     Returns {"eventos_lidos": N, "candidatos_novos": N, "candidatos_atualizados": N}."""
     by_id = _load_store(store_path)
-    eventos = 0
-    novos = 0
-    atualizados = 0
+    events = 0
+    new_candidates = 0
+    updated_candidates = 0
     now = time.strftime("%Y-%m-%dT%H:%M:%S")
 
     all_lines = ledger_path.read_text(encoding="utf-8").splitlines() if ledger_path.exists() else []
@@ -127,7 +127,7 @@ def scan(ledger_path: Path, store_path: Path) -> dict:
             continue
         if row.get("event") != "gate-failed":
             continue
-        eventos += 1
+        events += 1
         for cmd in row.get("failed_cmds", []) or []:
             cid = _signature(cmd)
             if cid in by_id:
@@ -135,7 +135,7 @@ def scan(ledger_path: Path, store_path: Path) -> dict:
                     continue  # already promoted -- does not resurface
                 by_id[cid]["count"] = by_id[cid].get("count", 1) + 1
                 by_id[cid]["last_seen"] = now
-                atualizados += 1
+                updated_candidates += 1
             else:
                 by_id[cid] = {
                     "id": cid,
@@ -145,11 +145,11 @@ def scan(ledger_path: Path, store_path: Path) -> dict:
                     "last_seen": now,
                     "status": "candidate",
                 }
-                novos += 1
+                new_candidates += 1
 
     _write_store(store_path, by_id)
     _write_cursor(store_path, len(all_lines))
-    return {"eventos_lidos": eventos, "candidatos_novos": novos, "candidatos_atualizados": atualizados}
+    return {"eventos_lidos": events, "candidatos_novos": new_candidates, "candidatos_atualizados": updated_candidates}
 
 
 def list_candidates(store_path: Path) -> list:
