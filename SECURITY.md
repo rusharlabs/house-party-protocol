@@ -4,14 +4,17 @@
 
 ## Reporting a vulnerability
 
-**Do not open a public issue** for a security flaw. Use one of two channels:
+**Do not open a public issue** for a security flaw. Two channels, equally valid — use whichever
+works for you:
 
-1. **GitHub → Security tab → "Report a vulnerability"** (private report, the preferred one).
-2. E-mail: `atendimento@rushar.com.br` with the subject `[house-party-protocol] security`.
+1. **GitHub → Security tab → "Report a vulnerability"** (private report). If the button is not
+   there — private reporting is a repository setting — use the e-mail channel; it is not a
+   fallback of lesser standing.
+2. **E-mail:** `atendimento@rushar.com.br` with the subject `[house-party-protocol] security`.
 
 Include: the module and its version (`.claude-plugin/plugin.json`), how to reproduce it, and the
-impact you measured. First response within 5 business days; the fix is published as a new version
-of the module, with the note in `CHANGELOG.md`.
+impact you measured. First response within 5 business days on either channel; the fix is
+published as a new version of the module, with the note in `CHANGELOG.md`.
 
 ## What this project treats as a security flaw
 

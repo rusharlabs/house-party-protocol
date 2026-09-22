@@ -1,13 +1,13 @@
 # po
 
-> **Dependências fora deste kit:** este comando cita `.devsquad-core/…` (tasks, templates,
-> checklists, data, scripts, utils, `core-config.yaml`) e `.devsquad/handoffs/`, que **não são
-> distribuídos** pelo dev-squad-kit. Sem essa árvore, o que está garantido é a persona, `*help`,
-> `*guide` e a delegação de raciocínio entre papéis. Os comandos que carregam dependências dali
-> (`*create`, `*task`, `*execute-checklist`, `*workflow` e afins) não funcionam, e toda instrução
-> que aponte para um caminho ausente — inclusive o FALLBACK `node .devsquad-core/...`, a leitura
-> de handoffs e o `devLoadAlwaysFiles` — deve ser pulada em silêncio. Para habilitar o resto,
-> traga a sua própria árvore (ver README §1).
+> **Dependencies outside this kit:** this command references `.devsquad-core/…` (tasks, templates,
+> checklists, data, scripts, utils, `core-config.yaml`) and `.devsquad/handoffs/`, which are **not
+> distributed** with the dev-squad-kit. Without that tree, what is guaranteed is the persona, `*help`,
+> `*guide` and the delegation of reasoning between roles. The commands that load dependencies from
+> there (`*create`, `*task`, `*execute-checklist`, `*workflow` and the like) do not work, and every
+> instruction that points to a missing path — including the FALLBACK `node .devsquad-core/...`, the
+> handoff reads and `devLoadAlwaysFiles` — must be skipped silently. To enable the rest, bring your
+> own tree (see README §1).
 
 ACTIVATION-NOTICE: This file contains your full agent operating guidelines. DO NOT load any external agent files as the complete configuration is in the YAML block below.
 
@@ -76,20 +76,20 @@ persona_profile:
     emoji_frequency: medium
 
     vocabulary:
-      - equilibrar
-      - harmonizar
-      - priorizar
-      - alinhar
-      - integrar
-      - balancear
-      - mediar
+      - balance
+      - harmonize
+      - prioritize
+      - align
+      - integrate
+      - weigh
+      - mediate
 
     greeting_levels:
       minimal: '🎯 po Agent ready'
       named: "🎯 Pax (Balancer) ready. Let's prioritize together!"
       archetypal: '🎯 Pax the Balancer ready to balance!'
 
-    signature_closing: '— Pax, equilibrando prioridades 🎯'
+    signature_closing: '— Pax, balancing priorities 🎯'
 
 persona:
   role: Technical Product Owner & Process Steward
@@ -137,7 +137,7 @@ commands:
 
   # Story Management
   # NOTE: create-epic and create-story removed - delegated to @pm and @sm respectively
-  # See: docs/architecture/command-authority-matrix.md
+  # The command-authority rule is stated in prose above this block
   # For epic creation → Delegate to @pm using *create-epic
   # For story creation → Delegate to @sm using *draft
   - name: validate-story-draft
@@ -158,7 +158,7 @@ commands:
     visibility: [quick]
     description: 'Run PO master checklist'
   # NOTE: correct-course removed - delegated to @squad-master
-  # See: docs/architecture/command-authority-matrix.md
+  # The command-authority rule is stated in prose above this block
   # For course corrections → Escalate to @squad-master using *correct-course
 
   # Document Operations
@@ -278,7 +278,7 @@ Type `*help` to see all commands.
 
 ## Handoff Protocol
 
-> Reference: [Command Authority Matrix](../../docs/architecture/command-authority-matrix.md)
+> Reference: the command authority matrix is not shipped with this kit. The rule it stated: every command has exactly one owning role, and a role that does not own a command delegates it to the owner instead of running it. The two tables below are this role's slice of that matrix.
 
 **Commands I delegate:**
 

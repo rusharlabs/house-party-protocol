@@ -75,8 +75,9 @@ hpp doctor
 hpp init --target ../your-repo
 ```
 
-O pacote não tem dependência de runtime e carrega o próprio manifesto, então `hpp` responde de
-qualquer diretório depois de instalado (`pipx install git+…` funciona igual). A partir de um checkout, a CLI é o módulo:
+O pacote não tem dependência de runtime e carrega o próprio manifesto e a suíte de benchmark,
+então `hpp` — inclusive `hpp benchmark` e `hpp --self-test` — responde de qualquer diretório
+depois de instalado (`pipx install git+…` funciona igual). A partir de um checkout, a CLI é o módulo:
 
 ```bash
 git clone https://github.com/rushar-labs/house-party-protocol.git
@@ -86,7 +87,29 @@ python -m hpp doctor
 
 `hpp init` roda seis estágios fixos e imprime um plano. Cada linha de abertura completa só quando
 o estágio terminou; a prontidão conta checagens que rodaram, e cada item carrega o comando que o
-reproduz. Esta é a saída num alvo virgem, a partir da árvore-fonte:
+reproduz. O que ele consegue verificar depende de onde o `hpp` roda. Este repositório é a
+distribuição emitida — harness, manifesto, os dez diretórios de módulo com seus `CHECKSUMS.txt`,
+`marketplace.json` e o instalador de módulos — e, a partir de um clone dele, contra um alvo vazio
+(`python -m hpp init --target <dir-vazio> --non-interactive --no-animation`), a saída é:
+
+```text
+> detecting host...           ✓ greenfield · 0 existing item(s) preserved
+> checking prerequisites...   ✓ python 3.14.3 · protocol 2.0
+> mounting profile...         ✓ would-write · host=claude-code · bundle=reliable-coding · policy=audit · 3 default(s)
+> loading modules...          ✓ 6 modules · reliable-coding · claude-code · 6/6 checksums verified
+> wiring suggestions...       ✓ 7 commands to paste · 0 files written
+> verifying evidence...       ✓ policy · graph · events · benchmark
+> protocol online.
+
+  READINESS  every line is a check that ran; the command below it reproduces it
+  ████████████████░░░░  9/11 verified · 2 not verified · 0 failed
+```
+
+Os dois itens não verificados são os dois que só uma ação posterior prova: o profile (só plano;
+`--apply` o escreve) e o wiring do host (um colar que você faz). A instalação por pip é outro
+canal: o wheel carrega o harness, o manifesto e a suíte de benchmark, mas nenhum diretório de
+módulo e nenhum `marketplace.json`. O mesmo comando a partir dessa instalação, no mesmo alvo
+vazio, mostra:
 
 ```text
 > detecting host...           ✓ greenfield · 0 existing item(s) preserved
@@ -101,10 +124,9 @@ reproduz. Esta é a saída num alvo virgem, a partir da árvore-fonte:
   █████████████░░░░░░░  7/11 verified · 4 not verified · 0 failed
 ```
 
-Os quatro itens não verificados nessa rodada são exatamente os que um checkout-fonte não consegue
-provar: integridade da distribuição e checksums dos módulos (só a distribuição emitida carrega
-`marketplace.json` e `CHECKSUMS.txt`), o profile (só plano) e o wiring do host (um colar que você
-faz). Nada é escrito até você rodar de novo com `--apply`, e aí exatamente um arquivo é escrito:
+Os dois itens a mais ali — integridade da distribuição e checksums dos módulos — são reportados
+como não verificados porque não há contra o que medi-los, nunca como aprovados. Em qualquer dos
+canais nada é escrito até você rodar de novo com `--apply`, e aí exatamente um arquivo é escrito:
 `.hpp/profile.json`. `hpp init --json` devolve o mesmo relatório em JSON para CI e agentes;
 `--non-interactive`, `--yes` e `--profile` respondem às três perguntas sem prompt.
 
@@ -116,9 +138,10 @@ nativo de plugin:
 /plugin install operator-kit@house-party-protocol
 ```
 
-Para Codex CLI, e para módulos sem hook de plugin no Claude Code, o instalador de módulos copia
-cada módulo e roda os smokes declarados. Ele planeja primeiro e aplica só numa segunda invocação
-explícita:
+Para Codex CLI o instalador de módulos copia cada módulo para `.agents/hpp/<módulo>` e roda os
+smokes declarados. No Claude Code, um módulo sem hook de plugin é copiado à mão (o README de cada
+módulo mostra a linha `cp -r`) e o instalador detecta, liga e verifica. Nos dois casos ele planeja
+primeiro e aplica só numa segunda invocação explícita:
 
 ```bash
 python instaladores/kit-forge-1.4.0/kit_doctor.py install \
@@ -127,8 +150,10 @@ python instaladores/kit-forge-1.4.0/kit_doctor.py install \
   --kit frameworks-com-plugins/operator-kit-1.4.0 --host codex --target ../your-repo --apply
 ```
 
-O instalador viaja com a distribuição emitida, não com esta árvore-fonte; o `hpp init` avisa
-isso no bloco de wiring quando não o encontra.
+O instalador faz parte deste repositório, em `instaladores/kit-forge-1.4.0/kit_doctor.py`, ao
+lado dos diretórios de módulo a partir dos quais ele instala. Uma instalação por pip não carrega
+nem um nem outro, e o `hpp init` avisa isso no bloco de wiring quando não encontra o instalador
+ao lado do manifesto.
 
 ## Harness, protocol, módulos, distribuição
 
@@ -147,8 +172,12 @@ distribution   marketplace · copy     Claude Code plugin channel · Codex CLI v
 ```
 
 `hpp doctor` valida o manifesto e, quando `marketplace.json` está ao lado dele, cruza cada caminho
-de módulo, versão e manifesto de plugin. Neste checkout ele reporta `modules=10`; o mesmo comando
-contra a distribuição emitida reporta `distribution: checked, ok, 10 modules`.
+de módulo, versão e manifesto de plugin. Neste repositório ele imprime
+`HPP doctor: ok · modules=10 · hosts=claude-code, codex`; o cruzamento só aparece em
+`hpp doctor --json`, onde `distribution` lê `{"checked": true, "modules": 10, "status": "ok"}`.
+A partir de uma instalação por pip a linha única é a mesma e o campo lê
+`{"checked": false, "status": "source-contract"}`, porque nenhum `marketplace.json` está ao lado
+do manifesto empacotado.
 
 O loop do protocol são cinco transições, cada uma atrás de um gate nomeado:
 
@@ -205,8 +234,9 @@ grafo e attestation de evidência. `pass^k = 1.00` é exigido para o gate passar
 e o hash dele estão no relatório JSON (`hpp benchmark -k 3 --json`). Veja [PROOF.pt-BR.md](docs/PROOF.pt-BR.md)
 para a matriz de claims e [BENCHMARK.pt-BR.md](docs/BENCHMARK.pt-BR.md) para os cenários.
 
-Numa distribuição emitida, `kit_doctor.py verify <módulo>` compara cada arquivo com o
-`CHECKSUMS.txt`, e `kit_doctor.py marketplace .` confere a árvore inteira.
+Neste repositório, `python instaladores/kit-forge-1.4.0/kit_doctor.py verify <dir-do-módulo>`
+compara cada arquivo de um módulo com o seu `CHECKSUMS.txt`, e
+`python instaladores/kit-forge-1.4.0/kit_doctor.py marketplace .` confere a árvore inteira.
 
 ## Limites honestos
 

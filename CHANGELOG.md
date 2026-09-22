@@ -9,6 +9,108 @@ keeps its own version in `plugin.json` and in `marketplace.json`.
 
 ## [Unreleased]
 
+## [2.4.2] — 2026-09-21
+
+### Added
+
+- **The three root contracts ship in both languages.** `INSTALL-CONTRACT`, `SKILL-CONTRACT` and
+  `INSTALL-GUIDE-TEMPLATE` gain an English `.md` (the source of truth) with the Portuguese text
+  as `.pt-BR.md`; the emission copies both sides and the pair gate now covers them. Rule numbers,
+  field names, exit codes, paths and code blocks are identical on both sides.
+- **The wheel ships the benchmark suite.** `examples/reliable-coding` travels inside the package
+  as a byte-identical copy (`hpp/examples/`, guarded by `tests/test_installed_package.py`), so
+  `hpp benchmark` and `hpp --self-test` run from a pip install, and `hpp init` from that install
+  measures the benchmark instead of reporting the suite as unshipped (readiness `7/11` there,
+  `9/11` from a clone of the repository).
+- **`docs/UX-INSTALL-JOURNEY` opens with the `hpp init` journey** — six stages, plan then
+  `--apply`, readiness per channel, flags and exit codes, each with measured output — and keeps
+  the module-installer journey as the second path.
+- **Package metadata.** `pyproject.toml` declares readme, licence (SPDX expression), authors,
+  keywords, classifiers and project URLs; `pip show -v house-party-protocol` reports them.
+- **`CITATION.cff` is tied to the package** by `tests/test_citation.py`: its version equals
+  `hpp.__version__`, its abstract equals the README's opening paragraph, its keywords name both hosts.
+
+### Changed
+
+- **The README, the manual, `ARCHITECTURE` and `CONCEPTS` describe the repository as what it
+  is: the emitted distribution** — modules, `CHECKSUMS.txt`, `marketplace.json` and the installer
+  beside the harness. The quoted `hpp init` output is the real one per channel (`9/11 verified`
+  from a clone, `7/11` from a pip install, both measured on 2026-09-21), the installer is named
+  where it lives, and `hpp doctor` is quoted as it prints
+  (`HPP doctor: ok · modules=10 · hosts=claude-code, codex`; the distribution cross-check appears
+  only in `--json`).
+- **Brand vectors use only the four palette tokens.** `assets/*.svg` no longer carry `#E5484D`,
+  `#FF8A3D`, `#A8ADB5` or `#6B7280`; lighter steps are `#FF6A00`, `#F4F1EB` or `#0F1113` at
+  reduced opacity. The approved raster lockup and the icon PNGs are untouched.
+- **The CI comment matches the tree it runs in.** The `CHECKSUMS.txt` step says it is a real gate
+  in the published repository and a no-op only in the harness source tree.
+- **`CONTRIBUTING` describes a flow a third party can actually run.** The module sources and the
+  forge manifests are not published, so the flow is: edit inside the emitted module, prove with
+  `kit_doctor.py verify` (checksum drift on your files is the expected signal), `skill_lint`,
+  `hpp doctor`, `hpp benchmark` and `pytest`, and open the pull request; maintainers fold the
+  change into the source, bump the version and re-emit. The DCO sign-off requirement is gone:
+  opening a pull request is the agreement that the contribution is MIT-licensed. The bilingual
+  rule now says what a contributor does in practice (agent layer in English, human docs in pairs).
+- **`SECURITY` treats the e-mail channel as equal** to GitHub private vulnerability reporting,
+  and says what to do when the private-report button is not there.
+- **The agent layer is English.** Every file an agent reads to execute — 33 skills, 14 commands,
+  14 agents, 13 rules, output styles — was translated from Portuguese with structure invariants
+  checked (headings per level, code fences, frontmatter keys, links, table rows). `skill_lint`
+  now treats the English schema tokens (`## Contract`, `## Proof`, `## When NOT to Activate`,
+  `Priority:`, `INPUT/OUTPUT/STATE IT TOUCHES`, `<!-- executed: … -->`) as canonical and still
+  accepts the Portuguese ones as legacy; `SKILL-CONTRACT.md` documents both.
+- **Module `description` is English** in `marketplace.json` and in the ten `plugin.json` (the field
+  the plugin UI shows); the Portuguese text moved to `description_pt`, which the catalogue uses.
+- **The ten module READMEs were re-measured against the emitted tree**: copy-install commands
+  point to the current module directory, the installer path is `instaladores/kit-forge-1.4.0/`,
+  quoted outputs (`skill_lint`, `--interview`, `--self-test`, the health-kit probe) were re-run
+  today, counts match `ls`, and the English side no longer carries Portuguese sections.
+- **Each emitted module carries `SANITIZATION.md` + `SANITIZATION.pt-BR.md`** (generated) instead
+  of a Portuguese-only `SANITIZACAO.md`.
+- **The catalogue opens with the product lockup and the five words**, like the manual.
+
+### Fixed
+
+- **`hpp benchmark` and `hpp --self-test` from a pip install exited 3 with
+  `internal error: FileNotFoundError`**, because the suite was resolved one level above the
+  package and the wheel carried no `examples/`. The suite is now resolved from the package, and a
+  missing suite path (`hpp eval run <missing>` included) is a one-line refusal with exit 2.
+- **`hpp doctor` — and the one-line `status` and `benchmark` reports — on a cp1252 stream** wrote
+  the middle dot as byte `0xB7`, which read as `�` downstream; they now go through the same console
+  as `hpp init` and degrade to ASCII (`-`).
+- **`.gitignore` covers `.hpp/`**, the directory the README's own `hpp event append` and
+  `hpp init --apply` examples create inside a checkout.
+- **`CITATION.cff` described version 1.4.0**, with a "ten kits for Claude Code" abstract and no
+  Codex keyword; it now describes 2.4.1, dated 2026-09-21, with the README's opening paragraph and
+  `codex-cli` among the keywords.
+- **The manual's measurement stamp said 2.4.0** while its header said 2.4.1; it now stamps the
+  date and the version the quoted outputs were measured against.
+- **`continuity-kit` and `lane-kit` installed as plugins armed no hook.** Both ship hooks but
+  their `plugin.json` had no `hooks` key and no `hooks/hooks.json`; both now declare their hooks
+  (SessionStart/Stop/PreCompact; SessionStart/PreToolUse/PostToolUse) through the same `pyrun.sh`
+  shim as the other modules.
+- **`kit_doctor.py verify` reported `warn` after a module's own smoke tests** because it counted
+  `__pycache__` and `.pyc` as extras. Bytecode and pytest caches are no longer extras; a stray
+  real file still is.
+- **The profile stage wrote a file the module never reads** (`profile.yaml` for modules whose
+  loader reads `operator-profile.yaml`) and copied nothing for `lane-kit` (its example lives in
+  `templates/`). The stage now derives the target name from the module's loader and looks in
+  `templates/` too.
+- **`skill_lint --run-proofs` on Windows created a stray `self-test` file**: a proof line's
+  trailing `# -> …` comment was fed to `cmd.exe` and its `>` became a redirect, and
+  `${CLAUDE_PLUGIN_ROOT}` was not expanded. Trailing comments are stripped and the variable is
+  expanded to the module root before running.
+- **`kit-forge`'s own install manifest said `plugin: false` for Claude Code** while it ships a
+  `plugin.json` and is listed in the marketplace.
+
+### Known limitation
+
+- **Runtime messages are still Portuguese.** The Markdown an agent reads is English, but the
+  hooks and scripts it runs print their messages in Portuguese (59 of 81 scripts, measured:
+  `grep -rlE 'ção|não |você|é ' --include=*.py --include=*.sh`), and the skills quote those
+  outputs verbatim. Translating them is a behaviour change with a test per script and is the next
+  release; until then a non-Portuguese reader sees English instructions and Portuguese logs.
+
 ## [2.4.1] — 2026-09-21
 
 ### Added

@@ -1,109 +1,109 @@
 ---
 name: architecture-decision-records
-description: Captura decisões arquiteturais tomadas durante a sessão como ADRs estruturados (contexto, alternativas consideradas, consequências) em docs/adr/. Use quando o usuário decide entre alternativas significativas (framework, banco, padrão) ou pergunta "por que escolhemos X?".
+description: Captures architectural decisions made during the session as structured ADRs (context, alternatives considered, consequences) in docs/adr/. Use when the user decides between significant alternatives (framework, database, pattern) or asks "why did we choose X?".
 ---
 
-> **Auto-Trigger:** Usuário diz "vamos decidir isso", "registra essa decisão", escolhe entre alternativas arquiteturais significativas, ou pergunta "por que fizemos X em vez de Y?".
-> **Keywords:** "ADR", "decisão arquitetural", "por que escolhemos", "alternativas consideradas", "architecture decision record"
-> **Prioridade:** MÉDIA
+> **Auto-Trigger:** The user says "let's decide this", "record this decision", chooses between significant architectural alternatives, or asks "why did we do X instead of Y?".
+> **Keywords:** "ADR", "architectural decision", "why did we choose", "alternatives considered", "architecture decision record"
+> **Priority:** MEDIUM
 > **Tools:** Read, Write, Glob
 
-## Quando NÃO Ativar
-- Decisão trivial (nome de variável, formatação) — ADR é para escolhas que um futuro dev precisaria entender o "porquê".
-- Usuário só quer implementar, não documentar a escolha.
+## When NOT to Activate
+- Trivial decision (variable name, formatting) — an ADR is for choices whose "why" a future dev would need to understand.
+- The user only wants to implement, not to document the choice.
 
-## Formato do ADR
+## ADR format
 
 ```markdown
-# ADR-NNNN: [Título da Decisão]
+# ADR-NNNN: [Decision Title]
 
-**Data**: YYYY-MM-DD
-**Status**: proposto | aceito | descontinuado | substituído por ADR-NNNN
-**Decisores**: [quem participou]
+**Date**: YYYY-MM-DD
+**Status**: proposed | accepted | deprecated | superseded by ADR-NNNN
+**Deciders**: [who took part]
 
-## Contexto
-[2-5 frases: qual problema motivou a decisão, que restrições existiam]
+## Context
+[2-5 sentences: which problem motivated the decision, which constraints existed]
 
-## Decisão
-[1-3 frases: o que foi decidido]
+## Decision
+[1-3 sentences: what was decided]
 
-## Alternativas Consideradas
-### Alternativa 1: [Nome]
-- **Prós**: ...
-- **Contras**: ...
-- **Por que não**: [razão específica da rejeição]
+## Alternatives Considered
+### Alternative 1: [Name]
+- **Pros**: ...
+- **Cons**: ...
+- **Why not**: [specific reason for rejection]
 
-## Consequências
-### Positivas / Negativas / Riscos
+## Consequences
+### Positive / Negative / Risks
 ```
 
-## Processo
+## Process
 
-1. **Primeira vez**: se `docs/adr/` não existir, pedir confirmação antes de criar (README.md com índice + template.md em branco). Nunca criar sem consentimento explícito.
-2. Identificar a decisão central, o contexto, as alternativas rejeitadas e as consequências.
-3. Numerar sequencialmente (escanear `docs/adr/` existente).
-4. **Apresentar o rascunho pro usuário ANTES de escrever** — só gravar após aprovação explícita.
-5. Atualizar o índice em `docs/adr/README.md`.
+1. **First time**: if `docs/adr/` does not exist, ask for confirmation before creating it (README.md with an index + a blank template.md). Never create it without explicit consent.
+2. Identify the central decision, the context, the rejected alternatives and the consequences.
+3. Number sequentially (scan the existing `docs/adr/`).
+4. **Present the draft to the user BEFORE writing** — only save after explicit approval.
+5. Update the index in `docs/adr/README.md`.
 
-Ao perguntarem "por que escolhemos X?": ler o índice, achar o ADR, mostrar as seções Contexto+Decisão. Se não existir: "Não encontrei ADR pra isso. Quer registrar agora?"
+When asked "why did we choose X?": read the index, find the ADR, show the Context+Decision sections. If it does not exist: "I found no ADR for this. Do you want to record it now?"
 
-## Sinais de que vale um ADR
-"Vamos usar X", "decidimos usar X em vez de Y", "o trade-off vale a pena porque...", escolha entre frameworks/bancos/padrões arquiteturais, decisão de autenticação, escolha de infra de deploy.
+## Signals that an ADR is warranted
+"Let's use X", "we decided to use X instead of Y", "the trade-off is worth it because...", a choice between frameworks/databases/architectural patterns, an authentication decision, a choice of deploy infrastructure.
 
-## Regras
-- Seja específico ("usar Prisma", não "usar um ORM").
-- Registre o PORQUÊ, não só o QUE.
-- Inclua as alternativas rejeitadas — é o que mais importa pra quem lê depois.
-- Curto: se o contexto passar de 10 linhas, está longo demais.
-- Decisão substituída sempre referencia o ADR que a substitui.
+## Rules
+- Be specific ("use Prisma", not "use an ORM").
+- Record the WHY, not just the WHAT.
+- Include the rejected alternatives — that is what matters most to whoever reads it later.
+- Short: if the context exceeds 10 lines, it is too long.
+- A superseded decision always references the ADR that supersedes it.
 
-## Contrato
+## Contract
 
-**Entrada:** uma decisão arquitetural tomada na conversa (explícita ou implícita).
-**Saída:** arquivo `docs/adr/NNNN-titulo-da-decisao.md` + entrada atualizada em `docs/adr/README.md`, **só após aprovação explícita do usuário do rascunho**.
+**Input:** an architectural decision made in the conversation (explicit or implicit).
+**Output:** file `docs/adr/NNNN-titulo-da-decisao.md` + updated entry in `docs/adr/README.md`, **only after the user explicitly approves the draft**.
 
 **EXIT CODES:**
 
-| Exit | Significado |
+| Exit | Meaning |
 |---|---|
-| 0 | estrutura do ADR válida |
-| 1 | aviso: contexto ou alternativa incompleta |
-| 2 | bloqueio: escrita sem aprovação ou sem alternativas |
-| 3 | erro ao ler/gravar o destino |
+| 0 | ADR structure valid |
+| 1 | warning: incomplete context or alternative |
+| 2 | block: write without approval or without alternatives |
+| 3 | error reading/writing the destination |
 
-**ESTADO QUE TOCA:**
+**STATE IT TOUCHES:**
 
-| Caminho | Ação | Condição |
+| Path | Action | Condition |
 |---|---|---|
-| `docs/adr/NNNN-*.md` | cria | somente após aprovação explícita |
-| `docs/adr/README.md` | atualiza índice | somente após aprovação explícita |
+| `docs/adr/NNNN-*.md` | creates | only after explicit approval |
+| `docs/adr/README.md` | updates index | only after explicit approval |
 
-## Exemplos executados
+## Executed examples
 
 ```console
 $ python -c "print('ADR-0001: aceito')"
 ADR-0001: aceito
 ```
-<!-- executado: 2026-09-20 · exit=0 -->
+<!-- executed: 2026-09-20 · exit=0 -->
 
 ```console
 $ python -c "print('alternativas=2')"
 alternativas=2
 ```
-<!-- executado: 2026-09-20 · exit=0 -->
+<!-- executed: 2026-09-20 · exit=0 -->
 
 ```console
 $ python -c "import sys; print('block: rascunho sem aprovacao'); sys.exit(2)"
 block: rascunho sem aprovacao
 ```
-<!-- executado: 2026-09-20 · exit=2 -->
+<!-- executed: 2026-09-20 · exit=2 -->
 
-## Prova
+## Proof
 
-Este skill é metodologia de captura de decisão. A prova estrutural mínima é:
+This skill is a decision-capture methodology. The minimum structural proof is:
 
 ```bash
 python -c "print('ADR-0001: aceito')"
 ```
 
-O artefato final ainda deve seguir o formato acima, com Alternativas Consideradas preenchidas.
+The final artifact must still follow the format above, with Alternativas Consideradas filled in.

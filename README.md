@@ -75,8 +75,9 @@ hpp doctor
 hpp init --target ../your-repo
 ```
 
-The package has no runtime dependencies and ships its own manifest, so `hpp` answers from any
-directory once installed (`pipx install git+…` works the same way). From a checkout, the CLI is the module:
+The package has no runtime dependencies and ships its own manifest and benchmark suite, so `hpp`
+— including `hpp benchmark` and `hpp --self-test` — answers from any directory once installed
+(`pipx install git+…` works the same way). From a checkout, the CLI is the module:
 
 ```bash
 git clone https://github.com/rushar-labs/house-party-protocol.git
@@ -86,7 +87,29 @@ python -m hpp doctor
 
 `hpp init` runs six fixed stages and prints a plan. Each boot line completes only when its stage
 has finished; readiness counts checks that ran, and each item carries the command that
-reproduces it. This is the output on a fresh target from the source tree:
+reproduces it. What it can verify depends on where `hpp` runs. This repository is the emitted
+distribution — harness, manifest, the ten module directories with their `CHECKSUMS.txt`,
+`marketplace.json` and the module installer — and from a clone of it, against an empty target
+(`python -m hpp init --target <empty-dir> --non-interactive --no-animation`), the output is:
+
+```text
+> detecting host...           ✓ greenfield · 0 existing item(s) preserved
+> checking prerequisites...   ✓ python 3.14.3 · protocol 2.0
+> mounting profile...         ✓ would-write · host=claude-code · bundle=reliable-coding · policy=audit · 3 default(s)
+> loading modules...          ✓ 6 modules · reliable-coding · claude-code · 6/6 checksums verified
+> wiring suggestions...       ✓ 7 commands to paste · 0 files written
+> verifying evidence...       ✓ policy · graph · events · benchmark
+> protocol online.
+
+  READINESS  every line is a check that ran; the command below it reproduces it
+  ████████████████░░░░  9/11 verified · 2 not verified · 0 failed
+```
+
+The two items not verified are the two that only a later action can prove: the profile (plan
+only; `--apply` writes it) and the host wiring (a paste you do yourself). The pip install is a
+different channel: the wheel carries the harness, the manifest and the benchmark suite, but no
+module directories and no `marketplace.json`. The same command from that install, on the same
+empty target, reads:
 
 ```text
 > detecting host...           ✓ greenfield · 0 existing item(s) preserved
@@ -101,12 +124,11 @@ reproduces it. This is the output on a fresh target from the source tree:
   █████████████░░░░░░░  7/11 verified · 4 not verified · 0 failed
 ```
 
-The four items not verified in that run are exactly the ones a source checkout cannot prove:
-distribution integrity and module checksums (only the emitted distribution carries
-`marketplace.json` and `CHECKSUMS.txt`), the profile (plan only) and the host wiring (a paste
-you do yourself). Nothing is written until you re-run with `--apply`, and then exactly one file
-is written: `.hpp/profile.json`. `hpp init --json` gives the same report as JSON for CI and
-agents; `--non-interactive`, `--yes` and `--profile` answer the three questions without a prompt.
+The two extra items there — distribution integrity and module checksums — are reported as not
+verified because there is nothing to measure them against, never as passed. In either channel
+nothing is written until you re-run with `--apply`, and then exactly one file is written:
+`.hpp/profile.json`. `hpp init --json` gives the same report as JSON for CI and agents;
+`--non-interactive`, `--yes` and `--profile` answer the three questions without a prompt.
 
 After `--apply`, paste the wire block the command printed. For Claude Code that is the native
 plugin channel:
@@ -116,9 +138,10 @@ plugin channel:
 /plugin install operator-kit@house-party-protocol
 ```
 
-For Codex CLI, and for modules that have no plugin hook on Claude Code, the module installer
-copies each module and runs its declared smokes. It plans first and applies only on a second,
-explicit invocation:
+For Codex CLI the module installer copies each module into `.agents/hpp/<module>` and runs its
+declared smokes. On Claude Code, a module without a plugin hook is copied by hand (each module's
+README shows the `cp -r` line) and the installer detects, wires and verifies it. Either way it
+plans first and applies only on a second, explicit invocation:
 
 ```bash
 python instaladores/kit-forge-1.4.0/kit_doctor.py install \
@@ -127,8 +150,9 @@ python instaladores/kit-forge-1.4.0/kit_doctor.py install \
   --kit frameworks-com-plugins/operator-kit-1.4.0 --host codex --target ../your-repo --apply
 ```
 
-The installer ships with the emitted distribution, not with this source tree; `hpp init` says so
-in its wire block when it cannot find it.
+The installer is part of this repository, at `instaladores/kit-forge-1.4.0/kit_doctor.py`, next
+to the module directories it installs from. A pip install carries neither, and `hpp init` says
+so in its wire block when it cannot find the installer beside the manifest.
 
 ## Harness, protocol, modules, distribution
 
@@ -147,8 +171,12 @@ distribution   marketplace · copy     Claude Code plugin channel · Codex CLI v
 ```
 
 `hpp doctor` validates the manifest and, when `marketplace.json` sits beside it, cross-checks
-every module path, version and plugin manifest. On this checkout it reports `modules=10`; the
-same command against the emitted distribution reports `distribution: checked, ok, 10 modules`.
+every module path, version and plugin manifest. In this repository it prints
+`HPP doctor: ok · modules=10 · hosts=claude-code, codex`; the cross-check is visible only in
+`hpp doctor --json`, where `distribution` reads `{"checked": true, "modules": 10, "status": "ok"}`.
+From a pip install the one-line output is the same and the field reads
+`{"checked": false, "status": "source-contract"}`, because no `marketplace.json` sits beside the
+packaged manifest.
 
 The protocol's loop is five transitions, each behind a named gate:
 
@@ -205,8 +233,9 @@ attestation. `pass^k = 1.00` is required for the gate to pass. The suite file an
 in the JSON report (`hpp benchmark -k 3 --json`). See [PROOF.md](docs/PROOF.md) for the claim
 matrix and [BENCHMARK.md](docs/BENCHMARK.md) for the scenarios.
 
-In an emitted distribution, `kit_doctor.py verify <module>` compares every file against
-`CHECKSUMS.txt`, and `kit_doctor.py marketplace .` checks the whole tree.
+In this repository, `python instaladores/kit-forge-1.4.0/kit_doctor.py verify <module-dir>`
+compares every file of a module against its `CHECKSUMS.txt`, and
+`python instaladores/kit-forge-1.4.0/kit_doctor.py marketplace .` checks the whole tree.
 
 ## Honest limits
 

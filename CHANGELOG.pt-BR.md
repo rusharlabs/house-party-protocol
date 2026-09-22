@@ -9,6 +9,115 @@ cada módulo mantém sua própria versão no `plugin.json` e no `marketplace.jso
 
 ## [Unreleased]
 
+## [2.4.2] — 2026-09-21
+
+### Adicionado
+
+- **Os três contratos da raiz saem nas duas línguas.** `INSTALL-CONTRACT`, `SKILL-CONTRACT` e
+  `INSTALL-GUIDE-TEMPLATE` ganham um `.md` em inglês (a fonte de verdade) com o texto em
+  português como `.pt-BR.md`; a emissão copia os dois lados e o gate de par agora os cobre.
+  Números de regra, nomes de campo, códigos de saída, caminhos e blocos de código são idênticos
+  nos dois lados.
+- **O wheel carrega a suíte de benchmark.** `examples/reliable-coding` viaja dentro do pacote
+  como cópia byte-idêntica (`hpp/examples/`, guardada por `tests/test_installed_package.py`),
+  então `hpp benchmark` e `hpp --self-test` rodam a partir de uma instalação por pip, e o
+  `hpp init` dessa instalação mede o benchmark em vez de reportar a suíte como não embarcada
+  (prontidão `7/11` ali, `9/11` a partir de um clone do repositório).
+- **O `docs/UX-INSTALL-JOURNEY` abre com a jornada do `hpp init`** — seis estágios, plano e depois
+  `--apply`, prontidão por canal, flags e códigos de saída, cada um com saída medida — e mantém a
+  jornada do instalador de módulos como segundo caminho.
+- **Metadados do pacote.** O `pyproject.toml` declara readme, licença (expressão SPDX), autores,
+  palavras-chave, classificadores e URLs do projeto; `pip show -v house-party-protocol` os reporta.
+- **O `CITATION.cff` está amarrado ao pacote** por `tests/test_citation.py`: a versão é igual a
+  `hpp.__version__`, o abstract é igual ao parágrafo de abertura do README, as palavras-chave
+  nomeiam os dois hosts.
+
+### Alterado
+
+- **O README, o manual, o `ARCHITECTURE` e o `CONCEPTS` descrevem o repositório como o que ele
+  é: a distribuição emitida** — módulos, `CHECKSUMS.txt`, `marketplace.json` e o instalador ao
+  lado do harness. A saída citada do `hpp init` é a real por canal (`9/11 verified` a partir de
+  um clone, `7/11` a partir de uma instalação por pip, as duas medidas em 2026-09-21), o
+  instalador é nomeado onde vive, e o `hpp doctor` é citado como imprime
+  (`HPP doctor: ok · modules=10 · hosts=claude-code, codex`; o cruzamento da distribuição só
+  aparece em `--json`).
+- **Os vetores da marca usam só os quatro tokens da paleta.** Os `assets/*.svg` não carregam
+  mais `#E5484D`, `#FF8A3D`, `#A8ADB5` nem `#6B7280`; os degraus mais claros são `#FF6A00`,
+  `#F4F1EB` ou `#0F1113` com opacidade reduzida. O lockup raster aprovado e os PNGs de ícone
+  ficam intocados.
+- **O comentário da CI bate com a árvore em que roda.** O passo do `CHECKSUMS.txt` diz que é um
+  gate real no repositório publicado e um no-op só na árvore-fonte do harness.
+- **O `CONTRIBUTING` descreve um fluxo que um terceiro consegue rodar de fato.** As fontes dos
+  módulos e os manifestos da forja não são publicados, então o fluxo é: editar dentro do módulo
+  emitido, provar com `kit_doctor.py verify` (a divergência de checksum nos seus arquivos é o
+  sinal esperado), `skill_lint`, `hpp doctor`, `hpp benchmark` e `pytest`, e abrir o pull
+  request; os mantenedores incorporam a mudança na fonte, sobem a versão e re-emitem. A exigência
+  de sign-off DCO saiu: abrir um pull request é o acordo de que a contribuição é licenciada sob
+  MIT. A regra bilíngue agora diz o que quem contribui faz na prática (camada de agente em
+  inglês, documentos humanos em pares).
+- **O `SECURITY` trata o canal de e-mail como igual** ao relato privado de vulnerabilidade do
+  GitHub, e diz o que fazer quando o botão de relato privado não está lá.
+- **A camada de agente é em inglês.** Todo arquivo que um agente lê para executar — 33 skills,
+  14 commands, 14 agents, 13 rules, output styles — foi traduzido do português com invariantes de
+  estrutura conferidas (títulos por nível, blocos de código, chaves de frontmatter, links, linhas
+  de tabela). O `skill_lint` agora trata os tokens de esquema em inglês (`## Contract`, `## Proof`,
+  `## When NOT to Activate`, `Priority:`, `INPUT/OUTPUT/STATE IT TOUCHES`, `<!-- executed: … -->`)
+  como canônicos e continua aceitando os em português como legado; o `SKILL-CONTRACT.md`
+  documenta os dois.
+- **A `description` dos módulos é em inglês** no `marketplace.json` e nos dez `plugin.json` (o
+  campo que a interface de plugins mostra); o texto em português foi para `description_pt`, que o
+  catálogo usa.
+- **Os dez READMEs de módulo foram re-medidos contra a árvore emitida**: os comandos de instalação
+  por cópia apontam para o diretório atual do módulo, o caminho do instalador é
+  `instaladores/kit-forge-1.4.0/`, as saídas citadas (`skill_lint`, `--interview`, `--self-test`,
+  a prova do health-kit) foram re-executadas hoje, as contagens batem com `ls`, e o lado em inglês
+  não carrega mais seções em português.
+- **Cada módulo emitido carrega `SANITIZATION.md` + `SANITIZATION.pt-BR.md`** (gerados) em vez de
+  um `SANITIZACAO.md` só em português.
+- **O catálogo abre com o lockup do produto e as cinco palavras**, como o manual.
+
+### Corrigido
+
+- **`hpp benchmark` e `hpp --self-test` a partir de uma instalação por pip saíam com 3 e
+  `internal error: FileNotFoundError`**, porque a suíte era resolvida um nível acima do pacote e o
+  wheel não carregava `examples/`. A suíte agora é resolvida a partir do pacote, e um caminho de
+  suíte ausente (`hpp eval run <ausente>` incluído) é uma recusa de uma linha com exit 2.
+- **`hpp doctor` — e os relatórios de uma linha de `status` e `benchmark` — num stream cp1252**
+  escreviam o ponto mediano como o byte `0xB7`, que se lia como `�` adiante; agora passam pelo
+  mesmo console do `hpp init` e degradam para ASCII (`-`).
+- **O `.gitignore` cobre `.hpp/`**, o diretório que os próprios exemplos de `hpp event append` e
+  `hpp init --apply` do README criam dentro de um checkout.
+- **O `CITATION.cff` descrevia a versão 1.4.0**, com um abstract de "dez kits para Claude Code" e
+  sem palavra-chave de Codex; agora descreve a 2.4.1, datada de 2026-09-21, com o parágrafo de
+  abertura do README e `codex-cli` entre as palavras-chave.
+- **O carimbo de medição do manual dizia 2.4.0** enquanto o cabeçalho dizia 2.4.1; agora ele
+  carimba a data e a versão contra as quais as saídas citadas foram medidas.
+- **`continuity-kit` e `lane-kit` instalados como plugin não armavam hook nenhum.** Os dois
+  trazem hooks, mas o `plugin.json` não tinha a chave `hooks` nem havia `hooks/hooks.json`; agora
+  os dois declaram seus hooks (SessionStart/Stop/PreCompact; SessionStart/PreToolUse/PostToolUse)
+  pelo mesmo shim `pyrun.sh` dos outros módulos.
+- **`kit_doctor.py verify` devolvia `warn` depois dos smoke tests do próprio módulo** porque
+  contava `__pycache__` e `.pyc` como extras. Bytecode e caches do pytest deixaram de ser extras;
+  um arquivo real perdido continua sendo.
+- **O estágio de perfil escrevia um arquivo que o módulo nunca lê** (`profile.yaml` para módulos
+  cujo loader lê `operator-profile.yaml`) e não copiava nada para o `lane-kit` (o exemplo dele
+  vive em `templates/`). O estágio agora deriva o nome do alvo do loader do módulo e olha
+  `templates/` também.
+- **`skill_lint --run-proofs` no Windows criava um arquivo `self-test` perdido**: o comentário
+  `# -> …` no fim de uma linha de prova ia para o `cmd.exe` e o `>` virava redirecionamento, e
+  `${CLAUDE_PLUGIN_ROOT}` não era expandido. Comentários finais são removidos e a variável é
+  expandida para a raiz do módulo antes de rodar.
+- **O manifesto de instalação do próprio `kit-forge` dizia `plugin: false` para o Claude Code**
+  enquanto ele traz um `plugin.json` e está listado no marketplace.
+
+### Limitação conhecida
+
+- **As mensagens de runtime ainda são em português.** O Markdown que um agente lê é inglês, mas
+  os hooks e scripts que ele roda imprimem suas mensagens em português (59 de 81 scripts, medido:
+  `grep -rlE 'ção|não |você|é ' --include=*.py --include=*.sh`), e as skills citam essas saídas
+  literalmente. Traduzi-las é mudança de comportamento com teste por script e é a próxima
+  release; até lá quem não lê português vê instruções em inglês e logs em português.
+
 ## [2.4.1] — 2026-09-21
 
 ### Adicionado

@@ -9,7 +9,14 @@ verification:
   - "python wire_settings.py --self-test"
 hosts:
   claude-code:
-    plugin: false
+    # `.claude-plugin/plugin.json` exists and marketplace.json lists kit-forge, so it IS a
+    # plugin (this said `false` until 2026-09-21 — measured against the two files above).
+    # What installing it as a plugin gives: the tools at a stable path, `${CLAUDE_PLUGIN_ROOT}`
+    # (kit_doctor.py, ip_pii_linter.py, kit_assembler.py, wire_settings.py, tools/skill_lint.py,
+    # tools/browse.py). It ships NO skills, NO commands and NO auto-wired hooks — the manifest
+    # has no skills/commands/hooks keys and there is no hooks/hooks.json;
+    # hooks/guard_origins.py --hook is an optional PreToolUse guard you wire by hand.
+    plugin: true
     manual_gates: [hooks, PreToolUse]
   codex:
     plugin: false

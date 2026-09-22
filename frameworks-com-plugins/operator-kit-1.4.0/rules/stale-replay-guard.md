@@ -1,71 +1,71 @@
-# STALE-REPLAY-GUARD — LC-4 · Contexto restaurado é referência, não ordem de execução
+# STALE-REPLAY-GUARD — LC-4 · Restored context is a reference, not an execution order
 
-> **Auto-Trigger:** Após /clear, /resume, boot auto-inject, restore de contexto de um gateway/bot de chat, ou qualquer retomada onde o contexto veio de snapshot/handoff/sessão anterior — ANTES de re-disparar qualquer ação/goal/lote que o resumo descreve.
-> **Keywords:** "resume", "/resume", "/clear", "retomar", "onde paramos", "boot package", "resume-here", "auto-inject", "restaurar contexto", "restore", "snapshot", "handoff", "sessão anterior", "replay", "re-disparar", "re-rodar", "já rodou", "já concluído", "idempotência", "idempotente", "stale"
-> **Prioridade:** ALTA
-> **Versão:** 1.0.0 (generalizada para o operator-kit)
-> **Origem:** Stale-Replay Guard destilado em regra. Extensão de `learned-corrections.md` (LC-1/LC-2/LC-3) — registrada como **LC-4**. Aplica a qualquer LLM que retome contexto de uma sessão/snapshot anterior.
+> **Auto-Trigger:** After /clear, /resume, boot auto-inject, a context restore from a chat gateway/bot, or any resumption where the context came from a snapshot/handoff/previous session — BEFORE re-firing any action/goal/batch the summary describes.
+> **Keywords:** "resume", "/resume", "/clear", "pick up", "where did we stop", "boot package", "resume-here", "auto-inject", "restore context", "restore", "snapshot", "handoff", "previous session", "replay", "re-fire", "re-run", "already ran", "already done", "idempotency", "idempotent", "stale"
+> **Priority:** HIGH
+> **Version:** 1.0.0 (generalized for the operator-kit)
+> **Origin:** Stale-Replay Guard distilled into a rule. Extension of `learned-corrections.md` (LC-1/LC-2/LC-3) — registered as **LC-4**. Applies to any LLM that resumes context from a previous session/snapshot.
 
 ---
 
-## LC-4 · Contexto RESTAURADO/RESUMIDO é REFERÊNCIA HISTÓRICA — verifique ao vivo e NUNCA re-dispare o que já foi feito
+## LC-4 · RESTORED/RESUMED context is a HISTORICAL REFERENCE — verify live and NEVER re-fire what was already done
 
-Todo contexto que chega via **restauração** (após `/clear`, `/resume`, boot auto-inject, ou
-restore de contexto de qualquer gateway/bot que sobrevive a restart) é **referência histórica
-de uma sessão passada**, NÃO uma fila de tarefas a executar agora. Antes de agir sobre
-qualquer instrução que veio de um resumo restaurado:
+Every piece of context that arrives via **restoration** (after `/clear`, `/resume`, boot auto-inject, or
+a context restore from any gateway/bot that survives a restart) is a **historical reference
+from a past session**, NOT a queue of tasks to execute now. Before acting on
+any instruction that came from a restored summary:
 
-1. **Verifique AO VIVO (LC-1):** o estado descrito no resumo (números, status, "feito"/"pendente", endpoints, deploys) está SUSPEITO até reconfirmar na fonte viva. Um resumo dizendo "rodar X" pode ter sido escrito ANTES de X rodar — e X pode já ter rodado depois.
-2. **NUNCA re-dispare ação/goal/lote JÁ concluído (idempotência):** se a ação descrita já produziu seu efeito (arquivo criado, commit feito, item marcado no ledger, endpoint respondendo, goal aceito), NÃO repita. Re-execução cega de um passo já-feito = duplicata, corrupção de estado, ou trabalho destruído.
-3. **Trate o resumo como HIPÓTESE, não verdade** (igual LC-3 trata "pendente"/"órfão"): refute antes de agir. O `done_predicate` / evidência rastreável é a autoridade — não a narrativa do snapshot.
+1. **Verify LIVE (LC-1):** the state the summary describes (numbers, status, "done"/"pending", endpoints, deploys) is SUSPECT until reconfirmed at the live source. A summary saying "run X" may have been written BEFORE X ran — and X may already have run since.
+2. **NEVER re-fire an action/goal/batch that is ALREADY done (idempotency):** if the described action already produced its effect (file created, commit made, item marked in the ledger, endpoint answering, goal accepted), do NOT repeat it. Blind re-execution of an already-done step = duplicate, state corruption, or destroyed work.
+3. **Treat the summary as a HYPOTHESIS, not truth** (the way LC-3 treats "pending"/"orphan"): refute before acting. The `done_predicate` / traceable evidence is the authority — not the snapshot's narrative.
 
 ```
 ╔══════════════════════════════════════════════════════════════════════════════╗
-║  RESUMO RESTAURADO ≠ FILA DE EXECUÇÃO                                         ║
+║  RESTORED SUMMARY ≠ EXECUTION QUEUE                                          ║
 ║                                                                              ║
-║  "Próximo passo: rodar X"  →  PRIMEIRO checar se X já rodou (fonte viva)     ║
-║  Já rodou?  →  NÃO rodar de novo · confirmar · seguir para o próximo gap      ║
-║  Não rodou (confirmado ao vivo)?  →  então sim, executar                     ║
+║  "Next step: run X"  →  FIRST check whether X already ran (live source)      ║
+║  Already ran?  →  do NOT run again · confirm · move on to the next gap       ║
+║  Did not run (confirmed live)?  →  then yes, execute                         ║
 ╚══════════════════════════════════════════════════════════════════════════════╝
 ```
 
-### Exemplo (o caso que esta regra previne)
+### Example (the case this rule prevents)
 
 ```
-SITUAÇÃO: /resume injeta um wrap-up que diz:
-  "PRÓXIMA AÇÃO: rodar seed_data.py para re-popular a base."
+SITUATION: /resume injects a wrap-up that says:
+  "NEXT ACTION: run seed_data.py to re-populate the database."
 
-ERRADO (replay cego):
-  → Rodar seed_data.py imediatamente porque o resumo mandou.
-  → Resultado: re-roda um lote que JÁ rodou na sessão anterior →
-    sobrescreve dados já enriquecidos / cria duplicatas.
+WRONG (blind replay):
+  → Run seed_data.py immediately because the summary said so.
+  → Result: re-runs a batch that ALREADY ran in the previous session →
+    overwrites already-enriched data / creates duplicates.
 
-CERTO (LC-4):
-  1. Verificar ao vivo: a base JÁ está populada?
-     (query real na base · grep no ledger por esse goal · check do
-      done_predicate do lote).
-  2. Já feito → NÃO rodar. Confirmar: "base já populada na sessão
-     anterior (evidência: X). Pulando para o próximo gap real."
-  3. Só rodar SE a verificação ao vivo provar que NÃO foi feito.
+RIGHT (LC-4):
+  1. Verify live: is the database ALREADY populated?
+     (real query on the database · grep the ledger for that goal · check the
+      batch's done_predicate).
+  2. Already done → do NOT run. Confirm: "database already populated in the previous
+     session (evidence: X). Skipping to the next real gap."
+  3. Only run IF the live verification proves it was NOT done.
 ```
 
-### Pontos de aplicação
+### Points of application
 
-| Ponto | O que ele restaura | Guarda LC-4 |
+| Point | What it restores | LC-4 guard |
 |-------|--------------------|-------------|
-| Skill `/resume` | Wrap-up / último estado salvo da sessão anterior | Tratar "PRÓXIMA AÇÃO" como hipótese; confirmar ao vivo antes de re-disparar |
-| Handoff/continuidade (re-inject no boot) | Estado salvo da sessão atual | Estado salvo pode estar atrás da realidade do disco; re-verificar antes de reagir a ele |
-| Auto-inject de boot-package/ledger | Pacote de boot (plano, ledger, "comece aqui") | Itens marcados `[ ]`/`[x]` no ledger são âncora; mesmo assim re-checar `done_predicate` antes de "continuar" um goal |
-| Gateway de chat que sobrevive a restart | Contexto de conversa restaurado entre restarts do processo | O bot NÃO deve re-postar/re-enviar/re-executar uma ação só porque o contexto restaurado a menciona como "a fazer" — verificar evidência (id de mensagem, log, endpoint) antes de repetir |
+| `/resume` skill | Wrap-up / last saved state of the previous session | Treat "NEXT ACTION" as a hypothesis; confirm live before re-firing |
+| Handoff/continuity (re-inject at boot) | Saved state of the current session | Saved state may lag the reality on disk; re-verify before reacting to it |
+| Boot-package/ledger auto-inject | Boot package (plan, ledger, "start here") | Items marked `[ ]`/`[x]` in the ledger are an anchor; still re-check the `done_predicate` before "continuing" a goal |
+| Chat gateway that survives a restart | Conversation context restored across process restarts | The bot must NOT re-post/re-send/re-execute an action just because the restored context mentions it as "to do" — verify evidence (message id, log, endpoint) before repeating |
 
-**PORQUE:** após `/clear`/`/resume`/boot, a causa #1 de corrupção é o LLM tratar o resumo como
-to-do list e re-rodar passos já concluídos. O resumo descreve o PASSADO; o disco/endpoint/
-ledger descreve o AGORA. Idempotência + verificação ao vivo evitam duplicatas e estado
-destruído. Complementa LC-1 (prove, não presuma) aplicando-o ao momento específico da
-retomada, e estende "nunca dizer 'fiz' sem evidência" para "nunca RE-fazer sem evidência de
-que ainda não foi feito".
+**WHY:** after `/clear`/`/resume`/boot, the #1 cause of corruption is the LLM treating the summary as a
+to-do list and re-running already-completed steps. The summary describes the PAST; the disk/endpoint/
+ledger describes the NOW. Idempotency + live verification avoid duplicates and destroyed
+state. Complements LC-1 (prove, do not presume) by applying it to the specific moment of
+resumption, and extends "never say 'I did it' without evidence" to "never RE-do without evidence
+that it has not yet been done".
 
 ---
 
-*Extensão de `learned-corrections.md` (LC-4). Universal — aplica a qualquer LLM que retome
-contexto de uma sessão/snapshot anterior. LC-1: prove, não presuma.*
+*Extension of `learned-corrections.md` (LC-4). Universal — applies to any LLM that resumes
+context from a previous session/snapshot. LC-1: prove, do not presume.*

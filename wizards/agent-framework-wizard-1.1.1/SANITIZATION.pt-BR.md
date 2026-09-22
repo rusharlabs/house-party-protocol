@@ -1,6 +1,8 @@
-# SANITIZACAO.md
+[English](SANITIZATION.md) · [Português](SANITIZATION.pt-BR.md)
 
-Kit: lane-kit 1.2.0
+# SANITIZATION.pt-BR.md
+
+Kit: agent-framework-wizard 1.1.1
 
 ## Sanitização aplicada
 - 7 padrão(ões) de exclusão de arquivo (ver manifesto interno da build — não distribuído)

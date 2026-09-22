@@ -14,7 +14,27 @@ class EvalError(ValueError):
     """A suite is invalid or unsafe to run."""
 
 
+BENCHMARK_SUITE = Path("examples") / "reliable-coding" / "benchmark-suite.json"
+
+
+def packaged_suite() -> Path:
+    """Locate the benchmark suite the product ships, whichever way `hpp` was installed."""
+    package_dir = Path(__file__).resolve().parent
+    # Why (pip install shipped no examples, 2026-09-21): the root examples/ exists only in a
+    # checkout, where it is the source of truth; inside site-packages the parent holds other
+    # packages, so the byte-identical copy the wheel carries under hpp/examples/ is the fallback.
+    # Same order as hpp.manifest.find_manifest: a real checkout always wins over the packaged copy.
+    for candidate in (package_dir.parent / BENCHMARK_SUITE, package_dir / BENCHMARK_SUITE):
+        if candidate.is_file():
+            return candidate
+    raise EvalError(f"benchmark suite not found: {BENCHMARK_SUITE.as_posix()} is missing both beside and inside the hpp package")
+
+
 def load_suite(path: Path) -> tuple[dict[str, Any], str]:
+    # Why: a missing path used to surface as FileNotFoundError, which the CLI reports as
+    # "internal error" with exit 3; a suite that is not there is a refused input, exit 2.
+    if not path.is_file():
+        raise EvalError(f"suite not found: {path}")
     raw = path.read_bytes()
     try:
         suite = json.loads(raw.decode("utf-8"))

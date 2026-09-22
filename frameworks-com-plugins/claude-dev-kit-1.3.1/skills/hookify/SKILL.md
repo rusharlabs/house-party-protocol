@@ -1,68 +1,68 @@
 ---
 name: hookify
-description: Cria hooks REAIS para Claude Code — scripts executáveis (stdin JSON, exit 0/1/2), registrados via hooks.json de plugin ou colados em settings.json. Use quando o usuário quer criar hook, regra de segurança, validação customizada, lifecycle hook.
+description: Creates REAL hooks for Claude Code — executable scripts (stdin JSON, exit 0/1/2), registered via a plugin's hooks.json or pasted into settings.json. Use when the user wants to create a hook, a safety rule, a custom validation, a lifecycle hook.
 ---
 
-> **Auto-Trigger:** Quando o usuário quiser criar um hook, uma regra de segurança automática, uma validação customizada, ou um lifecycle hook (PreToolUse/PostToolUse/SessionStart/Stop/etc.).
-> **Keywords:** "hook", "criar hook", "lifecycle", "safety rule", "validação", "regra de segurança", "pre-tool", "post-tool", "bloquear comando"
-> **Prioridade:** ALTA
+> **Auto-Trigger:** When the user wants to create a hook, an automatic safety rule, a custom validation, or a lifecycle hook (PreToolUse/PostToolUse/SessionStart/Stop/etc.).
+> **Keywords:** "hook", "create hook", "lifecycle", "safety rule", "validation", "security rule", "pre-tool", "post-tool", "block command"
+> **Priority:** HIGH
 > **Tools:** Read, Write, Edit, Glob, Grep, Bash
 
-## Quando NÃO Ativar
-- Discussões sobre hooks existentes sem intenção de criar novos, ou debugging de um hook já implementado (leia o script direto, não recrie).
-- **Criar uma SKILL** (SKILL.md acionada por keyword/contexto) — use `skill-writer` deste mesmo kit; skill ≠ hook (skill é instrução pro modelo seguir, hook é código que roda automaticamente no ciclo de vida da ferramenta).
-- **Empacotar hooks num plugin distribuível** — depois de criar o hook, use `plugin-dev` deste mesmo kit para o `.claude-plugin/plugin.json` + `hooks.json` que o instala.
+## When NOT to Activate
+- Discussions about existing hooks with no intent to create new ones, or debugging a hook that is already implemented (read the script directly, do not recreate it).
+- **Creating a SKILL** (a SKILL.md triggered by keyword/context) — use `skill-writer` from this same module; skill ≠ hook (a skill is an instruction for the model to follow, a hook is code that runs automatically in the tool lifecycle).
+- **Packaging hooks into a distributable plugin** — after creating the hook, use `plugin-dev` from this same module for the `.claude-plugin/plugin.json` + `hooks.json` that installs it.
 
 ## Core Purpose
 
-Criar hooks REAIS: **scripts executáveis** (não arquivos `.md` com frontmatter) que o Claude Code invoca em eventos do ciclo de vida, recebendo um payload JSON via **stdin** e comunicando a decisão via **exit code** (+ opcionalmente um JSON de saída).
+Create REAL hooks: **executable scripts** (not `.md` files with frontmatter) that Claude Code invokes on lifecycle events, receiving a JSON payload via **stdin** and communicating the decision via **exit code** (+ optionally an output JSON).
 
-## Contrato
+## Contract
 
-**ENTRADA:** payload JSON via stdin — o shape varia por evento, mas tipicamente inclui `tool_name`, `tool_input.{...}`, `session_id`, `hook_event_name`.
+**INPUT:** JSON payload via stdin — the shape varies per event, but typically includes `tool_name`, `tool_input.{...}`, `session_id`, `hook_event_name`.
 
-**SAÍDA:** exit code (obrigatório) + opcionalmente texto em stdout/stderr ou JSON estruturado (`hookSpecificOutput`/`decision`/`permissionDecision`, conforme o evento).
+**OUTPUT:** exit code (mandatory) + optionally text on stdout/stderr or structured JSON (`hookSpecificOutput`/`decision`/`permissionDecision`, depending on the event).
 
-**EXIT CODES** (o mecanismo REAL do Claude Code — não `mode: warn|block` em frontmatter):
+**EXIT CODES** (the REAL Claude Code mechanism — not `mode: warn|block` in frontmatter):
 
-| Exit | Significado |
+| Exit | Meaning |
 |---|---|
-| 0 | ok — silencioso, OU imprime aviso/injeta contexto SEM bloquear (modo WARN-only, o padrão desta doutrina) |
-| 1 | erro NÃO-bloqueante — aparece como aviso, o fluxo segue |
-| 2 | erro BLOQUEANTE (só faz efeito em `PreToolUse`) — stderr volta pro Claude, a ferramenta NÃO executa |
+| 0 | ok — silent, OR prints a warning/injects context WITHOUT blocking (WARN-only mode, the default of this doctrine) |
+| 1 | NON-blocking error — shows up as a warning, the flow continues |
+| 2 | BLOCKING error (only takes effect in `PreToolUse`) — stderr goes back to Claude, the tool does NOT run |
 
-**ESTADO QUE TOCA:**
+**STATE IT TOUCHES:**
 
-| Recurso | Lê/Escreve | Propósito |
+| Resource | Reads/Writes | Purpose |
 |---|---|---|
-| stdin | Lê | payload JSON do evento |
-| `<plugin>/hooks/hooks.json` (modo plugin) | Escreve | registro declarativo, resolvido via `${CLAUDE_PLUGIN_ROOT}` |
-| `.claude/settings.json`/`settings.local.json` (modo manual) | Escreve (colado pelo operador — gate humano) | registro direto, sem plugin |
+| stdin | Reads | the event's JSON payload |
+| `<plugin>/hooks/hooks.json` (plugin mode) | Writes | declarative registration, resolved via `${CLAUDE_PLUGIN_ROOT}` |
+| `.claude/settings.json`/`settings.local.json` (manual mode) | Writes (pasted by the operator — human gate) | direct registration, without a plugin |
 
-## Eventos disponíveis
+## Available events
 
-| Evento | Quando dispara |
+| Event | When it fires |
 |---|---|
-| `SessionStart` | Início de sessão |
-| `UserPromptSubmit` | Usuário envia uma mensagem |
-| `PreToolUse` | Antes de uma ferramenta executar (única fase onde exit 2 bloqueia) |
-| `PostToolUse` | Depois de uma ferramenta executar |
-| `Stop` | Fim de sessão/resposta |
-| `PreCompact` | Antes de compactar/limpar contexto |
-| `SubagentStop` | Quando um subagente termina |
-| `Notification` | Eventos de notificação |
+| `SessionStart` | Session start |
+| `UserPromptSubmit` | The user sends a message |
+| `PreToolUse` | Before a tool runs (the only phase where exit 2 blocks) |
+| `PostToolUse` | After a tool runs |
+| `Stop` | End of session/response |
+| `PreCompact` | Before compacting/clearing context |
+| `SubagentStop` | When a subagent finishes |
+| `Notification` | Notification events |
 
-`matcher` (só relevante em `PreToolUse`/`PostToolUse`): regex/pipe de nomes de ferramenta, ex. `"Bash"` ou `"Edit|Write|MultiEdit"`.
+`matcher` (only relevant in `PreToolUse`/`PostToolUse`): regex/pipe of tool names, e.g. `"Bash"` or `"Edit|Write|MultiEdit"`.
 
-## Processo
+## Process
 
-### 1. Escreva o script (stdin → decisão → exit code)
-Use `docs/hook-template.py` deste kit como scaffold — já tem a estrutura `decide(payload) -> (exit_code, mensagem)` separada de `main()` (facilita testar sem precisar simular um processo real) e um `--self-test`.
+### 1. Write the script (stdin → decision → exit code)
+Use this module's `docs/hook-template.py` as the scaffold — it already has the `decide(payload) -> (exit_code, mensagem)` structure separated from `main()` (makes it easy to test without simulating a real process) and a `--self-test`.
 
-### 2. Escolha WARN-only (default) ou BLOCK (exceção)
-WARN-only (exit 0 sempre, mensagem em stdout) é o padrão desta doutrina — um hook de segurança avisa, quem decide bloquear de verdade é o humano ou uma camada dedicada (ex. pre-commit). BLOCK (exit 2) é a exceção: só para casos onde a ação é irreversível E a detecção é confiável o bastante para nunca gerar falso-positivo bloqueante.
+### 2. Choose WARN-only (default) or BLOCK (exception)
+WARN-only (always exit 0, message on stdout) is the default of this doctrine — a safety hook warns; whoever actually decides to block is the human or a dedicated layer (e.g. pre-commit). BLOCK (exit 2) is the exception: only for cases where the action is irreversible AND the detection is reliable enough to never produce a blocking false positive.
 
-### 3. Registre — modo PLUGIN (recomendado, auto-wire)
+### 3. Register — PLUGIN mode (recommended, auto-wire)
 ```json
 {
   "hooks": {
@@ -74,51 +74,51 @@ WARN-only (exit 0 sempre, mensagem em stdout) é o padrão desta doutrina — um
   }
 }
 ```
-Salve como `<seu-plugin>/hooks/hooks.json` e referencie em `.claude-plugin/plugin.json` (`"hooks": "./hooks/hooks.json"`) — ver a skill `plugin-dev`.
+Save it as `<your-plugin>/hooks/hooks.json` and reference it in `.claude-plugin/plugin.json` (`"hooks": "./hooks/hooks.json"`) — see the `plugin-dev` skill.
 
-### 4. OU registre — modo MANUAL (sem plugin, cola direto)
-Adicione a mesma estrutura dentro do array `hooks` de `.claude/settings.json`/`settings.local.json`. **Isso costuma ser gate humano** — sessões automatizadas têm trava contra auto-editar settings/hooks; cole você mesmo.
+### 4. OR register — MANUAL mode (no plugin, paste directly)
+Add the same structure inside the `hooks` array of `.claude/settings.json`/`settings.local.json`. **This is usually a human gate** — automated sessions have a lock against self-editing settings/hooks; paste it yourself.
 
-### 5. Teste com o payload real
+### 5. Test with the real payload
 ```bash
 echo '{"tool_name":"Bash","tool_input":{"command":"..."}}' | python seu_hook.py
 ```
 
-## Exemplo vivo neste kit: `secret_scan_on_write.py`
+## Live example in this module: `secret_scan_on_write.py`
 
-Um hook `PreToolUse` (matcher `Edit|Write|MultiEdit`) real e shipado, WARN-only: lê `tool_input.{file_path, content, ...}` do stdin, verifica se o path bate um glob "persistente" (memória/CLAUDE.md/docs) E o conteúdo bate um padrão de segredo, e avisa — nunca bloqueia (exit 0 sempre). Ver `hooks/secret_scan_on_write.py`.
+A real, shipped `PreToolUse` hook (matcher `Edit|Write|MultiEdit`), WARN-only: reads `tool_input.{file_path, content, ...}` from stdin, checks whether the path matches a "persistent" glob (memory/CLAUDE.md/docs) AND the content matches a secret pattern, and warns — never blocks (always exit 0). See `hooks/secret_scan_on_write.py`.
 
-## Exemplos executados
+## Executed examples
 
 ```console
 $ echo '{"tool_name":"Write","tool_input":{"file_path":"CLAUDE.md","content":"api_key: \"sk-ant-abcdef1234567890ABCDEF\""}}' | python hooks/secret_scan_on_write.py
 [secret_scan_on_write] AVISO: possível segredo em arquivo persistente `CLAUDE.md` (padrão `sk-ant-a...`).
   -> NÃO commitar credencial crua. Referencie o `.env` (ex.: "key: stored in `.env` as FOO_API_KEY"). WARN-only — o BLOCK definitivo é do pre-commit.
 ```
-<!-- executado: 2026-07-10 · exit=0 -->
-(detectou o segredo e AVISOU — mas exit=0: WARN-only nunca impede a escrita.)
+<!-- executed: 2026-07-10 · exit=0 -->
+(detected the secret and WARNED — but exit=0: WARN-only never prevents the write.)
 
 ```console
 $ echo '{"tool_name":"Write","tool_input":{"file_path":"CLAUDE.md","content":"API key stored in .env as FOO_API_KEY"}}' | python hooks/secret_scan_on_write.py
 ```
-<!-- executado: 2026-07-10 · exit=0 -->
-(sem output — conteúdo limpo, hook silencioso.)
+<!-- executed: 2026-07-10 · exit=0 -->
+(no output — clean content, silent hook.)
 
 ```console
 $ echo '{"tool_name":"Bash","tool_input":{"command":"rm -rf /"}}' | python docs/hook-template.py
 BLOQUEADO: comando destrutivo detectado ('rm -rf /'). Confirme a intenção antes de rodar manualmente.
 ```
-<!-- executado: 2026-07-10 · exit=2 -->
-(o modo BLOCK — exit 2 em `PreToolUse` realmente impede a ferramenta de rodar. Use com moderação.)
+<!-- executed: 2026-07-10 · exit=2 -->
+(BLOCK mode — exit 2 in `PreToolUse` really does prevent the tool from running. Use sparingly.)
 
 ## Anti-patterns
 
-- ❌ Escrever um hook como arquivo `.md` com frontmatter `trigger:`/`pattern:`/`mode:` — isso NÃO é como Claude Code hooks funcionam; hooks são executáveis, não markdown declarativo.
-- ❌ Usar `mode: block` por padrão — block-mode falso-positivo trava o usuário no meio do trabalho; comece WARN-only, promova a block só com evidência de zero falso-positivo.
-- ❌ Fixar `py` como launcher — use `python` sempre (portabilidade cross-OS).
-- ❌ Hook que lança exceção não-tratada em payload malformado — sempre degrade pra exit 0 em erro de parsing (ver `docs/hook-template.py::main`).
+- ❌ Writing a hook as an `.md` file with `trigger:`/`pattern:`/`mode:` frontmatter — that is NOT how Claude Code hooks work; hooks are executables, not declarative markdown.
+- ❌ Using `mode: block` by default — a block-mode false positive locks the user up mid-work; start WARN-only, promote to block only with evidence of zero false positives.
+- ❌ Hardcoding `py` as the launcher — always use `python` (cross-OS portability).
+- ❌ A hook that raises an unhandled exception on a malformed payload — always degrade to exit 0 on a parsing error (see `docs/hook-template.py::main`).
 
-## Prova
+## Proof
 
 ```bash
 python docs/hook-template.py --self-test

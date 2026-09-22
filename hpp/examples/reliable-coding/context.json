@@ -1,0 +1,5 @@
+[
+  {"source": "spec", "priority": 100, "content": "Build only the declared harness capability."},
+  {"source": "acceptance", "priority": 90, "content": "Record fresh evidence before the verdict."},
+  {"source": "background", "priority": 10, "content": "Optional historical background stays below the decision contract."}
+]

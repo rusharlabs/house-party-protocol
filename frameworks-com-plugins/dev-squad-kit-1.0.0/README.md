@@ -16,8 +16,8 @@ commands expect to find in `.devsquad-core/{tasks,templates,checklists,data,util
 Without that tree, those specific commands will fail or improvise. Use the 12 agents for
 persona, `*help`, `*guide` and delegation of reasoning between roles — or build/bring your
 own task tree if you want the complete document-creation commands. Each of the 12 commands
-carries this same notice at the top (the **Dependências fora deste kit:** block), before
-the activation instructions, so the agent knows what to skip when the path does not exist.
+carries this same notice at the top (the **Dependencies outside this kit:** block), before the
+activation instructions, so the agent knows what to skip when the path does not exist.
 
 ## 2. Prerequisites + external APIs
 
@@ -31,25 +31,37 @@ not executable code, and call no API.
 ## 3. Install as a plugin
 
 ```bash
-/plugin marketplace add .
+/plugin marketplace add rushar-labs/house-party-protocol
 /plugin install dev-squad-kit@house-party-protocol
 ```
+`.claude-plugin/plugin.json` declares `commands/`; `agents/` and `skills/` are
+auto-discovered. No hooks.
 
 ## 4. Install by copy
 
+In the emitted distribution this module lives in
+`frameworks-com-plugins/dev-squad-kit-1.0.0/` (the directory carries the version — state it
+once, in `KIT`). The installer is `instaladores/kit-forge-1.4.0/kit_doctor.py`; run it from
+the distribution root. It plans first and writes only on a second, explicit `--apply`:
+
 ```bash
-cp -r dev-squad-kit <seu-projeto>/dev-squad-kit
-cd <seu-projeto>
-python dev-squad-kit/../instaladores/kit-forge/kit_doctor.py install dev-squad-kit --target . --human
-python dev-squad-kit/../instaladores/kit-forge/kit_doctor.py install dev-squad-kit --target . --apply
+KIT=frameworks-com-plugins/dev-squad-kit-1.0.0
+cp -r "$KIT" ../your-repo/dev-squad-kit       # the copy itself (kit_doctor does not copy on claude-code)
+python instaladores/kit-forge-1.4.0/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo
+python instaladores/kit-forge-1.4.0/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo --apply
+# Codex CLI: --host codex — the installer copies the module into .agents/hpp/dev-squad-kit
+#            and each skill into .agents/skills/hpp-dev-squad-kit-<skill>; no cp -r needed
 ```
 
 ## 5. What the installer detects
 
+The `detect` stage classifies the target (read-only) with exactly these three labels:
+
 ```
-greenfield    → copia os 12 comandos + 3 skills, nada mais a gerar (não há profile.yaml)
-em-andamento  → se já existir commands/<nome>.md com o mesmo nome, reporta conflito, não sobrescreve
-re-run        → cópia idempotente; nenhum estado externo pra perder
+greenfield    -> no prior config in the target; nothing to copy (there is no profile.yaml); the 12 commands + 3 skills become available
+in-progress   -> .claude/ exists, or settings(.local).json already has hooks/statusLine, or the repo has
+                 more than 3 commits: reported only — this kit touches no settings/hooks
+re-run        -> this kit+target pair is already in the registry (~/.claude-kits/registry.json); nothing changes
 ```
 
 ## 6. What is safe to run again
@@ -59,31 +71,29 @@ skills are static. Running the installation again only re-copies the same files.
 
 ## 7. Manual wiring
 
-None. This kit has no hooks — only `commands/` and `skills/`, both auto-discovered by
+None. This kit has no hooks — only `commands/`, `agents/` and `skills/`, all picked up by
 Claude Code through `.claude-plugin/plugin.json`.
 
 ## 8. Proof (real output, executed)
 
-```
-$ python ../instaladores/kit-forge/tools/skill_lint.py --all skills --run-proofs
+The kit ships no linter of its own — the linter is the installer's. From the distribution
+root:
 
-[FAIL] skills\pp-consolidate\SKILL.md
-    FAIL L1d.quando_nao_ativar        seção '## Quando NÃO Ativar' ausente
-    FAIL L2a.contrato_ausente         seção '## Contrato' ausente
-    FAIL L3a.exemplos_min3            0 exemplo(s) executado(s) < 3
-    FAIL L4a.prova_ausente            seção '## Prova' ausente
-[FAIL] skills\pp-discovery\SKILL.md   (mesmos 4 achados)
-[FAIL] skills\pp-raiox\SKILL.md       (mesmos 4 achados)
-skill_lint: 0 pass · 0 warn · 3 fail (de 3)
+```bash
+python instaladores/kit-forge-1.4.0/tools/skill_lint.py --all frameworks-com-plugins/dev-squad-kit-1.0.0/skills --run-proofs
 ```
+Last line of the output (the 3 `[PASS]` lines above it carry OS-specific path separators):
+```
+skill_lint: 3 pass · 0 warn · 0 fail (de 3)
+```
+<!-- executado: 2026-09-21 · exit=0 -->
 
 **Product honesty:** the 3 `pp-*` skills are investigation methodology (prose guiding how
-to inventory/read a repo before diving in), not scripts with deterministic output — which
-is why they have no `--self-test` and no `## Prova` section in the format that this
-marketplace's `SKILL-CONTRACT.md` requires for tool-skills. They have not yet been updated
-to the formal v1.0 contract (`## Contrato` section, 3 executed examples). They work as a
-reasoning guide; they have no mechanical proof of execution. Documented here rather than
-hidden — decide whether that serves your case before installing.
+to inventory/read a repo before diving in), not scripts with deterministic output. They now
+meet the marketplace `SKILL-CONTRACT.md` (`## Contrato`, executed examples, `## Prova`) and
+pass the linter above; what they prove is the method being followed, not a program's
+output. They work as a reasoning guide — decide whether that serves your case before
+installing.
 
 The 12 persona agents have no self-test mechanism (they are prompt, not code) — the
 possible proof is reading the `.md` itself, which deterministically and explicitly defines
@@ -92,6 +102,6 @@ commands, personas and collaboration rules.
 ## 9. Undo
 
 ```
-- Plugin: /plugin uninstall dev-squad-kit@house-party-protocol
-- Cópia: remover a pasta dev-squad-kit/ do projeto (nenhum outro arquivo foi tocado)
+- Plugin:  /plugin uninstall dev-squad-kit@house-party-protocol
+- Copy:    remove the dev-squad-kit/ folder from the project (no other file was touched)
 ```

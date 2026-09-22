@@ -39,6 +39,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import subprocess
 import sys
 from datetime import datetime, timedelta, timezone
@@ -50,6 +51,12 @@ except ImportError:
     yaml = None  # type: ignore[assignment]
 
 _IGNORE_NAMES = {"CHECKSUMS.txt", ".lint-report.json"}
+# Why (bytecode counted as extras): `verify` ran right after a module's own smoke tests and came back `warn`
+# (exit 1) because the `__pycache__/*.pyc` they left behind counted as `extras`. Bytecode and the
+# pytest cache are never part of the package — the assembler excludes them and the zip gate forbids
+# them — so they cannot be a finding about the package. Same set the assembler uses.
+_IGNORE_DIRS = {"__pycache__", ".pytest_cache"}
+_IGNORE_SUFFIXES = {".pyc", ".pyo"}
 _SUBCOMMANDS = ("verify", "install", "registry", "marketplace")
 _DEFAULT_REGISTRY = Path.home() / ".claude-kits" / "registry.json"
 
@@ -151,8 +158,12 @@ def check_kit(kit_dir: Path) -> dict:
 
     actual_files = set()
     for p in kit_dir.rglob("*"):
-        if p.is_file() and p.name not in _IGNORE_NAMES:
-            actual_files.add(p.relative_to(kit_dir).as_posix())
+        if not p.is_file() or p.name in _IGNORE_NAMES or p.suffix in _IGNORE_SUFFIXES:
+            continue
+        rel = p.relative_to(kit_dir)
+        if _IGNORE_DIRS.intersection(rel.parts[:-1]):
+            continue
+        actual_files.add(rel.as_posix())
     extras = sorted(actual_files - set(expected.keys()))
 
     if mismatches or missing or unsafe:
@@ -395,22 +406,96 @@ def stage_prereqs(kit_dir: Path) -> dict:
     return {"stage": "prereqs", "status": "ok" if ok else "warn", "checks": checks}
 
 
-def stage_profile(kit_dir: Path, target_dir: Path, dry_run: bool, host: str) -> dict:
-    """Descobre *.example.* na raiz do kit e oferece copiar pro nome real (sem
-    sobrescrever se já existir — mesmo espírito do wire_settings.py: nunca sobrescreve
-    config alheia por padrão)."""
-    actions = []
+_PROFILE_LOADER_NAMES_RE = re.compile(r"^_NAMES\s*=\s*\(\s*['\"]([^'\"]+)['\"]", re.MULTILINE)
+_PROFILE_SCAN_SUFFIXES = {".py", ".md", ".yaml", ".yml", ".json", ".sh"}
+
+
+def _loader_profile_name(kit_dir: Path) -> str | None:
+    """First entry of `_NAMES` in the module's `_lib/profile_loader.py`, if it declares one.
+
+    # Why: the stage turned `profile.example.yaml` into `profile.yaml`, but modules such as
+    # operator-kit / health-kit / gotcha-memory
+    # read ONLY the names in `_NAMES = ("operator-profile.yaml", ...)` of their vendored loader —
+    # the installed profile was silently ignored and every mechanism ran on defaults. Read by
+    # regex, never imported: the loader is another module's code and importing would run it.
+    """
+    loader = kit_dir / "_lib" / "profile_loader.py"
+    if not loader.is_file():
+        return None
+    try:
+        m = _PROFILE_LOADER_NAMES_RE.search(loader.read_text(encoding="utf-8", errors="replace"))
+    except OSError:
+        return None
+    return m.group(1) if m else None
+
+
+def _target_is_referenced(kit_dir: Path, target_name: str, example: Path) -> bool:
+    """True when some file of the module (outside the example itself) names `target_name`."""
+    for path in kit_dir.rglob("*"):
+        if path == example or not path.is_file() or path.suffix not in _PROFILE_SCAN_SUFFIXES:
+            continue
+        if any(part in _IGNORE_DIRS for part in path.relative_to(kit_dir).parts):
+            continue
+        try:
+            if target_name in path.read_text(encoding="utf-8", errors="replace"):
+                return True
+        except OSError:
+            continue
+    return False
+
+
+def profile_examples(kit_dir: Path) -> list:
+    """`(example, target_name, reason)` for every seed the profile stage should offer.
+
+    Root `*.example.*` -> name minus `.example` (v3.0.0 behaviour), except that
+    `profile.example.<ext>` takes the loader's `_NAMES[0]` when the module vendors a
+    `_lib/profile_loader.py`. `templates/*.example.*` are offered too — but only when the module
+    names the target somewhere (a template nobody reads is a schema example, not config).
+
+    # Why: `templates/` was outside the glob — lane-kit keeps its only seed,
+    # `lanes.example.yaml`, there, so the stage copied nothing and the README had to
+    # tell the operator to `cp` it by hand. The reference check keeps `lane-registry.example.json`
+    # (runtime-state example, referenced by no file) from landing in the target as a dead file.
+    """
+    loader_name = _loader_profile_name(kit_dir)
+    offers = []
     for example in sorted(kit_dir.glob("*.example.*")):
         target_name = example.name.replace(".example.", ".")
+        reason = "root"
+        if loader_name and example.name.split(".example.")[0] == "profile":
+            target_name, reason = loader_name, "loader _NAMES"
+        offers.append((example, target_name, reason))
+    templates = kit_dir / "templates"
+    if templates.is_dir():
+        for example in sorted(templates.glob("*.example.*")):
+            target_name = example.name.replace(".example.", ".")
+            if _target_is_referenced(kit_dir, target_name, example):
+                offers.append((example, target_name, "templates (referenced)"))
+            else:
+                offers.append((example, None, "templates (unreferenced)"))
+    return offers
+
+
+def stage_profile(kit_dir: Path, target_dir: Path, dry_run: bool, host: str) -> dict:
+    """Discovers the module's `*.example.*` seeds (root and `templates/`, see
+    `profile_examples`) and offers to copy each one under the name the module's loader reads
+    (never overwriting an existing target — same spirit as wire_settings.py: never overwrite
+    someone else's config by default)."""
+    actions = []
+    for example, target_name, reason in profile_examples(kit_dir):
+        rel = example.relative_to(kit_dir).as_posix()
+        if target_name is None:
+            actions.append({"file": rel, "action": "skip-unreferenced", "target": None, "reason": reason})
+            continue
         target = target_dir / target_name
         if target.exists():
-            actions.append({"file": example.name, "action": "skip-exists", "target": target_name})
+            actions.append({"file": rel, "action": "skip-exists", "target": target_name, "reason": reason})
             continue
         if dry_run:
-            actions.append({"file": example.name, "action": "would-copy", "target": target_name})
+            actions.append({"file": rel, "action": "would-copy", "target": target_name, "reason": reason})
         else:
             target.write_bytes(example.read_bytes())
-            actions.append({"file": example.name, "action": "copied", "target": target_name})
+            actions.append({"file": rel, "action": "copied", "target": target_name, "reason": reason})
     codex_report = None
     status = "ok"
     if host == "codex":
@@ -632,8 +717,10 @@ def render_plan(report: dict) -> str:
                     "would-copy": "copiaria",
                     "copied": "copiado",
                     "skip-exists": "já existe, preservado",
+                    "skip-unreferenced": "ignorado (nenhum arquivo do módulo lê esse nome)",
                 }.get(action["action"], action["action"])
-                lines.append(f"      {verb}: {action['file']} -> {action['target']}")
+                arrow = f" -> {action['target']}" if action.get("target") else ""
+                lines.append(f"      {verb}: {action['file']}{arrow}")
 
         if name == "configure" and stage.get("pending_defaults"):
             pend = ", ".join(str(q) for q in stage["pending_defaults"])

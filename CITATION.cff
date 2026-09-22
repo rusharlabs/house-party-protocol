@@ -2,9 +2,9 @@ cff-version: 1.2.0
 message: "If you use House Party Protocol, please cite it as below."
 type: software
 title: "House Party Protocol"
-abstract: "Ten installable kits for Claude Code: an agent harness where nothing ships without a second measurement — penless cross-model checker, budget as a hard stop, and 'done' only on exit 0."
-version: "1.4.0"
-date-released: "2026-09-20"
+abstract: "House Party Protocol (HPP) is a local-first harness for coding agents. It sits around the work an agent does in Claude Code or Codex CLI and turns four questions into executable contracts: what may run, who may approve, what counts as proof, and where the next step comes from after an interruption."
+version: "2.4.2"
+date-released: "2026-09-21"
 license: MIT
 url: "https://rusharlabs.com"
 repository-code: "https://github.com/rushar-labs/house-party-protocol"
@@ -13,8 +13,12 @@ authors:
     given-names: "Max"
     affiliation: "Rushar Labs"
 keywords:
+  - coding-agents
   - claude-code
-  - agents
-  - guardrails
+  - codex-cli
+  - harness
+  - evidence
+  - attestation
   - verification
-  - plugins
+  - guardrails
+  - local-first

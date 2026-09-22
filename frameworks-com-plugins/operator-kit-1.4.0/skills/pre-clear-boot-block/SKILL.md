@@ -1,56 +1,56 @@
 ---
 name: pre-clear-boot-block
-description: Antes de um /clear, emite o bloco DONE / FALTA / leia-nesta-ordem para a sessão fresca retomar com zero perda
+description: Before a /clear, emits the DONE / MISSING / read-in-this-order block so the fresh session resumes with zero loss
 ---
 
-> **Auto-Trigger:** Quando o contexto está crescendo, uma wave/feature fecha, ou o operador sinaliza intenção de /clear ou fim de sessão longa
-> **Keywords:** "/clear", "vou limpar", "pré-clear", "boot", "handoff", "retomar", "próxima sessão", "fechar sessão"
-> **Prioridade:** MÉDIA
+> **Auto-Trigger:** When the context is growing, a wave/feature closes, or the operator signals an intent to /clear or the end of a long session
+> **Keywords:** "/clear", "about to clear", "pre-clear", "boot", "handoff", "resume", "next session", "close session"
+> **Priority:** MEDIUM
 > **Tools:** Bash, Read, Write
-> **Doutrina relacionada:** `rules/stale-replay-guard.md` (LC-4: o boot bundle é referência, não fila), `rules/learned-corrections.md` (LC-1: re-verificar ao vivo no PASSO 0).
+> **Related doctrine:** `rules/stale-replay-guard.md` (LC-4: the boot bundle is a reference, not a queue), `rules/learned-corrections.md` (LC-1: re-verify live in STEP 0).
 
-# pre-clear-boot-block — handoff de 1 bloco antes do /clear
+# pre-clear-boot-block — a 1-block handoff before the /clear
 
-Antes de um `/clear`, a sessão fresca precisa retomar sem perder o fio. Este comando produz um bloco auto-contido. **Reusa o `autoprompt_resume` — não re-extrai estado.**
+Before a `/clear`, the fresh session needs to resume without losing the thread. This command produces a self-contained block. **It reuses `autoprompt_resume` — it does not re-extract state.**
 
-## Contrato
+## Contract
 
-**ENTRADA:** nenhuma (lê o SSoT declarado em `paths.boot_doc`/`paths.state_ssot` do `operator-profile.yaml` + `git log` local).
+**INPUT:** none (reads the SSoT declared in `paths.boot_doc`/`paths.state_ssot` of `operator-profile.yaml` + local `git log`).
 
-**SAÍDA:** bloco Markdown impresso em stdout com 3 seções (DONE / FALTA / BOOT), pronto para colar na próxima sessão; opcionalmente 1 commit (0 push).
+**OUTPUT:** Markdown block printed to stdout with 3 sections (DONE / MISSING / BOOT), ready to paste into the next session; optionally 1 commit (0 push).
 
 **EXIT CODES:**
 
-| Exit | Significado |
+| Exit | Meaning |
 |---|---|
-| 0 | bloco gerado e impresso |
-| 2 | script não encontrado / path do hook não resolvido (instalação quebrada) |
+| 0 | block generated and printed |
+| 2 | script not found / hook path not resolved (broken installation) |
 
-**ESTADO QUE TOCA:**
+**STATE IT TOUCHES:**
 
-| Arquivo/recurso | Lê/Escreve | Propósito |
+| File/resource | Reads/Writes | Purpose |
 |---|---|---|
-| `paths.state_ssot` (ex.: `docs/plans/execucao/00-STATE.md`) | Lê | pendências abertas |
-| `paths.boot_doc` | Lê | ordem de leitura sugerida |
-| `git log` | Lê | últimos commits (contexto de "o que já é DONE") |
-| `.git` (commit opcional) | Escreve | se `commita: true` no profile — commit por path, 0 push |
+| `paths.state_ssot` (e.g. `docs/plans/execucao/00-STATE.md`) | Reads | open items |
+| `paths.boot_doc` | Reads | suggested reading order |
+| `git log` | Reads | latest commits (context for "what is already DONE") |
+| `.git` (optional commit) | Writes | if `commita: true` in the profile — commit per path, 0 push |
 
-## Processo
-1. **Dispare/leia o RESUME-NEXT:** `python ${CLAUDE_PLUGIN_ROOT}/hooks/autoprompt_resume.py --print` (já agrega pendências abertas do SSoT + últimos commits, honesto). Não reimplemente extração.
-2. **Acrescente a ordem de leitura** (boot-docs do `paths.boot_doc` + correlatos) — "leia estes arquivos NESTA ordem".
-3. **Monte o bloco** com 3 seções:
-   - **DONE** — o que está duravelmente feito (commitado).
-   - **FALTA** — o que resta, por owner (autônomo / gate-humano / delegável).
-   - **BOOT** — ordem de leitura + o self-prompt colável.
-4. **Opcionalmente commite** o estado (`commita s/n` configurável) — commit por path, 0 push.
-5. **Imprima o bloco** pronto para colar na próxima sessão.
+## Process
+1. **Fire/read the RESUME-NEXT:** `python ${CLAUDE_PLUGIN_ROOT}/hooks/autoprompt_resume.py --print` (it already aggregates the open items from the SSoT + the latest commits, honestly). Do not reimplement extraction.
+2. **Add the reading order** (boot docs from `paths.boot_doc` + related) — "read these files IN THIS order".
+3. **Assemble the block** with 3 sections:
+   - **DONE** — what is durably done (committed).
+   - **MISSING** — what remains, by owner (autonomous / human gate / delegable).
+   - **BOOT** — reading order + the pasteable self-prompt.
+4. **Optionally commit** the state (`commita` y/n configurable) — commit per path, 0 push.
+5. **Print the block** ready to paste into the next session.
 
-## Quando NÃO Ativar
-- Sessão curta sem estado acumulado.
-- Quando `save`/`autoprompt_resume` já cobrem (não duplicar handoff).
-- Skill vizinha `dual-report-builder` cobre relatório de audiência dupla — não é isto (aqui é handoff de sessão, não relatório de negócio).
+## When NOT to Activate
+- Short session with no accumulated state.
+- When `save`/`autoprompt_resume` already cover it (do not duplicate the handoff).
+- The neighbouring skill `dual-report-builder` covers dual-audience reports — that is not this (this is a session handoff, not a business report).
 
-## Exemplos executados
+## Executed examples
 
 ```console
 $ python hooks/autoprompt_resume.py --print
@@ -65,26 +65,26 @@ $ python hooks/autoprompt_resume.py --print
 
 [... bloco completo continua com DONE/FALTA/BOOT — truncado aqui por brevidade ...]
 ```
-<!-- executado: 2026-07-10 · exit=0 -->
+<!-- executed: 2026-07-10 · exit=0 -->
 
 ```console
 $ python hooks/autoprompt_resume.py --self-test
 self-test OK
 ```
-<!-- executado: 2026-07-10 · exit=0 -->
+<!-- executed: 2026-07-10 · exit=0 -->
 
 ```console
 $ python operator-kit/hooks/autoprompt_resume.py --print
 python.exe: can't open file '...\operator-kit\hooks\autoprompt_resume.py': [Errno 2] No such file or directory
 ```
-<!-- executado: 2026-07-10 · exit=2 -->
-(reprodução real do bug que esta skill tinha antes do fix: path relativo cru sem `${CLAUDE_PLUGIN_ROOT}` quebra fora do diretório do kit — por isso o passo 1 agora usa a âncora.)
+<!-- executed: 2026-07-10 · exit=2 -->
+(real reproduction of the bug this skill had before the fix: a raw relative path without `${CLAUDE_PLUGIN_ROOT}` breaks outside the kit directory — which is why step 1 now uses the anchor.)
 
-## Prova
+## Proof
 
 ```bash
 python ${CLAUDE_PLUGIN_ROOT}/hooks/autoprompt_resume.py --self-test
 ```
 
-## Veja também
-`autoprompt_resume.py` (insumo), `loop-charter-template` (o BOOT-PROMPT canônico), `gate-sheet-collector` (a parte FALTA → gate-humano).
+## See also
+`autoprompt_resume.py` (input), `loop-charter-template` (the canonical BOOT-PROMPT), `gate-sheet-collector` (the MISSING → human-gate part).

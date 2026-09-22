@@ -168,9 +168,13 @@ sources ──forge──▶ module dir + CHECKSUMS.txt + .zip ──▶ marketp
                         └── kit_doctor.py verify ◀────────────┘── hpp doctor (cross-check)
 ```
 
-The source checkout of the harness does not contain the emitted modules or the installer. The
-doctor, the benchmark and the suite run there; distribution integrity and module checksums are
-reported as not verified rather than assumed.
+This repository is that published tree: the module directories with their `CHECKSUMS.txt`, the
+installer and `marketplace.json` sit beside the harness, so `hpp init` verifies distribution
+integrity and module checksums here (9 of 11 readiness items). Two other layouts carry less and
+say so: the pip wheel ships the harness, the manifest and the benchmark suite but no module
+directories, and the harness source tree has none of the emitted artefacts; in both, the doctor,
+the benchmark and the suite run, and distribution integrity and module checksums are reported as
+not verified rather than assumed.
 
 ## Exit contract
 
@@ -187,8 +191,8 @@ remaining stages when a stage fails with a blocking hint.
 ## Tests and CI
 
 The suite under `tests/` is stdlib-only and runs without network. Each test file carries at least
-one test named `CONTROLE` that proves the file can fail. Two tests skip in a source checkout because
-they need `marketplace.json`; they run in the emitted distribution. CI runs the suite,
+one test named `CONTROLE` that proves the file can fail. In this repository the whole suite runs;
+the harness source tree, which has no `marketplace.json`, skips the two tests that need it. CI runs the suite,
 `hpp doctor` and `hpp benchmark -k 3` on Linux, macOS and Windows across Python 3.10 to 3.13,
 with read-only permissions and no step allowed to fail silently.
 

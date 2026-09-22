@@ -26,75 +26,93 @@ regime is subscription/quota, not pay-per-use.
 
 ## What is in this folder
 
+Counts below were taken with `ls scripts | wc -l` (17) and `ls skills | wc -l` (13) on the
+emitted module.
+
 ```
 operator-kit/
-├── README.md                     ← este arquivo
-├── (crie operator-profile.yaml a partir de profile.example.yaml — não versionado)
-├── profile.example.yaml          ← template comentado p/ copiar em projeto novo
+├── README.md · README.pt-BR.md   ← this file (and its Portuguese twin)
+├── profile.example.yaml          ← commented template to copy into a new project
+├── (create operator-profile.yaml from profile.example.yaml — not versioned)
 ├── install/
-│   └── kit.install.yaml          ← manifesto lido por kit_doctor.py install (6 estágios)
+│   └── kit.install.yaml          ← manifest read by kit_doctor.py install (6 stages)
 ├── _lib/
-│   ├── profile_loader.py         ← acha+lê o profile (stdlib + PyYAML). TODO mecanismo importa daqui.
-│   ├── concurrency.py            ← teto de agentes simultâneos (concorrencia.teto)
-│   └── launcher.py               ← resolve o launcher Python correto (nunca fixa "py")
-├── scripts/                      ← 16 scripts (done_gate, verify_ladder, debt_ledger,
+│   ├── profile_loader.py         ← finds + reads the profile (stdlib + PyYAML). EVERY mechanism imports from here.
+│   ├── concurrency.py            ← ceiling of simultaneous agents (concorrencia.teto)
+│   └── launcher.py               ← resolves the right Python launcher (never hardcodes "py")
+├── scripts/                      ← 17 scripts: done_gate, verify_ladder, preflight, debt_ledger,
 │                                    goal_ledger/goal_review, passk_eval, audit_plan,
 │                                    determinism_harness, distill_corrections, drift_check,
 │                                    health_probe, live_count, status_now, delta_inventory,
-│                                    gate_sheet_panel)
-├── hooks/                        ← 8 hooks (hooks.json arma todos, WARN-only): operation_guard_
+│                                    gate_sheet_panel, claude_md_from_profile
+├── hooks/                        ← 8 hooks (hooks.json wires all of them, WARN-only): operation_guard_
 │                                    portable, snapshot_rollback_gate, external_send_draft_gate,
 │                                    secret_scan_on_write, project_root_confirm, rule_capture,
-│                                    ralph_gate, autoprompt_resume
-├── skills/                       ← 12 skills (delegate-with-handback, parallel-dispatch,
+│                                    ralph_gate, autoprompt_resume — plus pyrun.sh (resolves the
+│                                    project's Python interpreter for every hook)
+├── skills/                       ← 13 skills: delegate-with-handback, parallel-dispatch,
 │                                    adversarial-refuter, gated-improvement-proposal,
 │                                    ralph-loop-driver, pre-clear-boot-block, live-source-prover,
 │                                    gate-sheet-collector, doc-consolidator-dedup,
-│                                    dual-report-builder, rls-audit, supabase-edge-scaffold)
+│                                    dual-report-builder, rls-audit, supabase-edge-scaffold,
+│                                    claude-md-from-profile
+├── agents/                       ← 2 read-only sub-agents: refutador, silent-failure-hunter (+ NOTICE-ECC.md)
 ├── commands/                     ← /ralph-gate, /cancel-ralph-gate
-├── evals/                        ← ralph-gate-T1-T4.sh (prova do loop)
-├── evolve/                       ← instinct_promote.py + NOTICE-ECC.md (crédito de origem)
+├── evals/                        ← ralph-gate-T1-T4.sh (proof of the loop)
+├── evolve/                       ← instinct_promote.py + NOTICE-ECC.md (credit of origin)
+├── statusline/
+│   └── statusline.py             ← composable status bar (segments configured in the profile)
 ├── templates/
-│   └── loop-charter-template.md  ← anatomia preenchível de um loop autônomo
-├── rules/                        ← 13 regras universais (.claude/rules/*.md) — ver tabela abaixo
+│   └── loop-charter-template.md  ← fill-in anatomy of an autonomous loop
+├── rules/                        ← 13 universal rules (.claude/rules/*.md) — see the table below
 ├── docs/
-│   └── ANTHROPIC-STANDARDS.md    ← convenções de hook/skill/sub-agent
+│   ├── ANTHROPIC-STANDARDS.md    ← hook/skill/sub-agent conventions
+│   └── MCP-RUNBOOK.md            ← how to discover, test and diagnose MCP servers
 ├── output-styles/
-│   ├── direct-register.md        ← tom: direto, pt-BR, erro plano, frases-banidas
-│   └── execute-100pct.md         ← LC-2: autorizado → executa todo o escopo em batch
-├── RALPH-GATE.md                 ← doutrina do loop /ralph-gate
-└── SETTINGS-WIRE.md              ← blocos prontos p/ colar em settings.local.json — GATE humano
+│   ├── direct-register.md        ← tone: direct, plain error reporting, banned phrases
+│   └── execute-100pct.md         ← LC-2: authorised → executes the whole scope in batch
+├── RALPH-GATE.md                 ← doctrine of the /ralph-gate loop
+├── SETTINGS-WIRE.md              ← ready-to-paste blocks for settings.local.json — HUMAN gate
+├── AGENTS.md                     ← Codex CLI entry point (what Codex reads on --host codex)
+└── LICENSE · CHECKSUMS.txt · SANITIZATION.md   ← added by the forge at emission
 ```
 
 ## Install as a plugin (1 click)
 
 ```bash
-/plugin marketplace add .                            # registra o marketplace
-/plugin install operator-kit@house-party-protocol             # instala + arma os 8 hooks WARN-only
+/plugin marketplace add rushar-labs/house-party-protocol
+/plugin install operator-kit@house-party-protocol
 ```
-Wires the hooks automatically (through `${CLAUDE_PLUGIN_ROOT}`); skills, commands and
+`.claude-plugin/plugin.json` declares `hooks/hooks.json` and `commands/`: the 8 hooks are
+wired automatically (through `${CLAUDE_PLUGIN_ROOT}`), and skills, commands, agents and
 output-styles are auto-discovered. **statusLine** remains manual (a Claude Code limit: a
 plugin cannot embed `statusLine`) — see `SETTINGS-WIRE.md` §3.
 
 ## Install by copy
 
+In the emitted distribution this module lives in `frameworks-com-plugins/operator-kit-1.4.0/`
+(the directory carries the version — state it once, in `KIT`). The installer is
+`instaladores/kit-forge-1.4.0/kit_doctor.py`; run it from the distribution root. It plans
+first and writes only on a second, explicit `--apply`:
+
 ```bash
-cp -r operator-kit-1.1.0 <seu-projeto>/operator-kit
-cd <seu-projeto>
-python operator-kit/instaladores/kit-forge/kit_doctor.py install operator-kit --target . --human
-#                                                                                  ^ plano, zero escrita
-python operator-kit/instaladores/kit-forge/kit_doctor.py install operator-kit --target . --apply
-#                                                                                  ^ aplica de verdade
+KIT=frameworks-com-plugins/operator-kit-1.4.0
+cp -r "$KIT" ../your-repo/operator-kit        # the copy itself (kit_doctor does not copy on claude-code)
+python instaladores/kit-forge-1.4.0/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo
+python instaladores/kit-forge-1.4.0/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo --apply
+# Codex CLI: --host codex — the installer copies the module into .agents/hpp/operator-kit
+#            and each skill into .agents/skills/hpp-operator-kit-<skill>; no cp -r needed
 ```
-The `profile` stage copies `profile.example.yaml → operator-profile.yaml` if it does not
-exist (never overwrites). Then adjust by hand: `idioma`, `paths.*`,
-`autonomia.default`, `intensidade.default`, `concorrencia.teto`,
-`guardrails.protected_paths`/`protected_branches`, `verificacao.done_criterios` with the
-real commands of your stack. Smoke test:
+The `profile` stage copies every `*.example.*` at the module root into the target, dropping
+`.example` — so `profile.example.yaml` lands as `profile.yaml` (never overwritten if it
+exists). The loaders read **`operator-profile.yaml`**: rename the copy (or point
+`OPERATOR_PROFILE` at it), then adjust by hand: `idioma`, `paths.*`, `autonomia.default`,
+`intensidade.default`, `concorrencia.teto`, `guardrails.protected_paths`/`protected_branches`,
+`verificacao.done_criterios` with the real commands of your stack. Smoke test:
 ```bash
-python operator-kit/_lib/profile_loader.py             # imprime o profile resolvido
+python operator-kit/_lib/profile_loader.py             # prints the resolved profile
 python operator-kit/scripts/done_gate.py --self-test   # self-test OK
-python operator-kit/scripts/done_gate.py --profile py  # roda os critérios 'py' do perfil
+python operator-kit/scripts/done_gate.py --profile py  # runs the 'py' criteria of the profile
 ```
 gitignore the `paths.resume_pointer` (e.g. `.claude/RESUME-NEXT.md`). Output-styles:
 copy `output-styles/*.md` into the project's `.claude/output-styles/` and activate with
@@ -102,10 +120,13 @@ copy `output-styles/*.md` into the project's `.claude/output-styles/` and activa
 
 ## What the installer detects
 
+The `detect` stage classifies the target (read-only) with exactly these three labels:
+
 ```
-greenfield    → copia profile.example.yaml -> operator-profile.yaml (estágio profile)
-em-andamento  → .claude/settings.local.json já tem hooks/statusLine configurados (reportado, não sobrescrito)
-re-run        → registry (~/.claude-kits/registry.json) marca re-run; operator-profile.yaml existente = skip-exists
+greenfield    -> no prior config in the target; profile stage would copy profile.example.yaml -> profile.yaml
+in-progress   -> .claude/ exists, or settings(.local).json already has hooks/statusLine, or a real
+                 profile is present, or the repo has more than 3 commits: reported, never overwritten (skip-exists)
+re-run        -> this kit+target pair is already in the registry (~/.claude-kits/registry.json)
 ```
 
 This kit **has no `questions:`** in `kit.install.yaml` (deliberate, YAGNI) —
@@ -115,10 +136,10 @@ installer questions; the right path is to copy the example and adjust by hand (t
 
 ## What is safe to run again
 
-The `profile` stage **never overwrites** `operator-profile.yaml` if it already exists.
-All 8 hooks and the 16 scripts degrade to safe defaults if the profile is missing or
-malformed (they never break the caller). Running `kit_doctor.py install --apply` again is
-safe: customisation in the profile survives.
+The `profile` stage **never overwrites** a profile that already exists. All 8 hooks and
+the 17 scripts degrade to safe defaults if the profile is missing or malformed (they never
+break the caller). Running `kit_doctor.py install --apply` again is safe: customisation in
+the profile survives.
 
 ## Manual wiring (human gate — never automatic)
 
@@ -135,7 +156,7 @@ python operator-kit/scripts/done_gate.py --self-test
 ## Construction principle
 
 **Reuse / generalise / activate — never duplicate (LC-3).** Most of the kit generalises
-skills/hooks that already existed in this repo; the loop/verification mechanisms
+skills/hooks that already existed in the origin repo; the loop/verification mechanisms
 (`ralph_gate`, `determinism_harness`, `passk_eval`, `debt_ledger`) were built from the
 doctrine already codified in `rules/` (see `evolve/NOTICE-ECC.md` for credit of patterns
 adopted from external sources — always a clean-room reimplementation, never a literal copy).
@@ -176,15 +197,15 @@ python scripts/done_gate.py --self-test
 ```
 self-test OK
 ```
-<!-- executado: 2026-07-11 · exit=0 -->
+<!-- executado: 2026-09-21 · exit=0 -->
 
 ## Undo
 
 ```
-- Plugin: /plugin uninstall operator-kit@house-party-protocol
-- Cópia: remover a pasta operator-kit/ do projeto + reverter os blocos colados em
-  settings.local.json manualmente (gate humano também na remoção)
-- Ponteiro de retomada: rm .claude/RESUME-NEXT.md (efêmero, regenerado no próximo Stop)
+- Plugin:  /plugin uninstall operator-kit@house-party-protocol
+- Copy:    remove the operator-kit/ folder from the project + revert the blocks pasted into
+           settings.local.json by hand (removal is a human gate too)
+- Resume pointer: rm .claude/RESUME-NEXT.md (ephemeral, regenerated at the next Stop)
 ```
 
 ## Honest portability

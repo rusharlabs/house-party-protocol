@@ -1,54 +1,54 @@
 ---
 name: gated-improvement-proposal
-description: Toda auto-edição do harness (regra/CLAUDE.md/prompt/hook) vira PROPOSTA que passa por gate antes de aplicar — nunca auto-merge sensível
+description: Every self-edit of the harness (rule/CLAUDE.md/prompt/hook) becomes a PROPOSAL that passes a gate before being applied — never a sensitive auto-merge
 ---
 
-> **Auto-Trigger:** Quando se vai modificar o próprio harness — regra, CLAUDE.md, prompt de sistema, hook, settings, ou política do agente
-> **Keywords:** "atualizar regra", "editar CLAUDE.md", "auto-melhoria", "mudar o hook", "alterar prompt", "self-improve", "evoluir o agente"
-> **Prioridade:** ALTA
+> **Auto-Trigger:** When about to modify the harness itself — a rule, CLAUDE.md, a system prompt, a hook, settings, or the agent's policy
+> **Keywords:** "update rule", "edit CLAUDE.md", "self-improvement", "change the hook", "change prompt", "self-improve", "evolve the agent"
+> **Priority:** HIGH
 > **Tools:** Read, Write, Edit, Bash
-> **Doutrina relacionada:** `rules/partial-autonomy-slider.md` (níveis 0-5), `rules/loop-maker-checker.md` (proposta ≠ quem aprova).
+> **Related doctrine:** `rules/partial-autonomy-slider.md` (levels 0-5), `rules/loop-maker-checker.md` (proposal ≠ who approves).
 
-# gated-improvement-proposal — o harness muda a si mesmo SOB gate
+# gated-improvement-proposal — the harness changes itself UNDER a gate
 
-Auto-editar regra/CLAUDE.md/prompt sem validação corrompe o harness; exigir humano em tudo trava a evolução. A saída é o **gate**.
+Self-editing a rule/CLAUDE.md/prompt without validation corrupts the harness; requiring a human for everything stalls evolution. The way out is the **gate**.
 
-## Contrato
+## Contract
 
-**ENTRADA:** diff proposto + justificativa + critério de aceite testável.
+**INPUT:** proposed diff + rationale + testable acceptance criterion.
 
-**SAÍDA:** mudança aplicada (se gate verde E abaixo do teto de autonomia) OU proposta na `gate-sheet` (se gate vermelho OU path sensível).
+**OUTPUT:** change applied (if the gate is green AND below the autonomy ceiling) OR proposal in the `gate-sheet` (if the gate is red OR the path is sensitive).
 
-**EXIT CODES** (do `done_gate.py`, rodado como gate ANTES de aplicar):
+**EXIT CODES** (from `done_gate.py`, run as a gate BEFORE applying):
 
-| Exit | Significado |
+| Exit | Meaning |
 |---|---|
-| 0 | DONE — critério passou; pode aplicar (se autonomia permitir) |
-| 1 | NOT-DONE — critério falhou; NÃO aplica, vira proposta |
-| 2 | uso inválido do done_gate |
+| 0 | DONE — criterion passed; may apply (if autonomy allows) |
+| 1 | NOT-DONE — criterion failed; do NOT apply, it becomes a proposal |
+| 2 | invalid use of done_gate |
 
-**ESTADO QUE TOCA:**
+**STATE IT TOUCHES:**
 
-| Recurso | Lê/Escreve | Propósito |
+| Resource | Reads/Writes | Purpose |
 |---|---|---|
-| `operator-profile.yaml` (`autonomia.por_acao`, `autonomia.paths_sensiveis_auto_gate`) | Lê | decide auto-aplicar vs propor |
-| regra/CLAUDE.md/hook/prompt alvo | Escreve (se gate verde + autonomia permite) | a mudança em si |
-| `gate-sheet` | Escreve (se gate vermelho ou path sensível) | proposta pendente de humano |
+| `operator-profile.yaml` (`autonomia.por_acao`, `autonomia.paths_sensiveis_auto_gate`) | Reads | decides auto-apply vs propose |
+| target rule/CLAUDE.md/hook/prompt | Writes (if gate green + autonomy allows) | the change itself |
+| `gate-sheet` | Writes (if gate red or sensitive path) | proposal pending a human |
 
-## Processo
-1. **Vire PROPOSTA**, não edição direta: `diff` + justificativa + **critério de aceite testável** + qual `autonomia.por_acao` se aplica.
-2. **Rode o gate ANTES de aplicar:** `python ${CLAUDE_PLUGIN_ROOT}/scripts/done_gate.py --profile <tipo>` e/ou `eval-driven-development`. Reuse o runner existente — **não reimplemente eval**.
-3. **Consulte a autonomia** do `operator-profile.yaml`:
-   - `autonomia.por_acao.auto_edit_harness` (default 1) decide auto-aplicar vs propor.
-   - Qualquer alvo em `autonomia.paths_sensiveis_auto_gate` (`settings*.json`, `.claude/hooks/**`, `**/.env`, `.claude/rules/**`) = **gate humano forçado, nunca auto-merge**.
-4. **Aplique só se** gate verde **E** abaixo do teto de autonomia; senão entregue como PR/proposta na `gate-sheet`.
-5. **Registre** a mudança (rastreável: o que mudou, por quê, qual eval passou).
+## Process
+1. **Make it a PROPOSAL**, not a direct edit: `diff` + rationale + **testable acceptance criterion** + which `autonomia.por_acao` applies.
+2. **Run the gate BEFORE applying:** `python ${CLAUDE_PLUGIN_ROOT}/scripts/done_gate.py --profile <type>` and/or `eval-driven-development`. Reuse the existing runner — **do not reimplement eval**.
+3. **Consult the autonomy** in `operator-profile.yaml`:
+   - `autonomia.por_acao.auto_edit_harness` (default 1) decides auto-apply vs propose.
+   - Any target in `autonomia.paths_sensiveis_auto_gate` (`settings*.json`, `.claude/hooks/**`, `**/.env`, `.claude/rules/**`) = **forced human gate, never auto-merge**.
+4. **Apply only if** the gate is green **AND** below the autonomy ceiling; otherwise deliver it as a PR/proposal in the `gate-sheet`.
+5. **Record** the change (traceable: what changed, why, which eval passed).
 
-## Quando NÃO Ativar
-- Edição de conteúdo de domínio comum (não-harness) — fluxo normal.
-- Quando não há eval/critério possível — não auto-aplique; vire gate humano.
+## When NOT to Activate
+- Editing ordinary domain content (non-harness) — normal flow.
+- When no eval/criterion is possible — do not auto-apply; make it a human gate.
 
-## Exemplos executados
+## Executed examples
 
 ```console
 $ python scripts/done_gate.py "python -c \"print(1)\""
@@ -56,7 +56,7 @@ $ python scripts/done_gate.py "python -c \"print(1)\""
 
 DONE-GATE: DONE (1/1 criterios)
 ```
-<!-- executado: 2026-07-10 · exit=0 -->
+<!-- executed: 2026-07-10 · exit=0 -->
 
 ```console
 $ python scripts/done_gate.py --profile hooks
@@ -65,20 +65,20 @@ $ python scripts/done_gate.py --profile hooks
 
 DONE-GATE: NOT-DONE (0/1 criterios)
 ```
-<!-- executado: 2026-07-10 · exit=1 -->
-(critério falhou → a proposta NÃO se auto-aplica; vira item da gate-sheet, exatamente o passo 4.)
+<!-- executed: 2026-07-10 · exit=1 -->
+(criterion failed → the proposal does NOT self-apply; it becomes a gate-sheet item, exactly step 4.)
 
 ```console
 $ python scripts/done_gate.py --json "python -c \"import sys; sys.exit(0)\""
 {"done": true, "results": [{"cmd": "python -c \"import sys; sys.exit(0)\"", "passed": true, "exit_code": 0, "tail": ""}]}
 ```
-<!-- executado: 2026-07-10 · exit=0 -->
+<!-- executed: 2026-07-10 · exit=0 -->
 
-## Prova
+## Proof
 
 ```bash
 python ${CLAUDE_PLUGIN_ROOT}/scripts/done_gate.py --self-test
 ```
 
-## Veja também
-`done_gate.py` (o gate), `partial-autonomy-slider` (níveis 0-5), `distill_corrections.py` (a fonte mais comum de propostas de regra).
+## See also
+`done_gate.py` (the gate), `partial-autonomy-slider` (levels 0-5), `distill_corrections.py` (the most common source of rule proposals).

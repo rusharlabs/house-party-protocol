@@ -1,178 +1,179 @@
 # LOOP-MAKER-CHECKER — Maker ≠ Checker (cross-model) + hard tool-split
 
-> **Auto-Trigger:** Em QUALQUER loop de build (/goal, /loop, workflow agent, ciclo de geração) — antes de revisar, ANTES de push/merge e ANTES de fechar (marcar [x]) um /goal.
-> **Keywords:** "maker", "checker", "review", "revisão", "revisar", "cross-model", "de-viés", "gate", "goal", "/goal", "loop", "build", "push", "merge", "fechar goal", "code-review", "verificar", "checador", "construtor"
-> **Prioridade:** ALTA
-> **Versão:** 1.0.0 (generalizada para o operator-kit)
-> **Origem:** codifica "Maker≠Checker em modelo diferente + hard tool-split" como regra do loop autônomo.
+> **Auto-Trigger:** In ANY build loop (/goal, /loop, workflow agent, generation cycle) — before reviewing, BEFORE push/merge and BEFORE closing (marking [x]) a /goal.
+> **Keywords:** "maker", "checker", "review", "cross-model", "de-bias", "gate", "goal", "/goal", "loop", "build", "push", "merge", "close goal", "code-review", "verify", "reviewer", "builder"
+> **Priority:** HIGH
+> **Version:** 1.0.0 (generalized for the operator-kit)
+> **Origin:** codifies "Maker≠Checker on a different model + hard tool-split" as a rule of the autonomous loop.
 
 ---
 
-## PRINCÍPIO
+## PRINCIPLE
 
 ```
 ╔══════════════════════════════════════════════════════════════════════════════╗
 ║                                                                              ║
-║   QUEM CONSTRÓI NÃO É QUEM APROVA. E QUEM APROVA RODA EM OUTRO CÉREBRO.       ║
+║   WHOEVER BUILDS IS NOT WHOEVER APPROVES. AND WHOEVER APPROVES RUNS IN       ║
+║   ANOTHER BRAIN.                                                             ║
 ║                                                                              ║
-║   MAKER  = constrói (Opus / workflow agent que escreveu o código)            ║
-║   CHECKER = revisa, em MODELO/PROVEDOR DIFERENTE, SEM poder de escrita        ║
+║   MAKER   = builds (Opus / the workflow agent that wrote the code)           ║
+║   CHECKER = reviews, on a DIFFERENT MODEL/PROVIDER, WITHOUT write power      ║
 ║                                                                              ║
-║   O viés do maker (auto-justificação, "looks good", cegueira ao próprio       ║
-║   erro) é cancelado por um revisor que (a) não tem amor pelo código e         ║
-║   (b) fisicamente não consegue "consertar e seguir" — só PODE apontar.        ║
+║   The maker's bias (self-justification, "looks good", blindness to its own   ║
+║   error) is cancelled by a reviewer that (a) has no love for the code and    ║
+║   (b) physically cannot "fix it and move on" — it can ONLY point.            ║
 ║                                                                              ║
 ╚══════════════════════════════════════════════════════════════════════════════╝
 ```
 
-Por que cross-model (não só "outra instância"): dois Opus compartilham os mesmos vieses de treino — um aprova o que o outro erraria igual. Um modelo de outro provedor (Codex/GPT) erra em eixos diferentes, então pega o que o maker não vê. Isto é **de-viés cross-model**, não redundância.
+Why cross-model (not just "another instance"): two Opus share the same training biases — one approves what the other would get equally wrong. A model from another provider (Codex/GPT) errs on different axes, so it catches what the maker does not see. This is **cross-model de-biasing**, not redundancy.
 
 ---
 
-## REGRA 0 · ESCADA YAGNI — o MAKER para no degrau que se sustenta ANTES de escrever código
+## RULE 0 · YAGNI LADDER — the MAKER stops at the rung that holds BEFORE writing code
 
-> **Escopo INQUEBRÁVEL:** vale SÓ para CÓDIGO (`core/`, `scripts/`, `engine/`, `hooks/`). **NUNCA** para
-> `AGENT.md`/`SOUL.md`/`DNA-CONFIG`/dossiers/`MEMORY` — lá a densidade rastreável `^[FONTE]` é a feature, não bloat;
-> **`agent-integrity.md` sobrepõe SEMPRE**. "Menos linhas" NÃO é métrica de sucesso (proibido importar KPI de LOC).
+> **UNBREAKABLE scope:** applies ONLY to CODE (`core/`, `scripts/`, `engine/`, `hooks/`). **NEVER** to
+> `AGENT.md`/`SOUL.md`/`DNA-CONFIG`/dossiers/`MEMORY` — there the traceable `^[FONTE]` density is the feature, not bloat;
+> **`agent-integrity.md` ALWAYS overrides**. "Fewer lines" is NOT a success metric (importing a LOC KPI is forbidden).
 
-Antes de o MAKER escrever QUALQUER código novo, descer a escada e **parar no 1º degrau que resolve**:
+Before the MAKER writes ANY new code, go down the ladder and **stop at the 1st rung that solves it**:
 
 ```
-1. PRECISA EXISTIR?            — exige código novo, ou um doc/config/1 linha resolve? (YAGNI)
-2. JÁ EXISTE?                  — grep/ls/codegraph: função/script/módulo que já faz isso? → reusar.
-                                 (= learned-corrections.md LC-3, tornado gate PROATIVO pré-código)
-3. STDLIB / FERRAMENTA NATIVA? — Read/Write/Edit/Bash/Grep ou stdlib resolvem? (CLAUDE.md: nativo > MCP)
-4. DEP JÁ INSTALADA?           — uma dependência do repo já cobre? (não adicionar dep nova por preguiça)
-5. CABE EM 1 LINHA / arquivo existente? — evitar arquivo/módulo novo se um trecho serve.
-6. SÓ ENTÃO                    — o MÍNIMO que resolve a tarefa REAL (não o genérico/futuro imaginado).
+1. DOES IT NEED TO EXIST?       — does it require new code, or does a doc/config/1 line solve it? (YAGNI)
+2. DOES IT ALREADY EXIST?       — grep/ls/codegraph: a function/script/module that already does this? → reuse.
+                                  (= learned-corrections.md LC-3, turned into a PROACTIVE pre-code gate)
+3. STDLIB / NATIVE TOOL?        — do Read/Write/Edit/Bash/Grep or the stdlib solve it? (CLAUDE.md: native > MCP)
+4. DEP ALREADY INSTALLED?       — does a dependency of the repo already cover it? (do not add a new dep out of laziness)
+5. FITS IN 1 LINE / existing file? — avoid a new file/module if a snippet serves.
+6. ONLY THEN                    — the MINIMUM that solves the REAL task (not the generic/imagined future one).
 ```
 
-O CHECKER cross-model (REGRA 1) ganha um critério de FAIL objetivo: **"o MAKER pulou a escada?"** — criou
-dep/módulo/arquivo que stdlib, código existente ou 1 linha já resolviam = over-engineering → **FAIL**.
+The cross-model CHECKER (RULE 1) gains an objective FAIL criterion: **"did the MAKER skip the ladder?"** — created a
+dep/module/file that the stdlib, existing code or 1 line already solved = over-engineering → **FAIL**.
 
-> A escada acima é a mesma disciplina do LC-3 (`learned-corrections.md`) virada gate numerado
-> pré-código — o degrau 2 ("já existe?") é literalmente o LC-3 aplicado ANTES de escrever, não
-> depois de descobrir a duplicata.
+> The ladder above is the same discipline as LC-3 (`learned-corrections.md`) turned into a numbered
+> pre-code gate — rung 2 ("does it already exist?") is literally LC-3 applied BEFORE writing, not
+> after discovering the duplicate.
 
 ---
 
-## REGRA 1 · MAKER ≠ CHECKER, EM MODELO DIFERENTE
+## RULE 1 · MAKER ≠ CHECKER, ON A DIFFERENT MODEL
 
 ```
-SE há um loop de build (algo foi construído/editado por um agente):
-   → o CHECKER que revisa DEVE ser modelo/provedor DIFERENTE do maker.
+IF there is a build loop (something was built/edited by an agent):
+   → the CHECKER that reviews MUST be a DIFFERENT model/provider from the maker.
 
-CHECKER PREFERENCIAL = um MCP de outro provedor (ex.: Codex), sandbox read-only, SE disponível no seu ambiente
-   └─ de-viés cross-model: pega o que Opus não enxerga no próprio output.
+PREFERRED CHECKER = an MCP from another provider (e.g. Codex), read-only sandbox, IF available in your environment
+   └─ cross-model de-biasing: catches what Opus does not see in its own output.
 
-PROIBIDO:
-✗ Maker Opus revisado por outro Opus (mesmo viés de treino).
-✗ O próprio agente que escreveu declarar "revisado, está bom".
-✗ Pular o checker "porque é simples" (é onde o erro silencioso mora — LC-1).
+FORBIDDEN:
+✗ Opus maker reviewed by another Opus (same training bias).
+✗ The agent that wrote it declaring "reviewed, it is fine" itself.
+✗ Skipping the checker "because it is simple" (that is where the silent error lives — LC-1).
 ```
 
-Se `mcp__codex__codex` estiver indisponível, declarar explicitamente que a revisão cross-model NÃO foi feita (não fingir que foi) e tratar o gate como FALHO até rodar.
+If `mcp__codex__codex` is unavailable, explicitly declare that the cross-model review was NOT done (do not pretend it was) and treat the gate as FAILED until it runs.
 
 ---
 
-## REGRA 1b · CHECKER TIMEOUT-BOX & DRAIN (quando o checker cross-model trava/indisponível)
+## RULE 1b · CHECKER TIMEOUT-BOX & DRAIN (when the cross-model checker hangs/is unavailable)
 
-> **Por que:** um checker cross-model indisponível/travado pode prender o loop inteiro esperando
-> uma resposta que nunca chega — e esse hang costuma ser SILENCIOSO (ninguém percebe até o
-> downstream inteiro estar parado).
+> **Why:** an unavailable/hung cross-model checker can hold the whole loop waiting for
+> an answer that never comes — and that hang is usually SILENT (nobody notices until the
+> whole downstream is stopped).
 
-O CHECKER cross-model (REGRA 1) tem um **TIMEOUT-BOX**. Se ele não responde dentro do orçamento:
+The cross-model CHECKER (RULE 1) has a **TIMEOUT-BOX**. If it does not answer within the budget:
 ```
-1. TIMEOUT          — o checker tem teto de tempo/tentativas; NÃO esperar indefinido.
-2. DEFERIR EXPLÍCITO— ao expirar, NÃO travar nem fingir review: registrar no commit/log
-                      "review cross-model DEFERIDO (checker indisponível)" — verdade, não silêncio.
-3. BEST-EFFORT LOGADO— o MAKER faz o self-check possível (testes/diff) e segue, marcando o gate
-                      PENDENTE (NÃO ✅). push/merge/fechar-goal continuam BLOQUEADOS até o review real.
-4. PING             — avisar (não hang silencioso) que o checker está down + o item ficou pendente.
+1. TIMEOUT           — the checker has a time/attempt ceiling; do NOT wait indefinitely.
+2. EXPLICIT DEFERRAL — on expiry, do NOT hang or fake a review: record in the commit/log
+                       "cross-model review DEFERRED (checker unavailable)" — truth, not silence.
+3. LOGGED BEST-EFFORT— the MAKER does the self-check it can (tests/diff) and moves on, marking the gate
+                       PENDING (NOT ✅). push/merge/close-goal stay BLOCKED until the real review.
+4. PING              — warn (no silent hang) that the checker is down + the item is pending.
 ```
-Casa com `loop-operator.md` (stack-trace idêntico 2× = abort) e `loop-cost-budget.md` (teto). Delta: o timeout é
-do **próprio checker indisponível** (não do maker) — e o deferimento vira EVIDÊNCIA logada, não falso-FEITO.
+Pairs with `loop-operator.md` (identical stack trace 2× = abort) and `loop-cost-budget.md` (ceiling). Delta: the timeout is
+the **unavailable checker's own** (not the maker's) — and the deferral becomes logged EVIDENCE, not a false DONE.
 
 ---
 
-## REGRA 2 · O CHECKER É READ-ONLY (suggest-only FÍSICO)
+## RULE 2 · THE CHECKER IS READ-ONLY (PHYSICAL suggest-only)
 
 ```
-O CHECKER NÃO recebe Write nem Edit. Só lê e reporta.
-   └─ allowedTools do checker = ["Read","Glob","Grep","Bash(ro)"]  — NUNCA Write/Edit.
-   └─ mcp__codex__codex roda em sandbox read-only por padrão — mantê-lo assim.
+The CHECKER receives neither Write nor Edit. It only reads and reports.
+   └─ the checker's allowedTools = ["Read","Glob","Grep","Bash(ro)"]  — NEVER Write/Edit.
+   └─ mcp__codex__codex runs in a read-only sandbox by default — keep it that way.
 
-Por quê físico, não "por confiança": se o checker pudesse editar, ele
-"consertaria e seguiria" — e o defeito de processo (maker cego) nunca
-apareceria. Sem caneta, ele é obrigado a APONTAR. O maker (modelo original)
-aplica a correção e re-submete ao checker. Loop fecha quando o checker passa.
+Why physical, not "by trust": if the checker could edit, it would
+"fix it and move on" — and the process defect (blind maker) would never
+surface. Without a pen, it is forced to POINT. The maker (original model)
+applies the fix and re-submits to the checker. The loop closes when the checker passes.
 ```
 
-Isto é "suggest-only" tornado físico — alinhado ao `partial-autonomy-slider.md`.
+This is "suggest-only" made physical — aligned with `partial-autonomy-slider.md`.
 
 ---
 
-## REGRA 3 · GATE OBRIGATÓRIO — rodar o checker cross-model ANTES de:
+## RULE 3 · MANDATORY GATE — run the cross-model checker BEFORE:
 
 ```
-[ ] git push        → NUNCA empurrar sem revisão cross-model verde.
-[ ] merge (PR)      → o checker é pré-requisito do merge (soma às demais camadas de review do seu fluxo).
-[ ] fechar um /goal → ANTES de marcar como concluído / declarar 'pronto' no seu ledger,
-                      rodar o checker cross-model sobre o diff do goal.
+[ ] git push        → NEVER push without a green cross-model review.
+[ ] merge (PR)      → the checker is a prerequisite of the merge (adds to the other review layers of your flow).
+[ ] closing a /goal → BEFORE marking it complete / declaring 'done' in your ledger,
+                      run the cross-model checker over the goal's diff.
 
-SE o checker retorna FAIL ou WARNING crítico:
-   → NÃO push · NÃO merge · NÃO fechar goal.
-   → Maker corrige · re-submete · repete até PASS.
+IF the checker returns FAIL or a critical WARNING:
+   → NO push · NO merge · do NOT close the goal.
+   → Maker fixes · re-submits · repeats until PASS.
 ```
 
-Complementa (não substitui) a sua própria verificação de que o código funciona (testes, self-test):
-aquilo valida que a coisa FUNCIONA; esta regra exige que **outro cérebro** confirme, sem caneta na mão.
+Complements (does not replace) your own verification that the code works (tests, self-test):
+that validates that the thing WORKS; this rule requires that **another brain** confirm it, without a pen in hand.
 
 ---
 
-## REGRA 4 · LIGAÇÃO COM AUTONOMY-SLIDER
+## RULE 4 · LINK WITH THE AUTONOMY SLIDER
 
 ```
-O CHECKER opera sempre como autonomy_level 0/1 (propõe · NÃO executa):
-   └─ level 0 (suggest-only) = read-only físico desta regra. É o piso do checker.
+The CHECKER always operates as autonomy_level 0/1 (proposes · does NOT execute):
+   └─ level 0 (suggest-only) = this rule's physical read-only. It is the checker's floor.
 
-O MAKER respeita seu próprio autonomy_level (`partial-autonomy-slider.md`):
-   └─ Em áreas sensíveis (financeiro · contratos · DELETE · engine/cron vivo),
-      maker em level 0/1 → mesmo com checker verde, push/merge ainda depende do operador.
-   └─ Checker verde NUNCA promove o maker acima do seu nível — só destrava o que
-      o nível já permitia.
-```
-
----
-
-## EXEMPLO (loop de build → gate → fechar goal)
-
-```
-1. MAKER (Opus / workflow agent) escreve scripts/foo.py + testes.
-2. MAKER roda os testes localmente (verification-before-completion) → verde.
-3. CHECKER cross-model (mcp__codex__codex, sandbox read-only):
-     "Revise o diff de scripts/foo.py vs main. Aponte bugs, edge cases,
-      violações de regra. NÃO edite — só liste achados com severidade."
-4. Checker retorna: 1 WARNING (path hardcoded vs core/paths.py) + 0 FAIL.
-5. WARNING crítico → MAKER corrige o path → re-submete ao checker.
-6. Checker retorna PASS → SÓ AGORA: push / merge / marcar o item como concluído no seu ledger.
-```
-
-Anti-exemplo (PROIBIDO): Opus escreve, Opus relê, diz "está ótimo", dá push, fecha o goal. Mesmo viés, sem caneta tirada, gate furado.
-
----
-
-## CHECKLIST RÁPIDO
-
-```
-[ ] Há build neste loop? → então há um MAKER e precisa de CHECKER.
-[ ] O CHECKER é modelo/provedor DIFERENTE do maker? (preferir mcp__codex__codex)
-[ ] O CHECKER está SEM Write/Edit (read-only físico)?
-[ ] Rodei o checker cross-model ANTES de push / merge / fechar o /goal?
-[ ] Em FAIL/WARNING crítico: maker corrigiu e re-submeteu (não empurrei mesmo assim)?
-[ ] Em área sensível: respeitei autonomy_level 0/1 (gate-humano) mesmo com checker verde?
+The MAKER respects its own autonomy_level (`partial-autonomy-slider.md`):
+   └─ In sensitive areas (financial · contracts · DELETE · live engine/cron),
+      a maker at level 0/1 → even with a green checker, push/merge still depends on the operator.
+   └─ A green checker NEVER promotes the maker above its level — it only unlocks what
+      the level already allowed.
 ```
 
 ---
 
-*Regra do loop autônomo. Universal — qualquer LLM que rode um loop de build deve aplicar. LC-1: provar que o checker rodou, não presumir.*
+## EXAMPLE (build loop → gate → close goal)
+
+```
+1. MAKER (Opus / workflow agent) writes scripts/foo.py + tests.
+2. MAKER runs the tests locally (verification-before-completion) → green.
+3. Cross-model CHECKER (mcp__codex__codex, read-only sandbox):
+     "Review the diff of scripts/foo.py vs main. Point out bugs, edge cases,
+      rule violations. Do NOT edit — only list findings with severity."
+4. Checker returns: 1 WARNING (hardcoded path vs core/paths.py) + 0 FAIL.
+5. Critical WARNING → MAKER fixes the path → re-submits to the checker.
+6. Checker returns PASS → ONLY NOW: push / merge / mark the item complete in your ledger.
+```
+
+Anti-example (FORBIDDEN): Opus writes, Opus re-reads, says "it is great", pushes, closes the goal. Same bias, no pen taken away, gate bypassed.
+
+---
+
+## QUICK CHECKLIST
+
+```
+[ ] Is there a build in this loop? → then there is a MAKER and it needs a CHECKER.
+[ ] Is the CHECKER a DIFFERENT model/provider from the maker? (prefer mcp__codex__codex)
+[ ] Is the CHECKER WITHOUT Write/Edit (physical read-only)?
+[ ] Did I run the cross-model checker BEFORE push / merge / closing the /goal?
+[ ] On FAIL/critical WARNING: did the maker fix and re-submit (I did not push anyway)?
+[ ] In a sensitive area: did I respect autonomy_level 0/1 (human gate) even with a green checker?
+```
+
+---
+
+*Rule of the autonomous loop. Universal — any LLM that runs a build loop must apply it. LC-1: prove that the checker ran, do not presume.*

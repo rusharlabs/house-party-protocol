@@ -1,58 +1,58 @@
 ---
 name: doc-consolidator-dedup
-description: Funde N docs/planos sobrepostos num work-list único deduplicado, arquiva os superseded com stub-redirect — grep/ls antes de criar/classificar (LC-3)
+description: Merges N overlapping docs/plans into a single deduplicated work-list, archives the superseded ones with a stub-redirect — grep/ls before creating/classifying (LC-3)
 ---
 
-> **Auto-Trigger:** Quando há múltiplos docs/planos cobrindo o mesmo escopo, ou antes de criar um doc-mestre "novo"
-> **Keywords:** "consolidar", "dedup", "docs sobrepostos", "doc-mestre", "work-list único", "arquivar", "superseded", "duplicado"
-> **Prioridade:** MÉDIA
+> **Auto-Trigger:** When there are multiple docs/plans covering the same scope, or before creating a "new" master doc
+> **Keywords:** "consolidate", "dedup", "overlapping docs", "master doc", "single work-list", "archive", "superseded", "duplicate"
+> **Priority:** MEDIUM
 > **Tools:** Bash, Read, Grep, Glob, Write, Edit
-> **Doutrina relacionada:** `rules/learned-corrections.md` (LC-3: grep/ls antes de criar ou classificar).
+> **Related doctrine:** `rules/learned-corrections.md` (LC-3: grep/ls before creating or classifying).
 
-# doc-consolidator-dedup — um work-list, sem duplicata
+# doc-consolidator-dedup — one work-list, no duplicates
 
-Vários docs-mestre concorrentes viram ruído. Consolide num único, arquivando os superseded — **mas grep/ls ANTES de criar ou classificar qualquer coisa (LC-3)**.
+Several competing master docs become noise. Consolidate into a single one, archiving the superseded ones — **but grep/ls BEFORE creating or classifying anything (LC-3)**.
 
-## Contrato
+## Contract
 
-**ENTRADA:** N paths de docs/planos candidatos a sobreposição.
+**INPUT:** N paths of docs/plans that are candidates for overlap.
 
-**SAÍDA:** 1 doc canônico com work-list deduplicado; os superseded viram stub-redirect ("DEPRECATED → ver `<canônico>`").
+**OUTPUT:** 1 canonical doc with a deduplicated work-list; the superseded ones become stub-redirects ("DEPRECATED → see `<canonical>`").
 
-**EXIT CODES** (do `audit_plan.py`, usado no passo 2 para extrair itens):
+**EXIT CODES** (from `audit_plan.py`, used in step 2 to extract items):
 
-| Exit | Significado |
+| Exit | Meaning |
 |---|---|
-| 0 | extração ok (self-test ou extração real) |
-| 1 | doc não encontrado / parsing falhou |
+| 0 | extraction ok (self-test or real extraction) |
+| 1 | doc not found / parsing failed |
 
-**ESTADO QUE TOCA:**
+**STATE IT TOUCHES:**
 
-| Recurso | Lê/Escreve | Propósito |
+| Resource | Reads/Writes | Purpose |
 |---|---|---|
-| docs/planos candidatos | Lê | extrai itens (via `audit_plan.py`) |
-| doc eleito canônico | Escreve (com confirmação humana) | recebe o work-list fundido |
-| docs superseded | Escreve (com confirmação humana) | vira stub-redirect |
+| candidate docs/plans | Reads | extracts items (via `audit_plan.py`) |
+| doc elected canonical | Writes (with human confirmation) | receives the merged work-list |
+| superseded docs | Writes (with human confirmation) | become stub-redirects |
 
-## Processo
-1. **LC-3 primeiro:** `grep`/`ls`/`Glob` nos paths-alvo para confirmar o que já existe. Trate "novo doc-mestre" como hipótese — talvez já exista o canônico.
-2. **Extraia os itens** de cada doc (reuse o extrator do `${CLAUDE_PLUGIN_ROOT}/scripts/audit_plan.py` — não reimplemente parsing de plano).
-3. **Colapse aliases:** o MESMO item sob IDs/nomes diferentes vira uma entrada canônica (regra de alias configurável).
-4. **Eleja o canônico** e funda tudo nele (work-list único deduplicado).
-5. **Arquive os superseded** deixando um **stub-redirect** ("DEPRECATED → ver `<canônico>`"). Critério de superseded configurável: marker `_DEPRECATED`, data mais antiga, ou versão menor.
-6. **NUNCA mova/arquive sem confirmação** (respeita o directory-contract e LC-3).
+## Process
+1. **LC-3 first:** `grep`/`ls`/`Glob` on the target paths to confirm what already exists. Treat "new master doc" as a hypothesis — the canonical one may already exist.
+2. **Extract the items** from each doc (reuse the extractor in `${CLAUDE_PLUGIN_ROOT}/scripts/audit_plan.py` — do not reimplement plan parsing).
+3. **Collapse aliases:** the SAME item under different IDs/names becomes one canonical entry (configurable alias rule).
+4. **Elect the canonical doc** and merge everything into it (single deduplicated work-list).
+5. **Archive the superseded ones** leaving a **stub-redirect** ("DEPRECATED → see `<canonical>`"). Configurable superseded criterion: `_DEPRECATED` marker, older date, or lower version.
+6. **NEVER move/archive without confirmation** (respects the directory contract and LC-3).
 
-## Quando NÃO Ativar
-- Um único doc / sem sobreposição real.
-- Quando arquivar exigiria decisão de qual é canônico que só o operador toma → proponha, não execute.
+## When NOT to Activate
+- A single doc / no real overlap.
+- When archiving would require a decision about which one is canonical that only the operator makes → propose, do not execute.
 
-## Exemplos executados
+## Executed examples
 
 ```console
 $ python scripts/audit_plan.py --self-test
 self-test OK
 ```
-<!-- executado: 2026-07-10 · exit=0 -->
+<!-- executed: 2026-07-10 · exit=0 -->
 
 ```console
 $ python scripts/audit_plan.py plano-exemplo.md --no-git --json
@@ -65,21 +65,21 @@ $ python scripts/audit_plan.py plano-exemplo.md --no-git --json
   ]
 }
 ```
-<!-- executado: 2026-07-10 · exit=0 -->
-(prova o passo 2: nada é "provavelmente feito" — o que não existe no disco vira AUSENTE.)
+<!-- executed: 2026-07-10 · exit=0 -->
+(proves step 2: nothing is "probably done" — what does not exist on disk becomes AUSENTE.)
 
 ```console
 $ python scripts/audit_plan.py
 uso: audit_plan.py <plano.md> [--json] [--no-git] [--repo <dir>] [--extra-regex <re>]
 ```
-<!-- executado: 2026-07-10 · exit=2 -->
-(uso inválido — sem o plano.md, o extrator não tem o que auditar; nunca "assume" um doc.)
+<!-- executed: 2026-07-10 · exit=2 -->
+(invalid usage — without the plan.md the extractor has nothing to audit; it never "assumes" a doc.)
 
-## Prova
+## Proof
 
 ```bash
 python ${CLAUDE_PLUGIN_ROOT}/scripts/audit_plan.py --self-test
 ```
 
-## Veja também
-`${CLAUDE_PLUGIN_ROOT}/scripts/audit_plan.py` (extrator de deliverables), LC-3 (grep antes de criar/classificar).
+## See also
+`${CLAUDE_PLUGIN_ROOT}/scripts/audit_plan.py` (deliverables extractor), LC-3 (grep before creating/classifying).

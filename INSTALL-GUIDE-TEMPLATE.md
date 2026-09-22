@@ -1,12 +1,14 @@
-# INSTALL-GUIDE-TEMPLATE — o molde do README de instalação de qualquer kit
+[English](INSTALL-GUIDE-TEMPLATE.md) · [Português](INSTALL-GUIDE-TEMPLATE.pt-BR.md)
 
-> **Versão:** 1.0.0 · **Irmão de:** `SKILL-CONTRACT.md` (contrato de SKILL.md) e
-> `INSTALL-CONTRACT.md` (contrato do instalador). Este é o contrato do **README**
-> que documenta a instalação para um humano/agente lendo pela primeira vez.
-> **Enforcement:** revisão manual nesta rodada; candidato a lint futuro se o
-> marketplace crescer (mesmo padrão de `skill_lint.py`).
+# INSTALL-GUIDE-TEMPLATE — the mould of the installation README of every kit
 
-## Princípio
+> **Version:** 1.0.0 · **Sibling of:** `SKILL-CONTRACT.md` (the SKILL.md contract) and
+> `INSTALL-CONTRACT.md` (the installer contract). This one is the contract of the **README**
+> that documents the installation for a human/agent reading it for the first time.
+> **Enforcement:** manual review in this round; a candidate for a future lint if the
+> marketplace grows (same pattern as `skill_lint.py`).
+
+## Principle
 
 ```
 UM ESTRANHO, NUM REPO VIRGEM, LENDO SÓ ESTE README, CONSEGUE:
@@ -20,14 +22,21 @@ UM ESTRANHO, NUM REPO VIRGEM, LENDO SÓ ESTE README, CONSEGUE:
 Prosa sem comando literal para cada um destes 6 pontos não é guia — é resumo de marketing.
 ```
 
-## As 9 seções obrigatórias (nesta ordem)
+(A stranger, in a pristine repo, reading only this README, can: (1) know WHETHER any external
+API/service is needed before installing, (2) choose between plugin and copy without guessing,
+(3) know WHAT the installer will detect in their project, (4) run it again without fear of losing
+customisation, (5) prove with REAL output that the installation worked, (6) undo it, if needed.
+Prose without a literal command for each of these 6 points is not a guide — it is marketing
+copy.)
 
-### 1. O que é (1 parágrafo)
-O que o kit resolve, em linguagem de problema — não lista de features. Sem "revolucionário",
-sem adjetivo vazio. Uma frase de escopo negativo é bem-vinda ("não faz X — para X, ver `<kit
-irmão>`").
+## The 9 mandatory sections (in this order)
 
-### 2. Pré-requisitos + APIs externas
+### 1. What it is (1 paragraph)
+What the kit solves, in problem language — not a feature list. No "revolutionary", no empty
+adjective. A sentence of negative scope is welcome ("it does not do X — for X, see `<sibling
+kit>`").
+
+### 2. Prerequisites + external APIs
 ```
 | Requisito | Versão mínima | Obrigatório? |
 |---|---|---|
@@ -36,20 +45,24 @@ irmão>`").
 
 Serviços externos: <NENHUM — stdlib only> OU <lista: nome, via (MCP/API direta), credencial>
 ```
-**Regra dura:** default é **"nenhum — stdlib only"**. Se o kit precisar de algo externo,
-nomear exatamente (ex.: Supabase via MCP, URL + anon key). **NUNCA** `ANTHROPIC_API_KEY` —
-o regime deste ecossistema é assinatura/quota, não pay-per-use (ver `partial-autonomy-slider`
-do operator-kit e a doutrina subscription-only).
+(Table columns: requirement · minimum version · mandatory? — `sim` = yes, `não` = no,
+`qualquer` = any. Last line: external services: `<NENHUM — stdlib only>` (none) OR the list —
+name, via (MCP/direct API), credential.)
 
-### 3. Instalar via plugin (caminho recomendado quando existe `.claude-plugin/plugin.json`)
+**Hard rule:** the default is **"none — stdlib only"**. If the kit needs something external, name
+it exactly (e.g. Supabase via MCP, URL + anon key). **NEVER** `ANTHROPIC_API_KEY` — this
+ecosystem's regime is subscription/quota, not pay-per-use (see `partial-autonomy-slider` in the
+operator-kit and the subscription-only doctrine).
+
+### 3. Install via plugin (the recommended path when `.claude-plugin/plugin.json` exists)
 ```bash
 /plugin marketplace add .
 /plugin install <nome-do-kit>@house-party-protocol
 ```
-Se o kit não tiver `plugin.json` ainda, esta seção diz isso explicitamente e aponta para a
-seção 4 como único caminho.
+If the kit does not have a `plugin.json` yet, this section says so explicitly and points at
+section 4 as the only path.
 
-### 4. Instalar por cópia (sempre funciona, mesmo sem suporte a plugin)
+### 4. Install by copy (always works, even without plugin support)
 ```bash
 cp -r <kit-dir> <seu-projeto>/<nome-do-kit>
 cd <seu-projeto>
@@ -58,34 +71,42 @@ python <nome-do-kit>/instaladores/kit-forge/kit_doctor.py install <nome-do-kit> 
 python <nome-do-kit>/instaladores/kit-forge/kit_doctor.py install <nome-do-kit> --target . --apply
 #                                                                                   ^ aplica de verdade
 ```
-(ajustar o path do `kit_doctor.py` para onde o kit-forge foi copiado/instalado — ele é o
-motor único de instalação de todo o marketplace, ver `INSTALL-CONTRACT.md`).
+(`<seu-projeto>` = your project, `<nome-do-kit>` = the kit name; the first `install` shows the
+PLAN with zero writes, the second, with `--apply`, applies for real.) Adjust the path of
+`kit_doctor.py` to wherever the kit-forge was copied/installed — it is the single installation
+engine of the whole marketplace, see `INSTALL-CONTRACT.md`.
 
-### 5. O que o instalador detecta (greenfield / em-andamento / re-run)
-Uma frase por classificação, específica deste kit:
+### 5. What the installer detects (greenfield / in-progress / re-run)
+One sentence per classification, specific to this kit:
 ```
 greenfield    → <o que acontece: gera tudo do zero>
 em-andamento  → <o que é detectado: ex. "settings.local.json já tem hooks — reportado, não sobrescrito">
 re-run        → <o que é idempotente: ex. "profile já existe — skip-exists">
 ```
+(`greenfield` → what happens: generates everything from scratch; `em-andamento` (in-progress) →
+what is detected, e.g. "settings.local.json already has hooks — reported, not overwritten";
+`re-run` → what is idempotent, e.g. "profile already exists — skip-exists".)
 
-### 6. O que é seguro rodar de novo
-Lista explícita do que o instalador NUNCA sobrescreve sem `--force`/gate humano, e do que É
-regenerado sempre (ex.: docs derivados vs. config customizável). Se o kit tem um script tipo
-`generate_and_summary` com skip-exists, citar o campo do JSON de retorno que prova isso
-(`files_skipped_customized`, `no_op`).
+### 6. What is safe to run again
+An explicit list of what the installer NEVER overwrites without `--force`/a human gate, and of
+what IS regenerated every time (e.g. derived docs vs. customisable config). If the kit has a
+script like `generate_and_summary` with skip-exists, cite the field of the returned JSON that
+proves it (`files_skipped_customized`, `no_op`).
 
-### 7. Wiring manual (gate humano — nunca automático)
+### 7. Manual wiring (human gate — never automatic)
 ```
 ⚠️ Editar .claude/settings.local.json é gate humano nesta doutrina — sessões automatizadas
 têm trava explícita contra auto-editar arquivo de settings/hooks. Cole você mesmo o bloco
 abaixo (ou rode o comando programático, se o kit tiver um) — tudo WARN-only + timeout: 30.
 ```
-Colar aqui o bloco real de `install/wiring.settings.jsonc` (ou o comando de
-`scripts/wire_settings.py --spec ...`, se for o formato programático deste kit) — **nunca**
-resumir, colar o bloco inteiro tal como está no arquivo-fonte.
+(The notice reads: editing `.claude/settings.local.json` is a human gate in this doctrine —
+automated sessions have an explicit lock against auto-editing settings/hooks files. Paste the
+block below yourself (or run the programmatic command, if the kit has one) — all WARN-only +
+`timeout: 30`.) Paste here the real block from `install/wiring.settings.jsonc` (or the command of
+`scripts/wire_settings.py --spec ...`, if that is this kit's programmatic format) — **never**
+summarise; paste the whole block exactly as it is in the source file.
 
-### 8. Prova / aceite (saída real, executada — nunca inventada)
+### 8. Proof / acceptance (real output, executed — never invented)
 ```bash
 python <kit>/scripts/<algo>.py --self-test
 ```
@@ -93,17 +114,22 @@ python <kit>/scripts/<algo>.py --self-test
 <colar a saída REAL, literal, do comando acima — com marcador de data se o kit seguir o
 padrão SKILL-CONTRACT C3>
 ```
-Pelo menos 1 comando de prova por README. Saída inventada viola `agent-integrity.md`.
+(Paste the REAL, literal output of the command above — with a date marker if the kit follows the
+SKILL-CONTRACT C3 pattern.) At least 1 proof command per README. Invented output violates
+`agent-integrity.md`.
 
-### 9. Desfazer
+### 9. Undo
 ```
 - Plugin: /plugin uninstall <nome>@house-party-protocol
 - Cópia: remover a pasta <nome-do-kit>/ do projeto + reverter o bloco colado em
   settings.local.json manualmente (gate humano também na remoção)
 - wire_settings.py (se aplicável): python scripts/wire_settings.py --spec ... --undo
 ```
+(Plugin: `/plugin uninstall <nome>@house-party-protocol`. Copy: remove the `<nome-do-kit>/`
+folder from the project + revert the block pasted into `settings.local.json` by hand — a human
+gate on removal too. `wire_settings.py` (if applicable): `python scripts/wire_settings.py --spec ... --undo`.)
 
-## Checklist antes de considerar um README "conforme"
+## Checklist before considering a README "compliant"
 
 ```
 [ ] Seção 1 diz o que o kit NÃO faz (escopo negativo), não só o que faz
@@ -118,7 +144,17 @@ Pelo menos 1 comando de prova por README. Saída inventada viola `agent-integrit
 [ ] Seção 9 explica como desfazer plugin E cópia
 ```
 
+The ten boxes, in order: section 1 says what the kit does NOT do (negative scope), not only what
+it does; section 2 declares "none" or names the exact external service — never omits the
+section; section 2 NEVER mentions `ANTHROPIC_API_KEY` as a prerequisite; section 3 exists IF
+`plugin.json` exists, otherwise says explicitly that it does not exist yet; section 4 has the 2
+real `kit_doctor.py` commands (plan, then `--apply`); section 5 has the 3 classifications
+(greenfield/in-progress/re-run) specific to the kit; section 6 names the JSON field that proves
+skip-exists (if the kit has generate/profile); section 7 pastes the WHOLE wiring block (no
+summary) and marks the human gate; section 8 has REAL executed output, not invented; section 9
+explains how to undo both plugin AND copy.
+
 ---
 
-*Irmão de `SKILL-CONTRACT.md` — mesmo princípio (estranho + repo virgem + prova real),
-aplicado ao README de instalação em vez de ao corpo de uma skill.*
+*Sibling of `SKILL-CONTRACT.md` — same principle (stranger + pristine repo + real proof), applied
+to the installation README instead of to the body of a skill.*

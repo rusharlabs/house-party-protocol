@@ -1,103 +1,103 @@
 ---
 name: dashboard-builder
-description: Constrói dashboards de monitoramento (Grafana, SigNoz e similares) que respondem perguntas reais de operador, não "mostra toda métrica que existe". Use ao transformar uma lista de métricas em dashboard operável de verdade.
+description: Builds monitoring dashboards (Grafana, SigNoz and similar) that answer real operator questions, not "show every metric that exists". Use when turning a list of metrics into a genuinely operable dashboard.
 ---
 
-> **Auto-Trigger:** Usuário pede dashboard Grafana/SigNoz/Kafka/Elasticsearch, ou quer transformar uma lista de métricas num board operável.
-> **Keywords:** "dashboard grafana", "dashboard signoz", "dashboard de monitoramento", "board operacional"
-> **Prioridade:** BAIXA
+> **Auto-Trigger:** The user asks for a Grafana/SigNoz/Kafka/Elasticsearch dashboard, or wants to turn a list of metrics into an operable board.
+> **Keywords:** "grafana dashboard", "signoz dashboard", "monitoring dashboard", "operational board"
+> **Priority:** LOW
 > **Tools:** Read, Write
 
-## Quando NÃO Ativar
-- Dashboard HTML self-contained pra cliente/relatório (dark/light premium, pure CSS) — isso é
-  outro escopo (dataviz/relatório de negócio), não monitoramento de infra.
-- Complementa, não substitui, o `health_probe.py` deste kit — o probe MEDE o serviço; este
-  skill organiza COMO exibir o que foi medido num board de operação real (Grafana/SigNoz).
+## When NOT to Activate
+- Self-contained HTML dashboard for a client/report (dark/light premium, pure CSS) — that is
+  another scope (dataviz/business report), not infra monitoring.
+- It complements, not replaces, this module's `health_probe.py` — the probe MEASURES the service; this
+  skill organizes HOW to display what was measured on a real operations board (Grafana/SigNoz).
 
-## Princípio
+## Principle
 
-O objetivo não é "mostrar toda métrica". É responder:
-- está saudável?
-- onde está o gargalo?
-- o que mudou?
-- que ação alguém deveria tomar?
+The goal is not "show every metric". It is to answer:
+- is it healthy?
+- where is the bottleneck?
+- what changed?
+- what action should someone take?
 
 ## Guardrails
-- Não comece pelo layout visual; comece pelas perguntas do operador.
-- Não inclua toda métrica disponível só porque ela existe.
-- Não misture painéis de saúde, throughput e recursos sem estrutura.
-- Não publique painel sem título, unidade e threshold com sentido.
+- Do not start with the visual layout; start with the operator's questions.
+- Do not include every available metric just because it exists.
+- Do not mix health, throughput and resource panels without structure.
+- Do not publish a panel without a title, a unit and a meaningful threshold.
 
-## Processo
+## Process
 
-1. **Definir as perguntas operacionais**: saúde/disponibilidade, latência/performance,
-   throughput/volume, saturação/recursos, risco específico do serviço.
-2. **Estudar o schema da plataforma-alvo**: estrutura JSON, linguagem de query, variáveis,
-   estilo de threshold, layout de seção — inspecionar dashboards existentes primeiro.
-3. **Construir o board mínimo útil**: visão geral → performance → recursos → seção
-   específica do serviço.
-4. **Cortar painel vaidade**: todo painel deve responder uma pergunta real; se não responde,
-   remover.
+1. **Define the operational questions**: health/availability, latency/performance,
+   throughput/volume, saturation/resources, service-specific risk.
+2. **Study the target platform's schema**: JSON structure, query language, variables,
+   threshold style, section layout — inspect existing dashboards first.
+3. **Build the minimum useful board**: overview → performance → resources →
+   service-specific section.
+4. **Cut vanity panels**: every panel must answer a real question; if it does not,
+   remove it.
 
-## Checklist de qualidade
+## Quality checklist
 ```
-[ ] JSON de dashboard válido
-[ ] agrupamento de seção claro
-[ ] títulos e unidades presentes
-[ ] thresholds/cores de status com sentido
-[ ] variáveis existem para filtros comuns
-[ ] time range e refresh padrão fazem sentido
-[ ] zero painel vaidade sem valor de operador
+[ ] dashboard JSON is valid
+[ ] section grouping is clear
+[ ] titles and units are present
+[ ] thresholds/status colors make sense
+[ ] variables exist for common filters
+[ ] default time range and refresh make sense
+[ ] zero vanity panels with no operator value
 ```
 
-## Contrato
+## Contract
 
-**Entrada:** lista de métricas de um serviço + a plataforma-alvo (Grafana/SigNoz/etc.).
-**Saída:** JSON de dashboard organizado por pergunta operacional, com o checklist de
-qualidade acima satisfeito.
+**Input:** a service's list of metrics + the target platform (Grafana/SigNoz/etc.).
+**Output:** dashboard JSON organized by operational question, with the quality checklist
+above satisfied.
 
 **EXIT CODES:**
 
-| Exit | Significado |
+| Exit | Meaning |
 |---|---|
-| 0 | JSON válido e checklist satisfeito |
-| 1 | aviso: métrica opcional indisponível |
-| 2 | bloqueio: JSON inválido ou painel sem unidade/threshold |
-| 3 | erro ao ler schema ou gravar o dashboard |
+| 0 | valid JSON and checklist satisfied |
+| 1 | warning: optional metric unavailable |
+| 2 | block: invalid JSON or panel without unit/threshold |
+| 3 | error reading the schema or writing the dashboard |
 
-**ESTADO QUE TOCA:**
+**STATE IT TOUCHES:**
 
-| Caminho | Ação | Condição |
+| Path | Action | Condition |
 |---|---|---|
-| dashboard JSON escolhido pelo operador | cria/atualiza | após validar schema e perguntas |
-| fontes de métricas | leitura | nunca altera a telemetria |
+| dashboard JSON chosen by the operator | creates/updates | after validating schema and questions |
+| metric sources | read | never alters the telemetry |
 
-## Exemplos executados
+## Executed examples
 
 ```console
 $ python -c "import json; print(json.dumps({'title':'Saude'}))"
 {"title": "Saude"}
 ```
-<!-- executado: 2026-09-20 · exit=0 -->
+<!-- executed: 2026-09-20 · exit=0 -->
 
 ```console
 $ python -c "print('paineis=4 unidades=ok')"
 paineis=4 unidades=ok
 ```
-<!-- executado: 2026-09-20 · exit=0 -->
+<!-- executed: 2026-09-20 · exit=0 -->
 
 ```console
 $ python -c "import sys; print('block: painel sem unidade'); sys.exit(2)"
 block: painel sem unidade
 ```
-<!-- executado: 2026-09-20 · exit=2 -->
+<!-- executed: 2026-09-20 · exit=2 -->
 
-## Prova
+## Proof
 
-Metodologia de design de dashboard. A prova estrutural mínima é:
+Dashboard design methodology. The minimum structural proof is:
 
 ```bash
 python -c "import json; print(json.dumps({'title':'Saude'}))"
 ```
 
-O JSON real ainda deve passar no checklist acima.
+The real JSON must still pass the checklist above.

@@ -1,34 +1,183 @@
 [English](UX-INSTALL-JOURNEY.md) · [Português](UX-INSTALL-JOURNEY.pt-BR.md)
 
-# UX-INSTALL-JOURNEY — the canonical installation journey of a module, told in the conversation
+# UX-INSTALL-JOURNEY — the installation journey, told in the conversation
 
-> **Version:** 1.0.0 — a presentation layer over a frozen contract.
-> **Sibling of:** `INSTALL-CONTRACT.md` (the mechanics of the 6 stages) and
-> `INSTALL-GUIDE-TEMPLATE.md` (the mould of the per-module README); both ship at the root of the
-> emitted distribution. This document describes the EXPERIENCE: how an AGENT (Claude Code) guides
-> a HUMAN through the installation, in a conversation.
-> Nothing here changes the mechanics — if this document contradicts `INSTALL-CONTRACT.md`, the
-> contract wins.
+> **Version:** 2.0.0 — a presentation layer over two frozen contracts.
+> **Path 1** is `hpp init`, the harness installer (`hpp/wizard.py`, six stages, plan then
+> `--apply`). **Path 2** is the module installer, `instaladores/kit-forge-1.4.0/kit_doctor.py`,
+> whose mechanics live in `INSTALL-CONTRACT.md` and whose per-module README follows
+> `INSTALL-GUIDE-TEMPLATE.md`; both ship at the root of this repository. This document describes
+> the EXPERIENCE: how an AGENT (Claude Code or Codex CLI) guides a HUMAN through the installation,
+> in a conversation. Nothing here changes the mechanics — if this document contradicts the code or
+> `INSTALL-CONTRACT.md`, they win. Every output quoted below was measured on 2026-09-21 against
+> version 2.4.1, from a clone of this repository unless the text says "pip install".
 
 ## Principle
 
 **The human never sees a terminal prompt. The human sees a conversation.** The agent runs the
 plan, translates the plan into the human's language, and waits for the human to say "apply it"
-in natural language. Only then does it re-invoke with `--apply`. There is no `input()` anywhere —
-the "Confirm" is the double invocation.
+in natural language. Only then does it re-invoke with `--apply`. There is no `input()` reached in
+an agent session — `hpp init` only prompts on a TTY, and `--non-interactive`, `--yes`, `--json`
+or `CI` in the environment take that path away; the "Confirm" is the double invocation.
 
 Three roles, with no overlap:
 
 | Role | Does | Never does |
 |---|---|---|
-| **kit_doctor.py** | runs the 6 stages; in plan mode, zero writes | asks on stdin; writes settings/hooks |
+| **installer** (`hpp init` · `kit_doctor.py`) | runs its stages; in plan mode, zero writes | asks on stdin in an agent session; writes settings/hooks |
 | **agent** | runs commands, translates the plan, asks for confirmation, reports with real output | applies without confirmation; edits `settings.local.json`/hooks on its own |
 | **human** | reads the plan in the conversation, decides, confirms in natural language | needs to memorise flags — the agent carries the command |
 
-## The journey in 5 steps (the same in the 4 scenarios)
+## Path 1 — `hpp init`, the harness journey (primary)
 
-1. **Plan.** The agent runs `python kit_doctor.py install <kit> --target <project> --human`.
-   Plan mode is the default: nothing is written, exit 0.
+`hpp init` is the front door: it plans the whole installation for a host, verifies what it can,
+writes at most one file, and prints the module-installer lines of Path 2 in its wire block. The
+agent starts here, always.
+
+### The six stages
+
+The stages are fixed and run in this order; each boot line completes only when its stage has
+finished.
+
+| Stage | Boot line | What it measures | What can stop it |
+|---|---|---|---|
+| `detect` | `detecting host...` | `greenfield`, `in-progress` or `re-run`, from `.claude/settings*.json`, `AGENTS.md`, `.agents/`, `.hpp/events.jsonl`, a previous `.hpp/profile.json` and the git commit count; lists what exists and is kept | a corrupt event log or profile is a warning with the file to inspect |
+| `prereqs` | `checking prerequisites...` | Python at or above 3.10; the manifest contract; the distribution when `marketplace.json` sits beside the manifest; `git` on `PATH` | Python below the floor or a manifest/marketplace divergence halts (exit 2) |
+| `profile` | `mounting profile...` | the three answers — host, bundle, policy mode — from flags, `--profile`, the prompt (TTY only) or the default, with the source of each recorded | a recorded profile with different answers is a `conflict`; nothing is overwritten |
+| `configure` | `loading modules...` | the module plan for the host, `native` or `explicit-command` per module, and `CHECKSUMS.txt` for every module directory present | a module unsupported on the host, or a checksum mismatch, halts (exit 2) |
+| `wire-suggest` | `wiring suggestions...` | the block to paste: plugin lines for Claude Code, module-installer lines for Codex CLI and for explicit-command modules, the policy command as configured | nothing; it never writes |
+| `smoke` | `verifying evidence...` | four controls: policy classifier, capability graph, event log, benchmark at `k=1` | a failed control sets exit 1 and names itself |
+
+### Plan, then `--apply`
+
+1. **Plan.** The agent runs `python -m hpp init --target <project> --non-interactive --no-animation`
+   (from a clone of this repository) or `hpp init --target <project> --non-interactive --no-animation`
+   (from a pip install). Plan mode is the default: nothing is written, the target holds the same
+   files afterwards, exit 0.
+2. **Translation.** The agent pastes the confirmation block (template below) into the
+   conversation: what `detect` saw, the three answers and where each came from, the readiness
+   line with what was and was not verified, and the wire block.
+3. **Human confirmation.** The human answers in natural language — "apply it", "go ahead",
+   "yes". Anything that is not a clear confirmation = do not apply. If the human wants a
+   different answer (another host, `enforce` instead of `audit`, an explicit module list), the
+   agent re-runs the plan with `--host`, `--bundle`, `--policy-mode` or `--modules` and asks again.
+4. **Apply.** The agent re-invokes the SAME command with `--apply`. Exactly one file is written,
+   `.hpp/profile.json` inside the target; the boot line reads `written` and the readiness line
+   gains one verified item:
+
+```text
+> mounting profile...         ✓ written · host=claude-code · bundle=reliable-coding · policy=audit
+
+  ██████████████████░░  10/11 verified · 1 not verified · 0 failed
+    ✓ profile recorded        .hpp/profile.json written
+    · host wiring             not verified — manual gate — paste the block, then run doctor
+
+  APPLIED  1 file(s) written inside the target
+    .hpp/profile.json    written      host=claude-code · bundle=reliable-coding · policy=audit
+```
+
+5. **Wiring, by the human.** The agent shows the wire block as printed and **the human pastes
+   it**: `/plugin marketplace add` and `/plugin install` lines on Claude Code, module-installer
+   lines on Codex CLI and for explicit-command modules. `hpp init` never edits `settings.json`,
+   hooks or `AGENTS.md`; host wiring stays `not verified` until the human has done it.
+
+Running the same command again is safe: `detect` reports `re-run · 1 existing item(s) preserved`
+and `profile` reports `unchanged`. Different answers against a recorded profile are a `conflict`:
+the differing keys are named, nothing is overwritten, exit 1.
+
+```text
+> mounting profile...         ! conflict · host=claude-code · bundle=reliable-coding · policy=enforce
+
+  PROBLEMS  what was measured, what was expected, what to do
+    ✗ profile  [profile]
+        measured: existing .hpp/profile.json differs in: policy_mode
+        expected: the same answers as the recorded profile
+        └ re-run with the recorded answers, or remove .hpp/profile.json to initialise again (nothing was overwritten)
+```
+
+### Readiness per channel
+
+Readiness counts checks that ran, each with the command that reproduces it. What it can verify
+depends on where `hpp` runs, and the agent says which channel it used. From a clone of this
+repository — module directories, `CHECKSUMS.txt` and `marketplace.json` beside the manifest — a
+plan against an empty target reads:
+
+```text
+> detecting host...           ✓ greenfield · 0 existing item(s) preserved
+> checking prerequisites...   ✓ python 3.14.3 · protocol 2.0
+> mounting profile...         ✓ would-write · host=claude-code · bundle=reliable-coding · policy=audit · 3 default(s)
+> loading modules...          ✓ 6 modules · reliable-coding · claude-code · 6/6 checksums verified
+> wiring suggestions...       ✓ 7 commands to paste · 0 files written
+> verifying evidence...       ✓ policy · graph · events · benchmark
+> protocol online.
+
+  READINESS  every line is a check that ran; the command below it reproduces it
+  ████████████████░░░░  9/11 verified · 2 not verified · 0 failed
+```
+
+The two not verified are the profile (plan only) and the host wiring (a paste). From a pip
+install, which carries the harness, the manifest and the benchmark suite but no module
+directories and no `marketplace.json`, the same plan reads `7/11 verified · 4 not verified`:
+distribution integrity and module checksums are reported as not verified because there is
+nothing to measure them against, never as passed. The agent quotes the line it got, not the
+line it expected.
+
+### Flags
+
+| Flag | Effect |
+|---|---|
+| `--target <dir>` | the project to initialise (default: current directory) |
+| `--apply` | write `.hpp/profile.json`; without it, plan only |
+| `--host`, `--bundle`, `--policy-mode audit\|enforce` | answer the three questions; `--modules a,b` replaces the bundle with an explicit list |
+| `--profile answers.json` | the same answers from a file (keys `host`, `bundle`, `policy_mode`, `modules`; an unknown key is a usage error) |
+| `--yes`, `--non-interactive`, `--json`, or `CI` in the environment | no prompt is reached; unanswered questions take their defaults and the report says so |
+| `--no-animation` | plain output; `NO_COLOR` is honoured; without a TTY the output is complete and uncoloured |
+| `--no-benchmark` | skip the benchmark control in smoke; it is reported as not verified, not silently dropped |
+| `--marketplace <slug>` | the slug used in the Claude Code wire block, for forks |
+| `--json` | the same report as JSON (`schema: hpp.init-report/v1`), with `exit_code`, `readiness` and every stage's detail — for CI and for agents |
+
+### Exit codes
+
+| Code | Meaning | Measured example |
+|---|---|---|
+| `0` | plan or apply completed; every control that ran passed | the plans quoted above |
+| `1` | a warning: a smoke control failed, or the recorded profile conflicts with the answers given | `--policy-mode enforce` over a profile recorded with `audit` |
+| `2` | a blocking refusal: Python below 3.10, manifest/marketplace divergence, a module unsupported on the host, a checksum mismatch, an unknown module id | `--host codex --modules claude-dev-kit` → `loading modules... ✗ bundle custom requires claude-dev-kit, unsupported on codex` |
+| `3` | a usage error in the invocation itself | a `--profile` file with an unknown key → `hpp init: profile file has unknown keys: colour (allowed: bundle, host, modules, policy_mode)` |
+
+With `--json`, the code the process will return is also inside the report (`exit_code`), and a
+stage that halted the run leaves the later ones as `not run`.
+
+### What the agent says (template)
+
+The text the agent pastes into the conversation when presenting an `hpp init` plan. Placeholders
+in `{}`. The template is written in English; the agent speaks in the human's language and adapts
+the wording, not the structure.
+
+```
+I ran `hpp init` in plan mode against {target} -- nothing has been written. Summary:
+
+**Project diagnosis:** {greenfield | in-progress, preserving: {list} | re-run, profile already recorded}.
+**Answers:** host={host} ({flag|profile|default}) · bundle={bundle} ({source}) · policy={policy_mode} ({source}).
+**Readiness:** {n}/11 verified · {m} not verified · {f} failed -- not verified: {items}.
+  ({channel}: {clone of the repository | pip install}; the two extra items a pip install cannot measure are distribution integrity and module checksums.)
+**What --apply would do:** write exactly one file, {target}/.hpp/profile.json.
+**Wiring (settings/hooks/plugins):** never automatic. After the apply I bring you the wire block as printed and YOU paste it.
+
+If this is fine, say "apply it" and I run the same command with --apply.
+```
+
+## Path 2 — the module installer (`kit_doctor.py`)
+
+The lines `hpp init` prints in its wire block for Codex CLI, and for explicit-command modules on
+Claude Code, are this installer. It copies one module at a time into the target and runs the
+module's declared smokes; it plans first and applies only on a second, explicit invocation.
+
+### The journey in 5 steps (the same in the 4 scenarios)
+
+1. **Plan.** The agent runs `python instaladores/kit-forge-1.4.0/kit_doctor.py install --kit <module-dir> --host <host> --target <project> --human`
+   (`--human` selects the human-readable report). Plan mode is the default: nothing is written,
+   exit 0.
 2. **Translation.** The agent pastes the confirmation block into the conversation (template in
    the "Confirmation block" section below): what `detect` saw, what `--apply` would do, what is
    still pending a decision, and the smoke result.
@@ -43,13 +192,13 @@ Three roles, with no overlap:
    pastes/triggers it** — mutating `settings.local.json`/hooks is a human gate, always, even after
    `--apply`.
 
-## What changes between the 4 scenarios
+### What changes between the 4 scenarios
 
 Everything below uses REAL output of `kit_doctor.py`, which prints in Portuguese. The
 in-progress/re-run/failure outputs were captured against a minimal fixture (`demo-kit`) — same
 report structure, example module.
 
-### 1. `greenfield` — new project
+#### 1. `greenfield` — new project
 
 ```
   ✓ detect
@@ -58,9 +207,9 @@ report structure, example module.
 
 What the agent emphasises: **there is nothing to preserve**; the plan is the happy path.
 The human is asked one decision only: "is what `--apply` would do fine?".
-Complete end-to-end example in the last section.
+Complete end-to-end example in the last section of this path.
 
-### 2. `in-progress` — project with existing config
+#### 2. `in-progress` — project with existing config
 
 ```
   ✓ detect
@@ -73,7 +222,7 @@ preserved** — that is the information that removes the fear of installing on t
 never overwrites (`skip-exists` is reported, not silent). If the human WANTS to replace something
 that exists, that is a manual action of theirs, outside the installer.
 
-### 3. `re-run` — the same module+target pair was installed before
+#### 3. `re-run` — the same module+target pair was installed before
 
 ```
   ✓ detect
@@ -89,7 +238,7 @@ idempotent** — nothing is duplicated, customisation is preserved. Re-run is th
 (a) check an old installation and (b) update after pulling a new version of the module.
 The question to the human becomes: "do you want to re-apply anyway, or did you only want to check?".
 
-### 4. Smoke failure — the module failed its own self-test
+#### 4. Smoke failure — the module failed its own self-test
 
 ```
   ⚠ smoke  [FAIL]
@@ -102,11 +251,11 @@ Depois de corrigir, rode o plano de novo para confirmar antes do --apply.
 
 Exit code = 1. What changes in the conversation: **the agent does NOT offer `--apply`.** It
 reports which script failed, with its exit code, and proposes the next step (investigate the
-script, check integrity with `kit_doctor.py verify <kit>`, or download the module again). It only
-offers to apply again after a new plan comes out clean. A human who insists on applying with a
-failing smoke is on their own — the agent records that it advised against it, and why.
+script, check integrity with `kit_doctor.py verify <module-dir>`, or download the module again).
+It only offers to apply again after a new plan comes out clean. A human who insists on applying
+with a failing smoke is on their own — the agent records that it advised against it, and why.
 
-## Questions (`questions:`) in the conversation
+### Questions (`questions:`) in the conversation
 
 Most modules have no questions (by design). When one does, the plan shows:
 
@@ -122,10 +271,10 @@ agent writes an `answers.json` and runs the plan again with `--answers answers.j
 then ask for confirmation. Installing without answering anything never blocks — the default
 always resolves.
 
-## Confirmation block (template)
+### Confirmation block (template)
 
-The text the agent pastes into the conversation when presenting a plan. Placeholders in `{}`.
-Lines marked `[scenario]` only enter in the matching scenario. The template is written in
+The text the agent pastes into the conversation when presenting a module plan. Placeholders in
+`{}`. Lines marked `[scenario]` only enter in the matching scenario. The template is written in
 English; the agent speaks in the human's language and adapts the wording, not the structure.
 
 ```
@@ -156,7 +305,7 @@ I ran the {kit} installer in plan mode -- nothing has been written yet. Summary:
 [if smoke fail] Once that is fixed, I run the plan again and bring you the result.
 ```
 
-## End-to-end example (greenfield, real run)
+### End-to-end example (greenfield, real run)
 
 Module: `operator-kit-1.1.0`. Command the agent ran (real output below). This capture is dated:
 it predates the versioned installer path. In the current distribution the module is
@@ -222,9 +371,10 @@ The agent runs the same command with `--apply`, pastes the real output (the head
 
 ## What the agent NEVER does (conduct checklist)
 
-- [ ] NEVER runs `--apply` without explicit confirmation from the human IN THIS conversation
-- [ ] NEVER edits `settings.local.json` / hooks — presents the block, the human pastes it
+- [ ] NEVER runs `--apply` — of `hpp init` or of `kit_doctor.py` — without explicit confirmation from the human IN THIS conversation
+- [ ] NEVER edits `settings.local.json` / hooks / `AGENTS.md` — presents the block, the human pastes it
 - [ ] NEVER reports "installed" without pasting the real output of `--apply` (exit code included)
+- [ ] NEVER reports a readiness line it did not get — quotes the channel and the count as printed
 - [ ] NEVER offers `--apply` when the smoke failed (exit 1) — fix first
 - [ ] NEVER answers the module's questions alone when the human expressed a preference —
       writes `--answers` and re-plans

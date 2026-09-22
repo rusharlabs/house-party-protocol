@@ -1,200 +1,200 @@
 ---
 name: teaching
-description: Transforma qualquer output técnico (criação, estrutura, decisão arquitetural) numa oportunidade de aprendizado — árvore de onde o elemento mora, raio-x de o-que-é/onde-fica/pra-que-serve, mapa de conexões, analogia de negócio, e decisões explicadas. Use sempre em output técnico para um leitor não-programador.
+description: Turns any technical output (creation, structure, architectural decision) into a learning opportunity — a tree of where the element lives, an x-ray of what-it-is/where-it-sits/what-it-is-for, a connection map, a business analogy, and explained decisions. Always use in technical output for a non-programmer reader.
 ---
 
-> **Auto-Trigger:** Sempre ativo em todo output técnico que envolva criação, estrutura, ou decisões arquiteturais.
-> **Keywords:** "ensinar", "explicar", "como funciona", "onde fica", "arquitetura", "teaching", "por que"
-> **Prioridade:** MÉDIA
+> **Auto-Trigger:** Always active in every technical output that involves creation, structure, or architectural decisions.
+> **Keywords:** "teach", "explain", "how does it work", "where does it live", "architecture", "teaching", "why"
+> **Priority:** MEDIUM
 > **Tools:** Read, Write, Bash
 
-## Quando ativar
-SEMPRE. Em todo output que envolva:
-- Criação de arquivos
-- Proposta de estrutura
-- Planos de execução
-- Decisões técnicas
-- Menção a caminhos, pastas, formatos, conexões
+## When to activate
+ALWAYS. In every output that involves:
+- File creation
+- A proposed structure
+- Execution plans
+- Technical decisions
+- Mention of paths, folders, formats, connections
 
-## Quando NÃO Ativar
+## When NOT to Activate
 
-Mesmo sendo "SEMPRE ativo" para output técnico, NÃO aplicar os 5 blocos de ensino quando:
+Even though it is "ALWAYS active" for technical output, do NOT apply the 5 teaching blocks when:
 
-- **Resposta conversacional/não-técnica** (status, "onde paramos?", confirmação simples, pergunta de negócio sem elemento técnico) — não há arquivo/estrutura/conexão a ensinar.
-- **Output puramente factual de dados ao vivo** (métricas, health score, contagens) — o foco é o dado verificado, não a arquitetura.
-- **Edições triviais** (typo, vírgula, ajuste de 1 linha sem impacto estrutural) — o overhead de ensino vira ruído.
-- **Execução interna em batch de subagente** onde o output vai para outro agente/orquestrador, não para um humano aprendiz.
-- **Quando o usuário pedir explicitamente brevidade** ("só faz", "sem explicação", "resposta curta") — respeitar a instrução direta.
+- **Conversational/non-technical reply** (status, "where did we stop?", simple confirmation, business question with no technical element) — there is no file/structure/connection to teach.
+- **Purely factual output of live data** (metrics, health score, counts) — the focus is the verified data, not the architecture.
+- **Trivial edits** (typo, comma, 1-line tweak with no structural impact) — the teaching overhead becomes noise.
+- **Internal batch execution by a subagent** where the output goes to another agent/orchestrator, not to a human learner.
+- **When the user explicitly asks for brevity** ("just do it", "no explanation", "short answer") — respect the direct instruction.
 
-## Contrato
+## Contract
 
-**ENTRADA:** qualquer output técnico (texto) que o modelo está prestes a entregar, cobrindo criação/estrutura/decisão arquitetural.
+**INPUT:** any technical output (text) the model is about to deliver, covering creation/structure/architectural decision.
 
-**SAÍDA:** o mesmo output, com os 5 blocos de ensino anexados (árvore, raio-x, conexões, analogia, decisões).
+**OUTPUT:** the same output, with the 5 teaching blocks attached (tree, x-ray, connections, analogy, decisions).
 
 **EXIT CODES:**
 
-| Exit | Significado |
+| Exit | Meaning |
 |---|---|
-| 0 | sempre — esta é uma skill de FORMATAÇÃO/COMPORTAMENTO, não há falha de execução possível; o "contrato" é sobre completude do output, verificável via o validador da seção Prova |
+| 0 | always — this is a FORMATTING/BEHAVIOR skill, there is no possible execution failure; the "contract" is about output completeness, verifiable via the validator in the Proof section |
 
-**ESTADO QUE TOCA:**
+**STATE IT TOUCHES:**
 
-| Recurso | Lê/Escreve | Propósito |
+| Resource | Reads/Writes | Purpose |
 |---|---|---|
-| (nenhum arquivo) | — | esta skill não lê/escreve estado — molda a FORMA da resposta do modelo |
+| (no file) | — | this skill reads/writes no state — it shapes the FORM of the model's reply |
 
-## Formato obrigatório de cada output técnico
+## Mandatory format of every technical output
 
-### BLOCO 1: 🗺️ ONDE ESTAMOS (Tree Arquitetural)
+### BLOCK 1: 🗺️ WHERE WE ARE (Architectural Tree)
 
-Desenhe a árvore COMPLETA do projeto mostrando ONDE o elemento atual mora.
-Marque com ➡️ o arquivo ou pasta em questão.
-Use linguagem visual clara.
+Draw the project's COMPLETE tree showing WHERE the current element lives.
+Mark the file or folder in question with ➡️.
+Use clear visual language.
 
 ```
 projeto-raiz/
-├── CLAUDE.md              ← Regras gerais (o "handbook da empresa")
-├── agents/                ← Todos os agentes moram aqui
+├── CLAUDE.md              ← General rules (the "company handbook")
+├── agents/                ← All agents live here
 │   ├── vendedor.md
 │   └── analista.md
-├── skills/                ← Todas as competências reutilizáveis
+├── skills/                ← All reusable competencies
 │   ├── teaching/
 │   │   └── SKILL.md
 │   └── copywriting/
 │       └── SKILL.md
-├── workflows/             ← Todos os processos orquestrados
-│   ├── qualificar-lead.yml    ➡️ ESTAMOS AQUI
+├── workflows/             ← All orchestrated processes
+│   ├── qualificar-lead.yml    ➡️ WE ARE HERE
 │   └── onboarding-cliente.yml
-├── hooks/                 ← Todos os gatilhos automáticos
+├── hooks/                 ← All automatic triggers
 │   └── on-lead-entry.yml
-└── tasks/                 ← Tarefas unitárias (opcional, podem viver dentro dos workflows)
+└── tasks/                 ← Unit tasks (optional; they can live inside the workflows)
 ```
 
-REGRAS DO TREE:
-- Sempre mostrar a árvore A PARTIR DA RAIZ do projeto
-- Nunca mostrar só o caminho parcial — sempre o contexto completo
-- Marcar com ➡️ o elemento que está sendo criado/modificado/explicado
-- Se o projeto for muito grande, mostrar os 2 níveis mais relevantes + o caminho completo até o elemento
+TREE RULES:
+- Always show the tree FROM THE ROOT of the project
+- Never show only the partial path — always the full context
+- Mark with ➡️ the element being created/modified/explained
+- If the project is very large, show the 2 most relevant levels + the full path down to the element
 
 ---
 
-### BLOCO 2: 🔍 RAIO-X DO ELEMENTO
+### BLOCK 2: 🔍 X-RAY OF THE ELEMENT
 
-Para CADA arquivo ou pasta mencionado, responda OBRIGATORIAMENTE:
+For EACH file or folder mentioned, you MUST answer:
 
-| Pergunta | Resposta |
+| Question | Answer |
 |----------|----------|
-| **O que é isso?** | Explicação em 1 frase, sem jargão. Use analogia do mundo de negócios. |
-| **Onde fica?** | Caminho completo desde a raiz. Ex: `/projeto/workflows/qualificar-lead.yml` |
-| **Dentro de quê?** | Qual pasta contém esse arquivo e por que essa pasta existe. |
-| **Quantos desse tipo existem?** | 1 por processo? 1 por agente? Sem limite? Explique a regra. |
-| **A quem está ligado?** | Liste TODOS os outros arquivos que se conectam a este. Mostre a direção: quem chama quem. |
-| **Quem o aciona?** | O que faz este arquivo ser executado? Um comando? Um hook? Outro workflow? |
-| **O que tem dentro?** | Estrutura interna resumida. Quais seções, campos ou blocos existem dentro desse arquivo. |
-| **Por que esse formato?** | `.yml`, `.md`, `.json` — por que esse e não outro? Qual a vantagem prática? |
-| **O que acontece se eu apagar?** | Consequência real. O que quebra, o que para de funcionar. |
-| **Alternativa possível?** | Existia outra forma de fazer isso? Se sim, por que escolhemos esta? |
+| **What is this?** | A 1-sentence explanation, no jargon. Use a business-world analogy. |
+| **Where does it live?** | Full path from the root. E.g. `/projeto/workflows/qualificar-lead.yml` |
+| **Inside what?** | Which folder contains this file and why that folder exists. |
+| **How many of this kind exist?** | 1 per process? 1 per agent? No limit? Explain the rule. |
+| **What is it connected to?** | List ALL the other files that connect to this one. Show the direction: who calls whom. |
+| **Who triggers it?** | What makes this file run? A command? A hook? Another workflow? |
+| **What is inside?** | Summarized internal structure. Which sections, fields or blocks exist inside this file. |
+| **Why this format?** | `.yml`, `.md`, `.json` — why this one and not another? What is the practical advantage? |
+| **What happens if I delete it?** | Real consequence. What breaks, what stops working. |
+| **Possible alternative?** | Was there another way to do this? If so, why did we choose this one? |
 
 ---
 
-### BLOCO 3: 🔗 MAPA DE CONEXÕES
+### BLOCK 3: 🔗 CONNECTION MAP
 
-Desenhe como este elemento se conecta com os demais usando setas simples:
+Draw how this element connects to the others using simple arrows:
 
 ```
-[CLAUDE.md] ──define regras para──▶ [agents/vendedor.md]
+[CLAUDE.md] ──defines rules for──▶ [agents/vendedor.md]
                                           │
-                                    usa skill de
+                                    uses the skill
                                           │
                                           ▼
                                    [skills/copywriting/SKILL.md]
                                           │
-                                  é chamado pelo workflow
+                                  is called by the workflow
                                           │
                                           ▼
-                              [workflows/qualificar-lead.yml]  ➡️ ESTE
+                              [workflows/qualificar-lead.yml]  ➡️ THIS ONE
                                           │
-                                   disparado por
+                                   triggered by
                                           │
                                           ▼
                                 [hooks/on-lead-entry.yml]
 ```
 
-REGRAS:
-- Sempre mostrar no mínimo 1 nível acima e 1 nível abaixo do elemento atual
-- Usar verbos claros nas setas: "chama", "define", "dispara", "usa", "lê", "escreve"
-- Se houver mais de um caminho, mostre todos
+RULES:
+- Always show at least 1 level above and 1 level below the current element
+- Use clear verbs on the arrows: "calls", "defines", "triggers", "uses", "reads", "writes"
+- If there is more than one path, show them all
 
 ---
 
-### BLOCO 4: 💡 TRADUÇÃO PARA O MUNDO REAL
+### BLOCK 4: 💡 TRANSLATION TO THE REAL WORLD
 
-Faça uma analogia direta com operação de empresa:
+Make a direct analogy with company operations:
 
-> **Na sua empresa:** Esse workflow é como o processo que seu time de vendas segue
-> quando entra um lead novo. O arquivo `.yml` é o checklist escrito que qualquer
-> vendedor novo receberia no primeiro dia. O hook que dispara ele é como o alerta
-> automático que o CRM manda quando um formulário é preenchido. A skill que ele
-> usa é como o script de qualificação que o vendedor segue na ligação.
+> **In your company:** This workflow is like the process your sales team follows
+> when a new lead comes in. The `.yml` file is the written checklist any new
+> salesperson would receive on day one. The hook that triggers it is like the
+> automatic alert the CRM sends when a form is filled in. The skill it uses is
+> like the qualification script the salesperson follows on the call.
 
-REGRAS:
-- Sempre usar analogia com operação de empresa, vendas, marketing ou gestão
-- Nunca usar jargão técnico sem tradução imediata
-- Se o conceito não tiver analogia óbvia, criar uma e ser explícito: "Não tem analogia perfeita, mas pense assim..."
+RULES:
+- Always use an analogy with company operations, sales, marketing or management
+- Never use technical jargon without an immediate translation
+- If the concept has no obvious analogy, create one and be explicit: "There is no perfect analogy, but think of it like this..."
 
 ---
 
-### BLOCO 5: ⚠️ DECISÕES QUE TOMEI E POR QUÊ
+### BLOCK 5: ⚠️ DECISIONS I MADE AND WHY
 
-Quando o agente tomar qualquer decisão técnica, DEVE explicar:
+Whenever the agent makes any technical decision, it MUST explain:
 
 ```
-DECISÃO: Criei o workflow em formato .yml e não .md
-POR QUÊ: Porque .yml permite que o sistema leia e interprete a estrutura
-         automaticamente (parsing). Um .md é só texto legível por humanos —
-         o sistema não consegue extrair etapas dele sem interpretação.
-ALTERNATIVA: Poderia ser .json, mas .json é mais difícil de ler e editar
-             manualmente. .yml é o meio-termo: legível por humanos E por máquinas.
-CONSEQUÊNCIA: Se no futuro quiser que o sistema execute workflows automaticamente,
-              .yml já está pronto. Se tivesse usado .md, precisaria reescrever.
+DECISION: I created the workflow as .yml, not .md
+WHY: Because .yml lets the system read and interpret the structure
+     automatically (parsing). A .md file is just human-readable text —
+     the system cannot extract steps from it without interpretation.
+ALTERNATIVE: It could be .json, but .json is harder to read and edit
+             by hand. .yml is the middle ground: readable by humans AND by machines.
+CONSEQUENCE: If in the future you want the system to run workflows automatically,
+             .yml is already ready. Had I used .md, it would need a rewrite.
 ```
 
 ---
 
-## Regras de linguagem
+## Language rules
 
-1. **Nunca encurtar caminhos sem contexto.**
-   - ❌ "Fica em `/workflows/`"
-   - ✅ "Fica em `/projeto-raiz/workflows/qualificar-lead.yml` — a pasta `workflows` é onde moram TODOS os processos orquestrados do projeto, e fica diretamente na raiz."
+1. **Never shorten paths without context.**
+   - ❌ "It lives in `/workflows/`"
+   - ✅ "It lives in `/projeto-raiz/workflows/qualificar-lead.yml` — the `workflows` folder is where ALL the project's orchestrated processes live, and it sits directly at the root."
 
-2. **Nunca usar termo técnico sem tradução imediata.**
-   - ❌ "Isso é um parser de YAML"
-   - ✅ "Isso é um leitor automático de arquivos .yml (YAML é só o formato do arquivo — pense nele como uma planilha simplificada onde cada linha tem uma chave e um valor)"
+2. **Never use a technical term without an immediate translation.**
+   - ❌ "This is a YAML parser"
+   - ✅ "This is an automatic reader of .yml files (YAML is just the file format — think of it as a simplified spreadsheet where each line has a key and a value)"
 
-3. **Nunca assumir que o leitor sabe o que existe dentro de uma pasta.**
-   - Sempre listar o conteúdo, mesmo que seja "por enquanto está vazia, mas vai conter X"
+3. **Never assume the reader knows what is inside a folder.**
+   - Always list the contents, even if it is "empty for now, but it will contain X"
 
-4. **Sempre responder a pergunta antes que ela seja feita.**
-   - Se mencionou um formato, explique o formato
-   - Se mencionou uma conexão, mostre a conexão visualmente
-   - Se mencionou uma pasta, mostre o que tem dentro
+4. **Always answer the question before it is asked.**
+   - If you mentioned a format, explain the format
+   - If you mentioned a connection, show the connection visually
+   - If you mentioned a folder, show what is inside
 
-5. **Profundidade controlada.**
-   - Vá até 2 níveis de "porquê".
-   - Se a explicação puxar um terceiro nível, pare e diga: "Isso abre outro assunto (X). Quer que eu aprofunde?"
+5. **Controlled depth.**
+   - Go up to 2 levels of "why".
+   - If the explanation pulls in a third level, stop and say: "This opens another topic (X). Do you want me to go deeper?"
 
-## Exemplo completo de output com Teaching Mode ativo
+## Complete example of output with Teaching Mode active
 
-**Cenário:** O agente precisa criar um workflow de qualificação de leads.
+**Scenario:** The agent needs to create a lead-qualification workflow.
 
 ---
 
-**Output do agente:**
+**Agent output:**
 
-Vou criar o workflow de qualificação de leads.
+I will create the lead-qualification workflow.
 
-🗺️ **ONDE ESTAMOS:**
+🗺️ **WHERE WE ARE:**
 ```
 meu-projeto/
 ├── CLAUDE.md
@@ -204,59 +204,59 @@ meu-projeto/
 │   └── perguntas-spin/
 │       └── SKILL.md
 ├── workflows/
-│   └── qualificar-lead.yml    ➡️ CRIANDO ESTE AGORA
+│   └── qualificar-lead.yml    ➡️ CREATING THIS NOW
 └── hooks/
     └── novo-lead.yml
 ```
 
-🔍 **RAIO-X:**
+🔍 **X-RAY:**
 
-| Pergunta | Resposta |
+| Question | Answer |
 |----------|----------|
-| **O que é?** | Um processo escrito que define passo-a-passo como qualificar um lead. É o "checklist do vendedor". |
-| **Onde fica?** | `/meu-projeto/workflows/qualificar-lead.yml` |
-| **Dentro de quê?** | Pasta `workflows/`, que fica na raiz do projeto. Essa pasta existe para guardar TODOS os processos do projeto. Cada processo é um arquivo separado. |
-| **Quantos desse tipo?** | 1 arquivo por processo. Se você tem 5 processos diferentes, terá 5 arquivos `.yml` dentro de `workflows/`. Sem limite. |
-| **A quem está ligado?** | Chama o agente `agents/qualificador.md` para executar. O agente usa a skill `skills/perguntas-spin/SKILL.md`. |
-| **Quem o aciona?** | O hook `hooks/novo-lead.yml` dispara quando entra lead novo. Ou pode ser chamado manualmente por comando. |
-| **O que tem dentro?** | Nome do workflow, descrição, lista de steps (etapas), e para cada step: qual agente executa, qual skill usa, qual o output esperado. |
-| **Por que .yml?** | Porque máquina e humano conseguem ler. Diferente de .md (só humano lê bem) e .json (só máquina lê bem). |
-| **Se apagar?** | O hook vai tentar chamar esse workflow e vai dar erro. O agente continua existindo mas ninguém vai acioná-lo automaticamente. |
-| **Alternativa?** | Poderia ser .md se fosse só documentação. Mas como queremos que o sistema execute as etapas, precisa de formato estruturado. |
+| **What is it?** | A written process that defines step by step how to qualify a lead. It is the "salesperson's checklist". |
+| **Where does it live?** | `/meu-projeto/workflows/qualificar-lead.yml` |
+| **Inside what?** | The `workflows/` folder, which sits at the project root. That folder exists to hold ALL the project's processes. Each process is a separate file. |
+| **How many of this kind?** | 1 file per process. If you have 5 different processes, you will have 5 `.yml` files inside `workflows/`. No limit. |
+| **What is it connected to?** | It calls the agent `agents/qualificador.md` to execute. The agent uses the skill `skills/perguntas-spin/SKILL.md`. |
+| **Who triggers it?** | The hook `hooks/novo-lead.yml` fires when a new lead comes in. Or it can be called manually by command. |
+| **What is inside?** | Workflow name, description, list of steps, and for each step: which agent executes it, which skill it uses, what the expected output is. |
+| **Why .yml?** | Because both machine and human can read it. Unlike .md (only humans read it well) and .json (only machines read it well). |
+| **If deleted?** | The hook will try to call this workflow and will error. The agent still exists but nobody will trigger it automatically. |
+| **Alternative?** | It could be .md if it were only documentation. But since we want the system to execute the steps, it needs a structured format. |
 
-🔗 **CONEXÕES:**
+🔗 **CONNECTIONS:**
 ```
-[hooks/novo-lead.yml] ──dispara──▶ [workflows/qualificar-lead.yml] ➡️
+[hooks/novo-lead.yml] ──fires──▶ [workflows/qualificar-lead.yml] ➡️
                                            │
-                                     chama agente
+                                     calls agent
                                            ▼
                                    [agents/qualificador.md]
                                            │
-                                      usa skill
+                                      uses skill
                                            ▼
                                 [skills/perguntas-spin/SKILL.md]
 ```
 
-💡 **NO SEU MUNDO:**
-É como quando o CRM da sua empresa detecta um novo cadastro (hook),
-abre automaticamente o processo de qualificação (workflow),
-que escala pro SDR responsável (agente),
-que segue o script SPIN selling (skill).
+💡 **IN YOUR WORLD:**
+It is like when your company's CRM detects a new sign-up (hook),
+automatically opens the qualification process (workflow),
+which escalates to the responsible SDR (agent),
+who follows the SPIN selling script (skill).
 
-⚠️ **DECISÕES:**
+⚠️ **DECISIONS:**
 ```
-DECISÃO: Separei o workflow do agente em arquivos diferentes
-POR QUÊ: O mesmo agente pode ser usado em vários workflows diferentes.
-         Se juntasse, teria que duplicar o agente toda vez.
-CONSEQUÊNCIA: Mais flexível. O qualificador pode ser chamado por outros
-              processos no futuro sem reescrever nada.
+DECISION: I separated the workflow from the agent into different files
+WHY: The same agent can be used in several different workflows.
+     Merging them would mean duplicating the agent every time.
+CONSEQUENCE: More flexible. The qualifier can be called by other
+             processes in the future without rewriting anything.
 ```
 
 ---
 
-## Exemplos executados
+## Executed examples
 
-O contrato desta skill (completude dos 5 blocos) é verificável com um pequeno validador:
+This skill's contract (completeness of the 5 blocks) is verifiable with a small validator:
 
 ```console
 $ python -c "
@@ -268,8 +268,8 @@ print('faltando:', missing_teaching_blocks(completo))
 "
 faltando: []
 ```
-<!-- executado: 2026-07-10 · exit=0 -->
-(output com os 5 blocos presentes — Teaching Mode completo, 0 blocos faltando.)
+<!-- executed: 2026-07-10 · exit=0 -->
+(output with all 5 blocks present — Teaching Mode complete, 0 blocks missing.)
 
 ```console
 $ python -c "
@@ -283,8 +283,8 @@ import sys; sys.exit(1 if faltando else 0)
 "
 faltando: ['arvore', 'raio-x', 'conexoes', 'analogia', 'decisoes']
 ```
-<!-- executado: 2026-07-10 · exit=1 -->
-(um output técnico sem NENHUM dos 5 blocos — exatamente o que esta skill existe para prevenir.)
+<!-- executed: 2026-07-10 · exit=1 -->
+(a technical output with NONE of the 5 blocks — exactly what this skill exists to prevent.)
 
 ```console
 $ python -c "
@@ -296,17 +296,17 @@ print('faltando:', missing_teaching_blocks(parcial))
 "
 faltando: ['conexoes', 'analogia', 'decisoes']
 ```
-<!-- executado: 2026-07-10 · exit=0 -->
-(output PARCIAL — só árvore e raio-x — ainda faltam 3 blocos; útil pra revisar um output em progresso.)
+<!-- executed: 2026-07-10 · exit=0 -->
+(PARTIAL output — only tree and x-ray — 3 blocks still missing; useful for reviewing an output in progress.)
 
 ## Anti-patterns
 
-- ❌ Aplicar os 5 blocos numa resposta puramente conversacional ("oi", "onde paramos?") — vira ruído, veja "Quando NÃO Ativar".
-- ❌ Mencionar uma pasta sem mostrar o que tem dentro dela.
-- ❌ Usar termo técnico (parser, hook, schema) sem traduzir na mesma frase.
-- ❌ Ir além de 2 níveis de "por quê" sem perguntar se o leitor quer aprofundar.
+- ❌ Applying the 5 blocks to a purely conversational reply ("hi", "where did we stop?") — it becomes noise, see "When NOT to Activate".
+- ❌ Mentioning a folder without showing what is inside it.
+- ❌ Using a technical term (parser, hook, schema) without translating it in the same sentence.
+- ❌ Going beyond 2 levels of "why" without asking whether the reader wants to go deeper.
 
-## Prova
+## Proof
 
 ```bash
 python -c "
@@ -319,26 +319,26 @@ print('self-test OK')
 "
 ```
 
-## Instrução final para o CLAUDE.md
+## Final instruction for CLAUDE.md
 
-Cole este bloco no seu CLAUDE.md para ativar o Teaching Mode globalmente:
+Paste this block into your CLAUDE.md to activate Teaching Mode globally:
 
 ```markdown
-## 🧠 Teaching Mode (SEMPRE ATIVO)
+## 🧠 Teaching Mode (ALWAYS ACTIVE)
 
-Ao criar, modificar ou explicar qualquer elemento técnico, OBRIGATORIAMENTE inclua:
-1. 🗺️ Tree arquitetural completo mostrando ONDE o elemento mora (desde a raiz)
-2. 🔍 Raio-X com: o que é, onde fica, dentro de quê, ligado a quê, formato e porquê
-3. 🔗 Mapa de conexões visual com setas e verbos
-4. 💡 Analogia com operação de empresa (vendas, marketing, gestão)
-5. ⚠️ Cada decisão técnica explicada: o que, por quê, alternativa, consequência
+When creating, modifying or explaining any technical element, you MUST include:
+1. 🗺️ Full architectural tree showing WHERE the element lives (from the root)
+2. 🔍 X-ray with: what it is, where it lives, inside what, connected to what, format and why
+3. 🔗 Visual connection map with arrows and verbs
+4. 💡 Analogy with company operations (sales, marketing, management)
+5. ⚠️ Every technical decision explained: what, why, alternative, consequence
 
-Regras:
-- Nunca encurtar caminhos sem mostrar o contexto completo
-- Nunca usar termo técnico sem tradução imediata
-- Nunca mencionar pasta sem mostrar o que tem dentro
-- Ir até 2 níveis de profundidade. No 3º nível, perguntar se quer aprofundar.
-- Usar linguagem de negócios como analogia primária.
+Rules:
+- Never shorten paths without showing the full context
+- Never use a technical term without an immediate translation
+- Never mention a folder without showing what is inside it
+- Go up to 2 levels deep. At the 3rd level, ask whether to go deeper.
+- Use business language as the primary analogy.
 
-Referência completa: ${CLAUDE_PLUGIN_ROOT}/skills/teaching/SKILL.md
+Full reference: ${CLAUDE_PLUGIN_ROOT}/skills/teaching/SKILL.md
 ```

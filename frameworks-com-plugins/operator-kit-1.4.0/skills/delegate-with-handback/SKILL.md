@@ -1,57 +1,57 @@
 ---
 name: delegate-with-handback
-description: Delega tarefa longa/independente a um 2º agente com contexto explícito e gate de verificação no retorno
+description: Delegates a long/independent task to a 2nd agent with explicit context and a verification gate on the return
 ---
 
-> **Auto-Trigger:** Tarefa longa/independente (audit, refactor amplo, pesquisa) que ganharia com um 2º agente ou segunda opinião
-> **Keywords:** "delegar", "delega", "codex", "segundo agente", "segunda opinião", "rodar em paralelo", "offload", "revisar"
-> **Prioridade:** MÉDIA
+> **Auto-Trigger:** Long/independent task (audit, broad refactor, research) that would benefit from a 2nd agent or a second opinion
+> **Keywords:** "delegate", "codex", "second agent", "second opinion", "run in parallel", "offload", "review"
+> **Priority:** MEDIUM
 > **Tools:** Task/Agent, Bash, Read, Grep
 
-# delegate-with-handback — delegar com handback verificado
+# delegate-with-handback — delegate with a verified handback
 
-Generaliza o `codex-delegate` para um framework **provider-agnóstico**. Nunca confia no "done" do delegado.
+Generalizes `codex-delegate` into a **provider-agnostic** framework. Never trusts the delegate's "done".
 
-## Contrato
+## Contract
 
-**ENTRADA:** o pacote de contexto explícito (path/branch/commit + objetivo + critério de aceite + constraints) montado pelo passo 2; o output do delegado no disco.
+**INPUT:** the explicit context package (path/branch/commit + objective + acceptance criterion + constraints) assembled in step 2; the delegate's output on disk.
 
-**SAÍDA:** aceite (item marcado feito) OU re-enfileiramento com o gap apontado.
+**OUTPUT:** acceptance (item marked done) OR re-queue with the gap pointed out.
 
-**EXIT CODES** (do `done_gate.py`, usado no handback — passo 4):
+**EXIT CODES** (from `done_gate.py`, used in the handback — step 4):
 
-| Exit | Significado |
+| Exit | Meaning |
 |---|---|
-| 0 | DONE — critério de aceite passou; aceitar o handback |
-| 1 | NOT-DONE — critério falhou; re-enfileirar com o gap |
-| 2 | uso inválido do done_gate |
+| 0 | DONE — acceptance criterion passed; accept the handback |
+| 1 | NOT-DONE — criterion failed; re-queue with the gap |
+| 2 | invalid use of done_gate |
 
-**ESTADO QUE TOCA:**
+**STATE IT TOUCHES:**
 
-| Recurso | Lê/Escreve | Propósito |
+| Resource | Reads/Writes | Purpose |
 |---|---|---|
-| output do delegado (arquivo/diff no disco) | Lê | verificação real (não a mensagem "pronto") |
-| `operator-profile.yaml` (`autonomia`) | Lê | qual provider despachar |
-| hook `rule_capture` (se wired) | Escreve | preserva o padrão em `.claude/memory/_captured-rules.md` p/ o `distill_corrections.py` destilar depois |
+| delegate's output (file/diff on disk) | Reads | real verification (not the "done" message) |
+| `operator-profile.yaml` (`autonomia`) | Reads | which provider to dispatch to |
+| `rule_capture` hook (if wired) | Writes | preserves the pattern in `.claude/memory/_captured-rules.md` for `distill_corrections.py` to distill later |
 
-## Processo
-1. **Decida delegar** quando: tarefa longa, independente, repetitiva, ou quando uma **segunda opinião** reduz risco.
-2. **Monte o pacote de contexto explícito** (sem isso o output volta inútil):
-   - `path/branch/commit` exatos · objetivo em 1 frase · **critério de aceite testável** · constraints (o que NÃO tocar) · formato de retorno.
-3. **Despache** ao provider configurado (`autonomia`/ambiente define qual — Codex/outro). Em fan-out, respeite `parallel-dispatch` (teto + ondas).
-4. **Handback = GATE, não confiança.** Ao receber o resultado:
-   - Leia o output REAL no disco (não a mensagem "pronto").
-   - Rode `python ${CLAUDE_PLUGIN_ROOT}/scripts/done_gate.py --profile <tipo>` (ou o teste/critério de aceite).
-   - Só aceite se o gate passar; senão **re-enfileire** com o gap apontado.
-5. **Registre** a falha recorrente (o hook `rule_capture`, se wired, preserva o padrão p/ o `distill_corrections.py` destilar depois).
+## Process
+1. **Decide to delegate** when: the task is long, independent, repetitive, or when a **second opinion** reduces risk.
+2. **Assemble the explicit context package** (without it the output comes back useless):
+   - exact `path/branch/commit` · objective in 1 sentence · **testable acceptance criterion** · constraints (what NOT to touch) · return format.
+3. **Dispatch** to the configured provider (`autonomia`/environment decides which — Codex/other). In fan-out, respect `parallel-dispatch` (ceiling + waves).
+4. **Handback = GATE, not trust.** On receiving the result:
+   - Read the REAL output on disk (not the "done" message).
+   - Run `python ${CLAUDE_PLUGIN_ROOT}/scripts/done_gate.py --profile <type>` (or the test/acceptance criterion).
+   - Only accept if the gate passes; otherwise **re-queue** with the gap pointed out.
+5. **Record** the recurring failure (the `rule_capture` hook, if wired, preserves the pattern for `distill_corrections.py` to distill later).
 
-## Quando NÃO Ativar
-- Tarefa curta que você faz mais rápido direto.
-- Sem provider secundário disponível → faça local + verifique.
-- Quando o contexto não cabe num pacote explícito (refine o escopo antes).
-- Fan-out de N tarefas independentes (sem handback individual) → use `parallel-dispatch`; esta skill é 1 delegação com gate no retorno.
+## When NOT to Activate
+- Short task you do faster yourself.
+- No secondary provider available → do it locally + verify.
+- When the context does not fit in an explicit package (refine the scope first).
+- Fan-out of N independent tasks (no individual handback) → use `parallel-dispatch`; this skill is 1 delegation with a gate on the return.
 
-## Exemplos executados
+## Executed examples
 
 ```console
 $ python scripts/done_gate.py "python -c \"print(1)\""
@@ -59,7 +59,7 @@ $ python scripts/done_gate.py "python -c \"print(1)\""
 
 DONE-GATE: DONE (1/1 criterios)
 ```
-<!-- executado: 2026-07-10 · exit=0 -->
+<!-- executed: 2026-07-10 · exit=0 -->
 
 ```console
 $ python scripts/done_gate.py "python -c \"import sys; sys.exit(1)\""
@@ -67,16 +67,16 @@ $ python scripts/done_gate.py "python -c \"import sys; sys.exit(1)\""
 
 DONE-GATE: NOT-DONE (0/1 criterios)
 ```
-<!-- executado: 2026-07-11 · exit=1 -->
-(handback rejeitado — é exatamente o comportamento esperado do passo 4: "só aceite se o gate passar". Critério auto-contido — não depende de nenhum arquivo externo ao kit.)
+<!-- executed: 2026-07-11 · exit=1 -->
+(handback rejected — exactly the behavior expected in step 4: "only accept if the gate passes". Self-contained criterion — it depends on no file outside the kit.)
 
 ```console
 $ python scripts/done_gate.py --json "python -c \"import sys; sys.exit(0)\""
 {"done": true, "results": [{"cmd": "python -c \"import sys; sys.exit(0)\"", "passed": true, "exit_code": 0, "tail": ""}]}
 ```
-<!-- executado: 2026-07-10 · exit=0 -->
+<!-- executed: 2026-07-10 · exit=0 -->
 
-## Prova
+## Proof
 
 ```bash
 python ${CLAUDE_PLUGIN_ROOT}/scripts/done_gate.py --self-test

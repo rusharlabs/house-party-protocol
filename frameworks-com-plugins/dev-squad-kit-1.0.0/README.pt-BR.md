@@ -16,7 +16,7 @@ que os comandos `*create`, `*task`, `*workflow`, `*execute-checklist` esperam en
 comandos específicos vão falhar ou improvisar. Use os 12 agentes para persona, `*help`,
 `*guide` e delegação de raciocínio entre papéis — ou construa/traga sua própria árvore de
 tasks se quiser os comandos de criação de documento completos. Cada um dos 12 comandos
-carrega esse mesmo aviso no topo (bloco **Dependências fora deste kit:**), antes das
+carrega esse mesmo aviso no topo (o bloco **Dependencies outside this kit:**, em inglês como toda a camada de agente), antes das
 instruções de ativação, para que o agente saiba o que pular quando o caminho não existir.
 
 ## 2. Pré-requisitos + APIs externas
@@ -31,25 +31,38 @@ Serviços externos: **nenhum — stdlib only.** Os 12 agentes são arquivos `.md
 ## 3. Instalar via plugin
 
 ```bash
-/plugin marketplace add .
+/plugin marketplace add rushar-labs/house-party-protocol
 /plugin install dev-squad-kit@house-party-protocol
 ```
+O `.claude-plugin/plugin.json` declara `commands/`; `agents/` e `skills/` são
+auto-descobertos. Sem hooks.
 
 ## 4. Instalar por cópia
 
+Na distribuição emitida este módulo vive em
+`frameworks-com-plugins/dev-squad-kit-1.0.0/` (o diretório carrega a versão — declare-a
+uma vez, em `KIT`). O instalador é `instaladores/kit-forge-1.4.0/kit_doctor.py`; rode-o da
+raiz da distribuição. Ele planeja primeiro e só escreve numa segunda invocação explícita
+com `--apply`:
+
 ```bash
-cp -r dev-squad-kit <seu-projeto>/dev-squad-kit
-cd <seu-projeto>
-python dev-squad-kit/../instaladores/kit-forge/kit_doctor.py install dev-squad-kit --target . --human
-python dev-squad-kit/../instaladores/kit-forge/kit_doctor.py install dev-squad-kit --target . --apply
+KIT=frameworks-com-plugins/dev-squad-kit-1.0.0
+cp -r "$KIT" ../your-repo/dev-squad-kit       # the copy itself (kit_doctor does not copy on claude-code)
+python instaladores/kit-forge-1.4.0/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo
+python instaladores/kit-forge-1.4.0/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo --apply
+# Codex CLI: --host codex — the installer copies the module into .agents/hpp/dev-squad-kit
+#            and each skill into .agents/skills/hpp-dev-squad-kit-<skill>; no cp -r needed
 ```
 
 ## 5. O que o instalador detecta
 
+O estágio `detect` classifica o alvo (só leitura) com exatamente estes três rótulos:
+
 ```
-greenfield    → copia os 12 comandos + 3 skills, nada mais a gerar (não há profile.yaml)
-em-andamento  → se já existir commands/<nome>.md com o mesmo nome, reporta conflito, não sobrescreve
-re-run        → cópia idempotente; nenhum estado externo pra perder
+greenfield    -> no prior config in the target; nothing to copy (there is no profile.yaml); the 12 commands + 3 skills become available
+in-progress   -> .claude/ exists, or settings(.local).json already has hooks/statusLine, or the repo has
+                 more than 3 commits: reported only — this kit touches no settings/hooks
+re-run        -> this kit+target pair is already in the registry (~/.claude-kits/registry.json); nothing changes
 ```
 
 ## 6. O que é seguro rodar de novo
@@ -59,31 +72,28 @@ Rodar a instalação de novo apenas re-copia os mesmos arquivos.
 
 ## 7. Wiring manual
 
-Nenhum. Este kit não tem hooks — só `commands/` e `skills/`, ambos auto-descobertos pelo
-Claude Code via `.claude-plugin/plugin.json`.
+Nenhum. Este kit não tem hooks — só `commands/`, `agents/` e `skills/`, todos apanhados
+pelo Claude Code via `.claude-plugin/plugin.json`.
 
 ## 8. Prova (saída real, executada)
 
-```
-$ python ../instaladores/kit-forge/tools/skill_lint.py --all skills --run-proofs
+O kit não traz linter próprio — o linter é o do instalador. Da raiz da distribuição:
 
-[FAIL] skills\pp-consolidate\SKILL.md
-    FAIL L1d.quando_nao_ativar        seção '## Quando NÃO Ativar' ausente
-    FAIL L2a.contrato_ausente         seção '## Contrato' ausente
-    FAIL L3a.exemplos_min3            0 exemplo(s) executado(s) < 3
-    FAIL L4a.prova_ausente            seção '## Prova' ausente
-[FAIL] skills\pp-discovery\SKILL.md   (mesmos 4 achados)
-[FAIL] skills\pp-raiox\SKILL.md       (mesmos 4 achados)
-skill_lint: 0 pass · 0 warn · 3 fail (de 3)
+```bash
+python instaladores/kit-forge-1.4.0/tools/skill_lint.py --all frameworks-com-plugins/dev-squad-kit-1.0.0/skills --run-proofs
 ```
+Última linha da saída (as 3 linhas `[PASS]` acima dela carregam separadores de caminho do SO):
+```
+skill_lint: 3 pass · 0 warn · 0 fail (de 3)
+```
+<!-- executado: 2026-09-21 · exit=0 -->
 
 **Honestidade de produto:** as 3 skills `pp-*` são metodologia de investigação (prosa
 guiando como inventariar/ler um repo antes de mergulhar), não scripts com output
-determinístico — por isso não têm `--self-test` nem seção `## Prova` no formato que o
-`SKILL-CONTRACT.md` deste marketplace exige para skills-ferramenta. Elas ainda não foram
-atualizadas pro contrato v1.0 formal (seção `## Contrato`, 3 exemplos executados). Funcionam
-como guia de raciocínio; não têm prova mecânica de execução. Documentado aqui em vez de
-escondido — decida se isso serve seu caso antes de instalar.
+determinístico. Elas agora cumprem o `SKILL-CONTRACT.md` do marketplace (`## Contrato`,
+exemplos executados, `## Prova`) e passam no linter acima; o que provam é o método sendo
+seguido, não a saída de um programa. Funcionam como guia de raciocínio — decida se isso
+serve seu caso antes de instalar.
 
 Os 12 agentes de persona não têm mecanismo de self-test (são prompt, não código) — a prova
 possível é a leitura do `.md` em si, que define determinística e explicitamente comandos,
@@ -92,6 +102,6 @@ personas e regras de colaboração.
 ## 9. Desfazer
 
 ```
-- Plugin: /plugin uninstall dev-squad-kit@house-party-protocol
-- Cópia: remover a pasta dev-squad-kit/ do projeto (nenhum outro arquivo foi tocado)
+- Plugin:  /plugin uninstall dev-squad-kit@house-party-protocol
+- Copy:    remove the dev-squad-kit/ folder from the project (no other file was touched)
 ```

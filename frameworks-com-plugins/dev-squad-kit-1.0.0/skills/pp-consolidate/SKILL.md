@@ -1,39 +1,39 @@
 ---
 name: pp-consolidate
-description: "Parallel Process Consolidate - consolida outputs de sessoes/agentes paralelos em um veredito unico, deduplicado e verificavel"
+description: "Parallel Process Consolidate - consolidates the outputs of parallel sessions/agents into a single, deduplicated, verifiable verdict"
 type: skill
 ---
 
-> **Auto-Trigger:** Quando houver multiplos outputs de agentes, sessoes, auditorias ou waves e o usuario pedir sintese, veredito, consolidacao ou top findings.
-> **Keywords:** "pp-consolidate", "consolidar", "sintese de agentes", "outputs paralelos", "veredito", "dedup", "juntar auditorias"
-> **Prioridade:** ALTA
+> **Auto-Trigger:** When there are multiple outputs from agents, sessions, audits or waves and the user asks for a synthesis, a verdict, a consolidation or the top findings.
+> **Keywords:** "pp-consolidate", "consolidate", "agent synthesis", "parallel outputs", "verdict", "dedup", "merge audits"
+> **Priority:** HIGH
 > **Tools:** Bash, Read, Grep, Glob
 
-# pp-consolidate - consolidacao de ondas paralelas
+# pp-consolidate - consolidation of parallel waves
 
-## Objetivo
+## Goal
 
-Transformar varias respostas ou artefatos paralelos em uma unica decisao rastreavel. O foco e remover duplicatas, resolver conflitos e apontar o que esta provado, o que e hipotese e o que ainda precisa de verificacao live.
+Turn several parallel answers or artifacts into a single traceable decision. The focus is removing duplicates, resolving conflicts and stating what is proven, what is hypothesis and what still needs live verification.
 
-## Quando NÃO Ativar
+## When NOT to Activate
 
-- Ainda nao ha multiplos outputs ou artefatos para consolidar.
-- O pedido e inventariar um repo/pasta antes da analise; use `pp-discovery`.
-- O pedido e leitura profunda de um unico alvo; use `pp-raiox`.
-- A consolidacao exigiria executar acoes operacionais; gere o veredito e roteie para seu executor operacional.
+- There are not yet multiple outputs or artifacts to consolidate.
+- The request is to inventory a repo/folder before the analysis; use `pp-discovery`.
+- The request is a deep read of a single target; use `pp-raiox`.
+- The consolidation would require running operational actions; produce the verdict and route it to your operational executor.
 
-## Processo
+## Process
 
-1. Inventarie os inputs: arquivos, mensagens, task ids, commits ou relatorios.
-2. Para cada input, extraia achados atomicos com fonte.
-3. Deduplicate por entidade + causa raiz + evidencia, nao por texto parecido.
-4. Classifique conflitos:
-   - confirmados por duas fontes;
-   - contraditorios;
-   - stale ou sem evidencia.
-5. Produza TOP-N com severidade, impacto e proximo passo.
+1. Inventory the inputs: files, messages, task ids, commits or reports.
+2. For each input, extract atomic findings with their source.
+3. Deduplicate by entity + root cause + evidence, not by similar wording.
+4. Classify conflicts:
+   - confirmed by two sources;
+   - contradictory;
+   - stale or without evidence.
+5. Produce a TOP-N with severity, impact and next step.
 
-## Saida Esperada
+## Expected Output
 
 ```md
 # PP Consolidate - <tema>
@@ -61,54 +61,54 @@ Transformar varias respostas ou artefatos paralelos em uma unica decisao rastrea
 
 ## Guardrails
 
-- Nao promover consenso sem evidencia.
-- Nao apagar divergencias; resolva ou marque como conflito.
-- Nao tratar output de agente como fato live sem verificar quando a informacao pode ter mudado.
-- Nao executar tarefas operacionais; esta skill consolida conhecimento para decisao.
+- Do not promote consensus without evidence.
+- Do not erase divergences; resolve them or mark them as a conflict.
+- Do not treat an agent's output as a live fact without verifying, when the information may have changed.
+- Do not run operational tasks; this skill consolidates knowledge for a decision.
 
-## Contrato
+## Contract
 
-**ENTRADA:** dois ou mais outputs identificados por fonte.
+**INPUT:** two or more outputs identified by source.
 
-**SAÍDA:** um veredito deduplicado com conflitos e gaps preservados.
+**OUTPUT:** one deduplicated verdict with conflicts and gaps preserved.
 
 **EXIT CODES:**
 
-| Exit | Significado |
+| Exit | Meaning |
 |---|---|
-| 0 | consolidação completa e rastreável |
-| 1 | aviso: input parcial declarado |
-| 2 | bloqueio: fonte ausente ou conflito ocultado |
-| 3 | erro ao ler os inputs |
+| 0 | consolidation complete and traceable |
+| 1 | warning: partial input declared |
+| 2 | block: missing source or hidden conflict |
+| 3 | error reading the inputs |
 
-**ESTADO QUE TOCA:**
+**STATE IT TOUCHES:**
 
-| Caminho | Ação |
+| Path | Action |
 |---|---|
-| outputs informados | leitura |
-| destino definido pelo operador | escrita do veredito |
+| the given outputs | read |
+| destination chosen by the operator | write the verdict |
 
-## Exemplos executados
+## Executed examples
 
 ```console
 $ python -c "print('inputs=3 achados=2')"
 inputs=3 achados=2
 ```
-<!-- executado: 2026-09-20 · exit=0 -->
+<!-- executed: 2026-09-20 · exit=0 -->
 
 ```console
 $ python -c "print('conflitos=1 preservados=1')"
 conflitos=1 preservados=1
 ```
-<!-- executado: 2026-09-20 · exit=0 -->
+<!-- executed: 2026-09-20 · exit=0 -->
 
 ```console
 $ python -c "import sys; print('block: fonte ausente'); sys.exit(2)"
 block: fonte ausente
 ```
-<!-- executado: 2026-09-20 · exit=2 -->
+<!-- executed: 2026-09-20 · exit=2 -->
 
-## Prova
+## Proof
 
 ```bash
 python -c "print('inputs=3 achados=2')"

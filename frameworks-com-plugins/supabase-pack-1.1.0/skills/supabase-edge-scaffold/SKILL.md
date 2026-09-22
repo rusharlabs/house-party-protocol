@@ -1,40 +1,40 @@
 ---
 name: supabase-edge-scaffold
-description: Scaffold de uma Supabase Edge Function com CORS + service-role + tratamento de erro corretos, em vez de copiar boilerplate à mão
+description: Scaffold of a Supabase Edge Function with correct CORS + service-role + error handling, instead of copying boilerplate by hand
 ---
 
-> **Auto-Trigger:** Ao criar uma nova Supabase Edge Function / endpoint serverless Supabase
-> **Keywords:** "edge function", "supabase function", "nova edge", "/edge-new", "deno deploy supabase", "função serverless supabase"
-> **Prioridade:** MÉDIA
-> **Tools:** Write, Read, mcp__claude_ai_Supabase__deploy_edge_function, mcp__claude_ai_Supabase__list_edge_functions
+> **Auto-Trigger:** When creating a new Supabase Edge Function / Supabase serverless endpoint
+> **Keywords:** "edge function", "supabase function", "new edge", "/edge-new", "deno deploy supabase", "supabase serverless function"
+> **Priority:** MEDIUM
+> **Tools:** Write, Read, MCP Supabase by capability — `deploy_edge_function`, `list_edge_functions` (the tool prefix varies per installation, e.g. `mcp__claude_ai_Supabase__deploy_edge_function` or `mcp__supabase__deploy_edge_function` — never hardcode the full prefix)
 
-# supabase-edge-scaffold — edge function nascendo certa
+# supabase-edge-scaffold — an edge function born right
 
-Toda edge nova repete o mesmo boilerplate (CORS, OPTIONS preflight, service-role via env, erro JSON). Esta skill gera o esqueleto correto.
+Every new edge function repeats the same boilerplate (CORS, OPTIONS preflight, service-role via env, JSON error). This skill generates the correct skeleton.
 
-## Contrato
+## Contract
 
-**ENTRADA:** nome kebab-case da função + (opcional) lógica específica a inserir no corpo.
+**INPUT:** kebab-case name of the function + (optional) specific logic to insert in the body.
 
-**SAÍDA:** `supabase/functions/<nome>/index.ts` com CORS + OPTIONS preflight + service-role via env + erro JSON.
+**OUTPUT:** `supabase/functions/<nome>/index.ts` with CORS + OPTIONS preflight + service-role via env + JSON error.
 
-**EXIT CODES** (smoke test `deno check` sobre o arquivo gerado):
+**EXIT CODES** (`deno check` smoke test over the generated file):
 
-| Exit | Significado |
+| Exit | Meaning |
 |---|---|
-| 0 | TypeScript type-checa limpo (1ª vez baixa deps do jsr.io/npm; runs seguintes = cache local, offline) |
-| ≠0 | erro de sintaxe/tipo no esqueleto gerado — não commitar assim |
+| 0 | TypeScript type-checks clean (1st time downloads deps from jsr.io/npm; subsequent runs = local cache, offline) |
+| ≠0 | syntax/type error in the generated skeleton — do not commit like this |
 
-**ESTADO QUE TOCA:**
+**STATE IT TOUCHES:**
 
-| Recurso | Lê/Escreve | Propósito |
+| Resource | Reads/Writes | Purpose |
 |---|---|---|
-| `supabase/functions/<nome>/index.ts` | Escreve | o esqueleto |
-| `Deno.env` (em runtime, não aqui) | — | service-role NUNCA hardcoded/commitado |
+| `supabase/functions/<nome>/index.ts` | Writes | the skeleton |
+| `Deno.env` (at runtime, not here) | — | service-role NEVER hardcoded/committed |
 
-## Processo
-1. **Nome + propósito** da função (kebab-case).
-2. **Gerar `supabase/functions/<nome>/index.ts`** com este esqueleto:
+## Process
+1. **Name + purpose** of the function (kebab-case).
+2. **Generate `supabase/functions/<nome>/index.ts`** with this skeleton:
    ```ts
    import { createClient } from "jsr:@supabase/supabase-js@2";
 
@@ -64,14 +64,14 @@ Toda edge nova repete o mesmo boilerplate (CORS, OPTIONS preflight, service-role
      }
    });
    ```
-3. **Guardrails:** service-role só via `Deno.env` (nunca no código/commit — `no-secrets`); erro sempre JSON+CORS (não vaza stack); validar input antes de tocar o DB.
-4. **Deploy** quando pronto: `deploy_edge_function` (MCP) ou `supabase functions deploy <nome>`. **Deploy = gate humano** (não auto-deploy sem ok).
+3. **Guardrails:** service-role only via `Deno.env` (never in code/commit — `no-secrets`); error always JSON+CORS (does not leak the stack); validate input before touching the DB.
+4. **Deploy** when ready: `deploy_edge_function` (MCP) or `supabase functions deploy <nome>`. **Deploy = human gate** (no auto-deploy without an ok).
 
-## Quando NÃO Ativar
-- Projeto sem Supabase.
-- Editar function existente (use Edit direto).
+## When NOT to Activate
+- Project without Supabase.
+- Editing an existing function (use Edit directly).
 
-## Exemplos executados
+## Executed examples
 
 ```console
 $ deno check supabase/functions/exemplo/index.ts
@@ -79,22 +79,22 @@ Download https://jsr.io/@supabase/supabase-js/meta.json
 [... resolve deps na 1a vez ...]
 Check index.ts
 ```
-<!-- executado: 2026-07-10 · exit=0 -->
-(o esqueleto EXATO desta skill type-checa limpo — não é pseudocódigo.)
+<!-- executed: 2026-07-10 · exit=0 -->
+(the EXACT skeleton of this skill type-checks clean — it is not pseudocode.)
 
 ```console
 $ time deno check supabase/functions/exemplo/index.ts
 real 0m0.236s
 ```
-<!-- executado: 2026-07-10 · exit=0 -->
-(2ª chamada = cache local, 0.236s — a partir daqui `deno check` é offline e cabe como Prova rápida.)
+<!-- executed: 2026-07-10 · exit=0 -->
+(2nd call = local cache, 0.236s — from here on `deno check` is offline and works as a quick Proof.)
 
 ```console
 $ grep -c "Access-Control-Allow-Origin\|OPTIONS\|Deno.env.get\|catch (e)" supabase/functions/exemplo/index.ts
 4
 ```
-<!-- executado: 2026-07-10 · exit=0 -->
-(confirma os 4 guardrails do passo 3 presentes no arquivo gerado: CORS, preflight, env — nunca hardcode, e tratamento de erro.)
+<!-- executed: 2026-07-10 · exit=0 -->
+(confirms the 4 guardrails of step 3 are present in the generated file: CORS, preflight, env — never hardcoded, and error handling.)
 
 ```console
 $ deno check broken.ts
@@ -103,15 +103,15 @@ TS2345 [ERROR]: Argument of type 'string | undefined' is not assignable to param
 Found 2 errors.
 error: Type checking failed.
 ```
-<!-- executado: 2026-07-10 · exit=1 -->
-(reprodução real: tirar o `!` non-null assertion do `Deno.env.get(...)!` do esqueleto original QUEBRA o type-check — é exatamente por isso que o passo 2 exige o `!`.)
+<!-- executed: 2026-07-10 · exit=1 -->
+(real reproduction: removing the `!` non-null assertion from the original skeleton's `Deno.env.get(...)!` BREAKS the type-check — that is exactly why step 2 requires the `!`.)
 
-## Prova
+## Proof
 
 ```bash
 deno --version
 ```
-(pré-condição rápida e offline: sem `deno` no PATH, `deno check` do passo de smoke-test não roda. Depois de gerar um scaffold real, troque por `deno check supabase/functions/<nome>/index.ts`.)
+(quick, offline precondition: without `deno` on the PATH, the smoke-test step's `deno check` does not run. After generating a real scaffold, replace it with `deno check supabase/functions/<nome>/index.ts`.)
 
-## Veja também
-`rls-audit` (segurança de dados), `secret_scan_on_write` (não commitar a service-role).
+## See also
+`rls-audit` (data security), `secret_scan_on_write` (do not commit the service-role).

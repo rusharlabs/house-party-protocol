@@ -4,11 +4,11 @@
   <rect width="920" height="240" rx="32" fill="#0F1113"/>
   <g transform="translate(34 30) scale(.7)">
     <rect width="256" height="256" rx="52" fill="#F4F1EB"/>
-    <path d="M38 128H92M164 128H218" stroke="#FF8A3D" stroke-width="14" stroke-linecap="round"/>
+    <path d="M38 128H92M164 128H218" stroke="#FF6A00" stroke-width="14" stroke-linecap="round" opacity=".55"/>
     <path d="M92 72V184M164 72V184" stroke="#0F1113" stroke-width="14" stroke-linecap="round"/>
     <path d="M92 98H164M92 158H164" stroke="#FF6A00" stroke-width="14" stroke-linecap="round"/>
-    <circle cx="38" cy="128" r="13" fill="#E5484D"/><circle cx="218" cy="128" r="16" fill="#FF6A00"/>
+    <circle cx="38" cy="128" r="13" fill="#0F1113" opacity=".45"/><circle cx="218" cy="128" r="16" fill="#FF6A00"/>
   </g>
   <text x="250" y="108" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="54" font-weight="750" fill="#F4F1EB">HOUSE PARTY</text>
-  <text x="252" y="158" font-family="JetBrains Mono, Cascadia Code, Consolas, monospace" font-size="27" letter-spacing="8" fill="#A8ADB5">PROTOCOL</text>
+  <text x="252" y="158" font-family="JetBrains Mono, Cascadia Code, Consolas, monospace" font-size="27" letter-spacing="8" fill="#F4F1EB" opacity=".62">PROTOCOL</text>
 </svg>

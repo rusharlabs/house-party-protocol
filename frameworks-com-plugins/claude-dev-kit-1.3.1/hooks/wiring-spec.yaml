@@ -1,4 +1,4 @@
-# wiring-spec.yaml — consumido por scripts/wire_settings.py --spec (claude-dev-kit)
+# wiring-spec.yaml — consumed by scripts/wire_settings.py --spec (claude-dev-kit)
 hooks:
   PreToolUse:
     matcher: "Edit|Write|MultiEdit"

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>House Party Protocol — Harness manual</title>
-  <meta name="description" content="Operating manual for the House Party Protocol harness 2.4.1: init, maps, loop, policy, proof, hosts and exit codes, each claim with the command that reproduces it.">
+  <meta name="description" content="Operating manual for the House Party Protocol harness 2.4.2: init, maps, loop, policy, proof, hosts and exit codes, each claim with the command that reproduces it.">
   <link rel="alternate" hreflang="en" href="MANUAL.html">
   <link rel="alternate" hreflang="pt-BR" href="MANUAL.pt-BR.html">
   <style>
@@ -66,9 +66,9 @@
   <header class="hero">
     <div class="wrap">
       <img src="../assets/hpp-logo-dark.svg" alt="House Party Protocol — by Rushar Labs">
-      <p class="eyebrow">Harness manual · v2.4.1 · Claude Code and Codex CLI</p>
+      <p class="eyebrow">Harness manual · v2.4.2 · Claude Code and Codex CLI</p>
       <h1>From spec to proof.<br><span class="signal">Without a leap of trust.</span></h1>
-      <p>An operating guide to the harness: how <code>hpp init</code> installs, what each map projects, how the loop advances, what the policy blocks, and what counts as proof. Every claim below carries the command that reproduces it; the outputs quoted were measured on this source tree, version 2.4.0.</p>
+      <p>An operating guide to the harness: how <code>hpp init</code> installs, what each map projects, how the loop advances, what the policy blocks, and what counts as proof. Every claim below carries the command that reproduces it; the outputs quoted were measured on 2026-09-21 against version 2.4.2, from a clone of this repository and from a pip install of the same version, and each block says which.</p>
     </div>
   </header>
   <nav aria-label="Chapters"><div class="wrap"><a href="#model">Model</a><a href="#start">Start</a><a href="#init">Init</a><a href="#maps">Maps</a><a href="#loop">Loop</a><a href="#policy">Policy</a><a href="#proof">Proof</a><a href="#hosts">Hosts</a><a href="#exit">Exit codes</a></div></nav>
@@ -100,8 +100,8 @@
 python -m hpp init --target ../your-repo
 python -m hpp init --target ../your-repo --apply
 python -m hpp benchmark -k 3</pre>
-      <p><code>hpp doctor</code> validates the manifest. On this checkout it prints <code>HPP doctor: ok · modules=10 · hosts=claude-code, codex</code>; with <code>--json</code> the distribution field reads <code>source-contract</code>, because a source tree has no <code>marketplace.json</code> to cross-check — the command says what it could not verify instead of reporting a check it did not run. Against the emitted distribution the same field reads <code>checked</code>.</p>
-      <p><code>hpp install --bundle reliable-coding --host codex --target ../your-repo</code> prints a receipt with <code>"mode": "plan-only"</code> and copies nothing. The copy is done by the module installer, which ships with the emitted distribution and not with this source tree: <code>kit_doctor.py install --kit &lt;module-path&gt; --host &lt;host&gt; --target ../your-repo</code> prints a plan, and the same command with <code>--apply</code> performs it. <code>hpp init</code> prints these lines for you in its wire block.</p>
+      <p><code>hpp doctor</code> validates the manifest. In this repository it prints <code>HPP doctor: ok · modules=10 · hosts=claude-code, codex</code>, and because <code>marketplace.json</code> sits beside the manifest it also cross-checks every module path, version and plugin manifest; that result is visible only with <code>--json</code>, where <code>distribution</code> reads <code>{"checked": true, "modules": 10, "status": "ok"}</code>. From a pip install the one-line output is the same and the field reads <code>{"checked": false, "status": "source-contract"}</code> — the command says what it could not verify instead of reporting a check it did not run.</p>
+      <p><code>hpp install --bundle reliable-coding --host codex --target ../your-repo</code> prints a receipt with <code>"mode": "plan-only"</code> and copies nothing. The copy is done by the module installer, which is part of this repository at <code>instaladores/kit-forge-1.4.0/kit_doctor.py</code>, next to the module directories it installs from (a pip install carries neither): <code>python instaladores/kit-forge-1.4.0/kit_doctor.py install --kit &lt;module-path&gt; --host &lt;host&gt; --target ../your-repo</code> prints a plan, and the same command with <code>--apply</code> performs it. <code>hpp init</code> prints these lines for you in its wire block.</p>
       <p class="measured">Requirements: Python 3.10 or newer (<code>pyproject.toml</code>), <code>git</code> on <code>PATH</code> for attestation and for the commit count in <code>detect</code>; no third-party package.</p>
     </div></section>
 
@@ -118,7 +118,19 @@ python -m hpp benchmark -k 3</pre>
         <tr><td><code>smoke</code></td><td>Four controls: the policy classifier (<code>rm -rf</code> must be <code>BLOCK</code>, <code>pytest</code> must be <code>ALLOW</code>), a non-empty capability graph, the event log projecting onto the loop, and the benchmark at <code>k=1</code>.</td><td>A failed control sets exit 1 and the plan says which one; <code>--no-benchmark</code> reports that control as not verified instead of skipping it silently.</td></tr>
       </tbody></table>
       <h3>Readiness is counted, not estimated</h3>
-      <p>Eleven items, each <code>verified</code>, <code>not verified</code> or <code>failed</code>, each with the command that reproduces it. What was not measured appears as not verified — never as zero and never as one hundred. This is the boot sequence and the readiness line measured on an empty target from this source tree:</p>
+      <p>Eleven items, each <code>verified</code>, <code>not verified</code> or <code>failed</code>, each with the command that reproduces it. What was not measured appears as not verified — never as zero and never as one hundred. This is the boot sequence and the readiness line measured on an empty target from a clone of this repository, which carries the module directories, their <code>CHECKSUMS.txt</code> and <code>marketplace.json</code>:</p>
+      <pre>&gt; detecting host...           ✓ greenfield · 0 existing item(s) preserved
+&gt; checking prerequisites...   ✓ python 3.14.3 · protocol 2.0
+&gt; mounting profile...         ✓ would-write · host=claude-code · bundle=reliable-coding · policy=audit · 3 default(s)
+&gt; loading modules...          ✓ 6 modules · reliable-coding · claude-code · 6/6 checksums verified
+&gt; wiring suggestions...       ✓ 7 commands to paste · 0 files written
+&gt; verifying evidence...       ✓ policy · graph · events · benchmark
+&gt; protocol online.
+
+  READINESS  every line is a check that ran; the command below it reproduces it
+  ████████████████░░░░  9/11 verified · 2 not verified · 0 failed</pre>
+      <p class="measured">The two not verified are the two that only a later action can prove: the profile (plan only; <code>--apply</code> writes it) and the host wiring (a paste you do yourself). Command: <code>python -m hpp init --target &lt;empty-dir&gt; --non-interactive --no-animation</code>; the target directory held 0 files afterwards.</p>
+      <p>From a pip install of the same version, which carries the harness, the manifest and the benchmark suite but no module directories and no <code>marketplace.json</code>, the same command on the same target reads:</p>
       <pre>&gt; detecting host...           ✓ greenfield · 0 existing item(s) preserved
 &gt; checking prerequisites...   ✓ python 3.14.3 · protocol 2.0
 &gt; mounting profile...         ✓ would-write · host=claude-code · bundle=reliable-coding · policy=audit · 3 default(s)
@@ -129,7 +141,7 @@ python -m hpp benchmark -k 3</pre>
 
   READINESS  every line is a check that ran; the command below it reproduces it
   █████████████░░░░░░░  7/11 verified · 4 not verified · 0 failed</pre>
-      <p class="measured">The four not verified are the ones a source checkout cannot prove: distribution integrity and module checksums (only the emitted distribution carries <code>marketplace.json</code> and <code>CHECKSUMS.txt</code>), the profile (plan only) and the host wiring (a paste you do yourself). Command: <code>python -m hpp init --target &lt;empty-dir&gt; --non-interactive --no-animation</code>; the target directory held 0 files afterwards.</p>
+      <p class="measured">The two extra items not verified there — distribution integrity and module checksums — have nothing to be measured against in a wheel, so they are reported as not verified, never as passed.</p>
       <h3>Flags</h3>
       <ul>
         <li><code>--host</code>, <code>--bundle</code>, <code>--policy-mode audit|enforce</code> — answer the three questions; <code>--modules a,b</code> replaces the bundle with an explicit list.</li>

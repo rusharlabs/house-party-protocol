@@ -1,0 +1,8 @@
+{
+  "work": [
+    {"id": "spec", "acceptance": ["scope and invariants recorded"], "tier": "economy"},
+    {"id": "build", "depends_on": ["spec"], "acceptance": ["artifact exists"], "tier": "balanced"},
+    {"id": "docs", "depends_on": ["spec"], "acceptance": ["public guide matches behavior"], "tier": "economy"},
+    {"id": "verify", "depends_on": ["build", "docs"], "acceptance": ["fresh checks pass"], "tier": "frontier"}
+  ]
+}

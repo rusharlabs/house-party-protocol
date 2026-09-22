@@ -1,64 +1,64 @@
 ---
 name: parallel-dispatch
-description: Dispara tarefas independentes em ondas com teto de concorrência + fallback sequencial em rate-limit
+description: Fires independent tasks in waves with a concurrency ceiling + sequential fallback on rate limit
 ---
 
-> **Auto-Trigger:** Quando há 2+ tarefas independentes (paths/domínios disjuntos) que podem rodar em paralelo
-> **Keywords:** "paralelo", "fan-out", "em paralelo", "vários ao mesmo tempo", "dispatch", "ondas", "lotes"
-> **Prioridade:** ALTA
+> **Auto-Trigger:** When there are 2+ independent tasks (disjoint paths/domains) that can run in parallel
+> **Keywords:** "parallel", "fan-out", "in parallel", "several at once", "dispatch", "waves", "batches"
+> **Priority:** HIGH
 > **Tools:** Task/Agent, Bash, Read
 
-# parallel-dispatch — fan-out com teto e fallback
+# parallel-dispatch — fan-out with a ceiling and a fallback
 
-Generaliza o `dispatching-parallel-agents` de forma **portátil e config-driven**. Resolve a lição "ondas de ≤3 vencem onde 8-16 explodem (rate-limit do servidor)".
+Generalizes `dispatching-parallel-agents` in a **portable, config-driven** way. Resolves the lesson "waves of ≤3 win where 8-16 blow up (server rate limit)".
 
-## Contrato
+## Contract
 
-**ENTRADA:** lista de tarefas independentes (escopo disjunto); `concorrencia.teto`/`concorrencia.fallback` do `operator-profile.yaml`.
+**INPUT:** list of independent tasks (disjoint scope); `concorrencia.teto`/`concorrencia.fallback` from `operator-profile.yaml`.
 
-**SAÍDA:** resultados das tarefas, verificados no disco (não a mensagem "pronto" do agente); ondas fechadas em barreira.
+**OUTPUT:** the tasks' results, verified on disk (not the agent's "done" message); waves closed at a barrier.
 
-**EXIT CODES** (do `${CLAUDE_PLUGIN_ROOT}/_lib/concurrency.py`, invocado no passo 2 para ler o teto):
+**EXIT CODES** (from `${CLAUDE_PLUGIN_ROOT}/_lib/concurrency.py`, invoked in step 2 to read the ceiling):
 
-| Exit | Significado |
+| Exit | Meaning |
 |---|---|
-| 0 | teto/wave_size/fallback impressos com sucesso (sempre — degrada para defaults sem profile) |
+| 0 | ceiling/wave_size/fallback printed successfully (always — degrades to defaults without a profile) |
 
-**ESTADO QUE TOCA:**
+**STATE IT TOUCHES:**
 
-| Recurso | Lê/Escreve | Propósito |
+| Resource | Reads/Writes | Purpose |
 |---|---|---|
-| `operator-profile.yaml` (`concorrencia.*`) | Lê | teto, wave_size, fallback |
-| stderr dos agentes despachados | Lê | detectar rate-limit (`is_rate_limited`) |
-| output de cada tarefa no disco | Lê | verificação real (passo 6) |
+| `operator-profile.yaml` (`concorrencia.*`) | Reads | ceiling, wave_size, fallback |
+| stderr of the dispatched agents | Reads | detect rate limit (`is_rate_limited`) |
+| each task's output on disk | Reads | real verification (step 6) |
 
-## Processo
-1. **Confirme independência.** Só paralelize tarefas com **escopo disjunto** (paths/domínios que não se sobrepõem). Se há dependência sequencial ou estado compartilhado, NÃO paralelize.
-2. **Leia o teto.** `python ${CLAUDE_PLUGIN_ROOT}/_lib/concurrency.py` imprime `teto`/`wave_size`/`fallback` do `operator-profile.yaml` (default teto=3). Nunca exceda o teto.
-3. **Agrupe em ondas** de tamanho ≤ teto. Despache uma onda, **só abra a próxima quando a anterior fechar** (barreira).
-4. **Cada tarefa carrega contrato:** objetivo + escopo + **constraint de não tocar arquivos fora do seu escopo** + formato de retorno.
-5. **Fallback em rate-limit.** Se `is_rate_limited(stderr)` (casa "429"/"rate limit"/"quota"/"overloaded"), degrade conforme `concorrencia.fallback` do profile — default `sequential-local`: termine as tarefas restantes **sequencialmente e localmente** (bash/diretamente), imune ao rate-limit do servidor.
-6. **Verifique o retorno.** O "done" de agente delegado mente — confirme no disco/fonte (ver `adversarial-refuter` / `delegate-with-handback`).
+## Process
+1. **Confirm independence.** Only parallelize tasks with **disjoint scope** (paths/domains that do not overlap). If there is a sequential dependency or shared state, do NOT parallelize.
+2. **Read the ceiling.** `python ${CLAUDE_PLUGIN_ROOT}/_lib/concurrency.py` prints `teto`/`wave_size`/`fallback` from `operator-profile.yaml` (default teto=3). Never exceed the ceiling.
+3. **Group into waves** of size ≤ ceiling. Dispatch one wave, **only open the next when the previous one has closed** (barrier).
+4. **Each task carries a contract:** objective + scope + **constraint not to touch files outside its scope** + return format.
+5. **Fallback on rate limit.** If `is_rate_limited(stderr)` (matches "429"/"rate limit"/"quota"/"overloaded"), degrade according to `concorrencia.fallback` in the profile — default `sequential-local`: finish the remaining tasks **sequentially and locally** (bash/directly), immune to the server's rate limit.
+6. **Verify the return.** A delegated agent's "done" lies — confirm on disk/at the source (see `adversarial-refuter` / `delegate-with-handback`).
 
-## Quando NÃO Ativar
-- Tarefa única, ou tarefas com dependência sequencial / estado compartilhado.
-- Quando o custo de coordenação supera o ganho (2 tarefas triviais).
-- Quando o ambiente não tem um 2º executor disponível.
-- 1 delegação só, com handback individual → use `delegate-with-handback` (esta skill é fan-out de N; aquela é 1-para-1).
+## When NOT to Activate
+- Single task, or tasks with a sequential dependency / shared state.
+- When the coordination cost exceeds the gain (2 trivial tasks).
+- When the environment has no 2nd executor available.
+- Just 1 delegation, with an individual handback → use `delegate-with-handback` (this skill is fan-out of N; that one is 1-to-1).
 
-## Exemplos executados
+## Executed examples
 
 ```console
 $ python ${CLAUDE_PLUGIN_ROOT}/_lib/concurrency.py
 teto=3 wave_size=3 fallback=sequential-local signals=['429', 'rate limit', 'quota', 'overloaded']
 ```
-<!-- executado: 2026-07-10 · exit=0 -->
+<!-- executed: 2026-07-10 · exit=0 -->
 
 ```console
 $ python ${CLAUDE_PLUGIN_ROOT}/_lib/concurrency.py --self-test
 self-test OK
 ```
-<!-- executado: 2026-07-10 · exit=0 -->
+<!-- executed: 2026-07-10 · exit=0 -->
 
 ```console
 $ python ${CLAUDE_PLUGIN_ROOT}/scripts/done_gate.py --profile hooks
@@ -67,10 +67,10 @@ $ python ${CLAUDE_PLUGIN_ROOT}/scripts/done_gate.py --profile hooks
 
 DONE-GATE: NOT-DONE (0/1 criterios)
 ```
-<!-- executado: 2026-07-10 · exit=1 -->
-(passo 6 — "o done de agente delegado mente": o gate confirma no disco e rejeita quando o critério não bate.)
+<!-- executed: 2026-07-10 · exit=1 -->
+(step 6 — "a delegated agent's done lies": the gate confirms on disk and rejects when the criterion does not match.)
 
-## Prova
+## Proof
 
 ```bash
 python ${CLAUDE_PLUGIN_ROOT}/_lib/concurrency.py --self-test

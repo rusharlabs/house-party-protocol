@@ -244,8 +244,9 @@ that reproduces it: `verified`, `failed` or `not-verified`.
 not verified, never as zero and never as one hundred.
 
 **Verify:** `python -m hpp init --target <dir> --json` returns `readiness.items` with eleven
-entries; in a source checkout, distribution integrity and module checksums are `not-verified`
-because there is no `marketplace.json` or `CHECKSUMS.txt` to measure.
+entries. From a clone of this repository, distribution integrity and module checksums are
+`verified`, because `marketplace.json` and every module's `CHECKSUMS.txt` sit beside the manifest;
+from a pip install, which carries neither, the same two items are `not-verified`.
 
 ## monitor
 
