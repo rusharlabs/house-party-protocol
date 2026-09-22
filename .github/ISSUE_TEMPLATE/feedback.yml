@@ -1,0 +1,46 @@
+name: Feedback
+description: Something that was confusing, slower than it should be, or made you stop using a piece of the harness.
+title: "[feedback] "
+labels: ["feedback"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Leaving a module out, turning a hook off, or giving up on `hpp init` halfway is valid
+        feedback. Nothing here needs a reproduction; a sentence is enough.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - hpp init (installer)
+        - hpp doctor / benchmark
+        - Event log, status, resume
+        - Attestation
+        - Maps (lane, monitor)
+        - Policy classifier
+        - A module (name it below)
+        - Documentation
+        - Something else
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, in your words
+      description: What you were trying to do, what got in the way, and what you did instead.
+    validations:
+      required: true
+  - type: textarea
+    id: better
+    attributes:
+      label: What would have made it better
+    validations:
+      required: false
+  - type: input
+    id: version
+    attributes:
+      label: Version (optional)
+      placeholder: "hpp --version"
+    validations:
+      required: false

@@ -194,8 +194,9 @@ interrompe os estágios restantes quando um estágio falha com uma dica bloquean
 ## Testes e CI
 
 A suíte em `tests/` é stdlib-only e roda sem rede. Cada arquivo de teste carrega ao menos um teste
-chamado `CONTROLE` que prova que o arquivo consegue falhar. Neste repositório a suíte inteira roda;
-a árvore-fonte do harness, que não tem `marketplace.json`, pula os dois testes que precisam dele. A CI roda a suíte,
+chamado `CONTROLE` que prova que o arquivo consegue falhar. Neste repositório um teste pula de propósito
+(a cópia emitida é coberta pelo teste seguinte); a árvore-fonte do harness, que não tem
+`marketplace.json`, pula os dois testes que precisam dele. A CI roda a suíte,
 `hpp doctor` e `hpp benchmark -k 3` em Linux, macOS e Windows, de Python 3.10 a 3.13, com
 permissões somente de leitura e nenhum passo autorizado a falhar em silêncio.
 

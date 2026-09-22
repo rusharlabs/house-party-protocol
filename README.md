@@ -3,6 +3,7 @@
 </p>
 
 <p align="center"><sub><code>AGENTS &nbsp;·&nbsp; EVIDENCE &nbsp;·&nbsp; MEMORY &nbsp;·&nbsp; PROTOCOL &nbsp;·&nbsp; CONTINUITY</code></sub></p>
+<p align="center"><sub>spec-driven &nbsp;·&nbsp; wave-driven &nbsp;·&nbsp; lane-isolated</sub></p>
 
 <p align="center">
   <a href="LICENSE"><img alt="MIT" src="https://img.shields.io/badge/license-MIT-0F1113"></a>
@@ -19,7 +20,9 @@
 House Party Protocol (HPP) is a local-first harness for coding agents. It sits around the work
 an agent does in Claude Code or Codex CLI and turns four questions into executable contracts:
 what may run, who may approve, what counts as proof, and where the next step comes from after an
-interruption.
+interruption. The order of work is not negotiated in the conversation: a spec compiles into a
+WorkGraph, the graph runs in topological waves, parallel sessions work in isolated lanes, and every
+wave closes on evidence, never on a sentence.
 
 The harness is a Python package with no runtime dependencies (`python -m hpp`), a manifest that
 declares the protocol, a set of installable modules, and one distribution channel per host.
@@ -65,15 +68,30 @@ Each failure above has a mechanism in the code, and each mechanism has a command
 
 ## Quickstart
 
+> [!WARNING]
+> **Official sources only.** This project is published at
+> `github.com/rushar-labs/house-party-protocol` and through the Claude Code plugin channel
+> `rushar-labs/house-party-protocol` — nowhere else. A copy under another account, or on a package
+> index this README does not name, is not this project. Every release ships `SHA256SUMS` and
+> every module ships `CHECKSUMS.txt`; see [SECURITY.md](SECURITY.md).
+
 Requirements: Python 3.10 or newer (`pyproject.toml`), `git` on `PATH` for attestation, no
 third-party packages. CI exercises Python 3.10 to 3.13 on Linux, macOS and Windows
 (`.github/workflows/ci.yml`); older interpreters are not promised because nothing measures them.
 
 ```bash
-pip install git+https://github.com/rushar-labs/house-party-protocol
+pip install git+https://github.com/rushar-labs/house-party-protocol@v2.4.3
 hpp doctor
 hpp init --target ../your-repo
 ```
+
+<p align="center">
+  <img alt="python -m hpp doctor: HPP doctor: ok · modules=10 · hosts=claude-code, codex" src="assets/terminal/hpp-doctor.svg" width="474">
+</p>
+<p align="center">
+  <img alt="python -m hpp init --target your-repo --non-interactive --no-animation: six boot lines, then READINESS 9/11 verified · 2 not verified · 0 failed" src="assets/terminal/hpp-init.svg" width="860">
+</p>
+<p align="center"><sub>The two commands as they print from a clone of this repository. Both images are text rendered from the real output by <code>scripts/render_terminal_svg.py</code>; regenerate them after any change to the wizard.</sub></p>
 
 The package has no runtime dependencies and ships its own manifest and benchmark suite, so `hpp`
 — including `hpp benchmark` and `hpp --self-test` — answers from any directory once installed

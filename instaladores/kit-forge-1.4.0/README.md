@@ -26,7 +26,7 @@ External services: **none — stdlib + PyYAML, touches only the local filesystem
 
 ## Install as a plugin
 
-Kit Forge **is** a plugin: `.claude-plugin/plugin.json` (793 B in the emitted module)
+Kit Forge **is** a plugin: `.claude-plugin/plugin.json` ships in the emitted module
 declares name, version, description and keywords, and `marketplace.json` at the
 distribution root lists it under `installers`.
 

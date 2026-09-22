@@ -1,22 +1,24 @@
-# SETTINGS-WIRE — ativar os hooks (GATE HUMANO)
+[English](SETTINGS-WIRE.md) · [Português](SETTINGS-WIRE.pt-BR.md)
 
-> ⚠️ **Editar `.claude/settings.local.json` é gate humano** — sessões automatizadas costumam ter uma trava explícita contra auto-editar arquivo de settings/hooks (por design — mutar a própria permissão não deve ser automático). Cole você mesmo os blocos abaixo. Tudo é **WARN-only (exit 0)** + `timeout: 30` (padrão Anthropic).
+# SETTINGS-WIRE — activating the hooks (HUMAN GATE)
 
-Os hooks **MERGEM** nos arrays existentes de `hooks` do seu `settings.local.json` (não substituem) — adicione as entradas abaixo nos mesmos arrays, sem apagar o que já está lá.
+> ⚠️ **Editing `.claude/settings.local.json` is a human gate** — automated sessions usually have an explicit lock against self-editing settings/hooks files (by design — mutating one's own permission should not be automatic). Paste the blocks below yourself. Everything is **WARN-only (exit 0)** + `timeout: 30` (Anthropic standard).
 
-## 0. Caminho RECOMENDADO: instalar como PLUGIN (auto-wire de 1 clique)
-Em vez de colar hook por hook, instale o `operator-kit` como plugin — o `hooks/hooks.json` arma os 7 hooks WARN-only de uma vez (via `${CLAUDE_PLUGIN_ROOT}`):
+The hooks **MERGE** into the existing `hooks` arrays of your `settings.local.json` (they do not replace them) — add the entries below to the same arrays, without deleting what is already there.
+
+## 0. RECOMMENDED path: install as a PLUGIN (1-click auto-wire)
+Instead of pasting hook by hook, install `operator-kit` as a plugin — `hooks/hooks.json` arms the 7 WARN-only hooks at once (via `${CLAUDE_PLUGIN_ROOT}`):
 ```bash
-/plugin marketplace add .                            # registra o marketplace (nome = "name" do marketplace.json)
-/plugin install operator-kit@<nome-do-marketplace>   # instala + arma os 7 hooks automaticamente
+/plugin marketplace add .                            # registers the marketplace (name = "name" of marketplace.json)
+/plugin install operator-kit@<marketplace-name>      # installs + arms the 7 hooks automatically
 ```
-A statusLine (§2) e os output-styles continuam manuais (limite do Claude Code: plugin não embute statusLine). A seção 1 abaixo é o caminho MANUAL alternativo (sem plugin).
+The statusLine (§2) and the output-styles remain manual (Claude Code limit: a plugin cannot embed a statusLine). Section 1 below is the alternative MANUAL path (no plugin).
 
 ---
 
-## 1. Caminho manual (alternativa ao plugin) — os 7 hooks do kit
+## 1. Manual path (alternative to the plugin) — the kit's 7 hooks
 
-Copie as entradas de `hooks/hooks.json` deste kit para dentro dos arrays `PreToolUse`/`UserPromptSubmit`/`Stop` do seu `settings.local.json`, ajustando o path para onde você colocou o kit (ex.: `operator-kit/hooks/...`):
+Copy the entries of this kit's `hooks/hooks.json` into the `PreToolUse`/`UserPromptSubmit`/`Stop` arrays of your `settings.local.json`, adjusting the path to wherever you placed the kit (e.g. `operator-kit/hooks/...`):
 
 ```jsonc
 "PreToolUse": [
@@ -55,30 +57,30 @@ Copie as entradas de `hooks/hooks.json` deste kit para dentro dos arrays `PreToo
 ]
 ```
 
-Todos os 7 lêem `operator-profile.yaml` (via `_lib/profile_loader.py`) e degradam para defaults seguros se o profile não existir — nenhum deles quebra o fluxo do chamador.
+All 7 read `operator-profile.yaml` (via `_lib/profile_loader.py`) and degrade to safe defaults if the profile does not exist — none of them breaks the caller's flow.
 
-## 2. gitignore (obrigatório ao ativar o Stop hook `autoprompt_resume`)
-Adicionar ao `.gitignore` a linha do `paths.resume_pointer` do perfil:
+## 2. gitignore (mandatory when activating the `autoprompt_resume` Stop hook)
+Add the profile's `paths.resume_pointer` line to `.gitignore`:
 ```
 .claude/RESUME-NEXT.md
 ```
 
-## 3. statusLine — a barra de progresso viva (NÃO vai no plugin; só em settings)
-O Claude Code não aceita `statusLine` dentro de plugin — tem que ir no `settings.json`/`settings.local.json`. Aponte para a statusline portátil do kit (lê o `operator-profile.yaml`):
+## 3. statusLine — the live progress bar (does NOT go in the plugin; settings only)
+Claude Code does not accept `statusLine` inside a plugin — it has to go in `settings.json`/`settings.local.json`. Point it at the kit's portable statusline (it reads `operator-profile.yaml`):
 ```jsonc
 "statusLine": { "type": "command", "command": "python operator-kit/statusline/statusline.py --statusline", "padding": 0 }
 ```
-Reabra a sessão p/ aparecer no rodapé. Exemplo de render (segmentos default `progress,health,commits,branch`): `🧠 meu-projeto 58% █████░░░ ▸ 34c hoje ▸ feat/minha-branch` (o segmento `health` só aparece se `health.probes` estiver configurado — ver `health-kit`).
+Reopen the session for it to appear in the footer. Render example (default segments `progress,health,commits,branch`): `🧠 meu-projeto 58% █████░░░ ▸ 34c hoje ▸ feat/minha-branch` (the `health` segment only appears if `health.probes` is configured — see `health-kit`).
 
-## Smoke test pós-wire
+## Post-wire smoke test
 ```bash
 python operator-kit/hooks/autoprompt_resume.py --self-test
-python operator-kit/hooks/autoprompt_resume.py --print   # confere paths do perfil
+python operator-kit/hooks/autoprompt_resume.py --print   # checks the profile's paths
 python operator-kit/scripts/done_gate.py --self-test
 ```
 
-## O que NÃO é gate (já construído, sem tocar settings)
+## What is NOT a gate (already built, no settings touched)
 - `operator-profile.yaml`, `profile.example.yaml`, `_lib/profile_loader.py`
 - `scripts/done_gate.py --profile <tipo>`
 - `templates/loop-charter-template.md`
-- `output-styles/direct-register.md`, `output-styles/execute-100pct.md` (ativar com `/output-style` após copiar p/ `.claude/output-styles/`)
+- `output-styles/direct-register.md`, `output-styles/execute-100pct.md` (activate with `/output-style` after copying to `.claude/output-styles/`)

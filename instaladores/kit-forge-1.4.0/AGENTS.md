@@ -1,14 +1,14 @@
 # AGENTS.md — kit-forge
 
-Este kit monta, valida e instala os demais kits do House Party Protocol.
+This kit assembles, validates and installs the other House Party Protocol kits.
 
 ## Codex CLI
 
-- Use `kit_doctor.py install --kit <kit> --host codex --target <repo> --apply` para instalação por cópia.
-- O gerador `tools/codex_skills.py` cria skills namespaced em `.agents/skills` e mantém o runtime em `.agents/hpp`.
-- Hooks de Claude Code não são ativados no Codex.
+- Use `kit_doctor.py install --kit <kit> --host codex --target <repo> --apply` for install-by-copy.
+- The generator `tools/codex_skills.py` creates namespaced skills in `.agents/skills` and keeps the runtime in `.agents/hpp`.
+- Claude Code hooks are not activated on Codex.
 
-## Verificação
+## Verification
 
 ```bash
 python kit_doctor.py --self-test
@@ -16,4 +16,4 @@ python tools/codex_skills.py --self-test
 python tools/skill_lint.py --self-test
 ```
 
-Nunca relaxe o linter para fazer um pacote passar; corrija a fonte.
+Never relax the linter to make a package pass; fix the source.

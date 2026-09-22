@@ -1,34 +1,34 @@
-# 00-PROCESSES — escada de verificação + matriz de autoridade — {{project_name}}
+# 00-PROCESSES — verification ladder + authority matrix — {{project_name}}
 
-## A escada R0→R4 (config em `verificacao.escada` do profile)
+## The R0→R4 ladder (config in `verificacao.escada` of the profile)
 
-Ninguém declara readiness maior que a evidência. `goal_ledger.py --readiness <id> <RN> --evidence <ref>`
-recusa (exit 2) se a evidência não bater com o nível.
+Nobody declares readiness above what the evidence supports. `goal_ledger.py --readiness <id> <RN> --evidence <ref>`
+refuses (exit 2) if the evidence does not match the level.
 
-| Nível | Nome | O que prova | Mecanismo que certifica | Quem declara |
+| Level | Name | What it proves | Mechanism that certifies it | Who declares it |
 |---|---|---|---|---|
-| R0 | Declarado | "escrevi/mudei" | — (palavra do maker) | executora |
-| R1 | Auto-verificado | self-test/teste unitário verde | `--self-test`/pytest exit 0 | executora (evidência colada) |
-| R2 | Gate | DoD do PRD passa AO VIVO | `done_gate.py` exit 0 (probes) | só o script (nunca prosa) |
-| R3 | Revisado | outro cérebro confirmou | `goal_review.py` + checker cross-model; indisponível → `DEFERRED`, nunca R3 | revisora (família ≠ maker) |
-| R4 | Aceito | humano aceitou em uso real | gate humano / produção | humano |
+| R0 | Declared | "I wrote/changed it" | — (the maker's word) | executor |
+| R1 | Self-verified | self-test/unit test green | `--self-test`/pytest exit 0 | executor (evidence pasted) |
+| R2 | Gate | the PRD's DoD passes LIVE | `done_gate.py` exit 0 (probes) | only the script (never prose) |
+| R3 | Reviewed | another brain confirmed it | `goal_review.py` + cross-model checker; unavailable → `DEFERRED`, never R3 | reviewer (family ≠ maker) |
+| R4 | Accepted | a human accepted it in real use | human gate / production | human |
 
-## Matriz de autoridade (papel × direito)
+## Authority matrix (role × right)
 
-| | Planejadora (arquiteta) | Executora (construtora) | Revisora (auditora) |
+| | Planner (architect) | Executor (builder) | Reviewer (auditor) |
 |---|---|---|---|
-| **Escreve em** | `docs/plans/**`, `00-STATE.md` (single-writer), BOOT-prompts | código/artefatos dentro do território claimado; `00-STATE-LANE-<id>.md`; board (estados de builder) | **NADA** (read-only físico — sem Write/Edit; só `lane_board.py --set VERDICT`) |
-| **Git** | commit só de docs, com pathspec | commit com pathspec estrito; NUNCA push/merge | zero commits |
-| **Autonomy (slider 0-5)** | 2 | 2-3 (🟢🟠 auto; 🔴 propõe) | 0 (suggest-only por construção) |
-| **Proibido** | mutar código/engine/VM; instalar; wire de settings | fechar o próprio item como VERIFIED; tocar `00-STATE.md` (só o próprio LANE file); zonas vermelhas | editar qualquer arquivo; ser a mesma lane/modelo do builder |
-| **Quem aprova** | {{humano}} (specs viram BOOT colável) | Revisora (VERDICT) + {{humano}} (gates 🔴, merge) | {{humano}} (só ele fecha DEFERRED) |
+| **Writes to** | `docs/plans/**`, `00-STATE.md` (single-writer), BOOT prompts | code/artifacts inside the claimed territory; `00-STATE-LANE-<id>.md`; board (builder states) | **NOTHING** (physically read-only — no Write/Edit; only `lane_board.py --set VERDICT`) |
+| **Git** | commits docs only, with pathspec | commits with strict pathspec; NEVER push/merge | zero commits |
+| **Autonomy (slider 0-5)** | 2 | 2-3 (🟢🟠 auto; 🔴 proposes) | 0 (suggest-only by construction) |
+| **Forbidden** | mutating code/engine/VM; installing; wiring settings | closing its own item as VERIFIED; touching `00-STATE.md` (only its own LANE file); red zones | editing any file; being the same lane/model as the builder |
+| **Who approves** | {{humano}} (specs become a pasteable BOOT) | Reviewer (VERDICT) + {{humano}} (🔴 gates, merge) | {{humano}} (only they close a DEFERRED) |
 
-**Enforcement:** esta matriz não é só disciplina — `lane_board.py` (lane-kit) a codifica em
-máquina de estados: `CHECKPOINT-READY` só a lane que claimou + evidência; `VERIFIED`/`NEEDS-FIX`
-só revisora de OUTRA lane E OUTRA família de modelo (maker≠checker recusado com exit 2, não
-apenas sugerido em prosa).
+**Enforcement:** this matrix is not just discipline — `lane_board.py` (lane-kit) encodes it as a
+state machine: `CHECKPOINT-READY` only by the lane that claimed + evidence; `VERIFIED`/`NEEDS-FIX`
+only by a reviewer from ANOTHER lane AND ANOTHER model family (maker≠checker refused with exit 2, not
+merely suggested in prose).
 
-## Zonas vermelhas (WARN para TODAS as lanes, sempre — mesmo solo)
+## Red zones (WARN for ALL lanes, always — even solo)
 
-`.claude/settings*.json` · `**/MEMORY.md` · `{{state_doc}}` (fora do fluxo single-writer) ·
-qualquer path listado em `lanes.yaml → zonas_vermelhas`.
+`.claude/settings*.json` · `**/MEMORY.md` · `{{state_doc}}` (outside the single-writer flow) ·
+any path listed in `lanes.yaml → zonas_vermelhas`.

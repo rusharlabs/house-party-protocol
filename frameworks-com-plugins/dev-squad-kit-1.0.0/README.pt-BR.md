@@ -84,7 +84,7 @@ python instaladores/kit-forge-1.4.0/tools/skill_lint.py --all frameworks-com-plu
 ```
 Última linha da saída (as 3 linhas `[PASS]` acima dela carregam separadores de caminho do SO):
 ```
-skill_lint: 3 pass · 0 warn · 0 fail (de 3)
+skill_lint: 3 pass · 0 warn · 0 fail (of 3)
 ```
 <!-- executado: 2026-09-21 · exit=0 -->
 

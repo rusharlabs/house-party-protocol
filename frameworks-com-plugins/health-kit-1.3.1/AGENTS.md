@@ -1,14 +1,14 @@
 # AGENTS.md — health-kit
 
-Este kit mede saúde de serviço e mantém statusline cache-first.
+This kit measures service health and keeps a cache-first statusline.
 
 ## Codex CLI
 
-- Instale por cópia com `kit_doctor.py install --kit <health-kit> --host codex --target <repo> --apply`.
-- Scripts ficam em `.agents/hpp/health-kit/`; skills ficam em `.agents/skills`.
-- O hook `SessionStart` do Claude Code não é ativado no Codex. Agende ou execute `health_probe.py` explicitamente.
+- Install by copy with `kit_doctor.py install --kit <health-kit> --host codex --target <repo> --apply`.
+- Scripts live in `.agents/hpp/health-kit/`; skills live in `.agents/skills`.
+- The Claude Code `SessionStart` hook is not activated on Codex. Schedule or run `health_probe.py` explicitly.
 
-## Verificação
+## Verification
 
 ```bash
 python scripts/health_probe.py --self-test

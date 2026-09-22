@@ -2,6 +2,20 @@
 
 # Segurança
 
+## Versões suportadas
+
+Correções de segurança vão só para a linha minor atual; cada correção sai como uma nova versão
+patch com a nota no `CHANGELOG.md`. Confira a sua com `hpp --version`.
+
+| versão | suportada |
+|---|---|
+| 2.4.x | sim — linha atual |
+| 2.0 – 2.3 | não — atualize para 2.4.x |
+| 1.x | não |
+
+Os módulos têm versão própria (`plugin.json`, `marketplace.json`); a correção de um módulo sai
+como nova versão do módulo, pela mesma release.
+
 ## Reportar uma vulnerabilidade
 
 **Não abra issue pública** para falha de segurança. Dois canais, igualmente válidos — use o que
@@ -33,3 +47,18 @@ nova versão do módulo, com a nota no `CHANGELOG.md`.
 - Hooks são **WARN-only por padrão** — um hook nunca derruba a ferramenta.
 - Nenhum módulo contém credencial. O ruleset real do linter de IP/PII nunca é publicado; só o
   `ip-ruleset.example.yaml` viaja.
+
+## Superfícies oficiais
+
+O projeto é publicado nestes lugares e em nenhum outro. Uma cópia encontrada em outro lugar —
+outra conta do GitHub, um índice de pacotes que a lista abaixo não nomeia, um site de download,
+um fork que mantém o nome — não é este projeto e não recebe suporte de segurança.
+
+- Fonte, issues, releases: `https://github.com/rushar-labs/house-party-protocol`
+- Canal de plugin do Claude Code: `/plugin marketplace add rushar-labs/house-party-protocol`
+- pip: `pip install git+https://github.com/rushar-labs/house-party-protocol@<tag>` (uma
+  publicação no PyPI, quando existir, é anunciada primeiro no `CHANGELOG.md` e no README)
+- Web: `https://rusharlabs.com` · e-mail: `atendimento@rushar.com.br`
+
+Todo diretório de módulo traz `CHECKSUMS.txt`, e toda GitHub Release traz `SHA256SUMS`; um
+arquivo cujo hash não está neles não veio daqui.

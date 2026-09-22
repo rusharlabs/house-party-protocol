@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="972" height="816" viewBox="0 0 972 816" role="img" aria-label="python -m hpp init --target your-repo --non-interactive --no-animation — measured output, 2026-09-21" font-family="ui-monospace, Menlo, Consolas, 'Liberation Mono', monospace" font-size="13">
+  <title>python -m hpp init --target your-repo --non-interactive --no-animation — measured output, 2026-09-21</title>
+  <desc>Rendered from the command's real stdout by scripts/render_terminal_svg.py; no image was edited by hand.</desc>
+  <rect width="972" height="816" rx="10" fill="#0F1113"/>
+  <path d="M0 10a10 10 0 0 1 10-10h952a10 10 0 0 1 10 10v30H0z" fill="#16191C"/>
+  <circle cx="22" cy="20" r="5" fill="#FF6A00"/><circle cx="40" cy="20" r="5" fill="#8E8A83"/><circle cx="58" cy="20" r="5" fill="#8E8A83"/>
+  <text x="486" y="25" text-anchor="middle" fill="#8E8A83" font-size="12">python -m hpp init --target your-repo --non-interactive --no-animation</text>
+  <text x="24" y="64" xml:space="preserve"><tspan fill="#FF6A00" font-weight="bold">$ </tspan><tspan fill="#F4F1EB" font-weight="bold">python -m hpp init --target your-repo --non-interactive --no-animation</tspan></text>
+  <text x="24" y="84" xml:space="preserve"><tspan fill="#F4F1EB">house-party init · v2.4.3 · plan · target your-repo</tspan></text>
+  <text x="24" y="124" xml:space="preserve"><tspan fill="#FF6A00">&gt;</tspan><tspan fill="#F4F1EB"> detecting host...           </tspan><tspan fill="#FF6A00">✓</tspan><tspan fill="#F4F1EB"> greenfield · 0 existing item(s) preserved</tspan></text>
+  <text x="24" y="144" xml:space="preserve"><tspan fill="#FF6A00">&gt;</tspan><tspan fill="#F4F1EB"> checking prerequisites...   </tspan><tspan fill="#FF6A00">✓</tspan><tspan fill="#F4F1EB"> python 3.14.3 · protocol 2.0</tspan></text>
+  <text x="24" y="164" xml:space="preserve"><tspan fill="#FF6A00">&gt;</tspan><tspan fill="#F4F1EB"> mounting profile...         </tspan><tspan fill="#FF6A00">✓</tspan><tspan fill="#F4F1EB"> would-write · host=claude-code · bundle=reliable-coding · policy=audit · 3 default(s)</tspan></text>
+  <text x="24" y="184" xml:space="preserve"><tspan fill="#FF6A00">&gt;</tspan><tspan fill="#F4F1EB"> loading modules...          </tspan><tspan fill="#FF6A00">✓</tspan><tspan fill="#F4F1EB"> 6 modules · reliable-coding · claude-code · 6/6 checksums verified</tspan></text>
+  <text x="24" y="204" xml:space="preserve"><tspan fill="#FF6A00">&gt;</tspan><tspan fill="#F4F1EB"> wiring suggestions...       </tspan><tspan fill="#FF6A00">✓</tspan><tspan fill="#F4F1EB"> 7 commands to paste · 0 files written</tspan></text>
+  <text x="24" y="224" xml:space="preserve"><tspan fill="#FF6A00">&gt;</tspan><tspan fill="#F4F1EB"> verifying evidence...       </tspan><tspan fill="#FF6A00">✓</tspan><tspan fill="#F4F1EB"> policy · graph · events · benchmark</tspan></text>
+  <text x="24" y="244" xml:space="preserve"><tspan fill="#FF6A00">&gt;</tspan><tspan fill="#F4F1EB"> protocol online.</tspan></text>
+  <text x="24" y="284" xml:space="preserve"><tspan fill="#FF6A00" font-weight="bold">  READINESS</tspan><tspan fill="#8E8A83">  every line is a check that ran; the command below it reproduces it</tspan></text>
+  <text x="24" y="304" xml:space="preserve"><tspan fill="#F4F1EB">  </tspan><tspan fill="#FF6A00">█</tspan><tspan fill="#FF6A00">█</tspan><tspan fill="#FF6A00">█</tspan><tspan fill="#FF6A00">█</tspan><tspan fill="#FF6A00">█</tspan><tspan fill="#FF6A00">█</tspan><tspan fill="#FF6A00">█</tspan><tspan fill="#FF6A00">█</tspan><tspan fill="#FF6A00">█</tspan><tspan fill="#FF6A00">█</tspan><tspan fill="#FF6A00">█</tspan><tspan fill="#FF6A00">█</tspan><tspan fill="#FF6A00">█</tspan><tspan fill="#FF6A00">█</tspan><tspan fill="#FF6A00">█</tspan><tspan fill="#FF6A00">█</tspan><tspan fill="#8E8A83">░</tspan><tspan fill="#8E8A83">░</tspan><tspan fill="#8E8A83">░</tspan><tspan fill="#8E8A83">░</tspan><tspan fill="#F4F1EB">  9/11 verified · 2 not verified · 0 failed</tspan></text>
+  <text x="24" y="324" xml:space="preserve"><tspan fill="#F4F1EB">    </tspan><tspan fill="#FF6A00">✓</tspan><tspan fill="#F4F1EB"> host detected           greenfield · claude-code</tspan></text>
+  <text x="24" y="344" xml:space="preserve"><tspan fill="#8E8A83">        └ python -m hpp init --target your-repo</tspan></text>
+  <text x="24" y="364" xml:space="preserve"><tspan fill="#F4F1EB">    </tspan><tspan fill="#FF6A00">✓</tspan><tspan fill="#F4F1EB"> python version          3.14.3</tspan></text>
+  <text x="24" y="384" xml:space="preserve"><tspan fill="#8E8A83">        └ python.exe --version</tspan></text>
+  <text x="24" y="404" xml:space="preserve"><tspan fill="#F4F1EB">    </tspan><tspan fill="#FF6A00">✓</tspan><tspan fill="#F4F1EB"> manifest contract       protocol 2.0 · 10 modules · 2 hosts</tspan></text>
+  <text x="24" y="424" xml:space="preserve"><tspan fill="#8E8A83">        └ python -m hpp doctor</tspan></text>
+  <text x="24" y="444" xml:space="preserve"><tspan fill="#F4F1EB">    </tspan><tspan fill="#FF6A00">✓</tspan><tspan fill="#F4F1EB"> distribution integrity  marketplace.json checked · 10 modules</tspan></text>
+  <text x="24" y="464" xml:space="preserve"><tspan fill="#8E8A83">        └ python -m hpp doctor --json</tspan></text>
+  <text x="24" y="484" xml:space="preserve"><tspan fill="#F4F1EB">    </tspan><tspan fill="#FF6A00">✓</tspan><tspan fill="#F4F1EB"> module checksums        6/6 verified</tspan></text>
+  <text x="24" y="504" xml:space="preserve"><tspan fill="#8E8A83">        └ python -m hpp doctor --json</tspan></text>
+  <text x="24" y="524" xml:space="preserve"><tspan fill="#8E8A83">    · profile recorded        not verified — plan only — run with --apply</tspan></text>
+  <text x="24" y="544" xml:space="preserve"><tspan fill="#8E8A83">        └ python -m hpp init --target your-repo --apply</tspan></text>
+  <text x="24" y="564" xml:space="preserve"><tspan fill="#F4F1EB">    </tspan><tspan fill="#FF6A00">✓</tspan><tspan fill="#F4F1EB"> policy classifier       rm -rf -&gt; BLOCK · pytest -&gt; ALLOW</tspan></text>
+  <text x="24" y="584" xml:space="preserve"><tspan fill="#8E8A83">        └ python -m hpp policy check --mode enforce --command "rm -rf src"</tspan></text>
+  <text x="24" y="604" xml:space="preserve"><tspan fill="#F4F1EB">    </tspan><tspan fill="#FF6A00">✓</tspan><tspan fill="#F4F1EB"> capability graph        38 nodes · 67 edges</tspan></text>
+  <text x="24" y="624" xml:space="preserve"><tspan fill="#8E8A83">        └ python -m hpp graph --view capability</tspan></text>
+  <text x="24" y="644" xml:space="preserve"><tspan fill="#F4F1EB">    </tspan><tspan fill="#FF6A00">✓</tspan><tspan fill="#F4F1EB"> event log               state planned · 0 events</tspan></text>
+  <text x="24" y="664" xml:space="preserve"><tspan fill="#8E8A83">        └ cd your-repo &amp;&amp; python -m hpp status</tspan></text>
+  <text x="24" y="684" xml:space="preserve"><tspan fill="#F4F1EB">    </tspan><tspan fill="#FF6A00">✓</tspan><tspan fill="#F4F1EB"> benchmark gate          pass@k=1.00 · pass^k=1.00 · k=1</tspan></text>
+  <text x="24" y="704" xml:space="preserve"><tspan fill="#8E8A83">        └ python -m hpp benchmark -k 1</tspan></text>
+  <text x="24" y="724" xml:space="preserve"><tspan fill="#8E8A83">    · host wiring             not verified — manual gate — paste the block, then run doctor</tspan></text>
+  <text x="24" y="744" xml:space="preserve"><tspan fill="#8E8A83">        └ python -m hpp doctor</tspan></text>
+  <text x="24" y="784" xml:space="preserve"><tspan fill="#8E8A83">⋯ PLAN · MODULES · WIRE · NEXT follow — run the command for the full output</tspan></text>
+</svg>

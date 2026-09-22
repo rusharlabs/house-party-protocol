@@ -1,14 +1,14 @@
 # AGENTS.md — lane-kit
 
-Este kit coordena sessões concorrentes com claim, território e maker/checker separados.
+This kit coordinates concurrent sessions with claim, territory and separate maker/checker.
 
 ## Codex CLI
 
-- Instale por cópia com `kit_doctor.py install --kit <lane-kit> --host codex --target <repo> --apply`.
-- Use os scripts a partir de `.agents/hpp/lane-kit/`.
-- Hooks de território do Claude Code não são ativados no Codex; execute os checks explicitamente ou conecte-os ao mecanismo nativo do host.
+- Install by copy with `kit_doctor.py install --kit <lane-kit> --host codex --target <repo> --apply`.
+- Use the scripts from `.agents/hpp/lane-kit/`.
+- Claude Code territory hooks are not activated on Codex; run the checks explicitly or wire them into the host's native mechanism.
 
-## Verificação
+## Verification
 
 ```bash
 python scripts/lane_board.py --self-test

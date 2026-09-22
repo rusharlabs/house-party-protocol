@@ -1,0 +1,3 @@
+# Every path is reviewed by the maintainer account. Enforced only when branch protection on
+# `main` requires a code-owner review (a repository setting, applied at opening).
+* @rushar-labs

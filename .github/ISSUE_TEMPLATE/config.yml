@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security report (private)
+    url: https://github.com/rushar-labs/house-party-protocol/security/advisories/new
+    about: A vulnerability is never a public issue. Use the private advisory form, or e-mail atendimento@rushar.com.br with the subject "[house-party-protocol] security" (see SECURITY.md).
+  - name: Questions and discussion
+    url: https://github.com/rushar-labs/house-party-protocol/discussions
+    about: How-to questions, design conversations and announcements live in Discussions, not in the issue tracker.

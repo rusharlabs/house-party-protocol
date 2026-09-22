@@ -1,33 +1,33 @@
 # 00-ISOLAMENTO-E-RECUPERAÇÃO — {{project_name}}
 
-> Responde a pergunta que nenhum doc de handoff sozinho responde: **"outra sessão vai
-> sobrescrever isto enquanto eu trabalho?"** Se você não sabe a resposta antes de editar
-> um arquivo compartilhado, pare e confira aqui primeiro.
+> Answers the question no handoff doc answers on its own: **"will another session
+> overwrite this while I work?"** If you do not know the answer before editing a shared
+> file, stop and check here first.
 
-## Isolamento — quem pode tocar o quê, AGORA
+## Isolation — who may touch what, NOW
 
-1. **Confira o registry de lanes vivas** (se o lane-kit estiver instalado):
+1. **Check the registry of live lanes** (if the lane-kit is installed):
    ```bash
    python ${CLAUDE_PLUGIN_ROOT}/scripts/lane_board.py status
    ```
-2. **Sem lane-kit instalado** — heurística mínima antes de editar arquivo compartilhado:
-   - `git status --porcelain` — há trabalho não-commitado de outra sessão?
-   - mtime do arquivo-alvo — mudou nos últimos {{janela_minutos}} minutos por outra fonte?
-3. **Território exclusivo** (se declarado): `{{lista_de_paths_exclusivos_desta_lane}}` — fora
-   disso, presuma compartilhado e confirme antes de editar.
+2. **Without the lane-kit installed** — minimum heuristic before editing a shared file:
+   - `git status --porcelain` — is there uncommitted work from another session?
+   - mtime of the target file — did it change in the last {{janela_minutos}} minutes from another source?
+3. **Exclusive territory** (if declared): `{{lista_de_paths_exclusivos_desta_lane}}` — outside
+   of it, assume shared and confirm before editing.
 
-## Recuperação — se algo foi sobrescrito/perdido
+## Recovery — if something was overwritten/lost
 
-1. **Durabilidade primeiro**: `docs/_state-mirror/` (ou o `mirror_dir` deste projeto) guarda
-   cópias dos arquivos gitignored críticos — `state_mirror.py` os regenera, não os garante
-   originais perdidos, mas evita a perda TOTAL.
-2. **Git é a rede real**: `git log --all --oneline -- <path>` acha versões anteriores mesmo
-   de arquivo tracked sobrescrito.
-3. **Handoff/ledger**: `.claude/handoff/HANDOFF-LEDGER.jsonl` tem o histórico de o que cada
-   lane deixou — útil para reconstruir a timeline de quem tocou o quê.
+1. **Durability first**: `docs/_state-mirror/` (or this project's `mirror_dir`) keeps
+   copies of the critical gitignored files — `state_mirror.py` regenerates them; it does not
+   guarantee lost originals, but it prevents TOTAL loss.
+2. **Git is the real safety net**: `git log --all --oneline -- <path>` finds earlier versions even
+   of an overwritten tracked file.
+3. **Handoff/ledger**: `.claude/handoff/HANDOFF-LEDGER.jsonl` holds the history of what each
+   lane left behind — useful to rebuild the timeline of who touched what.
 
-## Gap conhecido (herdado, honesto)
+## Known gap (inherited, honest)
 
-Backup/isolamento cobre arquivos DENTRO do repo. Se a fonte-de-verdade vive fora dele (ex.:
-uma VM, um banco de dados externo), este template NÃO cobre isso — declare explicitamente
-o mecanismo de backup daquele sistema externo aqui: {{backup_externo_ou_gap_declarado}}.
+Backup/isolation covers files INSIDE the repo. If the source of truth lives outside it (e.g.
+a VM, an external database), this template does NOT cover that — declare explicitly
+the backup mechanism of that external system here: {{backup_externo_ou_gap_declarado}}.

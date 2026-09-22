@@ -116,7 +116,7 @@ python tools/skill_lint.py --all skills --run-proofs
 ```
 Last line of the output (the 8 `[PASS]` lines above it carry OS-specific path separators):
 ```
-skill_lint: 8 pass · 0 warn · 0 fail (de 8)
+skill_lint: 8 pass · 0 warn · 0 fail (of 8)
 ```
 <!-- executado: 2026-09-21 · exit=0 -->
 

@@ -1,63 +1,63 @@
-# 🔄 CHARTER — Loop autônomo «{NOME}» ({DATA})
+# 🔄 CHARTER — Autonomous loop «{NAME}» ({DATE})
 
-> **Este é o driver do loop.** A próxima sessão entra aqui, roda relentless, self-prompta, se auto-revisa, e só para quando a lane autônoma esgotar OU o teto de tempo OU risco irreversível iminente.
-> **Work-list:** `{paths.work_list}` · **Conceito-norte:** `{boot_doc}` (não driftar).
-> Preencha os `{…}`. Defaults vêm do `operator-profile.yaml`.
+> **This is the loop driver.** The next session enters here, runs relentless, self-prompts, self-reviews, and only stops when the autonomous lane is exhausted OR the time ceiling OR an imminent irreversible risk.
+> **Work-list:** `{paths.work_list}` · **Guiding concept:** `{boot_doc}` (do not drift).
+> Fill in the `{…}`. Defaults come from `operator-profile.yaml`.
 
 ---
 
-## 🎯 MISSÃO
-{O que esmagar, sozinho e em workflows. O que genuinamente depende do humano vira FORMULÁRIO (§GATE-HUMANO), nunca bloqueio.}
+## 🎯 MISSION
+{What to crush, alone and in workflows. What genuinely depends on the human becomes a FORM (§HUMAN-GATE), never a blocker.}
 
 ## 🛡️ GUARDRAILS
-**MANTIDOS (cinto de segurança — inquebrável):**
-1. **0 push** sem ordem · nunca force-push.
-2. **Backup antes de QUALQUER mutação de prod** (config/db/container).
-3. **Snapshot + verify antes de deletar** (destructive-actions).
-4. **Trava de credencial** (verificar a conta certa antes de tocar token/secret).
-5. **Gate-humano para:** billing, OAuth, legal, mensagem a cliente, deploy-prod-go, rotação de secret.
-6. **LC-1:** verificar live antes de declarar "feito". Não quebrar o que funciona.
+**KEPT (seat belt — unbreakable):**
+1. **0 push** without an order · never force-push.
+2. **Backup before ANY prod mutation** (config/db/container).
+3. **Snapshot + verify before deleting** (destructive-actions).
+4. **Credential lock** (verify the right account before touching a token/secret).
+5. **Human gate for:** billing, OAuth, legal, message to a client, deploy-prod-go, secret rotation.
+6. **LC-1:** verify live before declaring "done". Do not break what works.
 
-**RELAXADOS (fricção — pra autonomia):**
-- Auto-proceder (sem confirmar-cada-passo) · plan inline · self-prompt o próximo item · contínuo entre batches · workflows em ondas de ≤{concorrencia.teto}.
+**RELAXED (friction — for autonomy):**
+- Auto-proceed (no confirm-every-step) · plan inline · self-prompt the next item · continuous across batches · workflows in waves of ≤{concorrencia.teto}.
 
-## 🔁 CICLO (cada iteração)
-1. **Re-alinhar:** ler este charter + boot-doc (conceito) + SSoT §Agora.
-2. **Verificar live (LC-1):** estado real da fonte canônica do projeto.
-3. **Escolher** o próximo item não-feito de **maior alavancagem**.
-4. **Executar** via workflow ondas-de-{concorrencia.teto} + **adversarial verify** (refutar antes de aceitar).
-5. **Marcar feito** no work-list + commit por path (0 push).
-6. **Capstone por onda:** `python operator-kit/scripts/done_gate.py --profile {tipo}` + os validadores do projeto.
-7. **Self-prompt (OPCIONAL):** `ScheduleWakeup` com este charter pro próximo ciclo — ferramenta **exclusiva do main-loop `/loop`**, não é dependência deste charter. Fora do main-loop ela não existe: o fallback é re-invocar o charter à mão no próximo ciclo.
-8. **A cada ~5 ciclos — revisão adversarial:** "que ponta ficou solta? driftei do conceito? duplicata/órfão novo?".
+## 🔁 CYCLE (each iteration)
+1. **Re-align:** read this charter + boot-doc (concept) + SSoT §Now.
+2. **Verify live (LC-1):** real state of the project's canonical source.
+3. **Pick** the next not-done item of **highest leverage**.
+4. **Execute** via workflow waves-of-{concorrencia.teto} + **adversarial verify** (refute before accepting).
+5. **Mark done** in the work-list + commit per path (0 push).
+6. **Capstone per wave:** `python operator-kit/scripts/done_gate.py --profile {tipo}` + the project's validators.
+7. **Self-prompt (OPTIONAL):** `ScheduleWakeup` with this charter for the next cycle — a tool **exclusive to the `/loop` main-loop**, not a dependency of this charter. Outside the main-loop it does not exist: the fallback is to re-invoke the charter by hand in the next cycle.
+8. **Every ~5 cycles — adversarial review:** "which loose end is left? did I drift from the concept? new duplicate/orphan?".
 
-## ⚙️ ORDEM DE ATAQUE
-1. {Item 1 — autônomo}
-2. {Item 2 — autônomo}
-3. {Itens delegáveis a 2º agente — só após pré-requisito X}
-4. {Staged p/ gate humano}
+## ⚙️ ATTACK ORDER
+1. {Item 1 — autonomous}
+2. {Item 2 — autonomous}
+3. {Items delegable to a 2nd agent — only after prerequisite X}
+4. {Staged for the human gate}
 
-## 📋 GATE-HUMANO (a parede — limpa numa sentada)
-Cada item: `{gate, motivo, comando/passo EXATO, o-que-destrava}`. Saída em `{paths.gate_sheet}`.
+## 📋 HUMAN-GATE (the wall — cleared in one sitting)
+Each item: `{gate, reason, EXACT command/step, what-it-unblocks}`. Output in `{paths.gate_sheet}`.
 
 ## 🛑 STOP CONDITIONS
-- Lane autônoma esgotada (tudo não-gate feito) → reporta + aguarda gate.
-- {stop_conditions: teto de tempo}.
-- Risco irreversível iminente que um guardrail sinalizou → PARA + reporta.
+- Autonomous lane exhausted (everything non-gate done) → report + wait for the gate.
+- {stop_conditions: time ceiling}.
+- Imminent irreversible risk flagged by a guardrail → STOP + report.
 
-## 🚀 SELF-PROMPT / BOOT (cola pós-/clear · `ScheduleWakeup` repete isto **quando disponível**)
+## 🚀 SELF-PROMPT / BOOT (paste after /clear · `ScheduleWakeup` repeats this **when available**)
 
-> `ScheduleWakeup` é **opcional** e **exclusiva do main-loop `/loop`** — não é dependência deste
-> charter. Fora do main-loop, o fallback é colar o bloco abaixo à mão no próximo ciclo.
+> `ScheduleWakeup` is **optional** and **exclusive to the `/loop` main-loop** — it is not a dependency of this
+> charter. Outside the main-loop, the fallback is to paste the block below by hand in the next cycle.
 
 ```
-Loop autônomo «{NOME}». Pasta {raiz-do-projeto}, branch {branch}.
-LEIA (nesta ordem): {este charter} → {boot_doc} → {paths.work_list} → SSoT §Agora.
-PASSO 0 LIVE (LC-1): {comando(s) de verificação ao vivo do projeto}.
-GUARDRAILS: mantém (0 push · backup-antes-prod · snapshot-antes-delete · trava-credencial · gate-humano billing/OAuth/legal · LC-1). Relaxa fricção (auto-proceder · self-prompt · contínuo).
-EXECUTA (ondas-de-{teto} + adversarial verify): ordem do charter §. Commit por path, 0 push. Capstone por onda: done_gate --profile {tipo}.
-SELF-REVIEW a cada ~5 ciclos. Gate-humano → formulário único, NUNCA bloqueia o loop.
-ScheduleWakeup pro próximo ciclo (OPCIONAL — ferramenta exclusiva do main-loop /loop; fora dele, o fallback é recolar este bloco à mão). PARA em: lane-esgotada OU teto-tempo OU risco-irreversível.
+Autonomous loop «{NAME}». Folder {project-root}, branch {branch}.
+READ (in this order): {this charter} → {boot_doc} → {paths.work_list} → SSoT §Now.
+STEP 0 LIVE (LC-1): {the project's live verification command(s)}.
+GUARDRAILS: keep (0 push · backup-before-prod · snapshot-before-delete · credential-lock · human-gate billing/OAuth/legal · LC-1). Relax friction (auto-proceed · self-prompt · continuous).
+EXECUTE (waves-of-{teto} + adversarial verify): order of the charter §. Commit per path, 0 push. Capstone per wave: done_gate --profile {tipo}.
+SELF-REVIEW every ~5 cycles. Human gate → single form, NEVER blocks the loop.
+ScheduleWakeup for the next cycle (OPTIONAL — tool exclusive to the /loop main-loop; outside it, the fallback is to re-paste this block by hand). STOP on: lane-exhausted OR time-ceiling OR irreversible-risk.
 ```
 
-*Charter vivo. A cada ciclo re-verifica na fonte (LC-1). Risca itens no work-list ao concluir.*
+*Living charter. Each cycle re-verifies at the source (LC-1). Strike items off the work-list as they complete.*

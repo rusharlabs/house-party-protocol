@@ -1,0 +1,14 @@
+[
+  {"name": "problem",          "color": "B60205", "description": "Behaviour that does not match the documentation"},
+  {"name": "feedback",         "color": "FBCA04", "description": "Confusing, slow, or a reason to stop using a piece"},
+  {"name": "idea",             "color": "0E8A16", "description": "A capability, module or contract the harness should have"},
+  {"name": "needs-triage",     "color": "EDEDED", "description": "Not yet reproduced or classified by a maintainer"},
+  {"name": "needs-repro",      "color": "D93F0B", "description": "Waiting for a command and its output"},
+  {"name": "confirmed",        "color": "5319E7", "description": "Reproduced by a maintainer with the pasted command"},
+  {"name": "security",         "color": "000000", "description": "Handled through the private channel in SECURITY.md"},
+  {"name": "docs",             "color": "1D76DB", "description": "README, docs/ or a module README, in either language"},
+  {"name": "bilingual",        "color": "0052CC", "description": "The en / pt-BR pair diverged or is missing a side"},
+  {"name": "module",           "color": "C2E0C6", "description": "Lives in a module directory and goes through the forge"},
+  {"name": "harness",          "color": "FF6A00", "description": "hpp/ package, manifest or CLI contract"},
+  {"name": "good first issue", "color": "7057FF", "description": "Small, well-scoped, with the proof already described"}
+]

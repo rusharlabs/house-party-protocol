@@ -1,93 +1,95 @@
-# skill-template.md — copie para `<seu-projeto>/.claude/skills/<nome>/SKILL.md`
+[English](skill-template.md) · [Português](skill-template.pt-BR.md)
 
-> Scaffold vazio já estruturado nas 6 cláusulas do SKILL-CONTRACT (ver `docs/SKILL-CONTRACT.md`).
-> Preencha cada `<...>`, apague os comentários, rode `python tools/skill_lint.py <seu-arquivo>` até PASS.
-> Guia passo-a-passo: skill `skill-writer` deste kit.
+# skill-template.md — copy to `<your-project>/.claude/skills/<name>/SKILL.md`
 
-```markdown
+> Empty scaffold already structured in the 6 clauses of the SKILL-CONTRACT (see `docs/SKILL-CONTRACT.md`).
+> Fill in each `<...>`, delete the comments, run `python tools/skill_lint.py <your-file>` until PASS.
+> Step-by-step guide: the `skill-writer` skill of this kit.
+
+````markdown
 ---
-name: <nome-da-skill>
-description: <O que faz> + <quando usar>. Máx 1024 chars.
+name: <skill-name>
+description: <What it does> + <when to use it>. Max 1024 chars.
 ---
 
-> **Auto-Trigger:** <quando dispara automaticamente>
-> **Keywords:** "<termo1>", "<termo2>", "<termo3>", "<termo4>"
+> **Auto-Trigger:** <when it fires automatically>
+> **Keywords:** "<term1>", "<term2>", "<term3>", "<term4>"
 > **Priority:** HIGH | MEDIUM | LOW
-> **Tools:** <lista explícita de ferramentas usadas>
+> **Tools:** <explicit list of the tools used>
 
 ## When NOT to Activate
-- <situação 1 onde NÃO deveria disparar>
-- <situação 2 — nomeie a skill vizinha se há fronteira confundível: "não confundir com a skill X, que cobre Y">
+- <situation 1 where it should NOT fire>
+- <situation 2 — name the neighbouring skill if there is a confusable boundary: "not to be confused with skill X, which covers Y">
 
 ## Contract
 
-**INPUT:** <tipos aceitos — arquivo, string, flag>
+**INPUT:** <accepted types — file, string, flag>
 
-**OUTPUT:** <paths + formato modelado — não "gera um relatório", mas o SCHEMA do relatório>
+**OUTPUT:** <paths + modelled format — not "generates a report", but the SCHEMA of the report>
 
 **EXIT CODES:**
 
-| Exit | Significado |
+| Exit | Meaning |
 |---|---|
-| 0 | <sucesso> |
-| 1 | <aviso/rejeição não-fatal> |
-| 2 | <erro/uso inválido> |
+| 0 | <success> |
+| 1 | <warning/non-fatal rejection> |
+| 2 | <error/invalid usage> |
 
 **STATE IT TOUCHES:**
 
-| Recurso | Lê/Escreve | Propósito |
+| Resource | Reads/Writes | Purpose |
 |---|---|---|
-| <arquivo/path 1> | Lê/Escreve | <por quê> |
+| <file/path 1> | Reads/Writes | <why> |
 
-## Processo
+## Process
 
-1. **<Passo 1>** — comando literal:
+1. **<Step 1>** — literal command:
    ```bash
-   <comando exato, não "rode o script apropriado">
+   <exact command, not "run the appropriate script">
    ```
-2. **<Passo 2>** ...
+2. **<Step 2>** ...
 
-## Exemplos executados
+## Executed examples
 
-<!-- Cole saída REAL de comandos que você rodou de verdade — nunca invente.
-     Pelo menos 1 dos 3 exemplos precisa mostrar uma FALHA (exit != 0). -->
+<!-- Paste REAL output of commands you actually ran — never invent.
+     At least 1 of the 3 examples must show a FAILURE (exit != 0). -->
 
 ```console
-$ <comando real 1>
-<saída real 1>
+$ <real command 1>
+<real output 1>
 ```
 <!-- executed: YYYY-MM-DD · exit=0 -->
 
 ```console
-$ <comando real 2 — caso de FALHA>
-<saída real 2>
+$ <real command 2 — FAILURE case>
+<real output 2>
 ```
 <!-- executed: YYYY-MM-DD · exit=1 -->
 
 ```console
-$ <comando real 3>
-<saída real 3>
+$ <real command 3>
+<real output 3>
 ```
 <!-- executed: YYYY-MM-DD · exit=0 -->
 
 ## Anti-patterns
 
-- ❌ <armadilha conhecida 1>
-- ❌ <armadilha conhecida 2>
+- ❌ <known trap 1>
+- ❌ <known trap 2>
 
 ## Proof
 
 ```bash
-<comando único, <5s, sem rede, que prova o contrato — normalmente --self-test>
+<single command, <5s, no network, that proves the contract — usually --self-test>
 ```
-```
+````
 
-## Checklist antes de considerar pronto
+## Checklist before calling it ready
 
-- [ ] `name` bate exatamente com o nome da pasta
-- [ ] `description` tem O QUE + QUANDO, sem sintaxe de wikilink duplo-colchete nas Keywords
-- [ ] `## When NOT to Activate` tem ≥2 bullets
-- [ ] `## Contract` tem as 4 sub-seções (INPUT/OUTPUT/EXIT CODES/STATE IT TOUCHES)
-- [ ] ≥3 exemplos executados, ≥1 de falha (exit != 0), cada um com `<!-- executed: ... -->`
-- [ ] `## Proof` roda em <5s sem rede
-- [ ] `python tools/skill_lint.py <seu-arquivo>` → PASS
+- [ ] `name` matches the folder name exactly
+- [ ] `description` has WHAT + WHEN, with no double-bracket wikilink syntax in the Keywords
+- [ ] `## When NOT to Activate` has ≥2 bullets
+- [ ] `## Contract` has the 4 sub-sections (INPUT/OUTPUT/EXIT CODES/STATE IT TOUCHES)
+- [ ] ≥3 executed examples, ≥1 a failure (exit != 0), each with `<!-- executed: ... -->`
+- [ ] `## Proof` runs in <5s with no network
+- [ ] `python tools/skill_lint.py <your-file>` → PASS

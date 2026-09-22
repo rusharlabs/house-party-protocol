@@ -1,0 +1,263 @@
+name: Release
+
+# Why: a release is the tag. Pushing `vX.Y.Z` runs this workflow, which refuses to publish
+# unless the four version sources equal the tag and both CHANGELOG files carry a section for
+# it, builds the wheel and sdist once, installs that wheel from scratch on three operating
+# systems (no checkout there, so nothing but the artifact can satisfy the checks), and only
+# then creates the GitHub Release with the wheel, the sdist and SHA256SUMS, using the
+# CHANGELOG section as the release notes.
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+
+# Why: read-only by default; the one job that creates the release asks for `contents: write`
+# on its own, and nothing else in the workflow can push, comment or edit.
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    name: version sources == tag · CHANGELOG has the section
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.meta.outputs.version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: "3.12"
+
+      # Why: the tag is the release; every place the repository states its version must say the
+      # same thing, or the wheel would carry one number and the Release page another. The four
+      # sources are the ones `tests/test_citation.py` and `hpp --version` already read.
+      - name: Version sources agree with the tag
+        id: meta
+        shell: python
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          import json
+          import os
+          import pathlib
+          import re
+          import sys
+
+          tag = os.environ["TAG"]
+          expected = tag[1:]
+          sources = {}
+          pyproject = pathlib.Path("pyproject.toml").read_text(encoding="utf-8")
+          sources["pyproject.toml"] = re.search(r'^version\s*=\s*"([^"]+)"', pyproject, re.M).group(1)
+          init = pathlib.Path("hpp/__init__.py").read_text(encoding="utf-8")
+          sources["hpp/__init__.py"] = re.search(r'^__version__\s*=\s*"([^"]+)"', init, re.M).group(1)
+          manifest = json.loads(pathlib.Path("hpp.manifest.json").read_text(encoding="utf-8"))
+          sources["hpp.manifest.json"] = str(manifest.get("product_version"))
+          citation = pathlib.Path("CITATION.cff").read_text(encoding="utf-8")
+          sources["CITATION.cff"] = re.search(r'^version:\s*"([^"]+)"', citation, re.M).group(1)
+
+          wrong = {name: value for name, value in sources.items() if value != expected}
+          for name, value in sources.items():
+              print(f"{name:<20} {value}")
+          if wrong:
+              print(f"::error::tag {tag} expects version {expected}; disagreeing sources: {wrong}")
+              sys.exit(1)
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as out:
+              out.write(f"version={expected}\n")
+
+      # Why: a release without notes is a tarball with a date. The section for this version
+      # must exist and have a body in both languages before anything is built; the English
+      # section becomes the release body, with the Portuguese one below it.
+      - name: CHANGELOG has a non-empty section for this version (en and pt-BR)
+        shell: python
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          import os
+          import pathlib
+          import re
+          import sys
+
+          version = os.environ["TAG"][1:]
+          heading = re.compile(rf"^## \[{re.escape(version)}\]")
+          next_heading = re.compile(r"^## ")
+          notes = []
+          failures = []
+          for name in ("CHANGELOG.md", "CHANGELOG.pt-BR.md"):
+              lines = pathlib.Path(name).read_text(encoding="utf-8").splitlines()
+              start = next((i for i, line in enumerate(lines) if heading.match(line)), None)
+              if start is None:
+                  failures.append(f"{name}: no `## [{version}]` section")
+                  continue
+              end = next((i for i in range(start + 1, len(lines)) if next_heading.match(lines[i])), len(lines))
+              body = "\n".join(lines[start + 1:end]).strip()
+              if not body:
+                  failures.append(f"{name}: the `## [{version}]` section is empty")
+                  continue
+              print(f"{name}: section found, {len(body.splitlines())} line(s)")
+              notes.append(f"{lines[start]}\n\n{body}")
+          if failures:
+              for failure in failures:
+                  print(f"::error::{failure}")
+              sys.exit(1)
+          out = pathlib.Path(os.environ["RUNNER_TEMP"]) / "release-notes.md"
+          out.write_text("\n\n---\n\n".join(notes) + "\n", encoding="utf-8")
+          print(f"release notes written: {out}")
+
+      - name: Keep the release notes for the last job
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: release-notes
+          path: ${{ runner.temp }}/release-notes.md
+          if-no-files-found: error
+          retention-days: 7
+
+  build:
+    name: wheel + sdist + SHA256SUMS
+    needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: "3.12"
+
+      # Why: the product declares no build dependency beyond setuptools>=77 (pyproject.toml),
+      # so the wheel comes from `pip wheel --no-deps` exactly as tests/test_installed_package.py
+      # builds it, and the sdist from the PEP 517 hook of the same backend. No `build` package,
+      # no isolated environment fetching anything the project did not declare.
+      - name: Build wheel and sdist
+        run: |
+          python -m pip install --upgrade --disable-pip-version-check "setuptools>=77"
+          python -m pip wheel . --no-deps --no-build-isolation -w dist --disable-pip-version-check
+          python -c "from setuptools.build_meta import build_sdist; print(build_sdist('dist'))"
+          ls -l dist
+
+      - name: Write SHA256SUMS
+        working-directory: dist
+        run: |
+          sha256sum *.whl *.tar.gz > SHA256SUMS
+          cat SHA256SUMS
+
+      - name: Keep the distribution files
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: dist
+          path: dist/
+          if-no-files-found: error
+          retention-days: 7
+
+  install:
+    name: install the wheel from scratch (${{ matrix.os }})
+    needs: [verify, build]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      # Why: no checkout on purpose. The only thing on this runner is the wheel, so every
+      # command below proves the artifact people will install, not the source tree.
+      - name: Set up Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: "3.12"
+
+      - name: Fetch the distribution files
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: dist
+          path: dist
+
+      # Why: `--no-index` means pip may not reach the package index; with `dependencies = []`
+      # the install succeeds only if the wheel needs nothing, which is the promise the README
+      # makes. `shell: python` runs the same file on all three platforms.
+      - name: Install the wheel offline and run the harness from an empty directory
+        shell: python
+        env:
+          EXPECTED_VERSION: ${{ needs.verify.outputs.version }}
+        run: |
+          import os
+          import pathlib
+          import subprocess
+          import sys
+          import tempfile
+
+          wheels = sorted(pathlib.Path("dist").glob("*.whl"))
+          assert len(wheels) == 1, wheels
+          subprocess.run([sys.executable, "-m", "pip", "install", "--no-index", "--no-deps",
+                          "--disable-pip-version-check", str(wheels[0])], check=True)
+
+          empty = pathlib.Path(tempfile.mkdtemp(prefix="hpp-release-"))
+          target = empty / "your-repo"
+          target.mkdir()
+          env = dict(os.environ, PYTHONIOENCODING="utf-8", PYTHONUTF8="1")
+
+          def run(*args):
+              print("$", " ".join(args), flush=True)
+              result = subprocess.run(list(args), cwd=empty, env=env, capture_output=True, text=True,
+                                      encoding="utf-8", errors="replace")
+              print(result.stdout, flush=True)
+              if result.returncode != 0:
+                  print(result.stderr, flush=True)
+                  print(f"::error::exit {result.returncode}: {' '.join(args)}")
+                  sys.exit(result.returncode)
+              return result.stdout
+
+          version = run(sys.executable, "-m", "hpp", "--version").strip()
+          if version != os.environ["EXPECTED_VERSION"]:
+              print(f"::error::installed hpp reports {version!r}, tag says {os.environ['EXPECTED_VERSION']!r}")
+              sys.exit(1)
+          run(sys.executable, "-m", "hpp", "doctor")
+          run(sys.executable, "-m", "hpp", "benchmark", "-k", "3")
+          run(sys.executable, "-m", "hpp", "init", "--target", "your-repo", "--non-interactive", "--no-animation")
+
+  release:
+    name: GitHub Release
+    needs: [verify, build, install]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Fetch the distribution files
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: dist
+          path: dist
+
+      - name: Fetch the release notes
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: release-notes
+          path: notes
+
+      - name: Verify SHA256SUMS against the downloaded files
+        working-directory: dist
+        run: sha256sum --check SHA256SUMS
+
+      # Why: `gh` ships on the hosted runners; `--verify-tag` refuses to create a release for a
+      # tag that is not on the remote, and `--repo` makes a checkout unnecessary.
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+          REPO: ${{ github.repository }}
+        run: |
+          gh release create "$TAG" dist/*.whl dist/*.tar.gz dist/SHA256SUMS \
+            --repo "$REPO" \
+            --title "$TAG" \
+            --notes-file notes/release-notes.md \
+            --verify-tag

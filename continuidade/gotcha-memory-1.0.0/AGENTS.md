@@ -1,14 +1,14 @@
 # AGENTS.md — gotcha-memory
 
-Este kit transforma falhas recorrentes em lições operacionais consultáveis.
+This kit turns recurring failures into queryable operational lessons.
 
 ## Codex CLI
 
-- Instale por cópia com `kit_doctor.py install --kit <gotcha-memory> --host codex --target <repo> --apply`.
-- Runtime e memória de exemplo ficam em `.agents/hpp/gotcha-memory/`.
-- Hooks `PreToolUse`/`PostToolUse`/`PostToolUseFailure` do Claude Code não são ativados no Codex; use os scripts explicitamente.
+- Install by copy with `kit_doctor.py install --kit <gotcha-memory> --host codex --target <repo> --apply`.
+- Runtime and example memory live in `.agents/hpp/gotcha-memory/`.
+- Claude Code `PreToolUse`/`PostToolUse`/`PostToolUseFailure` hooks are not activated on Codex; use the scripts explicitly.
 
-## Verificação
+## Verification
 
 ```bash
 python hooks/gotcha_preflight.py --self-test

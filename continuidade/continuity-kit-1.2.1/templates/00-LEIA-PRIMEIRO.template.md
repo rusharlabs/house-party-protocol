@@ -1,34 +1,34 @@
 # 00-LEIA-PRIMEIRO — {{project_name}}
 
-> Roteador de papel — o ÚNICO doc que toda sessão nova (humana ou IA) lê primeiro,
-> independente do papel (planejadora/executora/revisora/solo). Se você não sabe por onde
-> começar, comece aqui. Gerado do template do continuity-kit — substitua `{{placeholders}}`.
+> Role router — the ONLY doc every new session (human or AI) reads first,
+> regardless of role (planner/executor/reviewer/solo). If you do not know where to
+> start, start here. Generated from the continuity-kit template — replace the `{{placeholders}}`.
 
-## Quem é você nesta sessão?
+## Who are you in this session?
 
-| Se você é... | Leia agora | Depois |
+| If you are... | Read now | Then |
 |---|---|---|
-| **Planejadora** (arquiteta) | `{{vision_doc}}` (VISÃO) → `{{state_doc}}` (§Agora) | `{{goal_ledger_path}}` (próximo goal) |
-| **Executora** (construtora) | `.claude/handoff/HANDOFF-CURRENT-<sua-lane>.json` (se existir) | `{{state_doc}}` §PENDÊNCIAS + seu item no board |
-| **Revisora** (auditora) | o item em `UNDER-REVIEW` no board (`lane_board.py status <item>`) | `{{review_template}}` p/ o formato do veredito |
-| **Solo** (sessão única, sem lanes) | `{{state_doc}}` completo | `{{goal_ledger_path}}` |
+| **Planner** (architect) | `{{vision_doc}}` (VISION) → `{{state_doc}}` (§Agora) | `{{goal_ledger_path}}` (next goal) |
+| **Executor** (builder) | `.claude/handoff/HANDOFF-CURRENT-<your-lane>.json` (if it exists) | `{{state_doc}}` §PENDÊNCIAS + your item on the board |
+| **Reviewer** (auditor) | the item in `UNDER-REVIEW` on the board (`lane_board.py status <item>`) | `{{review_template}}` for the verdict format |
+| **Solo** (single session, no lanes) | `{{state_doc}}` in full | `{{goal_ledger_path}}` |
 
-## Os 3 SSoT deste projeto (nunca duplicar, sempre re-verificar ao vivo — LC-1)
+## The 3 SSoTs of this project (never duplicate, always re-verify live — LC-1)
 
-1. **`{{state_doc}}`** — o AGORA (foco + pendências). Muda toda sessão.
-2. **`{{goal_ledger_path}}`** — os GOALS (o quê, por quê, quando "pronto"). Muda por goal.
-3. **`{{vision_doc}}`** — a VISÃO (por que o projeto existe). Muda raramente, só por aprovação humana.
+1. **`{{state_doc}}`** — the NOW (focus + open items). Changes every session.
+2. **`{{goal_ledger_path}}`** — the GOALS (what, why, when "done"). Changes per goal.
+3. **`{{vision_doc}}`** — the VISION (why the project exists). Changes rarely, only by human approval.
 
-## Ponteiro de retomada automático
+## Automatic resume pointer
 
-Se `.claude/RESUME-NEXT.md` ou um handoff JSON existir, ele já foi (ou será) injetado no
-boot da sessão — trate como **REFERÊNCIA HISTÓRICA, NÃO FILA DE EXECUÇÃO** (LC-4): antes de
-repetir qualquer ação que ele mencione, rode o `verify_first_cmd` correspondente.
+If `.claude/RESUME-NEXT.md` or a handoff JSON exists, it has already been (or will be) injected at
+session boot — treat it as **HISTORICAL REFERENCE, NOT AN EXECUTION QUEUE** (LC-4): before
+repeating any action it mentions, run the corresponding `verify_first_cmd`.
 
-## Regras que sobrepõem tudo
+## Rules that override everything
 
-- `docs/plans/execucao/00-STATE.md` (ou o `{{state_doc}}` deste projeto) é **single-writer**
-  da planejadora — executoras escrevem no `00-STATE-LANE-<id>.md` próprio.
-- Nenhuma lane declara "pronto" maior do que a evidência (escada R0→R4, ver
+- `docs/plans/execucao/00-STATE.md` (or this project's `{{state_doc}}`) is **single-writer**
+  by the planner — executors write in their own `00-STATE-LANE-<id>.md`.
+- No lane declares "done" above what the evidence supports (ladder R0→R4, see
   `00-PROCESSES.template.md`).
-- `git push`/merge/deploy real = sempre gate humano, nunca automático.
+- `git push`/merge/real deploy = always a human gate, never automatic.

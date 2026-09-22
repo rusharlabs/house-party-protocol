@@ -1,1 +1,3 @@
 Evidence-first harness for coding agents across Claude Code and Codex CLI: governed loops, isolated lanes, deterministic evaluation, and verified delivery.
+homepage: https://rusharlabs.com
+topics: coding-agents claude-code codex-cli harness evidence attestation verification guardrails pass-at-k local-first

@@ -1,21 +1,23 @@
+[English](ANTHROPIC-STANDARDS.md) · [Português](ANTHROPIC-STANDARDS.pt-BR.md)
+
 # ANTHROPIC STANDARDS ENFORCEMENT
 
-> **Versão:** 1.0.0
-> **Criado:** 2026-01-14
-> **Status:** ATIVO
-> **Propósito:** Documento central de enforcement de boas práticas Anthropic
+> **Version:** 1.0.0
+> **Created:** 2026-01-14
+> **Status:** ACTIVE
+> **Purpose:** Central enforcement document for Anthropic best practices
 
 ---
 
-## VISÃO GERAL
+## OVERVIEW
 
-Este documento define as regras OBRIGATÓRIAS para conformidade com as boas práticas oficiais da Anthropic para Claude Code. Toda criação ou modificação de hooks, skills, MCP configs, ou SDK sub-agents DEVE seguir estas regras.
+This document defines the MANDATORY rules for conformance with Anthropic's official best practices for Claude Code. Every creation or modification of hooks, skills, MCP configs, or SDK sub-agents MUST follow these rules.
 
 ---
 
-## 1. REGRAS PARA HOOKS
+## 1. RULES FOR HOOKS
 
-### 1.1 Timeout Obrigatório
+### 1.1 Mandatory Timeout
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────┐
@@ -72,7 +74,7 @@ Este documento define as regras OBRIGATÓRIAS para conformidade com as boas prá
 └──────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### 1.3 Estrutura de Hook
+### 1.3 Hook Structure
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────┐
@@ -99,9 +101,9 @@ Este documento define as regras OBRIGATÓRIAS para conformidade com as boas prá
 
 ---
 
-## 2. REGRAS PARA SKILLS
+## 2. RULES FOR SKILLS
 
-### 2.1 Header Obrigatório
+### 2.1 Mandatory Header
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────┐
@@ -126,7 +128,7 @@ Este documento define as regras OBRIGATÓRIAS para conformidade com as boas prá
 └──────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### 2.2 Estrutura de Skill
+### 2.2 Skill Structure
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────┐
@@ -151,9 +153,9 @@ Este documento define as regras OBRIGATÓRIAS para conformidade com as boas prá
 
 ---
 
-## 3. REGRAS PARA MCP (Model Context Protocol)
+## 3. RULES FOR MCP (Model Context Protocol)
 
-### 3.1 Credenciais Seguras
+### 3.1 Secure Credentials
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────┐
@@ -182,7 +184,7 @@ Este documento define as regras OBRIGATÓRIAS para conformidade com as boas prá
 └──────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### 3.2 Estrutura de MCP Server
+### 3.2 MCP Server Structure
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────┐
@@ -205,9 +207,9 @@ Este documento define as regras OBRIGATÓRIAS para conformidade com as boas prá
 
 ---
 
-## 4. REGRAS PARA SDK SUB-AGENTS
+## 4. RULES FOR SDK SUB-AGENTS
 
-### 4.1 Princípio de Menor Privilégio
+### 4.1 Principle of Least Privilege
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────┐
@@ -244,7 +246,7 @@ Este documento define as regras OBRIGATÓRIAS para conformidade com as boas prá
 └──────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### 4.2 Estrutura de Sub-Agent
+### 4.2 Sub-Agent Structure
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────┐
@@ -270,9 +272,9 @@ Este documento define as regras OBRIGATÓRIAS para conformidade com as boas prá
 
 ---
 
-## 5. REGRAS PARA PERMISSIONS
+## 5. RULES FOR PERMISSIONS
 
-### 5.1 Deny List Obrigatória
+### 5.1 Mandatory Deny List
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────┐
@@ -311,9 +313,9 @@ Este documento define as regras OBRIGATÓRIAS para conformidade com as boas prá
 
 ---
 
-## 6. CHECKLIST DE VALIDAÇÃO
+## 6. VALIDATION CHECKLIST
 
-### 6.1 Ao Criar Hook
+### 6.1 When Creating a Hook
 
 ```
 [ ] Tem "timeout": 30?
@@ -323,7 +325,7 @@ Este documento define as regras OBRIGATÓRIAS para conformidade com as boas prá
 [ ] Testado isoladamente?
 ```
 
-### 6.2 Ao Criar Skill
+### 6.2 When Creating a Skill
 
 ```
 [ ] Header com Auto-Trigger, Keywords, Prioridade, Tools?
@@ -333,7 +335,7 @@ Este documento define as regras OBRIGATÓRIAS para conformidade com as boas prá
 [ ] Exemplos incluídos?
 ```
 
-### 6.3 Ao Criar/Modificar MCP Config
+### 6.3 When Creating/Modifying an MCP Config
 
 ```
 [ ] Nenhum token em plaintext?
@@ -342,7 +344,7 @@ Este documento define as regras OBRIGATÓRIAS para conformidade com as boas prá
 [ ] ~/.zshrc atualizado com exports?
 ```
 
-### 6.4 Ao Criar Sub-Agent
+### 6.4 When Creating a Sub-Agent
 
 ```
 [ ] allowedTools explícito (não ["*"])?
@@ -354,27 +356,27 @@ Este documento define as regras OBRIGATÓRIAS para conformidade com as boas prá
 
 ---
 
-## 7. REFERÊNCIAS
+## 7. REFERENCES
 
-- **Boas Práticas Anthropic:** https://docs.anthropic.com/claude-code
+- **Anthropic Best Practices:** https://docs.anthropic.com/claude-code
 - **Hook Lifecycle:** settings.local.json → hooks
 - **MCP Protocol:** https://modelcontextprotocol.io
-- **REGRA #27:** Auto-routing de skills e sub-agents
-- **REGRA #28:** Ativação visível obrigatória
+- **RULE #27:** Auto-routing of skills and sub-agents
+- **RULE #28:** Mandatory visible activation
 
 ---
 
-## 8. ENFORCEMENT AUTOMÁTICO
+## 8. AUTOMATIC ENFORCEMENT
 
-Este documento é referenciado por:
+This document is referenced by:
 
-1. **creation_validator.py** (PreToolUse) - Valida criações
-2. **quality_watchdog.py** - Detecta não-conformidades
-3. **CLAUDE.md** - Referência @.claude/rules/ANTHROPIC-STANDARDS.md
+1. **creation_validator.py** (PreToolUse) - Validates creations
+2. **quality_watchdog.py** - Detects non-conformances
+3. **CLAUDE.md** - Reference @.claude/rules/ANTHROPIC-STANDARDS.md
 
-Qualquer criação de hook, skill, MCP config, ou sub-agent que viole estas regras será AVISADA (warn, not block) pelo sistema de validação.
+Any creation of a hook, skill, MCP config, or sub-agent that violates these rules will be WARNED (warn, not block) by the validation system.
 
 ---
 
-**FIM DO DOCUMENTO**
+**END OF DOCUMENT**
 
