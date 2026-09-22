@@ -3,7 +3,7 @@
 # Catalogue — house-party-protocol
 
 Derived from the emitted tree: what each kit installs, resource by resource. Regenerate with
-`python installers/kit-forge-*/tools/catalogo_md.py . --write`.
+`python installers/kit-forge-*/tools/catalog_md.py . --write`.
 
 ## Shared resources
 

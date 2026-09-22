@@ -40,6 +40,10 @@ LEDGER_PATH = _HANDOFF_DIR / "HANDOFF-LEDGER.jsonl"
 
 _MAX_BYTES = 65536
 _REQUIRED_TOP = ("schema_version", "handoff_id", "created_at", "trigger", "quality", "session", "state", "git", "valid_until")
+# The ONE place the accepted schema version is written. The validator reads it and the error
+# message is built from it, so a future bump cannot leave the message behind. v1.1 is absent
+# on purpose: it had zero files anywhere when it was renamed, so there is nothing to read.
+_ACCEPTED_SCHEMA_VERSIONS = ("2.0",)
 
 # Secret patterns -- same spirit as ip_pii_linter.py (kit-forge), local copy: each kit
 # in this marketplace is self-contained (C5 SKILL-CONTRACT), no cross-kit import.
@@ -101,8 +105,12 @@ def validate(data: dict) -> list:
     for field in _REQUIRED_TOP:
         if field not in data:
             errors.append(f"required field missing: {field}")
-    if data.get("schema_version") not in ("2.0",):
-        errors.append(f"schema_version must be '1.1' (got: {data.get('schema_version')!r})")
+    if data.get("schema_version") not in _ACCEPTED_SCHEMA_VERSIONS:
+        # Why: the check and the message used to be spelled separately, and the 2.0 rename
+        # moved only the check — the message kept telling the reader to write '1.1', which
+        # this very line then rejected. Deriving it means they cannot disagree again.
+        wanted = " or ".join(repr(v) for v in _ACCEPTED_SCHEMA_VERSIONS)
+        errors.append(f"schema_version must be {wanted} (got: {data.get('schema_version')!r})")
 
     session = data.get("session", {}) or {}
     if not session.get("session_id"):

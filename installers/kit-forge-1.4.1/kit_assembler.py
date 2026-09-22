@@ -210,6 +210,13 @@ def write_zip(staging: Path, files: list, zip_path: Path) -> None:
 _ZIP_PROIBIDO = (
     "*.bak",
     "*.bak-*",
+    # Why: the list knew `.bak` and `.orig` and not the naming this house actually uses for a
+    # pre-edit snapshot — `x.py.pre52`, `x.py.pre-selfref`. One of those reached the emitted
+    # tree, the zip AND the CHECKSUMS of a published module before anyone noticed, which is the
+    # whole defect this gate exists to stop. Two precise patterns instead of `*.pre*`, which
+    # would also match a name like `x.prettier.json`.
+    "*.pre[0-9]*",
+    "*.pre-*",
     "*.orig",
     "*.rej",
     "*.rebuild*.json",

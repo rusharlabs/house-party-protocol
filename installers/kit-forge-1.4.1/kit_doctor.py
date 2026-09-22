@@ -568,7 +568,7 @@ def stage_wire_suggest(kit_dir: Path, host: str) -> dict:
             "path": "hooks",
             "action": "Claude Code hooks are not activated in Codex; run scripts and gates explicitly",
         })
-        return {"stage": "wire-sugerido", "status": "ok", "suggestions": suggestions}
+        return {"stage": "wire-suggest", "status": "ok", "suggestions": suggestions}
     plugin_json = kit_dir / ".claude-plugin" / "plugin.json"
     if plugin_json.exists():
         suggestions.append({
@@ -592,7 +592,7 @@ def stage_wire_suggest(kit_dir: Path, host: str) -> dict:
     settings_wire_md = next(iter(kit_dir.glob("SETTINGS-WIRE.md")), None)
     if settings_wire_md is not None:
         suggestions.append({"path": "doc", "action": f"follow {settings_wire_md.name}"})
-    return {"stage": "wire-sugerido", "status": "ok", "suggestions": suggestions}
+    return {"stage": "wire-suggest", "status": "ok", "suggestions": suggestions}
 
 
 def stage_smoke(kit_dir: Path, timeout: float = 30) -> dict:
@@ -728,7 +728,7 @@ def render_plan(report: dict) -> str:
             lines.append(f"      unanswered (default assumed): {pend}")
             lines.append("      to answer for real: run again with --answers <file.json|yaml>")
 
-        if name == "wire-sugerido":
+        if name == "wire-suggest":
             for s in stage.get("suggestions", []):
                 lines.append(f"      option [{s['path']}]: {s['action']}")
             if stage.get("suggestions"):

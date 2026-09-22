@@ -188,7 +188,7 @@ explícita.
    `--answers` e roda o plano DE NOVO antes de pedir confirmação outra vez.
 4. **Apply.** O agente re-invoca o MESMO comando com `--apply`. O instalador aplica o profile,
    roda o smoke de verdade e registra a instalação no registry.
-5. **Relato + wiring manual.** O agente mostra a saída real do apply. Se o `wire-sugerido`
+5. **Relato + wiring manual.** O agente mostra a saída real do apply. Se o `wire-suggest`
    listou opções (plugin / bloco de settings), o agente apresenta o conteúdo exato e **o humano
    cola/aciona** — mutar `settings.local.json`/hooks é gate humano, sempre, mesmo depois do
    `--apply`.
@@ -203,7 +203,7 @@ estrutura de report, módulo de exemplo.
 
 ```
   ✓ detect
-      classificacao=greenfield · projeto novo — nenhuma config prévia detectada
+      classification=greenfield · new project — no previous config detected
 ```
 
 O que o agente enfatiza: **não há nada a preservar**; o plano é o caminho feliz.
@@ -214,7 +214,7 @@ Exemplo completo end-to-end na última seção deste caminho.
 
 ```
   ✓ detect
-      classificacao=in-progress · projeto em andamento — config existente detectada (será preservada)
+      classification=in-progress · project in progress — existing config detected (it will be preserved)
       já existe (não será tocado): .claude/settings.local.json: statusLine/hooks já configurados
 ```
 
@@ -227,7 +227,7 @@ uma ação manual dele, fora do instalador.
 
 ```
   ✓ detect
-      classificacao=re-run · reinstalação — este par kit+target já consta no registry
+      classification=re-run · reinstall — this kit+target pair is already in the registry
       já existe (não será tocado): profile.yaml presente (customizado)
   ...
   ✓ profile
@@ -294,7 +294,7 @@ I ran the {kit} installer in plan mode -- nothing has been written yet. Summary:
 **Module questions:** {"none" | "pending, using default: {id}={default} -- want to change it?"}
 
 **Wiring (settings/hooks):** never automatic. After the apply I bring you the exact block
-({paths suggested by wire-sugerido}) and YOU decide whether to paste it.
+({paths suggested by wire-suggest}) and YOU decide whether to paste it.
 
 **Smoke (module self-tests):** {N} ok, {N} ignored{" -- ALL passed" | see the failure block below}.
 
@@ -307,27 +307,27 @@ I ran the {kit} installer in plan mode -- nothing has been written yet. Summary:
 
 ### Exemplo end-to-end (greenfield, execução real)
 
-Módulo: `operator-kit-1.1.0`. Comando que o agente rodou (saída real abaixo). Esta captura é
+Módulo: `operator-kit-1.5.0`. Comando que o agente rodou (saída real abaixo). Esta captura é
 datada: ela é anterior ao caminho versionado do instalador. Na distribuição atual o módulo é o
 `operator-kit-1.5.0` e o instalador vive em `installers/kit-forge-1.4.1/kit_doctor.py`; os
 estágios, as flags (`--target`, `--host`, `--answers`, `--apply`, `--human`) e a forma da saída
 são os mesmos.
 
 ```
-$ python instaladores/kit-forge/kit_doctor.py install frameworks-com-plugins/operator-kit-1.1.0 \
-    --target frameworks-com-plugins/operator-kit-1.1.0 --human
+$ python installers/kit-forge-1.4.1/kit_doctor.py install frameworks/operator-kit-1.5.0 \
+    --target frameworks/operator-kit-1.5.0 --human
 
-PLANO DE INSTALACAO — operator-kit-1.1.0  (simulação: nada foi escrito)
-  target: frameworks-com-plugins\operator-kit-1.1.0
+INSTALL PLAN — operator-kit-1.5.0  (dry run: nothing was written)
+  target: frameworks\operator-kit-1.5.0
   host:   claude-code
 
   ✓ detect
-      classificacao=greenfield · projeto novo — nenhuma config prévia detectada
+      classification=greenfield · new project — no previous config detected
   ✓ prereqs
   ✓ profile
-      copiaria: profile.example.yaml -> profile.yaml
+      would copy: profile.example.yaml -> operator-profile.yaml
   ✓ configure
-  ✓ wire-sugerido
+  ✓ wire-suggest
       opção [plugin]: /plugin marketplace add . && /plugin install <nome>@<marketplace>
       opção [doc]: seguir SETTINGS-WIRE.md
       (nenhuma é executada automaticamente — mexer em settings/hooks é decisão humana)
@@ -335,12 +335,12 @@ PLANO DE INSTALACAO — operator-kit-1.1.0  (simulação: nada foi escrito)
       self-tests: 27 ok · 0 sem suporte (ignorados)
 
 Nada foi modificado. Se o plano está de acordo, aplique com:
-  python kit_doctor.py install frameworks-com-plugins\operator-kit-1.1.0 --target frameworks-com-plugins\operator-kit-1.1.0 --apply
+  python kit_doctor.py install frameworks\operator-kit-1.5.0 --target frameworks\operator-kit-1.5.0 --apply
 ```
 
 O que o agente diz ao humano (texto exato, seguindo o molde):
 
-> Rodei o instalador do operator-kit-1.1.0 em modo plano — nada foi escrito ainda. Resumo:
+> Rodei o instalador do operator-kit-1.5.0 em modo plano — nada foi escrito ainda. Resumo:
 >
 > **Diagnóstico do projeto:** projeto novo (greenfield) — nenhuma config prévia detectada,
 > nada a preservar.
@@ -362,8 +362,8 @@ O que o agente diz ao humano (texto exato, seguindo o molde):
 Humano: **"pode aplicar"**
 
 O agente roda o mesmo comando com `--apply`, cola a saída real (o cabeçalho vira
-`INSTALACAO APLICADA — ... (--apply)`, a linha do profile vira `copiado:`, o rodapé confirma
-`Instalação aplicada e registrada.`) e fecha com o wiring:
+`INSTALL APPLIED — ... (--apply)`, a linha do profile vira `copied:`, o rodapé confirma
+`Install applied and registered. Wiring of settings/hooks (if suggested above) stays manual.`) e fecha com o wiring:
 
 > Aplicado e registrado. Falta só o wiring, que é seu: quer que eu te mostre o bloco do
 > `SETTINGS-WIRE.md` para você colar no `settings.local.json`, ou prefere o caminho de plugin?

@@ -9,6 +9,69 @@ keeps its own version in `plugin.json` and in `marketplace.json`.
 
 ## [Unreleased]
 
+## [2.5.4] — 2026-09-22
+
+2.5.3 renamed things. This release fixes what the renames **broke**, and every one of the five
+defects was found by a different instrument than a language census — because none of them is a
+language problem. The old name and the new name are both English; only *existence* and *running
+the thing* can tell them apart.
+
+### Fixed
+
+- 🔴 **The installer's smoke test failed on the flagship kit, so a fresh install of `operator-kit`
+  told the reader "do not apply this kit".** `claude_md_from_profile.py` decides whether a profile
+  is the shipped example by looking for a sentinel; the sentinel was renamed to English in 2.5.3
+  and the READER was left looking for the retired Portuguese one. The visible consequence went
+  past the red test: the "generated from an EXAMPLE PROFILE" warning was **silently omitted**, so
+  a block generated from the example carried no sign that the project it describes does not exist.
+  Both spellings are now read, until 2.7.0.
+- 🔴 **All four published `CATALOG` documents told the reader to run a file that does not exist.**
+  `catalog_md.py` was renamed in 2.5.3 and kept printing its old name in six places, one of them
+  the regeneration command that lands in the generated docs. Copying it gives `No such file`.
+- 🔴 **The handoff validator instructed the reader to write the value it rejects.** The check
+  required `schema_version: "2.0"`; the error message still said `must be '1.1'`. The message is
+  now BUILT from the accepted set, so the two cannot disagree at the next bump.
+- **The installer printed a Portuguese stage name** — `wire-sugerido` — while the file's own
+  docstring and comments already said `wire-suggest`. The value, the render branch, the prose and
+  the docs now agree.
+- **The UX walkthrough presented itself as a real capture and was stale in four dimensions at
+  once**: the copyable command named `instaladores/kit-forge/` and `frameworks-com-plugins/` (both
+  retired by the 2.5.0 layout rename), the module version was `1.1.0` against the shipped `1.5.0`,
+  the output text was the pre-English-first Portuguese, and the profile target was `profile.yaml`
+  instead of `operator-profile.yaml`. The block was **re-captured from a live run** rather than
+  edited by hand.
+- **`operator-kit/evolve/NOTICE-ECC.md` was in Portuguese** — an attribution notice, in the
+  published product, and the only one of the six `NOTICE-ECC.md` files in that state. Translated
+  with every claim preserved, including the clause about what must change if literal ECC text is
+  ever incorporated.
+
+### Added
+
+- **A gate for what a language census cannot see: self-reference.** A module may not name itself
+  by a retired spelling, the published catalogue must cite a command that exists, and the handoff
+  version message must be derived rather than spelled. With the control that proves the premise —
+  the retired name really is retired — and one that rebuilds the 2.5.3 defect in memory to show
+  the assertion can fail.
+- **A gate for English documents: position, not vocabulary.** Portuguese inside a fenced block is
+  a verbatim quotation (a principle in the language it was authored in, a captured output, a
+  legacy token) and the product does that deliberately, with an English gloss beneath it;
+  Portuguese *outside* a fence and outside backticks is prose nobody translated. Measured when the
+  gate was written: `INSTALL-CONTRACT.md` had 16 accented lines, 16 of 16 inside a fence;
+  `NOTICE-ECC.md` had 17, 0 of 17 inside. Position separated them.
+
+### Known
+
+- **The two `.py` language censuses are vocabulary-based and narrow, and three attempts to widen
+  them failed their own control.** Judged against the product's English corpus, 67 of 100
+  candidate words were rejected — because that corpus itself carries Portuguese, so the words
+  were rejected for the defect they exist to detect. Judged by a differential pt/en ratio across
+  the published pairs, `nao` scored 2.3 (rejected) and `manifesto` scored 16.8 (accepted):
+  backwards on both. The censuses therefore **under-report and never over-report**: `0` from them
+  means "none that this vocabulary knows", not "none". The measured size of the blind spot, with
+  the stronger of the failed vocabularies, is 56 strings across ten modules, most of which are
+  deliberate Portuguese test fixtures simulating a Portuguese-speaking operator's input. Named
+  here rather than half-fixed with a fourth list.
+
 ## [2.5.3] — 2026-09-22
 
 The last Portuguese in the product was in the NAMES: functions, variables, config keys, and one

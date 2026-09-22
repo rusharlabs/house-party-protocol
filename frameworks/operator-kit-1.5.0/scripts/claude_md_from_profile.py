@@ -61,6 +61,15 @@ except ImportError:
 
 BEGIN = "<!-- operator-kit:claude-md:begin -->"
 END = "<!-- operator-kit:claude-md:end -->"
+
+# Why: the profile keys and the example placeholder were translated, and this
+# READER was left looking for the retired Portuguese sentinels — so `example` came back False
+# for the shipped `profile.example.yaml`, the "generated from an EXAMPLE" warning was silently
+# omitted, and the installer's smoke test failed on the flagship kit. Both spellings are read
+# until 2.7.0: a profile written before the rename must keep getting its warning.
+_EXAMPLE_FLAG_KEYS = ("_example", "_exemplo")
+_EXAMPLE_PROJECT_NAMES = ("your-project-name", "nome-do-projeto", "", None)
+EXAMPLE_SENTINELS_LEGACY_REMOVED_IN = "2.7.0"
 FALLBACK_NAME = "INSTRUCOES-DO-CLAUDE.md"  # literal: this is the name the person will look for
 
 # Why: the signature is what separates "generated" (can overwrite) from "hand-edited" (cannot).
@@ -190,7 +199,8 @@ def section_flow(p: dict) -> list:
 
 def generate_block(profile: dict, profile_name: str, script_name: str, today: str | None = None) -> str:
     today = today or _dt.date.today().isoformat()
-    example = bool(profile.get("_exemplo")) or _get(profile, "project") in ("nome-do-projeto", "", None)
+    example = any(profile.get(k) for k in _EXAMPLE_FLAG_KEYS) \
+        or _get(profile, "project") in _EXAMPLE_PROJECT_NAMES
     lines = [BEGIN]
     if example:
         lines.append("> WARNING: THIS BLOCK WAS GENERATED FROM AN EXAMPLE PROFILE. The project below does not exist. Fill in `operator-profile.yaml` and regenerate.")

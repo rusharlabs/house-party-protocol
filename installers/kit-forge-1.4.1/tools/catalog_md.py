@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""catalogo_md.py — bilingual module catalogue of a marketplace, derived from its emitted tree.
+"""catalog_md.py — bilingual module catalogue of a marketplace, derived from its emitted tree.
 
 Reads `marketplace.json` at the root and, for each plugin, lists what it ships: skills (name +
 frontmatter description), commands, agents, hooks (event -> script), rules, templates, scripts
@@ -21,9 +21,9 @@ relative to `docs/`) and closes with the five words — the catalogue is a page 
 looks like one.
 
 Usage:
-    python tools/catalogo_md.py <marketplace-root>            # prints the English Markdown
-    python tools/catalogo_md.py <marketplace-root> --write    # writes the four files under docs/
-    python tools/catalogo_md.py --self-test
+    python tools/catalog_md.py <marketplace-root>            # prints the English Markdown
+    python tools/catalog_md.py <marketplace-root> --write    # writes the four files under docs/
+    python tools/catalog_md.py --self-test
 
 Exit: 0 ok · 2 root without marketplace.json · 3 internal error.
 """
@@ -52,7 +52,7 @@ BRAND = {"black": "#000000", "ink": "#0F1113", "paper": "#F4F1EB", "signal": "#F
 # Why: the pair link and the regeneration command are identical on both sides on purpose — the
 # bilingual gate compares code and the reader switches language by the same two words.
 PAIR_LINKS = f"[English]({OUTPUTS['en']['md']}) · [Português]({OUTPUTS['pt-BR']['md']})"
-REGEN_CMD = "python installers/kit-forge-*/tools/catalogo_md.py . --write"
+REGEN_CMD = "python installers/kit-forge-*/tools/catalog_md.py . --write"
 COUNT_KEYS = ("skills", "commands", "agents", "hooks", "rules", "templates", "scripts")
 # Why: the header is the MANUAL's header — the lockup is read from `docs/MANUAL.html` next to the
 # outputs, so the two pages cannot drift apart, and this tool (which ships inside every copy of
@@ -576,12 +576,12 @@ def main(argv: list[str]) -> int:
         return 2
     root = Path(argv[0]).resolve()
     if not (root / "marketplace.json").exists():
-        print(f"catalogo_md: no marketplace.json in {root}", file=sys.stderr)
+        print(f"catalog_md: no marketplace.json in {root}", file=sys.stderr)
         return 2
     try:
         out = render_all(root)
     except Exception as exc:  # noqa: BLE001 -- Why: a read error becomes exit 3 with its cause, never a half catalogue
-        print(f"catalogo_md: error: {exc}", file=sys.stderr)
+        print(f"catalog_md: error: {exc}", file=sys.stderr)
         return 3
     if "--write" in argv:
         docs = root / "docs"

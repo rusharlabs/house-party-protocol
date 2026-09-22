@@ -9,6 +9,69 @@ cada módulo mantém sua própria versão no `plugin.json` e no `marketplace.jso
 
 ## [Unreleased]
 
+## [2.5.4] — 2026-09-22
+
+A 2.5.3 renomeou coisas. Esta release conserta o que os renames **quebraram**, e cada um dos cinco
+defeitos foi achado por um instrumento diferente de um censo de idioma — porque nenhum deles é
+problema de idioma. O nome velho e o nome novo estão os dois em inglês; só a *existência* e *rodar
+a coisa* os distinguem.
+
+### Fixed
+
+- 🔴 **O smoke do instalador falhava no kit principal, então uma instalação nova do `operator-kit`
+  dizia ao leitor "não aplique este kit".** O `claude_md_from_profile.py` decide se um profile é o
+  exemplo distribuído procurando um sentinela; o sentinela foi traduzido na 2.5.3 e o LEITOR ficou
+  procurando o português aposentado. A consequência visível passa do teste vermelho: o aviso
+  "gerado a partir de um EXAMPLE PROFILE" era **omitido em silêncio**, então um bloco gerado do
+  exemplo não carregava sinal de que o projeto que ele descreve não existe. As duas grafias são
+  lidas agora, até a 2.7.0.
+- 🔴 **Os quatro `CATALOG` publicados mandavam rodar um arquivo que não existe.** O `catalog_md.py`
+  foi renomeado na 2.5.3 e continuou imprimindo o nome velho em seis lugares, um deles o comando de
+  regeneração que desemboca nos docs gerados. Copiá-lo devolve `No such file`.
+- 🔴 **O validador de handoff instruía o leitor a escrever o valor que ele rejeita.** A verificação
+  exigia `schema_version: "2.0"`; a mensagem de erro ainda dizia `must be '1.1'`. A mensagem agora
+  é CONSTRUÍDA a partir do conjunto aceito, então as duas não podem divergir no próximo bump.
+- **O instalador imprimia nome de estágio em português** — `wire-sugerido` — enquanto o docstring e
+  os comentários do próprio arquivo já diziam `wire-suggest`. Valor, ramo de render, prosa e docs
+  agora concordam.
+- **O passo-a-passo de UX se apresentava como captura real e estava vencido em quatro dimensões ao
+  mesmo tempo**: o comando copiável citava `instaladores/kit-forge/` e `frameworks-com-plugins/`
+  (os dois aposentados no rename de layout da 2.5.0), a versão do módulo era `1.1.0` contra a
+  `1.5.0` publicada, o texto da saída era o português de antes do English-first, e o alvo do
+  profile era `profile.yaml` em vez de `operator-profile.yaml`. O bloco foi **re-capturado de uma
+  execução ao vivo**, não editado à mão.
+- **O `operator-kit/evolve/NOTICE-ECC.md` estava em português** — um aviso de atribuição, no
+  produto publicado, e o único dos seis `NOTICE-ECC.md` nesse estado. Traduzido com cada afirmação
+  preservada, inclusive a cláusula sobre o que muda se texto literal do ECC for algum dia
+  incorporado.
+
+### Added
+
+- **Um gate para o que um censo de idioma não vê: a auto-referência.** Um módulo não pode se
+  nomear por uma grafia aposentada, o catálogo publicado tem de citar um comando que existe, e a
+  mensagem de versão do handoff tem de ser derivada em vez de escrita ao lado. Com o controle que
+  prova a premissa — o nome aposentado de fato está aposentado — e outro que reconstrói o defeito
+  da 2.5.3 em memória para mostrar que a asserção consegue falhar.
+- **Um gate para documento inglês: posição, não vocabulário.** Português dentro de code fence é
+  citação verbatim (um princípio no idioma em que foi escrito, uma saída capturada, um token
+  legado) e o produto faz isso de propósito, com glosa inglesa abaixo; português *fora* de fence e
+  fora de crase é prosa que ninguém traduziu. Medido quando o gate nasceu: o `INSTALL-CONTRACT.md`
+  tinha 16 linhas acentuadas, 16 de 16 dentro de fence; o `NOTICE-ECC.md` tinha 17, 0 de 17 dentro.
+  A posição separou os dois.
+
+### Known
+
+- **Os dois censos de idioma em `.py` são baseados em vocabulário e são estreitos, e três
+  tentativas de ampliá-los reprovaram no próprio controle.** Julgadas contra o corpus inglês do
+  produto, 67 de 100 palavras candidatas foram rejeitadas — porque aquele corpus carrega português,
+  então as palavras foram rejeitadas pelo defeito que existem para achar. Julgadas por razão
+  diferencial pt/en nos pares publicados, `nao` deu 2,3 (rejeitada) e `manifesto` deu 16,8
+  (aceita): invertido nas duas. Os censos, portanto, **sub-reportam e nunca super-reportam**: um
+  `0` deles quer dizer "nenhum que este vocabulário conheça", não "nenhum". O tamanho medido do
+  ponto cego, com o mais forte dos vocabulários reprovados, é de 56 strings em dez módulos, a
+  maioria fixture de teste deliberadamente em português simulando a entrada de um operador
+  brasileiro. Nomeado aqui em vez de meio-consertado com uma quarta lista.
+
 ## [2.5.3] — 2026-09-22
 
 O último português do produto estava nos NOMES: funções, variáveis, chaves de config e um formato

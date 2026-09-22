@@ -3,7 +3,7 @@
 # Catálogo — house-party-protocol
 
 Derivado da árvore emitida: o que cada kit instala, recurso por recurso. Regenerar com
-`python installers/kit-forge-*/tools/catalogo_md.py . --write`.
+`python installers/kit-forge-*/tools/catalog_md.py . --write`.
 
 ## Recursos transversais
 
