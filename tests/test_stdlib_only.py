@@ -18,7 +18,10 @@ from pathlib import Path
 PRODUCT_ROOT = Path(__file__).resolve().parent.parent
 PACKAGE = PRODUCT_ROOT / "hpp"
 TESTS = PRODUCT_ROOT / "tests"
-STDLIB = frozenset(sys.stdlib_module_names)
+# Why (CI run 35678986775, 2026-09-22): `sys.stdlib_module_names` is the running interpreter's list, and
+# on the 3.10 floor it has no `tomllib` (stdlib since 3.11). Two tests import it behind a guard, which
+# is correct; this gate must not read a guarded stdlib import as a third-party dependency on 3.10.
+STDLIB = frozenset(sys.stdlib_module_names) | frozenset({"tomllib"})
 OWN = frozenset({"hpp"})
 TEST_ONLY = frozenset({"pytest"})
 
