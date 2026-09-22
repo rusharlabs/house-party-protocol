@@ -1,52 +1,52 @@
 ---
 name: health-check
-description: Sonda uma lista config-driven de serviços (HTTP ou comando local) e grava um cache JSON que outra ferramenta (ex.: statusline) pode ler sem tocar rede — nunca no próprio caminho quente, só gera o cache.
+description: Probes a config-driven list of services (HTTP or local command) and writes a JSON cache that another tool (e.g. the statusline) can read without touching the network — never on the hot path itself, it only generates the cache.
 ---
 
-> **Auto-Trigger:** Ao configurar monitoramento de saúde de serviços de um projeto, ou quando o usuário pede "verifica se os serviços estão no ar", "health check", "sonda de saúde".
-> **Keywords:** "health check", "saude dos servicos", "sonda", "probe", "servicos no ar", "status dos servicos", "monitoramento", "health probe"
-> **Prioridade:** MÉDIA
+> **Auto-Trigger:** When setting up service health monitoring for a project, or when the user asks "check whether the services are up", "health check", "health probe".
+> **Keywords:** "health check", "service health", "probe", "health probe", "services up", "service status", "monitoring", "uptime"
+> **Priority:** MEDIUM
 > **Tools:** Bash, Read
 
-## Quando NÃO Ativar
-- Verificação de UM endpoint pontual e único — use `curl`/`urllib` direto, sem o overhead de configurar `health.probes`.
-- Quando o "health" a verificar é sobre DADO (uma tabela populada, um job que rodou), não sobre SERVIÇO no ar — health de serviço ≠ health de dado; este script só prova que o processo responde, não que os dados dentro dele estão corretos.
+## When NOT to Activate
+- Checking ONE single, one-off endpoint — use `curl`/`urllib` directly, without the overhead of configuring `health.probes`.
+- When the "health" to check is about DATA (a populated table, a job that ran), not about a SERVICE being up — service health ≠ data health; this script only proves the process responds, not that the data inside it is correct.
 
-## Contrato
+## Contract
 
-**ENTRADA:** `health.probes` (lista de `{name, type: http|cmd, target}`) do `operator-profile.yaml`.
+**INPUT:** `health.probes` (list of `{name, type: http|cmd, target}`) from `operator-profile.yaml`.
 
-**SAÍDA:** cache JSON em `paths.health_cache` (default `.claude/health-cache.json`) + resumo impresso.
+**OUTPUT:** JSON cache at `paths.health_cache` (default `.claude/health-cache.json`) + printed summary.
 
 **EXIT CODES:**
 
-| Exit | Significado |
+| Exit | Meaning |
 |---|---|
-| 0 | sempre — o connector nunca quebra o fluxo do chamador, mesmo com serviços DOWN |
+| 0 | always — the connector never breaks the caller's flow, even with services DOWN |
 
-**ESTADO QUE TOCA:**
+**STATE IT TOUCHES:**
 
-| Recurso | Lê/Escreve | Propósito |
+| Resource | Reads/Writes | Purpose |
 |---|---|---|
-| `operator-profile.yaml` (`health.probes`, `paths.health_cache`) | Lê | config das sondas |
-| endpoint HTTP / comando local | Lê (read-only) | sonda de fato |
-| `paths.health_cache` | Escreve | cache que outra ferramenta (ex.: `statusline.py`) lê sem rede |
+| `operator-profile.yaml` (`health.probes`, `paths.health_cache`) | Reads | probe config |
+| HTTP endpoint / local command | Reads (read-only) | the actual probe |
+| `paths.health_cache` | Writes | cache that another tool (e.g. `statusline.py`) reads without network |
 
-## Processo
-1. **Declare as sondas** no profile: `type: http` (GET via `urllib`, nunca `curl`/`wget` — deny-list) ou `type: cmd` (comando shell do profile, confiável).
-2. **Rode o probe** — sob demanda, no `SessionStart`, ou via cron:
+## Process
+1. **Declare the probes** in the profile: `type: http` (GET via `urllib`, never `curl`/`wget` — deny-list) or `type: cmd` (shell command from the profile, trusted).
+2. **Run the probe** — on demand, on `SessionStart`, or via cron:
    ```bash
    python ${CLAUDE_PLUGIN_ROOT}/scripts/health_probe.py
    ```
-3. **Consumidores** (ex.: `statusline.py`, segmento `health`) leem SÓ o cache gerado — nunca chamam rede no caminho quente. O segmento `health` mostra o detalhe por-serviço (`api:OK db:DOWN`) até 6 serviços; acima disso degrada para o agregado (`⚕up/tot`).
+3. **Consumers** (e.g. `statusline.py`, `health` segment) read ONLY the generated cache — they never call the network on the hot path. The `health` segment shows the per-service detail (`api:OK db:DOWN`) up to 6 services; above that it degrades to the aggregate (`⚕up/tot`).
 
-## Exemplos executados
+## Executed examples
 
 ```console
 $ python scripts/health_probe.py
 ⚕ 1/2 UP (DOWN: servico-down)
 ```
-<!-- executado: 2026-07-10 · exit=0 -->
+<!-- executed: 2026-07-10 · exit=0 -->
 
 ```console
 $ python scripts/health_probe.py --json
@@ -59,22 +59,22 @@ $ python scripts/health_probe.py --json
   }
 }
 ```
-<!-- executado: 2026-07-10 · exit=0 -->
+<!-- executed: 2026-07-10 · exit=0 -->
 
 ```console
 $ python scripts/health_probe.py --quiet
 ```
-(sem output — `--quiet` suprime o resumo mesmo com serviços DOWN, útil p/ cron que só quer o cache)
-<!-- executado: 2026-07-10 · exit=0 -->
+(no output — `--quiet` suppresses the summary even with services DOWN, useful for a cron that only wants the cache)
+<!-- executed: 2026-07-10 · exit=0 -->
 
 ```console
 $ python statusline/statusline.py --statusline
 servico-ok:OK servico-down:DOWN
 ```
-(o mesmo cache acima, lido pelo segmento `health` da statusline — detalhe por-serviço, critério de aceite do kit)
-<!-- executado: 2026-07-10 · exit=0 -->
+(the same cache above, read by the statusline's `health` segment — per-service detail, the module's acceptance criterion)
+<!-- executed: 2026-07-10 · exit=0 -->
 
-## Prova
+## Proof
 
 ```bash
 python ${CLAUDE_PLUGIN_ROOT}/scripts/health_probe.py --self-test

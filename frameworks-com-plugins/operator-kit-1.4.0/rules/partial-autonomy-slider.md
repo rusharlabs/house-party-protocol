@@ -1,22 +1,22 @@
 # Partial Autonomy Slider Protocol
 
-> **Status:** ACTIVE (generalizada para o operator-kit)
-> **Fonte:** Karpathy "Autonomy Slider" UX pattern (YC keynote, Jun/2025)
+> **Status:** ACTIVE (generalized for the operator-kit)
+> **Source:** Karpathy "Autonomy Slider" UX pattern (YC keynote, Jun/2025)
 > **Keywords:** "autonomy" · "autonomy_level" · "human in the loop" · "auto mode" · "approve"
-> **Prioridade:** ALTA
+> **Priority:** HIGH
 
 ## Karpathy original
 
 > "Build systems that can slide along a spectrum [of autonomy]. Cursor (Tab→Cmd+K→Cmd+L→Cmd+I) does this. Perplexity does this."
 
-UX pattern: slider que regula nível de autonomia do AI · tab-complete conservador → agent mode full.
+UX pattern: a slider that regulates the AI's autonomy level · conservative tab-complete → full agent mode.
 
-## Aplicação a um ecossistema multi-agente
+## Application to a multi-agent ecosystem
 
-Cada agente (CARGO · MINDS · CONCLAVE · SYSTEM) recebe campo `autonomy_level` (0-5) declarando quanto pode agir sem human-in-the-loop.
+Each agent (CARGO · MINDS · CONCLAVE · SYSTEM) receives an `autonomy_level` field (0-5) declaring how much it may act without a human in the loop.
 
 ```yaml
-# Em AGENT.md frontmatter
+# In the AGENT.md frontmatter
 ---
 name: closer
 type: cargo
@@ -32,125 +32,125 @@ autonomy_history:
 ---
 ```
 
-## Os 6 níveis (0-5)
+## The 6 levels (0-5)
 
-| Level | Nome | Comportamento | Use case |
+| Level | Name | Behavior | Use case |
 |-------|------|---------------|----------|
-| **0** | Suggest-only | Apenas propõe · NUNCA executa · o operador sempre aprova | Agentes novos · sensitive areas (contratos · pagamentos · DELETE SQL) |
-| **1** | Approve-each | Executa após aprovação por ação · padrão para `awaits_max_scope` | Crons criando deliverables · novos clientes |
-| **2** | Approve-batch | Aprovação em batch (N ações) · default safe | **DEFAULT para novos agents** |
-| **3** | Approve-summary | Reporta sumário pós-execução · sem block | Crons rotina (briefing · digest · health) |
-| **4** | Trusted-auto | Executa autonomamente · audit log obrigatório | Após 7d clean record + verifiable success |
-| **5** | Full-auto | Executa + auto-recovery · só alerta em failures | Apenas após 30d clean + zero false-positive |
+| **0** | Suggest-only | Only proposes · NEVER executes · the operator always approves | New agents · sensitive areas (contracts · payments · DELETE SQL) |
+| **1** | Approve-each | Executes after per-action approval · default for `awaits_max_scope` | Crons creating deliverables · new clients |
+| **2** | Approve-batch | Batch approval (N actions) · default safe | **DEFAULT for new agents** |
+| **3** | Approve-summary | Reports a post-execution summary · no block | Routine crons (briefing · digest · health) |
+| **4** | Trusted-auto | Executes autonomously · audit log mandatory | After a 7-day clean record + verifiable success |
+| **5** | Full-auto | Executes + auto-recovery · only alerts on failures | Only after 30 days clean + zero false positives |
 
-## Promotion criteria (subir level)
+## Promotion criteria (going up a level)
 
-Para promover de level N para N+1:
-1. **Time minimum:** 7 dias no nível atual
-2. **Eval pass rate:** ≥80% nos últimos 50 outputs
-3. **Zero incident:** nenhuma regressão / rollback / correção do operador
-4. **Verifiability:** outputs com critério de sucesso testável (FW-AK-006)
-5. **Audit trail:** logs registrados em `auth_audit` ou cron logs
+To promote from level N to N+1:
+1. **Time minimum:** 7 days at the current level
+2. **Eval pass rate:** ≥80% over the last 50 outputs
+3. **Zero incidents:** no regression / rollback / operator correction
+4. **Verifiability:** outputs with a testable success criterion (FW-AK-006)
+5. **Audit trail:** logs recorded in `auth_audit` or cron logs
 
-Demotion (descer level) é AUTOMÁTICO em:
+Demotion (going down a level) is AUTOMATIC on:
 - Incident detected (false positive / regression / data loss)
-- Correção explícita do operador ("não faz X")
-- Eval pass rate cai <60%
+- Explicit operator correction ("don't do X")
+- Eval pass rate drops below 60%
 
-## Conexão com um tier de autenticação de API (se houver)
+## Connection with an API authentication tier (if there is one)
 
-Um eventual 3-tier de auth (admin/service/public) é tier de **API auth**, não autonomy level. Combinados:
+An eventual 3-tier auth (admin/service/public) is an **API auth** tier, not an autonomy level. Combined:
 
 ```
-agent.autonomy_level=4 + caller.auth_tier=service → OK (executa)
-agent.autonomy_level=2 + caller.auth_tier=public  → DENY (level alto requer auth)
-agent.autonomy_level=0 + qualquer caller          → propõe · não executa
+agent.autonomy_level=4 + caller.auth_tier=service → OK (executes)
+agent.autonomy_level=2 + caller.auth_tier=public  → DENY (a high level requires auth)
+agent.autonomy_level=0 + any caller               → proposes · does not execute
 ```
 
-## Implementação por fase (sugestão de rollout incremental)
+## Implementation by phase (suggested incremental rollout)
 
-### Fase 1 — piloto
-- Doc canon (este arquivo) + o mecanismo que consulta `autonomy_level` antes de despachar uma ação
-- Um pequeno grupo piloto de agentes/crons recebe `autonomy_level` (seeding manual)
+### Phase 1 — pilot
+- Canonical doc (this file) + the mechanism that consults `autonomy_level` before dispatching an action
+- A small pilot group of agents/crons receives `autonomy_level` (manual seeding)
 
-### Fase 2 — migração
-- Todos os agentes do seu ecossistema (contagem LIVE, nunca hardcode) recebem level inicial=2 (conservative)
-- Job de promoção periódico (auto-promove se os critérios passam)
-- Demoção automática em incidente
+### Phase 2 — migration
+- All the agents in your ecosystem (LIVE count, never hardcoded) receive initial level=2 (conservative)
+- Periodic promotion job (auto-promotes if the criteria pass)
+- Automatic demotion on incident
 
-### Fase 3 — observabilidade
-- Painel mostrando o level de cada agente
-- Histórico de mudanças
-- Override manual via o comando do seu canal de operação, se aplicável
+### Phase 3 — observability
+- Panel showing each agent's level
+- Change history
+- Manual override via your operations channel's command, if applicable
 
-## Default level inicial
+## Initial default level
 
-Todos os agentes começam em **level 2 (Approve-batch)** exceto:
-- **Sensitive areas (contratos · financeiro · DELETE):** level 0 forced
+All agents start at **level 2 (Approve-batch)** except:
+- **Sensitive areas (contracts · financial · DELETE):** level 0 forced
 - **Heartbeat/monitoring crons (read-only):** level 4 OK
 - **Health-sync (snapshot only):** level 3 OK
 
-## Conexão DNA Karpathy
+## Karpathy DNA connection
 
-- MM-AK-009 (Autonomy Slider UX Pattern) — fonte canônica
+- MM-AK-009 (Autonomy Slider UX Pattern) — canonical source
 - HEUR-AK-012 (Figure out which circuits) — jagged intelligence calibration
-- FIL-AK-010 (Outsource Thinking, Not Understanding) — alguém precisa entender o que está acontecendo
+- FIL-AK-010 (Outsource Thinking, Not Understanding) — someone needs to understand what is going on
 
-## Dimensão 2 — Intensidade (lite/full/ultra/off)
+## Dimension 2 — Intensity (lite/full/ultra/off)
 
-> **Origem:** backlog "ponytail" (`docs/plans/2026-06-29-PONYTAIL-ANALYSIS.md` item #4) — vocabulário
-> compartilhado com o resto do ecossistema, adotado aqui como doutrina do Operator Kit.
+> **Origin:** the "ponytail" backlog (`docs/plans/2026-06-29-PONYTAIL-ANALYSIS.md` item #4) — vocabulary
+> shared with the rest of the ecosystem, adopted here as Operator Kit doctrine.
 
-`autonomy_level` (acima) responde **"quanta aprovação humana esta ação precisa?"**. Intensidade
-responde uma pergunta ORTOGONAL: **"quanta verificação/maquinaria roda por ação?"**. As duas
-dimensões são independentes — um agente pode ter autonomia alta e intensidade baixa (age sozinho,
-mas com pouca checagem) ou autonomia baixa e intensidade máxima (precisa aprovar cada passo, mas
-quando age, verifica tudo).
+`autonomy_level` (above) answers **"how much human approval does this action need?"**. Intensity
+answers an ORTHOGONAL question: **"how much verification/machinery runs per action?"**. The two
+dimensions are independent — an agent can have high autonomy and low intensity (acts alone,
+but with little checking) or low autonomy and maximum intensity (needs approval for every step, but
+when it acts, it verifies everything).
 
 ```
-              autonomy_level (QUEM aprova)          intensidade (QUANTO se verifica)
-              ────────────────────────────          ─────────────────────────────────
+              autonomy_level (WHO approves)          intensity (HOW MUCH is verified)
+              ─────────────────────────────          ────────────────────────────────
 level 0-5     suggest-only  →  full-auto             lite  →  full  →  ultra  (→ off)
 ```
 
-| Modo | Verificação por ação | Quando usar |
+| Mode | Verification per action | When to use |
 |---|---|---|
-| **lite** | Só o essencial — critério de aceite mínimo, sem passes extras | Iteração rápida/exploratória, prototipagem descartável |
-| **full** | Verificação completa padrão (`done_gate`/`verify_ladder` nos níveis obrigatórios) | **DEFAULT** — trabalho normal |
-| **ultra** | Verificação máxima — múltiplas passadas, checker cross-model sempre (`loop-maker-checker`), determinismo (`determinism_harness`) | Release-crítico, path sensível (financeiro/DELETE/engine vivo), promoção de agente a `autonomy_level` 4-5 |
-| **off** | Zero verificação extra além do que a linguagem/runtime já força | **Emergência/debug apenas — NUNCA default, nunca em produção** |
+| **lite** | Only the essential — minimum acceptance criterion, no extra passes | Fast/exploratory iteration, disposable prototyping |
+| **full** | Standard complete verification (`done_gate`/`verify_ladder` at the mandatory levels) | **DEFAULT** — normal work |
+| **ultra** | Maximum verification — multiple passes, cross-model checker always (`loop-maker-checker`), determinism (`determinism_harness`) | Release-critical, sensitive path (financial/DELETE/live engine), promotion of an agent to `autonomy_level` 4-5 |
+| **off** | Zero extra verification beyond what the language/runtime already forces | **Emergency/debug only — NEVER the default, never in production** |
 
-**Configuração:** `intensidade.default: full` em `operator-profile.yaml` (ver seção `profile.example.yaml`
-deste kit). Mecanismos que hoje leem `verificacao.*`/`ladder_score_minimo` podem futuramente escalar
-o rigor com base neste campo — o escopo desta doutrina é o vocabulário + o config, não (ainda) um
-consumidor automático.
+**Configuration:** `intensidade.default: full` in `operator-profile.yaml` (see the `profile.example.yaml` section
+of this kit). Mechanisms that today read `verificacao.*`/`ladder_score_minimo` may in the future scale
+the rigor based on this field — the scope of this doctrine is the vocabulary + the config, not (yet) an
+automatic consumer.
 
-**Combinação com `autonomy_level` (a matriz que importa):**
+**Combination with `autonomy_level` (the matrix that matters):**
 
 ```
-autonomy ALTO (4-5) + intensidade OFF   →  ⚠️ PERIGOSO — agente age sozinho E sem checar. Desencorajado
-                                            explicitamente; se aparecer, tratar como incidente
-                                            (demotion automática de autonomy_level, ver acima).
-autonomy ALTO (4-5) + intensidade FULL  →  combinação normal de um agente "trusted" em regime.
-autonomy BAIXO (0-1) + intensidade OFF  →  aceitável só em debug local, nunca contra path sensível.
-autonomy BAIXO (0-1) + intensidade ULTRA→  o par mais conservador — usar em release-crítico
-                                            enquanto o agente ainda não tem histórico de promoção.
+autonomy HIGH (4-5) + intensity OFF   →  ⚠️ DANGEROUS — the agent acts alone AND without checking. Explicitly
+                                          discouraged; if it appears, treat it as an incident
+                                          (automatic demotion of autonomy_level, see above).
+autonomy HIGH (4-5) + intensity FULL  →  the normal combination of a "trusted" agent in steady state.
+autonomy LOW (0-1) + intensity OFF    →  acceptable only in local debug, never against a sensitive path.
+autonomy LOW (0-1) + intensity ULTRA  →  the most conservative pair — use in release-critical work
+                                          while the agent still has no promotion history.
 ```
 
-**Contrapeso ao LC-2 (`learned-corrections.md`):** "execute 100%, sem enrolar" quando o operador
-autoriza execução ampla (`/goal`, "máxima capacidade") NÃO dispensa a intensidade de verificação
-escolhida. "100% de esforço" e "zero verificação" não são a mesma coisa — LC-2 manda ir a fundo
-*dentro* do modo de intensidade vigente, nunca usá-lo como desculpa para rebaixar `intensidade`
-para `off` sem decisão explícita.
+**Counterweight to LC-2 (`learned-corrections.md`):** "execute 100%, no stalling" when the operator
+authorizes broad execution (`/goal`, "maximum capacity") does NOT waive the chosen verification
+intensity. "100% effort" and "zero verification" are not the same thing — LC-2 says to go deep
+*within* the current intensity mode, never to use it as an excuse to lower `intensidade`
+to `off` without an explicit decision.
 
 ## Anti-patterns
 
-- ❌ **All-or-nothing:** binary `manual` vs `auto` — usar slider
-- ❌ **Level 5 default:** sempre começar conservative
-- ❌ **No demotion:** se algo deu ruim, level desce automaticamente
-- ❌ **Level sem audit log:** sem trail = invisível regressão
+- ❌ **All-or-nothing:** binary `manual` vs `auto` — use the slider
+- ❌ **Level 5 default:** always start conservative
+- ❌ **No demotion:** if something went wrong, the level goes down automatically
+- ❌ **Level without an audit log:** no trail = invisible regression
 
-## Sample agent config (post-fase 2)
+## Sample agent config (post-phase 2)
 
 ```yaml
 # agents/cargo/sales/closer/AGENT.md
@@ -177,4 +177,4 @@ last_eval_pass_rate: 95
 
 ---
 
-*Karpathy autonomy slider adaptado a um ecossistema multi-agente.*
+*Karpathy autonomy slider adapted to a multi-agent ecosystem.*

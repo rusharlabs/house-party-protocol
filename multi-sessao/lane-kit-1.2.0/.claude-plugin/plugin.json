@@ -3,8 +3,9 @@
   "name": "lane-kit",
   "displayName": "Lane Kit",
   "version": "1.2.0",
-  "description": "N sessoes (lanes) simultaneas sobre o mesmo repo, sem colisao: quadro-branco de estados (CLAIMED->BUILDING->CHECKPOINT-READY->UNDER-REVIEW->VERIFIED/NEEDS-FIX->MERGED) com maker!=checker cross-model enforcado em codigo, registry de lanes vivas com heartbeat/liveness, guard de git (bloqueia commit -a/add -A/reset --hard com outra lane viva) e guard de territorio (zonas vermelhas + territorio exclusivo). Depende do continuity-kit (campo lane_id do handoff).",
+  "description": "N simultaneous sessions (lanes) on the same repo, without collisions: a state board (CLAIMED->BUILDING->CHECKPOINT-READY->UNDER-REVIEW->VERIFIED/NEEDS-FIX->MERGED) with cross-model maker!=checker enforced in code, a registry of live lanes with heartbeat/liveness, a git guard (blocks commit -a/add -A/reset --hard while another lane is live) and a territory guard (red zones + exclusive territory). Depends on continuity-kit (the handoff's lane_id field).",
   "author": { "name": "Max Parisi", "url": "https://rusharlabs.com" },
   "license": "MIT",
-  "keywords": ["lane", "lanes", "multi-session", "concurrency", "maker-checker", "git-guard", "territory-guard", "board", "coordination"]
+  "keywords": ["lane", "lanes", "multi-session", "concurrency", "maker-checker", "git-guard", "territory-guard", "board", "coordination"],
+  "hooks": "./hooks/hooks.json"
 }

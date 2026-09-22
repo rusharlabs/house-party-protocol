@@ -1,17 +1,17 @@
-# NOTICE — inspiração ECC (architecture-decision-records)
+# NOTICE — ECC inspiration (architecture-decision-records)
 
-Este skill é uma reimplementação, traduzida e adaptada ao formato de casa
-(header Auto-Trigger/Keywords/Prioridade + seção "Quando NÃO Ativar" +
-Contrato/Prova do `SKILL-CONTRACT.md` deste marketplace), do skill
-`architecture-decision-records` do projeto **ECC** (Excellence Compounding
-Cycle):
+This skill is a reimplementation, translated and adapted to the house format
+(Auto-Trigger/Keywords/Prioridade header + "Quando NÃO Ativar" section +
+Contrato/Prova from this marketplace's `SKILL-CONTRACT.md`), of the
+`architecture-decision-records` skill from the **ECC** project (Excellence
+Compounding Cycle):
 
-- Repositório: https://github.com/affaan-m/ECC
-- Autor: Affaan Mustafa
-- Licença: MIT, © 2026 Affaan Mustafa
-- Metadata de origem no ECC: `origin: ECC` (conteúdo próprio do repositório,
-  não um pointer para terceiro)
+- Repository: https://github.com/affaan-m/ECC
+- Author: Affaan Mustafa
+- License: MIT, © 2026 Affaan Mustafa
+- Origin metadata in ECC: `origin: ECC` (the repository's own content,
+  not a pointer to a third party)
 
-O conteúdo (formato ADR, fluxo de captura, sinais de detecção, regras do que
-faz um bom ADR) segue fielmente a estrutura original — é uma port/tradução
-adaptada, não uma obra nova. Atribuição MIT mantida por esta nota.
+The content (ADR format, capture flow, detection signals, rules for what
+makes a good ADR) faithfully follows the original structure — it is an
+adapted port/translation, not a new work. MIT attribution kept by this notice.

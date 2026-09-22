@@ -1,14 +1,45 @@
 [build-system]
-requires = ["setuptools>=61"]
+# Why (2026-09-21): `license` below is a PEP 639 SPDX expression, which setuptools reads from
+# 77.0 on; an older backend would reject the string and fail the build before it starts.
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "house-party-protocol"
-version = "2.4.1"
+version = "2.4.2"
 description = "A local-first reliability harness for coding agents."
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Max Parisi", email = "atendimento@rushar.com.br" }]
+maintainers = [{ name = "Rushar Labs", email = "atendimento@rushar.com.br" }]
 requires-python = ">=3.10"  # Why: a matriz de CI cobre 3.10-3.13. O codigo nao usa sintaxe
 # exclusiva de 3.10 e provavelmente roda em 3.9, mas nada mede isso — entao nao se promete.
 dependencies = []
+keywords = [
+  "coding-agents", "claude-code", "codex-cli", "harness", "evidence", "attestation",
+  "verification", "guardrails", "pass-at-k", "local-first",
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Software Development :: Quality Assurance",
+  "Topic :: Software Development :: Testing",
+]
+
+[project.urls]
+Homepage = "https://rusharlabs.com"
+Repository = "https://github.com/rushar-labs/house-party-protocol"
+Changelog = "https://github.com/rushar-labs/house-party-protocol/blob/main/CHANGELOG.md"
+Issues = "https://github.com/rushar-labs/house-party-protocol/issues"
+Security = "https://github.com/rushar-labs/house-party-protocol/blob/main/SECURITY.md"
 
 [project.scripts]
 hpp = "hpp.cli:main"
@@ -21,4 +52,8 @@ packages = ["hpp"]
 # inside a package, and the root hpp.manifest.json does not. hpp/hpp.manifest.json is a
 # byte-identical copy kept only so the wheel carries the protocol; the root file stays the
 # source of truth, and tests/test_installed_package.py rejects any drift between the two.
-hpp = ["hpp.manifest.json"]
+# Why (pip install shipped no examples, 2026-09-21): same rule for examples/reliable-coding —
+# `hpp benchmark` and `hpp --self-test` read its benchmark suite, so the wheel carries a
+# byte-identical copy under hpp/examples/; the root directory stays the source of truth and
+# the same test file rejects drift.
+hpp = ["hpp.manifest.json", "examples/reliable-coding/*"]

@@ -49,6 +49,9 @@ a label or an icon always goes with it.
 For state, the interface uses the terminal's own red (the palette has no red on purpose) and never
 paints a background: a light terminal stays readable.
 
+The vector assets carry only these four values: a lighter step is the same token at reduced
+opacity, never a fifth colour. Measure it with `grep -o '#[0-9A-Fa-f]\{6\}' assets/*.svg | sort -u`.
+
 ## Typography
 
 | Role | Stack |

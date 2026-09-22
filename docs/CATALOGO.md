@@ -14,14 +14,14 @@ Documents that apply to every kit: [`ARCHITECTURE.md`](ARCHITECTURE.md) · [`ARC
 | [kit-forge](#kit-forge) | 1.4.0 | 0 | 0 | 0 | 1 | 0 | 0 | 0 |
 | [operator-kit](#operator-kit) | 1.4.0 | 13 | 2 | 2 | 8 | 13 | 1 | 17 |
 | [continuity-kit](#continuity-kit) | 1.2.1 | 2 | 0 | 0 | 3 | 0 | 12 | 2 |
-| [lane-kit](#lane-kit) | 1.2.0 | 1 | 0 | 0 | 3 | 0 | 4 | 2 |
+| [lane-kit](#lane-kit) | 1.2.0 | 1 | 0 | 0 | 4 | 0 | 4 | 2 |
 | [health-kit](#health-kit) | 1.3.1 | 2 | 0 | 0 | 1 | 0 | 0 | 3 |
 | [claude-dev-kit](#claude-dev-kit) | 1.3.1 | 8 | 0 | 0 | 1 | 0 | 0 | 2 |
 | [supabase-pack](#supabase-pack) | 1.1.0 | 2 | 0 | 0 | 0 | 0 | 0 | 0 |
 | [agent-framework-wizard](#agent-framework-wizard) | 1.1.1 | 1 | 0 | 0 | 0 | 0 | 4 | 0 |
 | [dev-squad-kit](#dev-squad-kit) | 1.0.0 | 3 | 12 | 12 | 0 | 0 | 0 | 0 |
 | [gotcha-memory](#gotcha-memory) | 1.0.0 | 1 | 0 | 0 | 3 | 0 | 0 | 0 |
-| **total** | | **33** | **14** | **14** | **20** | **13** | **21** | **26** |
+| **total** | | **33** | **14** | **14** | **21** | **13** | **21** | **26** |
 
 ## kit-forge
 
@@ -41,19 +41,19 @@ The harness's operational module: executable gates, governed loops, standalone p
 
 | skill | what it does |
 |---|---|
-| `adversarial-refuter` | Antes de aceitar "feito/pronto", despacha refutadores read-only que tentam DERRUBAR a claim no disco/fonte viva |
-| `claude-md-from-profile` | Gera o bloco de CLAUDE.md do projeto A PARTIR do operator-profile.yaml — piso primeiro (o que a IA nao decide), depois onde as coisas moram, as regras do pronto e o fluxo. Idempotente, com assinatura; recusa sobrescrever bloco editado a mao |
-| `delegate-with-handback` | Delega tarefa longa/independente a um 2º agente com contexto explícito e gate de verificação no retorno |
-| `doc-consolidator-dedup` | Funde N docs/planos sobrepostos num work-list único deduplicado, arquiva os superseded com stub-redirect — grep/ls antes de criar/classificar (LC-3) |
-| `dual-report-builder` | Gera DUAS versoes da mesma analise/relatorio — INTERNA (crua, falhas expostas, dark) e EXTERNA (premium, positiva, sem expor falhas, light) — em HTML self-contained com charts CSS-puro e print-friendly. A versao externa passa por gate de registro sobrio (frases banidas do profile). Use ao produzir relatorio/dashboard que tem audiencia dupla (time interno + cliente/stakeholder). |
-| `gate-sheet-collector` | Drena tudo que depende do humano para UM formulário (comando exato + o-que-destrava), sem nunca bloquear o loop |
-| `gated-improvement-proposal` | Toda auto-edição do harness (regra/CLAUDE.md/prompt/hook) vira PROPOSTA que passa por gate antes de aplicar — nunca auto-merge sensível |
-| `live-source-prover` | Antes de citar QUALQUER número/status/métrica, re-deriva na fonte viva e rotula "live @ HH:MM + fonte" — nunca repete dado stale |
-| `parallel-dispatch` | Dispara tarefas independentes em ondas com teto de concorrência + fallback sequencial em rate-limit |
-| `pre-clear-boot-block` | Antes de um /clear, emite o bloco DONE / FALTA / leia-nesta-ordem para a sessão fresca retomar com zero perda |
-| `ralph-loop-driver` | Vira o agente em engenheiro-líder autônomo — lê charter+work-list, executa até esgotar, self-prompta, para nas stop-conditions |
-| `rls-audit` | Audita RLS de um projeto Supabase de verdade — pg_policies por policy anon permissiva + get_advisors, não só a flag relrowsecurity |
-| `supabase-edge-scaffold` | Scaffold de uma Supabase Edge Function com CORS + service-role + tratamento de erro corretos, em vez de copiar boilerplate à mão |
+| `adversarial-refuter` | Before accepting "done/ready", dispatches read-only refuters that try to KNOCK DOWN the claim against the disk/live source |
+| `claude-md-from-profile` | Generates the project's CLAUDE.md block FROM operator-profile.yaml — floor first (what the AI does not decide), then where things live, the rules of done and the flow. Idempotent, signed; refuses to overwrite a hand-edited block |
+| `delegate-with-handback` | Delegates a long/independent task to a 2nd agent with explicit context and a verification gate on the return |
+| `doc-consolidator-dedup` | Merges N overlapping docs/plans into a single deduplicated work-list, archives the superseded ones with a stub-redirect — grep/ls before creating/classifying (LC-3) |
+| `dual-report-builder` | Generates TWO versions of the same analysis/report — INTERNAL (raw, failures exposed, dark) and EXTERNAL (premium, positive, no failures exposed, light) — as self-contained HTML with pure-CSS charts, print-friendly. The external version goes through a sober-register gate (banned phrases from the profile). Use when producing a report/dashboard with a dual audience (internal team + client/stakeholder). |
+| `gate-sheet-collector` | Drains everything that depends on the human into ONE form (exact command + what-it-unblocks), without ever blocking the loop |
+| `gated-improvement-proposal` | Every self-edit of the harness (rule/CLAUDE.md/prompt/hook) becomes a PROPOSAL that passes a gate before being applied — never a sensitive auto-merge |
+| `live-source-prover` | Before citing ANY number/status/metric, re-derives it at the live source and labels it "live @ HH:MM + source" — never repeats stale data |
+| `parallel-dispatch` | Fires independent tasks in waves with a concurrency ceiling + sequential fallback on rate limit |
+| `pre-clear-boot-block` | Before a /clear, emits the DONE / MISSING / read-in-this-order block so the fresh session resumes with zero loss |
+| `ralph-loop-driver` | Turns the agent into an autonomous lead engineer — reads charter+work-list, executes until exhausted, self-prompts, stops at the stop-conditions |
+| `rls-audit` | Really audits the RLS of a Supabase project — pg_policies per permissive anon policy + get_advisors, not just the relrowsecurity flag |
+| `supabase-edge-scaffold` | Scaffolds a Supabase Edge Function with correct CORS + service-role + error handling, instead of copying boilerplate by hand |
 
 **Commands** — `/cancel-ralph-gate` · `/ralph-gate`
 
@@ -88,16 +88,16 @@ Handoff-v1.1: a session survives a stop/clear/crash without losing its next step
 
 | skill | what it does |
 |---|---|
-| `doc-rollup` | Mantém os docs de historico/evolucao do projeto (changelog, timeline narrativa, snapshot de estado, licoes, wrapup de sessao) atualizados apos uma sessao significativa — com degradacao embutida (carimbo em vez de narrativa infinita) desde o dia 1. |
-| `pre-clear` | Antes de um /clear, consolida o LONGO PRAZO (doc-rollup condicional — como chegamos até aqui) e o CURTO PRAZO (handoff — o que vem depois), depois renderiza o BOOT BUNDLE. |
+| `doc-rollup` | Keeps the project's history/evolution docs (changelog, narrative timeline, state snapshot, lessons, session wrapup) up to date after a significant session — with built-in degradation (a stamp instead of endless narrative) from day 1. |
+| `pre-clear` | Before a /clear, consolidates the LONG TERM (conditional doc-rollup — how we got here) and the SHORT TERM (handoff — what comes next), then renders the BOOT BUNDLE. |
 
 **Hooks**
 
 | event | script |
 |---|---|
-| (wired by the installer) | `handoff_guard.py` |
-| (wired by the installer) | `handoff_inject.py` |
-| (wired by the installer) | `session_boot.py` |
+| SessionStart · `*` | `handoff_inject.py` |
+| Stop · `*` | `handoff_guard.py` |
+| PreCompact · `*` | `handoff_guard.py` |
 
 **Templates** — `00-DEPLOY.template.md` · `00-ISOLAMENTO-E-RECUPERACAO.template.md` · `00-LEIA-PRIMEIRO.template.md` · `00-PROCESSES.template.md` · `00-ROLLBACK.template.md` · `00-STATE.template.md` · `00-VISION.template.md` · `LEARNINGS.template.md` · `loop-charter.template.md` · `prd-onda.template.md` · `review-onda.template.md` · `settings-continuidade.template.json`
 
@@ -111,15 +111,16 @@ N sessions without collisions. Lane board, cross-model maker!=checker, per-direc
 
 | skill | what it does |
 |---|---|
-| `lane-coordinator` | Coordena N sessões (lanes) concorrentes sobre o mesmo repo via um quadro-branco com máquina de estados (lane_board.py) — CLAIMED até MERGED, com maker≠checker cross-model enforçado em código, não em disciplina textual. |
+| `lane-coordinator` | Coordinates N concurrent sessions (lanes) over the same repo through a whiteboard with a state machine (lane_board.py) — from CLAIMED to MERGED, with cross-model maker≠checker enforced in code, not by textual discipline. |
 
 **Hooks**
 
 | event | script |
 |---|---|
-| (wired by the installer) | `lane_git_guard.py` |
-| (wired by the installer) | `lane_register.py` |
-| (wired by the installer) | `lane_territory_guard.py` |
+| SessionStart · `*` | `lane_register.py` |
+| PreToolUse · `Bash` | `lane_git_guard.py` |
+| PreToolUse · `Edit|Write` | `lane_territory_guard.py` |
+| PostToolUse · `*` | `lane_register.py --heartbeat` |
 
 **Templates** — `lane-registry.example.json` · `lanes.example.yaml` · `REORIENT-MAILBOX.template.md` · `status-stakeholder.template.html`
 
@@ -133,14 +134,14 @@ Service health probe (http/cmd) driven by profile.yaml + a statusline segment wi
 
 | skill | what it does |
 |---|---|
-| `dashboard-builder` | Constrói dashboards de monitoramento (Grafana, SigNoz e similares) que respondem perguntas reais de operador, não "mostra toda métrica que existe". Use ao transformar uma lista de métricas em dashboard operável de verdade. |
-| `health-check` | Sonda uma lista config-driven de serviços (HTTP ou comando local) e grava um cache JSON que outra ferramenta (ex.: statusline) pode ler sem tocar rede — nunca no próprio caminho quente, só gera o cache. |
+| `dashboard-builder` | Builds monitoring dashboards (Grafana, SigNoz and similar) that answer real operator questions, not "show every metric that exists". Use when turning a list of metrics into a genuinely operable dashboard. |
+| `health-check` | Probes a config-driven list of services (HTTP or local command) and writes a JSON cache that another tool (e.g. the statusline) can read without touching the network — never on the hot path itself, it only generates the cache. |
 
 **Hooks**
 
 | event | script |
 |---|---|
-| SessionStart · `*` | `bash "${CLAUDE_PLUGIN_ROOT}/hooks/pyrun.sh" "${CLAUDE_PLUGIN_ROOT}/scripts/health_probe.py" --quiet` |
+| SessionStart · `*` | `pyrun.sh "${CLAUDE_PLUGIN_ROOT}/scripts/health_probe.py" --quiet` |
 
 **Scripts** — `gate_sheet_panel.py` · `health_probe.py` · `wire_statusline.py`
 
@@ -152,14 +153,14 @@ Tools for building tools: skill-writer, hookify, plugin-dev, teaching, reversibl
 
 | skill | what it does |
 |---|---|
-| `architecture-decision-records` | Captura decisões arquiteturais tomadas durante a sessão como ADRs estruturados (contexto, alternativas consideradas, consequências) em docs/adr/. Use quando o usuário decide entre alternativas significativas (framework, banco, padrão) ou pergunta "por que escolhemos X?". |
-| `claude-dev-setup` | Instala hooks base do Claude Code num projeto novo — wiring de settings idempotente e reversível (nunca sobrescreve config alheia sem --force) + git hook chain-preserving (nunca substitui um hook pre-commit já existente). |
-| `hookify` | Cria hooks REAIS para Claude Code — scripts executáveis (stdin JSON, exit 0/1/2), registrados via hooks.json de plugin ou colados em settings.json. Use quando o usuário quer criar hook, regra de segurança, validação customizada, lifecycle hook. |
-| `plugin-dev` | Empacota skills/hooks/commands num plugin Claude Code instalável — anatomia real (.claude-plugin/plugin.json + hooks/hooks.json + ${CLAUDE_PLUGIN_ROOT}), sem framework/build-step. Use quando o usuário quer criar plugin, empacotar uma extensão, ou distribuir um conjunto de skills/hooks. |
-| `search-first` | Busca por biblioteca/ferramenta/padrão existente ANTES de escrever código novo — cobre registro de pacotes (npm/PyPI), MCP e GitHub, além do grep local. Use antes de criar utilitário, helper, ou integração nova. |
-| `skill-scout` | Busca skills locais, no marketplace, no GitHub e na web ANTES de criar uma skill nova — evita duplicar trabalho já existente. Use quando o usuário disser "criar uma skill", "existe skill pra X?", ou você estiver prestes a sugerir criar uma skill nova. |
-| `skill-writer` | Guia a criação de Agent Skills para Claude Code — estrutura, frontmatter, descrições eficazes, e validação contra o SKILL-CONTRACT. Use quando o usuário quer criar, escrever ou estruturar uma nova skill. |
-| `teaching` | Transforma qualquer output técnico (criação, estrutura, decisão arquitetural) numa oportunidade de aprendizado — árvore de onde o elemento mora, raio-x de o-que-é/onde-fica/pra-que-serve, mapa de conexões, analogia de negócio, e decisões explicadas. Use sempre em output técnico para um leitor não-programador. |
+| `architecture-decision-records` | Captures architectural decisions made during the session as structured ADRs (context, alternatives considered, consequences) in docs/adr/. Use when the user decides between significant alternatives (framework, database, pattern) or asks "why did we choose X?". |
+| `claude-dev-setup` | Installs the base Claude Code hooks in a new project — idempotent and reversible settings wiring (never overwrites someone else's config without --force) + chain-preserving git hook (never replaces an existing pre-commit hook). |
+| `hookify` | Creates REAL hooks for Claude Code — executable scripts (stdin JSON, exit 0/1/2), registered via a plugin's hooks.json or pasted into settings.json. Use when the user wants to create a hook, a safety rule, a custom validation, a lifecycle hook. |
+| `plugin-dev` | Packages skills/hooks/commands into an installable Claude Code plugin — the real anatomy (.claude-plugin/plugin.json + hooks/hooks.json + ${CLAUDE_PLUGIN_ROOT}), no framework/build step. Use when the user wants to create a plugin, package an extension, or distribute a set of skills/hooks. |
+| `search-first` | Searches for an existing library/tool/pattern BEFORE writing new code — covers package registries (npm/PyPI), MCP and GitHub, in addition to the local grep. Use before creating a utility, helper, or new integration. |
+| `skill-scout` | Searches for skills locally, in the marketplace, on GitHub and on the web BEFORE creating a new skill — avoids duplicating work that already exists. Use when the user says "create a skill", "is there a skill for X?", or you are about to suggest creating a new skill. |
+| `skill-writer` | Guides the creation of Agent Skills for Claude Code — structure, frontmatter, effective descriptions, and validation against the SKILL-CONTRACT. Use when the user wants to create, write or structure a new skill. |
+| `teaching` | Turns any technical output (creation, structure, architectural decision) into a learning opportunity — a tree of where the element lives, an x-ray of what-it-is/where-it-sits/what-it-is-for, a connection map, a business analogy, and explained decisions. Always use in technical output for a non-programmer reader. |
 
 **Hooks**
 
@@ -169,7 +170,7 @@ Tools for building tools: skill-writer, hookify, plugin-dev, teaching, reversibl
 
 **Scripts** — `install_git_hook.py` · `wire_settings.py`
 
-**Documents and records** — `docs/hook-template.py` · `docs/SKILL-CANDIDATES.json` · `docs/SKILL-CONTRACT.md` · `docs/skill-template.md`
+**Documents and records** — `docs/hook-template.py` · `docs/SKILL-CANDIDATES.json` · `docs/SKILL-CONTRACT.md` · `docs/SKILL-CONTRACT.pt-BR.md` · `docs/skill-template.md`
 
 ## supabase-pack
 
@@ -179,8 +180,8 @@ rls-audit (real RLS via pg_policies + get_advisors) + supabase-edge-scaffold (Ty
 
 | skill | what it does |
 |---|---|
-| `rls-audit` | Audita RLS de um projeto Supabase de verdade — pg_policies por policy anon permissiva + get_advisors, não só a flag relrowsecurity |
-| `supabase-edge-scaffold` | Scaffold de uma Supabase Edge Function com CORS + service-role + tratamento de erro corretos, em vez de copiar boilerplate à mão |
+| `rls-audit` | Audits a Supabase project's RLS for real — pg_policies per permissive anon policy + get_advisors, not only the relrowsecurity flag |
+| `supabase-edge-scaffold` | Scaffold of a Supabase Edge Function with correct CORS + service-role + error handling, instead of copying boilerplate by hand |
 
 ## agent-framework-wizard
 
@@ -190,7 +191,7 @@ rls-audit (real RLS via pg_policies + get_advisors) + supabase-edge-scaffold (Ty
 
 | skill | what it does |
 |---|---|
-| `agent-framework-scaffold` | Roda o wizard de 6 passos que gera o esqueleto de um projeto novo (operator-profile.yaml + templates do TEMPLATE-SET escolhidos) — método genérico (check ambiente → configurar → validar → gerar), reescrito do zero. |
+| `agent-framework-scaffold` | Runs the 6-step wizard that generates the skeleton of a new project (operator-profile.yaml + the chosen TEMPLATE-SET templates) — generic method (check environment → configure → validate → generate), rewritten from scratch. |
 
 **Templates** — `00-LEIA-PRIMEIRO.template.md` · `00-PROCESSES.template.md` · `00-STATE.template.md` · `00-VISION.template.md`
 
@@ -202,9 +203,9 @@ A squad of 12 roles available as slash commands and real subagents, with explici
 
 | skill | what it does |
 |---|---|
-| `pp-consolidate` | Parallel Process Consolidate - consolida outputs de sessoes/agentes paralelos em um veredito unico, deduplicado e verificavel |
-| `pp-discovery` | Parallel Process Discovery - inventario token-safe de repositorios, pastas e artefatos grandes antes de analise profunda |
-| `pp-raiox` | Parallel Process Raio-X - leitura linha-a-linha de um modulo/repo externo com evidencias, riscos e chamadas de proxima investigacao |
+| `pp-consolidate` | Parallel Process Consolidate - consolidates the outputs of parallel sessions/agents into a single, deduplicated, verifiable verdict |
+| `pp-discovery` | Parallel Process Discovery - token-safe inventory of repositories, folders and large artifacts before deep analysis |
+| `pp-raiox` | Parallel Process Raio-X - line-by-line reading of an external module/repo with evidence, risks and calls for the next investigation |
 
 **Commands** — `/analyst` · `/architect` · `/data-engineer` · `/dev` · `/devops` · `/master` · `/pm` · `/po` · `/qa` · `/sm` · `/squad-creator` · `/ux-design-expert`
 
@@ -218,7 +219,7 @@ Standalone operational learning loop: a failure becomes knowledge. After every B
 
 | skill | what it does |
 |---|---|
-| `gotcha-memory` | Loop de aprendizado operacional — registra falhas de comandos, detecta recorrência e injeta a lição como preâmbulo antes da próxima execução da mesma tarefa. Use para consultar/seedar/depurar a memória de gotchas do projeto. |
+| `gotcha-memory` | Operational learning loop — records command failures, detects recurrence and injects the lesson as a preamble before the next execution of the same task. Use to query/seed/debug the project's gotcha memory. |
 
 **Hooks**
 

@@ -54,11 +54,11 @@ verification:
 
 hosts:
   claude-code:
-    plugin: true    # .claude-plugin/plugin.json existe (verificado: name,
-                    # displayName, version 1.1.0, description, author,
-                    # license MIT, keywords — sem chaves hooks/commands
-                    # porque este kit nao tem hooks/hooks.json nem commands/
-                    # na raiz do plugin; o wiring e manual via wiring.settings.jsonc)
+    plugin: true    # .claude-plugin/plugin.json existe (name, displayName, version,
+                    # description, author, license MIT, keywords) e desde 2.4.2 declara
+                    # "hooks": "./hooks/hooks.json" (SessionStart/Stop/PreCompact via
+                    # pyrun.sh) — o plugin arma os hooks; wiring.settings.jsonc segue
+                    # como caminho manual para quem instala por copia.
     wiring_spec: install/wiring.settings.jsonc   # existe — bloco ADITIVO p/
                     # colar em settings.json/settings.local.json (SessionStart
                     # -> handoff_inject.py; Stop e PreCompact -> handoff_guard.py)

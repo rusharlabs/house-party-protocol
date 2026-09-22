@@ -1,4 +1,6 @@
-# SANITIZACAO.md
+[English](SANITIZATION.md) · [Português](SANITIZATION.pt-BR.md)
+
+# SANITIZATION.pt-BR.md
 
 Kit: operator-kit 1.4.0
 

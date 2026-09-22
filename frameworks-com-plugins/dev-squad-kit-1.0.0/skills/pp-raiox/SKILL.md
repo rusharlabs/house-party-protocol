@@ -1,44 +1,44 @@
 ---
 name: pp-raiox
-description: "Parallel Process Raio-X - leitura linha-a-linha de um modulo/repo externo com evidencias, riscos e chamadas de proxima investigacao"
+description: "Parallel Process Raio-X - line-by-line reading of an external module/repo with evidence, risks and calls for the next investigation"
 type: skill
 ---
 
-> **Auto-Trigger:** Quando o usuario pedir raio-x tecnico, auditoria linha-a-linha, leitura profunda de modulo externo ou explicacao com evidencias de arquivos.
-> **Keywords:** "pp-raiox", "raio-x", "linha a linha", "auditoria profunda", "repo externo", "ler tudo", "mapa cabo a cabo"
-> **Prioridade:** ALTA
+> **Auto-Trigger:** When the user asks for a technical x-ray, a line-by-line audit, a deep read of an external module or an explanation backed by file evidence.
+> **Keywords:** "pp-raiox", "x-ray", "line by line", "deep audit", "external repo", "read everything", "end-to-end map"
+> **Priority:** HIGH
 > **Tools:** Bash, Read, Grep, Glob
 
-# pp-raiox - raio-x com evidencia
+# pp-raiox - x-ray with evidence
 
-## Objetivo
+## Goal
 
-Produzir uma leitura tecnica rastreavel de um alvo delimitado. Diferente de `pp-discovery`, esta skill entra no conteudo dos arquivos selecionados e registra achados com caminho, linha e impacto.
+Produce a traceable technical reading of a delimited target. Unlike `pp-discovery`, this skill goes into the content of the selected files and records findings with path, line and impact.
 
-Use depois de uma descoberta ou quando o usuario ja forneceu um escopo pequeno o bastante para leitura profunda.
+Use it after a discovery, or when the user has already provided a scope small enough for a deep read.
 
-## Quando NÃO Ativar
+## When NOT to Activate
 
-- O alvo ainda e amplo demais para leitura completa; use `pp-discovery`.
-- O trabalho e juntar relatorios/agentes ja executados; use `pp-consolidate`.
-- A pergunta exige pesquisa externa atual; use fluxo de pesquisa com fontes.
-- O usuario pediu implementacao/correcao imediata; use skill de feature/dev apropriada.
+- The target is still too broad for a complete read; use `pp-discovery`.
+- The job is to merge reports/agents that have already run; use `pp-consolidate`.
+- The question requires current external research; use a research flow with sources.
+- The user asked for an immediate implementation/fix; use the appropriate feature/dev skill.
 
-## Processo
+## Process
 
-1. Fixe escopo e criterio de completude.
-2. Capture estado:
+1. Fix the scope and the completeness criterion.
+2. Capture the state:
    - `git status --short --branch`
-   - lista exata de arquivos do alvo.
-3. Leia os arquivos em ordem de dependencia: manifests/configs, entrypoints, libs centrais, testes/docs.
-4. Para cada achado, registre:
-   - arquivo e linha;
-   - fato observado;
-   - impacto;
-   - incerteza ou check pendente.
-5. Separe fato de recomendacao.
+   - the exact list of files in the target.
+3. Read the files in dependency order: manifests/configs, entrypoints, core libs, tests/docs.
+4. For each finding, record:
+   - file and line;
+   - observed fact;
+   - impact;
+   - uncertainty or pending check.
+5. Separate fact from recommendation.
 
-## Saida Esperada
+## Expected Output
 
 ```md
 # PP Raio-X - <alvo>
@@ -65,54 +65,54 @@ Use depois de uma descoberta ou quando o usuario ja forneceu um escopo pequeno o
 
 ## Guardrails
 
-- Nao afirmar "todo o repo" se o escopo lido foi parcial.
-- Nao editar arquivos durante o raio-x, salvo pedido explicito.
-- Nao substituir auditoria live por docs antigos.
-- Se o alvo for grande demais, volte para `pp-discovery` e proponha ondas.
+- Do not claim "the whole repo" if the scope read was partial.
+- Do not edit files during the x-ray, unless explicitly requested.
+- Do not replace a live audit with old docs.
+- If the target is too large, go back to `pp-discovery` and propose waves.
 
-## Contrato
+## Contract
 
-**ENTRADA:** alvo delimitado e critério de completude.
+**INPUT:** a delimited target and a completeness criterion.
 
-**SAÍDA:** achados com severidade, arquivo:linha, fato, impacto e gaps.
+**OUTPUT:** findings with severity, file:line, fact, impact and gaps.
 
 **EXIT CODES:**
 
-| Exit | Significado |
+| Exit | Meaning |
 |---|---|
-| 0 | leitura concluída no escopo declarado |
-| 1 | aviso: gap declarado sem invalidar os achados |
-| 2 | bloqueio: escopo amplo demais ou evidência ausente |
-| 3 | erro ao ler o alvo |
+| 0 | reading complete within the declared scope |
+| 1 | warning: gap declared without invalidating the findings |
+| 2 | block: scope too broad or evidence missing |
+| 3 | error reading the target |
 
-**ESTADO QUE TOCA:**
+**STATE IT TOUCHES:**
 
-| Caminho | Ação |
+| Path | Action |
 |---|---|
-| alvo delimitado | leitura |
-| destino definido pelo operador | escrita do relatório |
+| delimited target | read |
+| destination chosen by the operator | write the report |
 
-## Exemplos executados
+## Executed examples
 
 ```console
 $ python -c "print('arquivos_lidos=4')"
 arquivos_lidos=4
 ```
-<!-- executado: 2026-09-20 · exit=0 -->
+<!-- executed: 2026-09-20 · exit=0 -->
 
 ```console
 $ python -c "print('achados=2 gaps=1')"
 achados=2 gaps=1
 ```
-<!-- executado: 2026-09-20 · exit=0 -->
+<!-- executed: 2026-09-20 · exit=0 -->
 
 ```console
 $ python -c "import sys; print('block: evidencia ausente'); sys.exit(2)"
 block: evidencia ausente
 ```
-<!-- executado: 2026-09-20 · exit=2 -->
+<!-- executed: 2026-09-20 · exit=2 -->
 
-## Prova
+## Proof
 
 ```bash
 python -c "print('arquivos_lidos=4')"

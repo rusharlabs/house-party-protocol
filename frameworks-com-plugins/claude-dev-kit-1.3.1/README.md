@@ -2,13 +2,27 @@
 
 # Claude Dev Kit
 
-Tools for **building tools** for Claude Code. 4 meta-skills (`skill-writer`, `hookify`,
-`plugin-dev`, `teaching`) with a vendored `SKILL-CONTRACT.md` — they do not describe in
+Tools for **building tools** for Claude Code. 8 meta-skills (`ls skills | wc -l` = 8 on
+the emitted module) with a vendored `docs/SKILL-CONTRACT.md` — they do not describe in
 prose how to create a skill/hook/plugin, they enforce the same contract (header + I/O + at
-least 3 real examples + proof) on whoever uses them to create their own. Plus 2 installation
-tools: `wire_settings.py` (idempotent, byte-stable merge into `settings.local.json`, with
-`--undo`) and `install_git_hook.py` (chains with an existing `pre-commit` from someone
-else — never replaces it). It does not generate product code — it generates the tool that
+least 3 real examples + proof) on whoever uses them to create their own:
+
+| Skill | What it does |
+|---|---|
+| `skill-writer` | guides the creation of a skill — structure, frontmatter, effective descriptions, validation against the SKILL-CONTRACT |
+| `skill-scout` | searches local skills, the marketplace, GitHub and the web BEFORE writing a new skill |
+| `search-first` | searches for an existing library/tool/pattern (npm/PyPI, MCP, GitHub) BEFORE writing new code |
+| `hookify` | creates REAL hooks — executable scripts (stdin JSON, exit 0/1/2), registered through a plugin `hooks.json` or pasted into settings |
+| `plugin-dev` | packages skills/hooks/commands into an installable plugin (`.claude-plugin/plugin.json` + `hooks/hooks.json` + `${CLAUDE_PLUGIN_ROOT}`) |
+| `claude-dev-setup` | installs the base hooks in a new project — idempotent, reversible settings wiring |
+| `architecture-decision-records` | captures the architectural decisions of a session as structured ADRs in `docs/adr/` |
+| `teaching` | turns any technical output into a learning opportunity (where it lives, what it connects to, why) |
+
+Plus the tooling: `scripts/wire_settings.py` (idempotent, byte-stable merge into
+`settings.local.json`, with `--undo`), `scripts/install_git_hook.py` (chains with an
+existing `pre-commit` from someone else — never replaces it) and `tools/skill_lint.py`, a
+vendored copy of the marketplace linter so the kit can check its own skills without the
+installer around. It does not generate product code — it generates the tool that
 generates/audits other tools.
 
 ## Prerequisites + external APIs
@@ -23,29 +37,39 @@ External services: **none — stdlib + PyYAML, touches only the local filesystem
 ## Install as a plugin (1-click auto-wire)
 
 ```bash
-/plugin marketplace add .
+/plugin marketplace add rushar-labs/house-party-protocol
 /plugin install claude-dev-kit@house-party-protocol
 ```
-The `hooks/hooks.json` already wires `secret_scan_on_write.py` automatically (through
-`${CLAUDE_PLUGIN_ROOT}`, matcher `Edit|Write|MultiEdit`).
+`.claude-plugin/plugin.json` declares `hooks/hooks.json`, which wires
+`secret_scan_on_write.py` automatically (through `${CLAUDE_PLUGIN_ROOT}`, matcher
+`Edit|Write|MultiEdit`). The 8 skills are auto-discovered.
 
 ## Install by copy
 
+In the emitted distribution this module lives in
+`frameworks-com-plugins/claude-dev-kit-1.3.1/` (the directory carries the version — state it
+once, in `KIT`). The installer is `instaladores/kit-forge-1.4.0/kit_doctor.py`; run it from
+the distribution root. It plans first and writes only on a second, explicit `--apply`:
+
 ```bash
-cp -r claude-dev-kit-1.1.0 <seu-projeto>/claude-dev-kit
-cd <seu-projeto>
-python claude-dev-kit/instaladores/kit-forge/kit_doctor.py install claude-dev-kit --target . --human
-#                                                                                       ^ plano, zero escrita
-python claude-dev-kit/instaladores/kit-forge/kit_doctor.py install claude-dev-kit --target . --apply
-#                                                                                       ^ aplica de verdade
+KIT=frameworks-com-plugins/claude-dev-kit-1.3.1
+cp -r "$KIT" ../your-repo/claude-dev-kit      # the copy itself (kit_doctor does not copy on claude-code)
+python instaladores/kit-forge-1.4.0/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo
+python instaladores/kit-forge-1.4.0/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo --apply
+# Codex CLI: --host codex — the installer copies the module into .agents/hpp/claude-dev-kit
+#            and each skill into .agents/skills/hpp-claude-dev-kit-<skill>; no cp -r needed
 ```
 
 ## What the installer detects
 
+The `detect` stage classifies the target (read-only) with exactly these three labels:
+
 ```
-greenfield    → nenhum profile.example.* neste kit (sem config configurável — YAGNI); nada a copiar
-em-andamento  → .claude/settings.local.json já com o hook secret_scan_on_write (reportado, não sobrescrito)
-re-run        → registry (~/.claude-kits/registry.json) marca re-run; wire_settings.py idempotente detecta merge já aplicado
+greenfield    -> no prior config in the target; nothing to copy (this kit has no *.example.* file — YAGNI)
+in-progress   -> .claude/ exists, or settings(.local).json already has hooks/statusLine, or the repo has
+                 more than 3 commits: reported, never overwritten
+re-run        -> this kit+target pair is already in the registry (~/.claude-kits/registry.json);
+                 wire_settings.py is idempotent and reports an already-applied merge as no-op
 ```
 
 ## What is safe to run again
@@ -61,24 +85,16 @@ if a `pre-commit` from another tool already exists, it chains (never replaces).
 > Editing `.claude/settings.local.json` is a human gate. `wire_settings.py` is
 > **programmatic** (a different format from the human-paste `wiring.settings.jsonc` of the
 > other kits) — but it still NEVER runs on its own: the human gate is who invokes the command.
+> The target file must already exist (`{}` is enough).
 
 ```bash
-python scripts/wire_settings.py --spec hooks/wiring-spec.yaml --settings .claude/settings.local.json
-#                                                                          ^ merge idempotente; --undo reverte
+python scripts/wire_settings.py --spec hooks/wiring-spec.yaml --target .claude/settings.local.json
+#                                                                          ^ idempotent merge; --undo reverts
 ```
 
-Content of `hooks/wiring-spec.yaml` (what will be merged):
-```yaml
-# wiring-spec.yaml — consumido por scripts/wire_settings.py --spec (claude-dev-kit)
-hooks:
-  PreToolUse:
-    matcher: "Edit|Write|MultiEdit"
-    match_substring: "secret_scan_on_write"
-    value:
-      type: command
-      command: "python \"${CLAUDE_PLUGIN_ROOT}/hooks/secret_scan_on_write.py\""
-      timeout: 30
-```
+`hooks/wiring-spec.yaml` declares what will be merged: one `PreToolUse` entry, matcher
+`Edit|Write|MultiEdit`, matched by the substring `secret_scan_on_write`, running
+`python "${CLAUDE_PLUGIN_ROOT}/hooks/secret_scan_on_write.py"` with `timeout: 30`.
 
 Git hook (chains with someone else's `pre-commit`, never replaces it):
 ```bash
@@ -93,14 +109,23 @@ python scripts/wire_settings.py --self-test
 ```
 self-test OK — wire idempotente, conflito sem --force preservado, --force sobrescreve, --undo byte-idêntico
 ```
-<!-- executado: 2026-07-11 · exit=0 -->
+<!-- executado: 2026-09-21 · exit=0 -->
+
+```bash
+python tools/skill_lint.py --all skills --run-proofs
+```
+Last line of the output (the 8 `[PASS]` lines above it carry OS-specific path separators):
+```
+skill_lint: 8 pass · 0 warn · 0 fail (de 8)
+```
+<!-- executado: 2026-09-21 · exit=0 -->
 
 ## Undo
 
 ```
-- Plugin: /plugin uninstall claude-dev-kit@house-party-protocol
-- Cópia: remover a pasta claude-dev-kit/ do projeto
-- wire_settings.py: python scripts/wire_settings.py --spec hooks/wiring-spec.yaml --settings .claude/settings.local.json --undo
-- install_git_hook.py: remover manualmente o bloco encadeado do .git/hooks/pre-commit
-  (o script preserva o pre-commit alheio original abaixo do bloco inserido)
+- Plugin:  /plugin uninstall claude-dev-kit@house-party-protocol
+- Copy:    remove the claude-dev-kit/ folder from the project
+- wire_settings.py: python scripts/wire_settings.py --spec hooks/wiring-spec.yaml --target .claude/settings.local.json --undo
+- install_git_hook.py: remove the chained block from .git/hooks/pre-commit by hand
+           (the script keeps the original third-party pre-commit below the inserted block)
 ```

@@ -12,18 +12,18 @@ description: <O que faz> + <quando usar>. Máx 1024 chars.
 
 > **Auto-Trigger:** <quando dispara automaticamente>
 > **Keywords:** "<termo1>", "<termo2>", "<termo3>", "<termo4>"
-> **Prioridade:** ALTA | MÉDIA | BAIXA
+> **Priority:** HIGH | MEDIUM | LOW
 > **Tools:** <lista explícita de ferramentas usadas>
 
-## Quando NÃO Ativar
+## When NOT to Activate
 - <situação 1 onde NÃO deveria disparar>
 - <situação 2 — nomeie a skill vizinha se há fronteira confundível: "não confundir com a skill X, que cobre Y">
 
-## Contrato
+## Contract
 
-**ENTRADA:** <tipos aceitos — arquivo, string, flag>
+**INPUT:** <tipos aceitos — arquivo, string, flag>
 
-**SAÍDA:** <paths + formato modelado — não "gera um relatório", mas o SCHEMA do relatório>
+**OUTPUT:** <paths + formato modelado — não "gera um relatório", mas o SCHEMA do relatório>
 
 **EXIT CODES:**
 
@@ -33,7 +33,7 @@ description: <O que faz> + <quando usar>. Máx 1024 chars.
 | 1 | <aviso/rejeição não-fatal> |
 | 2 | <erro/uso inválido> |
 
-**ESTADO QUE TOCA:**
+**STATE IT TOUCHES:**
 
 | Recurso | Lê/Escreve | Propósito |
 |---|---|---|
@@ -56,26 +56,26 @@ description: <O que faz> + <quando usar>. Máx 1024 chars.
 $ <comando real 1>
 <saída real 1>
 ```
-<!-- executado: YYYY-MM-DD · exit=0 -->
+<!-- executed: YYYY-MM-DD · exit=0 -->
 
 ```console
 $ <comando real 2 — caso de FALHA>
 <saída real 2>
 ```
-<!-- executado: YYYY-MM-DD · exit=1 -->
+<!-- executed: YYYY-MM-DD · exit=1 -->
 
 ```console
 $ <comando real 3>
 <saída real 3>
 ```
-<!-- executado: YYYY-MM-DD · exit=0 -->
+<!-- executed: YYYY-MM-DD · exit=0 -->
 
 ## Anti-patterns
 
 - ❌ <armadilha conhecida 1>
 - ❌ <armadilha conhecida 2>
 
-## Prova
+## Proof
 
 ```bash
 <comando único, <5s, sem rede, que prova o contrato — normalmente --self-test>
@@ -86,8 +86,8 @@ $ <comando real 3>
 
 - [ ] `name` bate exatamente com o nome da pasta
 - [ ] `description` tem O QUE + QUANDO, sem sintaxe de wikilink duplo-colchete nas Keywords
-- [ ] `## Quando NÃO Ativar` tem ≥2 bullets
-- [ ] `## Contrato` tem as 4 sub-seções (ENTRADA/SAÍDA/EXIT CODES/ESTADO QUE TOCA)
-- [ ] ≥3 exemplos executados, ≥1 de falha (exit != 0), cada um com `<!-- executado: ... -->`
-- [ ] `## Prova` roda em <5s sem rede
+- [ ] `## When NOT to Activate` tem ≥2 bullets
+- [ ] `## Contract` tem as 4 sub-seções (INPUT/OUTPUT/EXIT CODES/STATE IT TOUCHES)
+- [ ] ≥3 exemplos executados, ≥1 de falha (exit != 0), cada um com `<!-- executed: ... -->`
+- [ ] `## Proof` roda em <5s sem rede
 - [ ] `python tools/skill_lint.py <seu-arquivo>` → PASS

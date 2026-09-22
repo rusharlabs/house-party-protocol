@@ -1,327 +1,328 @@
 # AGENT-INTEGRITY-PROTOCOL
-# Protocolo de Integridade e Fidelidade de Agentes
+# Agent Integrity and Fidelity Protocol
 
-> **Versao:** 1.2.1
-> **Status:** REGRA INQUEBRAVEL
-> **Data:** 2025-12-25
-> **Prioridade:** MAXIMA - Sobrepoe todos os outros protocolos
-> **Ultima Atualizacao:** Templates oficiais para SOUL/MEMORY/DNA-CONFIG com rastreabilidade 100%
+> **Version:** 1.2.1
+> **Status:** UNBREAKABLE RULE
+> **Date:** 2025-12-25
+> **Priority:** MAXIMUM - Overrides all other protocols
+> **Last Update:** Official templates for SOUL/MEMORY/DNA-CONFIG with 100% traceability
 
 ---
 
-## PRINCIPIO FUNDAMENTAL
+## FUNDAMENTAL PRINCIPLE
 
 ```
 ╔══════════════════════════════════════════════════════════════════════════════╗
 ║                                                                              ║
-║   TODO CONTEUDO EM AGENTES DEVE SER 100% RASTREAVEL A FONTES ORIGINAIS      ║
+║   ALL CONTENT IN AGENTS MUST BE 100% TRACEABLE TO ORIGINAL SOURCES           ║
 ║                                                                              ║
-║   NENHUMA PALAVRA, NUMERO OU AFIRMACAO PODE SER INVENTADA                   ║
+║   NO WORD, NUMBER OR STATEMENT MAY BE INVENTED                               ║
 ║                                                                              ║
-║   O AGENTE REFLETE A ESSENCIA DAS FONTES, NAO INTERPRETACOES DO SISTEMA     ║
+║   THE AGENT REFLECTS THE ESSENCE OF THE SOURCES, NOT THE SYSTEM'S            ║
+║   INTERPRETATIONS                                                            ║
 ║                                                                              ║
 ╚══════════════════════════════════════════════════════════════════════════════╝
 ```
 
 ---
 
-## DISTINCAO CRITICA: FORTIFICAR vs INVENTAR
+## CRITICAL DISTINCTION: FORTIFY vs INVENT
 
 ```
 ╔══════════════════════════════════════════════════════════════════════════════╗
 ║                                                                              ║
-║   FORTIFICAR ≠ INVENTAR                                                      ║
+║   FORTIFY ≠ INVENT                                                           ║
 ║                                                                              ║
-║   FORTIFICAR = Expandir a essência DENTRO dos limites do DNA                 ║
-║   INVENTAR   = Criar conteúdo que NÃO EXISTE nas fontes (PROIBIDO)          ║
+║   FORTIFY = Expand the essence WITHIN the limits of the DNA                  ║
+║   INVENT  = Create content that DOES NOT EXIST in the sources (FORBIDDEN)    ║
 ║                                                                              ║
-║   "Fortificar" significa abrir a mente do especialista no seu limite        ║
-║   máximo, SEM ultrapassar os limites definidos pelo DNA.                    ║
+║   "Fortify" means opening the expert's mind to its maximum extent,           ║
+║   WITHOUT going past the limits defined by the DNA.                          ║
 ║                                                                              ║
 ╚══════════════════════════════════════════════════════════════════════════════╝
 ```
 
-### Quando o Usuário Pede para "Fortificar":
+### When the User Asks to "Fortify":
 
-| Ação | Permitido? | Exemplo |
+| Action | Allowed? | Example |
 |------|------------|---------|
-| Expandir conceito existente | ✅ | "Cash is king" → explicar em detalhe o que isso significa |
-| Conectar conceitos da mesma fonte | ✅ | Ligar insight de SOUL.md com insight de MEMORY.md |
-| Usar vocabulário do próprio mentor | ✅ | Se Hormozi usa "unit economics", usar esse termo |
-| Elaborar implicações lógicas | ✅ | "Se LTV/CAC < 3, então..." (consequência lógica) |
-| Inventar nova filosofia | ❌ | Criar crença que não existe em SOUL.md |
-| Adicionar metáfora externa | ❌ | Usar analogia que o mentor nunca usou |
-| Criar frase "inspiracional" | ❌ | Escrever quote que soa bonito mas não existe |
+| Expand an existing concept | ✅ | "Cash is king" → explain in detail what that means |
+| Connect concepts from the same source | ✅ | Link an insight from SOUL.md with an insight from MEMORY.md |
+| Use the mentor's own vocabulary | ✅ | If Hormozi uses "unit economics", use that term |
+| Elaborate logical implications | ✅ | "If LTV/CAC < 3, then..." (logical consequence) |
+| Invent a new philosophy | ❌ | Create a belief that does not exist in SOUL.md |
+| Add an external metaphor | ❌ | Use an analogy the mentor never used |
+| Create an "inspirational" phrase | ❌ | Write a quote that sounds nice but does not exist |
 
-### Mecanismo de Fortificação Permitido:
-
-```
-FONTE: "Cash is king, everything else is noise" ^[SOUL.md:70]
-
-FORTIFICACAO PERMITIDA:
-"Cash is king, everything else is noise. Isso significa que posso ter
-R$1M em vendas e estar quebrado se tudo está em recebíveis. O que
-importa é o que está na conta." ^[SOUL.md:70-72]
-
-RAZAO: Expandi usando texto que EXISTE nas linhas seguintes da mesma fonte.
-```
-
-### Teste de Validação para Fortificação:
+### Allowed Fortification Mechanism:
 
 ```
-PERGUNTA: O texto expandido pode ser rastreado a linhas específicas das fontes?
+SOURCE: "Cash is king, everything else is noise" ^[SOUL.md:70]
 
-SE SIM → Fortificação válida (adicionar ^[FONTE])
-SE NAO → Invenção proibida (REMOVER ou REESCREVER)
+ALLOWED FORTIFICATION:
+"Cash is king, everything else is noise. That means I can have
+R$1M in sales and be broke if everything is in receivables. What
+matters is what is in the account." ^[SOUL.md:70-72]
+
+REASON: I expanded using text that EXISTS in the following lines of the same source.
+```
+
+### Validation Test for Fortification:
+
+```
+QUESTION: Can the expanded text be traced to specific lines of the sources?
+
+IF YES → Valid fortification (add ^[FONTE])
+IF NO → Forbidden invention (REMOVE or REWRITE)
 ```
 
 ---
 
-## PRINCIPIO DO TEMPLATE FLEXIVEL
+## FLEXIBLE TEMPLATE PRINCIPLE
 
 ```
 ╔══════════════════════════════════════════════════════════════════════════════╗
 ║                                                                              ║
-║   O TEMPLATE É FLEXÍVEL - AS INFORMAÇÕES SÃO O LIMITE                       ║
+║   THE TEMPLATE IS FLEXIBLE - THE INFORMATION IS THE LIMIT                    ║
 ║                                                                              ║
-║   Template = Estrutura que pode crescer, expandir, melhorar                  ║
-║   Limite   = Informações disponíveis do agente (SOUL/MEMORY/dna/SOURCES)    ║
+║   Template = A structure that can grow, expand, improve                      ║
+║   Limit    = The agent's available information (SOUL/MEMORY/dna/SOURCES)     ║
 ║                                                                              ║
-║   USE E ABUSE do template. Deixe-o mais visual, mais rico, mais completo.   ║
-║   MAS respeite o limite do que EXISTE nas fontes do agente.                 ║
+║   USE AND ABUSE the template. Make it more visual, richer, more complete.    ║
+║   BUT respect the limit of what EXISTS in the agent's sources.               ║
 ║                                                                              ║
 ╚══════════════════════════════════════════════════════════════════════════════╝
 ```
 
-### O Que Pode Fazer com o Template:
+### What You May Do with the Template:
 
-| Ação | Permitido? | Condição |
+| Action | Allowed? | Condition |
 |------|------------|----------|
-| Expandir seções | ✅ | Se houver mais informação nas fontes |
-| Adicionar diagramas visuais | ✅ | Se representarem dados das fontes |
-| Criar novas seções | ✅ | Se as fontes tiverem conteúdo para popular |
-| Melhorar formatação | ✅ | Sempre permitido |
-| Adicionar tabelas | ✅ | Se os dados existirem nas fontes |
-| Omitir seções vazias | ✅ | Melhor omitir que inventar |
-| Inventar conteúdo | ❌ | NUNCA |
-| Criar seção sem fonte | ❌ | NUNCA |
+| Expand sections | ✅ | If there is more information in the sources |
+| Add visual diagrams | ✅ | If they represent data from the sources |
+| Create new sections | ✅ | If the sources have content to populate them |
+| Improve formatting | ✅ | Always allowed |
+| Add tables | ✅ | If the data exists in the sources |
+| Omit empty sections | ✅ | Better to omit than to invent |
+| Invent content | ❌ | NEVER |
+| Create a section without a source | ❌ | NEVER |
 
-### Regra de Proporcionalidade:
-
-```
-TAMANHO DO AGENTE = PROPORCIONAL ÀS INFORMAÇÕES DISPONÍVEIS
-
-Agente com MUITAS fontes processadas:
-    → AGENT.md pode ter 10 PARTES completas
-    → TOP 10 INSIGHTS pode virar TOP 20
-    → RADAR pode ter mais dimensões
-    → MAPA DE NAVEGAÇÃO pode listar 50+ arquivos
-
-Agente com POUCAS fontes processadas:
-    → AGENT.md pode ter apenas 5 PARTES
-    → TOP 5 INSIGHTS (não inventar os outros 5)
-    → RADAR com menos dimensões
-    → MAPA DE NAVEGAÇÃO lista apenas o que existe
-
-NUNCA:
-    → Esticar conteúdo para preencher template
-    → Inventar para "completar" seções
-    → Duplicar informação para parecer maior
-```
-
-### Teste de Validação do Template:
+### Proportionality Rule:
 
 ```
-PARA CADA SEÇÃO DO TEMPLATE:
+AGENT SIZE = PROPORTIONAL TO THE AVAILABLE INFORMATION
 
-1. Esta seção tem fonte correspondente no agente?
-   SE NÃO → OMITIR a seção (não inventar)
+Agent with MANY processed sources:
+    → AGENT.md may have 10 complete PARTS
+    → TOP 10 INSIGHTS may become TOP 20
+    → RADAR may have more dimensions
+    → NAVIGATION MAP may list 50+ files
 
-2. As informações existem em SOUL/MEMORY/dna/SOURCES?
-   SE NÃO → OMITIR o conteúdo
+Agent with FEW processed sources:
+    → AGENT.md may have only 5 PARTS
+    → TOP 5 INSIGHTS (do not invent the other 5)
+    → RADAR with fewer dimensions
+    → NAVIGATION MAP lists only what exists
 
-3. O diagrama/visual representa dados reais?
-   SE NÃO → REMOVER ou SIMPLIFICAR
-
-RESULTADO: Template cresce APENAS com as informações do agente
+NEVER:
+    → Stretch content to fill the template
+    → Invent to "complete" sections
+    → Duplicate information to look bigger
 ```
 
----
-
-## REGRAS INQUEBRAVEIS
-
-### REGRA 1: ZERO INVENCAO
+### Template Validation Test:
 
 ```
-PROIBIDO:
-- Escrever texto "floreado" sem fonte
-- Inventar frases que o agente "diria"
-- Criar numeros sem calculo real
-- Elaborar descricoes baseadas em "interpretacao"
+FOR EACH SECTION OF THE TEMPLATE:
 
-OBRIGATORIO:
-- Todo texto extraido literalmente de SOUL.md, MEMORY.md, DNA/*.yaml
-- Toda frase citada deve existir em arquivo fonte
-- Todo numero derivado de contagem real em arquivos
-```
+1. Does this section have a corresponding source in the agent?
+   IF NOT → OMIT the section (do not invent)
 
-**Exemplo ERRADO:**
-```markdown
-Minha memoria contem **26+ insights** extraidos de 7 fontes.
-```
+2. Does the information exist in SOUL/MEMORY/dna/SOURCES?
+   IF NOT → OMIT the content
 
-**Exemplo CORRETO:**
-```markdown
-Minha memoria contem **26 insights** ^[MEMORY.md:linhas46-98]
-extraidos de **7 fontes** ^[DNA-CONFIG.yaml:dna_sources].
+3. Does the diagram/visual represent real data?
+   IF NOT → REMOVE or SIMPLIFY
+
+RESULT: The template grows ONLY with the agent's information
 ```
 
 ---
 
-### REGRA 2: CITACAO OBRIGATORIA
+## UNBREAKABLE RULES
 
-Toda afirmacao em AGENT.md DEVE ter referencia no formato:
+### RULE 1: ZERO INVENTION
 
 ```
-^[ARQUIVO:localizacao]
+FORBIDDEN:
+- Writing "flowery" text without a source
+- Inventing phrases the agent "would say"
+- Creating numbers without a real calculation
+- Elaborating descriptions based on "interpretation"
 
-Onde:
-- ARQUIVO = nome do arquivo fonte (SOUL.md, MEMORY.md, etc.)
-- localizacao = linha, secao, ou chunk_id
+MANDATORY:
+- All text extracted literally from SOUL.md, MEMORY.md, DNA/*.yaml
+- Every quoted phrase must exist in a source file
+- Every number derived from a real count in files
 ```
 
-**Aplicacao por secao:**
+**WRONG example:**
+```markdown
+My memory contains **26+ insights** extracted from 7 sources.
+```
 
-| Secao do AGENT.md | Fonte Obrigatoria | Formato |
+**CORRECT example:**
+```markdown
+My memory contains **26 insights** ^[MEMORY.md:lines46-98]
+extracted from **7 sources** ^[DNA-CONFIG.yaml:dna_sources].
+```
+
+---
+
+### RULE 2: MANDATORY CITATION
+
+Every statement in AGENT.md MUST have a reference in the format:
+
+```
+^[FILE:location]
+
+Where:
+- FILE = name of the source file (SOUL.md, MEMORY.md, etc.)
+- location = line, section, or chunk_id
+```
+
+**Application per section:**
+
+| AGENT.md section | Mandatory source | Format |
 |-------------------|-------------------|---------|
-| QUEM SOU | SOUL.md secao "QUEM SOU EU" | ^[SOUL.md:44-62] |
-| MINHA FORMACAO | DNA-CONFIG.yaml | ^[DNA-CONFIG.yaml:dna_sources] |
-| COMO FALO | SOUL.md secao "SISTEMA DE VOZ" | ^[SOUL.md:XX-YY] |
-| O QUE JA SEI | MEMORY.md secao "APRENDIZADOS" | ^[MEMORY.md:42-98] |
-| DECISOES PADRAO | MEMORY.md secao "PADROES DECISORIOS" | ^[MEMORY.md:30-39] |
+| WHO I AM | SOUL.md section "WHO I AM" | ^[SOUL.md:44-62] |
+| MY TRAINING | DNA-CONFIG.yaml | ^[DNA-CONFIG.yaml:dna_sources] |
+| HOW I SPEAK | SOUL.md section "VOICE SYSTEM" | ^[SOUL.md:XX-YY] |
+| WHAT I ALREADY KNOW | MEMORY.md section "LEARNINGS" | ^[MEMORY.md:42-98] |
+| DEFAULT DECISIONS | MEMORY.md section "DECISION PATTERNS" | ^[MEMORY.md:30-39] |
 
 ---
 
-### REGRA 3: NUMEROS DERIVADOS, NAO ESCRITOS
+### RULE 3: NUMBERS DERIVED, NOT WRITTEN
 
 ```
-PROIBIDO:
-- Escrever "26+ insights" manualmente
-- Chutar "7 fontes processadas"
-- Inventar "15 arquivos de DNA"
+FORBIDDEN:
+- Writing "26+ insights" by hand
+- Guessing "7 processed sources"
+- Inventing "15 DNA files"
 
-OBRIGATORIO:
-- Contar linhas reais em MEMORY.md
-- Contar entradas em DNA-CONFIG.yaml
-- Listar arquivos existentes em /knowledge/external/dna/
+MANDATORY:
+- Count the real lines in MEMORY.md
+- Count the entries in DNA-CONFIG.yaml
+- List the existing files in /knowledge/external/dna/
 ```
 
-**Mecanismo de Derivacao:**
+**Derivation Mechanism:**
 
-| Metrica | Como Calcular | Onde Armazenar |
+| Metric | How to Calculate | Where to Store |
 |---------|---------------|----------------|
-| Total de insights | Contar tabelas em MEMORY.md secao APRENDIZADOS | AGENT.md + atualizar quando MEMORY muda |
-| Total de fontes | Contar entradas em DNA-CONFIG.yaml | AGENT.md + atualizar quando DNA-CONFIG muda |
-| Arquivos DNA | Listar arquivos em /knowledge/external/dna/persons/{fontes}/ | AGENT.md secao MAPA DE NAVEGACAO |
-| Decisoes padrao | Contar linhas em MEMORY.md secao PADROES DECISORIOS | AGENT.md + atualizar quando MEMORY muda |
+| Total insights | Count the tables in the MEMORY.md LEARNINGS section | AGENT.md + update when MEMORY changes |
+| Total sources | Count the entries in DNA-CONFIG.yaml | AGENT.md + update when DNA-CONFIG changes |
+| DNA files | List the files in /knowledge/external/dna/persons/{sources}/ | AGENT.md NAVIGATION MAP section |
+| Default decisions | Count the lines in the MEMORY.md DECISION PATTERNS section | AGENT.md + update when MEMORY changes |
 
 ---
 
-### REGRA 4: TEXTO DO AGENTE = TEXTO DA FONTE
+### RULE 4: AGENT TEXT = SOURCE TEXT
 
-O texto em AGENT.md/DOSSIE EXECUTIVO deve ser:
+The text in AGENT.md/EXECUTIVE DOSSIER must be:
 
-1. **CITACAO DIRETA** - Copiar literalmente do SOUL.md
-2. **SINTESE REFERENCIADA** - Resumir com ^[FONTE]
-3. **DERIVACAO EXPLICITA** - Calcular de dados reais
+1. **DIRECT QUOTATION** - Copied literally from SOUL.md
+2. **REFERENCED SYNTHESIS** - Summarized with ^[FONTE]
+3. **EXPLICIT DERIVATION** - Calculated from real data
 
-**NUNCA:**
-- Parafrasear sem referencia
-- "Melhorar" o texto original
-- Adicionar interpretacoes proprias
+**NEVER:**
+- Paraphrase without a reference
+- "Improve" the original text
+- Add your own interpretations
 
-**Exemplo de CITACAO DIRETA:**
+**Example of DIRECT QUOTATION:**
 
 ```markdown
-## QUEM SOU
+## WHO I AM
 
 > ^[SOUL.md:46-51]
-> "Eu sou o guardiao da saude financeira. O freio quando precisa frear,
-> o acelerador quando os numeros permitem acelerar.
-> Sam Oven me ensinou que sistemas financeiros robustos sao fundacao.
-> Sem visibilidade de numeros, decisoes sao chutes. Com dados claros,
-> decisoes sao estrategia."
+> "I am the guardian of financial health. The brake when it needs braking,
+> the accelerator when the numbers allow accelerating.
+> Sam Oven taught me that robust financial systems are foundation.
+> Without visibility of the numbers, decisions are guesses. With clear data,
+> decisions are strategy."
 ```
 
 ---
 
-### REGRA 5: ATUALIZACAO AUTOMATICA
+### RULE 5: AUTOMATIC UPDATE
 
-Quando um arquivo fonte muda, TODOS os arquivos dependentes DEVEM ser atualizados:
+When a source file changes, ALL dependent files MUST be updated:
 
 ```
-MEMORY.md atualizado
+MEMORY.md updated
     ↓
-VERIFICAR e ATUALIZAR:
-    ├── AGENT.md secao "O QUE JA SEI"
-    ├── AGENT.md contagens de insights
-    └── AGENT.md decisoes padrao
+CHECK and UPDATE:
+    ├── AGENT.md section "WHAT I ALREADY KNOW"
+    ├── AGENT.md insight counts
+    └── AGENT.md default decisions
 
-SOUL.md atualizado
+SOUL.md updated
     ↓
-VERIFICAR e ATUALIZAR:
-    ├── AGENT.md secao "QUEM SOU"
-    ├── AGENT.md secao "COMO FALO"
-    └── AGENT.md secao "O QUE ESPERAR"
+CHECK and UPDATE:
+    ├── AGENT.md section "WHO I AM"
+    ├── AGENT.md section "HOW I SPEAK"
+    └── AGENT.md section "WHAT TO EXPECT"
 
-DNA-CONFIG.yaml atualizado
+DNA-CONFIG.yaml updated
     ↓
-VERIFICAR e ATUALIZAR:
-    ├── AGENT.md secao "MINHA FORMACAO"
-    ├── AGENT.md contagem de fontes
-    └── AGENT.md MAPA DE NAVEGACAO GRANULAR
+CHECK and UPDATE:
+    ├── AGENT.md section "MY TRAINING"
+    ├── AGENT.md source count
+    └── AGENT.md GRANULAR NAVIGATION MAP
 ```
 
 ---
 
-### REGRA 6: VALIDACAO ANTES DE FINALIZAR
+### RULE 6: VALIDATION BEFORE FINALIZING
 
-Antes de considerar um AGENT.md "completo", executar checklist:
+Before considering an AGENT.md "complete", run the checklist:
 
 ```
-□ Toda afirmacao tem ^[FONTE]?
-□ Todos os numeros foram derivados (nao escritos)?
-□ O texto do DOSSIE EXECUTIVO e citacao direta ou sintese referenciada?
-□ As frases "que digo" existem literalmente em SOUL.md?
-□ As decisoes padrao existem literalmente em MEMORY.md?
-□ O MAPA DE NAVEGACAO GRANULAR lista arquivos que EXISTEM?
-□ O indice reflete as partes que EXISTEM no documento?
+□ Does every statement have ^[FONTE]?
+□ Were all the numbers derived (not written)?
+□ Is the EXECUTIVE DOSSIER text a direct quotation or a referenced synthesis?
+□ Do the phrases "I say" exist literally in SOUL.md?
+□ Do the default decisions exist literally in MEMORY.md?
+□ Does the GRANULAR NAVIGATION MAP list files that EXIST?
+□ Does the index reflect the parts that EXIST in the document?
 ```
 
-Se QUALQUER item falhar = AGENT.md NAO ESTA COMPLETO.
+If ANY item fails = the AGENT.md IS NOT COMPLETE.
 
 ---
 
-## PRINCIPIO DE INTERCONEXAO TOTAL
+## TOTAL INTERCONNECTION PRINCIPLE
 
 ```
 ╔══════════════════════════════════════════════════════════════════════════════╗
 ║                                                                              ║
-║   NENHUM ARQUIVO É ILHA - TODOS ESTÃO CONECTADOS                            ║
+║   NO FILE IS AN ISLAND - ALL ARE CONNECTED                                   ║
 ║                                                                              ║
-║   Qualquer arquivo que alimenta um agente PODE modificar outros arquivos.   ║
-║   Não há como incrementar informações importantes sem otimizar os demais.   ║
-║   Por isso TODOS os campos devem estar bem mapeados.                        ║
+║   Any file that feeds an agent MAY modify other files.                       ║
+║   There is no way to add important information without optimizing the rest.  ║
+║   That is why ALL the fields must be well mapped.                            ║
 ║                                                                              ║
 ╚══════════════════════════════════════════════════════════════════════════════╝
 ```
 
-### Rede de Interdependências
+### Interdependency Network
 
 ```
                     ┌──────────────────────────────────────────────┐
-                    │           FONTES PRIMÁRIAS                   │
-                    │  (inbox → processing → knowledge)   │
+                    │           PRIMARY SOURCES                    │
+                    │  (inbox → processing → knowledge)            │
                     └──────────────────────┬───────────────────────┘
                                            │
               ┌────────────────────────────┼────────────────────────────┐
@@ -329,15 +330,15 @@ Se QUALQUER item falhar = AGENT.md NAO ESTA COMPLETO.
               ▼                            ▼                            ▼
    ┌─────────────────────┐    ┌─────────────────────┐    ┌─────────────────────┐
    │      DOSSIERS       │◄──►│       THEMES        │◄──►│       SOURCES       │
-   │   (por pessoa)      │    │    (por tema)       │    │   (pessoa×tema)     │
+   │   (per person)      │    │    (per theme)      │    │   (person×theme)    │
    └──────────┬──────────┘    └──────────┬──────────┘    └──────────┬──────────┘
               │                          │                          │
               └────────────┬─────────────┼─────────────┬────────────┘
                            │             │             │
                            ▼             ▼             ▼
               ┌─────────────────────────────────────────────────────┐
-              │              DNA COGNITIVO (5 Camadas)              │
-              │  FILOSOFIAS ← MODELOS ← HEURÍSTICAS ← FRAMEWORKS    │
+              │              COGNITIVE DNA (5 Layers)               │
+              │  PHILOSOPHIES ← MODELS ← HEURISTICS ← FRAMEWORKS    │
               └──────────────────────────┬──────────────────────────┘
                                          │
          ┌───────────────────────────────┼───────────────────────────────┐
@@ -345,7 +346,7 @@ Se QUALQUER item falhar = AGENT.md NAO ESTA COMPLETO.
          ▼                               ▼                               ▼
 ┌─────────────────┐            ┌─────────────────┐            ┌─────────────────┐
 │    SOUL.md      │◄──────────►│   MEMORY.md     │◄──────────►│ DNA-CONFIG.yaml │
-│  (identidade)   │            │  (experiência)  │            │    (fontes)     │
+│   (identity)    │            │  (experience)   │            │    (sources)    │
 └────────┬────────┘            └────────┬────────┘            └────────┬────────┘
          │                              │                              │
          └──────────────────────────────┼──────────────────────────────┘
@@ -354,338 +355,339 @@ Se QUALQUER item falhar = AGENT.md NAO ESTA COMPLETO.
          ┌─────────────────────────────────────────────────────────────┐
          │                      AGENT.md                               │
          │  ┌────────────────────────────────────────────────────────┐ │
-         │  │              DOSSIÊ EXECUTIVO                          │ │
+         │  │              EXECUTIVE DOSSIER                         │ │
          │  ├────────────────────────────────────────────────────────┤ │
-         │  │ 🛡️ QUEM SOU        ← SOUL.md:44-62                    │ │
-         │  │ 🧬 MINHA FORMAÇÃO  ← DNA-CONFIG.yaml + SOUL.md:20-25  │ │
-         │  │ 🗣️ COMO FALO       ← SOUL.md:66-87 + 129-154         │ │
-         │  │ 🧠 O QUE JÁ SEI    ← MEMORY.md:46-104                 │ │
-         │  │ 📁 PROFUNDIDADE    ← DNA/* + SOURCES/* + DOSSIERS/*   │ │
-         │  │ 🎯 O QUE ESPERAR   ← SOUL.md + MEMORY.md              │ │
+         │  │ 🛡️ WHO I AM            ← SOUL.md:44-62                │ │
+         │  │ 🧬 MY TRAINING         ← DNA-CONFIG.yaml + SOUL.md:20-25│ │
+         │  │ 🗣️ HOW I SPEAK         ← SOUL.md:66-87 + 129-154      │ │
+         │  │ 🧠 WHAT I ALREADY KNOW ← MEMORY.md:46-104             │ │
+         │  │ 📁 DEPTH               ← DNA/* + SOURCES/* + DOSSIERS/*│ │
+         │  │ 🎯 WHAT TO EXPECT      ← SOUL.md + MEMORY.md          │ │
          │  └────────────────────────────────────────────────────────┘ │
          └─────────────────────────────────────────────────────────────┘
 ```
 
-### Matriz de Propagação (O Que Muda O Quê)
+### Propagation Matrix (What Changes What)
 
-| Quando ESTE Arquivo Muda | ESTES Arquivos DEVEM Ser Verificados |
+| When THIS File Changes | THESE Files MUST Be Checked |
 |--------------------------|--------------------------------------|
-| **DOSSIER-{PESSOA}.md** | SOUL.md, MEMORY.md (do agente relacionado) |
-| **DOSSIER-{TEMA}.md** | SOURCES/{PESSOA}/{TEMA}.md, MEMORY.md (de agentes do tema) |
-| **SOURCES/{PESSOA}/{TEMA}.md** | DOSSIERS, MEMORY.md do agente, DNA se nova filosofia |
-| **DNA/{PESSOA}/FILOSOFIAS.yaml** | SOUL.md, AGENT.md seção "O QUE ACREDITO" |
-| **DNA/{PESSOA}/HEURISTICAS.yaml** | MEMORY.md, AGENT.md seção "REGRAS DE DECISÃO" |
-| **SOUL.md** | AGENT.md (QUEM SOU, COMO FALO, O QUE ESPERAR) |
-| **MEMORY.md** | AGENT.md (O QUE JÁ SEI, contagens, decisões padrão) |
-| **DNA-CONFIG.yaml** | AGENT.md (MINHA FORMAÇÃO, PROFUNDIDADE) |
+| **DOSSIER-{PERSON}.md** | SOUL.md, MEMORY.md (of the related agent) |
+| **DOSSIER-{THEME}.md** | SOURCES/{PERSON}/{THEME}.md, MEMORY.md (of the theme's agents) |
+| **SOURCES/{PERSON}/{THEME}.md** | DOSSIERS, the agent's MEMORY.md, DNA if a new philosophy |
+| **DNA/{PERSON}/FILOSOFIAS.yaml** | SOUL.md, AGENT.md section "WHAT I BELIEVE" |
+| **DNA/{PERSON}/HEURISTICAS.yaml** | MEMORY.md, AGENT.md section "DECISION RULES" |
+| **SOUL.md** | AGENT.md (WHO I AM, HOW I SPEAK, WHAT TO EXPECT) |
+| **MEMORY.md** | AGENT.md (WHAT I ALREADY KNOW, counts, default decisions) |
+| **DNA-CONFIG.yaml** | AGENT.md (MY TRAINING, DEPTH) |
 
-### Regra de Propagação Obrigatória
+### Mandatory Propagation Rule
 
 ```
-QUANDO: Novo material processado via seu pipeline de ingestão
+WHEN: New material processed via your ingestion pipeline
     │
-    ├── SE gera novo INSIGHT em INSIGHTS-STATE.json
+    ├── IF it generates a new INSIGHT in INSIGHTS-STATE.json
     │       │
-    │       └── VERIFICAR: Qual agente se beneficia?
+    │       └── CHECK: Which agent benefits?
     │               │
-    │               ├── ATUALIZAR: MEMORY.md do agente
+    │               ├── UPDATE: the agent's MEMORY.md
     │               │       │
-    │               │       └── PROPAGAR: AGENT.md seção "O QUE JÁ SEI"
+    │               │       └── PROPAGATE: AGENT.md section "WHAT I ALREADY KNOW"
     │               │
-    │               └── SE nova FILOSOFIA detectada
+    │               └── IF a new PHILOSOPHY is detected
     │                       │
-    │                       ├── ATUALIZAR: SOUL.md seção "O QUE ACREDITO"
+    │                       ├── UPDATE: SOUL.md section "WHAT I BELIEVE"
     │                       │
-    │                       └── PROPAGAR: AGENT.md seção "QUEM SOU"
+    │                       └── PROPAGATE: AGENT.md section "WHO I AM"
     │
-    └── SE gera novo DOSSIER ou atualiza existente
+    └── IF it generates a new DOSSIER or updates an existing one
             │
-            └── VERIFICAR: Quais agentes usam este DOSSIER?
+            └── CHECK: Which agents use this DOSSIER?
                     │
-                    └── PROPAGAR: Referências em MAPA DE NAVEGAÇÃO
+                    └── PROPAGATE: References in the NAVIGATION MAP
 
-RESULTADO: Nenhum arquivo fica "órfão" de atualizações.
+RESULT: No file is left "orphaned" of updates.
 ```
 
 ---
 
-## MAPA DE DEPENDENCIAS DETALHADO
+## DETAILED DEPENDENCY MAP
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                                                                             │
-│   FONTES PRIMARIAS              AGENT.md                                    │
+│   PRIMARY SOURCES               AGENT.md                                    │
 │   ═══════════════               ═════════                                   │
 │                                                                             │
-│   SOUL.md ────────────────────→ DOSSIE EXECUTIVO                           │
-│   │                             ├── QUEM SOU                               │
-│   │                             ├── COMO FALO                              │
-│   │                             └── O QUE ESPERAR                          │
+│   SOUL.md ────────────────────→ EXECUTIVE DOSSIER                          │
+│   │                             ├── WHO I AM                               │
+│   │                             ├── HOW I SPEAK                            │
+│   │                             └── WHAT TO EXPECT                         │
 │   │                                                                         │
-│   MEMORY.md ──────────────────→ DOSSIE EXECUTIVO                           │
-│   │                             ├── O QUE JA SEI                           │
-│   │                             └── DECISOES PADRAO                        │
+│   MEMORY.md ──────────────────→ EXECUTIVE DOSSIER                          │
+│   │                             ├── WHAT I ALREADY KNOW                    │
+│   │                             └── DEFAULT DECISIONS                      │
 │   │                                                                         │
-│   DNA-CONFIG.yaml ────────────→ DOSSIE EXECUTIVO                           │
-│   │                             ├── MINHA FORMACAO                         │
-│   │                             └── PROFUNDIDADE DISPONIVEL                │
+│   DNA-CONFIG.yaml ────────────→ EXECUTIVE DOSSIER                          │
+│   │                             ├── MY TRAINING                            │
+│   │                             └── AVAILABLE DEPTH                        │
 │   │                                                                         │
-│   /knowledge/external/dna/* ────────→ MAPA DE NAVEGACAO GRANULAR                 │
-│   │                             └── DNA Cognitivo por Pessoa               │
+│   /knowledge/external/dna/* ──→ GRANULAR NAVIGATION MAP                    │
+│   │                             └── Cognitive DNA per Person               │
 │   │                                                                         │
-│   /knowledge/SOURCES/* ────→ MAPA DE NAVEGACAO GRANULAR                 │
-│   │                             └── SOURCES Granulares                     │
+│   /knowledge/SOURCES/* ───────→ GRANULAR NAVIGATION MAP                    │
+│   │                             └── Granular SOURCES                       │
 │   │                                                                         │
-│   /knowledge/external/dossiers/* ───→ MAPA DE NAVEGACAO GRANULAR                 │
-│                                 └── Dossiês Consolidados                   │
+│   /knowledge/external/dossiers/* ─→ GRANULAR NAVIGATION MAP                │
+│                                 └── Consolidated Dossiers                  │
 │                                                                             │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## FORMATO DE REFERENCIA PADRAO
+## STANDARD REFERENCE FORMAT
 
-### Em Texto Corrido
+### In Running Text
 
 ```markdown
-Cash flow e rei, margem e rainha ^[SOUL.md:70-72]. Esta filosofia guia
-todas as minhas decisoes financeiras.
+Cash flow is king, margin is queen ^[SOUL.md:70-72]. This philosophy guides
+all my financial decisions.
 ```
 
-### Em Tabelas
+### In Tables
 
 ```markdown
-| Insight | Fonte |
+| Insight | Source |
 |---------|-------|
-| LTV/CAC minimo 3x | ^[MEMORY.md:103] |
+| LTV/CAC minimum 3x | ^[MEMORY.md:103] |
 | CCR < 10% ticket | ^[MEMORY.md:86] |
 ```
 
-### Em Listas
+### In Lists
 
 ```markdown
-**Frases que digo:** ^[SOUL.md:secao-sistema-de-voz]
-- "Qual e o unit economics disso?"
-- "Mostra a margem."
+**Phrases I say:** ^[SOUL.md:voice-system-section]
+- "What is the unit economics of this?"
+- "Show me the margin."
 - "Cash is king."
 ```
 
-### Para Numeros Derivados
+### For Derived Numbers
 
 ```markdown
-Minha memoria contem **26 insights** ^[derivado:MEMORY.md:linhas46-98:count=26]
+My memory contains **26 insights** ^[derived:MEMORY.md:lines46-98:count=26]
 ```
 
 ---
 
-## PROCESSO DE CRIACAO/ATUALIZACAO DE AGENTE
+## AGENT CREATION/UPDATE PROCESS
 
-### Passo 1: Ler Fontes
-
-```
-ANTES de escrever qualquer coisa em AGENT.md:
-
-1. Ler SOUL.md completo
-2. Ler MEMORY.md completo
-3. Ler DNA-CONFIG.yaml completo
-4. Listar arquivos em /knowledge/external/dna/persons/{fontes}/
-5. Listar arquivos em /knowledge/external/sources/ relevantes
-```
-
-### Passo 2: Extrair (Nao Inventar)
+### Step 1: Read the Sources
 
 ```
-Para cada secao do AGENT.md:
+BEFORE writing anything in AGENT.md:
 
-1. Identificar secao correspondente na fonte
-2. COPIAR texto relevante (nao parafrasear)
-3. Adicionar ^[FONTE] a cada citacao
-4. CONTAR numeros (nao estimar)
+1. Read SOUL.md in full
+2. Read MEMORY.md in full
+3. Read DNA-CONFIG.yaml in full
+4. List the files in /knowledge/external/dna/persons/{sources}/
+5. List the relevant files in /knowledge/external/sources/
 ```
 
-### Passo 3: Validar
+### Step 2: Extract (Do Not Invent)
 
 ```
-Para cada afirmacao:
+For each section of AGENT.md:
 
-1. Verificar se existe em arquivo fonte
-2. Verificar se ^[FONTE] esta correto
-3. Verificar se numeros batem com contagem real
+1. Identify the corresponding section in the source
+2. COPY the relevant text (do not paraphrase)
+3. Add ^[FONTE] to every quotation
+4. COUNT the numbers (do not estimate)
 ```
 
-### Passo 4: Documentar Derivacoes
+### Step 3: Validate
 
 ```
-No final do AGENT.md, adicionar secao:
+For each statement:
 
-## METADADOS DE DERIVACAO
+1. Check that it exists in a source file
+2. Check that the ^[FONTE] is correct
+3. Check that the numbers match the real count
+```
 
-| Metrica | Valor | Fonte | Data Verificacao |
+### Step 4: Document the Derivations
+
+```
+At the end of AGENT.md, add the section:
+
+## DERIVATION METADATA
+
+| Metric | Value | Source | Verification Date |
 |---------|-------|-------|------------------|
 | Insights | 26 | MEMORY.md:46-98 | 2025-12-25 |
-| Fontes | 7 | DNA-CONFIG.yaml | 2025-12-25 |
+| Sources | 7 | DNA-CONFIG.yaml | 2025-12-25 |
 | ... | ... | ... | ... |
 ```
 
 ---
 
-## CONSEQUENCIAS DE VIOLACAO
+## CONSEQUENCES OF VIOLATION
 
 ```
-SE encontrar texto sem ^[FONTE]:
-    → PARAR
-    → Identificar fonte ou REMOVER texto
+IF you find text without ^[FONTE]:
+    → STOP
+    → Identify the source or REMOVE the text
 
-SE encontrar numero nao derivado:
-    → PARAR
-    → Calcular numero real ou REMOVER
+IF you find a non-derived number:
+    → STOP
+    → Calculate the real number or REMOVE
 
-SE encontrar interpretacao/floreio:
-    → PARAR
-    → Substituir por citacao direta ou REMOVER
+IF you find interpretation/embellishment:
+    → STOP
+    → Replace with a direct quotation or REMOVE
 
-SE arquivo fonte mudar e AGENT.md nao atualizar:
-    → AGENT.md considerado DESATUALIZADO
-    → Flag de integridade = FALHA
+IF a source file changes and AGENT.md is not updated:
+    → AGENT.md considered OUTDATED
+    → Integrity flag = FAIL
 ```
 
 ---
 
-## INTEGRACAO COM OUTROS PROTOCOLOS
+## INTEGRATION WITH OTHER PROTOCOLS
 
-| Protocolo | Integracao |
+| Protocol | Integration |
 |-----------|------------|
-| EPISTEMIC-PROTOCOL | Aplicar mesma logica de ^[FONTE] e confidence levels |
-| PIPELINE DE INGESTÃO | Fase final deve verificar integridade de agentes afetados |
-| **AGENT-COGNITION-PROTOCOL** | FASE 1.5 (Depth-Seeking) permite navegação até RAIZ quando contexto insuficiente |
+| EPISTEMIC-PROTOCOL | Apply the same ^[FONTE] logic and confidence levels |
+| INGESTION PIPELINE | The final phase must check the integrity of the affected agents |
+| **AGENT-COGNITION-PROTOCOL** | PHASE 1.5 (Depth-Seeking) allows navigation to the ROOT when the context is insufficient |
 
-### Integração com FASE 1.5 (Depth-Seeking) - v1.2.0
+### Integration with PHASE 1.5 (Depth-Seeking) - v1.2.0
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                                                                             │
-│  AGENT-INTEGRITY-PROTOCOL + AGENT-COGNITION-PROTOCOL FASE 1.5              │
+│  AGENT-INTEGRITY-PROTOCOL + AGENT-COGNITION-PROTOCOL PHASE 1.5             │
 │                                                                             │
-│  Este protocolo define O QUE deve ser rastreável (todas as afirmações).    │
-│  A FASE 1.5 define COMO navegar até a fonte ANTES de entregar resposta.    │
+│  This protocol defines WHAT must be traceable (all statements).            │
+│  PHASE 1.5 defines HOW to navigate to the source BEFORE delivering an      │
+│  answer.                                                                    │
 │                                                                             │
-│  ⚠️ REGRA INQUEBRÁVEL (v1.2.0):                                            │
-│  NAVEGAÇÃO PRÉVIA OBRIGATÓRIA - 5 ELEMENTOS SEMPRE PRONTOS                 │
+│  ⚠️ UNBREAKABLE RULE (v1.2.0):                                             │
+│  PRIOR NAVIGATION MANDATORY - 5 ELEMENTS ALWAYS READY                      │
 │                                                                             │
 │  ┌────────────────────────────────────────────────────────────────────┐    │
-│  │ QUEM:    Nome da pessoa que disse (speaker)                        │    │
-│  │ QUANDO:  Data/contexto temporal                                    │    │
-│  │ ONDE:    Material exato (título, tipo, canal)                      │    │
-│  │ TEXTO:   Citação bruta original (não parafraseada)                 │    │
-│  │ PATH:    Caminho até o arquivo inbox                            │    │
+│  │ WHO:     Name of the person who said it (speaker)                  │    │
+│  │ WHEN:    Date/temporal context                                     │    │
+│  │ WHERE:   Exact material (title, type, channel)                     │    │
+│  │ TEXT:    Original raw quotation (not paraphrased)                  │    │
+│  │ PATH:    Path to the inbox file                                    │    │
 │  └────────────────────────────────────────────────────────────────────┘    │
 │                                                                             │
-│  FLUXO INTEGRADO:                                                          │
+│  INTEGRATED FLOW:                                                          │
 │                                                                             │
-│  1. ANTES de responder: Navegar até RAIZ                                   │
-│  2. Ter 5 elementos prontos para "de onde vem essa informação?"           │
-│  3. Se não conseguir = não pode afirmar como fato                          │
+│  1. BEFORE answering: Navigate to the ROOT                                 │
+│  2. Have the 5 elements ready for "where does this information come from?" │
+│  3. If you cannot = you cannot state it as fact                            │
 │                                                                             │
-│  NAVEGAÇÃO COMPLETA:                                                       │
-│  AGENT.md → SOUL.md → MEMORY.md → DNA → INSIGHTS → CHUNKS → RAIZ          │
+│  FULL NAVIGATION:                                                          │
+│  AGENT.md → SOUL.md → MEMORY.md → DNA → INSIGHTS → CHUNKS → ROOT           │
 │                                                                             │
-│  Ver: AGENT-COGNITION-PROTOCOL.md seções 1.5.0 a 1.5.6                     │
+│  See: AGENT-COGNITION-PROTOCOL.md sections 1.5.0 to 1.5.6                  │
 │                                                                             │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## CHECKLIST DE INTEGRIDADE
+## INTEGRITY CHECKLIST
 
 ```
 ╔══════════════════════════════════════════════════════════════════════════════╗
-║                        VALIDACAO DE INTEGRIDADE                              ║
+║                        INTEGRITY VALIDATION                                  ║
 ╠══════════════════════════════════════════════════════════════════════════════╣
 ║                                                                              ║
-║  □ 1. Toda afirmacao tem ^[FONTE:arquivo:localizacao]                       ║
+║  □ 1. Every statement has ^[FONTE:file:location]                            ║
 ║                                                                              ║
-║  □ 2. Todos os numeros sao derivados com formula explicita                  ║
+║  □ 2. All numbers are derived with an explicit formula                      ║
 ║                                                                              ║
-║  □ 3. Texto do DOSSIE e citacao direta ou sintese referenciada              ║
+║  □ 3. DOSSIER text is a direct quotation or a referenced synthesis          ║
 ║                                                                              ║
-║  □ 4. Frases "que digo" existem LITERALMENTE em SOUL.md                     ║
+║  □ 4. Phrases "I say" exist LITERALLY in SOUL.md                            ║
 ║                                                                              ║
-║  □ 5. Decisoes padrao existem LITERALMENTE em MEMORY.md                     ║
+║  □ 5. Default decisions exist LITERALLY in MEMORY.md                        ║
 ║                                                                              ║
-║  □ 6. Arquivos listados em MAPA DE NAVEGACAO existem no filesystem          ║
+║  □ 6. Files listed in the NAVIGATION MAP exist on the filesystem            ║
 ║                                                                              ║
-║  □ 7. Indice reflete estrutura real do documento                            ║
+║  □ 7. Index reflects the real structure of the document                     ║
 ║                                                                              ║
-║  □ 8. Secao METADADOS DE DERIVACAO esta presente e atualizada               ║
+║  □ 8. DERIVATION METADATA section is present and up to date                 ║
 ║                                                                              ║
-║  □ 9. Data de ultima verificacao esta documentada                           ║
+║  □ 9. Date of last verification is documented                               ║
 ║                                                                              ║
-║  □ 10. Nenhum texto foi "floreado" ou "melhorado"                           ║
+║  □ 10. No text was "embellished" or "improved"                              ║
 ║                                                                              ║
 ╚══════════════════════════════════════════════════════════════════════════════╝
 
-RESULTADO: ___/10 itens OK
+RESULT: ___/10 items OK
 
-SE < 10/10 = AGENTE NAO ESTA EM CONFORMIDADE
+IF < 10/10 = THE AGENT IS NOT COMPLIANT
 ```
 
 ---
 
-## TEMPLATES OFICIAIS PARA CRIAÇÃO DE AGENTES
+## OFFICIAL TEMPLATES FOR AGENT CREATION
 
 ```
 ╔══════════════════════════════════════════════════════════════════════════════╗
 ║                                                                              ║
-║   TEMPLATES GOVERNAM A ESTRUTURA E RASTREABILIDADE DOS AGENTES              ║
+║   TEMPLATES GOVERN THE STRUCTURE AND TRACEABILITY OF AGENTS                  ║
 ║                                                                              ║
-║   Qualquer novo agente DEVE seguir os templates oficiais.                   ║
-║   Templates garantem consistência e rastreabilidade 100%.                   ║
+║   Any new agent MUST follow the official templates.                          ║
+║   Templates guarantee consistency and 100% traceability.                     ║
 ║                                                                              ║
 ╚══════════════════════════════════════════════════════════════════════════════╝
 ```
 
-### Localização dos Templates
+### Template Location
 
-| Template | Localização | Versão | Propósito |
+| Template | Location | Version | Purpose |
 |----------|-------------|--------|-----------|
-| **SOUL-TEMPLATE.md** | `core/templates/agents/soul-template.md` | v2.0 | Identidade viva do agente |
-| **MEMORY-PROTOCOL.md** | `core/templates/agents/memory-template.md` | v2.0.0 | Experiência acumulada |
-| **DNA-CONFIG-TEMPLATE.yaml** | `core/templates/agents/dna-config-template.yaml` | v2.0.0 | Configuração de fontes |
+| **SOUL-TEMPLATE.md** | `core/templates/agents/soul-template.md` | v2.0 | The agent's living identity |
+| **MEMORY-PROTOCOL.md** | `core/templates/agents/memory-template.md` | v2.0.0 | Accumulated experience |
+| **DNA-CONFIG-TEMPLATE.yaml** | `core/templates/agents/dna-config-template.yaml` | v2.0.0 | Source configuration |
 
-### Requisitos de Rastreabilidade por Template
+### Traceability Requirements per Template
 
-| Template | Formato ^[FONTE] | Elementos Obrigatórios |
+| Template | ^[FONTE] format | Mandatory Elements |
 |----------|------------------|------------------------|
-| **SOUL.md** | `^[chunk_id]`, `^[insight_id]`, `^[RAIZ:path:linha]` | Toda afirmação factual |
-| **MEMORY.md** | Tabelas com colunas `chunk_id`, `PATH_RAIZ` | Todo insight/padrão |
-| **DNA-CONFIG.yaml** | Campos `insight_ids`, `chunk_ids`, `raiz` | Toda fonte primária |
+| **SOUL.md** | `^[chunk_id]`, `^[insight_id]`, `^[RAIZ:path:linha]` | Every factual statement |
+| **MEMORY.md** | Tables with `chunk_id`, `PATH_RAIZ` columns | Every insight/pattern |
+| **DNA-CONFIG.yaml** | Fields `insight_ids`, `chunk_ids`, `raiz` | Every primary source |
 
-### Exemplo de Aplicação: CFO (Template V2)
+### Application Example: CFO (Template V2)
 
 ```
 CFO SOUL.md v2.0
-├── ^[insight_id:OB002, chunk_199] em Unit Economics
-├── ^[insight_id:CM001, CM002] em Compensação
+├── ^[insight_id:OB002, chunk_199] in Unit Economics
+├── ^[insight_id:CM001, CM002] in Compensation
 ├── ^[RAIZ:/inbox/ALEX HORMOZI/.../HOW I SCALED MY SALES TEAM.txt]
-└── Sínteses marcadas como "opinião emergente do HÍBRIDO"
+└── Syntheses marked as "emergent opinion of the HYBRID"
 
 CFO MEMORY.md v2.0.0
-├── Tabelas com colunas chunk_id e PATH_RAIZ
-├── Fontes pendentes marcadas como *aguardando o pipeline de ingestão*
-└── Seção de VALIDAÇÃO DE RASTREABILIDADE
+├── Tables with chunk_id and PATH_RAIZ columns
+├── Pending sources marked as *awaiting the ingestion pipeline*
+└── TRACEABILITY VALIDATION section
 
 CFO DNA-CONFIG.yaml
-├── raiz: path para inbox por pessoa
-├── insight_ids: lista de insights relevantes
-└── materiais_fonte: lista de arquivos originais
+├── raiz: inbox path per person
+├── insight_ids: list of relevant insights
+└── materiais_fonte: list of original files
 ```
 
 ---
 
-*Este protocolo e INQUEBRAVEL. Nenhuma excecao e permitida.*
-*A integridade do sistema multi-agente depende da fidelidade as fontes.*
-*AGENT-INTEGRITY-PROTOCOL v1.2.1 - Atualizado com templates oficiais (2025-12-25)*
+*This protocol is UNBREAKABLE. No exception is allowed.*
+*The integrity of the multi-agent system depends on fidelity to the sources.*
+*AGENT-INTEGRITY-PROTOCOL v1.2.1 - Updated with official templates (2025-12-25)*
 
-*Versao: 1.2.0 | Data: 2025-12-25 | Navegação prévia obrigatória: 5 elementos (QUEM, QUANDO, ONDE, TEXTO, PATH)*
+*Version: 1.2.0 | Date: 2025-12-25 | Prior navigation mandatory: 5 elements (WHO, WHEN, WHERE, TEXT, PATH)*

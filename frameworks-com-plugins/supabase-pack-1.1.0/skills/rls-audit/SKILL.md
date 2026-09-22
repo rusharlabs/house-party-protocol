@@ -1,70 +1,70 @@
 ---
 name: rls-audit
-description: Audita RLS de um projeto Supabase de verdade — pg_policies por policy anon permissiva + get_advisors, não só a flag relrowsecurity
+description: Audits a Supabase project's RLS for real — pg_policies per permissive anon policy + get_advisors, not only the relrowsecurity flag
 ---
 
-> **Auto-Trigger:** Antes de declarar um schema Supabase "seguro", ao mexer em policies/RLS, ou em auditoria de segurança de dados
-> **Keywords:** "rls", "supabase seguro", "row level security", "anon leak", "pg_policies", "vazamento de dados", "advisors", "policy"
-> **Prioridade:** ALTA
-> **Tools:** MCP Supabase por capability — `execute_sql`, `get_advisors`, `list_tables` (o prefixo da ferramenta varia por instalação: pode ser `mcp__supabase__*`, `mcp__claude_ai_Supabase__*`, etc. — NUNCA hardcode o prefixo completo)
+> **Auto-Trigger:** Before declaring a Supabase schema "secure", when touching policies/RLS, or in a data security audit
+> **Keywords:** "rls", "secure supabase", "row level security", "anon leak", "pg_policies", "data leak", "advisors", "policy"
+> **Priority:** HIGH
+> **Tools:** MCP Supabase by capability — `execute_sql`, `get_advisors`, `list_tables` (the tool prefix varies per installation: it can be `mcp__supabase__*`, `mcp__claude_ai_Supabase__*`, etc. — NEVER hardcode the full prefix)
 
-# rls-audit — RLS de verdade (não a flag)
+# rls-audit — real RLS (not the flag)
 
-**Lição (18/jun):** `pg_class.relrowsecurity = true` **NÃO garante seguro** — o vazamento real vive em **policies `anon` permissivas** (`qual = true`). Auditar a flag só dá falso-conforto. Esta skill audita onde o leak mora.
+**Lesson (18 Jun):** `pg_class.relrowsecurity = true` does **NOT guarantee secure** — the real leak lives in **permissive `anon` policies** (`qual = true`). Auditing the flag only gives false comfort. This skill audits where the leak lives.
 
-## Contrato
+## Contract
 
-**ENTRADA:** nenhuma (conecta no projeto Supabase já vinculado ao MCP).
+**INPUT:** none (connects to the Supabase project already bound to the MCP).
 
-**SAÍDA:** veredicto por tabela — `(RLS on/off · policies anon · qual · sensível?) → bug / by-design / a-corrigir`. Nunca "seguro" só pela flag.
+**OUTPUT:** verdict per table — `(RLS on/off · anon policies · qual · sensitive?) → bug / by-design / to-fix`. Never "secure" by the flag alone.
 
-**EXIT CODES** (da chamada MCP):
+**EXIT CODES** (from the MCP call):
 
-| Exit | Significado |
+| Exit | Meaning |
 |---|---|
-| 0 | consulta rodou — resultado (mesmo que "0 leaks") é confiável |
-| erro `Unauthorized` | token do MCP Supabase ausente/expirado — **NÃO declare "seguro" nem "0 leaks"**; declare "não verificado" |
+| 0 | query ran — the result (even "0 leaks") is trustworthy |
+| `Unauthorized` error | Supabase MCP token missing/expired — do **NOT** declare "secure" or "0 leaks"; declare "not verified" |
 
-**ESTADO QUE TOCA:**
+**STATE IT TOUCHES:**
 
-| Recurso | Lê/Escreve | Propósito |
+| Resource | Reads/Writes | Purpose |
 |---|---|---|
-| `pg_policies` (via `execute_sql`) | Lê (read-only) | policies anon/public permissivas |
-| `get_advisors(type="security")` | Lê (read-only) | RLS-disabled, SECURITY DEFINER views |
+| `pg_policies` (via `execute_sql`) | Reads (read-only) | permissive anon/public policies |
+| `get_advisors(type="security")` | Reads (read-only) | RLS-disabled, SECURITY DEFINER views |
 
-## Processo
-1. **Advisors primeiro:** `get_advisors(type="security")` — pega RLS-disabled, policies abertas, SECURITY DEFINER views, etc.
-2. **Policies anon permissivas (o ponto cego):**
+## Process
+1. **Advisors first:** `get_advisors(type="security")` — catches RLS-disabled, open policies, SECURITY DEFINER views, etc.
+2. **Permissive anon policies (the blind spot):**
    ```sql
    select schemaname, tablename, policyname, roles, cmd, qual
    from pg_policies
    where 'anon' = any(roles) or roles = '{public}'
    order by tablename;
    ```
-   Sinal de leak: `qual = true` (ou nulo) numa policy `SELECT` para `anon`/`public` → **qualquer um lê a tabela inteira**. Cruze com dados sensíveis.
-3. **Tabelas sem RLS:** `select relname from pg_class where relkind='r' and not relrowsecurity and relnamespace='public'::regnamespace;` — RLS off = porta aberta.
-4. **GRANTs amplos:** procurar `GRANT ALL ... TO anon/public` e `ALTER DEFAULT PRIVILEGES` permissivos.
-5. **Veredicto honesto:** liste cada tabela com (RLS on/off · policies anon · qual · sensível?) → bug / by-design (ex: `shared_state` público intencional) / a-corrigir. **Não declare "seguro" só porque a flag está on.**
+   Leak signal: `qual = true` (or null) in a `SELECT` policy for `anon`/`public` → **anyone reads the whole table**. Cross-check against sensitive data.
+3. **Tables without RLS:** `select relname from pg_class where relkind='r' and not relrowsecurity and relnamespace='public'::regnamespace;` — RLS off = open door.
+4. **Broad GRANTs:** look for `GRANT ALL ... TO anon/public` and permissive `ALTER DEFAULT PRIVILEGES`.
+5. **Honest verdict:** list each table with (RLS on/off · anon policies · qual · sensitive?) → bug / by-design (e.g. an intentionally public `shared_state`) / to-fix. **Do not declare "secure" just because the flag is on.**
 
-## Quando NÃO Ativar
-- Projeto sem Supabase / sem MCP Supabase conectado.
-- Mudança que não toca dados/policies.
+## When NOT to Activate
+- Project without Supabase / without a connected Supabase MCP.
+- A change that does not touch data/policies.
 
-## Exemplos executados
+## Executed examples
 
 ```console
 $ mcp__supabase__get_advisors(type="security")
 {"error":{"name":"Error","message":"Unauthorized. Please provide a valid access token to the MCP server via the --access-token flag or SUPABASE_ACCESS_TOKEN."}}
 ```
-<!-- executado: 2026-07-10 · exit=1 -->
-(token do MCP ausente nesta sessão — o passo 5 se aplica: NÃO declarar "seguro", declarar "não verificado, token ausente".)
+<!-- executed: 2026-07-10 · exit=1 -->
+(MCP token missing in this session — step 5 applies: do NOT declare "secure", declare "not verified, token missing".)
 
 ```console
 $ mcp__supabase__list_tables(schemas=["public"], verbose=false)
 {"error":{"name":"Error","message":"Unauthorized. Please provide a valid access token to the MCP server via the --access-token flag or SUPABASE_ACCESS_TOKEN."}}
 ```
-<!-- executado: 2026-07-10 · exit=1 -->
-(2º erro idêntico confirma que é o token — não uma falha pontual da 1ª chamada.)
+<!-- executed: 2026-07-10 · exit=1 -->
+(a 2nd identical error confirms it is the token — not a one-off failure of the 1st call.)
 
 ```console
 $ python -c "
@@ -82,14 +82,14 @@ LEAK: shared_state - qual= true
 LEAK: billing_customers - qual= true
 2 / 3 tabelas com leak anon-permissivo
 ```
-<!-- executado: 2026-07-10 · exit=0 -->
-(a LÓGICA de detecção do passo 2 (qual=true numa policy anon SELECT = leak) validada localmente — independente do MCP estar autenticado; `shared_state` pode ser by-design, `billing_customers` não.)
+<!-- executed: 2026-07-10 · exit=0 -->
+(the detection LOGIC of step 2 (qual=true in an anon SELECT policy = leak) validated locally — independent of the MCP being authenticated; `shared_state` may be by-design, `billing_customers` is not.)
 
-## Prova
+## Proof
 
 ```bash
 python -c "policies=[{'roles':['anon'],'cmd':'SELECT','qual':'true'}]; assert any('anon' in p['roles'] and p['qual']=='true' for p in policies)"
 ```
 
-## Veja também
-`drift_check.py` (intenção×realidade), o incidente registrado na memória do projeto (RLS leak fechado 18/jun: 8 `*_anon_read qual=true` dropadas).
+## See also
+`drift_check.py` (intent×reality), the incident recorded in the project's memory (RLS leak closed 18 Jun: 8 `*_anon_read qual=true` policies dropped).

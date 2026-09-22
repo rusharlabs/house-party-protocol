@@ -1,77 +1,77 @@
 ---
 name: pre-clear
-description: Antes de um /clear, consolida o LONGO PRAZO (doc-rollup condicional — como chegamos até aqui) e o CURTO PRAZO (handoff — o que vem depois), depois renderiza o BOOT BUNDLE.
+description: Before a /clear, consolidates the LONG TERM (conditional doc-rollup — how we got here) and the SHORT TERM (handoff — what comes next), then renders the BOOT BUNDLE.
 ---
 
-> **Auto-Trigger:** Quando uma wave/feature fecha, o contexto está crescendo, ou o operador sinaliza que vai compactar/limpar a sessão.
-> **Keywords:** "pre-clear", "vou dar clear", "compactar", "antes do clear", "boot da próxima", "fechar sessão", "preparar próxima sessão"
-> **Prioridade:** ALTA
+> **Auto-Trigger:** When a wave/feature closes, the context is growing, or the operator signals they are about to compact/clear the session.
+> **Keywords:** "pre-clear", "about to clear", "compact", "before the clear", "next session boot", "close session", "prepare next session"
+> **Priority:** HIGH
 > **Tools:** Read, Write, Bash
 
-## Quando NÃO Ativar
-- Mid-task: a wave/feature não terminou (termine primeiro — nunca consolidar pela metade).
-- Já existe um `/pre-clear` instalado no projeto-alvo (ex.: casa-específico, consolidando `00-STATE.md`/memória própria) — **o instalado VENCE**; esta versão do kit é só para projetos sem um `/pre-clear` próprio. O `kit_assembler` verifica colisão nome+keywords antes de instalar.
-- Sessão read-only trivial sem decisão/mudança nova (nada a consolidar) — nem o rollup nem o handoff disparam; registre isso em vez de forçar uma entrada vazia.
-- Não confundir com a skill `doc-rollup`, que este fluxo CHAMA como passo 1 — `doc-rollup` sozinha só cobre o longo prazo (histórico); `pre-clear` orquestra o longo prazo + o curto prazo (handoff) + o boot bundle final.
+## When NOT to Activate
+- Mid-task: the wave/feature has not finished (finish first — never consolidate halfway).
+- A `/pre-clear` is already installed in the target project (e.g. house-specific, consolidating `00-STATE.md`/its own memory) — **the installed one WINS**; this module's version is only for projects without their own `/pre-clear`. The `kit_assembler` checks for name+keywords collision before installing.
+- Trivial read-only session with no new decision/change (nothing to consolidate) — neither the rollup nor the handoff fires; record that instead of forcing an empty entry.
+- Do not confuse with the `doc-rollup` skill, which this flow CALLS as step 1 — `doc-rollup` alone covers only the long term (history); `pre-clear` orchestrates the long term + the short term (handoff) + the final boot bundle.
 
-## Contrato
+## Contract
 
-**ENTRADA:** o modelo preenche mentalmente (a) o payload de rollup (resumo/shipments/métricas/decisões/aprendizados, se algo significativo fechou) e (b) o schema do handoff (resumo, números com `re_derive_cmd`, decisões, gates abertos, próximo passo com `verify_first_cmd`) e passa cada um via stdin ao comando correspondente.
+**INPUT:** the model mentally fills in (a) the rollup payload (summary/shipments/metrics/decisions/lessons, if something significant closed) and (b) the handoff schema (summary, numbers with `re_derive_cmd`, decisions, open gates, next step with `verify_first_cmd`) and passes each one via stdin to the corresponding command.
 
-**SAÍDA:** (1, condicional) docs de histórico atualizados via `doc_rollup.py`; (2) `HANDOFF-CURRENT-<lane>.json` gravado + evento `written` no ledger; (3) BOOT BUNDLE renderizado no chat.
+**OUTPUT:** (1, conditional) history docs updated via `doc_rollup.py`; (2) `HANDOFF-CURRENT-<lane>.json` written + `written` event in the ledger; (3) BOOT BUNDLE rendered in the chat.
 
-**EXIT CODES** (de `_handoff_io.py write --stdin` — o passo final e obrigatório):
+**EXIT CODES** (from `_handoff_io.py write --stdin` — the final, mandatory step):
 
-| Exit | Significado |
+| Exit | Meaning |
 |---|---|
-| 0 | handoff válido, gravado |
-| 1 | rejeitado (segredo detectado, `verify_first_cmd`/`re_derive_cmd` ausente, schema inválido) |
-| 2 | uso inválido (JSON malformado no stdin) |
+| 0 | valid handoff, written |
+| 1 | rejected (secret detected, `verify_first_cmd`/`re_derive_cmd` missing, invalid schema) |
+| 2 | invalid usage (malformed JSON on stdin) |
 
-**ESTADO QUE TOCA:**
+**STATE IT TOUCHES:**
 
-| Arquivo | Lê/Escreve | Propósito |
+| File | Reads/Writes | Purpose |
 |---|---|---|
-| `rollup.yaml` + alvos de histórico (via `doc_rollup.py`) | Lê+Escreve (condicional) | longo prazo — como chegamos até aqui |
-| `.claude/handoff/HANDOFF-CURRENT-<lane>.json` | Escreve (atômico) | curto prazo — o handoff vivo desta lane |
-| `.claude/handoff/HANDOFF-LEDGER.jsonl` | Escreve (append) | evento `written` |
-| `schemas/handoff-v1.1.schema.json` | Lê (implícito via validação) | o contrato do handoff |
+| `rollup.yaml` + history targets (via `doc_rollup.py`) | Reads+Writes (conditional) | long term — how we got here |
+| `.claude/handoff/HANDOFF-CURRENT-<lane>.json` | Writes (atomic) | short term — this lane's live handoff |
+| `.claude/handoff/HANDOFF-LEDGER.jsonl` | Writes (append) | `written` event |
+| `schemas/handoff-v1.1.schema.json` | Reads (implicitly via validation) | the handoff contract |
 
-## Processo
+## Process
 
-1. **Checagem de significância:** algo fechou nesta sessão que merece registro de longo prazo (feature, decisão, aprendizado)? Se NÃO, pule os passos 2-3 e registre explicitamente por que pulou (ex.: "sessão de exploração pura, sem rollup"). Nunca force uma entrada vazia só para preencher o passo.
-2. **Se significativo, rode o doc-rollup primeiro** (longo prazo, ANTES do handoff — assim a árvore de arquivos que o handoff descreve já reflete os docs atualizados):
+1. **Significance check:** did something close in this session that deserves a long-term record (feature, decision, lesson)? If NOT, skip steps 2-3 and record explicitly why you skipped (e.g. "pure exploration session, no rollup"). Never force an empty entry just to fill the step.
+2. **If significant, run the doc-rollup first** (long term, BEFORE the handoff — so the file tree the handoff describes already reflects the updated docs):
    ```bash
    echo '<payload-rollup>' | python ${CLAUDE_PLUGIN_ROOT}/scripts/doc_rollup.py plan  --stdin --config rollup.yaml
    echo '<payload-rollup>' | python ${CLAUDE_PLUGIN_ROOT}/scripts/doc_rollup.py apply --stdin --config rollup.yaml
    ```
-   Leia o relatório — `skipped-collision`/`skipped-passive`/`applied:stamp-degrade` são guardrails funcionando, não erros (ver `doc-rollup` SKILL.md).
-3. **Monte o JSON do handoff** (curto prazo) — só o modelo sabe decisões/gates/próximo-passo reais desta sessão. Campos mínimos: `session.lane_id`, `estado.resumo`, `git` (head/branch/dirty/untracked — rode `git status --porcelain` e `git rev-parse --short HEAD` primeiro), `proximo_passo[].verify_first_cmd`, `valid_until`.
-4. **Grave via o comando** (nunca escreva o arquivo à mão — a validação de segredo/LC-1/LC-4 só roda pelo comando):
+   Read the report — `skipped-collision`/`skipped-passive`/`applied:stamp-degrade` are guardrails working, not errors (see the `doc-rollup` SKILL.md).
+3. **Assemble the handoff JSON** (short term) — only the model knows this session's real decisions/gates/next step. Minimum fields: `session.lane_id`, `estado.resumo`, `git` (head/branch/dirty/untracked — run `git status --porcelain` and `git rev-parse --short HEAD` first), `proximo_passo[].verify_first_cmd`, `valid_until`.
+4. **Write via the command** (never write the file by hand — the secret/LC-1/LC-4 validation only runs through the command):
    ```bash
    echo '<json>' | python ${CLAUDE_PLUGIN_ROOT}/hooks/_handoff_io.py write --stdin
    ```
-5. **Se rejeitado (exit 1):** leia os motivos impressos, corrija o JSON (não remova o campo exigido — preencha-o de verdade), tente de novo.
-6. **Renderize o BOOT BUNDLE** e exiba no chat (nunca só em arquivo):
+5. **If rejected (exit 1):** read the printed reasons, fix the JSON (do not remove the required field — fill it in for real), try again.
+6. **Render the BOOT BUNDLE** and show it in the chat (never only in a file):
    ```bash
    python ${CLAUDE_PLUGIN_ROOT}/hooks/_handoff_io.py render --lane <lane>
    ```
-7. **Avise explicitamente:** "Pronto para /clear — bloco acima é o que a próxima sessão recebe." + se o passo 1-2 rodou, mencione o que foi registrado no histórico (ou por que pulou). Nunca sugerir `/clear` sem o bloco montado e exibido.
+7. **Announce explicitly:** "Ready for /clear — the block above is what the next session receives." + if steps 1-2 ran, mention what was recorded in the history (or why it was skipped). Never suggest `/clear` without the block assembled and displayed.
 
-## Exemplos executados
+## Executed examples
 
 ```console
 $ echo '{"schema_version":"1.1","handoff_id":"HO-20260710-1600-solo","created_at":"2026-07-10T16:00:00-03:00","trigger":"manual","quality":"full","session":{"session_id":"s1","lane_id":"solo"},"estado":{"resumo":"fechei a FASE 5","numeros":[]},"git":{"head":"637561f5","branch":"feat/codex-migration","dirty":true,"untracked":5},"proximo_passo":[{"ordem":1,"descricao":"comecar FASE 6","verify_first_cmd":"test -d lane-kit"}],"valid_until":"2026-07-17T00:00:00-03:00"}' | python hooks/_handoff_io.py write --stdin
 _handoff_io: escrito em .claude/handoff/HANDOFF-CURRENT-solo.json
 ```
-<!-- executado: 2026-07-10 · exit=0 -->
+<!-- executed: 2026-07-10 · exit=0 -->
 
 ```console
 $ echo '{"schema_version":"1.1","handoff_id":"HO-x","created_at":"2026-07-10T16:00:00-03:00","trigger":"manual","quality":"full","session":{"session_id":"s1","lane_id":"solo"},"estado":{"resumo":"x"},"git":{"head":"a","branch":"m","dirty":false,"untracked":0},"proximo_passo":[{"ordem":1,"descricao":"sem verify"}],"valid_until":"2026-07-17T00:00:00-03:00"}' | python hooks/_handoff_io.py write --stdin
   [REJEITADO] proximo_passo[0] sem verify_first_cmd (LC-4: próximo passo sem verificação de idempotência)
 ```
-<!-- executado: 2026-07-10 · exit=1 -->
-(handoff sem `verify_first_cmd` é REJEITADO — a próxima sessão nunca herda um passo sem forma de checar se já foi feito.)
+<!-- executed: 2026-07-10 · exit=1 -->
+(a handoff without `verify_first_cmd` is REJECTED — the next session never inherits a step with no way to check whether it was already done.)
 
 ```console
 $ python hooks/_handoff_io.py render --lane solo
@@ -82,11 +82,11 @@ PRÓXIMO PASSO 1: comecar FASE 6
   → ANTES DE EXECUTAR, RODE: test -d lane-kit (se já feito: pular, registrar)
 Arquivo completo: .claude/handoff/HANDOFF-CURRENT-solo.json
 ```
-<!-- executado: 2026-07-10 · exit=0 -->
+<!-- executed: 2026-07-10 · exit=0 -->
 
-(exemplos do passo de rollup condicional: ver `doc-rollup` SKILL.md — os mesmos payloads/exit-codes se aplicam quando chamado a partir daqui.)
+(examples of the conditional rollup step: see the `doc-rollup` SKILL.md — the same payloads/exit codes apply when called from here.)
 
-## Prova
+## Proof
 
 ```bash
 python ${CLAUDE_PLUGIN_ROOT}/hooks/_handoff_io.py --self-test

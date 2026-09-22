@@ -3,7 +3,7 @@
   "name": "agent-framework-wizard",
   "displayName": "Agent Framework Wizard",
   "version": "1.1.1",
-  "description": "Wizard de 6 passos (check ambiente -> configurar -> validar -> gerar) que faz o scaffold de um projeto novo: gera operator-profile.yaml (escada de verificacao R0-R4) + templates do TEMPLATE-SET escolhido, nunca sobrescrevendo customizacao sem --force.",
+  "description": "6-step wizard (check environment -> configure -> validate -> generate) that scaffolds a new project: generates operator-profile.yaml (verification ladder R0-R4) + the templates of the chosen TEMPLATE-SET, never overwriting a customization without --force.",
   "author": { "name": "Max Parisi", "url": "https://rusharlabs.com" },
   "license": "MIT",
   "keywords": ["wizard", "scaffold", "setup", "operator-profile", "agent-framework", "template"]

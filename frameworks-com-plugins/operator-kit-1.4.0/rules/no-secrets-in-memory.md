@@ -2,7 +2,7 @@
 
 > **Auto-Trigger:** memory, credentials, API key, token, webhook
 > **Keywords:** "memory", "credentials", "API key", "secret", "token"
-> **Prioridade:** CRITICA
+> **Priority:** CRITICAL
 
 ## Rule
 

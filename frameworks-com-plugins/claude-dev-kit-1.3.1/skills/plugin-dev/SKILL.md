@@ -1,92 +1,92 @@
 ---
 name: plugin-dev
-description: Empacota skills/hooks/commands num plugin Claude Code instalável — anatomia real (.claude-plugin/plugin.json + hooks/hooks.json + ${CLAUDE_PLUGIN_ROOT}), sem framework/build-step. Use quando o usuário quer criar plugin, empacotar uma extensão, ou distribuir um conjunto de skills/hooks.
+description: Packages skills/hooks/commands into an installable Claude Code plugin — the real anatomy (.claude-plugin/plugin.json + hooks/hooks.json + ${CLAUDE_PLUGIN_ROOT}), no framework/build step. Use when the user wants to create a plugin, package an extension, or distribute a set of skills/hooks.
 ---
 
-> **Auto-Trigger:** Quando o usuário quiser criar um plugin Claude Code, empacotar skills/hooks para distribuição, ou perguntar "como faço um plugin instalável".
-> **Keywords:** "plugin", "criar plugin", "empacotar plugin", "claude-plugin", "marketplace", "plugin.json", "distribuir skill"
-> **Prioridade:** ALTA
+> **Auto-Trigger:** When the user wants to create a Claude Code plugin, package skills/hooks for distribution, or asks "how do I make an installable plugin".
+> **Keywords:** "plugin", "create plugin", "package plugin", "claude-plugin", "marketplace", "plugin.json", "distribute skill"
+> **Priority:** HIGH
 > **Tools:** Read, Write, Edit, Glob, Grep, Bash
 
-## Quando NÃO Ativar
-- Uso de um plugin já instalado sem modificação, ou debugging de um plugin existente (leia os arquivos direto).
-- **Criar a SKILL ou o HOOK em si** — use `skill-writer`/`hookify` deste mesmo kit primeiro; `plugin-dev` é só a EMBALAGEM que agrupa o que já existe, não cria conteúdo novo.
-- Não confundir com um pacote npm/TypeScript — plugins Claude Code **não têm build step, não têm `package.json`, não têm `src/index.ts`**. É um diretório com manifests JSON + arquivos que o Claude Code já sabe interpretar (SKILL.md, hooks Python, commands .md).
+## When NOT to Activate
+- Using an already installed plugin without modification, or debugging an existing plugin (read the files directly).
+- **Creating the SKILL or the HOOK itself** — use `skill-writer`/`hookify` from this same module first; `plugin-dev` is only the PACKAGING that groups what already exists, it creates no new content.
+- Do not confuse with an npm/TypeScript package — Claude Code plugins **have no build step, no `package.json`, no `src/index.ts`**. It is a directory with JSON manifests + files Claude Code already knows how to interpret (SKILL.md, Python hooks, .md commands).
 
-## Contrato
+## Contract
 
-**ENTRADA:** um conjunto de skills/hooks/commands já criados (ou a criar) que devem virar um plugin instalável.
+**INPUT:** a set of already created (or to be created) skills/hooks/commands that must become an installable plugin.
 
-**SAÍDA:** um diretório `<plugin-name>/` com `.claude-plugin/plugin.json` válido (+ `hooks/hooks.json` se houver hooks).
+**OUTPUT:** a `<plugin-name>/` directory with a valid `.claude-plugin/plugin.json` (+ `hooks/hooks.json` if there are hooks).
 
-**EXIT CODES** (do validador de manifest usado na seção Prova):
+**EXIT CODES** (from the manifest validator used in the Proof section):
 
-| Exit | Significado |
+| Exit | Meaning |
 |---|---|
-| 0 | manifest com todos os campos obrigatórios |
-| 1 | campo obrigatório ausente |
+| 0 | manifest with all required fields |
+| 1 | required field missing |
 
-**ESTADO QUE TOCA:**
+**STATE IT TOUCHES:**
 
-| Recurso | Lê/Escreve | Propósito |
+| Resource | Reads/Writes | Purpose |
 |---|---|---|
-| `<plugin>/.claude-plugin/plugin.json` | Escreve | manifesto do plugin (nome, versão, hooks, commands) |
-| `<plugin>/hooks/hooks.json` | Escreve (se houver hooks) | registro declarativo dos hooks — ver skill `hookify` |
-| `<plugin>/skills/*/SKILL.md` | Lê (já existentes) | as skills que o plugin empacota — ver skill `skill-writer` |
-| `marketplace.json` (se for distribuir >1 plugin junto) | Escreve | índice de vários plugins — `/plugin marketplace add` lê este arquivo |
+| `<plugin>/.claude-plugin/plugin.json` | Writes | plugin manifest (name, version, hooks, commands) |
+| `<plugin>/hooks/hooks.json` | Writes (if there are hooks) | declarative hook registration — see the `hookify` skill |
+| `<plugin>/skills/*/SKILL.md` | Reads (already existing) | the skills the plugin packages — see the `skill-writer` skill |
+| `marketplace.json` (if distributing >1 plugin together) | Writes | index of several plugins — `/plugin marketplace add` reads this file |
 
-## Anatomia REAL de um plugin (não é TypeScript/npm)
+## REAL anatomy of a plugin (it is not TypeScript/npm)
 
 ```
 meu-plugin/
 ├── .claude-plugin/
-│   └── plugin.json        # manifesto — OBRIGATÓRIO
+│   └── plugin.json        # manifest — REQUIRED
 ├── hooks/
-│   ├── hooks.json         # registro declarativo dos hooks (se houver)
-│   └── meu_hook.py        # o(s) script(s) real(is) — ver skill hookify
+│   ├── hooks.json         # declarative hook registration (if any)
+│   └── meu_hook.py        # the actual script(s) — see the hookify skill
 ├── skills/
 │   └── minha-skill/
-│       └── SKILL.md       # ver skill skill-writer
-├── commands/               # opcional — slash commands custom
+│       └── SKILL.md       # see the skill-writer skill
+├── commands/               # optional — custom slash commands
 │   └── meu-comando.md
-├── scripts/                # opcional — CLIs auxiliares
-└── README.md               # instalação + uso
+├── scripts/                # optional — helper CLIs
+└── README.md               # install + usage
 ```
 
-Nada de `src/`, `package.json`, `*.test.ts`, build step. Se o plugin tem lógica em Python (hooks/scripts), ela roda direto via `python arquivo.py` — sem transpilação, sem bundler.
+No `src/`, `package.json`, `*.test.ts`, build step. If the plugin has Python logic (hooks/scripts), it runs directly via `python arquivo.py` — no transpilation, no bundler.
 
 ## `${CLAUDE_PLUGIN_ROOT}`
 
-Toda referência de comando dentro de `hooks.json` deve usar `${CLAUDE_PLUGIN_ROOT}` em vez de path relativo cru — o Claude Code resolve essa variável para a raiz real do plugin NO MOMENTO DA INSTALAÇÃO, então funciona não importa onde o usuário instalou (ele pode ter clonado num path totalmente diferente do seu).
+Every command reference inside `hooks.json` must use `${CLAUDE_PLUGIN_ROOT}` instead of a raw relative path — Claude Code resolves that variable to the plugin's real root AT INSTALL TIME, so it works no matter where the user installed it (they may have cloned it to a path completely different from yours).
 
 ```jsonc
-// ERRADO — quebra assim que o plugin é instalado num path diferente
+// WRONG — breaks as soon as the plugin is installed at a different path
 { "type": "command", "command": "python meu-plugin/hooks/meu_hook.py" }
 
-// CORRETO
+// CORRECT
 { "type": "command", "command": "python \"${CLAUDE_PLUGIN_ROOT}/hooks/meu_hook.py\"", "timeout": 30 }
 ```
 
-## `.claude-plugin/plugin.json` — campos reais (exemplo de um kit deste marketplace)
+## `.claude-plugin/plugin.json` — real fields (example from a module in this marketplace)
 
 ```json
 {
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "meu-plugin",
-  "displayName": "Meu Plugin",
+  "displayName": "My Plugin",
   "version": "1.0.0",
-  "description": "O que o plugin faz + quando usar.",
-  "author": { "name": "Seu Nome" },
+  "description": "What the plugin does + when to use it.",
+  "author": { "name": "Your Name" },
   "license": "MIT",
-  "keywords": ["categoria1", "categoria2"],
+  "keywords": ["category1", "category2"],
   "hooks": "./hooks/hooks.json",
   "commands": "./commands"
 }
 ```
 
-`hooks` e `commands` são OPCIONAIS — omita se o plugin só traz skills.
+`hooks` and `commands` are OPTIONAL — omit them if the plugin only ships skills.
 
-## `hooks/hooks.json` — registro declarativo (ver skill `hookify` p/ o script em si)
+## `hooks/hooks.json` — declarative registration (see the `hookify` skill for the script itself)
 
 ```json
 {
@@ -100,44 +100,44 @@ Toda referência de comando dentro de `hooks.json` deve usar `${CLAUDE_PLUGIN_RO
 }
 ```
 
-## Limitação real: `statusLine` NÃO vai no plugin
+## Real limitation: `statusLine` does NOT go in the plugin
 
-O Claude Code não aceita `statusLine` dentro de `plugin.json`/`hooks.json` — tem que ir manualmente em `.claude/settings.json`/`settings.local.json` do projeto-alvo, mesmo que o plugin traga uma statusline pronta (`statusline/statusline.py --statusline`). Documente esse passo manual no README do plugin; não prometa "statusLine auto-instalada".
+Claude Code does not accept `statusLine` inside `plugin.json`/`hooks.json` — it has to go manually into the target project's `.claude/settings.json`/`settings.local.json`, even if the plugin ships a ready statusline (`statusline/statusline.py --statusline`). Document that manual step in the plugin's README; do not promise an "auto-installed statusLine".
 
-## Instalar (1 plugin) ou distribuir (vários num marketplace)
+## Install (1 plugin) or distribute (several in a marketplace)
 
 ```bash
-# instalar 1 plugin a partir de um diretório local
+# install 1 plugin from a local directory
 /plugin marketplace add .
 /plugin install meu-plugin@<nome-do-marketplace>
 ```
 
-Para distribuir VÁRIOS plugins juntos, crie um `marketplace.json` na raiz do bundle:
+To distribute SEVERAL plugins together, create a `marketplace.json` at the root of the bundle:
 
 ```json
 {
   "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
   "name": "meu-marketplace",
-  "description": "Bundle de plugins",
+  "description": "Plugin bundle",
   "version": "1.0.0",
-  "owner": { "name": "Seu Nome" },
+  "owner": { "name": "Your Name" },
   "plugins": [
-    { "name": "meu-plugin", "displayName": "Meu Plugin", "source": "./meu-plugin",
+    { "name": "meu-plugin", "displayName": "My Plugin", "source": "./meu-plugin",
       "description": "...", "version": "1.0.0", "category": "productivity", "keywords": ["..."] }
   ]
 }
 ```
 
-## Processo
+## Process
 
-1. **Crie/reúna** as skills (`skill-writer`) e hooks (`hookify`) que o plugin vai empacotar.
-2. **Monte `.claude-plugin/plugin.json`** com os campos obrigatórios (`name`, `version`, `description`) + `hooks`/`commands` se aplicável.
-3. **Se houver hooks**, monte `hooks/hooks.json` referenciando cada script via `${CLAUDE_PLUGIN_ROOT}`.
-4. **Valide o manifest** (ver Prova) antes de anunciar como pronto.
-5. **Documente a instalação** no README (`/plugin marketplace add` + `/plugin install`), incluindo qualquer passo MANUAL (ex.: statusLine).
-6. **Teste a instalação de verdade** num diretório/projeto separado, não só leia o JSON.
+1. **Create/gather** the skills (`skill-writer`) and hooks (`hookify`) the plugin will package.
+2. **Build `.claude-plugin/plugin.json`** with the required fields (`name`, `version`, `description`) + `hooks`/`commands` if applicable.
+3. **If there are hooks**, build `hooks/hooks.json` referencing each script via `${CLAUDE_PLUGIN_ROOT}`.
+4. **Validate the manifest** (see Proof) before announcing it as ready.
+5. **Document the installation** in the README (`/plugin marketplace add` + `/plugin install`), including any MANUAL step (e.g. statusLine).
+6. **Actually test the installation** in a separate directory/project; do not just read the JSON.
 
-## Exemplos executados
+## Executed examples
 
 ```console
 $ python -c "
@@ -152,7 +152,7 @@ print('plugin.json valido: campos obrigatorios presentes')
 "
 plugin.json valido: campos obrigatorios presentes
 ```
-<!-- executado: 2026-07-10 · exit=0 -->
+<!-- executed: 2026-07-10 · exit=0 -->
 
 ```console
 $ python -c "
@@ -166,24 +166,24 @@ import sys; sys.exit(1 if missing else 0)
 "
 plugin.json invalido detectado: ['version', 'description']
 ```
-<!-- executado: 2026-07-10 · exit=1 -->
-(manifest sem `version`/`description` é rejeitado ANTES de tentar instalar — falha cedo, não em produção.)
+<!-- executed: 2026-07-10 · exit=1 -->
+(a manifest without `version`/`description` is rejected BEFORE attempting to install — fails early, not in production.)
 
 ```console
 $ mkdir -p meu-plugin/.claude-plugin meu-plugin/hooks && ls meu-plugin
 .claude-plugin  hooks
 ```
-<!-- executado: 2026-07-10 · exit=0 -->
-(passo 2-3 do processo — esqueleto de diretório antes de escrever os manifests.)
+<!-- executed: 2026-07-10 · exit=0 -->
+(steps 2-3 of the process — directory skeleton before writing the manifests.)
 
 ## Anti-patterns
 
-- ❌ `src/index.ts` + `package.json` + build step — plugins Claude Code não são pacotes npm; são diretórios que o Claude Code já sabe ler.
-- ❌ Path relativo cru em `hooks.json` (`"command": "hooks/meu_hook.py"`) — quebra assim que instalado num path diferente do seu. Sempre `${CLAUDE_PLUGIN_ROOT}`.
-- ❌ Prometer `statusLine` "auto-instalada pelo plugin" — é limitação real do Claude Code; documente o passo manual.
-- ❌ Anunciar o plugin como pronto sem testar a instalação de verdade (só ler o JSON não prova que instala).
+- ❌ `src/index.ts` + `package.json` + build step — Claude Code plugins are not npm packages; they are directories Claude Code already knows how to read.
+- ❌ Raw relative path in `hooks.json` (`"command": "hooks/meu_hook.py"`) — breaks as soon as it is installed at a path different from yours. Always `${CLAUDE_PLUGIN_ROOT}`.
+- ❌ Promising a `statusLine` "auto-installed by the plugin" — it is a real Claude Code limitation; document the manual step.
+- ❌ Announcing the plugin as ready without actually testing the installation (only reading the JSON does not prove it installs).
 
-## Prova
+## Proof
 
 ```bash
 python -c "

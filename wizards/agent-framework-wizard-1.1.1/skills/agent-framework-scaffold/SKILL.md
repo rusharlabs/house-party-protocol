@@ -1,50 +1,50 @@
 ---
 name: agent-framework-scaffold
-description: Roda o wizard de 6 passos que gera o esqueleto de um projeto novo (operator-profile.yaml + templates do TEMPLATE-SET escolhidos) — método genérico (check ambiente → configurar → validar → gerar), reescrito do zero.
+description: Runs the 6-step wizard that generates the skeleton of a new project (operator-profile.yaml + the chosen TEMPLATE-SET templates) — generic method (check environment → configure → validate → generate), rewritten from scratch.
 ---
 
-> **Auto-Trigger:** Quando o usuário quer começar um projeto novo com a estrutura do operator-kit/continuity-kit, ou pede "monta o esqueleto", "cria o profile inicial", "wizard de setup".
-> **Keywords:** "scaffold", "wizard", "projeto novo", "esqueleto", "operator-profile inicial", "setup wizard", "montar estrutura"
-> **Prioridade:** MÉDIA
+> **Auto-Trigger:** When the user wants to start a new project with the operator-kit/continuity-kit structure, or asks to "build the skeleton", "create the initial profile", "setup wizard".
+> **Keywords:** "scaffold", "wizard", "new project", "skeleton", "initial operator-profile", "setup wizard", "build the structure"
+> **Priority:** MEDIUM
 > **Tools:** Bash, Read, Write
 
-## Quando NÃO Ativar
-- Projeto já tem `operator-profile.yaml` — rode o wizard só se quiser regenerar do zero (ele não faz merge, sobrescreve os arquivos que gera).
-- Precisa reproduzir alguma automação COMERCIAL de terceiro (ex.: instalador de produto pago) — este wizard é MÉTODO genérico de scaffold, não clone de nenhuma ferramenta específica.
+## When NOT to Activate
+- The project already has `operator-profile.yaml` — run the wizard only if you want to regenerate from scratch (it does not merge; it overwrites the files it generates).
+- You need to reproduce some third-party COMMERCIAL automation (e.g. a paid product's installer) — this wizard is a generic scaffold METHOD, not a clone of any specific tool.
 
-## Contrato
+## Contract
 
-**ENTRADA:** `--out <dir>` (destino) + `--project-name` (opcional, default "agente-teste" em `--demo`).
+**INPUT:** `--out <dir>` (destination) + `--project-name` (optional, default "agente-teste" in `--demo`).
 
-**SAÍDA:** `operator-profile.yaml` + templates do TEMPLATE-SET escolhidos, instanciados com `{{project_name}}` substituído, em `<out>/docs/plans/execucao/`.
+**OUTPUT:** `operator-profile.yaml` + the chosen TEMPLATE-SET templates, instantiated with `{{project_name}}` substituted, in `<out>/docs/plans/execucao/`.
 
 **EXIT CODES:**
 
-| Exit | Significado |
+| Exit | Meaning |
 |---|---|
-| 0 | scaffold gerado (ou já estava idêntico — no-op) |
-| 2 | pré-requisito ausente (Python <3.9, git ausente, PyYAML ausente) ou config inválida |
+| 0 | scaffold generated (or already identical — no-op) |
+| 2 | missing prerequisite (Python <3.9, git missing, PyYAML missing) or invalid config |
 
-**ESTADO QUE TOCA:**
+**STATE IT TOUCHES:**
 
-| Recurso | Lê/Escreve | Propósito |
+| Resource | Reads/Writes | Purpose |
 |---|---|---|
-| `templates/*.template.md` (bundled) | Lê | fonte dos templates a instanciar |
-| `<out>/operator-profile.yaml` | Escreve | perfil gerado (escada R0-R4 + nome do projeto) |
-| `<out>/docs/plans/execucao/*.md` | Escreve | templates instanciados |
+| `templates/*.template.md` (bundled) | Reads | source of the templates to instantiate |
+| `<out>/operator-profile.yaml` | Writes | generated profile (R0-R4 ladder + project name) |
+| `<out>/docs/plans/execucao/*.md` | Writes | instantiated templates |
 
-## Processo
-1. **Rode o wizard** (modo `--demo` = não-interativo, defaults sensatos):
+## Process
+1. **Run the wizard** (`--demo` mode = non-interactive, sensible defaults):
    ```bash
    python wizard.py --demo --out /caminho/do/projeto-novo
    ```
-2. **Confirme limpeza de IP/PII** no output (deve ser sempre exit 0 — o scaffold é 100% genérico):
+2. **Confirm the IP/PII cleanliness** in the output (must always be exit 0 — the scaffold is 100% generic):
    ```bash
    python ${CLAUDE_PLUGIN_ROOT}/../instaladores/kit-forge/ip_pii_linter.py /caminho/do/projeto-novo
    ```
-3. **Re-rodar é seguro** — mesmo conteúdo = no-op, nunca duplica nem corrompe.
+3. **Re-running is safe** — same content = no-op, never duplicates or corrupts.
 
-## Exemplos executados
+## Executed examples
 
 ```console
 $ python wizard.py --demo --out /tmp/agente-teste
@@ -56,23 +56,23 @@ $ python wizard.py --demo --out /tmp/agente-teste
 [6/6] generate_and_summary
 {"project_name": "agente-teste", "files_written": ["operator-profile.yaml", "docs\\plans\\execucao\\00-LEIA-PRIMEIRO.md", "docs\\plans\\execucao\\00-STATE.md", "docs\\plans\\execucao\\00-VISION.md", "docs\\plans\\execucao\\00-PROCESSES.md"], "no_op": false}
 ```
-<!-- executado: 2026-07-10 · exit=0 -->
+<!-- executed: 2026-07-10 · exit=0 -->
 
 ```console
 $ python wizard.py --demo --out /tmp/agente-teste
 {"project_name": "agente-teste", "files_written": [...], "no_op": true}
 ```
-<!-- executado: 2026-07-10 · exit=0 -->
-(2ª rodada com o mesmo destino = no-op — sha256 do diretório idêntico, nada reescrito.)
+<!-- executed: 2026-07-10 · exit=0 -->
+(2nd run against the same destination = no-op — identical directory sha256, nothing rewritten.)
 
 ```console
 $ python wizard.py --out /tmp/sem-demo
 uso: wizard.py --demo --out <dir>
 ```
-<!-- executado: 2026-07-10 · exit=2 -->
-(sem `--demo`, o wizard recusa — modo interativo real não está implementado ainda, e o script é honesto sobre isso em vez de fingir.)
+<!-- executed: 2026-07-10 · exit=2 -->
+(without `--demo` the wizard refuses — the real interactive mode is not implemented yet, and the script is honest about that instead of pretending.)
 
-## Prova
+## Proof
 
 ```bash
 python wizard.py --self-test

@@ -11,9 +11,14 @@ re-emit the kits, run this again, and the catalogue follows:
     docs/CATALOGO.html        English HTML page: the four brand tokens, zero external requests
     docs/CATALOGO.pt-BR.html  Portuguese HTML page, language switch + hreflang like MANUAL.html
 
-Kit descriptions come from `marketplace.json`: `plugins[].description_en` feeds the English
-side and `plugins[].description` the Portuguese one. A kit without `description_en` falls back
-to `description`, so the gap is visible on the English page instead of silently hidden.
+Kit descriptions come from `marketplace.json`: `plugins[].description` — the field Claude Code's
+`/plugin` UI shows, so it is English — feeds the English side and `plugins[].description_pt` the
+Portuguese one. A kit without `description_pt` falls back to `description`, so the gap is visible
+on the Portuguese page instead of silently hidden.
+
+The HTML pair opens with the same lockup MANUAL.html opens with (`../assets/hpp-logo-dark.svg`,
+relative to `docs/`) and closes with the five words — the catalogue is a page of the product and
+looks like one.
 
 Usage:
     python tools/catalogo_md.py <marketplace-root>            # prints the English Markdown
@@ -49,6 +54,16 @@ BRAND = {"black": "#000000", "ink": "#0F1113", "paper": "#F4F1EB", "signal": "#F
 PAIR_LINKS = f"[English]({OUTPUTS['en']['md']}) · [Português]({OUTPUTS['pt-BR']['md']})"
 REGEN_CMD = "python instaladores/kit-forge-*/tools/catalogo_md.py . --write"
 COUNT_KEYS = ("skills", "commands", "agents", "hooks", "rules", "templates", "scripts")
+# Why: the header is the MANUAL's header — the lockup is read from `docs/MANUAL.html` next to the
+# outputs, so the two pages cannot drift apart, and this tool (which ships inside every copy of
+# kit-forge) never carries the brand credit itself: the IP gate bans that string here, while the
+# product page next to it declares the exception. Only a sibling `../assets/` path qualifies — an
+# absolute URL in the MANUAL would not be imported as a request into the catalogue.
+LOCKUP_SRC = "../assets/hpp-logo-dark.svg"
+_LOCKUP = re.compile(r'<img\s[^>]*src="\.\./assets/[^"]+"[^>]*>')
+# Why: the five words are a label (BRAND.md), upper case and spaced, never a sentence.
+FIVE_WORDS = "AGENTS · EVIDENCE · MEMORY · PROTOCOL · CONTINUITY"
+_HOOK_SCRIPT = re.compile(r"hooks/([A-Za-z0-9_.-]+\.(?:py|sh))\"?")
 
 _T: dict[str, dict[str, object]] = {
     "en": {
@@ -129,10 +144,12 @@ def _hooks(kit: Path) -> list[tuple[str | None, str | None, str]]:
         for bloco in blocos or []:
             for h in bloco.get("hooks") or []:
                 cmd = h.get("command", "")
-                script = re.findall(r"hooks/([A-Za-z0-9_.-]+\.(?:py|sh))\"?\s*$", cmd)
-                nome = script[-1] if script else cmd
-                if nome.endswith("pyrun.sh") and len(script) > 1:
-                    nome = script[-1]
+                # Why: the last `hooks/<name>.py|.sh` in the command is the hook (the first may be
+                # the pyrun.sh shim), and whatever follows it is an explicit argument that belongs
+                # in the listing — lane-kit wires `lane_register.py --heartbeat`. An end-anchored
+                # regex missed that command and printed the whole shell line instead.
+                achados = list(_HOOK_SCRIPT.finditer(cmd))
+                nome = (achados[-1].group(1) + cmd[achados[-1].end():].rstrip()) if achados else cmd
                 rows.append((evento, bloco.get("matcher") or "*", nome))
     return rows
 
@@ -144,6 +161,16 @@ def _lista(kit: Path, rel: str, padrao: str) -> list[Path]:
 def _documentos(kit: Path) -> list[Path]:
     docs = kit / "docs"
     return sorted(path for path in docs.rglob("*") if path.is_file()) if docs.is_dir() else []
+
+
+def _lockup(raiz: Path, display: str) -> str:
+    """The `<img>` MANUAL.html opens with; without a MANUAL, the same asset with the plain name."""
+    manual = raiz / "docs" / "MANUAL.html"
+    if manual.is_file():
+        m = _LOCKUP.search(manual.read_text(encoding="utf-8", errors="replace"))
+        if m:
+            return m.group(0)
+    return f'<img src="{LOCKUP_SRC}" alt="{html.escape(display)}">'
 
 
 def build_model(raiz: Path) -> dict:
@@ -163,10 +190,10 @@ def build_model(raiz: Path) -> dict:
             "name": pl["name"],
             "version": pl.get("version", ""),
             "description": {
-                # Why: the fallback is deliberate — an English page showing Portuguese is a
+                # Why: the fallback is deliberate — a Portuguese page showing English is a
                 # visible gap; an empty paragraph would hide it.
-                "en": (pl.get("description_en") or pl.get("description", "")).strip(),
-                "pt-BR": pl.get("description", "").strip(),
+                "en": pl.get("description", "").strip(),
+                "pt-BR": (pl.get("description_pt") or pl.get("description", "")).strip(),
             },
             "skills": skills,
             "commands": [c.stem for c in _lista(kit, "commands", "*.md")],
@@ -182,9 +209,11 @@ def build_model(raiz: Path) -> dict:
             totals[k] += v
         kits.append(entry)
     name = mk.get("name", "marketplace")
+    display = " ".join(part.capitalize() for part in name.split("-"))
     return {
         "name": name,
-        "display": " ".join(part.capitalize() for part in name.split("-")),
+        "display": display,
+        "lockup": _lockup(raiz, display),
         "shared": shared,
         "kits": kits,
         "totals": totals,
@@ -277,6 +306,7 @@ _CSS = (
     ".lang a{color:var(--hpp-paper)}\n"
     ".lang a[aria-current]{text-decoration:none;font-weight:700}\n"
     ".hero{background:var(--hpp-ink);color:var(--hpp-paper);padding:44px 0 50px;border-bottom:8px solid var(--hpp-signal)}\n"
+    ".hero img{width:min(720px,100%);display:block}\n"
     ".hero h1{font:800 clamp(2.2rem,6vw,4.6rem)/.95 Sora,Inter,\"Segoe UI\",sans-serif;letter-spacing:-.02em;margin:.35em 0}\n"
     ".hero p{max-width:760px;font-size:1.1rem;color:rgba(244,241,235,.82)}\n"
     ".hero code{color:var(--hpp-paper)}\n"
@@ -297,7 +327,9 @@ _CSS = (
     "tr.total td{font-weight:700;border-top:2px solid var(--hpp-ink)}\n"
     ".chips code{display:inline-block;background:var(--surface);border:1px solid var(--line);"
     "border-radius:6px;padding:.15em .5em;margin:.15em .35em .15em 0}\n"
-    "footer{padding:28px 0 48px;color:var(--muted);font-size:.9rem}\n"
+    "footer{padding:48px 0;background:var(--hpp-black);color:var(--hpp-paper);font-size:.9rem}\n"
+    "footer a{color:var(--hpp-paper)}\n"
+    "footer .five{letter-spacing:.2em;font-size:.8rem;color:rgba(244,241,235,.72)}\n"
     "@media(max-width:700px){.wrap{width:calc(100% - 26px)}table{display:block;overflow-x:auto}}\n"
 )
 
@@ -341,6 +373,7 @@ def render_html(model: dict, lang: str) -> str:
     switch[lang] = switch[lang].replace('" hreflang=', '" aria-current="page" hreflang=', 1)
     w(f'  <div class="lang"><div class="wrap">{switch["en"]} · {switch["pt-BR"]}</div></div>')
     w('  <header class="hero"><div class="wrap">')
+    w(f"    {model['lockup']}")
     w(f'    <p class="eyebrow">{esc(str(t["html_eyebrow"]).format(display=display))}</p>')
     w(f"    <h1>{esc(str(t['html_title']))}</h1>")
     w(f"    <p>{esc(str(t['lead']))} <code>{esc(REGEN_CMD)}</code>.</p>")
@@ -407,6 +440,7 @@ def render_html(model: dict, lang: str) -> str:
         w("    </section>")
     w("  </main>")
     w('  <footer><div class="wrap">')
+    w(f'    <p class="five">{FIVE_WORDS}</p>')
     w(f'    <p><a href="{t["manual_href"]}">{esc(str(t["manual"]))}</a> · '
       f'<a href="{t["readme_href"]}">README</a> · '
       f'<a href="{OUTPUTS[lang]["md"]}">{esc(str(t["markdown"]))}</a> · '
@@ -432,13 +466,18 @@ def render_all(raiz: Path) -> dict[str, str]:
 def write_fixture_tree(raiz: Path) -> None:
     """A two-kit marketplace with every resource kind — shared by the self-test and the suite.
 
-    `demo-kit` carries `description_en`; `lone-kit` does not, so the fallback is observable."""
+    `demo-kit` carries `description_pt`; `lone-kit` does not, so the fallback is observable.
+    `demo-kit` also wires one hook with an argument after the script (`beat.py --heartbeat`)."""
     kit = raiz / "cat" / "demo-kit-1.0.0"
     (kit / "skills" / "ola").mkdir(parents=True)
     (kit / "skills" / "ola" / "SKILL.md").write_text("---\nname: ola\ndescription: diz ola\n---\n# ola\n", encoding="utf-8")
     (kit / "hooks").mkdir()
-    (kit / "hooks" / "hooks.json").write_text(json.dumps({"hooks": {"PreToolUse": [{"matcher": "Bash", "hooks": [
-        {"type": "command", "command": 'bash "${CLAUDE_PLUGIN_ROOT}/hooks/pyrun.sh" "${CLAUDE_PLUGIN_ROOT}/hooks/guard.py"'}]}]}}), encoding="utf-8")
+    (kit / "hooks" / "hooks.json").write_text(json.dumps({"hooks": {
+        "PreToolUse": [{"matcher": "Bash", "hooks": [
+            {"type": "command", "command": 'bash "${CLAUDE_PLUGIN_ROOT}/hooks/pyrun.sh" "${CLAUDE_PLUGIN_ROOT}/hooks/guard.py"'}]}],
+        "PostToolUse": [{"matcher": "*", "hooks": [
+            {"type": "command", "command": 'bash "${CLAUDE_PLUGIN_ROOT}/hooks/pyrun.sh" "${CLAUDE_PLUGIN_ROOT}/hooks/beat.py" --heartbeat'}]}],
+    }}), encoding="utf-8")
     (kit / "rules").mkdir()
     (kit / "rules" / "r1.md").write_text("# r1\n", encoding="utf-8")
     (kit / "agents").mkdir()
@@ -459,11 +498,16 @@ def write_fixture_tree(raiz: Path) -> None:
     (raiz / "docs" / "TIPS.md").write_text("# tips\n", encoding="utf-8")
     # Why: a stale copy of the catalogue itself must not be listed as a shared resource.
     (raiz / "docs" / "CATALOGO.html").write_text("<!doctype html>\n", encoding="utf-8")
+    # the MANUAL the catalogue borrows its header from — the alt text is the MANUAL's, not ours
+    (raiz / "docs" / "MANUAL.html").write_text(
+        '<!doctype html>\n<header class="hero"><div class="wrap">\n'
+        f'      <img src="{LOCKUP_SRC}" alt="Demo Market — the approved art">\n'
+        "      <h1>Manual</h1>\n</div></header>\n", encoding="utf-8")
     (raiz / "marketplace.json").write_text(json.dumps({"name": "demo-market", "plugins": [
         {"name": "demo-kit", "version": "1.0.0", "source": "./cat/demo-kit-1.0.0",
-         "description": "kit de teste <com> & sinais", "description_en": "test kit <with> & signs"},
+         "description": "test kit <with> & signs", "description_pt": "kit de teste <com> & sinais"},
         {"name": "lone-kit", "version": "0.1.0", "source": "./cat/lone-kit-0.1.0",
-         "description": "kit sem tradução"},
+         "description": "kit without translation"},
     ]}), encoding="utf-8")
 
 
@@ -476,9 +520,11 @@ def _self_test() -> int:
         pt, en = out["CATALOGO.pt-BR.md"], out["CATALOGO.md"]
         for md in (pt, en):
             assert md.startswith(PAIR_LINKS + "\n\n# "), md[:80]
-            assert "| [demo-kit](#demo-kit) | 1.0.0 | 1 | 0 | 1 | 1 | 1 | 0 | 0 |" in md, md
+            assert "| [demo-kit](#demo-kit) | 1.0.0 | 1 | 0 | 1 | 2 | 1 | 0 | 0 |" in md, md
             assert "| [lone-kit](#lone-kit) | 0.1.0 | 0 | 1 | 0 | 1 | 0 | 1 | 1 |" in md, md
             assert "| `ola` | diz ola |" in md and "| PreToolUse · `Bash` | `guard.py` |" in md and "`r1`" in md, md
+            # the argument after the script survives; the shim never shows as the hook
+            assert "| PostToolUse · `*` | `beat.py --heartbeat` |" in md and "`pyrun.sh`" not in md, md
             assert "`TIPS.md`" in md and "`CATALOGO.html`" not in md, md
             assert "`checker`" in md and "NOTICE-ECC" not in md
             assert "`docs/RUNBOOK.md`" in md and "`/go`" in md and "`t.md`" in md and "`s.py`" in md, md
@@ -486,8 +532,8 @@ def _self_test() -> int:
         assert "## Shared resources" in en and "**Documents and records**" in en and "(wired by the installer)" in en
         assert "test kit <with> & signs" in en and "kit de teste <com> & sinais" not in en
         assert "kit de teste <com> & sinais" in pt and "test kit" not in pt
-        # control: the kit without description_en falls back instead of going blank
-        assert "kit sem tradução" in en and "kit sem tradução" in pt
+        # control: the kit without description_pt falls back instead of going blank
+        assert "kit without translation" in en and "kit without translation" in pt
         # control: a kit with nothing does not grow a section
         assert "**Commands**" not in en.split("## lone-kit")[0].split("## demo-kit")[1]
         # same headings, same order — the bilingual gate's rule, applied here first
@@ -501,6 +547,19 @@ def _self_test() -> int:
             assert not re.search(r'(?:src|href)="[a-z]+://', page) and "<script" not in page and "@import" not in page, "external request"
             assert "test kit &lt;with&gt; &amp; signs" in page or "kit de teste &lt;com&gt; &amp; sinais" in page
             assert 'id="demo-kit"' in page and 'href="#lone-kit"' in page and "Demo Market" in page
+            # the same opening as MANUAL.html: ITS lockup (alt text included) before the <h1>,
+            # the five words in the footer, and no other image on the page
+            lockup = f'<img src="{LOCKUP_SRC}" alt="Demo Market — the approved art">'
+            assert page.count(lockup) == 1 and page.index(lockup) < page.index("<h1>") and FIVE_WORDS in page
+            assert re.findall(r'<img\s[^>]*src="([^"]*)"', page) == [LOCKUP_SRC]
+        # control: without a MANUAL the header still opens with the asset, under the plain name
+        (raiz / "docs" / "MANUAL.html").unlink()
+        page = render_all(raiz)["CATALOGO.html"]
+        assert f'<img src="{LOCKUP_SRC}" alt="Demo Market">' in page and "approved art" not in page
+        # control: an absolute URL in the MANUAL is not imported as a request into the catalogue
+        (raiz / "docs" / "MANUAL.html").write_text('<img src="https://cdn.example/logo.svg" alt="x">\n', encoding="utf-8")
+        page = render_all(raiz)["CATALOGO.html"]
+        assert "cdn.example" not in page and f'<img src="{LOCKUP_SRC}" alt="Demo Market">' in page
         assert 'aria-current="page" hreflang="en"' in out["CATALOGO.html"]
         assert 'aria-current="page" hreflang="pt-BR"' in out["CATALOGO.pt-BR.html"]
     print("self-test OK")

@@ -1,122 +1,122 @@
 ---
 name: dual-report-builder
-description: Gera DUAS versoes da mesma analise/relatorio — INTERNA (crua, falhas expostas, dark) e EXTERNA (premium, positiva, sem expor falhas, light) — em HTML self-contained com charts CSS-puro e print-friendly. A versao externa passa por gate de registro sobrio (frases banidas do profile). Use ao produzir relatorio/dashboard que tem audiencia dupla (time interno + cliente/stakeholder).
+description: Generates TWO versions of the same analysis/report — INTERNAL (raw, failures exposed, dark) and EXTERNAL (premium, positive, no failures exposed, light) — as self-contained HTML with pure-CSS charts, print-friendly. The external version goes through a sober-register gate (banned phrases from the profile). Use when producing a report/dashboard with a dual audience (internal team + client/stakeholder).
 type: skill
 ---
 
-> **Auto-Trigger:** Quando o usuario pede relatorio/dashboard que sera visto tanto pelo time interno quanto por cliente/stakeholder; quando menciona "versao interna e externa", "relatorio pra mostrar pro cliente", "dashboard interno", "duas versoes", "prestacao de contas", ou pede um report apos uma tarefa de geracao/auditoria em massa.
-> **Keywords:** "relatorio dual", "versao interna", "versao externa", "interno e externo", "dashboard cliente", "dashboard interno", "duas versoes", "relatorio premium", "prestacao de contas", "report pro cliente", "antes/depois"
-> **Prioridade:** MEDIA
+> **Auto-Trigger:** When the user asks for a report/dashboard that will be seen both by the internal team and by a client/stakeholder; when they mention "internal and external version", "report to show the client", "internal dashboard", "two versions", "accountability report", or ask for a report after a bulk generation/audit task.
+> **Keywords:** "dual report", "internal version", "external version", "internal and external", "client dashboard", "internal dashboard", "two versions", "premium report", "accountability report", "report for the client", "before/after"
+> **Priority:** MEDIUM
 > **Tools:** Read, Write, Glob, Grep
-> **Doutrina relacionada:** `rules/agent-integrity.md` (a externa omite falha, nunca fabrica sucesso), `rules/learned-corrections.md` (LC-1: números rastreáveis).
+> **Related doctrine:** `rules/agent-integrity.md` (the external version omits failure, never fabricates success), `rules/learned-corrections.md` (LC-1: traceable numbers).
 
-## Quando NÃO Ativar
+## When NOT to Activate
 
-- Relatorio de audiencia UNICA (so interno OU so cliente) — gere uma versao so, sem o overhead das duas.
-- Pedido de dado bruto/numero pontual ("quantos X?") — use `status_now.py` ou `delta_inventory.py` direto.
-- Construir o motor visual/CSS do zero — o desenho fica a cargo da skill `frontend-design`; esta skill orquestra o PROCESSO das duas versoes, nao reimplementa layout.
-- Envio ao cliente — esta skill PRODUZ os dois artefatos; o disparo externo e gate humano (aprovacao do operador), nunca automatico.
+- SINGLE-audience report (internal only OR client only) — generate one version only, without the overhead of two.
+- Request for a raw datum/one-off number ("how many X?") — use `status_now.py` or `delta_inventory.py` directly.
+- Building the visual/CSS engine from scratch — the design belongs to the `frontend-design` skill; this skill orchestrates the PROCESS of the two versions, it does not reimplement layout.
+- Sending to the client — this skill PRODUCES the two artifacts; the external send is a human gate (operator approval), never automatic.
 
 ---
 
-# dual-report-builder — Interna (crua) + Externa (premium) da MESMA analise
+# dual-report-builder — Internal (raw) + External (premium) from the SAME analysis
 
-O CLAUDE.md exige, para relatorio de cliente: **versao interna (sem filtro, dados brutos)** + **versao externa (resultados positivos, sem expor falhas internas)**. Esta skill descreve o processo de produzir as DUAS a partir de uma unica analise — mesmos numeros-fonte, recortes diferentes — e de submeter a externa a um gate de registro sobrio antes de declarar pronta.
+CLAUDE.md requires, for a client report: **internal version (unfiltered, raw data)** + **external version (positive results, without exposing internal failures)**. This skill describes the process of producing BOTH from a single analysis — same source numbers, different cuts — and of submitting the external one to a sober-register gate before declaring it ready.
 
-**Principio:** a analise (os fatos/numeros) e UMA. As duas versoes diferem no RECORTE e no TOM, nunca nos numeros. Nada de inventar dado positivo para a externa (AGENT-INTEGRITY). A externa OMITE falhas; nunca FABRICA sucesso.
+**Principle:** the analysis (the facts/numbers) is ONE. The two versions differ in the CUT and the TONE, never in the numbers. No inventing positive data for the external version (AGENT-INTEGRITY). The external version OMITS failures; it never FABRICATES success.
 
-## Contrato
+## Contract
 
-**ENTRADA:** a analise unica (fatos/numeros rastreaveis, LC-1) + `report.*`/`paths.draft_dir` do `operator-profile.yaml`.
+**INPUT:** the single analysis (traceable facts/numbers, LC-1) + `report.*`/`paths.draft_dir` from `operator-profile.yaml`.
 
-**SAÍDA:** 2 artefatos HTML self-contained — interna (completa, dark) em logs do projeto + externa (premium, light) em `paths.draft_dir` como RASCUNHO.
+**OUTPUT:** 2 self-contained HTML artifacts — internal (complete, dark) in the project logs + external (premium, light) in `paths.draft_dir` as a DRAFT.
 
-**EXIT CODES** (do gate de registro sobrio, passo 4 — a varredura de frases banidas):
+**EXIT CODES** (from the sober-register gate, step 4 — the banned-phrase sweep):
 
-| Exit | Significado |
+| Exit | Meaning |
 |---|---|
-| 0 | texto da externa limpo — nenhuma frase banida encontrada, pode declarar "pronta p/ revisao" |
-| 1 | >=1 frase banida encontrada — reescrever o trecho e revarrer, NAO declarar pronta |
+| 0 | external text clean — no banned phrase found, may be declared "ready for review" |
+| 1 | >=1 banned phrase found — rewrite the passage and sweep again, do NOT declare ready |
 
-**ESTADO QUE TOCA:**
+**STATE IT TOUCHES:**
 
-| Recurso | Lê/Escreve | Propósito |
+| Resource | Reads/Writes | Purpose |
 |---|---|---|
-| `operator-profile.yaml` (`report.*`, `paths.draft_dir`) | Lê | temas, frases banidas, destino do rascunho |
-| logs do projeto (versao interna) | Escreve | relatorio completo, sem filtro |
-| `paths.draft_dir` (versao externa) | Escreve | rascunho — envio e gate humano |
+| `operator-profile.yaml` (`report.*`, `paths.draft_dir`) | Reads | themes, banned phrases, draft destination |
+| project logs (internal version) | Writes | complete, unfiltered report |
+| `paths.draft_dir` (external version) | Writes | draft — sending is a human gate |
 
-## Parametrizacao (lida do operator-profile.yaml)
+## Parameters (read from operator-profile.yaml)
 
-Leia via o loader do kit (`_lib/profile_loader.get(profile, "report.X")`):
+Read them via the kit loader (`_lib/profile_loader.get(profile, "report.X")`):
 
-| Chave | Uso |
+| Key | Use |
 |-------|-----|
-| `report.estilo_interno` (ex.: `dark`) | tema visual da versao interna |
-| `report.estilo_externo` (ex.: `light`) | tema visual da versao externa (premium) |
-| `report.frases_banidas` (lista) | termos PROIBIDOS na externa — gate de registro sobrio |
-| `paths.draft_dir` | onde gravar a versao externa (rascunho, ate liberacao do operador) |
-| `idioma` | idioma do conteudo (default pt-BR) |
+| `report.estilo_interno` (e.g. `dark`) | visual theme of the internal version |
+| `report.estilo_externo` (e.g. `light`) | visual theme of the external (premium) version |
+| `report.frases_banidas` (list) | terms FORBIDDEN in the external version — sober-register gate |
+| `paths.draft_dir` | where to write the external version (draft, until the operator releases it) |
+| `idioma` | content language (default pt-BR) |
 
-Sem profile → defaults seguros: interna=dark, externa=light, frases_banidas=`[]` (gate vira no-op mas a estrutura dual continua), draft em `drafts/`.
+Without a profile → safe defaults: internal=dark, external=light, frases_banidas=`[]` (the gate becomes a no-op but the dual structure stays), draft in `drafts/`.
 
 ## Pipeline
 
 ```
-PASSO 0 — ESCOPO + FONTES
-  -> Definir o que e o relatorio (cliente/projeto/janela) e a audiencia dupla.
-  -> Reunir os numeros-fonte UMA vez. Cada numero rastreavel a uma fonte real (LC-1):
-     contagens via delta_inventory.py, estado via status_now.py, metricas via MCP/arquivo.
-     Numero sem fonte = NAO entra (nem na interna).
+STEP 0 — SCOPE + SOURCES
+  -> Define what the report is (client/project/window) and the dual audience.
+  -> Gather the source numbers ONCE. Each number traceable to a real source (LC-1):
+     counts via delta_inventory.py, state via status_now.py, metrics via MCP/file.
+     A number without a source does NOT go in (not even in the internal version).
 
-PASSO 1 — ANALISE UNICA (a verdade crua)
-  -> Liste TUDO: o que foi bem, o que falhou, gargalos, dividas, riscos, gaps.
-  -> Esta e a materia-prima das duas versoes.
+STEP 1 — SINGLE ANALYSIS (the raw truth)
+  -> List EVERYTHING: what went well, what failed, bottlenecks, debts, risks, gaps.
+  -> This is the raw material of both versions.
 
-PASSO 2 — VERSAO INTERNA (tema = report.estilo_interno)
-  -> Tudo da analise, SEM filtro: falhas expostas, numeros crus, pendencias abertas,
-     tabela antes/depois/delta (delta_inventory.py), proximos passos honestos.
-  -> Audiencia: time/operador. Tom direto, plano (ver output-style direct-register).
-  -> Gravar em logs/relatorio interno do projeto.
+STEP 2 — INTERNAL VERSION (theme = report.estilo_interno)
+  -> Everything from the analysis, UNFILTERED: failures exposed, raw numbers, open items,
+     before/after/delta table (delta_inventory.py), honest next steps.
+  -> Audience: team/operator. Direct, flat tone (see the direct-register output style).
+  -> Write to the project's logs/internal report.
 
-PASSO 3 — VERSAO EXTERNA (tema = report.estilo_externo, premium)
-  -> Mesmos numeros-fonte; recorte nos RESULTADOS POSITIVOS e proximos passos.
-  -> OMITIR falhas internas/gargalos/dividas (nao expor cozinha) — mas NUNCA inventar
-     ganho que nao existe. Se nao houve resultado positivo real, dizer o que ESTA em
-     andamento, sem floreio.
-  -> Registro corporativo SOBRIO.
-  -> Gravar em paths.draft_dir como RASCUNHO (envio = gate humano).
+STEP 3 — EXTERNAL VERSION (theme = report.estilo_externo, premium)
+  -> Same source numbers; cut on the POSITIVE RESULTS and next steps.
+  -> OMIT internal failures/bottlenecks/debts (do not expose the kitchen) — but NEVER invent
+     a gain that does not exist. If there was no real positive result, say what IS in
+     progress, without embellishment.
+  -> SOBER corporate register.
+  -> Write to paths.draft_dir as a DRAFT (sending = human gate).
 
-PASSO 4 — GATE DA EXTERNA (registro sobrio)
-  -> Varrer o texto da externa contra report.frases_banidas (case-insensitive).
-  -> Se encontrar QUALQUER frase banida -> reescrever o trecho e revarrer. So declarar
-     a externa "pronta p/ revisao" quando passar limpa.
-  -> Este gate e a aplicacao do registro sobrio que o CLAUDE.md exige.
+STEP 4 — EXTERNAL GATE (sober register)
+  -> Sweep the external text against report.frases_banidas (case-insensitive).
+  -> If ANY banned phrase is found -> rewrite the passage and sweep again. Only declare
+     the external version "ready for review" when it passes clean.
+  -> This gate is the application of the sober register that CLAUDE.md requires.
 
-PASSO 5 — ENTREGA
-  -> Reportar os dois caminhos (interna + externa-rascunho) e que a externa AGUARDA
-     liberacao do operador para envio. Nunca enviar direto.
+STEP 5 — DELIVERY
+  -> Report the two paths (internal + external draft) and that the external version AWAITS
+     the operator's release before sending. Never send directly.
 ```
 
-## Padroes visuais (delegados a frontend-design)
+## Visual patterns (delegated to frontend-design)
 
-Esta skill NAO reimplementa CSS. Ao montar o HTML, siga as regras de dashboard do CLAUDE.md (e acione `frontend-design` para o acabamento):
+This skill does NOT reimplement CSS. When assembling the HTML, follow the dashboard rules in CLAUDE.md (and call `frontend-design` for the finish):
 
-- HTML **self-contained** (sem libs JS externas; Google Fonts CDN ok).
-- Charts em **CSS puro**: `conic-gradient` (pizza/gauge), barras por `width`, SVG gauge. **Sem Chart.js/D3.**
-- **Interna = dark**, **externa = light/premium** (vindo do profile).
-- **Print-friendly**: `@media print` em ambas.
-- Tabela comparativa **antes/depois/delta** (preferencia registrada no profile) — alimentada por `delta_inventory.py`.
+- **Self-contained** HTML (no external JS libs; Google Fonts CDN ok).
+- **Pure-CSS** charts: `conic-gradient` (pie/gauge), bars by `width`, SVG gauge. **No Chart.js/D3.**
+- **Internal = dark**, **external = light/premium** (from the profile).
+- **Print-friendly**: `@media print` in both.
+- **Before/after/delta** comparison table (preference recorded in the profile) — fed by `delta_inventory.py`.
 
-## Gate de registro sobrio (esboco do mecanismo)
+## Sober-register gate (sketch of the mechanism)
 
-A varredura de frases banidas reusa o profile, nao reimplementa config:
+The banned-phrase sweep reuses the profile; it does not reimplement config:
 
 ```python
 import os, sys
 from pathlib import Path
-# ${CLAUDE_PLUGIN_ROOT} em modo plugin; senão sobe 2 níveis (skills/<nome>/ -> skills/ -> operator-kit/)
-# FIX 2026-07-10: era parents[1] (resolvia para .../skills, off-by-one) — parents[2] e o correto.
+# ${CLAUDE_PLUGIN_ROOT} in plugin mode; otherwise go up 2 levels (skills/<name>/ -> skills/ -> operator-kit/)
+# FIX 2026-07-10: it was parents[1] (resolved to .../skills, off by one) — parents[2] is correct.
 _plugin_root = os.environ.get("CLAUDE_PLUGIN_ROOT")
 _kit_root = Path(_plugin_root) if _plugin_root else Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(_kit_root))
@@ -124,24 +124,24 @@ from _lib.profile_loader import load_profile, get
 
 prof = load_profile()
 banidas = [f.lower() for f in (get(prof, "report.frases_banidas", []) or [])]
-texto_externo = "..."  # conteudo da versao externa
+texto_externo = "..."  # content of the external version
 ofensas = [f for f in banidas if f and f in texto_externo.lower()]
-# ofensas != [] -> reescrever os trechos e revarrer ANTES de declarar pronta.
+# ofensas != [] -> rewrite the passages and sweep again BEFORE declaring ready.
 ```
 
-## Checklist de saida
+## Exit checklist
 
 ```
-[ ] Numeros-fonte coletados UMA vez, cada um rastreavel (LC-1)?
-[ ] Versao INTERNA expoe falhas/gargalos/dividas (tema interno do profile)?
-[ ] Versao EXTERNA omite falhas SEM inventar sucesso (tema externo do profile)?
-[ ] Tabela antes/depois/delta presente (delta_inventory.py)?
-[ ] HTML self-contained, charts CSS-puro, print-friendly (via frontend-design)?
-[ ] Externa varrida contra report.frases_banidas e passou limpa?
-[ ] Externa gravada em draft_dir como RASCUNHO; envio sinalizado como gate humano?
+[ ] Source numbers collected ONCE, each one traceable (LC-1)?
+[ ] INTERNAL version exposes failures/bottlenecks/debts (internal theme from the profile)?
+[ ] EXTERNAL version omits failures WITHOUT inventing success (external theme from the profile)?
+[ ] Before/after/delta table present (delta_inventory.py)?
+[ ] Self-contained HTML, pure-CSS charts, print-friendly (via frontend-design)?
+[ ] External version swept against report.frases_banidas and passed clean?
+[ ] External version written to draft_dir as a DRAFT; sending flagged as a human gate?
 ```
 
-## Exemplos executados
+## Executed examples
 
 ```console
 $ python -c "
@@ -157,8 +157,8 @@ print('frases_banidas:', [f.lower() for f in (get(prof, 'report.frases_banidas',
 kit_root aponta pro operator-kit? True
 frases_banidas: ['consider it done', 'com certeza!', 'otima pergunta', 'risco']
 ```
-<!-- executado: 2026-07-10 · exit=0 -->
-(prova o fix do off-by-one: `parents[2]` resolve pro `operator-kit/` de verdade — `operator-profile.yaml` existe ali.)
+<!-- executed: 2026-07-10 · exit=0 -->
+(proves the off-by-one fix: `parents[2]` really resolves to `operator-kit/` — `operator-profile.yaml` exists there.)
 
 ```console
 $ python -c "
@@ -170,8 +170,8 @@ import sys; sys.exit(1 if ofensas else 0)
 "
 ofensas encontradas: ['consider it done', 'risco']
 ```
-<!-- executado: 2026-07-10 · exit=1 -->
-(passo 4 — gate BLOQUEIA: 2 frases banidas no rascunho da externa; reescrever e revarrer ANTES de declarar pronta.)
+<!-- executed: 2026-07-10 · exit=1 -->
+(step 4 — the gate BLOCKS: 2 banned phrases in the external draft; rewrite and sweep again BEFORE declaring ready.)
 
 ```console
 $ python -c "
@@ -183,10 +183,10 @@ import sys; sys.exit(1 if ofensas else 0)
 "
 ofensas encontradas: []
 ```
-<!-- executado: 2026-07-10 · exit=0 -->
-(mesmo texto reescrito em registro sobrio — gate passa limpo, pode declarar "pronta p/ revisao".)
+<!-- executed: 2026-07-10 · exit=0 -->
+(the same text rewritten in a sober register — the gate passes clean, it may be declared "ready for review".)
 
-## Prova
+## Proof
 
 ```bash
 python -c "

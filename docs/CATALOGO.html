@@ -20,6 +20,7 @@ a:focus-visible{outline:4px solid var(--hpp-signal);outline-offset:3px}
 .lang a{color:var(--hpp-paper)}
 .lang a[aria-current]{text-decoration:none;font-weight:700}
 .hero{background:var(--hpp-ink);color:var(--hpp-paper);padding:44px 0 50px;border-bottom:8px solid var(--hpp-signal)}
+.hero img{width:min(720px,100%);display:block}
 .hero h1{font:800 clamp(2.2rem,6vw,4.6rem)/.95 Sora,Inter,"Segoe UI",sans-serif;letter-spacing:-.02em;margin:.35em 0}
 .hero p{max-width:760px;font-size:1.1rem;color:rgba(244,241,235,.82)}
 .hero code{color:var(--hpp-paper)}
@@ -37,13 +38,16 @@ th{font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--mu
 td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
 tr.total td{font-weight:700;border-top:2px solid var(--hpp-ink)}
 .chips code{display:inline-block;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:.15em .5em;margin:.15em .35em .15em 0}
-footer{padding:28px 0 48px;color:var(--muted);font-size:.9rem}
+footer{padding:48px 0;background:var(--hpp-black);color:var(--hpp-paper);font-size:.9rem}
+footer a{color:var(--hpp-paper)}
+footer .five{letter-spacing:.2em;font-size:.8rem;color:rgba(244,241,235,.72)}
 @media(max-width:700px){.wrap{width:calc(100% - 26px)}table{display:block;overflow-x:auto}}
   </style>
 </head>
 <body>
   <div class="lang"><div class="wrap"><a href="CATALOGO.html" aria-current="page" hreflang="en">English</a> · <a href="CATALOGO.pt-BR.html" hreflang="pt-BR" lang="pt-BR">Português</a></div></div>
   <header class="hero"><div class="wrap">
+    <img src="../assets/hpp-logo-dark.svg" alt="House Party Protocol — by Rushar Labs">
     <p class="eyebrow">House Party Protocol · modules</p>
     <h1>Module catalogue</h1>
     <p>Derived from the emitted tree: what each kit installs, resource by resource. Regenerate with <code>python instaladores/kit-forge-*/tools/catalogo_md.py . --write</code>.</p>
@@ -57,14 +61,14 @@ footer{padding:28px 0 48px;color:var(--muted);font-size:.9rem}
           <tr><td><a href="#kit-forge">kit-forge</a></td><td class="mono">1.4.0</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">1</td><td class="n">0</td><td class="n">0</td><td class="n">0</td></tr>
           <tr><td><a href="#operator-kit">operator-kit</a></td><td class="mono">1.4.0</td><td class="n">13</td><td class="n">2</td><td class="n">2</td><td class="n">8</td><td class="n">13</td><td class="n">1</td><td class="n">17</td></tr>
           <tr><td><a href="#continuity-kit">continuity-kit</a></td><td class="mono">1.2.1</td><td class="n">2</td><td class="n">0</td><td class="n">0</td><td class="n">3</td><td class="n">0</td><td class="n">12</td><td class="n">2</td></tr>
-          <tr><td><a href="#lane-kit">lane-kit</a></td><td class="mono">1.2.0</td><td class="n">1</td><td class="n">0</td><td class="n">0</td><td class="n">3</td><td class="n">0</td><td class="n">4</td><td class="n">2</td></tr>
+          <tr><td><a href="#lane-kit">lane-kit</a></td><td class="mono">1.2.0</td><td class="n">1</td><td class="n">0</td><td class="n">0</td><td class="n">4</td><td class="n">0</td><td class="n">4</td><td class="n">2</td></tr>
           <tr><td><a href="#health-kit">health-kit</a></td><td class="mono">1.3.1</td><td class="n">2</td><td class="n">0</td><td class="n">0</td><td class="n">1</td><td class="n">0</td><td class="n">0</td><td class="n">3</td></tr>
           <tr><td><a href="#claude-dev-kit">claude-dev-kit</a></td><td class="mono">1.3.1</td><td class="n">8</td><td class="n">0</td><td class="n">0</td><td class="n">1</td><td class="n">0</td><td class="n">0</td><td class="n">2</td></tr>
           <tr><td><a href="#supabase-pack">supabase-pack</a></td><td class="mono">1.1.0</td><td class="n">2</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">0</td></tr>
           <tr><td><a href="#agent-framework-wizard">agent-framework-wizard</a></td><td class="mono">1.1.1</td><td class="n">1</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">4</td><td class="n">0</td></tr>
           <tr><td><a href="#dev-squad-kit">dev-squad-kit</a></td><td class="mono">1.0.0</td><td class="n">3</td><td class="n">12</td><td class="n">12</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">0</td></tr>
           <tr><td><a href="#gotcha-memory">gotcha-memory</a></td><td class="mono">1.0.0</td><td class="n">1</td><td class="n">0</td><td class="n">0</td><td class="n">3</td><td class="n">0</td><td class="n">0</td><td class="n">0</td></tr>
-          <tr class="total"><td>total</td><td></td><td class="n">33</td><td class="n">14</td><td class="n">14</td><td class="n">20</td><td class="n">13</td><td class="n">21</td><td class="n">26</td></tr>
+          <tr class="total"><td>total</td><td></td><td class="n">33</td><td class="n">14</td><td class="n">14</td><td class="n">21</td><td class="n">13</td><td class="n">21</td><td class="n">26</td></tr>
         </tbody>
       </table>
     </section>
@@ -90,19 +94,19 @@ footer{padding:28px 0 48px;color:var(--muted);font-size:.9rem}
       <table>
         <thead><tr><th>skill</th><th>what it does</th></tr></thead>
         <tbody>
-          <tr><td><code>adversarial-refuter</code></td><td>Antes de aceitar "feito/pronto", despacha refutadores read-only que tentam DERRUBAR a claim no disco/fonte viva</td></tr>
-          <tr><td><code>claude-md-from-profile</code></td><td>Gera o bloco de CLAUDE.md do projeto A PARTIR do operator-profile.yaml — piso primeiro (o que a IA nao decide), depois onde as coisas moram, as regras do pronto e o fluxo. Idempotente, com assinatura; recusa sobrescrever bloco editado a mao</td></tr>
-          <tr><td><code>delegate-with-handback</code></td><td>Delega tarefa longa/independente a um 2º agente com contexto explícito e gate de verificação no retorno</td></tr>
-          <tr><td><code>doc-consolidator-dedup</code></td><td>Funde N docs/planos sobrepostos num work-list único deduplicado, arquiva os superseded com stub-redirect — grep/ls antes de criar/classificar (LC-3)</td></tr>
-          <tr><td><code>dual-report-builder</code></td><td>Gera DUAS versoes da mesma analise/relatorio — INTERNA (crua, falhas expostas, dark) e EXTERNA (premium, positiva, sem expor falhas, light) — em HTML self-contained com charts CSS-puro e print-friendly. A versao externa passa por gate de registro sobrio (frases banidas do profile). Use ao produzir relatorio/dashboard que tem audiencia dupla (time interno + cliente/stakeholder).</td></tr>
-          <tr><td><code>gate-sheet-collector</code></td><td>Drena tudo que depende do humano para UM formulário (comando exato + o-que-destrava), sem nunca bloquear o loop</td></tr>
-          <tr><td><code>gated-improvement-proposal</code></td><td>Toda auto-edição do harness (regra/CLAUDE.md/prompt/hook) vira PROPOSTA que passa por gate antes de aplicar — nunca auto-merge sensível</td></tr>
-          <tr><td><code>live-source-prover</code></td><td>Antes de citar QUALQUER número/status/métrica, re-deriva na fonte viva e rotula "live @ HH:MM + fonte" — nunca repete dado stale</td></tr>
-          <tr><td><code>parallel-dispatch</code></td><td>Dispara tarefas independentes em ondas com teto de concorrência + fallback sequencial em rate-limit</td></tr>
-          <tr><td><code>pre-clear-boot-block</code></td><td>Antes de um /clear, emite o bloco DONE / FALTA / leia-nesta-ordem para a sessão fresca retomar com zero perda</td></tr>
-          <tr><td><code>ralph-loop-driver</code></td><td>Vira o agente em engenheiro-líder autônomo — lê charter+work-list, executa até esgotar, self-prompta, para nas stop-conditions</td></tr>
-          <tr><td><code>rls-audit</code></td><td>Audita RLS de um projeto Supabase de verdade — pg_policies por policy anon permissiva + get_advisors, não só a flag relrowsecurity</td></tr>
-          <tr><td><code>supabase-edge-scaffold</code></td><td>Scaffold de uma Supabase Edge Function com CORS + service-role + tratamento de erro corretos, em vez de copiar boilerplate à mão</td></tr>
+          <tr><td><code>adversarial-refuter</code></td><td>Before accepting "done/ready", dispatches read-only refuters that try to KNOCK DOWN the claim against the disk/live source</td></tr>
+          <tr><td><code>claude-md-from-profile</code></td><td>Generates the project's CLAUDE.md block FROM operator-profile.yaml — floor first (what the AI does not decide), then where things live, the rules of done and the flow. Idempotent, signed; refuses to overwrite a hand-edited block</td></tr>
+          <tr><td><code>delegate-with-handback</code></td><td>Delegates a long/independent task to a 2nd agent with explicit context and a verification gate on the return</td></tr>
+          <tr><td><code>doc-consolidator-dedup</code></td><td>Merges N overlapping docs/plans into a single deduplicated work-list, archives the superseded ones with a stub-redirect — grep/ls before creating/classifying (LC-3)</td></tr>
+          <tr><td><code>dual-report-builder</code></td><td>Generates TWO versions of the same analysis/report — INTERNAL (raw, failures exposed, dark) and EXTERNAL (premium, positive, no failures exposed, light) — as self-contained HTML with pure-CSS charts, print-friendly. The external version goes through a sober-register gate (banned phrases from the profile). Use when producing a report/dashboard with a dual audience (internal team + client/stakeholder).</td></tr>
+          <tr><td><code>gate-sheet-collector</code></td><td>Drains everything that depends on the human into ONE form (exact command + what-it-unblocks), without ever blocking the loop</td></tr>
+          <tr><td><code>gated-improvement-proposal</code></td><td>Every self-edit of the harness (rule/CLAUDE.md/prompt/hook) becomes a PROPOSAL that passes a gate before being applied — never a sensitive auto-merge</td></tr>
+          <tr><td><code>live-source-prover</code></td><td>Before citing ANY number/status/metric, re-derives it at the live source and labels it "live @ HH:MM + source" — never repeats stale data</td></tr>
+          <tr><td><code>parallel-dispatch</code></td><td>Fires independent tasks in waves with a concurrency ceiling + sequential fallback on rate limit</td></tr>
+          <tr><td><code>pre-clear-boot-block</code></td><td>Before a /clear, emits the DONE / MISSING / read-in-this-order block so the fresh session resumes with zero loss</td></tr>
+          <tr><td><code>ralph-loop-driver</code></td><td>Turns the agent into an autonomous lead engineer — reads charter+work-list, executes until exhausted, self-prompts, stops at the stop-conditions</td></tr>
+          <tr><td><code>rls-audit</code></td><td>Really audits the RLS of a Supabase project — pg_policies per permissive anon policy + get_advisors, not just the relrowsecurity flag</td></tr>
+          <tr><td><code>supabase-edge-scaffold</code></td><td>Scaffolds a Supabase Edge Function with correct CORS + service-role + error handling, instead of copying boilerplate by hand</td></tr>
         </tbody>
       </table>
       <h3>Commands</h3>
@@ -139,17 +143,17 @@ footer{padding:28px 0 48px;color:var(--muted);font-size:.9rem}
       <table>
         <thead><tr><th>skill</th><th>what it does</th></tr></thead>
         <tbody>
-          <tr><td><code>doc-rollup</code></td><td>Mantém os docs de historico/evolucao do projeto (changelog, timeline narrativa, snapshot de estado, licoes, wrapup de sessao) atualizados apos uma sessao significativa — com degradacao embutida (carimbo em vez de narrativa infinita) desde o dia 1.</td></tr>
-          <tr><td><code>pre-clear</code></td><td>Antes de um /clear, consolida o LONGO PRAZO (doc-rollup condicional — como chegamos até aqui) e o CURTO PRAZO (handoff — o que vem depois), depois renderiza o BOOT BUNDLE.</td></tr>
+          <tr><td><code>doc-rollup</code></td><td>Keeps the project's history/evolution docs (changelog, narrative timeline, state snapshot, lessons, session wrapup) up to date after a significant session — with built-in degradation (a stamp instead of endless narrative) from day 1.</td></tr>
+          <tr><td><code>pre-clear</code></td><td>Before a /clear, consolidates the LONG TERM (conditional doc-rollup — how we got here) and the SHORT TERM (handoff — what comes next), then renders the BOOT BUNDLE.</td></tr>
         </tbody>
       </table>
       <h3>Hooks</h3>
       <table>
         <thead><tr><th>event</th><th>script</th></tr></thead>
         <tbody>
-          <tr><td>(wired by the installer)</td><td><code>handoff_guard.py</code></td></tr>
-          <tr><td>(wired by the installer)</td><td><code>handoff_inject.py</code></td></tr>
-          <tr><td>(wired by the installer)</td><td><code>session_boot.py</code></td></tr>
+          <tr><td>SessionStart · <code>*</code></td><td><code>handoff_inject.py</code></td></tr>
+          <tr><td>Stop · <code>*</code></td><td><code>handoff_guard.py</code></td></tr>
+          <tr><td>PreCompact · <code>*</code></td><td><code>handoff_guard.py</code></td></tr>
         </tbody>
       </table>
       <h3>Templates</h3>
@@ -164,16 +168,17 @@ footer{padding:28px 0 48px;color:var(--muted);font-size:.9rem}
       <table>
         <thead><tr><th>skill</th><th>what it does</th></tr></thead>
         <tbody>
-          <tr><td><code>lane-coordinator</code></td><td>Coordena N sessões (lanes) concorrentes sobre o mesmo repo via um quadro-branco com máquina de estados (lane_board.py) — CLAIMED até MERGED, com maker≠checker cross-model enforçado em código, não em disciplina textual.</td></tr>
+          <tr><td><code>lane-coordinator</code></td><td>Coordinates N concurrent sessions (lanes) over the same repo through a whiteboard with a state machine (lane_board.py) — from CLAIMED to MERGED, with cross-model maker≠checker enforced in code, not by textual discipline.</td></tr>
         </tbody>
       </table>
       <h3>Hooks</h3>
       <table>
         <thead><tr><th>event</th><th>script</th></tr></thead>
         <tbody>
-          <tr><td>(wired by the installer)</td><td><code>lane_git_guard.py</code></td></tr>
-          <tr><td>(wired by the installer)</td><td><code>lane_register.py</code></td></tr>
-          <tr><td>(wired by the installer)</td><td><code>lane_territory_guard.py</code></td></tr>
+          <tr><td>SessionStart · <code>*</code></td><td><code>lane_register.py</code></td></tr>
+          <tr><td>PreToolUse · <code>Bash</code></td><td><code>lane_git_guard.py</code></td></tr>
+          <tr><td>PreToolUse · <code>Edit|Write</code></td><td><code>lane_territory_guard.py</code></td></tr>
+          <tr><td>PostToolUse · <code>*</code></td><td><code>lane_register.py --heartbeat</code></td></tr>
         </tbody>
       </table>
       <h3>Templates</h3>
@@ -188,15 +193,15 @@ footer{padding:28px 0 48px;color:var(--muted);font-size:.9rem}
       <table>
         <thead><tr><th>skill</th><th>what it does</th></tr></thead>
         <tbody>
-          <tr><td><code>dashboard-builder</code></td><td>Constrói dashboards de monitoramento (Grafana, SigNoz e similares) que respondem perguntas reais de operador, não "mostra toda métrica que existe". Use ao transformar uma lista de métricas em dashboard operável de verdade.</td></tr>
-          <tr><td><code>health-check</code></td><td>Sonda uma lista config-driven de serviços (HTTP ou comando local) e grava um cache JSON que outra ferramenta (ex.: statusline) pode ler sem tocar rede — nunca no próprio caminho quente, só gera o cache.</td></tr>
+          <tr><td><code>dashboard-builder</code></td><td>Builds monitoring dashboards (Grafana, SigNoz and similar) that answer real operator questions, not "show every metric that exists". Use when turning a list of metrics into a genuinely operable dashboard.</td></tr>
+          <tr><td><code>health-check</code></td><td>Probes a config-driven list of services (HTTP or local command) and writes a JSON cache that another tool (e.g. the statusline) can read without touching the network — never on the hot path itself, it only generates the cache.</td></tr>
         </tbody>
       </table>
       <h3>Hooks</h3>
       <table>
         <thead><tr><th>event</th><th>script</th></tr></thead>
         <tbody>
-          <tr><td>SessionStart · <code>*</code></td><td><code>bash &quot;${CLAUDE_PLUGIN_ROOT}/hooks/pyrun.sh&quot; &quot;${CLAUDE_PLUGIN_ROOT}/scripts/health_probe.py&quot; --quiet</code></td></tr>
+          <tr><td>SessionStart · <code>*</code></td><td><code>pyrun.sh &quot;${CLAUDE_PLUGIN_ROOT}/scripts/health_probe.py&quot; --quiet</code></td></tr>
         </tbody>
       </table>
       <h3>Scripts</h3>
@@ -209,14 +214,14 @@ footer{padding:28px 0 48px;color:var(--muted);font-size:.9rem}
       <table>
         <thead><tr><th>skill</th><th>what it does</th></tr></thead>
         <tbody>
-          <tr><td><code>architecture-decision-records</code></td><td>Captura decisões arquiteturais tomadas durante a sessão como ADRs estruturados (contexto, alternativas consideradas, consequências) em docs/adr/. Use quando o usuário decide entre alternativas significativas (framework, banco, padrão) ou pergunta "por que escolhemos X?".</td></tr>
-          <tr><td><code>claude-dev-setup</code></td><td>Instala hooks base do Claude Code num projeto novo — wiring de settings idempotente e reversível (nunca sobrescreve config alheia sem --force) + git hook chain-preserving (nunca substitui um hook pre-commit já existente).</td></tr>
-          <tr><td><code>hookify</code></td><td>Cria hooks REAIS para Claude Code — scripts executáveis (stdin JSON, exit 0/1/2), registrados via hooks.json de plugin ou colados em settings.json. Use quando o usuário quer criar hook, regra de segurança, validação customizada, lifecycle hook.</td></tr>
-          <tr><td><code>plugin-dev</code></td><td>Empacota skills/hooks/commands num plugin Claude Code instalável — anatomia real (.claude-plugin/plugin.json + hooks/hooks.json + ${CLAUDE_PLUGIN_ROOT}), sem framework/build-step. Use quando o usuário quer criar plugin, empacotar uma extensão, ou distribuir um conjunto de skills/hooks.</td></tr>
-          <tr><td><code>search-first</code></td><td>Busca por biblioteca/ferramenta/padrão existente ANTES de escrever código novo — cobre registro de pacotes (npm/PyPI), MCP e GitHub, além do grep local. Use antes de criar utilitário, helper, ou integração nova.</td></tr>
-          <tr><td><code>skill-scout</code></td><td>Busca skills locais, no marketplace, no GitHub e na web ANTES de criar uma skill nova — evita duplicar trabalho já existente. Use quando o usuário disser "criar uma skill", "existe skill pra X?", ou você estiver prestes a sugerir criar uma skill nova.</td></tr>
-          <tr><td><code>skill-writer</code></td><td>Guia a criação de Agent Skills para Claude Code — estrutura, frontmatter, descrições eficazes, e validação contra o SKILL-CONTRACT. Use quando o usuário quer criar, escrever ou estruturar uma nova skill.</td></tr>
-          <tr><td><code>teaching</code></td><td>Transforma qualquer output técnico (criação, estrutura, decisão arquitetural) numa oportunidade de aprendizado — árvore de onde o elemento mora, raio-x de o-que-é/onde-fica/pra-que-serve, mapa de conexões, analogia de negócio, e decisões explicadas. Use sempre em output técnico para um leitor não-programador.</td></tr>
+          <tr><td><code>architecture-decision-records</code></td><td>Captures architectural decisions made during the session as structured ADRs (context, alternatives considered, consequences) in docs/adr/. Use when the user decides between significant alternatives (framework, database, pattern) or asks "why did we choose X?".</td></tr>
+          <tr><td><code>claude-dev-setup</code></td><td>Installs the base Claude Code hooks in a new project — idempotent and reversible settings wiring (never overwrites someone else's config without --force) + chain-preserving git hook (never replaces an existing pre-commit hook).</td></tr>
+          <tr><td><code>hookify</code></td><td>Creates REAL hooks for Claude Code — executable scripts (stdin JSON, exit 0/1/2), registered via a plugin's hooks.json or pasted into settings.json. Use when the user wants to create a hook, a safety rule, a custom validation, a lifecycle hook.</td></tr>
+          <tr><td><code>plugin-dev</code></td><td>Packages skills/hooks/commands into an installable Claude Code plugin — the real anatomy (.claude-plugin/plugin.json + hooks/hooks.json + ${CLAUDE_PLUGIN_ROOT}), no framework/build step. Use when the user wants to create a plugin, package an extension, or distribute a set of skills/hooks.</td></tr>
+          <tr><td><code>search-first</code></td><td>Searches for an existing library/tool/pattern BEFORE writing new code — covers package registries (npm/PyPI), MCP and GitHub, in addition to the local grep. Use before creating a utility, helper, or new integration.</td></tr>
+          <tr><td><code>skill-scout</code></td><td>Searches for skills locally, in the marketplace, on GitHub and on the web BEFORE creating a new skill — avoids duplicating work that already exists. Use when the user says "create a skill", "is there a skill for X?", or you are about to suggest creating a new skill.</td></tr>
+          <tr><td><code>skill-writer</code></td><td>Guides the creation of Agent Skills for Claude Code — structure, frontmatter, effective descriptions, and validation against the SKILL-CONTRACT. Use when the user wants to create, write or structure a new skill.</td></tr>
+          <tr><td><code>teaching</code></td><td>Turns any technical output (creation, structure, architectural decision) into a learning opportunity — a tree of where the element lives, an x-ray of what-it-is/where-it-sits/what-it-is-for, a connection map, a business analogy, and explained decisions. Always use in technical output for a non-programmer reader.</td></tr>
         </tbody>
       </table>
       <h3>Hooks</h3>
@@ -229,7 +234,7 @@ footer{padding:28px 0 48px;color:var(--muted);font-size:.9rem}
       <h3>Scripts</h3>
       <p class="chips"><code>install_git_hook.py</code> <code>wire_settings.py</code></p>
       <h3>Documents and records</h3>
-      <p class="chips"><code>docs/hook-template.py</code> <code>docs/SKILL-CANDIDATES.json</code> <code>docs/SKILL-CONTRACT.md</code> <code>docs/skill-template.md</code></p>
+      <p class="chips"><code>docs/hook-template.py</code> <code>docs/SKILL-CANDIDATES.json</code> <code>docs/SKILL-CONTRACT.md</code> <code>docs/SKILL-CONTRACT.pt-BR.md</code> <code>docs/skill-template.md</code></p>
     </section>
     <section id="supabase-pack" class="kit">
       <h2>supabase-pack <span class="version">1.1.0</span></h2>
@@ -238,8 +243,8 @@ footer{padding:28px 0 48px;color:var(--muted);font-size:.9rem}
       <table>
         <thead><tr><th>skill</th><th>what it does</th></tr></thead>
         <tbody>
-          <tr><td><code>rls-audit</code></td><td>Audita RLS de um projeto Supabase de verdade — pg_policies por policy anon permissiva + get_advisors, não só a flag relrowsecurity</td></tr>
-          <tr><td><code>supabase-edge-scaffold</code></td><td>Scaffold de uma Supabase Edge Function com CORS + service-role + tratamento de erro corretos, em vez de copiar boilerplate à mão</td></tr>
+          <tr><td><code>rls-audit</code></td><td>Audits a Supabase project's RLS for real — pg_policies per permissive anon policy + get_advisors, not only the relrowsecurity flag</td></tr>
+          <tr><td><code>supabase-edge-scaffold</code></td><td>Scaffold of a Supabase Edge Function with correct CORS + service-role + error handling, instead of copying boilerplate by hand</td></tr>
         </tbody>
       </table>
     </section>
@@ -250,7 +255,7 @@ footer{padding:28px 0 48px;color:var(--muted);font-size:.9rem}
       <table>
         <thead><tr><th>skill</th><th>what it does</th></tr></thead>
         <tbody>
-          <tr><td><code>agent-framework-scaffold</code></td><td>Roda o wizard de 6 passos que gera o esqueleto de um projeto novo (operator-profile.yaml + templates do TEMPLATE-SET escolhidos) — método genérico (check ambiente → configurar → validar → gerar), reescrito do zero.</td></tr>
+          <tr><td><code>agent-framework-scaffold</code></td><td>Runs the 6-step wizard that generates the skeleton of a new project (operator-profile.yaml + the chosen TEMPLATE-SET templates) — generic method (check environment → configure → validate → generate), rewritten from scratch.</td></tr>
         </tbody>
       </table>
       <h3>Templates</h3>
@@ -263,9 +268,9 @@ footer{padding:28px 0 48px;color:var(--muted);font-size:.9rem}
       <table>
         <thead><tr><th>skill</th><th>what it does</th></tr></thead>
         <tbody>
-          <tr><td><code>pp-consolidate</code></td><td>Parallel Process Consolidate - consolida outputs de sessoes/agentes paralelos em um veredito unico, deduplicado e verificavel</td></tr>
-          <tr><td><code>pp-discovery</code></td><td>Parallel Process Discovery - inventario token-safe de repositorios, pastas e artefatos grandes antes de analise profunda</td></tr>
-          <tr><td><code>pp-raiox</code></td><td>Parallel Process Raio-X - leitura linha-a-linha de um modulo/repo externo com evidencias, riscos e chamadas de proxima investigacao</td></tr>
+          <tr><td><code>pp-consolidate</code></td><td>Parallel Process Consolidate - consolidates the outputs of parallel sessions/agents into a single, deduplicated, verifiable verdict</td></tr>
+          <tr><td><code>pp-discovery</code></td><td>Parallel Process Discovery - token-safe inventory of repositories, folders and large artifacts before deep analysis</td></tr>
+          <tr><td><code>pp-raiox</code></td><td>Parallel Process Raio-X - line-by-line reading of an external module/repo with evidence, risks and calls for the next investigation</td></tr>
         </tbody>
       </table>
       <h3>Commands</h3>
@@ -280,7 +285,7 @@ footer{padding:28px 0 48px;color:var(--muted);font-size:.9rem}
       <table>
         <thead><tr><th>skill</th><th>what it does</th></tr></thead>
         <tbody>
-          <tr><td><code>gotcha-memory</code></td><td>Loop de aprendizado operacional — registra falhas de comandos, detecta recorrência e injeta a lição como preâmbulo antes da próxima execução da mesma tarefa. Use para consultar/seedar/depurar a memória de gotchas do projeto.</td></tr>
+          <tr><td><code>gotcha-memory</code></td><td>Operational learning loop — records command failures, detects recurrence and injects the lesson as a preamble before the next execution of the same task. Use to query/seed/debug the project's gotcha memory.</td></tr>
         </tbody>
       </table>
       <h3>Hooks</h3>
@@ -295,6 +300,7 @@ footer{padding:28px 0 48px;color:var(--muted);font-size:.9rem}
     </section>
   </main>
   <footer><div class="wrap">
+    <p class="five">AGENTS · EVIDENCE · MEMORY · PROTOCOL · CONTINUITY</p>
     <p><a href="MANUAL.html">Harness manual</a> · <a href="../README.md">README</a> · <a href="CATALOGO.md">Markdown catalogue</a> · <a href="CATALOGO.pt-BR.html" hreflang="pt-BR">Português</a></p>
   </div></footer>
 </body>

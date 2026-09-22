@@ -1,61 +1,61 @@
 ---
 name: live-source-prover
-description: Antes de citar QUALQUER número/status/métrica, re-deriva na fonte viva e rotula "live @ HH:MM + fonte" — nunca repete dado stale
+description: Before citing ANY number/status/metric, re-derives it at the live source and labels it "live @ HH:MM + source" — never repeats stale data
 ---
 
-> **Auto-Trigger:** Antes de afirmar qualquer contagem, métrica, health, status de deploy/rota, ou completude
-> **Keywords:** "quantos", "quantas", "contagem", "status", "health", "métrica", "número", "está no ar", "stale", "onde estamos", "% completo"
-> **Prioridade:** ALTA
+> **Auto-Trigger:** Before asserting any count, metric, health, deploy/route status, or completeness
+> **Keywords:** "how many", "count", "status", "health", "metric", "number", "is it live", "stale", "where are we", "% complete"
+> **Priority:** HIGH
 > **Tools:** Bash, Read, Grep
-> **Doutrina relacionada:** `rules/learned-corrections.md` (LC-1, mecanizada em skill), `rules/epistemic-standards.md` (separar fato de recomendação).
+> **Related doctrine:** `rules/learned-corrections.md` (LC-1, mechanized as a skill), `rules/epistemic-standards.md` (separating fact from recommendation).
 
-# live-source-prover — verificar AO VIVO antes de citar (LC-1)
+# live-source-prover — verify LIVE before citing (LC-1)
 
-O trato #1: **trate todo dado herdado de sessão/doc/snapshot/outro-agente como SUSPEITO até confirmar na fonte viva.** Materializa LC-1 como skill portátil.
+Deal #1: **treat every datum inherited from a session/doc/snapshot/other agent as SUSPECT until confirmed at the live source.** Materializes LC-1 as a portable skill.
 
-## Contrato
+## Contract
 
-**ENTRADA:** a afirmação a citar (número/status/métrica) + o domínio dela (contagem/operacional/health/deploy/plano) + `sources.yaml` do projeto.
+**INPUT:** the statement to cite (number/status/metric) + its domain (count/operational/health/deploy/plan) + the project's `sources.yaml`.
 
-**SAÍDA:** o valor re-derivado + rótulo `live @ HH:MM · fonte: <comando/endpoint>` colado junto à afirmação.
+**OUTPUT:** the re-derived value + the label `live @ HH:MM · source: <command/endpoint>` attached to the statement.
 
-**EXIT CODES** (o comando de re-derivação do domínio, seja `curl`/`urllib`/`git log`/`find`):
+**EXIT CODES** (the domain's re-derivation command, whether `curl`/`urllib`/`git log`/`find`):
 
-| Exit | Significado |
+| Exit | Meaning |
 |---|---|
-| 0 | fonte respondeu — valor confirmado, pode citar com o rótulo |
-| ≠0 | fonte não respondeu/indisponível — NÃO cite o número velho; declare "não verificado" |
+| 0 | source answered — value confirmed, may be cited with the label |
+| ≠0 | source did not answer/unavailable — do NOT cite the old number; declare "not verified" |
 
-**ESTADO QUE TOCA:**
+**STATE IT TOUCHES:**
 
-| Recurso | Lê/Escreve | Propósito |
+| Resource | Reads/Writes | Purpose |
 |---|---|---|
-| `sources.yaml` (ao lado desta skill) | Lê | comando de re-derivação por domínio |
-| endpoint/disco/git da fonte viva | Lê (read-only) | o valor real |
+| `sources.yaml` (next to this skill) | Reads | re-derivation command per domain |
+| endpoint/disk/git of the live source | Reads (read-only) | the real value |
 
-## Processo
-1. **Antes de citar** um número/status, identifique o domínio (contagem de arquivos, operacional, health de serviço, deploy/rota, completude de plano).
-2. **Re-derive AO VIVO** rodando o comando do `sources.yaml` do projeto (veja `sources.example.yaml` ao lado):
-   - contagem → `find/grep/ls`; serviço → `curl`/`urllib` num endpoint; deploy → curl numa **rota EXCLUSIVA do novo** + marca de build (não só o gate de auth); plano → `git log --grep` + disco (ver `audit_plan.py`).
-3. **Cole o output** e **rotule** o valor: `live @ HH:MM · fonte: <comando/endpoint>`.
-4. **TTL de frescor:** dado mais velho que `verificacao.fonte_suspeita_ttl_dias` (default 7) = re-verificar, não repetir.
-5. **Sem `sources.yaml`** definido p/ aquele domínio → **WARN** ("não verificado"), nunca invente o comando nem o número.
+## Process
+1. **Before citing** a number/status, identify the domain (file count, operational, service health, deploy/route, plan completeness).
+2. **Re-derive LIVE** by running the command from the project's `sources.yaml` (see `sources.example.yaml` next to it):
+   - count → `find/grep/ls`; service → `curl`/`urllib` on an endpoint; deploy → curl on a **route EXCLUSIVE to the new build** + build marker (not just the auth gate); plan → `git log --grep` + disk (see `audit_plan.py`).
+3. **Paste the output** and **label** the value: `live @ HH:MM · source: <command/endpoint>`.
+4. **Freshness TTL:** data older than `verificacao.fonte_suspeita_ttl_dias` (default 7) = re-verify, do not repeat.
+5. **No `sources.yaml`** defined for that domain → **WARN** ("not verified"); never invent the command or the number.
 
-> Caso deploy/routing: confirme que o **backend** trocou (rota/conteúdo exclusivo do novo), não só o status do processo nem o gate de auth. Cadeia de proxy/tunnel: confirme CADA hop.
+> Deploy/routing case: confirm that the **backend** switched (route/content exclusive to the new build), not just the process status or the auth gate. Proxy/tunnel chain: confirm EACH hop.
 
-## Quando NÃO Ativar
-- Quando o número já foi verificado live **nesta mesma resposta**.
-- Valores puramente ilustrativos/hipotéticos explicitamente marcados como tal.
-- A pergunta é sobre plano vs realidade especificamente (checkboxes/deliverables) → use `doc-consolidator-dedup`'s extrator (`audit_plan.py`), que já é este princípio aplicado a planos.
+## When NOT to Activate
+- When the number was already verified live **in this same reply**.
+- Purely illustrative/hypothetical values explicitly marked as such.
+- The question is specifically about plan vs reality (checkboxes/deliverables) → use `doc-consolidator-dedup`'s extractor (`audit_plan.py`), which is this same principle applied to plans.
 
-## Exemplos executados
+## Executed examples
 
 ```console
 $ git log --oneline -1
 b2ea2af0 feat(P0.4): seed_pessoas.py — tabela _PESSOAS.md vira registry (52 pessoas + 28 links)
 ```
-<!-- executado: 2026-07-10 · exit=0 -->
-(domínio "completude de plano" — o commit real, não o que a sessão anterior dizia.)
+<!-- executed: 2026-07-10 · exit=0 -->
+(domain "plan completeness" — the real commit, not what the previous session said.)
 
 ```console
 $ python -c "
@@ -65,10 +65,10 @@ with urllib.request.urlopen('http://127.0.0.1:8099/health', timeout=3) as r:
 "
 200 b'{"status": "ok", "service": "example-api"}'
 ```
-<!-- executado: 2026-07-10 · exit=0 -->
-(domínio "health de serviço" — servidor local de exemplo na porta 8099; rotular:
-`live @ 15:03 · fonte: python -c urllib 127.0.0.1:8099/health`. Troque a porta pelo
-endpoint real do seu `sources.yaml`.)
+<!-- executed: 2026-07-10 · exit=0 -->
+(domain "service health" — example local server on port 8099; label it:
+`live @ 15:03 · source: python -c urllib 127.0.0.1:8099/health`. Replace the port with the
+real endpoint from your `sources.yaml`.)
 
 ```console
 $ python -c "
@@ -81,10 +81,10 @@ except Exception as e:
 "
 ERRO: URLError
 ```
-<!-- executado: 2026-07-10 · exit=1 -->
-(fonte indisponível — o passo 5 manda declarar "não verificado", NUNCA repetir um valor velho porque a fonte caiu.)
+<!-- executed: 2026-07-10 · exit=1 -->
+(source unavailable — step 5 says declare "not verified", NEVER repeat an old value because the source went down.)
 
-## Prova
+## Proof
 
 ```bash
 python -c "import subprocess,sys; sys.exit(subprocess.run(['git','log','--oneline','-1'], capture_output=True).returncode)"

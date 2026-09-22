@@ -1,102 +1,102 @@
 ---
 name: search-first
-description: Busca por biblioteca/ferramenta/padrão existente ANTES de escrever código novo — cobre registro de pacotes (npm/PyPI), MCP e GitHub, além do grep local. Use antes de criar utilitário, helper, ou integração nova.
+description: Searches for an existing library/tool/pattern BEFORE writing new code — covers package registries (npm/PyPI), MCP and GitHub, in addition to the local grep. Use before creating a utility, helper, or new integration.
 ---
 
-> **Auto-Trigger:** Antes de escrever um utilitário/helper novo, adicionar uma dependência, ou quando o pedido do usuário provavelmente já tem solução pronta.
-> **Keywords:** "adicionar funcionalidade", "criar utilitário", "nova dependência", "existe biblioteca pra isso"
-> **Prioridade:** MÉDIA
+> **Auto-Trigger:** Before writing a new utility/helper, adding a dependency, or when the user's request probably already has a ready-made solution.
+> **Keywords:** "add functionality", "create utility", "new dependency", "is there a library for this"
+> **Priority:** MEDIUM
 > **Tools:** Read, Grep, Bash, WebSearch
 
-## Quando NÃO Ativar
-- Já é sabido que não existe solução pronta (domínio muito específico do negócio).
-- Complementa, não substitui, LC-3 (`learned-corrections.md`) — LC-3 é grep local antes de
-  criar/classificar arquivo; este skill estende a busca pra fora do repo (registros de
-  pacote, MCP, GitHub) antes de escrever código novo.
+## When NOT to Activate
+- It is already known that no ready-made solution exists (a very business-specific domain).
+- It complements, not replaces, LC-3 (`learned-corrections.md`) — LC-3 is the local grep before
+  creating/classifying a file; this skill extends the search outside the repo (package
+  registries, MCP, GitHub) before writing new code.
 
-## Fluxo
+## Flow
 
 ```
-0. PREFLIGHT DE DISPONIBILIDADE — checar que canais de busca existem antes de contar com eles
-1. ANÁLISE DA NECESSIDADE — o que precisa, que linguagem/framework
-2. BUSCA EM PARALELO — npm/PyPI · MCP/skills locais · GitHub/web
-3. AVALIAR — funcionalidade, manutenção, comunidade, docs, licença, dependências
-4. DECIDIR — adotar como está / estender-wrap / compor 2-3 pacotes / construir custom
-5. IMPLEMENTAR
+0. AVAILABILITY PREFLIGHT — check that the search channels exist before relying on them
+1. NEEDS ANALYSIS — what is needed, which language/framework
+2. SEARCH IN PARALLEL — npm/PyPI · local MCP/skills · GitHub/web
+3. EVALUATE — functionality, maintenance, community, docs, license, dependencies
+4. DECIDE — adopt as-is / extend-wrap / compose 2-3 packages / build custom
+5. IMPLEMENT
 ```
 
-## Matriz de decisão
+## Decision matrix
 
-| Sinal | Ação |
+| Signal | Action |
 |---|---|
-| Match exato, bem mantido, MIT/Apache | **Adotar** — instalar e usar direto |
-| Match parcial, boa base | **Estender** — instalar + wrapper fino |
-| Múltiplos matches fracos | **Compor** — combinar 2-3 pacotes pequenos |
-| Nada adequado encontrado | **Construir** — custom, mas informado pela pesquisa |
+| Exact match, well maintained, MIT/Apache | **Adopt** — install and use directly |
+| Partial match, good base | **Extend** — install + thin wrapper |
+| Multiple weak matches | **Compose** — combine 2-3 small packages |
+| Nothing suitable found | **Build** — custom, but informed by the research |
 
-## Modo rápido (inline, antes de escrever utilitário)
+## Quick mode (inline, before writing a utility)
 
-0. Já existe no repo? → `rg` nos módulos/testes relevantes primeiro (= LC-3)
-1. É um problema comum? → buscar npm/PyPI
-2. Existe MCP pra isso? → checar `.claude/settings.json` + `.mcp.json`
-3. Existe skill pra isso? → `skill-scout` (deste mesmo kit)
-4. Existe implementação/template no GitHub? → busca de código antes de escrever net-new
+0. Does it already exist in the repo? → `rg` the relevant modules/tests first (= LC-3)
+1. Is it a common problem? → search npm/PyPI
+2. Is there an MCP for it? → check `.claude/settings.json` + `.mcp.json`
+3. Is there a skill for it? → `skill-scout` (from this same module)
+4. Is there an implementation/template on GitHub? → code search before writing net-new
 
-## Anti-Padrões
-- Pular direto pro código sem checar se já existe.
-- Ignorar MCP disponível.
-- "Não achei nada" quando um canal de busca só estava indisponível (reportar honestamente).
-- Over-customizar um wrapper até perder o benefício da lib.
-- Inflar dependências por 1 feature pequena.
+## Anti-patterns
+- Jumping straight to code without checking whether it already exists.
+- Ignoring an available MCP.
+- "Found nothing" when a search channel was merely unavailable (report honestly).
+- Over-customizing a wrapper until the lib's benefit is lost.
+- Bloating dependencies for 1 small feature.
 
-## Contrato
+## Contract
 
-**Entrada:** necessidade de funcionalidade nova antes de escrever código.
-**Saída:** decisão registrada (adotar/estender/compor/construir) com a busca real que a embasou —
-nunca "construir" sem antes ter buscado nos 4 canais aplicáveis.
+**Input:** a need for new functionality, before writing code.
+**Output:** a recorded decision (adopt/extend/compose/build) with the real search that grounded it —
+never "build" without first having searched the 4 applicable channels.
 
 **EXIT CODES:**
 
-| Exit | Significado |
+| Exit | Meaning |
 |---|---|
-| 0 | busca aplicável executada e decisão registrada |
-| 1 | aviso: canal indisponível declarado |
-| 2 | bloqueio: decisão de construir sem busca |
-| 3 | erro do instrumento de busca |
+| 0 | applicable search executed and decision recorded |
+| 1 | warning: unavailable channel declared |
+| 2 | block: decision to build without searching |
+| 3 | search instrument error |
 
-**ESTADO QUE TOCA:**
+**STATE IT TOUCHES:**
 
-| Caminho | Ação | Condição |
+| Path | Action | Condition |
 |---|---|---|
-| repositório-alvo | leitura | busca local antes de criar |
-| registro da decisão definido pelo projeto | escrita opcional | só quando o projeto exigir |
+| target repository | read | local search before creating |
+| decision record defined by the project | optional write | only when the project requires it |
 
-## Exemplos executados
+## Executed examples
 
 ```console
 $ python -c "print('local=consultado')"
 local=consultado
 ```
-<!-- executado: 2026-09-20 · exit=0 -->
+<!-- executed: 2026-09-20 · exit=0 -->
 
 ```console
 $ python -c "print('decisao=adotar')"
 decisao=adotar
 ```
-<!-- executado: 2026-09-20 · exit=0 -->
+<!-- executed: 2026-09-20 · exit=0 -->
 
 ```console
 $ python -c "import sys; print('block: construir sem busca'); sys.exit(2)"
 block: construir sem busca
 ```
-<!-- executado: 2026-09-20 · exit=2 -->
+<!-- executed: 2026-09-20 · exit=2 -->
 
-## Prova
+## Proof
 
-Metodologia de pesquisa — a prova mínima do contrato é:
+Research methodology — the minimum proof of the contract is:
 
 ```bash
 python -c "print('local=consultado')"
 ```
 
-Na execução real, a evidência é o comando de busca aplicável ter rodado antes do código novo.
+In real execution, the evidence is that the applicable search command ran before the new code.

@@ -1,126 +1,126 @@
-# LOOP-COST-BUDGET — LC-5 · Orçamento de tokens/custo é condição de PARADA de 1ª classe
+# LOOP-COST-BUDGET — LC-5 · Token/cost budget is a FIRST-CLASS STOP condition
 
-> **Auto-Trigger:** Ao iniciar/declarar QUALQUER loop autônomo (/goal, /loop, ralph-loop, workflow multi-onda, cron de execução contínua, dispatch de squad em batch) — ANTES de disparar a 1ª iteração; e a cada checkpoint do loop antes de continuar.
-> **Keywords:** "loop", "/goal", "/loop", "ralph", "ralph-loop", "autônomo", "auto mode", "máxima capacidade", "100%", "budget", "orçamento", "token budget", "budget_tokens", "budget_custo", "custo", "cost", "kill-switch", "killswitch", "estourar orçamento", "limite semanal", "weekly limit", "rate limit", "quota", "subscription", "assinatura", "pay-per-use", "parar loop", "stop condition", "condição de parada", "circuit breaker", "onda", "batch", "iteração"
-> **Prioridade:** ALTA
-> **Versão:** 1.0.0 (generalizada para o operator-kit)
-> **Origem:** orçamento de tokens/custo como condição de PARADA de 1ª classe, destilado em regra — registrada como **LC-5**. Extensão de `learned-corrections.md` (LC-1/LC-2/LC-3 + LC-4 em `stale-replay-guard.md`). Universal: aplica a qualquer loop autônomo. Contrapesa o LC-2 ("fazer tudo 100%" — mas dentro do orçamento).
+> **Auto-Trigger:** When starting/declaring ANY autonomous loop (/goal, /loop, ralph-loop, multi-wave workflow, continuously running cron, squad dispatch in batch) — BEFORE firing the 1st iteration; and at every checkpoint of the loop before continuing.
+> **Keywords:** "loop", "/goal", "/loop", "ralph", "ralph-loop", "autonomous", "auto mode", "maximum capacity", "100%", "budget", "token budget", "budget_tokens", "budget_custo", "cost", "kill-switch", "killswitch", "blow the budget", "weekly limit", "rate limit", "quota", "subscription", "pay-per-use", "stop loop", "stop condition", "circuit breaker", "wave", "batch", "iteration"
+> **Priority:** HIGH
+> **Version:** 1.0.0 (generalized for the operator-kit)
+> **Origin:** token/cost budget as a FIRST-CLASS STOP condition, distilled into a rule — registered as **LC-5**. Extension of `learned-corrections.md` (LC-1/LC-2/LC-3 + LC-4 in `stale-replay-guard.md`). Universal: applies to any autonomous loop. Counterweight to LC-2 ("do everything 100%" — but within the budget).
 
 ---
 
-## LC-5 · Todo loop declara seu orçamento ANTES de rodar; estourar o orçamento PARA o loop
+## LC-5 · Every loop declares its budget BEFORE running; blowing the budget STOPS the loop
 
-Um loop autônomo sem orçamento explícito é um loop sem freio. Tokens e custo NÃO são "efeito colateral" do trabalho — são um **recurso finito** cujo esgotamento é uma **condição de parada de 1ª classe**, no mesmo nível de `done_predicate` (objetivo atingido) e `circuit breaker` (falha repetida). Um loop pode terminar por TRÊS razões legítimas: (1) **concluiu** o objetivo, (2) **travou** (circuit breaker), ou (3) **estourou o orçamento** (kill-switch de custo). A terceira é tão válida e tão obrigatória quanto as duas primeiras.
+An autonomous loop without an explicit budget is a loop without brakes. Tokens and cost are NOT a "side effect" of the work — they are a **finite resource** whose exhaustion is a **first-class stop condition**, on the same level as `done_predicate` (objective reached) and `circuit breaker` (repeated failure). A loop may end for THREE legitimate reasons: (1) it **completed** the objective, (2) it **stalled** (circuit breaker), or (3) it **blew the budget** (cost kill-switch). The third is as valid and as mandatory as the first two.
 
 ```
 ╔══════════════════════════════════════════════════════════════════════════════╗
-║  ORÇAMENTO ESTOURADO = PARADA LEGÍTIMA (não é falha, não é desistência)       ║
+║  BUDGET BLOWN = LEGITIMATE STOP (not a failure, not giving up)               ║
 ║                                                                              ║
-║  done_predicate satisfeito   →  PARA · objetivo atingido                      ║
-║  circuit breaker (N falhas)  →  PARA · loop travado, escalar ao operador      ║
-║  budget_tokens/custo estourou →  PARA · kill-switch · reporta e aguarda        ║
+║  done_predicate satisfied      →  STOP · objective reached                   ║
+║  circuit breaker (N failures)  →  STOP · loop stalled, escalate to operator  ║
+║  budget_tokens/cost blown      →  STOP · kill-switch · report and wait       ║
 ║                                                                              ║
-║  Loop sem budget declarado = loop PROIBIDO de iniciar.                        ║
+║  Loop without a declared budget = loop FORBIDDEN to start.                   ║
 ╚══════════════════════════════════════════════════════════════════════════════╝
 ```
 
-### 1. DECLARAR o orçamento antes da 1ª iteração (obrigatório)
+### 1. DECLARE the budget before the 1st iteration (mandatory)
 
-Todo loop autônomo declara, no seu ledger/estado/header, ANTES de disparar:
+Every autonomous loop declares, in its ledger/state/header, BEFORE firing:
 
-| Campo | O que é | Default conservador |
+| Field | What it is | Conservative default |
 |-------|---------|---------------------|
-| `budget_tokens` | Teto de tokens consumidos pelo loop inteiro (soma das iterações) | Definir explícito — sem default mágico |
-| `budget_custo` | Teto de custo monetário equivalente, quando rastreável | `0` em regime subscription-only (ver §3) |
-| `budget_iteracoes` | Teto de iterações/ondas antes de checkpoint obrigatório | ≤ 3 ondas (evita estourar rate-limit em rajada) |
-| `budget_tempo` | Janela máxima de relógio antes de pausar e reportar | Declarar (ex: "até X" ou "N horas") |
-| `consumido_ate_agora` | Contador vivo do que já foi gasto (atualizado a cada iteração) | `0` no início |
+| `budget_tokens` | Ceiling of tokens consumed by the whole loop (sum of the iterations) | Set it explicitly — no magic default |
+| `budget_custo` | Ceiling of equivalent monetary cost, when trackable | `0` in a subscription-only regime (see §3) |
+| `budget_iteracoes` | Ceiling of iterations/waves before a mandatory checkpoint | ≤ 3 waves (avoids blowing the rate limit in a burst) |
+| `budget_tempo` | Maximum wall-clock window before pausing and reporting | Declare it (e.g. "until X" or "N hours") |
+| `consumido_ate_agora` | Live counter of what has already been spent (updated every iteration) | `0` at the start |
 
-Sem esses campos declarados, o loop **não inicia** — proponha o orçamento ao operador e aguarde, ou aplique os defaults conservadores acima e DECLARE que aplicou.
+Without these fields declared, the loop **does not start** — propose the budget to the operator and wait, or apply the conservative defaults above and DECLARE that you did.
 
-### 2. KILL-SWITCH ao estourar (obrigatório)
+### 2. KILL-SWITCH on blowing it (mandatory)
 
-A cada checkpoint do loop (fim de iteração/onda), ANTES de continuar:
+At every loop checkpoint (end of iteration/wave), BEFORE continuing:
 
-1. Atualizar `consumido_ate_agora` (tokens/custo/iterações/tempo) com número REAL — auditado ao vivo (LC-1), nunca estimado de cabeça.
-2. Comparar com o orçamento declarado.
-3. **Se `consumido_ate_agora >= budget_*` em QUALQUER dimensão → KILL-SWITCH:**
-   - PARAR o loop imediatamente (não iniciar a próxima iteração).
-   - NÃO re-disparar, NÃO "só mais uma" (isso é exatamente o que o orçamento existe para barrar).
-   - Reportar ao operador: o que foi feito, quanto custou (real), o que falta, e o orçamento adicional necessário para concluir.
-   - Aguardar autorização explícita para estender o orçamento — estender orçamento é decisão do operador, nunca auto-concedida pelo loop.
-4. Registrar a parada por orçamento no ledger como término legítimo (status `paused-budget`), não como falha silenciosa.
-
-```
-SE consumido >= budget em qualquer dimensão:
-   → KILL-SWITCH · pare AGORA · reporte real · aguarde o operador
-SENÃO:
-   → continue a próxima iteração (dentro do orçamento)
-```
-
-### 3. Regime de billing declarado no profile (nunca escale sozinho para um provider mais caro)
-
-O regime de custo (assinatura fixa vs pay-per-use vs quota compartilhada entre processos) é
-uma decisão do operador, declarada no profile — não algo que o loop decide sozinho quando
-aperta:
-
-- **PROIBIDO** trocar de provider/chave para "ganhar mais orçamento" quando o loop estourar —
-  o kill-switch NÃO autoriza contornar o limite dessa forma. Estourou = para e reporta; não =
-  "abre a torneira paga".
-- **Se o regime é assinatura com quota compartilhada** entre múltiplos processos/agentes (ex.:
-  um cron 24/7 e uma sessão interativa dividindo a mesma conta), o orçamento real do loop é a
-  fração da quota que ele pode consumir sem faminto os outros processos. `budget_custo` nesse
-  regime é fração da quota, não dinheiro — declare quanto da janela o loop pode queimar e pare
-  ao atingir.
-- Se o loop precisa de mais volume e estourou a quota, a saída é **delegar a um provider/conta
-  alternativa já autorizada no profile** (se houver) OU pausar e reportar — nunca escalar
-  para pay-per-use sem autorização explícita do operador.
-- Não confie cegamente em monitores de quota com parsing frágil — audite o consumo real ao
-  vivo (LC-1) antes de declarar "quota estourada" ou "quota ok".
-
-### 4. CONTRAPESO sadio ao LC-2 (fazer 100% — mas dentro do orçamento)
-
-O `LC-2` manda executar de verdade, 100% em batch, sem enrolar, quando o operador autoriza
-("máxima capacidade", "/goal", "concluir tudo 100%"). Esta regra NÃO contradiz o LC-2 — ela o
-**delimita**:
+1. Update `consumido_ate_agora` (tokens/cost/iterations/time) with the REAL number — audited live (LC-1), never estimated from memory.
+2. Compare with the declared budget.
+3. **If `consumido_ate_agora >= budget_*` in ANY dimension → KILL-SWITCH:**
+   - STOP the loop immediately (do not start the next iteration).
+   - Do NOT re-fire, NO "just one more" (that is exactly what the budget exists to stop).
+   - Report to the operator: what was done, what it cost (real), what is missing, and the additional budget needed to finish.
+   - Wait for explicit authorization to extend the budget — extending the budget is the operator's decision, never self-granted by the loop.
+4. Record the budget stop in the ledger as a legitimate end (status `paused-budget`), not as a silent failure.
 
 ```
-LC-2:  "execute TODO o escopo, 100%, sem meias-execuções"
-LC-5:  "...dentro do orçamento declarado. Estourou o orçamento ANTES de
-        concluir 100%? → pare, reporte o gap real, e peça mais orçamento —
-        não enrole, mas também não queime o orçamento inteiro às cegas."
+IF consumed >= budget in any dimension:
+   → KILL-SWITCH · stop NOW · report the real numbers · wait for the operator
+ELSE:
+   → continue to the next iteration (within the budget)
 ```
 
-"100% de esforço" e "100% do escopo nesta janela" não são a mesma coisa quando o recurso é
-finito. O comportamento perfeito é: ir a fundo de verdade (LC-2) **até** o orçamento, e ao
-bater o teto, fazer a parada honesta e rastreável (LC-5) — reportar exatamente onde parou e
-quanto custou, para o operador decidir estender. Estourar o orçamento em silêncio (sem
-reportar) viola LC-5; parar antes do escopo "para economizar" sem autorização viola LC-2. O
-equilíbrio é: **máximo esforço dentro do envelope declarado, parada transparente no limite.**
+### 3. Billing regime declared in the profile (never escalate on your own to a more expensive provider)
+
+The cost regime (fixed subscription vs pay-per-use vs quota shared across processes) is
+an operator decision, declared in the profile — not something the loop decides on its own when
+things get tight:
+
+- **FORBIDDEN** to switch provider/key to "gain more budget" when the loop blows it —
+  the kill-switch does NOT authorize working around the limit that way. Blown = stop and report; not =
+  "open the paid tap".
+- **If the regime is a subscription with a quota shared** across multiple processes/agents (e.g.
+  a 24/7 cron and an interactive session sharing the same account), the loop's real budget is the
+  fraction of the quota it can consume without starving the other processes. `budget_custo` in that
+  regime is a fraction of the quota, not money — declare how much of the window the loop may burn and stop
+  on reaching it.
+- If the loop needs more volume and blew the quota, the way out is to **delegate to an alternative provider/account
+  already authorized in the profile** (if any) OR pause and report — never escalate
+  to pay-per-use without explicit operator authorization.
+- Do not blindly trust quota monitors with fragile parsing — audit the real consumption
+  live (LC-1) before declaring "quota blown" or "quota ok".
+
+### 4. Healthy COUNTERWEIGHT to LC-2 (do 100% — but within the budget)
+
+`LC-2` says to really execute, 100% in batch, without stalling, when the operator authorizes
+("maximum capacity", "/goal", "finish everything 100%"). This rule does NOT contradict LC-2 — it
+**bounds** it:
+
+```
+LC-2:  "execute the WHOLE scope, 100%, no half-executions"
+LC-5:  "...within the declared budget. Blew the budget BEFORE
+        finishing 100%? → stop, report the real gap, and ask for more budget —
+        do not stall, but do not burn the whole budget blindly either."
+```
+
+"100% effort" and "100% of the scope in this window" are not the same thing when the resource is
+finite. The perfect behavior is: really go deep (LC-2) **up to** the budget, and on
+hitting the ceiling, make the honest, traceable stop (LC-5) — report exactly where it stopped and
+what it cost, so the operator can decide to extend. Blowing the budget in silence (without
+reporting) violates LC-5; stopping short of the scope "to save" without authorization violates LC-2. The
+balance is: **maximum effort within the declared envelope, transparent stop at the limit.**
 
 ---
 
-## Checklist (antes de iniciar QUALQUER loop)
+## Checklist (before starting ANY loop)
 
 ```
-[ ] budget_tokens declarado? (sem default mágico)
-[ ] budget_custo declarado? (0 em subscription-only, ou fração da quota compartilhada)
-[ ] budget_iteracoes / budget_tempo declarados? (≤3 ondas default)
-[ ] consumido_ate_agora inicializado e será atualizado a cada checkpoint (LC-1: real)?
-[ ] kill-switch definido: estourou qualquer dimensão → PARA + reporta + aguarda o operador?
-[ ] PROIBIDO trocar de provider/chave para escapar do limite sem autorização?
-[ ] Fallback de volume (se houver) é uma conta/provider já autorizado, não pay-per-use surpresa?
-[ ] Parada por orçamento registrada como término legítimo (paused-budget), não falha?
+[ ] budget_tokens declared? (no magic default)
+[ ] budget_custo declared? (0 in subscription-only, or a fraction of the shared quota)
+[ ] budget_iteracoes / budget_tempo declared? (≤3 waves default)
+[ ] consumido_ate_agora initialized and to be updated at every checkpoint (LC-1: real)?
+[ ] kill-switch defined: blew any dimension → STOP + report + wait for the operator?
+[ ] FORBIDDEN to switch provider/key to escape the limit without authorization?
+[ ] Volume fallback (if any) is an already-authorized account/provider, not surprise pay-per-use?
+[ ] Budget stop recorded as a legitimate end (paused-budget), not a failure?
 ```
 
 ```
-⚠️ LOOP SEM ORÇAMENTO = LOOP SEM FREIO = PROIBIDO INICIAR
-⚠️ ORÇAMENTO ESTOURADO = PARADA DE 1ª CLASSE (igual a done_predicate / circuit breaker)
-⚠️ ESTOUROU ≠ "abre a torneira paga" — o limite declarado É o limite
+⚠️ LOOP WITHOUT A BUDGET = LOOP WITHOUT BRAKES = FORBIDDEN TO START
+⚠️ BUDGET BLOWN = FIRST-CLASS STOP (same as done_predicate / circuit breaker)
+⚠️ BLOWN ≠ "open the paid tap" — the declared limit IS the limit
 ```
 
 ---
 
-*Orçamento de tokens/custo como condição de parada de 1ª classe. Universal — aplica a
-qualquer LLM que rode loops autônomos. Casa com `learned-corrections.md` LC-2 (contrapeso) e
-`loop-operator.md` (trigger 3). Estado de quota/custo vivo = auditar AO VIVO (LC-1).*
+*Token/cost budget as a first-class stop condition. Universal — applies to
+any LLM that runs autonomous loops. Pairs with `learned-corrections.md` LC-2 (counterweight) and
+`loop-operator.md` (trigger 3). Live quota/cost state = audit LIVE (LC-1).*

@@ -1,103 +1,103 @@
 ---
 name: skill-scout
-description: Busca skills locais, no marketplace, no GitHub e na web ANTES de criar uma skill nova — evita duplicar trabalho já existente. Use quando o usuário disser "criar uma skill", "existe skill pra X?", ou você estiver prestes a sugerir criar uma skill nova.
+description: Searches for skills locally, in the marketplace, on GitHub and on the web BEFORE creating a new skill — avoids duplicating work that already exists. Use when the user says "create a skill", "is there a skill for X?", or you are about to suggest creating a new skill.
 ---
 
-> **Auto-Trigger:** Usuário pede pra criar/construir/forkar uma skill, ou pergunta se já existe skill para uma tarefa.
-> **Keywords:** "criar skill", "existe skill", "nova skill", "forkar skill", "skill pra isso"
-> **Prioridade:** MÉDIA
+> **Auto-Trigger:** The user asks to create/build/fork a skill, or asks whether a skill already exists for a task.
+> **Keywords:** "create skill", "is there a skill", "new skill", "fork skill", "skill for this"
+> **Priority:** MEDIUM
 > **Tools:** Read, Glob, Grep, Bash
 
-## Quando NÃO Ativar
-- Usuário disse explicitamente pra pular a busca e criar do zero — reconhecer e prosseguir.
-- Debugging de skill já existente (não é criação nova).
+## When NOT to Activate
+- The user explicitly said to skip the search and create from scratch — acknowledge and proceed.
+- Debugging an already existing skill (it is not a new creation).
 
-## Processo
+## Process
 
-### 1. Capturar a intenção
-Extrair: a tarefa, os gatilhos, o domínio/ferramentas envolvidas, 3-5 palavras-chave + sinônimos.
+### 1. Capture the intent
+Extract: the task, the triggers, the domain/tools involved, 3-5 keywords + synonyms.
 
-### 2. Buscar fontes locais primeiro (preferidas — já fazem parte do ambiente)
+### 2. Search local sources first (preferred — already part of the environment)
 ```bash
 find .claude/skills -maxdepth 2 -name SKILL.md 2>/dev/null | xargs grep -liE "keyword|sinonimo"
 grep -RilE "keyword|sinonimo" .claude/skills 2>/dev/null
 ```
 
-### 3. Buscar fontes remotas (GitHub/web) só se local não resolver
+### 3. Search remote sources (GitHub/web) only if local does not resolve it
 ```bash
 gh search repos "claude code skill keyword" --limit 10 --sort stars
 gh search code "name: keyword" --filename SKILL.md --limit 10
 ```
 
-### 4. Antes de recomendar QUALQUER skill externa
-- Ler o `SKILL.md` inteiro (frontmatter + instruções).
-- Procurar comando de shell inesperado, escrita de arquivo, chamada de rede, manuseio de credencial, install de pacote.
-- Verificar se o repositório parece mantido.
-- Copiar pra uma branch local e revisar o diff — nunca editar o marketplace original direto.
+### 4. Before recommending ANY external skill
+- Read the whole `SKILL.md` (frontmatter + instructions).
+- Look for unexpected shell commands, file writes, network calls, credential handling, package installs.
+- Check whether the repository looks maintained.
+- Copy it to a local branch and review the diff — never edit the original marketplace directly.
 
-### 5. Rankear e apresentar (máx. 10 resultados)
-Ordem: match exato no nome > match na descrição > fonte local/marketplace > fonte GitHub mantida > só menção web.
+### 5. Rank and present (max. 10 results)
+Order: exact match in the name > match in the description > local/marketplace source > maintained GitHub source > web mention only.
 
-| Opção | Significado |
+| Option | Meaning |
 |---|---|
-| Usar existente | Invocar/instalar a skill que já resolve |
-| Fork/estender | Copiar a mais próxima e modificar |
-| Criar do zero | Só depois de confirmar que não há match próximo |
+| Use existing | Invoke/install the skill that already solves it |
+| Fork/extend | Copy the closest one and modify it |
+| Create from scratch | Only after confirming there is no close match |
 
-## Anti-Padrões
-- Pular direto pra criação sem buscar primeiro.
-- Instalar skill externa sem ler o conteúdo antes.
-- Apresentar lista longa e não-rankeada de matches fracos.
-- Tratar menção web-only como fonte confiável.
-- Editar o original do marketplace instalado em vez de copiar.
+## Anti-patterns
+- Jumping straight to creation without searching first.
+- Installing an external skill without reading its content first.
+- Presenting a long, unranked list of weak matches.
+- Treating a web-only mention as a trustworthy source.
+- Editing the installed marketplace original instead of copying it.
 
-## Contrato
+## Contract
 
-**Entrada:** um pedido de criação de skill nova, ou pergunta "existe skill pra X?".
-**Saída:** tabela de até 10 candidatos rankeados + recomendação (usar/estender/criar), NUNCA "criar do zero" sem antes ter buscado.
+**Input:** a request to create a new skill, or the question "is there a skill for X?".
+**Output:** a table of up to 10 ranked candidates + a recommendation (use/extend/create), NEVER "create from scratch" without having searched first.
 
 **EXIT CODES:**
 
-| Exit | Significado |
+| Exit | Meaning |
 |---|---|
-| 0 | candidatos avaliados e recomendação produzida |
-| 1 | aviso: só parte dos canais estava disponível |
-| 2 | bloqueio: criação proposta sem busca ou origem sem licença |
-| 3 | erro do instrumento de busca |
+| 0 | candidates evaluated and recommendation produced |
+| 1 | warning: only some of the channels were available |
+| 2 | block: creation proposed without a search, or origin without a license |
+| 3 | search instrument error |
 
-**ESTADO QUE TOCA:**
+**STATE IT TOUCHES:**
 
-| Caminho | Ação | Condição |
+| Path | Action | Condition |
 |---|---|---|
-| `.claude/skills/` | leitura | inventário local |
-| cópia de trabalho escolhida pelo operador | escrita opcional | só após origem e licença verificadas |
+| `.claude/skills/` | read | local inventory |
+| working copy chosen by the operator | optional write | only after origin and license are verified |
 
-## Exemplos executados
+## Executed examples
 
 ```console
 $ python -c "print('candidatos=3')"
 candidatos=3
 ```
-<!-- executado: 2026-09-20 · exit=0 -->
+<!-- executed: 2026-09-20 · exit=0 -->
 
 ```console
 $ python -c "print('recomendacao=estender')"
 recomendacao=estender
 ```
-<!-- executado: 2026-09-20 · exit=0 -->
+<!-- executed: 2026-09-20 · exit=0 -->
 
 ```console
 $ python -c "import sys; print('block: origem sem licenca'); sys.exit(2)"
 block: origem sem licenca
 ```
-<!-- executado: 2026-09-20 · exit=2 -->
+<!-- executed: 2026-09-20 · exit=2 -->
 
-## Prova
+## Proof
 
-Metodologia de busca — a prova mínima do contrato é:
+Search methodology — the minimum proof of the contract is:
 
 ```bash
 python -c "print('candidatos=3')"
 ```
 
-Na execução real, a evidência é a busca ter rodado antes de recomendar criação.
+In real execution, the evidence is that the search ran before recommending creation.

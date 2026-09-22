@@ -28,29 +28,32 @@ External services: **none**. I/O is 100% local (JSONL append/read in the store).
 
 ```
 gotcha-memory/
-├── README.md                     ← este arquivo
-├── profile.example.yaml          ← subset de config p/ copiar no seu operator-profile.yaml
-├── curated.seed.example.yaml     ← lições curated de exemplo (genéricas — edite antes de seedar)
+├── README.md · README.pt-BR.md   ← this file (and its Portuguese twin)
+├── profile.example.yaml          ← config subset to copy into your operator-profile.yaml
+├── curated.seed.example.yaml     ← example curated lessons (generic — edit before seeding)
 ├── _lib/
-│   ├── gotchas_memory.py         ← núcleo: record/recurring/curated/preamble + CLI (--seed/--preamble/--self-test/demo)
-│   ├── error_strategy.py         ← classificador puro erro→família→estratégia (vendorizado, stdlib)
-│   └── profile_loader.py         ← acha+lê o operator-profile.yaml (vendorizado; degrada p/ defaults)
+│   ├── gotchas_memory.py         ← core: record/recurring/curated/preamble + CLI (--seed/--preamble/--self-test/demo)
+│   ├── error_strategy.py         ← pure classifier error→family→strategy (vendored, stdlib)
+│   └── profile_loader.py         ← finds + reads operator-profile.yaml (vendored; degrades to defaults)
 ├── hooks/
 │   ├── hooks.json                ← PreToolUse Bash → preflight · PostToolUse + PostToolUseFailure Bash → postflight
-│   ├── gotcha_preflight.py       ← injeta o preâmbulo "⚠️ GOTCHAS" no stderr antes do comando
-│   └── gotcha_postflight.py      ← registra a falha depois do comando (conservador)
+│   ├── pyrun.sh                  ← resolves the project's Python interpreter for the hooks
+│   ├── gotcha_preflight.py       ← injects the "⚠️ GOTCHAS" preamble into stderr before the command
+│   └── gotcha_postflight.py      ← records the failure after the command (conservative)
 ├── skills/
-│   └── gotcha-memory/SKILL.md    ← doutrina + exemplos executados
+│   └── gotcha-memory/SKILL.md    ← doctrine + executed examples
 ├── install/
-│   └── kit.install.yaml          ← prereqs + verification (4 self-tests)
-└── .claude-plugin/
-    └── plugin.json               ← manifesto do plugin
+│   └── kit.install.yaml          ← prereqs + verification (4 self-tests) + 1 question
+├── .claude-plugin/
+│   └── plugin.json               ← plugin manifest (declares hooks/hooks.json)
+├── AGENTS.md                     ← Codex CLI entry point (what Codex reads on --host codex)
+└── LICENSE · CHECKSUMS.txt · SANITIZATION.md   ← added by the forge at emission
 ```
 
 ## Install as a plugin (1 click)
 
 ```bash
-/plugin marketplace add .
+/plugin marketplace add rushar-labs/house-party-protocol
 /plugin install gotcha-memory@house-party-protocol
 ```
 
@@ -62,8 +65,24 @@ however many events arrive.
 
 ## Install by copy (manual wire)
 
-Copy the folder into your project and paste into `.claude/settings.local.json` (wiring
-hooks is a **human gate** by design — editing settings is your decision):
+In the emitted distribution this module lives in `continuidade/gotcha-memory-1.0.0/` (the
+directory carries the version — state it once, in `KIT`). The marketplace installer plans
+first and writes only on a second, explicit `--apply`; its `profile` stage copies
+`profile.example.yaml` → `profile.yaml` and `curated.seed.example.yaml` →
+`curated.seed.yaml` into the target (never overwriting), and its `configure` stage asks
+`seedar_curated_agora` (seed the curated lessons now? default: no):
+
+```bash
+KIT=continuidade/gotcha-memory-1.0.0
+cp -r "$KIT" ../your-repo/gotcha-memory       # the copy itself (kit_doctor does not copy on claude-code)
+python instaladores/kit-forge-1.4.0/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo
+python instaladores/kit-forge-1.4.0/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo --apply
+# Codex CLI: --host codex — the installer copies the module into .agents/hpp/gotcha-memory
+#            and the skill into .agents/skills/hpp-gotcha-memory-<skill>; no cp -r needed
+```
+
+Then paste into `.claude/settings.local.json` (wiring hooks is a **human gate** by design —
+editing settings is your decision):
 
 ```json
 {
@@ -89,27 +108,30 @@ hooks is a **human gate** by design — editing settings is your decision):
 
 ## Config (operator-profile.yaml)
 
-Copy from `profile.example.yaml`. Without a profile, defaults: store `.claude/gotchas/`,
-24h window, min_count 3, top 5. The store can also be overridden through the
-`GOTCHA_STORE_DIR` env var. Recommended: **gitignore the store** (regenerable local memory).
+Copy from `profile.example.yaml` (the loader reads `operator-profile.yaml`, so the
+`profile.yaml` the installer leaves must be renamed or merged into it). Without a profile,
+defaults: store `.claude/gotchas/`, 24h window, min_count 3, top 5. The store can also be
+overridden through the `GOTCHA_STORE_DIR` env var. Recommended: **gitignore the store**
+(regenerable local memory).
 
 ## Direct use (CLI)
 
 ```bash
-python _lib/gotchas_memory.py                                  # demo do loop inteiro (store temporário)
-python _lib/gotchas_memory.py --self-test                      # asserções do núcleo
-python _lib/gotchas_memory.py --seed curated.seed.example.yaml # seeda suas regras (idempotente)
-python _lib/gotchas_memory.py --preamble "rodar o deploy"      # o que o agente veria antes dessa task
+python _lib/gotchas_memory.py                                  # demo of the whole loop (temporary store)
+python _lib/gotchas_memory.py --self-test                      # core assertions
+python _lib/gotchas_memory.py --seed curated.seed.example.yaml # seeds your rules (idempotent)
+python _lib/gotchas_memory.py --preamble "run the deploy"      # what the agent would see before that task
 ```
 
 ## Verification (the criterion for "installed and working")
 
 ```bash
-python _lib/error_strategy.py --self-test      # OK
+python _lib/error_strategy.py --self-test      # self-test OK
 python _lib/gotchas_memory.py --self-test      # self-test OK ✓
 python hooks/gotcha_preflight.py --self-test   # self-test OK
 python hooks/gotcha_postflight.py --self-test  # self-test OK
 ```
+<!-- executado: 2026-09-21 · exit=0 (the four) -->
 
 End-to-end test of the loop: provoke 3 identical failures (`bash -c "exit 1"` with the same
 description) and confirm that the next preflight of the same task prints

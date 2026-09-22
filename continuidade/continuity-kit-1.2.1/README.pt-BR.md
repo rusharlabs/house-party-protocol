@@ -23,29 +23,46 @@ Serviços externos: **nenhum — stdlib + PyYAML, só toca filesystem local + gi
 ## Instalar via plugin
 
 ```bash
-/plugin marketplace add .
+/plugin marketplace add rushar-labs/house-party-protocol
 /plugin install continuity-kit@house-party-protocol
 ```
+O `.claude-plugin/plugin.json` declara `hooks/hooks.json`, então o plugin arma três
+entradas via `${CLAUDE_PLUGIN_ROOT}` (cada uma lançada por `hooks/pyrun.sh`, que resolve o
+Python do projeto; WARN-only, `timeout: 30`): `handoff_inject.py` no `SessionStart`
+(injeta o handoff válido mais novo, ≤4 KB, e grava `consumed`), e `handoff_guard.py` no
+`Stop` e no `PreCompact` (garante que um handoff fresco existe, sem nunca travar de
+verdade). O `hooks/session_boot.py` — um `SessionStart` genérico que soma git
+HEAD/branch/tags e as seções vivas do seu state doc, e depois delega ao
+`handoff_inject.py` — não é armado pelo plugin; cole você mesmo se quiser. Skills são
+auto-descobertas.
 
 ## Instalar por cópia
 
+Na distribuição emitida este módulo vive em `continuidade/continuity-kit-1.2.1/` (o
+diretório carrega a versão — declare-a uma vez, em `KIT`). O instalador é
+`instaladores/kit-forge-1.4.0/kit_doctor.py` — o motor único de instalação de todo o
+marketplace, ver `INSTALL-CONTRACT.md` na raiz da distribuição. Rode-o da raiz da
+distribuição; ele planeja primeiro e só escreve numa segunda invocação explícita com
+`--apply`:
+
 ```bash
-cp -r continuity-kit-1.1.0 <seu-projeto>/continuity-kit
-cd <seu-projeto>
-python continuity-kit/instaladores/kit-forge/kit_doctor.py install continuity-kit --target . --human
-#                                                                                     ^ plano, zero escrita
-python continuity-kit/instaladores/kit-forge/kit_doctor.py install continuity-kit --target . --apply
-#                                                                                     ^ aplica de verdade
+KIT=continuidade/continuity-kit-1.2.1
+cp -r "$KIT" ../your-repo/continuity-kit      # the copy itself (kit_doctor does not copy on claude-code)
+python instaladores/kit-forge-1.4.0/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo
+python instaladores/kit-forge-1.4.0/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo --apply
+# Codex CLI: --host codex — the installer copies the module into .agents/hpp/continuity-kit
+#            and each skill into .agents/skills/hpp-continuity-kit-<skill>; no cp -r needed
 ```
-(ajuste o path do `kit_doctor.py` para onde o kit-forge foi copiado — é o motor único de
-instalação de todo o marketplace, ver `INSTALL-CONTRACT.md`.)
 
 ## O que o instalador detecta
 
+O estágio `detect` classifica o alvo (só leitura) com exatamente estes três rótulos:
+
 ```
-greenfield    → copia rollup.example.yaml -> rollup.yaml (estágio profile); nenhum handoff prévio
-em-andamento  → detecta .claude/settings.local.json já com hooks configurados (reportado, não sobrescrito)
-re-run        → rollup.yaml já existe -> skip-exists; registry (~/.claude-kits/registry.json) marca re-run
+greenfield    -> no prior config in the target; profile stage would copy rollup.example.yaml -> rollup.yaml; no previous handoff
+in-progress   -> .claude/ exists, or settings(.local).json already has hooks/statusLine, or rollup.yaml is
+                 already present, or the repo has more than 3 commits: reported, never overwritten (skip-exists)
+re-run        -> this kit+target pair is already in the registry (~/.claude-kits/registry.json)
 ```
 
 ## O que é seguro rodar de novo
@@ -59,37 +76,38 @@ customização em `rollup.yaml` sobrevive.
 ## Wiring manual (gate humano — nunca automático)
 
 > Editar `.claude/settings.local.json` é gate humano nesta doutrina — sessões
-> automatizadas têm trava explícita contra auto-editar arquivo de settings/hooks. Cole
-> você mesmo o bloco abaixo — WARN-only + `timeout: 30`.
+> automatizadas têm trava explícita contra auto-editar arquivo de settings/hooks. No
+> caminho por cópia não existe `${CLAUDE_PLUGIN_ROOT}`: cole você mesmo o bloco abaixo,
+> com a pasta para onde copiou o kit — WARN-only + `timeout: 30`.
 
 ```jsonc
-// wiring.settings.jsonc — bloco de colar (GATE HUMANO — o classifier bloqueia auto-edit de
-// settings/hooks). ADITIVO: mesclar dentro dos arrays "hooks" já existentes em
-// settings.json/settings.local.json — NUNCA substituir o arquivo inteiro.
+// Paste block (HUMAN GATE — the classifier blocks self-editing of settings/hooks).
+// ADDITIVE: merge into the "hooks" arrays that already exist in
+// settings.json/settings.local.json — NEVER replace the whole file.
 //
-// Launcher: NUNCA fixar "py" — detectar na instalação (${CLAUDE_PLUGIN_ROOT} + _lib/launcher.py
-// do operator-kit, ou o Python resolvido pelo instalador). Os comandos abaixo usam "python"
-// (correto na maioria dos PATHs); troque por caminho absoluto do venv se o projeto-alvo tiver um.
+// Launcher: NEVER hardcode "py" — detect it at install time (hooks/pyrun.sh, or the Python the
+// installer resolved). The commands below use "python" (right on most PATHs); swap in the
+// absolute path of the venv if the target project has one.
 {
   "hooks": {
     "SessionStart": [
       {
         "hooks": [
-          { "type": "command", "command": "python \"${CLAUDE_PLUGIN_ROOT}/hooks/handoff_inject.py\"", "timeout": 30 }
+          { "type": "command", "command": "python \"continuity-kit/hooks/handoff_inject.py\"", "timeout": 30 }
         ]
       }
     ],
     "Stop": [
       {
         "hooks": [
-          { "type": "command", "command": "python \"${CLAUDE_PLUGIN_ROOT}/hooks/handoff_guard.py\"", "timeout": 30 }
+          { "type": "command", "command": "python \"continuity-kit/hooks/handoff_guard.py\"", "timeout": 30 }
         ]
       }
     ],
     "PreCompact": [
       {
         "hooks": [
-          { "type": "command", "command": "python \"${CLAUDE_PLUGIN_ROOT}/hooks/handoff_guard.py\"", "timeout": 30 }
+          { "type": "command", "command": "python \"continuity-kit/hooks/handoff_guard.py\"", "timeout": 30 }
         ]
       }
     ]
@@ -99,10 +117,10 @@ customização em `rollup.yaml` sobrevive.
 
 Checklist pós-wiring (rodar o round-trip real, não presumir — LC-1):
 ```bash
-python "${CLAUDE_PLUGIN_ROOT}/hooks/_handoff_io.py" --self-test
-python "${CLAUDE_PLUGIN_ROOT}/hooks/_handoff_io.py" write --demo --lane solo
-echo '{"hook_event_name":"SessionStart","session_id":"proof"}' | python "${CLAUDE_PLUGIN_ROOT}/hooks/handoff_inject.py"
-tail -1 .claude/handoff/HANDOFF-LEDGER.jsonl   # confirmar "event": "consumed"
+python continuity-kit/hooks/_handoff_io.py --self-test
+python continuity-kit/hooks/_handoff_io.py write --demo --lane solo
+echo '{"hook_event_name":"SessionStart","session_id":"proof"}' | python continuity-kit/hooks/handoff_inject.py
+tail -1 .claude/handoff/HANDOFF-LEDGER.jsonl   # confirm "event": "consumed"
 ```
 
 ## Prova / aceite (saída real, executada)
@@ -111,11 +129,9 @@ tail -1 .claude/handoff/HANDOFF-LEDGER.jsonl   # confirmar "event": "consumed"
 python hooks/_handoff_io.py --self-test
 ```
 ```
-self-test OK — write válido+ledger, rejeita sem verify_first_cmd, rejeita sem re_derive_cmd,
-rejeita segredo, rejeita degraded-auto sem porcelain, render com LC-4, staleness, consume,
-degraded-auto
+self-test OK — write válido+ledger, rejeita sem verify_first_cmd, rejeita sem re_derive_cmd, rejeita segredo, rejeita degraded-auto sem porcelain, render com LC-4, staleness, consume, degraded-auto
 ```
-<!-- executado: 2026-07-11 · exit=0 -->
+<!-- executado: 2026-09-21 · exit=0 -->
 
 Prova estendida (round-trip real via a interface de hook — stdin JSON → stdout JSON, C1-C4:
 round-trip, staleness, degraded-auto <5s, anti-replay LC-4):
@@ -126,14 +142,14 @@ bash evals/handoff-roundtrip-C1-C4.sh
 ## Desfazer
 
 ```
-- Plugin: /plugin uninstall continuity-kit@house-party-protocol
-- Cópia: remover a pasta continuity-kit/ do projeto + reverter o bloco colado em
-  settings.local.json manualmente (gate humano também na remoção)
-- Handoff ledger: .claude/handoff/HANDOFF-LEDGER.jsonl é append-only — remover o
-  arquivo inteiro se quiser resetar o histórico (não afeta o handoff mais recente
-  em .claude/RESUME-NEXT.md, que é regenerado a cada Stop)
+- Plugin:  /plugin uninstall continuity-kit@house-party-protocol
+- Copy:    remove the continuity-kit/ folder from the project + revert the block pasted into
+           settings.local.json by hand (removal is a human gate too)
+- Handoff ledger: .claude/handoff/HANDOFF-LEDGER.jsonl is append-only — remove the whole
+           file to reset the history (it does not affect the newest handoff in
+           .claude/RESUME-NEXT.md, which is regenerated at every Stop)
 ```
 
 ---
 
-*Ver `LANE-KIT.md` (kit irmão) para multi-sessão/lanes — este kit é o alicerce single-lane.*
+*Para multi-sessão/lanes ver `LANE-KIT.md` dentro do módulo `lane-kit` — este kit é o alicerce single-lane.*

@@ -1,15 +1,15 @@
-# NOTICE — adaptação ECC (`silent-failure-hunter`)
+# NOTICE — ECC adaptation (`silent-failure-hunter`)
 
-O agente `silent-failure-hunter.md` é uma reimplementação curta, em pt-BR e
-adaptada aos contratos do House Party Protocol, do agente homônimo do projeto
-**ECC** (Excellence Compounding Cycle):
+The `silent-failure-hunter.md` agent is a short reimplementation, adapted to the
+House Party Protocol contracts, of the agent of the same name from the
+**ECC** project (Excellence Compounding Cycle):
 
-- Repositório: https://github.com/affaan-m/ECC
-- Caminho de origem: `agents/silent-failure-hunter.md`
-- SHA do blob verificado: `e38053453908f27687826db7b34ba5849971205b`
-- Autor: Affaan Mustafa
-- Licença verificada: MIT, © 2026 Affaan Mustafa
+- Repository: https://github.com/affaan-m/ECC
+- Source path: `agents/silent-failure-hunter.md`
+- Verified blob SHA: `e38053453908f27687826db7b34ba5849971205b`
+- Author: Affaan Mustafa
+- Verified license: MIT, © 2026 Affaan Mustafa
 
-A atribuição é preservada porque os alvos de revisão e a forma de reporte foram
-adaptados da obra MIT. O texto distribuído foi reescrito e reduzido; os limites
-read-only e o contrato de saída são próprios deste kit.
+The attribution is preserved because the review targets and the report format were
+adapted from the MIT work. The distributed text was rewritten and reduced; the
+read-only limits and the output contract belong to this kit.

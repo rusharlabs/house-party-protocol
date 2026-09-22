@@ -1,59 +1,59 @@
 ---
 name: skill-writer
-description: Guia a criação de Agent Skills para Claude Code — estrutura, frontmatter, descrições eficazes, e validação contra o SKILL-CONTRACT. Use quando o usuário quer criar, escrever ou estruturar uma nova skill.
+description: Guides the creation of Agent Skills for Claude Code — structure, frontmatter, effective descriptions, and validation against the SKILL-CONTRACT. Use when the user wants to create, write or structure a new skill.
 ---
 
-> **Auto-Trigger:** Quando o usuário quer criar, escrever ou estruturar uma nova skill para Claude Code, ou converter um prompt/processo repetido numa skill reutilizável.
-> **Keywords:** "criar skill", "nova skill", "SKILL.md", "skill structure", "write skill", "author skill", "estruturar skill"
-> **Prioridade:** MÉDIA
+> **Auto-Trigger:** When the user wants to create, write or structure a new skill for Claude Code, or convert a repeated prompt/process into a reusable skill.
+> **Keywords:** "create skill", "new skill", "SKILL.md", "skill structure", "write skill", "author skill", "structure skill"
+> **Priority:** MEDIUM
 > **Tools:** Read, Grep, Glob, Write, Edit, Bash
 
-## Quando NÃO Ativar
-- **Criar um HOOK** (PreToolUse/PostToolUse/SessionStart) — use a skill `hookify` deste mesmo kit; hooks são scripts com stdin→JSON e exit codes, não SKILL.md.
-- **Criar um PLUGIN** (`.claude-plugin/plugin.json` + `hooks.json`/`commands/`) — use a skill `plugin-dev` deste mesmo kit; plugin é a embalagem que agrupa skills/hooks/commands, não uma skill em si.
-- **Editar uma skill vendored/de outro plugin** (cópia idêntica de um marketplace) — não reescrever; essas atualizam pelo próprio plugin de origem.
-- **Escrever documentação de projeto ou plano de implementação** — isso não é uma Skill (não tem gatilho nem contrato de I/O).
+## When NOT to Activate
+- **Creating a HOOK** (PreToolUse/PostToolUse/SessionStart) — use the `hookify` skill from this same module; hooks are scripts with stdin→JSON and exit codes, not SKILL.md.
+- **Creating a PLUGIN** (`.claude-plugin/plugin.json` + `hooks.json`/`commands/`) — use the `plugin-dev` skill from this same module; a plugin is the packaging that groups skills/hooks/commands, not a skill itself.
+- **Editing a vendored skill / one from another plugin** (an identical copy from a marketplace) — do not rewrite it; those update through their plugin of origin.
+- **Writing project documentation or an implementation plan** — that is not a Skill (it has no trigger and no I/O contract).
 
-## Contrato
+## Contract
 
-**ENTRADA:** o modelo (via conversa com o usuário) determina escopo/nome/gatilhos/ferramentas da nova skill.
+**INPUT:** the model (via conversation with the user) determines the scope/name/triggers/tools of the new skill.
 
-**SAÍDA:** um diretório `<skill-name>/SKILL.md` (+ companions opcionais) que passa em `tools/skill_lint.py` sem FAIL.
+**OUTPUT:** a `<skill-name>/SKILL.md` directory (+ optional companions) that passes `tools/skill_lint.py` with no FAIL.
 
-**EXIT CODES** (de `tools/skill_lint.py`, usado para validar o resultado):
+**EXIT CODES** (from `tools/skill_lint.py`, used to validate the result):
 
-| Exit | Significado |
+| Exit | Meaning |
 |---|---|
-| 0 | skill em conformidade com o SKILL-CONTRACT (PASS, 0 FAIL) |
-| 1 | só WARN (ex.: exemplo executado há >90 dias) — utilizável, mas revisar |
-| 2 | ≥1 FAIL (violação de cláusula obrigatória — ver `docs/SKILL-CONTRACT.md`) |
+| 0 | skill compliant with the SKILL-CONTRACT (PASS, 0 FAIL) |
+| 1 | WARN only (e.g. an example executed >90 days ago) — usable, but review |
+| 2 | ≥1 FAIL (violation of a mandatory clause — see `docs/SKILL-CONTRACT.md`) |
 
-**ESTADO QUE TOCA:**
+**STATE IT TOUCHES:**
 
-| Recurso | Lê/Escreve | Propósito |
+| Resource | Reads/Writes | Purpose |
 |---|---|---|
-| `<skill-dir>/SKILL.md` | Escreve | a skill em si |
-| `<skill-dir>/examples.md`, `troubleshooting.md`, `reference.md` (opcionais) | Escreve | progressive disclosure — conteúdo extenso sai do SKILL.md principal |
-| `docs/SKILL-CONTRACT.md` | Lê | as 6 cláusulas que toda skill PRODUTO deve cumprir |
-| `tools/skill_lint.py` | Executa (read-only) | valida a skill criada contra o contrato |
+| `<skill-dir>/SKILL.md` | Writes | the skill itself |
+| `<skill-dir>/examples.md`, `troubleshooting.md`, `reference.md` (optional) | Writes | progressive disclosure — long content moves out of the main SKILL.md |
+| `docs/SKILL-CONTRACT.md` | Reads | the 6 clauses every PRODUCT skill must meet |
+| `tools/skill_lint.py` | Runs (read-only) | validates the created skill against the contract |
 
-## Processo
+## Process
 
-### 1. Determine o escopo
-Pergunte (ou infira da conversa): que capacidade única esta skill resolve? Quando ela deve disparar? Quais ferramentas ela precisa? **Regra: uma skill = uma capacidade.**
+### 1. Determine the scope
+Ask (or infer from the conversation): what single capability does this skill solve? When should it fire? Which tools does it need? **Rule: one skill = one capability.**
 
-### 2. Escolha a localização
-| Local | Uso |
+### 2. Choose the location
+| Location | Use |
 |-------|-----|
-| `~/.claude/skills/` | Pessoal, experimental |
-| `.claude/skills/` | Time/projeto, versionado em git |
-| `<kit>/skills/` | Distribuído via plugin/marketplace |
+| `~/.claude/skills/` | Personal, experimental |
+| `.claude/skills/` | Team/project, versioned in git |
+| `<kit>/skills/` | Distributed via plugin/marketplace |
 
-### 3. Crie a estrutura
+### 3. Create the structure
 ```bash
 mkdir -p .claude/skills/skill-name
 ```
-Multi-arquivo (progressive disclosure — use quando o corpo passaria de ~500 linhas):
+Multi-file (progressive disclosure — use it when the body would exceed ~500 lines):
 ```
 skill-name/
 ├── SKILL.md (obrigatório)
@@ -62,7 +62,7 @@ skill-name/
 └── scripts/ (opcional)
 ```
 
-### 4. Escreva o header completo (C1 do contrato)
+### 4. Write the complete header (C1 of the contract)
 ```yaml
 ---
 name: skill-name
@@ -72,20 +72,20 @@ description: O que faz + quando usar. Máx 1024 chars.
 ```markdown
 > **Auto-Trigger:** quando dispara automaticamente
 > **Keywords:** "termo1", "termo2", "termo3", "termo4" (mínimo 4, sem sintaxe de wikilink duplo-colchete)
-> **Prioridade:** ALTA | MÉDIA | BAIXA
+> **Priority:** HIGH | MEDIUM | LOW
 > **Tools:** lista explícita
 
-## Quando NÃO Ativar
+## When NOT to Activate
 - (≥2 bullets — nomeie a skill vizinha se há fronteira confundível)
 ```
 
-| Campo | Regra |
+| Field | Rule |
 |-------|-------|
-| `name` | minúsculas, hífens, máx 64 chars, **deve bater com o nome da pasta** |
-| `description` | máx 1024 chars, inclua O QUE + QUANDO usar |
-| `allowed-tools`/`Tools` | lista explícita de ferramentas |
+| `name` | lowercase, hyphens, max 64 chars, **must match the folder name** |
+| `description` | max 1024 chars, include WHAT + WHEN to use |
+| `allowed-tools`/`Tools` | explicit list of tools |
 
-### 5. Escreva a descrição (fórmula: O QUE + QUANDO + gatilhos-chave)
+### 5. Write the description (formula: WHAT + WHEN + key triggers)
 ```yaml
 # Boa
 description: Extrai texto de PDFs, preenche formulários. Use quando o usuário mencionar PDFs ou extração de documentos.
@@ -93,28 +93,28 @@ description: Extrai texto de PDFs, preenche formulários. Use quando o usuário 
 # Ruim
 description: Ajuda com documentos
 ```
-Ver `examples.md` para mais padrões de descrição boa/ruim.
+See `examples.md` for more good/bad description patterns.
 
-### 6. Escreva o Contrato de I/O (C2) — ENTRADA / SAÍDA / EXIT CODES / ESTADO QUE TOCA
+### 6. Write the I/O contract (C2) — INPUT / OUTPUT / EXIT CODES / STATE IT TOUCHES
 
-### 7. Colete ≥3 exemplos EXECUTADOS DE VERDADE (C3)
-Rode o comando real, cole a saída real, marque `<!-- executado: YYYY-MM-DD · exit=N -->`. Pelo menos 1 exemplo deve mostrar uma FALHA (exit != 0). Nunca invente saída — se não rodou, não cole.
+### 7. Collect ≥3 GENUINELY EXECUTED examples (C3)
+Run the real command, paste the real output, mark it `<!-- executed: YYYY-MM-DD · exit=N -->`. At least 1 example must show a FAILURE (exit != 0). Never invent output — if it did not run, do not paste it.
 
-### 8. Escreva a seção Prova (C4)
-Um comando único, <5s, sem rede, que prova o contrato com exit 0. Normalmente `--self-test`.
+### 8. Write the Proof section (C4)
+A single command, <5s, no network, that proves the contract with exit 0. Usually `--self-test`.
 
-### 9. Valide contra o contrato
+### 9. Validate against the contract
 ```bash
 python tools/skill_lint.py <skill-dir>/SKILL.md
 ```
-Corrija cada FAIL apontado (não ignore WARN de exemplo velho sem reverificar).
+Fix every FAIL reported (do not ignore a stale-example WARN without re-verifying).
 
-### 10. Teste de ativação
-1. Reinicie o Claude Code para carregar a skill.
-2. Faça uma pergunta que bate com a `description`.
-3. Confirme que ela ativa e se comporta como esperado.
+### 10. Activation test
+1. Restart Claude Code to load the skill.
+2. Ask a question that matches the `description`.
+3. Confirm it activates and behaves as expected.
 
-## Exemplos executados
+## Executed examples
 
 ```console
 $ python tools/skill_lint.py skills/claude-dev-setup/SKILL.md
@@ -122,8 +122,8 @@ $ python tools/skill_lint.py skills/claude-dev-setup/SKILL.md
 
 skill_lint: 1 pass · 0 warn · 0 fail (de 1)
 ```
-<!-- executado: 2026-07-10 · exit=0 -->
-(uma skill em conformidade total com as 6 cláusulas — 0 FAIL, 0 WARN.)
+<!-- executed: 2026-07-10 · exit=0 -->
+(a skill in full compliance with the 6 clauses — 0 FAIL, 0 WARN.)
 
 ```console
 $ cat bad-skill/SKILL.md
@@ -148,30 +148,30 @@ $ python tools/skill_lint.py bad-skill/SKILL.md
 
 skill_lint: 0 pass · 0 warn · 1 fail (de 1)
 ```
-<!-- executado: 2026-07-10 · exit=2 -->
-(uma descrição vaga ("Helps with stuff") e um corpo sem estrutura falham em 8 checks de uma vez — exatamente o "ensaio sem contrato" que o SKILL-CONTRACT existe para impedir.)
+<!-- executed: 2026-07-10 · exit=2 -->
+(a vague description ("Helps with stuff") and an unstructured body fail 8 checks at once — exactly the "essay without a contract" the SKILL-CONTRACT exists to prevent.)
 
 ```console
 $ mkdir -p .claude/skills/exemplo-novo && ls .claude/skills/exemplo-novo
 ```
-<!-- executado: 2026-07-10 · exit=0 -->
-(passo 3 do processo — criação da estrutura antes de escrever o SKILL.md.)
+<!-- executed: 2026-07-10 · exit=0 -->
+(step 3 of the process — creating the structure before writing the SKILL.md.)
 
 ## Anti-patterns
 
-- ❌ Descrição vaga ("ajuda com X") sem gatilhos específicos — a skill nunca ativa quando deveria.
-- ❌ Nome da pasta diferente do `name` no frontmatter — quebra silenciosa, a skill simplesmente não é encontrada.
-- ❌ Colar saída "provável" em vez de rodar o comando de verdade — viola C3 e a doutrina de integridade deste marketplace (nunca inventar saída).
-- ❌ Aninhamento profundo de arquivos-companion (`SKILL.md → a.md → b.md → c.md`) — mantenha achatado: `SKILL.md → examples.md`, `SKILL.md → troubleshooting.md`.
+- ❌ Vague description ("helps with X") without specific triggers — the skill never activates when it should.
+- ❌ Folder name different from the `name` in the frontmatter — silent breakage, the skill simply is not found.
+- ❌ Pasting "probable" output instead of actually running the command — violates C3 and this marketplace's integrity doctrine (never invent output).
+- ❌ Deep nesting of companion files (`SKILL.md → a.md → b.md → c.md`) — keep it flat: `SKILL.md → examples.md`, `SKILL.md → troubleshooting.md`.
 
-## Prova
+## Proof
 
 ```bash
 python tools/skill_lint.py --self-test
 ```
 
-## Recursos adicionais
+## Additional resources
 
-- **Padrões e exemplos**: ver [examples.md](examples.md)
-- **Debugging de skills que não ativam**: ver [troubleshooting.md](troubleshooting.md)
-- **O contrato completo (6 cláusulas)**: ver [`docs/SKILL-CONTRACT.md`](../../docs/SKILL-CONTRACT.md)
+- **Patterns and examples**: see [examples.md](examples.md)
+- **Debugging skills that do not activate**: see [troubleshooting.md](troubleshooting.md)
+- **The full contract (6 clauses)**: see [`docs/SKILL-CONTRACT.md`](../../docs/SKILL-CONTRACT.md)

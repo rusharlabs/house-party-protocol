@@ -1,60 +1,60 @@
 ---
 name: gotcha-memory
-description: Loop de aprendizado operacional — registra falhas de comandos, detecta recorrência e injeta a lição como preâmbulo antes da próxima execução da mesma tarefa. Use para consultar/seedar/depurar a memória de gotchas do projeto.
+description: Operational learning loop — records command failures, detects recurrence and injects the lesson as a preamble before the next execution of the same task. Use to query/seed/debug the project's gotcha memory.
 ---
 
-> **Auto-Trigger:** Quando o usuário pergunta "por que isso falha sempre?", "o que já aprendemos sobre essa tarefa?", quer seedar regras curated, ou quer inspecionar/limpar a memória de falhas do projeto.
-> **Keywords:** "gotcha", "gotchas", "falha recorrente", "erro recorrente", "lição aprendida", "memória de falhas", "preâmbulo", "curated", "seed de regras", "aprendizado operacional"
-> **Prioridade:** MÉDIA
+> **Auto-Trigger:** When the user asks "why does this always fail?", "what have we already learned about this task?", wants to seed curated rules, or wants to inspect/clean the project's failure memory.
+> **Keywords:** "gotcha", "gotchas", "recurring failure", "recurring error", "lesson learned", "failure memory", "preamble", "curated", "rule seed", "operational learning"
+> **Priority:** MEDIUM
 > **Tools:** Bash, Read
 
-## Quando NÃO Ativar
-- Depuração de UMA falha pontual e nova — este kit trata RECORRÊNCIA (>= N falhas iguais numa janela); para a primeira ocorrência, debugue normal.
-- Gestão de memória conversacional/semântica (contexto de sessão, RAG) — este kit é memória de FALHAS DE EXECUÇÃO, não de conhecimento.
+## When NOT to Activate
+- Debugging ONE new, one-off failure — this module handles RECURRENCE (>= N identical failures within a window); for the first occurrence, debug normally.
+- Managing conversational/semantic memory (session context, RAG) — this module is memory of EXECUTION FAILURES, not of knowledge.
 
-## Contrato
+## Contract
 
-**ENTRADA:** eventos de falha de Bash (gravados automaticamente pelo hook `gotcha_postflight.py`) + lições curated suas (seed YAML/JSONL). Config em `gotchas.*`/`paths.gotcha_store` do `operator-profile.yaml`.
+**INPUT:** Bash failure events (recorded automatically by the `gotcha_postflight.py` hook) + your curated lessons (YAML/JSONL seed). Config in `gotchas.*`/`paths.gotcha_store` of `operator-profile.yaml`.
 
-**SAÍDA:** `failures.jsonl` + `curated.jsonl` no store (default `.claude/gotchas/`) e um preâmbulo "⚠️ GOTCHAS" no stderr do preflight quando há lição que casa com a tarefa.
+**OUTPUT:** `failures.jsonl` + `curated.jsonl` in the store (default `.claude/gotchas/`) and a "⚠️ GOTCHAS" preamble on the preflight's stderr when a lesson matches the task.
 
 **EXIT CODES:**
 
-| Exit | Significado |
+| Exit | Meaning |
 |---|---|
-| 0 | sempre (hooks e CLI) — o loop de aprendizado nunca quebra o fluxo do chamador |
-| 1 | só no `--self-test` quando uma asserção falha |
+| 0 | always (hooks and CLI) — the learning loop never breaks the caller's flow |
+| 1 | only in `--self-test` when an assertion fails |
 
-**ESTADO QUE TOCA:**
+**STATE IT TOUCHES:**
 
-| Recurso | Lê/Escreve | Propósito |
+| Resource | Reads/Writes | Purpose |
 |---|---|---|
-| `operator-profile.yaml` (`gotchas.*`, `paths.gotcha_store`) | Lê | config (janela, min_count, top, store) |
-| `<store>/failures.jsonl` | Escreve (append) | eventos de falha classificados por família |
-| `<store>/curated.jsonl` | Lê/Escreve (append idempotente) | suas regras always-on |
+| `operator-profile.yaml` (`gotchas.*`, `paths.gotcha_store`) | Reads | config (window, min_count, top, store) |
+| `<store>/failures.jsonl` | Writes (append) | failure events classified by family |
+| `<store>/curated.jsonl` | Reads/Writes (idempotent append) | your always-on rules |
 
-## Processo
-1. **Instale os hooks** (via plugin ou wire manual — ver README): `PreToolUse Bash → gotcha_preflight.py` e `PostToolUse` + `PostToolUseFailure Bash → gotcha_postflight.py`, todos `timeout: 30`, WARN-only. Os dois eventos de saída apontam para o mesmo script porque o host emite `PostToolUseFailure` quando o Bash falha — o caso que esta memória existe para registrar.
-2. **Seede suas regras** (opcional, idempotente):
+## Process
+1. **Install the hooks** (via plugin or manual wire — see README): `PreToolUse Bash → gotcha_preflight.py` and `PostToolUse` + `PostToolUseFailure Bash → gotcha_postflight.py`, all `timeout: 30`, WARN-only. The two exit events point to the same script because the host emits `PostToolUseFailure` when Bash fails — the case this memory exists to record.
+2. **Seed your rules** (optional, idempotent):
    ```bash
    python "${CLAUDE_PLUGIN_ROOT}/_lib/gotchas_memory.py" --seed curated.seed.example.yaml
    ```
-3. **Consulte o que o sistema aprendeu** para uma tarefa:
+3. **Query what the system has learned** about a task:
    ```bash
    python "${CLAUDE_PLUGIN_ROOT}/_lib/gotchas_memory.py" --preamble "rodar o deploy do site"
    ```
-4. **Veja o loop inteiro funcionando** (demo com store temporário, zero efeito no projeto):
+4. **See the whole loop working** (demo with a temporary store, zero effect on the project):
    ```bash
    python "${CLAUDE_PLUGIN_ROOT}/_lib/gotchas_memory.py"
    ```
 
-## Exemplos executados
+## Executed examples
 
-Os três abaixo foram rodados de verdade (2026-09-19) contra um store temporário via
-`GOTCHA_STORE_DIR` — zero efeito no projeto. A saída é a real, com o caminho do store
-abreviado para `<store>`.
+The three below were genuinely run (2026-09-19) against a temporary store via
+`GOTCHA_STORE_DIR` — zero effect on the project. The output is the real one, with the store
+path abbreviated to `<store>`.
 
-**1 · Seedar as regras curated (primeira vez):**
+**1 · Seed the curated rules (first time):**
 
 ```
 $ GOTCHA_STORE_DIR=<store> python "${CLAUDE_PLUGIN_ROOT}/_lib/gotchas_memory.py" --seed curated.seed.example.yaml
@@ -62,20 +62,20 @@ Seedados 5 gotchas curated em <store>/curated.jsonl
 $ echo $?
 0
 ```
-<!-- executado: 2026-09-19 · exit=0 -->
+<!-- executed: 2026-09-19 · exit=0 -->
 
-**2 · Seedar de novo o MESMO arquivo — a prova de idempotência:**
+**2 · Seed the SAME file again — the idempotency proof:**
 
 ```
 $ GOTCHA_STORE_DIR=<store> python "${CLAUDE_PLUGIN_ROOT}/_lib/gotchas_memory.py" --seed curated.seed.example.yaml
 Seedados 0 gotchas curated em <store>/curated.jsonl
 ```
-<!-- executado: 2026-09-19 · exit=0 -->
+<!-- executed: 2026-09-19 · exit=0 -->
 
-Zero, não cinco de novo: re-seedar não duplica. É isso que permite deixar o seed no
-setup de um projeto e rodá-lo em toda sessão.
+Zero, not five again: re-seeding does not duplicate. That is what allows leaving the seed in a
+project's setup and running it in every session.
 
-**3 · Consultar o que o sistema sabe sobre uma tarefa:**
+**3 · Query what the system knows about a task:**
 
 ```
 $ GOTCHA_STORE_DIR=<store> python "${CLAUDE_PLUGIN_ROOT}/_lib/gotchas_memory.py" --preamble "rodar o deploy do site"
@@ -84,13 +84,13 @@ $ GOTCHA_STORE_DIR=<store> python "${CLAUDE_PLUGIN_ROOT}/_lib/gotchas_memory.py"
 $ echo $?
 0
 ```
-<!-- executado: 2026-09-19 · exit=0 -->
+<!-- executed: 2026-09-19 · exit=0 -->
 
-A regra que apareceu é uma **curated** (seedada no exemplo 1) — casou por substring
-com "deploy". Uma lição **aprendida** (de falhas recorrentes) apareceria na mesma lista
-com o contador `[Nx]` na frente.
+The rule that appeared is a **curated** one (seeded in example 1) — it matched by substring
+on "deploy". A **learned** lesson (from recurring failures) would appear in the same list
+with the `[Nx]` counter in front.
 
-## Prova
+## Proof
 
 ```bash
 python "${CLAUDE_PLUGIN_ROOT}/_lib/gotchas_memory.py" --self-test     # -> self-test OK ✓  · exit 0
@@ -99,15 +99,15 @@ python "${CLAUDE_PLUGIN_ROOT}/hooks/gotcha_preflight.py" --self-test  # -> self-
 python "${CLAUDE_PLUGIN_ROOT}/hooks/gotcha_postflight.py" --self-test # -> self-test OK
 ```
 
-Os quatro self-tests cobrem: classificação por família (com fronteira de palavra —
-`ENOTFOUND` isolado é rede, `ModuleNotFoundError` é dependência), recorrência que vira
-gotcha após `min_count` falhas na janela, idempotência do seed, e a detecção
-conservadora dos hooks (ambíguo = não-falha).
+The four self-tests cover: classification by family (with word boundary —
+an isolated `ENOTFOUND` is network, `ModuleNotFoundError` is dependency), recurrence that becomes a
+gotcha after `min_count` failures within the window, seed idempotency, and the hooks'
+conservative detection (ambiguous = not a failure).
 
-**Critério de sucesso operacional:** após 3 falhas iguais registradas em < 24h,
-`--preamble "<mesma task>"` devolve preâmbulo não-vazio com `[3x]`.
+**Operational success criterion:** after 3 identical failures recorded in < 24h,
+`--preamble "<same task>"` returns a non-empty preamble with `[3x]`.
 
-## Falhas conhecidas / limites
-- Detecção de falha é CONSERVADORA: só exit-code != 0, `is_error: true` ou campo `error` não-vazio contam. Falha "silenciosa" (exit 0 com output errado) não é capturada — por design (não inventa falha).
-- Cobre só a tool Bash (matcher dos hooks). Outras tools exigiriam novos matchers.
-- Seed em YAML exige PyYAML; sem PyYAML, use seed `.jsonl` (stdlib).
+## Known failures / limits
+- Failure detection is CONSERVATIVE: only exit code != 0, `is_error: true` or a non-empty `error` field count. A "silent" failure (exit 0 with wrong output) is not captured — by design (it does not invent failures).
+- Covers only the Bash tool (the hooks' matcher). Other tools would require new matchers.
+- YAML seed requires PyYAML; without PyYAML, use a `.jsonl` seed (stdlib).

@@ -10,7 +10,7 @@ from typing import Any
 from hpp import __version__
 from hpp.attest import AttestationError, create_attestation, verify_attestation
 from hpp.context import compile_context
-from hpp.evals import EvalError, exit_for as eval_exit_for, run_suite
+from hpp.evals import EvalError, exit_for as eval_exit_for, packaged_suite, run_suite
 from hpp.graph import build_graph, to_mermaid
 from hpp.install import InstallError, installation_plan
 from hpp.manifest import ManifestError, load_manifest, validate_distribution
@@ -18,12 +18,22 @@ from hpp.maps import build_agent_map, build_context_map, build_lane_map, build_m
 from hpp.policy import assess, exit_for as policy_exit_for
 from hpp.routing import route
 from hpp.state import StateError, append_event, event_path, project, read_events
+from hpp.term import Console
 from hpp.wizard import InitUsageError, prepare_options, run_init_command
 from hpp.workgraph import compile_workgraph
 
 
 def _json(value: Any) -> None:
     print(json.dumps(value, ensure_ascii=False, indent=2, sort_keys=True))
+
+
+def _line(text: str) -> None:
+    """Print a one-line human report through the same console the wizard uses."""
+    # Why (cp1252 console, 2026-09-21): the one-liners carry `·`; written with print() to a
+    # cp1252 stream (hpp.exe without -X utf8, output piped) the byte was not UTF-8 and read as
+    # `�` downstream. Console picks ASCII glyphs from the stream's encoding and rewrites `·` and
+    # `—` to `-`, exactly as `hpp init` already degrades.
+    Console(animate=False).write(text)
 
 
 def _manifest(args: argparse.Namespace) -> tuple[dict[str, Any], Path]:
@@ -53,7 +63,7 @@ def command_doctor(args: argparse.Namespace) -> int:
     if args.json:
         _json(result)
     else:
-        print(f"HPP doctor: ok · modules={result['modules']} · hosts={', '.join(result['hosts'])}")
+        _line(f"HPP doctor: ok · modules={result['modules']} · hosts={', '.join(result['hosts'])}")
     return 0
 
 
@@ -116,7 +126,7 @@ def command_status(args: argparse.Namespace) -> int:
     if args.json:
         _json(status)
     else:
-        print(f"HPP status: {status['state']} · events={status['event_count']} · next={status['next_step']}")
+        _line(f"HPP status: {status['state']} · events={status['event_count']} · next={status['next_step']}")
     return 0
 
 
@@ -134,13 +144,12 @@ def command_eval(args: argparse.Namespace) -> int:
 
 
 def command_benchmark(args: argparse.Namespace) -> int:
-    suite = Path(__file__).resolve().parent.parent / "examples" / "reliable-coding" / "benchmark-suite.json"
-    report = run_suite(suite, args.k, "both")
+    report = run_suite(packaged_suite(), args.k, "both")
     if args.json:
         _json(report)
     else:
         metrics = report["metrics"]
-        print(f"HPP benchmark: pass@k={metrics['pass_at_k']:.2f} · pass^k={metrics['pass_caret_k']:.2f} · gate={'PASS' if report['gate']['passed'] else 'FAIL'}")
+        _line(f"HPP benchmark: pass@k={metrics['pass_at_k']:.2f} · pass^k={metrics['pass_caret_k']:.2f} · gate={'PASS' if report['gate']['passed'] else 'FAIL'}")
     return eval_exit_for(report)
 
 
@@ -213,11 +222,7 @@ def self_test() -> int:
     graph = build_graph(manifest, "capability")
     if not graph["nodes"] or not graph["edges"]:
         raise ValueError("self-test capability graph is empty")
-    report = run_suite(
-        Path(__file__).resolve().parent.parent / "examples" / "reliable-coding" / "benchmark-suite.json",
-        3,
-        "both",
-    )
+    report = run_suite(packaged_suite(), 3, "both")
     if not report["gate"]["passed"]:
         raise ValueError("self-test benchmark gate failed")
     print("hpp self-test OK")

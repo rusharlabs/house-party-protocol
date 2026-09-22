@@ -16,6 +16,10 @@ dist/
 build/
 *.egg-info/
 
+# Harness state written by the README examples themselves (`hpp event append` -> .hpp/events.jsonl,
+# `hpp init --apply` -> .hpp/profile.json): per-checkout state, never part of the distribution
+.hpp/
+
 # 🔴 O ruleset REAL do ip_pii_linter carrega nome de cliente e de infra interna.
 # So o ip-ruleset.example.yaml e publicavel. Esta linha e a diferenca entre publicar
 # o gate e publicar o que o gate esconde.

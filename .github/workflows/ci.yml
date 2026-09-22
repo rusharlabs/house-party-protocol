@@ -58,14 +58,14 @@ jobs:
       # Why: verifies every CHECKSUMS.txt found in the checkout against the
       # bytes on disk. `shell: python` runs this identically on all three
       # platforms (Actions invokes `python <tmp-script>`), so no OS branching
-      # is needed. As of this writing, product-root/ (the tree this workflow
-      # ships from) does not itself contain assembled module directories or
-      # CHECKSUMS.txt files -- those are produced by a separate build/assembly
-      # step (kit-forge) that is not part of this source tree. When none are
-      # present the step says so explicitly and exits 0, rather than either
-      # failing on a check with nothing to verify or silently doing nothing;
-      # it becomes a real gate automatically the day assembled modules (with
-      # CHECKSUMS.txt) are checked in or produced earlier in this job.
+      # is needed. The published repository is the emitted distribution: every
+      # module directory (frameworks-com-plugins/, instaladores/, continuidade/,
+      # multi-sessao/, wizards/) carries a CHECKSUMS.txt written by the forge,
+      # so here this step is a real gate over every shipped module file. The
+      # same workflow also runs in the harness source tree, which has no module
+      # directories; there the step says that nothing was found and exits 0,
+      # rather than failing on a check with nothing to verify or silently
+      # doing nothing.
       - name: Verify CHECKSUMS.txt for any distributed module present in the checkout
         shell: python
         run: |
@@ -78,10 +78,10 @@ jobs:
 
           if not checksum_files:
               print(
-                  "::notice::No CHECKSUMS.txt found in this checkout. Assembled "
-                  "module bundles (each with its own CHECKSUMS.txt) are produced "
-                  "by a separate build step and are not part of this source tree, "
-                  "so there is nothing to verify here yet."
+                  "::notice::No CHECKSUMS.txt found in this checkout: this is the "
+                  "harness source tree, not the emitted distribution. Module "
+                  "directories (each with its own CHECKSUMS.txt) exist only in "
+                  "the published repository, so there is nothing to verify here."
               )
               sys.exit(0)
 

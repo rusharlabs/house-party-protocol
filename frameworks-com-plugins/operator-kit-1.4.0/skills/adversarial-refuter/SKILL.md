@@ -1,67 +1,67 @@
 ---
 name: adversarial-refuter
-description: Antes de aceitar "feito/pronto", despacha refutadores read-only que tentam DERRUBAR a claim no disco/fonte viva
+description: Before accepting "done/ready", dispatches read-only refuters that try to KNOCK DOWN the claim against the disk/live source
 ---
 
-> **Auto-Trigger:** Ao receber um "pronto/feito/corrigido/implementado" — próprio ou de agente/workflow/cron delegado
-> **Keywords:** "feito", "pronto", "concluído", "corrigido", "implementado", "done", "verificar", "tem certeza", "refutar"
-> **Prioridade:** ALTA
+> **Auto-Trigger:** On receiving a "ready/done/fixed/implemented" — your own or from a delegated agent/workflow/cron
+> **Keywords:** "done", "ready", "finished", "fixed", "implemented", "verify", "are you sure", "refute"
+> **Priority:** HIGH
 > **Tools:** Task/Agent, Read, Glob, Grep, Bash
-> **Doutrina relacionada:** `rules/loop-maker-checker.md` (checker cross-model, read-only), `rules/learned-corrections.md` (LC-1).
+> **Related doctrine:** `rules/loop-maker-checker.md` (cross-model, read-only checker), `rules/learned-corrections.md` (LC-1).
 
-# adversarial-refuter — refutar antes de aceitar
+# adversarial-refuter — refute before accepting
 
-O "done" mente. Em vez de confiar, despache céticos cuja **única missão é provar que a claim é FALSA**. Materializa o trato #1 do operador (LC-1) como verificação multi-agente.
+"Done" lies. Instead of trusting, dispatch sceptics whose **only mission is to prove the claim is FALSE**. Materializes the operator's deal #1 (LC-1) as multi-agent verification.
 
-## Contrato
+## Contract
 
-**ENTRADA:** 1 claim falsificável (afirmação testável contra disco/fonte viva).
+**INPUT:** 1 falsifiable claim (a statement testable against the disk/live source).
 
-**SAÍDA:** veredicto — "sobrevive" (nenhum refutador conseguiu derrubar) ou "refutada" (≥1 refutador provou falsa, com o gap exato).
+**OUTPUT:** verdict — "survives" (no refuter managed to knock it down) or "refuted" (≥1 refuter proved it false, with the exact gap).
 
-**EXIT CODES** (a claim vira 1+ critério do `done_gate.py` — o refutador roda o critério e reporta o resultado bruto):
+**EXIT CODES** (the claim becomes 1+ criterion of `done_gate.py` — the refuter runs the criterion and reports the raw result):
 
-| Exit | Significado |
+| Exit | Meaning |
 |---|---|
-| 0 | claim SOBREVIVE — critério passou, nenhuma refutação encontrada |
-| 1 | claim REFUTADA — critério falhou, a claim era falsa |
-| 2 | claim não-falseável / critério mal-formado (reformule antes de despachar) |
+| 0 | claim SURVIVES — criterion passed, no refutation found |
+| 1 | claim REFUTED — criterion failed, the claim was false |
+| 2 | claim not falsifiable / malformed criterion (rephrase before dispatching) |
 
-**ESTADO QUE TOCA:**
+**STATE IT TOUCHES:**
 
-| Recurso | Lê/Escreve | Propósito |
+| Resource | Reads/Writes | Purpose |
 |---|---|---|
-| disco/fonte viva citada na claim | Lê (read-only) | verificação real |
-| `gotcha-memory` | Escreve | registra a refutação mais forte tentada |
+| disk/live source cited in the claim | Reads (read-only) | real verification |
+| `gotcha-memory` | Writes | records the strongest refutation attempted |
 
-## Processo
-1. **Formule a claim** como afirmação falsificável (ex.: "o arquivo X existe e contém Y", "a rota /Z responde 200", "o teste T passa", "o deploy trocou o backend").
-2. **Despache N refutadores** (N e teto vêm de `concorrencia` do profile, default 2-3) — cada um **read-only** (allowedTools: Read/Glob/Grep/Bash só-leitura). Prompt: *"Tente PROVAR que esta claim é falsa contra o disco/fonte viva. Default = refutado se houver qualquer dúvida."*
-3. **Lentes distintas** quando a claim pode falhar de vários jeitos (existe-no-disco / conteúdo-correto / endpoint-responde / teste-roda / não-é-stale).
-4. **Veredicto:** aceita **só se TODAS as tentativas de refutação falharem**. Qualquer refutação bem-sucedida → **re-enfileira** o trabalho com o gap exato.
-5. **Registre** a refutação mais forte tentada (vira evidência + alimenta `gotcha-memory`).
+## Process
+1. **Phrase the claim** as a falsifiable statement (e.g. "file X exists and contains Y", "route /Z answers 200", "test T passes", "the deploy switched the backend").
+2. **Dispatch N refuters** (N and the ceiling come from `concorrencia` in the profile, default 2-3) — each one **read-only** (allowedTools: Read/Glob/Grep/read-only Bash). Prompt: *"Try to PROVE this claim is false against the disk/live source. Default = refuted if there is any doubt."*
+3. **Distinct lenses** when the claim can fail in several ways (exists-on-disk / content-correct / endpoint-answers / test-runs / not-stale).
+4. **Verdict:** accept **only if ALL refutation attempts fail**. Any successful refutation → **re-queue** the work with the exact gap.
+5. **Record** the strongest refutation attempted (it becomes evidence + feeds `gotcha-memory`).
 
-## Quando NÃO Ativar
-- Mudança trivial já verificada na mesma resposta (ex.: 1 linha + teste rodado e mostrado).
-- Quando não há fonte-de-verdade para confrontar (claim subjetiva).
-- Sem 2º agente disponível → caia para verificação local single-pass (`verification-before-completion`).
-- A claim é sobre o RETORNO de 1 delegação específica (não uma afirmação solta) → use o gate embutido em `delegate-with-handback`.
+## When NOT to Activate
+- Trivial change already verified in the same reply (e.g. 1 line + test run and shown).
+- When there is no source of truth to confront (subjective claim).
+- No 2nd agent available → fall back to single-pass local verification (`verification-before-completion`).
+- The claim is about the RETURN of 1 specific delegation (not a loose statement) → use the gate built into `delegate-with-handback`.
 
-## Exemplos executados
+## Executed examples
 
 ```console
 $ python -c "import os; print('claim sobrevive:', os.path.exists('ip_pii_linter.py') and 'self-test' in open('ip_pii_linter.py',encoding='utf-8').read())"
 claim sobrevive: True
 ```
-<!-- executado: 2026-07-10 · exit=0 -->
-(claim: "ip_pii_linter.py existe e tem self-test" — tentativa de refutação FALHOU, claim sobrevive.)
+<!-- executed: 2026-07-10 · exit=0 -->
+(claim: "ip_pii_linter.py exists and has a self-test" — the refutation attempt FAILED, the claim survives.)
 
 ```console
 $ python -c "import os,sys; ok = os.path.exists('nao-existe-nunca.py'); print('claim REFUTADA (arquivo nao existe):', not ok); sys.exit(0 if ok else 1)"
 claim REFUTADA (arquivo nao existe): True
 ```
-<!-- executado: 2026-07-10 · exit=1 -->
-(claim: "nao-existe-nunca.py existe" — refutação teve SUCESSO; exit 1 = a claim era falsa.)
+<!-- executed: 2026-07-10 · exit=1 -->
+(claim: "nao-existe-nunca.py exists" — the refutation SUCCEEDED; exit 1 = the claim was false.)
 
 ```console
 $ python scripts/done_gate.py "python -c \"import os; assert os.path.exists('kit_assembler.py')\""
@@ -69,10 +69,10 @@ $ python scripts/done_gate.py "python -c \"import os; assert os.path.exists('kit
 
 DONE-GATE: DONE (1/1 criterios)
 ```
-<!-- executado: 2026-07-10 · exit=0 -->
-(a claim vira critério do done_gate — o mecanismo comum a `delegate-with-handback`/`gated-improvement-proposal`.)
+<!-- executed: 2026-07-10 · exit=0 -->
+(the claim becomes a done_gate criterion — the mechanism shared with `delegate-with-handback`/`gated-improvement-proposal`.)
 
-## Prova
+## Proof
 
 ```bash
 python -c "import os,sys; sys.exit(0 if os.path.exists('SKILL.md') else 1)"

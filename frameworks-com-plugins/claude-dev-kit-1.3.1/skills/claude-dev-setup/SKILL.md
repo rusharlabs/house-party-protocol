@@ -1,84 +1,84 @@
 ---
 name: claude-dev-setup
-description: Instala hooks base do Claude Code num projeto novo — wiring de settings idempotente e reversível (nunca sobrescreve config alheia sem --force) + git hook chain-preserving (nunca substitui um hook pre-commit já existente).
+description: Installs the base Claude Code hooks in a new project — idempotent and reversible settings wiring (never overwrites someone else's config without --force) + chain-preserving git hook (never replaces an existing pre-commit hook).
 ---
 
-> **Auto-Trigger:** Quando o usuário pede para configurar Claude Code num projeto novo, instalar hooks base, ou "preparar este repo pro Claude Code".
-> **Keywords:** "setup claude code", "instalar hooks", "configurar projeto novo", "wire settings", "hook pre-commit", "claude dev kit"
-> **Prioridade:** MÉDIA
+> **Auto-Trigger:** When the user asks to set up Claude Code in a new project, install the base hooks, or "prepare this repo for Claude Code".
+> **Keywords:** "setup claude code", "install hooks", "configure new project", "wire settings", "pre-commit hook", "claude dev kit"
+> **Priority:** MEDIUM
 > **Tools:** Bash, Read
 
-## Quando NÃO Ativar
-- Projeto já tem `.claude/settings.json` wired do jeito que o usuário quer — rode só `wire_settings.py` com `--force` se REALMENTE quiser sobrescrever, nunca por padrão.
-- Precisa de guardrails específicos de autonomia/verificação/loop — isso é o `operator-kit` completo, não este kit enxuto.
+## When NOT to Activate
+- The project already has `.claude/settings.json` wired the way the user wants — only run `wire_settings.py` with `--force` if you REALLY want to overwrite, never by default.
+- You need specific autonomy/verification/loop guardrails — that is the full `operator-kit`, not this lean module.
 
-## Contrato
+## Contract
 
-**ENTRADA:** `settings.json`/`settings.local.json` alvo (para `wire_settings.py`) + um `.git/hooks/<nome>` alvo (para `install_git_hook.py`).
+**INPUT:** target `settings.json`/`settings.local.json` (for `wire_settings.py`) + a target `.git/hooks/<name>` (for `install_git_hook.py`).
 
-**SAÍDA:** settings wired (idempotente) + git hook encadeado (chain-preserving).
+**OUTPUT:** wired settings (idempotent) + chained git hook (chain-preserving).
 
 **EXIT CODES:**
 
-| Exit | Significado |
+| Exit | Meaning |
 |---|---|
-| 0 | wired/encadeado com sucesso, ou já estava (no-op) |
-| 1 | conflito sem `--force` (settings) — nada sobrescrito |
-| 3 | erro (target ausente, payload ausente) |
+| 0 | wired/chained successfully, or already was (no-op) |
+| 1 | conflict without `--force` (settings) — nothing overwritten |
+| 3 | error (target missing, payload missing) |
 
-**ESTADO QUE TOCA:**
+**STATE IT TOUCHES:**
 
-| Recurso | Lê/Escreve | Propósito |
+| Resource | Reads/Writes | Purpose |
 |---|---|---|
-| `settings.json`/`settings.local.json` alvo | Lê+Escreve (com backup `.bak-<timestamp>`) | wiring aditivo |
-| `.git/hooks/<nome>` | Lê+Escreve | chain-preserving (preserva o original como `.pre-kitforge`) |
+| target `settings.json`/`settings.local.json` | Reads+Writes (with `.bak-<timestamp>` backup) | additive wiring |
+| `.git/hooks/<name>` | Reads+Writes | chain-preserving (keeps the original as `.pre-kitforge`) |
 
-## Processo
-1. **Wire os hooks base** (secret-scan em Edit/Write) num settings de teste primeiro:
+## Process
+1. **Wire the base hooks** (secret-scan on Edit/Write) into a test settings file first:
    ```bash
    python scripts/wire_settings.py --target /caminho/settings-copy.json --spec hooks/wiring-spec.yaml
    ```
-2. **Confirme idempotência** rodando de novo — deve dar `no-op`, byte-idêntico.
-3. **Instale o git hook** SEM medo de perder o hook que já existe:
+2. **Confirm idempotency** by running again — it must return `no-op`, byte-identical.
+3. **Install the git hook** WITHOUT fear of losing the hook that already exists:
    ```bash
    python scripts/install_git_hook.py --repo . --hook-name pre-commit --payload hooks/meu-payload.sh
    ```
-4. **Se precisar desfazer** o wiring de settings:
+4. **If you need to undo** the settings wiring:
    ```bash
    python scripts/wire_settings.py --undo --target /caminho/settings-copy.json
    ```
 
-## Exemplos executados
+## Executed examples
 
 ```console
 $ python scripts/install_git_hook.py --repo /tmp/projeto-teste --hook-name pre-commit --payload payload.sh
 {"status": "chained", "hook": ".../pre-commit", "preserved_original": ".../pre-commit.pre-kitforge", "payload": ".../pre-commit.kitforge-payload"}
 ```
-<!-- executado: 2026-07-10 · exit=0 -->
-(hook pre-commit JÁ existente é preservado como `.pre-kitforge`, não sobrescrito.)
+<!-- executed: 2026-07-10 · exit=0 -->
+(an ALREADY existing pre-commit hook is preserved as `.pre-kitforge`, not overwritten.)
 
 ```console
 $ python scripts/wire_settings.py --target conflict-settings.json --spec statusline-only-spec.yaml
 {"status": "warn", "changed": [], "warnings": ["statusLine já ocupado por outra config; use --force para sobrescrever (atual: 'outro-dono-ja-configurou-isso')"]}
 ```
-<!-- executado: 2026-07-10 · exit=1 -->
-(conflito SEM `--force` — nada é sobrescrito; é a correção do defeito conhecido de `wire_statusline.py:47-49` que sobrescrevia silenciosamente.)
+<!-- executed: 2026-07-10 · exit=1 -->
+(conflict WITHOUT `--force` — nothing is overwritten; this is the fix for the known defect in `wire_statusline.py:47-49`, which overwrote silently.)
 
 ```console
 $ sh .git/hooks/pre-commit log.txt && cat log.txt
 original-pre-commit-ran
 claude-dev-kit-payload-ran
 ```
-<!-- executado: 2026-07-10 · exit=0 -->
-(o original roda PRIMEIRO — se ele falhar, `set -e` aborta ANTES do payload novo rodar.)
+<!-- executed: 2026-07-10 · exit=0 -->
+(the original runs FIRST — if it fails, `set -e` aborts BEFORE the new payload runs.)
 
 ```console
 $ bash evals/hook-chain-test.sh
 [OK] hook original + payload novo, ambos rodaram, original PRIMEIRO (chain-preserving provado)
 ```
-<!-- executado: 2026-07-10 · exit=0 -->
+<!-- executed: 2026-07-10 · exit=0 -->
 
-## Prova
+## Proof
 
 ```bash
 python scripts/install_git_hook.py --self-test

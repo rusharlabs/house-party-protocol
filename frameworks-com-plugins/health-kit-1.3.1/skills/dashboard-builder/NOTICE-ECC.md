@@ -1,15 +1,15 @@
-# NOTICE — inspiração ECC (dashboard-builder)
+# NOTICE — ECC inspiration (dashboard-builder)
 
-Reimplementação, traduzida e adaptada ao formato de casa, do skill `dashboard-builder`
-do projeto **ECC** (Excellence Compounding Cycle):
+Reimplementation, translated and adapted to the house format, of the `dashboard-builder`
+skill from the **ECC** project (Excellence Compounding Cycle):
 
-- Repositório: https://github.com/affaan-m/ECC
-- Autor: Affaan Mustafa
-- Licença: MIT, © 2026 Affaan Mustafa
-- Metadata de origem no ECC: `origin: ECC direct-port adaptation`
+- Repository: https://github.com/affaan-m/ECC
+- Author: Affaan Mustafa
+- License: MIT, © 2026 Affaan Mustafa
+- Origin metadata in ECC: `origin: ECC direct-port adaptation`
 
-Nota de escopo: este skill é sobre dashboards de MONITORAMENTO de infra (Grafana/SigNoz/
-Kafka/Elasticsearch) — diferente da doutrina de dashboards HTML self-contained pra
-cliente/relatório já existente neste ecossistema (dark/light premium, pure CSS,
-conic-gradient, sem Chart.js/D3). Os dois não se sobrepõem: um é pra operador de infra,
-o outro é pra apresentação de negócio.
+Scope note: this skill is about infra MONITORING dashboards (Grafana/SigNoz/
+Kafka/Elasticsearch) — different from the self-contained HTML dashboard doctrine for
+client/report use that already exists in this ecosystem (dark/light premium, pure CSS,
+conic-gradient, no Chart.js/D3). The two do not overlap: one is for the infra operator,
+the other for business presentation.

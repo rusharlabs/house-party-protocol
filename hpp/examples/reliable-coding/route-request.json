@@ -1,0 +1,6 @@
+{
+  "stage": "inspect",
+  "risk": "low",
+  "complexity": "low",
+  "context": 4000
+}

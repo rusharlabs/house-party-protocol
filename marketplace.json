@@ -1,8 +1,9 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
   "name": "house-party-protocol",
-  "description": "House Party Protocol é um harness modular e cross-host para Claude Code e Codex CLI: gates executáveis, loops governados, revisão independente, continuidade, avaliação determinística e distribuição verificável.",
-  "version": "2.4.1",
+  "description": "House Party Protocol is a modular, cross-host harness for Claude Code and Codex CLI: executable gates, governed loops, independent review, continuity, deterministic evaluation and verifiable distribution.",
+  "description_pt": "House Party Protocol é um harness modular e cross-host para Claude Code e Codex CLI: gates executáveis, loops governados, revisão independente, continuidade, avaliação determinística e distribuição verificável.",
+  "version": "2.4.2",
   "owner": {
     "name": "Max Parisi",
     "url": "https://rusharlabs.com"
@@ -12,8 +13,8 @@
       "name": "kit-forge",
       "displayName": "Kit Forge",
       "source": "./instaladores/kit-forge-1.4.0",
-      "description": "O gate de IP/PII + o montador de kits. ip_pii_linter + kit_assembler (com guard_origins integrado) + kit_doctor (verify/install/registry, 6 estagios: detect/prereqs/profile/configure/wire-suggest/smoke) + guard_origins + wire_settings + install_git_hook + skill_lint + tools/browse.py (menu interativo do marketplace), contrato unico de exit (0 ok/no-op, 1 warn, 2 block, 3 erro). Sem --skip-lint.",
-      "description_en": "The IP/PII gate plus the kit assembler. ip_pii_linter + kit_assembler (with guard_origins built in) + kit_doctor (verify/install/registry, 6 stages: detect/prereqs/profile/configure/wire-suggest/smoke) + guard_origins + wire_settings + install_git_hook + skill_lint + tools/browse.py (interactive marketplace menu), single exit contract (0 ok/no-op, 1 warn, 2 block, 3 error). No --skip-lint.",
+      "description": "The IP/PII gate plus the kit assembler. ip_pii_linter + kit_assembler (with guard_origins built in) + kit_doctor (verify/install/registry, 6 stages: detect/prereqs/profile/configure/wire-suggest/smoke) + guard_origins + wire_settings + install_git_hook + skill_lint + tools/browse.py (interactive marketplace menu), single exit contract (0 ok/no-op, 1 warn, 2 block, 3 error). No --skip-lint.",
+      "description_pt": "O gate de IP/PII + o montador de kits. ip_pii_linter + kit_assembler (com guard_origins integrado) + kit_doctor (verify/install/registry, 6 estagios: detect/prereqs/profile/configure/wire-suggest/smoke) + guard_origins + wire_settings + install_git_hook + skill_lint + tools/browse.py (menu interativo do marketplace), contrato unico de exit (0 ok/no-op, 1 warn, 2 block, 3 erro). Sem --skip-lint.",
       "version": "1.4.0",
       "category": "installers",
       "keywords": [
@@ -29,8 +30,8 @@
       "name": "operator-kit",
       "displayName": "Operator Kit",
       "source": "./frameworks-com-plugins/operator-kit-1.4.0",
-      "description": "Módulo operacional do harness: gates executáveis, loops governados, pass@k/pass^k standalone, política audit/enforce, preflight, planejamento spec-driven e dois checkers read-only.",
-      "description_en": "The harness's operational module: executable gates, governed loops, standalone pass@k/pass^k, audit/enforce policy, preflight, spec-driven planning and two read-only checkers.",
+      "description": "The harness's operational module: executable gates, governed loops, standalone pass@k/pass^k, audit/enforce policy, preflight, spec-driven planning and two read-only checkers.",
+      "description_pt": "Módulo operacional do harness: gates executáveis, loops governados, pass@k/pass^k standalone, política audit/enforce, preflight, planejamento spec-driven e dois checkers read-only.",
       "version": "1.4.0",
       "category": "productivity",
       "keywords": [
@@ -48,8 +49,8 @@
       "name": "continuity-kit",
       "displayName": "Continuity Kit",
       "source": "./continuidade/continuity-kit-1.2.1",
-      "description": "Handoff-v1.1: uma sessao sobrevive a parada/clear/crash sem perder o proximo passo. Schema com git-block + re_derive_cmd (LC-1) + verify_first_cmd (LC-4), hooks Stop/PreCompact/SessionStart. Inclui doc-rollup (historico/evolucao com degradacao embutida) + pre-clear (longo-prazo + curto-prazo).",
-      "description_en": "Handoff-v1.1: a session survives a stop/clear/crash without losing its next step. Schema with git-block + re_derive_cmd (LC-1) + verify_first_cmd (LC-4), Stop/PreCompact/SessionStart hooks. Includes doc-rollup (history/evolution with built-in degradation) + pre-clear (long-term + short-term).",
+      "description": "Handoff-v1.1: a session survives a stop/clear/crash without losing its next step. Schema with git-block + re_derive_cmd (LC-1) + verify_first_cmd (LC-4), Stop/PreCompact/SessionStart hooks. Includes doc-rollup (history/evolution with built-in degradation) + pre-clear (long-term + short-term).",
+      "description_pt": "Handoff-v1.1: uma sessao sobrevive a parada/clear/crash sem perder o proximo passo. Schema com git-block + re_derive_cmd (LC-1) + verify_first_cmd (LC-4), hooks Stop/PreCompact/SessionStart. Inclui doc-rollup (historico/evolucao com degradacao embutida) + pre-clear (longo-prazo + curto-prazo).",
       "version": "1.2.1",
       "category": "productivity",
       "keywords": [
@@ -65,8 +66,8 @@
       "name": "lane-kit",
       "displayName": "Lane Kit",
       "source": "./multi-sessao/lane-kit-1.2.0",
-      "description": "N sessoes sem colisao. Lane board, maker!=checker cross-model, lock por diretorio, git-guard e territory-guard. O checker_router detecta Codex, Cursor e Gemini e escolhe um provider diferente do maker.",
-      "description_en": "N sessions without collisions. Lane board, cross-model maker!=checker, per-directory lock, git-guard and territory-guard. The checker_router detects Codex, Cursor and Gemini and picks a provider different from the maker's.",
+      "description": "N sessions without collisions. Lane board, cross-model maker!=checker, per-directory lock, git-guard and territory-guard. The checker_router detects Codex, Cursor and Gemini and picks a provider different from the maker's.",
+      "description_pt": "N sessoes sem colisao. Lane board, maker!=checker cross-model, lock por diretorio, git-guard e territory-guard. O checker_router detecta Codex, Cursor e Gemini e escolhe um provider diferente do maker.",
       "version": "1.2.0",
       "category": "productivity",
       "keywords": [
@@ -80,8 +81,8 @@
       "name": "health-kit",
       "displayName": "Health Kit",
       "source": "./frameworks-com-plugins/health-kit-1.3.1",
-      "description": "Sonda de saude de servicos (http/cmd) config-driven por profile.yaml + segmento de statusline com detalhe por-servico (api:OK db:DOWN), cache-first (statusline nunca toca rede). Doutrina embarcada: health de SERVICO != health de DADO. +dashboard-builder (Grafana/SigNoz, adaptado do ECC MIT).",
-      "description_en": "Service health probe (http/cmd) driven by profile.yaml + a statusline segment with per-service detail (api:OK db:DOWN), cache-first (the statusline never touches the network). Embedded doctrine: SERVICE health != DATA health. +dashboard-builder (Grafana/SigNoz, adapted from ECC, MIT).",
+      "description": "Service health probe (http/cmd) driven by profile.yaml + a statusline segment with per-service detail (api:OK db:DOWN), cache-first (the statusline never touches the network). Embedded doctrine: SERVICE health != DATA health. +dashboard-builder (Grafana/SigNoz, adapted from ECC, MIT).",
+      "description_pt": "Sonda de saude de servicos (http/cmd) config-driven por profile.yaml + segmento de statusline com detalhe por-servico (api:OK db:DOWN), cache-first (statusline nunca toca rede). Doutrina embarcada: health de SERVICO != health de DADO. +dashboard-builder (Grafana/SigNoz, adaptado do ECC MIT).",
       "version": "1.3.1",
       "category": "monitoring",
       "keywords": [
@@ -95,8 +96,8 @@
       "name": "claude-dev-kit",
       "displayName": "Claude Dev Kit",
       "source": "./frameworks-com-plugins/claude-dev-kit-1.3.1",
-      "description": "Ferramentas de construir ferramentas: skill-writer, hookify, plugin-dev, teaching, wiring reversivel, secret scan, tres skills adaptadas do ECC MIT e um registro auditavel de skills externas candidatas.",
-      "description_en": "Tools for building tools: skill-writer, hookify, plugin-dev, teaching, reversible wiring, secret scan, three skills adapted from ECC (MIT) and an auditable registry of candidate external skills.",
+      "description": "Tools for building tools: skill-writer, hookify, plugin-dev, teaching, reversible wiring, secret scan, three skills adapted from ECC (MIT) and an auditable registry of candidate external skills.",
+      "description_pt": "Ferramentas de construir ferramentas: skill-writer, hookify, plugin-dev, teaching, wiring reversivel, secret scan, tres skills adaptadas do ECC MIT e um registro auditavel de skills externas candidatas.",
       "version": "1.3.1",
       "category": "installers",
       "keywords": [
@@ -113,8 +114,8 @@
       "name": "supabase-pack",
       "displayName": "Supabase Pack",
       "source": "./frameworks-com-plugins/supabase-pack-1.1.0",
-      "description": "rls-audit (RLS de verdade via pg_policies + get_advisors) + supabase-edge-scaffold (Edge Function TS com deno check).",
-      "description_en": "rls-audit (real RLS via pg_policies + get_advisors) + supabase-edge-scaffold (TypeScript Edge Function with deno check).",
+      "description": "rls-audit (real RLS via pg_policies + get_advisors) + supabase-edge-scaffold (TypeScript Edge Function with deno check).",
+      "description_pt": "rls-audit (RLS de verdade via pg_policies + get_advisors) + supabase-edge-scaffold (Edge Function TS com deno check).",
       "version": "1.1.0",
       "category": "database",
       "keywords": [
@@ -128,8 +129,8 @@
       "name": "agent-framework-wizard",
       "displayName": "Agent Framework Wizard",
       "source": "./wizards/agent-framework-wizard-1.1.1",
-      "description": "Wizard de 6 passos (check_python->check_git->check_deps->configure->validate->generate_and_summary) para gerar o esqueleto de um agente/skill novo. --interview/--answers nao-interativos + --demo; skip-exists com --force.",
-      "description_en": "6-step wizard (check_python->check_git->check_deps->configure->validate->generate_and_summary) that scaffolds a new agent/skill. Non-interactive --interview/--answers + --demo; skip-exists with --force.",
+      "description": "6-step wizard (check_python->check_git->check_deps->configure->validate->generate_and_summary) that scaffolds a new agent/skill. Non-interactive --interview/--answers + --demo; skip-exists with --force.",
+      "description_pt": "Wizard de 6 passos (check_python->check_git->check_deps->configure->validate->generate_and_summary) para gerar o esqueleto de um agente/skill novo. --interview/--answers nao-interativos + --demo; skip-exists com --force.",
       "version": "1.1.1",
       "category": "scaffolding",
       "keywords": [
@@ -144,8 +145,8 @@
       "name": "dev-squad-kit",
       "displayName": "Dev Squad Kit",
       "source": "./frameworks-com-plugins/dev-squad-kit-1.0.0",
-      "description": "Squad com 12 papéis disponíveis como slash commands e subagents reais, tools explícitos e QA read-only, mais 3 skills de leitura/consolidação paralela token-safe. Não inclui árvore proprietária de tasks/templates.",
-      "description_en": "A squad of 12 roles available as slash commands and real subagents, with explicit tools and read-only QA, plus 3 token-safe parallel reading/consolidation skills. Does not include the proprietary tasks/templates tree.",
+      "description": "A squad of 12 roles available as slash commands and real subagents, with explicit tools and read-only QA, plus 3 token-safe parallel reading/consolidation skills. Does not include the proprietary tasks/templates tree.",
+      "description_pt": "Squad com 12 papéis disponíveis como slash commands e subagents reais, tools explícitos e QA read-only, mais 3 skills de leitura/consolidação paralela token-safe. Não inclui árvore proprietária de tasks/templates.",
       "version": "1.0.0",
       "category": "agents",
       "keywords": [
@@ -161,8 +162,8 @@
       "name": "gotcha-memory",
       "displayName": "Gotcha Memory",
       "source": "./continuidade/gotcha-memory-1.0.0",
-      "description": "Loop de aprendizado operacional standalone: a falha vira conhecimento. Depois de cada comando Bash que falha, o postflight registra o evento classificado por familia de erro; quando o mesmo tipo recorre N vezes numa janela, vira um GOTCHA -- uma licao acionavel que o preflight injeta ANTES da proxima execucao da mesma tarefa. Gotchas curated (suas regras) sao always-on. Deteccao conservadora: so sinal claro de erro conta, ambiguo nao e falha. Dois hooks WARN-only (exit 0 sempre) -- o loop de aprendizado jamais bloqueia o fluxo. stdlib only.",
-      "description_en": "Standalone operational learning loop: a failure becomes knowledge. After every Bash command that fails, the postflight records the event classified by error family; when the same type recurs N times within a window it becomes a GOTCHA -- an actionable lesson the preflight injects BEFORE the next run of the same task. Curated gotchas (your rules) are always-on. Conservative detection: only a clear error signal counts, ambiguous is not a failure. Two WARN-only hooks (always exit 0) -- the learning loop never blocks the flow. stdlib only.",
+      "description": "Standalone operational learning loop: a failure becomes knowledge. After every Bash command that fails, the postflight records the event classified by error family; when the same type recurs N times within a window it becomes a GOTCHA -- an actionable lesson the preflight injects BEFORE the next run of the same task. Curated gotchas (your rules) are always-on. Conservative detection: only a clear error signal counts, ambiguous is not a failure. Two WARN-only hooks (always exit 0) -- the learning loop never blocks the flow. stdlib only.",
+      "description_pt": "Loop de aprendizado operacional standalone: a falha vira conhecimento. Depois de cada comando Bash que falha, o postflight registra o evento classificado por familia de erro; quando o mesmo tipo recorre N vezes numa janela, vira um GOTCHA -- uma licao acionavel que o preflight injeta ANTES da proxima execucao da mesma tarefa. Gotchas curated (suas regras) sao always-on. Deteccao conservadora: so sinal claro de erro conta, ambiguo nao e falha. Dois hooks WARN-only (exit 0 sempre) -- o loop de aprendizado jamais bloqueia o fluxo. stdlib only.",
       "version": "1.0.0",
       "category": "productivity",
       "keywords": [

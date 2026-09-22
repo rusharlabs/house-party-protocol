@@ -1,41 +1,41 @@
 ---
 name: pp-discovery
-description: "Parallel Process Discovery - inventario token-safe de repositorios, pastas e artefatos grandes antes de analise profunda"
+description: "Parallel Process Discovery - token-safe inventory of repositories, folders and large artifacts before deep analysis"
 type: skill
 ---
 
-> **Auto-Trigger:** Quando o usuario pedir descoberta inicial de um repo/pasta grande, mapa de arquivos, inventario token-safe ou preparacao para analise paralela.
-> **Keywords:** "pp-discovery", "discovery", "mapear repo", "inventario token-safe", "deep-read", "repo grande", "descoberta paralela"
-> **Prioridade:** MEDIA
+> **Auto-Trigger:** When the user asks for the initial discovery of a large repo/folder, a file map, a token-safe inventory or the preparation for parallel analysis.
+> **Keywords:** "pp-discovery", "discovery", "map repo", "token-safe inventory", "deep-read", "large repo", "parallel discovery"
+> **Priority:** MEDIUM
 > **Tools:** Bash, Read, Grep, Glob
 
-# pp-discovery - descoberta token-safe
+# pp-discovery - token-safe discovery
 
-## Objetivo
+## Goal
 
-Mapear rapidamente uma base grande sem despejar conteudo demais no contexto. A saida deve dizer o que existe, onde olhar primeiro, quais arquivos sao fonte de verdade e quais areas parecem risco ou ruido.
+Map a large codebase quickly without dumping too much content into the context. The output must say what exists, where to look first, which files are the source of truth and which areas look like risk or noise.
 
-Use quando o pedido ainda e amplo. Se a pergunta ja exige uma tese com evidencias externas, use pesquisa dedicada/deep-research em vez desta skill.
+Use it while the request is still broad. If the question already demands a thesis with external evidence, use dedicated research/deep-research instead of this skill.
 
-## Quando NÃO Ativar
+## When NOT to Activate
 
-- Escopo pequeno e ja delimitado para leitura linha-a-linha; use `pp-raiox`.
-- Consolidacao de outputs paralelos ja existentes; use `pp-consolidate`.
-- Pesquisa externa com web/citacoes; use fluxo de pesquisa apropriado.
-- Execucao operacional no seu executor; use skills de dispatch/executor.
+- Small scope, already delimited for line-by-line reading; use `pp-raiox`.
+- Consolidation of parallel outputs that already exist; use `pp-consolidate`.
+- External research with web/citations; use the appropriate research flow.
+- Operational execution in your executor; use dispatch/executor skills.
 
-## Processo
+## Process
 
-1. Defina o alvo exato: repo, pasta, commit ou pacote.
-2. Colete estrutura com comandos baratos:
+1. Define the exact target: repo, folder, commit or package.
+2. Collect the structure with cheap commands:
    - `git status --short --branch`
    - `rg --files`
-   - `find <alvo> -maxdepth 3 -type f` quando `rg` nao cobrir.
-3. Classifique por tipo: codigo, docs, configs, dados, logs, builds, vendored/deps.
-4. Leia apenas headers, manifests e arquivos de indice antes de ler corpos grandes.
-5. Liste candidatos para analise seguinte com motivo concreto.
+   - `find <alvo> -maxdepth 3 -type f` when `rg` does not cover it.
+3. Classify by type: code, docs, configs, data, logs, builds, vendored/deps.
+4. Read only headers, manifests and index files before reading large bodies.
+5. List candidates for the next analysis with a concrete reason.
 
-## Saida Esperada
+## Expected Output
 
 ```md
 # PP Discovery - <alvo>
@@ -60,54 +60,54 @@ Use quando o pedido ainda e amplo. Se a pergunta ja exige uma tese com evidencia
 
 ## Guardrails
 
-- Nao resumir arquivo que nao foi lido.
-- Nao contar itens por estimativa; use comando real.
-- Nao criar plano de execucao operacional no seu executor; este skill e do seu sistema de conhecimento e so prepara conhecimento.
-- Nao copiar conteudo massivo para memoria; referencie caminhos e hashes quando util.
+- Do not summarise a file that was not read.
+- Do not count items by estimate; use a real command.
+- Do not create an operational execution plan in your executor; this skill belongs to your knowledge system and only prepares knowledge.
+- Do not copy massive content into memory; reference paths and hashes when useful.
 
-## Contrato
+## Contract
 
-**ENTRADA:** repo, pasta, commit ou pacote delimitado.
+**INPUT:** a delimited repo, folder, commit or package.
 
-**SAÍDA:** inventário com mapa, fontes de verdade, riscos e próxima onda.
+**OUTPUT:** an inventory with map, sources of truth, risks and next wave.
 
 **EXIT CODES:**
 
-| Exit | Significado |
+| Exit | Meaning |
 |---|---|
-| 0 | inventário concluído com régua ao lado das contagens |
-| 1 | aviso: área inacessível declarada |
-| 2 | bloqueio: escopo ausente ou contagem estimada |
-| 3 | erro ao ler o alvo |
+| 0 | inventory complete, with the measuring command next to each count |
+| 1 | warning: inaccessible area declared |
+| 2 | block: missing scope or estimated count |
+| 3 | error reading the target |
 
-**ESTADO QUE TOCA:**
+**STATE IT TOUCHES:**
 
-| Caminho | Ação |
+| Path | Action |
 |---|---|
-| alvo delimitado | leitura |
-| destino definido pelo operador | escrita do inventário |
+| delimited target | read |
+| destination chosen by the operator | write the inventory |
 
-## Exemplos executados
+## Executed examples
 
 ```console
 $ python -c "print('arquivos=12 fonte=rg')"
 arquivos=12 fonte=rg
 ```
-<!-- executado: 2026-09-20 · exit=0 -->
+<!-- executed: 2026-09-20 · exit=0 -->
 
 ```console
 $ python -c "print('fontes_de_verdade=2')"
 fontes_de_verdade=2
 ```
-<!-- executado: 2026-09-20 · exit=0 -->
+<!-- executed: 2026-09-20 · exit=0 -->
 
 ```console
 $ python -c "import sys; print('block: escopo ausente'); sys.exit(2)"
 block: escopo ausente
 ```
-<!-- executado: 2026-09-20 · exit=2 -->
+<!-- executed: 2026-09-20 · exit=2 -->
 
-## Prova
+## Proof
 
 ```bash
 python -c "print('arquivos=12 fonte=rg')"

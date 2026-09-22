@@ -1,15 +1,15 @@
-# NOTICE — inspiração ECC (search-first)
+# NOTICE — ECC inspiration (search-first)
 
-Reimplementação, traduzida e adaptada ao formato de casa, do skill `search-first`
-do projeto **ECC** (Excellence Compounding Cycle):
+Reimplementation, translated and adapted to the house format, of the `search-first`
+skill from the **ECC** project (Excellence Compounding Cycle):
 
-- Repositório: https://github.com/affaan-m/ECC
-- Autor: Affaan Mustafa
-- Licença: MIT, © 2026 Affaan Mustafa
-- Metadata de origem no ECC: `origin: ECC` (conteúdo próprio do repositório)
+- Repository: https://github.com/affaan-m/ECC
+- Author: Affaan Mustafa
+- License: MIT, © 2026 Affaan Mustafa
+- Origin metadata in ECC: `origin: ECC` (the repository's own content)
 
-Nota de relação com doutrina própria: este marketplace já tem `learned-corrections.md`
-LC-3 ("grep antes de criar/classificar"), escopado a arquivos/scripts DENTRO do repo.
-O `search-first` do ECC estende a mesma disciplina para FORA do repo (registros de
-pacote npm/PyPI, servidores MCP, busca de código no GitHub) — adaptado aqui como
-skill complementar, não duplicata.
+Note on the relation to house doctrine: this marketplace already has `learned-corrections.md`
+LC-3 ("grep before creating/classifying"), scoped to files/scripts INSIDE the repo.
+ECC's `search-first` extends the same discipline to OUTSIDE the repo (npm/PyPI package
+registries, MCP servers, code search on GitHub) — adapted here as a complementary
+skill, not a duplicate.

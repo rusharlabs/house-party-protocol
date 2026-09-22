@@ -1,68 +1,68 @@
 ---
 name: claude-md-from-profile
-description: Gera o bloco de CLAUDE.md do projeto A PARTIR do operator-profile.yaml — piso primeiro (o que a IA nao decide), depois onde as coisas moram, as regras do pronto e o fluxo. Idempotente, com assinatura; recusa sobrescrever bloco editado a mao
+description: Generates the project's CLAUDE.md block FROM operator-profile.yaml — floor first (what the AI does not decide), then where things live, the rules of done and the flow. Idempotent, signed; refuses to overwrite a hand-edited block
 ---
 
-> **Auto-Trigger:** Ao criar ou alterar o `operator-profile.yaml`; ao abrir um projeto que tem perfil e nao tem CLAUDE.md; quando a IA de um projeto ignora um gate que o perfil declara
-> **Keywords:** "claude.md", "gerar claude.md", "instrucoes do projeto", "perfil do operador", "operator-profile", "piso", "o que a IA nao decide", "regenerar bloco", "assinatura"
-> **Prioridade:** ALTA
+> **Auto-Trigger:** When creating or changing `operator-profile.yaml`; when opening a project that has a profile and no CLAUDE.md; when a project's AI ignores a gate the profile declares
+> **Keywords:** "claude.md", "generate claude.md", "project instructions", "operator profile", "operator-profile", "floor", "what the AI does not decide", "regenerate block", "signature"
+> **Priority:** HIGH
 > **Tools:** Bash, Read
-> **Doutrina relacionada:** `rules/partial-autonomy-slider.md` (o eixo QUANTO — `autonomia.por_acao`), `rules/gateguard.md` (paths protegidos, familias bloqueadas), `rules/verification-before-completion.md` (as regras do pronto).
+> **Related doctrine:** `rules/partial-autonomy-slider.md` (the HOW MUCH axis — `autonomia.por_acao`), `rules/gateguard.md` (protected paths, blocked families), `rules/verification-before-completion.md` (the rules of done).
 
-# claude-md-from-profile — o CLAUDE.md nasce do perfil, nao o contrario
+# claude-md-from-profile — CLAUDE.md is born from the profile, not the other way round
 
-O `operator-profile.yaml` ja diz tudo o que importa: que acao e nivel 0, que path e
-protegido, que familia de comando e bloqueada, onde moram o inbox e os logs, o que
-"pronto" exige. Mas o perfil e lido por **hooks e scripts** — a IA que abre o projeto le
-o **CLAUDE.md**. Sem esta skill, os dois divergem em silencio: o hook bloqueia o que o
-CLAUDE.md nunca disse que era proibido, e a IA aprende a contornar o gate em vez de
-respeita-lo.
+`operator-profile.yaml` already says everything that matters: which action is level 0, which
+path is protected, which command family is blocked, where the inbox and the logs live, what
+"done" requires. But the profile is read by **hooks and scripts** — the AI that opens the project
+reads **CLAUDE.md**. Without this skill the two diverge in silence: the hook blocks what
+CLAUDE.md never said was forbidden, and the AI learns to work around the gate instead of
+respecting it.
 
-Esta skill gera um **bloco marcado** dentro do CLAUDE.md, com o piso na primeira secao.
-O que a pessoa escreveu fora dos marcadores nunca e tocado.
+This skill generates a **marked block** inside CLAUDE.md, with the floor in the first section.
+What the person wrote outside the markers is never touched.
 
-## Quando NÃO Ativar
-- O projeto nao tem `operator-profile.yaml` — crie o perfil primeiro (`cp profile.example.yaml operator-profile.yaml`). O script se recusa a gerar de um perfil que nao existe, e nao ha default escondido.
-- Voce quer escrever prosa no CLAUDE.md — escreva **fora** dos marcadores; dentro deles o conteudo e derivado e sera regenerado.
-- O bloco foi editado a mao de proposito e voce ainda nao decidiu se a edicao vai para o perfil — resolva isso antes; `--force` apaga a edicao.
+## When NOT to Activate
+- The project has no `operator-profile.yaml` — create the profile first (`cp profile.example.yaml operator-profile.yaml`). The script refuses to generate from a profile that does not exist, and there is no hidden default.
+- You want to write prose in CLAUDE.md — write it **outside** the markers; inside them the content is derived and will be regenerated.
+- The block was hand-edited on purpose and you have not yet decided whether the edit goes to the profile — settle that first; `--force` erases the edit.
 
-## Contrato
+## Contract
 
-**ENTRADA:** um `operator-profile.yaml` (achado pela cwd, por `OPERATOR_PROFILE=`, ou por `--profile`). Nenhuma chave e obrigatoria — secao sem dado e omitida, nao inventada.
+**INPUT:** an `operator-profile.yaml` (found from the cwd, via `OPERATOR_PROFILE=`, or via `--profile`). No key is mandatory — a section without data is omitted, not invented.
 
-**SAÍDA:** um bloco `<!-- operator-kit:claude-md:begin -->` … `<!-- operator-kit:claude-md:end -->` gravado em `./CLAUDE.md` (ou `--out`). A ultima linha do bloco e a **assinatura** (hash do perfil + data). Perfil de exemplo gera o bloco com um aviso na primeira linha.
+**OUTPUT:** a block `<!-- operator-kit:claude-md:begin -->` … `<!-- operator-kit:claude-md:end -->` written to `./CLAUDE.md` (or `--out`). The last line of the block is the **signature** (profile hash + date). The example profile generates the block with a warning on the first line.
 
 **EXIT CODES**
 
-| Exit | Significado |
+| Exit | Meaning |
 |---|---|
-| 0 | bloco gravado (novo/substituido) ou **no-op** — o CLAUDE.md ja estava em dia com o perfil |
-| 1 | o bloco existente foi **editado a mao** (assinatura nao bate). Nada gravado. Veja o diff com `--dry-run`; para sobrescrever, `--force` |
-| 2 | uso ou perfil invalido: sem perfil encontrado, YAML ilegivel, PyYAML ausente, flag desconhecida |
-| 3 | a maquina recusou gravar `CLAUDE.md` — o conteudo inteiro esta em `INSTRUCOES-DO-CLAUDE.md` ao lado; renomeie |
+| 0 | block written (new/replaced) or **no-op** — CLAUDE.md was already up to date with the profile |
+| 1 | the existing block was **hand-edited** (signature does not match). Nothing written. See the diff with `--dry-run`; to overwrite, `--force` |
+| 2 | usage or invalid profile: no profile found, unreadable YAML, PyYAML missing, unknown flag |
+| 3 | the machine refused to write `CLAUDE.md` — the whole content is in `INSTRUCOES-DO-CLAUDE.md` next to it; rename it |
 
-**ESTADO QUE TOCA:**
+**STATE IT TOUCHES:**
 
-| Recurso | Lê/Escreve | Propósito |
+| Resource | Reads/Writes | Purpose |
 |---|---|---|
-| `operator-profile.yaml` | Lê | a fonte unica do bloco |
-| `CLAUDE.md` (ou `--out`) | Escreve — **so entre os marcadores** | o bloco gerado; texto fora dos marcadores e preservado byte a byte |
-| `INSTRUCOES-DO-CLAUDE.md` | Escreve (so no exit 3) | fallback quando a escrita em `CLAUDE.md` e recusada |
+| `operator-profile.yaml` | Reads | the single source of the block |
+| `CLAUDE.md` (or `--out`) | Writes — **only between the markers** | the generated block; text outside the markers is preserved byte for byte |
+| `INSTRUCOES-DO-CLAUDE.md` | Writes (only on exit 3) | fallback when writing to `CLAUDE.md` is refused |
 
-## Processo
-1. **Veja o que sairia** antes de gravar — `--dry-run` imprime o bloco inteiro no stdout e nao toca em nada.
-2. **Gere** na raiz do projeto: `python "${CLAUDE_PLUGIN_ROOT}/scripts/claude_md_from_profile.py"`. Se ja existe CLAUDE.md, o bloco entra no **topo**, antes do texto da pessoa.
-3. **Leia o piso** que saiu (`## O QUE VOCE NAO DECIDE`). Se algo ali esta errado, o conserto e **no perfil**, nunca no bloco — regere depois.
-4. **Ponha no setup do projeto** (hook de SessionStart, `make setup`, o que houver): rodar de novo e barato e idempotente — exit 0 com `no-op` quando nada mudou.
-5. **Se der exit 1**, alguem editou o bloco a mao. Compare com `--dry-run`, leve o que vale para o perfil, e so entao `--force`.
+## Process
+1. **See what would come out** before writing — `--dry-run` prints the whole block to stdout and touches nothing.
+2. **Generate** at the project root: `python "${CLAUDE_PLUGIN_ROOT}/scripts/claude_md_from_profile.py"`. If CLAUDE.md already exists, the block goes at the **top**, before the person's text.
+3. **Read the floor** that came out (`## O QUE VOCE NAO DECIDE`). If something there is wrong, the fix is **in the profile**, never in the block — regenerate afterwards.
+4. **Put it in the project setup** (SessionStart hook, `make setup`, whatever exists): running it again is cheap and idempotent — exit 0 with `no-op` when nothing changed.
+5. **On exit 1**, someone hand-edited the block. Compare with `--dry-run`, carry what is worth keeping into the profile, and only then `--force`.
 
-## Exemplos executados
+## Executed examples
 
-Os quatro abaixo foram rodados de verdade (2026-09-20) num diretorio temporario com o
-`profile.example.yaml` copiado como `operator-profile.yaml` — zero efeito em projeto
-real. A saida e a real.
+The four below were really run (2026-09-20) in a temporary directory with
+`profile.example.yaml` copied as `operator-profile.yaml` — zero effect on a real
+project. The output is the real one.
 
-**1 · Primeira geracao — o CLAUDE.md nasce:**
+**1 · First generation — CLAUDE.md is born:**
 
 ```
 $ python "${CLAUDE_PLUGIN_ROOT}/scripts/claude_md_from_profile.py"
@@ -70,10 +70,10 @@ claude_md_from_profile: bloco novo em CLAUDE.md (fonte: operator-profile.yaml)
 $ echo $?
 0
 ```
-<!-- executado: 2026-09-20 · exit=0 -->
+<!-- executed: 2026-09-20 · exit=0 -->
 
-O bloco comeca pelo piso, e o piso vem do perfil, chave a chave — cada linha diz de
-onde saiu:
+The block starts with the floor, and the floor comes from the profile, key by key — each line
+says where it came from:
 
 ```
 ## O QUE VOCE NAO DECIDE
@@ -84,7 +84,7 @@ onde saiu:
 - A familia de comando **git-push-force** e BLOQUEADA (`guardrails.block_families`). Nao ha excecao por urgencia.
 ```
 
-**2 · Rodar de novo sem mudar nada — a prova de idempotencia:**
+**2 · Run again without changing anything — the idempotence proof:**
 
 ```
 $ python "${CLAUDE_PLUGIN_ROOT}/scripts/claude_md_from_profile.py"
@@ -92,12 +92,12 @@ claude_md_from_profile: CLAUDE.md ja esta em dia com operator-profile.yaml (no-o
 $ echo $?
 0
 ```
-<!-- executado: 2026-09-20 · exit=0 -->
+<!-- executed: 2026-09-20 · exit=0 -->
 
-No-op, nao "substituido": o arquivo nao e reescrito, o mtime nao anda, e um hook de
-SessionStart pode chamar isto toda sessao sem sujar o `git status`.
+No-op, not "replaced": the file is not rewritten, the mtime does not move, and a
+SessionStart hook can call this every session without dirtying `git status`.
 
-**3 · Alguem editou o bloco a mao — a recusa:**
+**3 · Someone hand-edited the block — the refusal:**
 
 ```
 $ sed -i 's/## O FLUXO/## O FLUXO (mexi aqui)/' CLAUDE.md
@@ -106,13 +106,13 @@ claude_md_from_profile: o bloco em CLAUDE.md foi EDITADO A MAO (a assinatura nao
 $ echo $?
 1
 ```
-<!-- executado: 2026-09-20 · exit=1 -->
+<!-- executed: 2026-09-20 · exit=1 -->
 
-A assinatura e um hash do conteudo do bloco: qualquer byte alterado entre os
-marcadores faz o script parar. E o que impede uma regeneracao automatica de apagar,
-em silencio, uma correcao que alguem fez na mao e ainda nao levou para o perfil.
+The signature is a hash of the block's content: any byte changed between the
+markers makes the script stop. That is what keeps an automatic regeneration from silently
+erasing a fix someone made by hand and has not yet carried into the profile.
 
-**4 · Perfil que nao existe — nao ha default escondido:**
+**4 · Profile that does not exist — there is no hidden default:**
 
 ```
 $ python "${CLAUDE_PLUGIN_ROOT}/scripts/claude_md_from_profile.py" --profile nao-existe.yaml
@@ -120,27 +120,27 @@ claude_md_from_profile: perfil ilegivel ([Errno 2] No such file or directory: 'n
 $ echo $?
 2
 ```
-<!-- executado: 2026-09-20 · exit=2 -->
+<!-- executed: 2026-09-20 · exit=2 -->
 
-## Prova
+## Proof
 
 ```bash
 python "${CLAUDE_PLUGIN_ROOT}/scripts/claude_md_from_profile.py" --self-test   # -> self-test OK · exit 0
 ```
 
-O self-test cobre: perfil de exemplo gera aviso na 1a linha e o piso vem **antes** dos
-inventarios; perfil vazio gera bloco valido sem inventar secao; conteudo da pessoa fora
-dos marcadores sobrevive byte a byte a `novo` e a `substituido`; segunda rodada e
-`no-op`; edicao a mao dentro do bloco e `recusado` e `--force` a vence; a assinatura
-muda quando o perfil muda.
+The self-test covers: the example profile generates the warning on line 1 and the floor comes
+**before** the inventories; an empty profile generates a valid block without inventing a
+section; the person's content outside the markers survives `novo` and `substituido` byte for
+byte; the second run is `no-op`; a hand edit inside the block is `recusado` and `--force`
+overrides it; the signature changes when the profile changes.
 
-**Criterio de sucesso operacional:** a IA que abre o projeto le, no CLAUDE.md, a mesma
-lista de nivel-0 que o hook de autonomia bloqueia — `grep -c "nivel 0" CLAUDE.md` igual
-ao numero de acoes com `nivel: 0` no perfil.
+**Operational success criterion:** the AI that opens the project reads, in CLAUDE.md, the same
+level-0 list that the autonomy hook blocks — `grep -c "nivel 0" CLAUDE.md` equal to the
+number of actions with `nivel: 0` in the profile.
 
-## Falhas conhecidas / limites
-- Gera **so o bloco**. Descricao do projeto, convencoes de codigo, comandos de teste: isso e da pessoa, fora dos marcadores. A skill nao escreve o que o perfil nao sabe.
-- A descoberta automatica do perfil sobe da cwd ate a raiz; num monorepo com dois perfis, o mais proximo vence. Use `--profile` quando isso importar.
-- Exige PyYAML (o perfil e YAML). Sem ele, exit 2 com a mensagem — nao ha parser de fallback.
-- O texto que o script escreve e ASCII por escolha (sem acento): o bloco vai para o system prompt de qualquer harness, e alguns ainda tropecam em encoding. Os **valores** do perfil entram como estao — o script nao translitera o que e seu.
-- O EOL do arquivo e da pessoa: um `CLAUDE.md` em CRLF continua CRLF depois do bloco, e a assinatura bate nos dois casos. Sem isso, todo arquivo salvo por editor Windows seria "editado a mao" para sempre.
+## Known failures / limits
+- Generates **only the block**. Project description, code conventions, test commands: those belong to the person, outside the markers. The skill does not write what the profile does not know.
+- Automatic profile discovery walks up from the cwd to the root; in a monorepo with two profiles, the closest one wins. Use `--profile` when that matters.
+- Requires PyYAML (the profile is YAML). Without it, exit 2 with the message — there is no fallback parser.
+- The text the script writes is ASCII by choice (no accents): the block goes into the system prompt of any harness, and some still trip on encoding. The profile's **values** go in as they are — the script does not transliterate what is yours.
+- The file's EOL belongs to the person: a `CLAUDE.md` in CRLF stays CRLF after the block, and the signature matches in both cases. Without that, every file saved by a Windows editor would be "hand-edited" forever.

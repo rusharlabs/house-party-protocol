@@ -1,13 +1,13 @@
 ---
-description: "Cancela o /ralph-gate ativo"
+description: "Cancels the active /ralph-gate"
 allowed-tools: ["Bash(python ${CLAUDE_PLUGIN_ROOT}/hooks/ralph_gate.py:*)"]
 hide-from-slash-command-tool: "true"
 ---
 
-# Cancelar /ralph-gate
+# Cancel /ralph-gate
 
 ```!
 python "${CLAUDE_PLUGIN_ROOT}/hooks/ralph_gate.py" cancel
 ```
 
-Reporte o resultado exato impresso pelo comando (havia loop ativo ou não).
+Report the exact result the command printed (whether there was an active loop or not).

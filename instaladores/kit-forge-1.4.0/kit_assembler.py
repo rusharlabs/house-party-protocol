@@ -3,9 +3,10 @@
 kit_assembler — do manifesto ao kit distribuível, com o ip_pii_linter como GATE inquebrável.
 
 Lê um manifesto YAML, resolve o conjunto de arquivos (include - exclude), copia para um
-staging temporário, aplica sanitizações determinísticas, gera LICENSE/SANITIZACAO.md/
-CHECKSUMS.txt, roda o ip_pii_linter como gate e SÓ ENTÃO troca atomicamente para o destino
-final (+ zip determinístico). Não existe --skip-lint — o gate não tem porta dos fundos.
+staging temporário, aplica sanitizações determinísticas, gera LICENSE/SANITIZATION.md (+ o par
+SANITIZATION.pt-BR.md)/CHECKSUMS.txt, roda o ip_pii_linter como gate e SÓ ENTÃO troca
+atomicamente para o destino final (+ zip determinístico). Não existe --skip-lint — o gate não
+tem porta dos fundos.
 
 Uso:
     python kit_assembler.py --manifest <manifest.yaml>
@@ -41,6 +42,27 @@ except ImportError:
 _ROOT = Path(__file__).resolve().parent
 _LINTER = _ROOT / "ip_pii_linter.py"
 _ZIP_EPOCH = (2020, 1, 1, 0, 0, 0)  # timestamp fixo -> zip determinístico
+
+# Why (English-first docs): human docs ship English-first with a pt-BR pair. The sanitization
+# record is generated, so the pair is generated too — same numbers, same headings, pair link at
+# the top — and the Portuguese-only SANITIZACAO.md is no longer emitted. The manifest switch keeps
+# its historical name (`generate.sanitizacao_md`): it is a config key, not a file name.
+_SANITIZATION_FILES = ("SANITIZATION.md", "SANITIZATION.pt-BR.md")
+_SANITIZATION_PAIR_LINK = "[English](SANITIZATION.md) · [Português](SANITIZATION.pt-BR.md)"
+_SANITIZATION_TEXT = {
+    "SANITIZATION.md": {
+        "applied_h": "## Sanitization applied",
+        "exclude": "- {n} file exclusion pattern(s) (see the build's internal manifest — not distributed)",
+        "replaces": "- {n} text replacement(s) applied",
+        "lint_h": "## Lint result",
+    },
+    "SANITIZATION.pt-BR.md": {
+        "applied_h": "## Sanitização aplicada",
+        "exclude": "- {n} padrão(ões) de exclusão de arquivo (ver manifesto interno da build — não distribuído)",
+        "replaces": "- {n} substituição(ões) de texto aplicada(s)",
+        "lint_h": "## Resultado do lint",
+    },
+}
 
 sys.path.insert(0, str(_ROOT / "hooks"))
 try:
@@ -165,7 +187,7 @@ def write_zip(staging: Path, files: list, zip_path: Path) -> None:
     if zip_path.exists():
         zip_path.unlink()
     with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED) as zf:
-        for rel in sorted(files) + ["LICENSE", "SANITIZACAO.md", "CHECKSUMS.txt"]:
+        for rel in sorted(files) + ["LICENSE", *_SANITIZATION_FILES, "CHECKSUMS.txt"]:
             p = staging / rel
             if not p.exists():
                 continue
@@ -565,16 +587,18 @@ def run_pipeline(manifest: dict, manifest_dir: Path, out_dir: Path, dry_run: boo
             # exclusao (o nome do que foi escondido vazaria no relatorio). Só a CONTAGEM
             # é reportada; o mesmo vale para 'replaces' (o 'find' pode conter o texto
             # sensível que está sendo substituído).
-            lines = ["# SANITIZACAO.md", "", f"Kit: {name} {version}", "",
-                     "## Sanitização aplicada",
-                     f"- {len(exclude)} padrão(ões) de exclusão de arquivo (ver manifesto interno da build — não distribuído)",
-                     f"- {len(applied_replaces)} substituição(ões) de texto aplicada(s)",
-                     "", "## Resultado do lint", f"- status: {lint_status}", f"- counts: {lint_report.get('counts', {})}"]
-            _escreve_lf(staging / "SANITIZACAO.md", "\n".join(lines) + "\n")
+            for fname in _SANITIZATION_FILES:
+                t = _SANITIZATION_TEXT[fname]
+                lines = [_SANITIZATION_PAIR_LINK, "", f"# {fname}", "", f"Kit: {name} {version}", "",
+                         t["applied_h"],
+                         t["exclude"].format(n=len(exclude)),
+                         t["replaces"].format(n=len(applied_replaces)),
+                         "", t["lint_h"], f"- status: {lint_status}", f"- counts: {lint_report.get('counts', {})}"]
+                _escreve_lf(staging / fname, "\n".join(lines) + "\n")
 
         emitted_files = files + (["LICENSE"] if generate.get("license", True) else [])
         if generate.get("sanitizacao_md", True):
-            emitted_files = emitted_files + ["SANITIZACAO.md"]
+            emitted_files = emitted_files + list(_SANITIZATION_FILES)
         if generate.get("checksums", True):
             write_checksums(staging, emitted_files)
             emitted_files = emitted_files + ["CHECKSUMS.txt"]
@@ -637,7 +661,7 @@ def run_pipeline(manifest: dict, manifest_dir: Path, out_dir: Path, dry_run: boo
             "files": len(emitted_files),
             "lint": lint_report,
             # Why: os valores de find/replace ficam FORA do report pelo mesmo
-            # motivo que ficam fora do SANITIZACAO.md — o 'find' costuma ser
+            # motivo que ficam fora do SANITIZATION.md — o 'find' costuma ser
             # exatamente o texto sensivel que se esta escondendo.
             "sanitize": {
                 "aplicadas": [
@@ -688,7 +712,9 @@ def _self_test() -> int:
         assert code1 == 0, f"1a emissão deveria ser exit 0: {report1}"
         final_dir = Path(report1["out"])
         assert (final_dir / "LICENSE").exists(), "LICENSE não gerado"
-        assert (final_dir / "SANITIZACAO.md").exists(), "SANITIZACAO.md não gerado"
+        for fname in _SANITIZATION_FILES:
+            assert (final_dir / fname).exists(), f"{fname} não gerado"
+        assert not (final_dir / "SANITIZACAO.md").exists(), "o nome antigo voltou a ser emitido"
         assert (final_dir / "CHECKSUMS.txt").exists(), "CHECKSUMS.txt não gerado"
         assert not (final_dir / "operator-profile.yaml").exists(), "arquivo excluído vazou pro kit"
         assert Path(report1["zip"]).exists(), "zip não gerado"

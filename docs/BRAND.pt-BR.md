@@ -48,6 +48,9 @@ rótulo ou ícone sempre acompanha.
 Para estado, a interface usa o vermelho do próprio terminal (a paleta não tem vermelho de
 propósito) e nunca pinta fundo: um terminal claro continua legível.
 
+Os ativos vetoriais carregam só esses quatro valores: um degrau mais claro é o mesmo token com
+opacidade reduzida, nunca uma quinta cor. Meça com `grep -o '#[0-9A-Fa-f]\{6\}' assets/*.svg | sort -u`.
+
 ## Tipografia
 
 | Papel | Pilha |

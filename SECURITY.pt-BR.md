@@ -4,14 +4,17 @@
 
 ## Reportar uma vulnerabilidade
 
-**Não abra issue pública** para falha de segurança. Use um dos dois canais:
+**Não abra issue pública** para falha de segurança. Dois canais, igualmente válidos — use o que
+funcionar para você:
 
-1. **GitHub → aba Security → "Report a vulnerability"** (relato privado, o preferido).
-2. E-mail: `atendimento@rushar.com.br` com o assunto `[house-party-protocol] security`.
+1. **GitHub → aba Security → "Report a vulnerability"** (relato privado). Se o botão não
+   estiver lá — relato privado é uma configuração do repositório — use o canal de e-mail; ele
+   não é um fallback de menor valor.
+2. **E-mail:** `atendimento@rushar.com.br` com o assunto `[house-party-protocol] security`.
 
 Inclua: o módulo e a versão (`.claude-plugin/plugin.json`), como reproduzir, e o impacto que você
-mediu. Resposta inicial em até 5 dias úteis; correção publicada como nova versão do módulo, com a
-nota no `CHANGELOG.md`.
+mediu. Resposta inicial em até 5 dias úteis por qualquer dos dois canais; correção publicada como
+nova versão do módulo, com a nota no `CHANGELOG.md`.
 
 ## O que este projeto considera falha de segurança
 

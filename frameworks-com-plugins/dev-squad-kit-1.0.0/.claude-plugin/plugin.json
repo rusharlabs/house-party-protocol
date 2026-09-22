@@ -3,7 +3,7 @@
   "name": "dev-squad-kit",
   "displayName": "Dev Squad Kit",
   "version": "1.0.0",
-  "description": "Squad de 12 agentes de papel (master orchestrator, analyst, architect, data-engineer, dev, devops, pm, po, qa, sm, squad-creator, ux-design-expert) via slash-command, mais 3 skills de leitura/consolidacao paralela token-safe (pp-discovery, pp-raiox, pp-consolidate). Camada de persona/prompt -- nao inclui arvore de tasks/templates proprietaria.",
+  "description": "A squad of 12 role agents (master orchestrator, analyst, architect, data-engineer, dev, devops, pm, po, qa, sm, squad-creator, ux-design-expert) via slash command, plus 3 token-safe parallel reading/consolidation skills (pp-discovery, pp-raiox, pp-consolidate). Persona/prompt layer -- does not include the proprietary tasks/templates tree.",
   "author": { "name": "Max Parisi", "url": "https://rusharlabs.com" },
   "license": "MIT",
   "keywords": ["agents", "squad", "roles", "persona", "orchestration", "discovery", "consolidation", "pm", "architect", "qa"],

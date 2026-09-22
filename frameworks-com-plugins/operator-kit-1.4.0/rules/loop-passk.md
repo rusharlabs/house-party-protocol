@@ -1,33 +1,33 @@
-# LOOP-PASSK — capacidade e confiabilidade são gates diferentes
+# LOOP-PASSK — capability and reliability are different gates
 
-> **Auto-Trigger:** eval de agente, skill, workflow ou release; promoção de autonomia; investigação de flakiness.
-> **Keywords:** pass@k, pass^k, eval, k-runs, capacidade, regressão, determinismo, flaky, release.
-> **Prioridade:** ALTA
-> **Versão:** 2.0.0
+> **Auto-Trigger:** eval of an agent, skill, workflow or release; autonomy promotion; flakiness investigation.
+> **Keywords:** pass@k, pass^k, eval, k-runs, capability, regression, determinism, flaky, release.
+> **Priority:** HIGH
+> **Version:** 2.0.0
 
-## Princípio
+## Principle
 
-Um resultado verde não prova repetibilidade. Para cada caso, rode a mesma verificação `k`
-vezes e responda a duas perguntas separadas:
+A green result does not prove repeatability. For each case, run the same verification `k`
+times and answer two separate questions:
 
-- `pass@k`: o caso passou em pelo menos uma das `k` tentativas? Mede capacidade.
-- `pass^k`: o caso passou em todas as `k` tentativas? Mede confiabilidade.
+- `pass@k`: did the case pass in at least one of the `k` attempts? Measures capability.
+- `pass^k`: did the case pass in all `k` attempts? Measures reliability.
 
-Sempre vale `pass^k <= pass@k`. A diferença entre as métricas é a zona de flakiness.
+`pass^k <= pass@k` always holds. The difference between the metrics is the flakiness zone.
 
-## Gates padrão
+## Default gates
 
-| Gate | Critério | Decisão |
+| Gate | Criterion | Decision |
 |---|---:|---|
-| Capacidade | `pass@k >= 0.90`, com `k=3` | abaixo disso, a implementação volta ao maker |
-| Regressão | `pass^k == 1.00`, com `k=3` | abaixo disso, a release fica bloqueada |
-| Ambos | os dois critérios | exigido para promoção de autonomia crítica |
+| Capability | `pass@k >= 0.90`, with `k=3` | below that, the implementation goes back to the maker |
+| Regression | `pass^k == 1.00`, with `k=3` | below that, the release stays blocked |
+| Both | both criteria | required for promotion of critical autonomy |
 
-O limiar pode ser elevado por domínio. Reduzi-lo para obter verde invalida a medição.
+The threshold may be raised per domain. Lowering it to obtain green invalidates the measurement.
 
-## Runner portátil
+## Portable runner
 
-O kit inclui `scripts/passk_eval.py`, que lê uma suite JSON e funciona sem pacote externo:
+The kit includes `scripts/passk_eval.py`, which reads a JSON suite and works without an external package:
 
 ```json
 {
@@ -55,46 +55,46 @@ python scripts/passk_eval.py --suite eval-suite.json -k 3 --gate regression --js
 python scripts/passk_eval.py --self-test
 ```
 
-`command` recebe um argv e roda com `shell=False`. `replay` mede fixtures declaradas; não
-simula uma chamada a agente. Exit `0` aprova, `2` bloqueia e `3` indica erro de suite ou
-execução.
+`command` receives an argv and runs with `shell=False`. `replay` measures declared fixtures; it does not
+simulate an agent call. Exit `0` approves, `2` blocks and `3` indicates a suite or
+execution error.
 
-## Escolha do verificador
+## Choosing the verifier
 
-Use o verificador mais determinístico que mede o comportamento real:
+Use the most deterministic verifier that measures the real behavior:
 
-1. código: teste, schema, exit code ou checksum;
-2. regra: formato, presença, ausência ou padrão explícito;
-3. modelo: rubric para qualidade aberta, assumindo variação do próprio juiz;
-4. humano: decisão sensível ou ambígua que não pode ser automatizada com segurança.
+1. code: test, schema, exit code or checksum;
+2. rule: format, presence, absence or explicit pattern;
+3. model: rubric for open-ended quality, assuming variation of the judge itself;
+4. human: sensitive or ambiguous decision that cannot be safely automated.
 
-Um caso julgado por modelo pode oscilar por causa do objeto ou do juiz. Investigue os dois
-antes de classificar a causa.
+A case judged by a model may oscillate because of the object or because of the judge. Investigate both
+before classifying the cause.
 
-## Integração com o loop
+## Integration with the loop
 
-1. Defina casos positivos, negativos e de regressão antes da implementação.
-2. Rode `k=3` durante a construção.
-3. Se capacidade falhar, volte ao maker.
-4. Se capacidade passar e regressão falhar, remova a fonte de flakiness.
-5. O checker independente valida o diff; pass@k/pass^k valida o comportamento.
-6. Só promova estado ou autonomia depois que o gate correspondente passar.
+1. Define positive, negative and regression cases before the implementation.
+2. Run `k=3` during construction.
+3. If capability fails, go back to the maker.
+4. If capability passes and regression fails, remove the source of flakiness.
+5. The independent checker validates the diff; pass@k/pass^k validates the behavior.
+6. Only promote state or autonomy after the corresponding gate passes.
 
-## Anti-padrões
+## Anti-patterns
 
-- uma execução verde tratada como estabilidade;
-- somente happy path;
-- caso conhecido decorado pelo agente;
-- grader estocástico como único gate release-critical;
-- resultado sem suite, hash, `k` e casos individuais;
-- indisponibilidade do runner tratada como self-test aprovado.
+- one green execution treated as stability;
+- happy path only;
+- a known case memorized by the agent;
+- a stochastic grader as the only release-critical gate;
+- a result without suite, hash, `k` and individual cases;
+- runner unavailability treated as an approved self-test.
 
 ## Checklist
 
-- [ ] A suite possui versão, nome e IDs únicos?
-- [ ] Cada caso usa `command` real ou `replay` declarado?
-- [ ] Existem controles positivo e negativo?
-- [ ] `k` execuções foram concluídas?
-- [ ] pass@k e pass^k foram reportados separadamente?
-- [ ] A zona de flakiness foi resolvida ou declarada?
-- [ ] O gate bloqueou a promoção quando deveria?
+- [ ] Does the suite have a version, a name and unique IDs?
+- [ ] Does each case use a real `command` or a declared `replay`?
+- [ ] Are there positive and negative controls?
+- [ ] Were `k` executions completed?
+- [ ] Were pass@k and pass^k reported separately?
+- [ ] Was the flakiness zone resolved or declared?
+- [ ] Did the gate block the promotion when it should have?
