@@ -27,13 +27,13 @@ o módulo, e os checksums são regenerados na emissão.
 
 ```bash
 # 1. verify the module you are about to touch -- expect "status": "ok", exit 0
-python instaladores/kit-forge-1.4.0/kit_doctor.py verify frameworks-com-plugins/operator-kit-1.4.0
+python installers/kit-forge-1.4.1/kit_doctor.py verify frameworks/operator-kit-1.5.0
 
 # 2. edit the files INSIDE the emitted module (open an issue first if the change is large)
 
 # 3. prove it with what ships in this tree
-python instaladores/kit-forge-1.4.0/kit_doctor.py verify frameworks-com-plugins/operator-kit-1.4.0
-python instaladores/kit-forge-1.4.0/tools/skill_lint.py --all frameworks-com-plugins/operator-kit-1.4.0/skills --run-proofs --json skill-lint.json
+python installers/kit-forge-1.4.1/kit_doctor.py verify frameworks/operator-kit-1.5.0
+python installers/kit-forge-1.4.1/tools/skill_lint.py --all frameworks/operator-kit-1.5.0/skills --run-proofs --json skill-lint.json
 python -m hpp doctor
 python -m hpp benchmark -k 3
 python -m pytest tests -q
@@ -46,7 +46,7 @@ Em ordem: verifique o módulo que vai tocar (espere `"status": "ok"`, exit 0); e
 **dentro** do módulo emitido (abra uma issue antes se a mudança for grande); prove com o que viaja
 nesta árvore; abra o pull request contra `main` sem tocar `CHECKSUMS.txt`, o `.zip` do módulo nem
 a versão dele — os três são regenerados pela forja quando a mudança é emitida. Troque
-`frameworks-com-plugins/operator-kit-1.4.0` pelo módulo que você mudou; o layout é
+`frameworks/operator-kit-1.5.0` pelo módulo que você mudou; o layout é
 `<area>/<módulo>-<versão>/`, e o `marketplace.json` lista todos.
 
 O que cada comando do passo 3 diz:

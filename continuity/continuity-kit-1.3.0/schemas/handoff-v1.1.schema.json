@@ -1,0 +1,158 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "handoff-v1.1.schema.json",
+  "title": "Handoff v1.1",
+  "description": "Contract of the handoff artifact between sessions (continuity-kit). v1.1 over v1.0: mandatory git block, stale_when.head_moved, degraded-auto with git status --porcelain, FORMAL schema (max_bytes:65536).",
+  "type": "object",
+  "required": ["schema_version", "handoff_id", "created_at", "trigger", "quality", "session", "estado", "git", "valid_until"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": "1.1" },
+    "handoff_id": { "type": "string", "pattern": "^HO-\\d{8}-\\d{4}-[a-z0-9-]+$" },
+    "created_at": { "type": "string", "format": "date-time" },
+    "trigger": { "type": "string", "enum": ["pre-clear", "precompact", "stop", "manual", "degraded-auto"] },
+    "quality": { "type": "string", "enum": ["full", "degraded-auto"] },
+
+    "session": {
+      "type": "object",
+      "required": ["session_id", "lane_id"],
+      "additionalProperties": false,
+      "properties": {
+        "session_id": { "type": "string" },
+        "lane_id": { "type": "string", "default": "solo" },
+        "role": { "type": "string", "enum": ["executora", "planejadora", "revisora", "solo"] },
+        "model": { "type": "string" },
+        "branch": { "type": "string" },
+        "cwd": { "type": "string" }
+      }
+    },
+
+    "git": {
+      "type": "object",
+      "description": "MANDATORY (v1.1 correction) — without it, staleness by HEAD (stale_when.head_moved) cannot be computed.",
+      "required": ["head", "branch", "dirty", "untracked"],
+      "additionalProperties": false,
+      "properties": {
+        "head": { "type": "string", "description": "short sha of HEAD at write time" },
+        "branch": { "type": "string" },
+        "dirty": { "type": "boolean" },
+        "untracked": { "type": "integer", "minimum": 0 },
+        "porcelain": { "type": "string", "description": "raw output of git status --porcelain (mandatory when quality=degraded-auto)" },
+        "checkpoint_ref": { "type": "string", "description": "OPTIONAL — ref of the turn checkpoint written by turn_checkpoint.py (refs/hpp/checkpoints/<session>/turn/<n>): evidence that does NOT go through the index." },
+        "checkpoint_commit": { "type": "string", "description": "OPTIONAL — the commit object the ref above points at, so the evidence survives pruning by retention." }
+      }
+    },
+
+    "stale_when": {
+      "type": "object",
+      "description": "v1.1 correction — staleness by commit delta, not only by clock: the tree moved = proximo_passo is not actionable even inside valid_until.",
+      "additionalProperties": false,
+      "properties": {
+        "head_moved": { "type": "boolean", "description": "true if the current HEAD != git.head at injection time (computed at runtime by handoff_inject.py, not stored at write time)" },
+        "days": { "type": "integer", "minimum": 1, "default": 7 }
+      }
+    },
+
+    "estado": {
+      "type": "object",
+      "required": ["resumo"],
+      "additionalProperties": false,
+      "properties": {
+        "resumo": { "type": "string", "minLength": 1 },
+        "fase": { "type": "string" },
+        "numeros": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["metrica", "valor", "medido_em", "re_derive_cmd"],
+            "properties": {
+              "metrica": { "type": "string" },
+              "valor": { "type": "string" },
+              "medido_em": { "type": "string", "format": "date-time" },
+              "re_derive_cmd": { "type": "string", "minLength": 1 }
+            }
+          }
+        }
+      }
+    },
+
+    "decisoes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "decisao"],
+        "properties": {
+          "id": { "type": "string" },
+          "decisao": { "type": "string" },
+          "motivo": { "type": "string" },
+          "evidencia": { "type": "string" }
+        }
+      }
+    },
+
+    "gates_abertos": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "dono", "descricao"],
+        "properties": {
+          "id": { "type": "string" },
+          "dono": { "type": "string" },
+          "descricao": { "type": "string" },
+          "bloqueia": { "type": "string" },
+          "comando_destrava": { "type": "string" }
+        }
+      }
+    },
+
+    "proibicoes": { "type": "array", "items": { "type": "string" } },
+
+    "ja_executado": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["acao", "evidencia"],
+        "properties": {
+          "acao": { "type": "string" },
+          "evidencia": { "type": "string" },
+          "nunca_repetir": { "type": "boolean", "default": true }
+        }
+      }
+    },
+
+    "proximo_passo": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["ordem", "descricao", "verify_first_cmd"],
+        "properties": {
+          "ordem": { "type": "integer", "minimum": 1 },
+          "descricao": { "type": "string" },
+          "done_predicate": { "type": "string" },
+          "verify_first_cmd": { "type": "string", "minLength": 1, "description": "command that proves whether it was ALREADY done (LC-4) — mandatory" },
+          "idempotente": { "type": "boolean", "default": false }
+        }
+      }
+    },
+
+    "evidencias": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["tipo", "ref"],
+        "properties": {
+          "tipo": { "type": "string", "enum": ["commit", "arquivo", "http", "cmd"] },
+          "ref": { "type": "string" },
+          "valor": { "type": "string" }
+        }
+      }
+    },
+
+    "todos_snapshot": { "type": "array", "items": { "type": "string" } },
+
+    "valid_until": { "type": "string", "format": "date-time" },
+    "boot_docs": { "type": "array", "items": { "type": "string" } }
+  },
+
+  "max_bytes": 65536
+}

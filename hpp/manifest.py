@@ -2,8 +2,15 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 from typing import Any, Iterable
+
+
+# The one place the protocol version lives in code. Why (cross-model review of 2.5.0): the bump
+# to 2.1 left the wizard's prerequisite check saying "protocol 2.0, validated" — the string
+# rendered on failure was a literal in a second file, so the contract had two spellings.
+PROTOCOL_VERSION = "2.1"
 
 
 class ManifestError(ValueError):
@@ -87,8 +94,50 @@ def validate_distribution(data: dict[str, Any], root: Path) -> dict[str, Any]:
                 raise ManifestError(f"invalid plugin manifest for {module['id']}: {exc.msg}") from exc
             if plugin_data.get("name") != module["id"] or plugin_data.get("version") != module["version"]:
                 raise ManifestError(f"plugin manifest diverges for module {module['id']}")
+        _check_wired_hooks_are_declared(data, module["id"], module_path)
         checked_paths += 1
     return {"checked": True, "status": "ok", "modules": checked_paths}
+
+
+_SCRIPT_IN_COMMAND = re.compile(r"hooks/([A-Za-z0-9_.-]+\.(?:py|sh))")
+
+
+def _check_wired_hooks_are_declared(data: dict[str, Any], module_id: str, module_path: Path) -> None:
+    """Every script a module WIRES in `hooks/hooks.json` must be DECLARED in the manifest.
+
+    Why (cross-model review of 2.5.0): the capability table was only checked against itself — a
+    hook listed in the manifest with a missing field failed, but a module that wired three scripts
+    and declared one passed `hpp doctor`, because doctor never opened the file the host actually
+    reads. The wired-versus-declared coverage lived in a source-tree test that does not ship. The
+    user asked "what will the hooks I am about to paste do?" and the answer could be missing a hook
+    without the product noticing. Now the emitted tree is the ruler: absent from the table means
+    undeclared, never "no capabilities".
+    """
+    hooks_json = module_path / "hooks" / "hooks.json"
+    if not hooks_json.is_file():
+        return
+    try:
+        wiring = json.loads(hooks_json.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        raise ManifestError(f"invalid hooks.json for module {module_id}: {exc.msg}") from exc
+    events = wiring.get("hooks", wiring) if isinstance(wiring, dict) else {}
+    wired: set[str] = set()
+    for entries in events.values() if isinstance(events, dict) else []:
+        for entry in entries if isinstance(entries, list) else []:
+            for hook in entry.get("hooks", []) if isinstance(entry, dict) else []:
+                command = str(hook.get("command", "")) if isinstance(hook, dict) else ""
+                for script in _SCRIPT_IN_COMMAND.findall(command):
+                    if script != "pyrun.sh":  # the interpreter shim, never a hook of its own
+                        wired.add(f"hooks/{script}")
+    declared = {
+        hook["script"] for hook in data.get("hooks", [])
+        if isinstance(hook, dict) and hook.get("module") == module_id
+    }
+    missing = sorted(wired - declared)
+    if missing:
+        raise ManifestError(
+            f"module {module_id} wires {len(missing)} hook(s) with no capability declaration: "
+            + ", ".join(missing))
 
 
 def _unique(values: Iterable[str], label: str) -> None:
@@ -119,9 +168,86 @@ def _cycles(modules: dict[str, dict[str, Any]]) -> None:
         visit(module_id)
 
 
+EXIT_POLICIES = frozenset({"observe", "warn", "block"})
+
+
+def _validate_hooks(data: dict[str, Any], modules: dict[str, dict[str, Any]]) -> None:
+    """Every hook the product installs declares what it is capable of.
+
+    Absent is never read as empty: a hook with no `capabilities` key, an empty list, or a
+    module that declares the `hooks` component with nothing declared for it are all refused.
+    A missing declaration that validated as "does nothing" would be the widest permission in
+    the manifest written as silence.
+    """
+    vocabulary = data.get("hook_capabilities")
+    if (not isinstance(vocabulary, list) or not vocabulary
+            or not all(isinstance(item, str) and item for item in vocabulary)):
+        raise ManifestError("hook_capabilities must be a non-empty list of capability groups")
+    _unique(vocabulary, "hook capability")
+    allowed = set(vocabulary)
+
+    hooks = data.get("hooks")
+    if not isinstance(hooks, list) or not hooks:
+        raise ManifestError("hooks must be a non-empty list of hook declarations")
+    hook_ids: list[str] = []
+    declaring: set[str] = set()
+    for hook in hooks:
+        if not isinstance(hook, dict) or not isinstance(hook.get("id"), str) or not hook["id"]:
+            raise ManifestError("every hook needs a string id")
+        hook_id = hook["id"]
+        hook_ids.append(hook_id)
+        module_id = hook.get("module")
+        if module_id not in modules:
+            raise ManifestError(f"hook {hook_id} names unknown module: {module_id}")
+        declaring.add(module_id)
+        script = hook.get("script")
+        if not isinstance(script, str) or not script or script.startswith(("/", "..")):
+            raise ManifestError(f"hook {hook_id} needs a relative script path")
+        events = hook.get("events")
+        if (not isinstance(events, list) or not events
+                or not all(isinstance(event, str) and event for event in events)):
+            raise ManifestError(f"hook {hook_id} needs a non-empty events list")
+        _unique(events, f"event in {hook_id}")
+        capabilities = hook.get("capabilities")
+        if (not isinstance(capabilities, list) or not capabilities
+                or not all(isinstance(item, str) and item for item in capabilities)):
+            raise ManifestError(f"hook {hook_id} needs non-empty capabilities")
+        _unique(capabilities, f"capability in {hook_id}")
+        unknown = sorted(set(capabilities) - allowed)
+        if unknown:
+            raise ManifestError(f"hook {hook_id} declares unknown capability: {', '.join(unknown)}")
+        if hook.get("exit_policy") not in EXIT_POLICIES:
+            raise ManifestError(
+                f"hook {hook_id} needs an exit_policy of {', '.join(sorted(EXIT_POLICIES))}")
+    _unique(hook_ids, "hook")
+    silent = sorted(module_id for module_id, module in modules.items()
+                    if "hooks" in module.get("components", []) and module_id not in declaring)
+    if silent:
+        raise ManifestError(
+            f"module declares the hooks component and declares no hook: {', '.join(silent)}")
+
+
+def hook_capability_census(data: dict[str, Any]) -> dict[str, Any]:
+    """Counts per capability group, with every group present even when it counts zero."""
+    counts = {group: 0 for group in data["hook_capabilities"]}
+    for hook in data["hooks"]:
+        for group in hook["capabilities"]:
+            counts[group] += 1
+    return {"declared": len(data["hooks"]), "by_capability": counts,
+            "by_exit_policy": {policy: sum(1 for hook in data["hooks"]
+                                           if hook["exit_policy"] == policy)
+                               for policy in sorted(EXIT_POLICIES)}}
+
+
+def hooks_for_modules(data: dict[str, Any], module_ids: Iterable[str]) -> list[dict[str, Any]]:
+    """The declarations of the modules being installed, in manifest order."""
+    wanted = set(module_ids)
+    return [hook for hook in data.get("hooks", []) if hook["module"] in wanted]
+
+
 def validate_manifest(data: dict[str, Any]) -> None:
-    if data.get("protocol_version") != "2.0":
-        raise ManifestError("protocol_version must be 2.0")
+    if data.get("protocol_version") != PROTOCOL_VERSION:
+        raise ManifestError(f"protocol_version must be {PROTOCOL_VERSION}")
     hosts = data.get("hosts")
     if not isinstance(hosts, list) or not hosts:
         raise ManifestError("hosts must be a non-empty list")
@@ -168,6 +294,7 @@ def validate_manifest(data: dict[str, Any]) -> None:
             if unknown:
                 raise ManifestError(f"unknown {relation}: {module_id} -> {', '.join(unknown)}")
     _cycles(modules)
+    _validate_hooks(data, modules)
     capability_set = {capability for module in modules.values() for capability in module["capabilities"]}
     bundles = data.get("bundles")
     if not isinstance(bundles, dict) or not bundles:

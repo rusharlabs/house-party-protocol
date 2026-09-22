@@ -162,7 +162,7 @@ estágios.
 A árvore publicada é emitida pela forja a partir das fontes dos módulos. Cada diretório de módulo
 carrega `CHECKSUMS.txt` (sha256 por arquivo) e um `.zip` com os mesmos bytes; `marketplace.json`
 lista os módulos com `source` e `version`; o instalador
-(`instaladores/kit-forge-<version>/kit_doctor.py`) roda os seis estágios de instalação, verifica
+(`installers/kit-forge-<version>/kit_doctor.py`) roda os seis estágios de instalação, verifica
 checksums e executa os smokes declarados do módulo.
 
 ```text
