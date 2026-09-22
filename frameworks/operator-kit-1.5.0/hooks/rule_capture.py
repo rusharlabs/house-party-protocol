@@ -4,7 +4,7 @@ rule_capture (Operator Kit) — UserPromptSubmit hook que CAPTURA instrucoes enf
 
 Implementa o gatilho da REGRA #10 (auto-atualizacao) sem AGIR sobre o CLAUDE.md:
 quando o operador da uma instrucao com marcador de enfase
-(memoria.marcadores_enfase do profile — default SEMPRE/NUNCA/ja falei/toda vez/
+(memory.emphasis_markers do profile — default SEMPRE/NUNCA/ja falei/toda vez/
 pare de), o hook ANEXA o texto LITERAL da instrucao + timestamp BRT a um arquivo
 duravel em `paths.memory_dir` (default .claude/memory/_captured-rules.md). Isso
 preserva a regra entre sessoes p/ depois o `distill_corrections.py` / o agente
@@ -105,8 +105,8 @@ def _ensure_header(capture_file: Path) -> None:
 def _resolve(root: Path):
     prof = load_profile() if load_profile is not None else {}
     mem_dir = get(prof, "paths.memory_dir", _DEF_MEMORY_DIR) if (prof and get) else _DEF_MEMORY_DIR
-    marcadores = get(prof, "memoria.marcadores_enfase", _DEF_MARCADORES) if (prof and get) else _DEF_MARCADORES
-    ativo = get(prof, "memoria.rule_capture", "on") if (prof and get) else "on"
+    marcadores = get(prof, "memory.emphasis_markers", _DEF_MARCADORES) if (prof and get) else _DEF_MARCADORES
+    ativo = get(prof, "memory.rule_capture", "on") if (prof and get) else "on"
     if not isinstance(marcadores, list) or not marcadores:
         marcadores = _DEF_MARCADORES
     return (root / mem_dir / _DEF_CAPTURE_FILE, marcadores, str(ativo).lower() not in ("off", "false", "0", "no"))

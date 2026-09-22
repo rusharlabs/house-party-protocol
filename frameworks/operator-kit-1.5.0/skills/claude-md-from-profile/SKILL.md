@@ -7,7 +7,7 @@ description: Generates the project's CLAUDE.md block FROM operator-profile.yaml 
 > **Keywords:** "claude.md", "generate claude.md", "project instructions", "operator profile", "operator-profile", "floor", "what the AI does not decide", "regenerate block", "signature"
 > **Priority:** HIGH
 > **Tools:** Bash, Read
-> **Related doctrine:** `rules/partial-autonomy-slider.md` (the HOW MUCH axis — `autonomia.por_acao`), `rules/gateguard.md` (protected paths, blocked families), `rules/verification-before-completion.md` (the rules of done).
+> **Related doctrine:** `rules/partial-autonomy-slider.md` (the HOW MUCH axis — `autonomy.by_action`), `rules/gateguard.md` (protected paths, blocked families), `rules/verification-before-completion.md` (the rules of done).
 
 # claude-md-from-profile — CLAUDE.md is born from the profile, not the other way round
 
@@ -77,8 +77,8 @@ says where it came from:
 
 ```
 ## WHAT YOU DO NOT DECIDE
-- **rm_codigo_vivo**: level 0 (`autonomia.por_acao.rm_codigo_vivo`). You PROPOSE, you do not execute. The person authorises.
-- Any write to `settings*.json` falls into an automatic human gate (`autonomia.paths_sensiveis_auto_gate`). Do not route around it.
+- **rm_live_code**: level 0 (`autonomy.by_action.rm_live_code`). You PROPOSE, you do not execute. The person authorises.
+- Any write to `settings*.json` falls into an automatic human gate (`autonomy.sensitive_paths_auto_gate`). Do not route around it.
 - `src/**` is protected (`guardrails.protected_paths`): do not delete, do not move, do not mass-rewrite.
 - Branch `main` is protected (`guardrails.protected_branches`): never push directly, never force.
 - The command family **git-push-force** is BLOCKED (`guardrails.block_families`). Urgency is not an exception.

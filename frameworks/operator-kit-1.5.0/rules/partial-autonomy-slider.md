@@ -128,8 +128,8 @@ level 0-5     suggest-only  →  full-auto             lite  →  full  →  ult
 | **ultra** | Maximum verification — multiple passes, cross-model checker always (`loop-maker-checker`), determinism (`determinism_harness`) | Release-critical, sensitive path (financial/DELETE/live engine), promotion of an agent to `autonomy_level` 4-5 |
 | **off** | Zero extra verification beyond what the language/runtime already forces | **Emergency/debug only — NEVER the default, never in production** |
 
-**Configuration:** `intensidade.default: full` in `operator-profile.yaml` (see the `profile.example.yaml` section
-of this kit). Mechanisms that today read `verificacao.*`/`ladder_score_minimo` may in the future scale
+**Configuration:** `intensity.default: full` in `operator-profile.yaml` (see the `profile.example.yaml` section
+of this kit). Mechanisms that today read `verification.*`/`ladder_min_score` may in the future scale
 the rigor based on this field — the scope of this doctrine is the vocabulary + the config, not (yet) an
 automatic consumer.
 
@@ -148,7 +148,7 @@ autonomy LOW (0-1) + intensity ULTRA  →  the most conservative pair — use in
 **Counterweight to LC-2 (`learned-corrections.md`):** "execute 100%, no stalling" when the operator
 authorizes broad execution (`/goal`, "maximum capacity") does NOT waive the chosen verification
 intensity. "100% effort" and "zero verification" are not the same thing — LC-2 says to go deep
-*within* the current intensity mode, never to use it as an excuse to lower `intensidade`
+*within* the current intensity mode, never to use it as an excuse to lower `intensity`
 to `off` without an explicit decision.
 
 ## Objectives, not transitions

@@ -247,9 +247,15 @@ def set_state(item_id: str, new_state: str, lane_id: str, role: str, model: str,
 def _render_target() -> Path:
     """Dual write for one version: the English path wins; a repo that only has the legacy
     directory keeps its board there, with a deprecation notice on stderr."""
-    if RENDER_PATH.exists():
-        return RENDER_PATH
     legacy = _PROJECT_ROOT.joinpath(*_LEGACY_RENDER_DIR, RENDER_PATH.name)
+    if RENDER_PATH.exists():
+        # Why (adversarial review of 2.5.0): with a half-done manual rename BOTH boards can exist —
+        # the English one wins, and the stale legacy board sits there looking current to whoever
+        # opens it. The new one is still the answer; saying the old one is stale is the whole fix.
+        if legacy.exists():
+            print(f"[lane_board] stale board left behind: '{legacy}' is no longer written — "
+                  f"delete it; the current board is '{RENDER_PATH}'.", file=sys.stderr)
+        return RENDER_PATH
     if legacy.parent.is_dir() and not RENDER_PATH.parent.is_dir():
         print(
             f"[lane_board] deprecated: wrote '{'/'.join(_LEGACY_RENDER_DIR)}/{RENDER_PATH.name}'; "

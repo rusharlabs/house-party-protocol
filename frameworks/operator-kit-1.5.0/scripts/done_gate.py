@@ -4,7 +4,7 @@ done_gate (Operator Kit) — Definition-of-Done programática, config-driven.
 
 Definition-of-Done programatica e config-driven: além de receber critérios
 soltos (argv/stdin), aceita `--profile <tipo>` e lê os comandos de
-`verificacao.done_criterios[<tipo>]` do operator-profile.yaml. É o gate
+`verification.done_criteria[<tipo>]` do operator-profile.yaml. É o gate
 determinístico entre "achei que terminei" e "está verificado": exit 0 SÓ se
 TODOS os critérios passarem (AND). Lista vazia = NÃO-done (nunca passa por omissão).
 
@@ -83,11 +83,11 @@ def gate(criteria, cwd: str | None = None, timeout: int = 600):
 
 
 def criteria_from_profile(task_type: str) -> list[str]:
-    """Lê verificacao.done_criterios[<task_type>] do operator-profile.yaml. [] se ausente."""
+    """Lê verification.done_criteria[<task_type>] do operator-profile.yaml. [] se ausente."""
     if load_profile is None or get is None:
         return []
     prof = load_profile()
-    crit = get(prof, f"verificacao.done_criterios.{task_type}", [])
+    crit = get(prof, f"verification.done_criteria.{task_type}", [])
     return [str(c) for c in crit] if isinstance(crit, list) else []
 
 
@@ -177,7 +177,7 @@ def main(argv) -> int:
 
     if argv and argv[0] == "--profile":
         if len(argv) < 2:
-            print("usage: done_gate.py --profile <type>   (type = key under verificacao.done_criterios)", file=sys.stderr)
+            print("usage: done_gate.py --profile <type>   (type = key under verification.done_criteria)", file=sys.stderr)
             return 2
         task_type = argv[1]
         criteria = criteria_from_profile(task_type)

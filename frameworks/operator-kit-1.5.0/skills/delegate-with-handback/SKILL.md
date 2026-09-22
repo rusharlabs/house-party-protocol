@@ -31,14 +31,14 @@ Generalizes `codex-delegate` into a **provider-agnostic** framework. Never trust
 | Resource | Reads/Writes | Purpose |
 |---|---|---|
 | delegate's output (file/diff on disk) | Reads | real verification (not the "done" message) |
-| `operator-profile.yaml` (`autonomia`) | Reads | which provider to dispatch to |
+| `operator-profile.yaml` (`autonomy`) | Reads | which provider to dispatch to |
 | `rule_capture` hook (if wired) | Writes | preserves the pattern in `.claude/memory/_captured-rules.md` for `distill_corrections.py` to distill later |
 
 ## Process
 1. **Decide to delegate** when: the task is long, independent, repetitive, or when a **second opinion** reduces risk.
 2. **Assemble the explicit context package** (without it the output comes back useless):
    - exact `path/branch/commit` · objective in 1 sentence · **testable acceptance criterion** · constraints (what NOT to touch) · return format.
-3. **Dispatch** to the configured provider (`autonomia`/environment decides which — Codex/other). In fan-out, respect `parallel-dispatch` (ceiling + waves).
+3. **Dispatch** to the configured provider (`autonomy`/environment decides which — Codex/other). In fan-out, respect `parallel-dispatch` (ceiling + waves).
 4. **Handback = GATE, not trust.** On receiving the result:
    - Read the REAL output on disk (not the "done" message).
    - Run `python ${CLAUDE_PLUGIN_ROOT}/scripts/done_gate.py --profile <type>` (or the test/acceptance criterion).

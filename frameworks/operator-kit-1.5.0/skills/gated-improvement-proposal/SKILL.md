@@ -31,16 +31,16 @@ Self-editing a rule/CLAUDE.md/prompt without validation corrupts the harness; re
 
 | Resource | Reads/Writes | Purpose |
 |---|---|---|
-| `operator-profile.yaml` (`autonomia.por_acao`, `autonomia.paths_sensiveis_auto_gate`) | Reads | decides auto-apply vs propose |
+| `operator-profile.yaml` (`autonomy.by_action`, `autonomy.sensitive_paths_auto_gate`) | Reads | decides auto-apply vs propose |
 | target rule/CLAUDE.md/hook/prompt | Writes (if gate green + autonomy allows) | the change itself |
 | `gate-sheet` | Writes (if gate red or sensitive path) | proposal pending a human |
 
 ## Process
-1. **Make it a PROPOSAL**, not a direct edit: `diff` + rationale + **testable acceptance criterion** + which `autonomia.por_acao` applies.
+1. **Make it a PROPOSAL**, not a direct edit: `diff` + rationale + **testable acceptance criterion** + which `autonomy.by_action` applies.
 2. **Run the gate BEFORE applying:** `python ${CLAUDE_PLUGIN_ROOT}/scripts/done_gate.py --profile <type>` and/or `eval-driven-development`. Reuse the existing runner — **do not reimplement eval**.
 3. **Consult the autonomy** in `operator-profile.yaml`:
-   - `autonomia.por_acao.auto_edit_harness` (default 1) decides auto-apply vs propose.
-   - Any target in `autonomia.paths_sensiveis_auto_gate` (`settings*.json`, `.claude/hooks/**`, `**/.env`, `.claude/rules/**`) = **forced human gate, never auto-merge**.
+   - `autonomy.by_action.auto_edit_harness` (default 1) decides auto-apply vs propose.
+   - Any target in `autonomy.sensitive_paths_auto_gate` (`settings*.json`, `.claude/hooks/**`, `**/.env`, `.claude/rules/**`) = **forced human gate, never auto-merge**.
 4. **Apply only if** the gate is green **AND** below the autonomy ceiling; otherwise deliver it as a PR/proposal in the `gate-sheet`.
 5. **Record** the change (traceable: what changed, why, which eval passed).
 

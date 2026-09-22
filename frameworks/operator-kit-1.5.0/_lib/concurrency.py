@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
 """
-concurrency — teto de agentes concorrentes, ondas e detecção de rate-limit (Operator Kit).
+concurrency — max concurrent agents, waves and rate-limit detection (Operator Kit).
 
 Materializa a lição "ondas de ≤3 vencem onde 8-16 explodem (rate-limit)". Lê
-`concorrencia.*` do operator-profile.yaml (teto, wave_size, rate_limit_signals,
-fallback). Sem profile, defaults seguros (teto 3, fallback sequential-local).
+`concurrency.*` do operator-profile.yaml (max_agents, wave_size, rate_limit_signals,
+fallback). Sem profile, defaults seguros (max_agents 3, fallback sequential-local).
 
 Uso programático (em skills/scripts de dispatch):
-    from _lib.concurrency import teto, waves, is_rate_limited, fallback_mode
-    for lote in waves(tarefas):        # cada lote tem no máx `teto` itens
+    from _lib.concurrency import max_agents, waves, is_rate_limited, fallback_mode
+    for lote in waves(tarefas):        # cada lote tem no máx `max_agents` itens
         ...
     if is_rate_limited(stderr): ...    # casa "429"/"rate limit"/"quota"/"overloaded"
 
 stdlib + (PyYAML via loader). Nunca crasha. --self-test sem rede/profile.
 
-v1.0.0 — 2026-06-19 (Operator Kit · Tier 2)
+v1.1.0 — 2026-09-22 (Operator Kit · Tier 2) — v1.0.0 2026-06-19
 """
 from __future__ import annotations
 
@@ -28,7 +28,7 @@ except Exception:  # noqa: BLE001
     load_profile = None  # type: ignore[assignment]
     get = None  # type: ignore[assignment]
 
-_DEF_TETO = 3
+_DEF_MAX_AGENTS = 3
 _DEF_SIGNALS = ["429", "rate limit", "quota", "overloaded"]
 
 
@@ -36,22 +36,28 @@ def _profile() -> dict:
     return load_profile() if load_profile is not None else {}
 
 
-def teto() -> int:
+def max_agents() -> int:
     p = _profile()
-    v = get(p, "concorrencia.teto", _DEF_TETO) if (p and get) else _DEF_TETO
+    v = get(p, "concurrency.max_agents", _DEF_MAX_AGENTS) if (p and get) else _DEF_MAX_AGENTS
     try:
         return max(1, int(v))
     except (TypeError, ValueError):
-        return _DEF_TETO
+        return _DEF_MAX_AGENTS
+
+
+# Why, the rename: the profile key became `concurrency.max_agents`; a function still
+# called `teto` would send a skill author grepping for a word the config no longer contains.
+# The old name keeps importing for one version, like the legacy keys in the loader.
+teto = max_agents  # deprecated alias, removed in v2.7.0
 
 
 def wave_size() -> int:
     p = _profile()
-    v = get(p, "concorrencia.wave_size", teto()) if (p and get) else teto()
+    v = get(p, "concurrency.wave_size", max_agents()) if (p and get) else max_agents()
     try:
         return max(1, int(v))
     except (TypeError, ValueError):
-        return teto()
+        return max_agents()
 
 
 def waves(items, size: int | None = None):
@@ -64,7 +70,7 @@ def waves(items, size: int | None = None):
 
 def rate_limit_signals() -> list[str]:
     p = _profile()
-    sig = get(p, "concorrencia.rate_limit_signals", _DEF_SIGNALS) if (p and get) else _DEF_SIGNALS
+    sig = get(p, "concurrency.rate_limit_signals", _DEF_SIGNALS) if (p and get) else _DEF_SIGNALS
     return [str(s).lower() for s in sig] if isinstance(sig, list) else list(_DEF_SIGNALS)
 
 
@@ -75,7 +81,7 @@ def is_rate_limited(text) -> bool:
 
 def fallback_mode() -> str:
     p = _profile()
-    return get(p, "concorrencia.fallback", "sequential-local") if (p and get) else "sequential-local"
+    return get(p, "concurrency.fallback", "sequential-local") if (p and get) else "sequential-local"
 
 
 def _self_test() -> None:
@@ -85,7 +91,8 @@ def _self_test() -> None:
     assert is_rate_limited("HTTP 429 Too Many Requests") is True
     assert is_rate_limited("rate limit exceeded") is True
     assert is_rate_limited("tudo certo") is False
-    assert teto() >= 1 and wave_size() >= 1
+    assert max_agents() >= 1 and wave_size() >= 1
+    assert teto is max_agents, "the deprecated alias must keep importing for one version"
     assert isinstance(fallback_mode(), str)
     print("self-test OK")
 
@@ -98,5 +105,5 @@ if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] in ("--self-test", "-t"):
         _self_test()
     else:
-        print(f"teto={teto()} wave_size={wave_size()} fallback={fallback_mode()} "
+        print(f"max_agents={max_agents()} wave_size={wave_size()} fallback={fallback_mode()} "
               f"signals={rate_limit_signals()}")

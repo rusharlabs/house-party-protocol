@@ -3,7 +3,7 @@
 verify_ladder (Operator Kit) — escada de verificacao em 6 niveis, portatil e config-driven.
 
 Escada de verificacao em 6 niveis, agnostica de projeto: le a
-escada de `verificacao.ladder` do operator-profile.yaml (dict nivel->comando)
+escada de `verification.ladder` do operator-profile.yaml (dict nivel->comando)
 e roda cada nivel que TEM comando. Os 6 niveis canonicos sao:
     lint · test · build · visual · staging · security
 
@@ -12,8 +12,8 @@ e SKIPPED e nao conta no score. O score e X/N onde N = numero de niveis com coma
 de verdade (os SKIPPED nao inflam o denominador nem o numerador).
 
 PASS/FAIL geral:
-    FAIL se QUALQUER nivel obrigatorio (verificacao.ladder_obrigatorios) falhou,
-    OU se o score (niveis que passaram) < verificacao.ladder_score_minimo.
+    FAIL se QUALQUER nivel obrigatorio (verification.ladder_required) falhou,
+    OU se o score (niveis que passaram) < verification.ladder_min_score.
     Caso contrario PASS. (Um obrigatorio sem comando = SKIPPED = nao satisfeito = FAIL.)
 
 Uso:
@@ -121,19 +121,19 @@ def evaluate(ladder: dict, obrigatorios=None, score_minimo: int = 1,
 
 
 def ladder_from_profile() -> tuple[dict, list, int]:
-    """Le verificacao.ladder / ladder_obrigatorios / ladder_score_minimo do profile.
+    """Le verification.ladder / ladder_required / ladder_min_score do profile.
 
     Retorna (ladder_dict, obrigatorios_list, score_minimo_int). Defaults seguros se ausente.
     """
     if load_profile is None or get is None:
         return {}, [], 1
     prof = load_profile()
-    ladder = get(prof, "verificacao.ladder", {}) or {}
+    ladder = get(prof, "verification.ladder", {}) or {}
     if not isinstance(ladder, dict):
         ladder = {}
-    obrig = get(prof, "verificacao.ladder_obrigatorios", []) or []
+    obrig = get(prof, "verification.ladder_required", []) or []
     obrig = [str(x) for x in obrig] if isinstance(obrig, list) else []
-    minimo = get(prof, "verificacao.ladder_score_minimo", 1)
+    minimo = get(prof, "verification.ladder_min_score", 1)
     try:
         minimo = int(minimo)
     except (TypeError, ValueError):
@@ -205,7 +205,7 @@ def main(argv) -> int:
 
     ladder, obrig, minimo = ladder_from_profile()
     if not ladder:
-        msg = "verify_ladder: no ladder in verificacao.ladder of operator-profile.yaml " \
+        msg = "verify_ladder: no ladder in verification.ladder of operator-profile.yaml " \
               "(or profile/PyYAML missing) — nothing to verify"
         if as_json:
             print(json.dumps({"passed": False, "score": 0, "total": 0,

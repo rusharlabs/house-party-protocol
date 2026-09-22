@@ -1,7 +1,7 @@
 # profile.example.yaml — health-kit (copy to the target project's operator-profile.yaml)
 
 # project name — used by the statusline's 'progress' segment
-projeto: "meu-projeto"
+project: "meu-projeto"
 
 health:
   # probes for health_probe.py — http (urllib GET, no curl/wget) or cmd (subprocess shell)

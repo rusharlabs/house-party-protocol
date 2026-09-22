@@ -6,7 +6,7 @@ exige UM unico hash de stdout. Saida que muda entre runs = teste nao-determinist
 
 Por que existe: um gate de verificacao so vale se for estavel. Um teste flaky
 "passa" as vezes e cria verde-falso. Aqui medimos a estabilidade da saida (hash
-do stdout) ao longo de N execucoes — N vem de verificacao.determinism_runs (default 5).
+do stdout) ao longo de N execucoes — N vem de verification.determinism_runs (default 5).
 
 Controle negativo (Monte-Carlo do proprio gate): --negative recebe um comando que
 DEVE falhar (exit != 0). Se esse comando "passar" (exit 0), o gate esta quebrado/
@@ -118,11 +118,11 @@ def harness(validador: str, runs: int = DEFAULT_RUNS, negative: str | None = Non
 
 
 def runs_from_profile() -> int:
-    """Le verificacao.determinism_runs do profile. Default 5 se ausente/invalido."""
+    """Le verification.determinism_runs do profile. Default 5 se ausente/invalido."""
     if load_profile is None or get is None:
         return DEFAULT_RUNS
     prof = load_profile()
-    val = get(prof, "verificacao.determinism_runs", DEFAULT_RUNS)
+    val = get(prof, "verification.determinism_runs", DEFAULT_RUNS)
     try:
         return max(1, int(val))
     except (TypeError, ValueError):

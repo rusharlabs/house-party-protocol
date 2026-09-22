@@ -7,10 +7,10 @@ Generaliza o padrao de minerar sessoes p/ regras destiladas (workflow que ja ger
 (default .claude/sessions/), extrai linhas que parecem CORRECOES do operador
 (marcadores tipo NUNCA/SEMPRE/na verdade/errado/corrige/pare de), agrupa por
 similaridade simples (normalizacao + chave de tokens), e mantem SO as correcoes
-que recorrem em >= K sessoes DISTINTAS (distill.limiar_recorrencia, default 3).
+que recorrem em >= K sessoes DISTINTAS (distill.recurrence_threshold, default 3).
 
 Emite candidatas a regra (1 linha + evidencia de quais sessoes) e atualiza um
-ledger de REJEITADAS (distill.ledger_rejeitadas) p/ nao re-propor o que ja foi
+ledger de REJEITADAS (distill.rejected_ledger) p/ nao re-propor o que ja foi
 descartado antes — as chaves que JA estao no ledger sao filtradas das candidatas.
 
 NAO aplica nada. NAO escreve na regra-alvo. So PROPOE (o agente/operador decide).
@@ -224,9 +224,9 @@ def _ensure_ledger(ledger: Path) -> None:
 def _resolve_paths(root: Path):
     prof = load_profile() if load_profile is not None else {}
     logs_dir = get(prof, "paths.logs_dir", _DEF_LOGS_DIR) if (prof and get) else _DEF_LOGS_DIR
-    ledger = get(prof, "distill.ledger_rejeitadas", _DEF_LEDGER) if (prof and get) else _DEF_LEDGER
-    k = get(prof, "distill.limiar_recorrencia", _DEF_K) if (prof and get) else _DEF_K
-    n = get(prof, "distill.janela_sessoes", _DEF_N) if (prof and get) else _DEF_N
+    ledger = get(prof, "distill.rejected_ledger", _DEF_LEDGER) if (prof and get) else _DEF_LEDGER
+    k = get(prof, "distill.recurrence_threshold", _DEF_K) if (prof and get) else _DEF_K
+    n = get(prof, "distill.session_window", _DEF_N) if (prof and get) else _DEF_N
     return (root / logs_dir, root / ledger, int(k), int(n))
 
 
@@ -294,7 +294,7 @@ def main(argv) -> int:
         print(f"   <!-- key: {c['key']} -->  (paste into the ledger to reject)")
         print()
     print("PROPOSAL only — nothing was applied. Decide which ones become rules in "
-          "`distill.regra_alvo`; reject the rest in the ledger.")
+          "`distill.target_rule`; reject the rest in the ledger.")
     return 0
 
 

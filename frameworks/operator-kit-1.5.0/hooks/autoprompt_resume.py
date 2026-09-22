@@ -88,7 +88,7 @@ def _cfg(root: Path):
     # pointing at the file that does. The next session follows the pointer into nothing, silently.
     boot = _resolve_state(boot, root, "autoprompt_resume")
     pointer = get(prof, "paths.resume_pointer", _DEF_POINTER) if prof else _DEF_POINTER
-    lang = get(prof, "idioma", "pt-BR") if prof else "pt-BR"
+    lang = get(prof, "language", "pt-BR") if prof else "pt-BR"
     return (root / state, root / boot, root / pointer, lang)
 
 

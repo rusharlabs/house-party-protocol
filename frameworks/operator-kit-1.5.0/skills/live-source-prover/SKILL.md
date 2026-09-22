@@ -38,7 +38,7 @@ Deal #1: **treat every datum inherited from a session/doc/snapshot/other agent a
 2. **Re-derive LIVE** by running the command from the project's `sources.yaml` (see `sources.example.yaml` next to it):
    - count → `find/grep/ls`; service → `curl`/`urllib` on an endpoint; deploy → curl on a **route EXCLUSIVE to the new build** + build marker (not just the auth gate); plan → `git log --grep` + disk (see `audit_plan.py`).
 3. **Paste the output** and **label** the value: `live @ HH:MM · source: <command/endpoint>`.
-4. **Freshness TTL:** data older than `verificacao.fonte_suspeita_ttl_dias` (default 7) = re-verify, do not repeat.
+4. **Freshness TTL:** data older than `verification.stale_source_ttl_days` (default 7) = re-verify, do not repeat.
 5. **No `sources.yaml`** defined for that domain → **WARN** ("not verified"); never invent the command or the number.
 
 > Deploy/routing case: confirm that the **backend** switched (route/content exclusive to the new build), not just the process status or the auth gate. Proxy/tunnel chain: confirm EACH hop.

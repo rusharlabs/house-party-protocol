@@ -52,13 +52,13 @@ Read them via the kit loader (`_lib/profile_loader.get(profile, "report.X")`):
 
 | Key | Use |
 |-------|-----|
-| `report.estilo_interno` (e.g. `dark`) | visual theme of the internal version |
-| `report.estilo_externo` (e.g. `light`) | visual theme of the external (premium) version |
-| `report.frases_banidas` (list) | terms FORBIDDEN in the external version — sober-register gate |
+| `report.internal_style` (e.g. `dark`) | visual theme of the internal version |
+| `report.external_style` (e.g. `light`) | visual theme of the external (premium) version |
+| `report.banned_phrases` (list) | terms FORBIDDEN in the external version — sober-register gate |
 | `paths.draft_dir` | where to write the external version (draft, until the operator releases it) |
-| `idioma` | content language (default pt-BR) |
+| `language` | content language (default pt-BR) |
 
-Without a profile → safe defaults: internal=dark, external=light, frases_banidas=`[]` (the gate becomes a no-op but the dual structure stays), draft in `drafts/`.
+Without a profile → safe defaults: internal=dark, external=light, banned_phrases=`[]` (the gate becomes a no-op but the dual structure stays), draft in `drafts/`.
 
 ## Pipeline
 
@@ -123,7 +123,7 @@ sys.path.insert(0, str(_kit_root))
 from _lib.profile_loader import load_profile, get
 
 prof = load_profile()
-banidas = [f.lower() for f in (get(prof, "report.frases_banidas", []) or [])]
+banidas = [f.lower() for f in (get(prof, "report.banned_phrases", []) or [])]
 texto_externo = "..."  # content of the external version
 ofensas = [f for f in banidas if f and f in texto_externo.lower()]
 # ofensas != [] -> rewrite the passages and sweep again BEFORE declaring ready.
@@ -137,7 +137,7 @@ ofensas = [f for f in banidas if f and f in texto_externo.lower()]
 [ ] EXTERNAL version omits failures WITHOUT inventing success (external theme from the profile)?
 [ ] Before/after/delta table present (delta_inventory.py)?
 [ ] Self-contained HTML, pure-CSS charts, print-friendly (via frontend-design)?
-[ ] External version swept against report.frases_banidas and passed clean?
+[ ] External version swept against report.banned_phrases and passed clean?
 [ ] External version written to draft_dir as a DRAFT; sending flagged as a human gate?
 ```
 
@@ -152,12 +152,12 @@ sys.path.insert(0, str(_kit_root))
 from _lib.profile_loader import load_profile, get
 prof = load_profile()
 print('kit_root aponta pro operator-kit?', (_kit_root / 'operator-profile.yaml').exists())
-print('frases_banidas:', [f.lower() for f in (get(prof, 'report.frases_banidas', []) or [])])
+print('banned_phrases:', [f.lower() for f in (get(prof, 'report.banned_phrases', []) or [])])
 "
 kit_root aponta pro operator-kit? True
-frases_banidas: ['consider it done', 'com certeza!', 'otima pergunta', 'risco']
+banned_phrases: ['consider it done', 'com certeza!', 'ótima pergunta', 'risco']
 ```
-<!-- executed: 2026-07-10 · exit=0 -->
+<!-- executed: 2026-09-22 · exit=0 -->
 (proves the off-by-one fix: `parents[2]` really resolves to `operator-kit/` — `operator-profile.yaml` exists there.)
 
 ```console

@@ -8,13 +8,13 @@ description: LC-2 — once authorized, executes the WHOLE scope in batch; no hal
 Portable vehicle of rule LC-2 (the canonical source of the rule prevails; this is the per-project instantiator).
 
 ## When it activates
-When the operator authorizes broad execution — triggers in `loop.gatilho_autorizacao` of the profile (e.g. `/goal`, "auto", "100%", "do everything", "maximum capacity").
+When the operator authorizes broad execution — triggers in `loop.authorization_triggers` of the profile (e.g. `/goal`, "auto", "100%", "do everything", "maximum capacity").
 
 ## Behavior
 - **Execute the WHOLE scope in batch.** Never "1 per session", never "I prepared it, may I proceed?". An explicit instruction to "finish everything 100%" OVERRIDES any cadence suggested in a runbook.
 - **Do not stop at preparing/promising/hedging.** Preparation without action is failure, not progress.
 - **Attack everything that does NOT break the system** autonomously, within the maintained guardrails.
-- **Parallelize** in waves of ≤ `concorrencia.teto` (default 3); sequential-local fallback on rate limit.
+- **Parallelize** in waves of ≤ `concurrency.max_agents` (default 3); sequential-local fallback on rate limit.
 - **Self-prompt the next item** (not "what do I do now?"); continuous across batches.
 
 ## The wall (never becomes an excuse)

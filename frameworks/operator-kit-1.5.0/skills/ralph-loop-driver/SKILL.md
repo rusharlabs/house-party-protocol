@@ -3,7 +3,7 @@ name: ralph-loop-driver
 description: Turns the agent into an autonomous lead engineer — reads charter+work-list, executes until exhausted, self-prompts, stops at the stop-conditions
 ---
 
-> **Auto-Trigger:** When the operator authorizes broad execution of a backlog (triggers in `loop.gatilho_autorizacao` of the profile)
+> **Auto-Trigger:** When the operator authorizes broad execution of a backlog (triggers in `loop.authorization_triggers` of the profile)
 > **Keywords:** "/goal", "auto", "100%", "do everything", "maximum capacity", "autonomous loop", "until done", "relentless"
 > **Priority:** HIGH
 > **Tools:** Read, Write, Edit, Bash, Task/Agent

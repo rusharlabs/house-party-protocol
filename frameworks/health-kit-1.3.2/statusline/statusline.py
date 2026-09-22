@@ -10,7 +10,7 @@ configuraveis (statusline.segments no operator-profile.yaml); cada segmento e
 best-effort e DEGRADA p/ vazio se a fonte nao existir (nunca trava).
 
 Segmentos embutidos (todos opcionais, ordem definida pelo profile):
-  progress  -> 🧠 <projeto> <pct>% ████░░   (checklist do tracker_doc/state_ssot)
+  progress  -> 🧠 <project> <pct>% ████░░   (checklist do tracker_doc/state_ssot)
   health    -> api:OK db:DOWN (ou ⚕<up>/<tot> acima de 6 servicos) — cache de health_probe.py
   tokens    -> <stdout de statusline.token_cmd>  (ex: "◔41% $63/100"; vazio = omite)
   autonomy  -> 🎚L<n>                         (statusline.autonomy_level 0-5; omite se null)
@@ -52,6 +52,16 @@ except Exception:  # noqa: BLE001
 _BRT = timezone(timedelta(hours=-3))
 _DEF_STATE = "docs/plans/execution/00-STATE.md"
 _LEGACY_STATE = "docs/plans/execucao/00-STATE.md"
+# A statusline renders on every prompt: the fallback works, it just does not shout about it.
+_QUIET_FALLBACK = True
+# Same reasoning for the profile keys renamed in 2.6.0: the loader's dual read keeps working here,
+# and the once-per-session notice belongs to the hooks, not to a bar that redraws every prompt.
+try:
+    from _lib import profile_loader as _profile_loader  # type: ignore[import-not-found]
+
+    _profile_loader.QUIET_DEPRECATION = _QUIET_FALLBACK
+except Exception:  # noqa: BLE001 -- no loader, nothing to mute
+    pass
 
 
 # Why (rename of the generated names): the modules now write `docs/plans/execution/`. A repo
@@ -65,8 +75,14 @@ def _resolve_state(rel: str, root: Path, quem: str) -> str:
     if (root / _DEF_STATE).exists():
         return _DEF_STATE
     if (root / _LEGACY_STATE).exists():
-        print(f"[{quem}] deprecated: read '{_LEGACY_STATE}'; rename it to '{_DEF_STATE}' — "
-              "the old spelling is accepted for one version only.", file=sys.stderr)
+        # Why (adversarial review of 2.5.0): a statusline re-renders on every prompt, so this line
+        # printed on EVERY refresh — a deprecation notice that repeats forever is noise the operator
+        # learns to scroll past, and it competes with the status bar it sits next to. The hooks
+        # (`autoprompt_resume`, `session_boot`) already say it once per session, which is where a
+        # notice belongs; here the fallback stays silent and simply works.
+        if not _QUIET_FALLBACK:
+            print(f"[{quem}] deprecated: read '{_LEGACY_STATE}'; rename it to '{_DEF_STATE}' — "
+                  "the old spelling is accepted for one version only.", file=sys.stderr)
         return _LEGACY_STATE
     return _DEF_STATE
 _DEF_HEALTH_CACHE = ".claude/health-cache.json"
@@ -190,7 +206,7 @@ def _services_detail(root: Path) -> dict:
 
 def seg_progress(root: Path) -> str:
     prof = _prof()
-    label = str(get(prof, "projeto", "proj"))
+    label = str(get(prof, "project", "proj"))
     tracker = get(prof, "paths.tracker_doc", "")
     src = (_read(root / tracker) if tracker else "") or _read(
         root / _resolve_state(get(prof, "paths.state_ssot", _DEF_STATE), root, "statusline"))

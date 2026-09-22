@@ -9,6 +9,61 @@ cada módulo mantém sua própria versão no `plugin.json` e no `marketplace.jso
 
 ## [Unreleased]
 
+## [2.5.1] — 2026-09-22
+
+### Alterado
+
+- O modelo Codex de todo exemplo distribuído passa para a família `gpt-5.6`.
+- **`assets/social-preview-1280x640.png`**: o card que o GitHub mostra quando o repositório é
+  linkado — o lockup, a assinatura de cinco palavras, `spec-driven · wave-driven · lane-isolated` e a
+  tagline, na paleta da marca. Não existe endpoint REST para social preview; a imagem viaja para que
+  o upload seja um arrastar, não um trabalho de design.
+
+### Corrigido
+
+- **O `done_gate` rejeitava toda tarefa num profile em inglês.** Ele lia os critérios por um caminho
+  dotted *interpolado* (`f"verification.done_criteria.{task_type}"`), que nenhum censo de chaves por
+  regex enxerga — então o rename das chaves passou em todos os gates e o comando continuou
+  respondendo `no criterion for type 'py'`, exit 2. Achado de ponta a ponta, não por leitura:
+  rodando `done_gate --profile py` contra um profile renomeado. As duas grafias resolvem, provado ao vivo.
+- **Uma statusline repetia o aviso de depreciação a cada prompt.** Uma barra de status re-renderiza o
+  tempo todo, então um aviso ali é ruído que o operador aprende a ignorar — e competia com o próprio
+  status ao lado. Os hooks dizem uma vez por sessão, que é onde um aviso pertence; as statuslines
+  caem no legado em silêncio e continuam lendo.
+- **Um board obsoleto podia ficar ao lado do atual** depois de um rename manual pela metade, com cara
+  de corrente para quem o abrisse. O board em inglês continua vencendo; o antigo agora é denunciado.
+- **Um CONTROLE re-declarava o padrão que ele guardava**, então uma mudança no padrão real era
+  invisível para o teste que existe para notar exatamente isso. Uma definição, dois usos — provado
+  sabotando o padrão e vendo o controle cair.
+
+### Descontinuado
+
+- **As chaves do `operator-profile.yaml` são inglesas, e as portuguesas estão descontinuadas até a
+  v2.7.0.** O único arquivo que o usuário edita ainda pedia `projeto:`, `verificacao:`, `memoria:`.
+  33 das 91 chaves eram portuguesas (a nota de release da 2.5.0 dizia seis; o censo abaixo é o
+  conjunto inteiro) e foram renomeadas: `projeto`→`project`, `idioma`→`language`,
+  `forma_tratamento`→`register`, `autonomia`→`autonomy` (`por_acao`→`by_action`,
+  `rm_codigo_vivo`→`rm_live_code`, `git_push_branch_protegida`→`git_push_protected_branch`,
+  `edit_codigo`→`edit_code`, `paths_sensiveis_auto_gate`→`sensitive_paths_auto_gate`),
+  `intensidade`→`intensity`, `concorrencia`→`concurrency` (`teto`→`max_agents`),
+  `verificacao`→`verification` (`done_criterios`→`done_criteria`,
+  `ladder_obrigatorios`→`ladder_required`, `ladder_score_minimo`→`ladder_min_score`,
+  `fonte_suspeita_ttl_dias`→`stale_source_ttl_days`),
+  `loop.fronteiras_proibidas`→`loop.forbidden_boundaries`,
+  `loop.gatilho_autorizacao`→`loop.authorization_triggers`, `planejamento`→`planning`
+  (`pequeno/medio/grande`→`small/medium/large`), `distill.janela_sessoes`→`session_window`,
+  `limiar_recorrencia`→`recurrence_threshold`, `ledger_rejeitadas`→`rejected_ledger`,
+  `regra_alvo`→`target_rule`, `memoria`→`memory` (`marcadores_enfase`→`emphasis_markers`),
+  `report.estilo_interno/estilo_externo/frases_banidas`→`internal_style/external_style/banned_phrases`.
+  **Um profile existente continua funcionando sem edição:** o `_lib/profile_loader.get()` lê a
+  chave inglesa primeiro e cai na grafia antiga **em qualquer profundidade do dot-path**, imprime
+  uma linha por chave antiga no stderr e não move exit code nenhum; uma chave nova explícita vence
+  a antiga obsoleta. **A partir da v2.7.0 a grafia antiga deixa de ser lida.** Valores, enums,
+  paths e regexes não foram tocados (`block_families: ["rm-rf-codigo-vivo", …]` é casado por
+  string no `operation_guard_portable.py`). O `_lib/concurrency.py` acompanha a chave que lê:
+  `teto()` virou `max_agents()`, com `teto` mantido como alias de importação descontinuado no
+  mesmo prazo, e a CLI imprime `max_agents=` em vez de `teto=`.
+
 ## [2.5.0] — 2026-09-22
 
 ### Alterado

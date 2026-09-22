@@ -38,7 +38,7 @@ operator-kit/
 │   └── kit.install.yaml          ← manifest read by kit_doctor.py install (6 stages)
 ├── _lib/
 │   ├── profile_loader.py         ← finds + reads the profile (stdlib + PyYAML). EVERY mechanism imports from here.
-│   ├── concurrency.py            ← ceiling of simultaneous agents (concorrencia.teto)
+│   ├── concurrency.py            ← ceiling of simultaneous agents (concurrency.max_agents)
 │   └── launcher.py               ← resolves the right Python launcher (never hardcodes "py")
 ├── scripts/                      ← 17 scripts: done_gate, verify_ladder, preflight, debt_ledger,
 │                                    goal_ledger/goal_review, passk_eval, audit_plan,
@@ -106,14 +106,20 @@ python installers/kit-forge-1.4.1/kit_doctor.py install --kit "$KIT" --host clau
 The `profile` stage copies every `*.example.*` at the module root into the target, dropping
 `.example` — so `profile.example.yaml` lands as `profile.yaml` (never overwritten if it
 exists). The loaders read **`operator-profile.yaml`**: rename the copy (or point
-`OPERATOR_PROFILE` at it), then adjust by hand: `idioma`, `paths.*`, `autonomia.default`,
-`intensidade.default`, `concorrencia.teto`, `guardrails.protected_paths`/`protected_branches`,
-`verificacao.done_criterios` with the real commands of your stack. Smoke test:
+`OPERATOR_PROFILE` at it), then adjust by hand: `language`, `paths.*`, `autonomy.default`,
+`intensity.default`, `concurrency.max_agents`, `guardrails.protected_paths`/`protected_branches`,
+`verification.done_criteria` with the real commands of your stack. Smoke test:
 ```bash
 python operator-kit/_lib/profile_loader.py             # prints the resolved profile
 python operator-kit/scripts/done_gate.py --self-test   # self-test OK
 python operator-kit/scripts/done_gate.py --profile py  # runs the 'py' criteria of the profile
 ```
+**If your profile is older than 2.6.0, it still works and you do not have to touch it.** The keys
+were Portuguese up to 2.5.0 and are English now: legacy `projeto`→`project`, `idioma`→`language`, `verificacao`→`verification`, `memoria`→`memory`, and so on — the full table is in `_lib/profile_loader.py`.
+The loader reads the English key first and falls back to the old spelling at any depth, prints one
+line per old key on stderr and changes no exit code; an explicit new key wins over a stale old one.
+**From v2.7.0 the old spelling stops being read** — rename the keys before then.
+
 gitignore the `paths.resume_pointer` (e.g. `.claude/RESUME-NEXT.md`). Output-styles:
 copy `output-styles/*.md` into the project's `.claude/output-styles/` and activate with
 `/output-style`.
@@ -217,12 +223,12 @@ doctrine over lazy-loading by keyword.
 | `no-secrets-in-memory.md` | Never a plaintext credential in a file that persists (memory/doc/rule) | `hooks/secret_scan_on_write.py` |
 | `gateguard.md` | Facts (importers/schema/rollback) before the first Edit; rollback+authorisation+verify before destructive Bash | `hooks/fact_force_gate.py`, `hooks/snapshot_rollback_gate.py`, `hooks/project_root_confirm.py` |
 | `loop-operator.md` | Pre-flight (baseline+rollback+branch) + 4 stop-conditions + triple action (pause+notice+demote) | `hooks/ralph_gate.py`, `templates/loop-charter-template.md` |
-| `loop-cost-budget.md` (LC-5) | Token/cost budget is a first-class stop condition, declared BEFORE the loop runs | `hooks/ralph_gate.py` (kill-switch), `operator-profile.yaml` (`concorrencia.teto`) |
+| `loop-cost-budget.md` (LC-5) | Token/cost budget is a first-class stop condition, declared BEFORE the loop runs | `hooks/ralph_gate.py` (kill-switch), `operator-profile.yaml` (`concurrency.max_agents`) |
 | `loop-maker-checker.md` | Whoever builds is not whoever approves; the checker runs on a different model, read-only | `skills/adversarial-refuter`, `skills/gated-improvement-proposal` |
 | `loop-passk.md` | pass@k measures capability, pass^k measures regression — 1 green run proves nothing | `scripts/passk_eval.py`, `scripts/determinism_harness.py` |
 | `loop-patterns-catalog.md` | Catalogue of 6 autonomous-loop architectures (which shape to use before arming one) | `templates/loop-charter-template.md` (reference when choosing the shape) |
 | `agent-cognition.md` | Protocol for how an agent/persona should load identity and reason in cascade | reference doctrine (applies to projects with agents/personas) |
-| `partial-autonomy-slider.md` | Autonomy as a slider (0-5) + intensity (lite/full/ultra/off) — orthogonal dimensions; promotion requires a real eval, demotion is automatic on incident | `operator-profile.yaml` (`autonomia.default`, `intensidade.default`), `hooks/operation_guard_portable.py` |
+| `partial-autonomy-slider.md` | Autonomy as a slider (0-5) + intensity (lite/full/ultra/off) — orthogonal dimensions; promotion requires a real eval, demotion is automatic on incident | `operator-profile.yaml` (`autonomy.default`, `intensity.default`), `hooks/operation_guard_portable.py` |
 | `docs/ANTHROPIC-STANDARDS.md` | Hook/skill/sub-agent conventions (timeout, exit codes, explicit allowedTools) | applies to every hook/skill of this very kit |
 
 ## Proof / acceptance (real output, executed)

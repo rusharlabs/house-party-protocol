@@ -137,7 +137,7 @@ def build_status(start: Path | None = None) -> dict:
     ssot = _resolve_ssot_path(profile, base) if profile else None
 
     data = {
-        "projeto": (get(profile, "projeto", _NA) if get is not None else _NA) or _NA,
+        "projeto": (get(profile, "project", _NA) if get is not None else _NA) or _NA,
         "ssot_path": str(ssot) if ssot else _NA,
         "ssot_rel": ssot_rel or _NA,
         "etapa": _NA,

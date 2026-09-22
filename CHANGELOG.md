@@ -9,6 +9,60 @@ keeps its own version in `plugin.json` and in `marketplace.json`.
 
 ## [Unreleased]
 
+## [2.5.1] — 2026-09-22
+
+### Changed
+
+- The Codex model in every shipped example moves to the `gpt-5.6` family.
+- **`assets/social-preview-1280x640.png`**: the card GitHub shows when the repository is linked —
+  the lockup, the five-word signature, `spec-driven · wave-driven · lane-isolated` and the tagline,
+  in the brand palette. There is no REST endpoint for a social preview; the image ships so the
+  upload is a drag, not a design job.
+
+### Fixed
+
+- **`done_gate` rejected every task on an English profile.** It read the criteria through an
+  *interpolated* dotted path (`f"verification.done_criteria.{task_type}"`), which no key census
+  built on a regex can see — so the rename of the profile keys passed every gate and the command
+  still answered `no criterion for type 'py'`, exit 2. Found end to end, not by reading: running
+  `done_gate --profile py` against a renamed profile. Both spellings now resolve, proven live.
+- **A statusline repeated the deprecation notice on every prompt.** A status bar re-renders
+  constantly, so a notice there is noise the operator learns to scroll past — and it sat next to the
+  status it was competing with. The hooks say it once per session, which is where a notice belongs;
+  the statuslines fall back silently and still read the legacy path.
+- **A stale board could sit beside the current one** after a half-done manual rename, looking
+  current to whoever opened it. The English board still wins; the old one is now named as stale.
+- **A CONTROLE re-declared the pattern it was guarding**, so a change to the real one was invisible
+  to the test that exists to notice exactly that. One definition, both call sites — proven by
+  sabotaging the pattern and watching the control fail.
+
+### Deprecated
+
+- **The keys of `operator-profile.yaml` are English, and the Portuguese ones are deprecated until
+  v2.7.0.** The one file a user edits still asked for `projeto:`, `verificacao:`, `memoria:`. 33 of
+  its 91 keys were Portuguese (the release note of 2.5.0 said six; the census below is the whole
+  set) and are renamed: `projeto`→`project`, `idioma`→`language`, `forma_tratamento`→`register`,
+  `autonomia`→`autonomy` (`por_acao`→`by_action`, `rm_codigo_vivo`→`rm_live_code`,
+  `git_push_branch_protegida`→`git_push_protected_branch`, `edit_codigo`→`edit_code`,
+  `paths_sensiveis_auto_gate`→`sensitive_paths_auto_gate`), `intensidade`→`intensity`,
+  `concorrencia`→`concurrency` (`teto`→`max_agents`), `verificacao`→`verification`
+  (`done_criterios`→`done_criteria`, `ladder_obrigatorios`→`ladder_required`,
+  `ladder_score_minimo`→`ladder_min_score`, `fonte_suspeita_ttl_dias`→`stale_source_ttl_days`),
+  `loop.fronteiras_proibidas`→`loop.forbidden_boundaries`,
+  `loop.gatilho_autorizacao`→`loop.authorization_triggers`, `planejamento`→`planning`
+  (`pequeno/medio/grande`→`small/medium/large`), `distill.janela_sessoes`→`session_window`,
+  `limiar_recorrencia`→`recurrence_threshold`, `ledger_rejeitadas`→`rejected_ledger`,
+  `regra_alvo`→`target_rule`, `memoria`→`memory` (`marcadores_enfase`→`emphasis_markers`),
+  `report.estilo_interno/estilo_externo/frases_banidas`→`internal_style/external_style/banned_phrases`.
+  **An existing profile keeps working with no edit:** `_lib/profile_loader.get()` reads the English
+  key first and falls back to the legacy spelling **at any depth of a dotted path**, prints one line
+  per legacy key on stderr, and does not move any exit code; an explicit new key wins over a stale
+  legacy one. **From v2.7.0 the legacy spelling stops being read.** Values, enums, paths and regexes
+  were not touched (`block_families: ["rm-rf-codigo-vivo", …]` is matched by string in
+  `operation_guard_portable.py`). `_lib/concurrency.py` follows the key it reads: `teto()` is now
+  `max_agents()`, with `teto` kept as a deprecated import alias on the same schedule, and the CLI
+  prints `max_agents=` instead of `teto=`.
+
 ## [2.5.0] — 2026-09-22
 
 ### Changed

@@ -2,9 +2,9 @@
 # Copy to `operator-profile.yaml` and adjust per project. Every mechanism reads from here.
 # Stdlib + PyYAML. Paths are relative to the root of the project where the profile lives.
 
-projeto: "nome-do-projeto"
-idioma: pt-BR                      # labels, messages, output-style (pt-BR | en | es)
-forma_tratamento: neutro          # neutro | formal (opt-in)
+project: "nome-do-projeto"
+language: pt-BR                    # labels, messages, output-style (pt-BR | en | es)
+register: neutro                  # neutro | formal (opt-in)
 
 paths:
   state_ssot: ".planning/STATE.md"          # SSoT with "- [ ]" pending items
@@ -18,28 +18,28 @@ paths:
   tracker_doc: ""                            # doc with <!-- CHECKLIST --> for the statusline (empty = uses state_ssot)
   health_cache: ".claude/health-cache.json"  # service health cache for the statusline (no network)
 
-autonomia:                          # level 0-5 per action type (Karpathy slider)
+autonomy:                           # level 0-5 per action type (Karpathy slider)
   default: 2
-  por_acao:
-    rm_codigo_vivo: 0               # never automatic
-    git_push_branch_protegida: 0
+  by_action:
+    rm_live_code: 0                 # never automatic
+    git_push_protected_branch: 0
     deploy: 0
-    edit_codigo: 3
+    edit_code: 3
     docs_logs: 4
     auto_edit_harness: 1            # gated-improvement: proposes, does not apply
-  paths_sensiveis_auto_gate:        # forced auto-gate, never auto-merge
+  sensitive_paths_auto_gate:        # forced auto-gate, never auto-merge
     - "settings*.json"
     - ".claude/hooks/**"
     - "**/.env"
     - ".claude/rules/**"
 
-intensidade:                         # dimension ORTHOGONAL to autonomy — HOW MUCH is verified per action
+intensity:                           # dimension ORTHOGONAL to autonomy — HOW MUCH is verified per action
                                       # (not WHO approves). See rules/partial-autonomy-slider.md
                                       # "Dimension 2 — Intensity".
   default: full                      # lite | full | ultra | off ("off" is NEVER a real default)
 
-concorrencia:
-  teto: 3                           # max simultaneous agents (lesson: 3 win where 10-16 blow up)
+concurrency:
+  max_agents: 3                     # max simultaneous agents (lesson: 3 win where 10-16 blow up)
   wave_size: 3
   rate_limit_signals: ["429", "rate limit", "quota", "overloaded"]
   fallback: sequential-local        # sequential-local | retry-backoff | abort
@@ -59,8 +59,8 @@ guardrails:                         # config-driven operation-guard
   # operator's own language. Replace with yours.
   approval_keywords: ["ok", "aprovo", "pode enviar"]
 
-verificacao:
-  done_criterios:                   # consumed by done_gate.py --profile <type>
+verification:
+  done_criteria:                    # consumed by done_gate.py --profile <type>
     py:   ["python -m pytest -q", "ruff check ."]
     web:  ["npm run lint", "npm run build"]
     deploy: ["curl -fsS https://staging/_health/exclusive-route"]
@@ -71,35 +71,35 @@ verificacao:
     visual:   ""
     staging:  ""
     security: ""
-  ladder_obrigatorios: ["lint", "test"]
-  ladder_score_minimo: 2
+  ladder_required: ["lint", "test"]
+  ladder_min_score: 2
   determinism_runs: 5
-  fonte_suspeita_ttl_dias: 7        # older data = re-verify (LC-1)
+  stale_source_ttl_days: 7          # older data = re-verify (LC-1)
 
 loop:
   charter: ".planning/CHARTER.md"
   work_list: ".planning/STATE.md"
   stop_conditions: ["work_list_vazia", "teto_tempo_4h", "tier_risco_irreversivel"]
-  fronteiras_proibidas: ["../outro-repo/**", "production/**"]
+  forbidden_boundaries: ["../outro-repo/**", "production/**"]
   # Phrases that authorize BROAD execution — matched against the operator's prompts, in the
   # operator's own language (copied verbatim into the generated CLAUDE.md). Replace with yours.
-  gatilho_autorizacao: ["/goal", "auto", "100%", "faça tudo", "máxima capacidade"]
+  authorization_triggers: ["/goal", "auto", "100%", "faça tudo", "máxima capacidade"]
 
-planejamento:
-  thresholds: { pequeno: "<=2 files", medio: "<=8 files", grande: ">8 files" }
+planning:
+  thresholds: { small: "<=2 files", medium: "<=8 files", large: ">8 files" }
   eval_cmd: ""                      # empty = eval off
   prd_path: "docs/plans/"
 
 distill:
-  janela_sessoes: 50                # N
-  limiar_recorrencia: 3             # K (>=K distinct sessions)
-  ledger_rejeitadas: ".claude/memory/_distill-rejeitadas.md"
-  regra_alvo: ".claude/rules/learned-corrections.md"
+  session_window: 50                # N
+  recurrence_threshold: 3           # K (>=K distinct sessions)
+  rejected_ledger: ".claude/memory/_distill-rejeitadas.md"
+  target_rule: ".claude/rules/learned-corrections.md"
 
-memoria:
+memory:
   # Emphasis markers that flag a correction worth capturing — matched against the operator's
   # prompts, in the operator's own language (same default list as hooks/rule_capture.py). Replace with yours.
-  marcadores_enfase: ["SEMPRE", "NUNCA", "já falei", "toda vez", "pare de"]
+  emphasis_markers: ["SEMPRE", "NUNCA", "já falei", "toda vez", "pare de"]
   rule_capture: on
 
 statusline:                         # footer bar segments (statusline.py); order = display order
@@ -112,8 +112,8 @@ health:                             # probes for health_probe.py (writes the hea
   probes: []                        # e.g. [{name: api, type: http, target: "http://127.0.0.1:3000/health"}, {name: db, type: cmd, target: "pg_isready"}]
 
 report:
-  estilo_interno: dark              # raw, failures exposed
-  estilo_externo: light             # premium, no internal failures exposed; goes through a gate
+  internal_style: dark              # raw, failures exposed
+  external_style: light             # premium, no internal failures exposed; goes through a gate
   # Phrases banned from reports — matched against the report text, in the operator's own
   # language. Replace with yours.
-  frases_banidas: ["consider it done", "com certeza!", "ótima pergunta"]
+  banned_phrases: ["consider it done", "com certeza!", "ótima pergunta"]

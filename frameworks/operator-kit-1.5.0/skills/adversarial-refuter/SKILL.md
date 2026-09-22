@@ -36,7 +36,7 @@ description: Before accepting "done/ready", dispatches read-only refuters that t
 
 ## Process
 1. **Phrase the claim** as a falsifiable statement (e.g. "file X exists and contains Y", "route /Z answers 200", "test T passes", "the deploy switched the backend").
-2. **Dispatch N refuters** (N and the ceiling come from `concorrencia` in the profile, default 2-3) — each one **read-only** (allowedTools: Read/Glob/Grep/read-only Bash). Prompt: *"Try to PROVE this claim is false against the disk/live source. Default = refuted if there is any doubt."*
+2. **Dispatch N refuters** (N and the ceiling come from `concurrency` in the profile, default 2-3) — each one **read-only** (allowedTools: Read/Glob/Grep/read-only Bash). Prompt: *"Try to PROVE this claim is false against the disk/live source. Default = refuted if there is any doubt."*
 3. **Distinct lenses** when the claim can fail in several ways (exists-on-disk / content-correct / endpoint-answers / test-runs / not-stale).
 4. **Verdict:** accept **only if ALL refutation attempts fail**. Any successful refutation → **re-queue** the work with the exact gap.
 5. **Record** the strongest refutation attempted (it becomes evidence + feeds `gotcha-memory`).

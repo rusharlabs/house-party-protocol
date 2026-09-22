@@ -14,7 +14,7 @@ Generalizes `dispatching-parallel-agents` in a **portable, config-driven** way. 
 
 ## Contract
 
-**INPUT:** list of independent tasks (disjoint scope); `concorrencia.teto`/`concorrencia.fallback` from `operator-profile.yaml`.
+**INPUT:** list of independent tasks (disjoint scope); `concurrency.max_agents`/`concurrency.fallback` from `operator-profile.yaml`.
 
 **OUTPUT:** the tasks' results, verified on disk (not the agent's "done" message); waves closed at a barrier.
 
@@ -34,10 +34,10 @@ Generalizes `dispatching-parallel-agents` in a **portable, config-driven** way. 
 
 ## Process
 1. **Confirm independence.** Only parallelize tasks with **disjoint scope** (paths/domains that do not overlap). If there is a sequential dependency or shared state, do NOT parallelize.
-2. **Read the ceiling.** `python ${CLAUDE_PLUGIN_ROOT}/_lib/concurrency.py` prints `teto`/`wave_size`/`fallback` from `operator-profile.yaml` (default teto=3). Never exceed the ceiling.
+2. **Read the ceiling.** `python ${CLAUDE_PLUGIN_ROOT}/_lib/concurrency.py` prints `max_agents`/`wave_size`/`fallback` from `operator-profile.yaml` (default teto=3). Never exceed the ceiling.
 3. **Group into waves** of size ≤ ceiling. Dispatch one wave, **only open the next when the previous one has closed** (barrier).
 4. **Each task carries a contract:** objective + scope + **constraint not to touch files outside its scope** + return format.
-5. **Fallback on rate limit.** If `is_rate_limited(stderr)` (matches "429"/"rate limit"/"quota"/"overloaded"), degrade according to `concorrencia.fallback` in the profile — default `sequential-local`: finish the remaining tasks **sequentially and locally** (bash/directly), immune to the server's rate limit.
+5. **Fallback on rate limit.** If `is_rate_limited(stderr)` (matches "429"/"rate limit"/"quota"/"overloaded"), degrade according to `concurrency.fallback` in the profile — default `sequential-local`: finish the remaining tasks **sequentially and locally** (bash/directly), immune to the server's rate limit.
 6. **Verify the return.** A delegated agent's "done" lies — confirm on disk/at the source (see `adversarial-refuter` / `delegate-with-handback`).
 
 ## When NOT to Activate
@@ -50,9 +50,9 @@ Generalizes `dispatching-parallel-agents` in a **portable, config-driven** way. 
 
 ```console
 $ python ${CLAUDE_PLUGIN_ROOT}/_lib/concurrency.py
-teto=3 wave_size=3 fallback=sequential-local signals=['429', 'rate limit', 'quota', 'overloaded']
+max_agents=3 wave_size=3 fallback=sequential-local signals=['429', 'rate limit', 'quota', 'overloaded']
 ```
-<!-- executed: 2026-07-10 · exit=0 -->
+<!-- executed: 2026-09-22 · exit=0 -->
 
 ```console
 $ python ${CLAUDE_PLUGIN_ROOT}/_lib/concurrency.py --self-test

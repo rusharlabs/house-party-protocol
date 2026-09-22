@@ -7,10 +7,10 @@ secoes que ensinam qualquer agente a operar ESTE projeto — e a calar onde a de
 dele. O piso vem PRIMEIRO, por cruzamento de campos, nunca por opiniao: cada linha sai de
 um campo do perfil; se o campo nao esta la, a linha nao existe.
 
-    ## O QUE VOCE NAO DECIDE      <- autonomia · guardrails · loop.fronteiras_proibidas
+    ## O QUE VOCE NAO DECIDE      <- autonomy · guardrails · loop.forbidden_boundaries
     ## ONDE AS COISAS MORAM       <- paths.*
-    ## AS REGRAS DO PRONTO        <- verificacao.done_criterios · ladder
-    ## O FLUXO                    <- concorrencia · loop · autonomia.default
+    ## AS REGRAS DO PRONTO        <- verification.done_criteria · ladder
+    ## O FLUXO                    <- concurrency · loop · autonomy.default
 
 O script governa SOMENTE o bloco entre os marcadores:
 
@@ -48,9 +48,11 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 try:
-    from _lib.profile_loader import profile_path as find_profile  # type: ignore[import-not-found]
+    from _lib.profile_loader import get as _loader_get  # type: ignore[import-not-found]
+    from _lib.profile_loader import profile_path as find_profile
 except Exception:  # noqa: BLE001 -- Why: sem o loader, --profile explicito continua funcionando; so a descoberta automatica cai
     find_profile = None  # type: ignore[assignment]
+    _loader_get = None  # type: ignore[assignment]
 
 try:
     import yaml
@@ -70,6 +72,12 @@ _ASSINATURA = "*Bloco gerado do `{perfil}` em {data} - assinatura {hash} - para 
 
 
 def _get(d: dict, dotted: str, default=None):
+    """Dotted read THROUGH the kit loader, which carries the dual read of the profile keys
+    renamed in 2.6.0 (legacy `projeto` -> `project`, and so on). Falls back to a plain walk only
+    when the loader is not importable — the same degradation `find_profile` already has, and the
+    only case in which a profile written before the rename would read as empty here."""
+    if _loader_get is not None:
+        return _loader_get(d, dotted, default)
     cur = d
     for k in dotted.split("."):
         if not isinstance(cur, dict) or k not in cur:
@@ -88,17 +96,17 @@ def _lista(x) -> list:
 def secao_nao_decide(p: dict) -> list:
     """O piso. Nunca sai vazia: se nada cruzou, uma linha honesta."""
     out = []
-    por_acao = _get(p, "autonomia.por_acao", {}) or {}
-    if isinstance(por_acao, dict):
-        for acao, nivel in por_acao.items():
+    by_action = _get(p, "autonomy.by_action", {}) or {}
+    if isinstance(by_action, dict):
+        for acao, nivel in by_action.items():
             try:
                 n = int(nivel)
             except (TypeError, ValueError):
                 continue
             if n <= 1:
-                out.append(f"- **{acao}**: level {n} (`autonomia.por_acao.{acao}`). You PROPOSE, you do not execute. The person authorises.")
-    for pth in _lista(_get(p, "autonomia.paths_sensiveis_auto_gate")):
-        out.append(f"- Any write to `{pth}` falls into an automatic human gate (`autonomia.paths_sensiveis_auto_gate`). Do not route around it.")
+                out.append(f"- **{acao}**: level {n} (`autonomy.by_action.{acao}`). You PROPOSE, you do not execute. The person authorises.")
+    for pth in _lista(_get(p, "autonomy.sensitive_paths_auto_gate")):
+        out.append(f"- Any write to `{pth}` falls into an automatic human gate (`autonomy.sensitive_paths_auto_gate`). Do not route around it.")
     for pth in _lista(_get(p, "guardrails.protected_paths")):
         out.append(f"- `{pth}` is protected (`guardrails.protected_paths`): do not delete, do not move, do not mass-rewrite.")
     for br in _lista(_get(p, "guardrails.protected_branches")):
@@ -108,8 +116,8 @@ def secao_nao_decide(p: dict) -> list:
     ext = _lista(_get(p, "guardrails.external_send_tools"))
     if ext:
         out.append(f"- Sending outside ({', '.join(ext)}) is a human gate (`guardrails.external_send_tools`): prepare it, show it, do not fire it.")
-    for fr in _lista(_get(p, "loop.fronteiras_proibidas")):
-        out.append(f"- Forbidden loop boundary: `{fr}` (`loop.fronteiras_proibidas`). If the task seems to require this, the task is wrong.")
+    for fr in _lista(_get(p, "loop.forbidden_boundaries")):
+        out.append(f"- Forbidden loop boundary: `{fr}` (`loop.forbidden_boundaries`). If the task seems to require this, the task is wrong.")
     for sc in _lista(_get(p, "loop.stop_conditions")):
         out.append(f"- STOP condition: **{sc}** (`loop.stop_conditions`). Stopping here is success, not failure.")
     if not out:
@@ -132,9 +140,9 @@ def secao_onde_moram(p: dict) -> list:
 
 def secao_regras_do_pronto(p: dict) -> list:
     out = []
-    crit = _get(p, "verificacao.done_criterios", {}) or {}
+    crit = _get(p, "verification.done_criteria", {}) or {}
     if isinstance(crit, dict) and crit:
-        out.append("\"Done\" only exists after the gate. By task type (`verificacao.done_criterios`):")
+        out.append("\"Done\" only exists after the gate. By task type (`verification.done_criteria`):")
         for tipo, cmds in crit.items():
             cmds_l = _lista(cmds)
             if cmds_l:
@@ -142,12 +150,12 @@ def secao_regras_do_pronto(p: dict) -> list:
             else:
                 out.append(f"- **{tipo}**: *no criterion* - an empty list NEVER passes by omission (done_gate).")
     else:
-        out.append("- `verificacao.done_criterios` is not filled. With no criterion, no task is \"done\" - the done_gate rejects an empty list by design.")
-    ladder = _get(p, "verificacao.ladder", {}) or {}
-    obrig = _lista(_get(p, "verificacao.ladder_obrigatorios"))
-    minimo = _get(p, "verificacao.ladder_score_minimo")
+        out.append("- `verification.done_criteria` is not filled. With no criterion, no task is \"done\" - the done_gate rejects an empty list by design.")
+    ladder = _get(p, "verification.ladder", {}) or {}
+    obrig = _lista(_get(p, "verification.ladder_required"))
+    minimo = _get(p, "verification.ladder_min_score")
     if isinstance(ladder, dict) and ladder:
-        out.append(f"- Verification ladder (`verificacao.ladder`): {', '.join(str(k) for k in ladder.keys())}."
+        out.append(f"- Verification ladder (`verification.ladder`): {', '.join(str(k) for k in ladder.keys())}."
                    + (f" Mandatory: {', '.join(obrig)}." if obrig else "")
                    + (f" Minimum score: {minimo}." if minimo is not None else ""))
     out.append("- Three states, and only one is forbidden: **DONE** | **PARCIAL-DECLARADO** (say what is missing) | ~~silent partial~~. If you did not finish, declare it - silence is not a state.")
@@ -156,38 +164,38 @@ def secao_regras_do_pronto(p: dict) -> list:
 
 def secao_fluxo(p: dict) -> list:
     out = []
-    default = _get(p, "autonomia.default")
-    inten = _get(p, "intensidade.default")
+    default = _get(p, "autonomy.default")
+    inten = _get(p, "intensity.default")
     if default is not None:
-        out.append(f"- Default autonomy: **level {default}** (`autonomia.default`)" + (f", intensity **{inten}** (`intensidade.default`)." if inten else "."))
-    teto = _get(p, "concorrencia.teto")
-    wave = _get(p, "concorrencia.wave_size")
-    fb = _get(p, "concorrencia.fallback")
+        out.append(f"- Default autonomy: **level {default}** (`autonomy.default`)" + (f", intensity **{inten}** (`intensity.default`)." if inten else "."))
+    teto = _get(p, "concurrency.max_agents")
+    wave = _get(p, "concurrency.wave_size")
+    fb = _get(p, "concurrency.fallback")
     if teto is not None or wave is not None:
-        out.append(f"- Parallelism: cap **{teto}** (`concorrencia.teto`), waves of **{wave}** (`concorrencia.wave_size`)" + (f", fallback `{fb}`." if fb else "."))
+        out.append(f"- Parallelism: cap **{teto}** (`concurrency.max_agents`), waves of **{wave}** (`concurrency.wave_size`)" + (f", fallback `{fb}`." if fb else "."))
     charter = _get(p, "loop.charter")
     work = _get(p, "loop.work_list")
     if charter or work:
         out.append(f"- The loop reads the charter at `{charter}` and the queue at `{work}` (`loop.charter` / `loop.work_list`).")
-    gat = _lista(_get(p, "loop.gatilho_autorizacao"))
+    gat = _lista(_get(p, "loop.authorization_triggers"))
     if gat:
-        out.append(f"- BROAD execution only when the person says one of these: {', '.join(repr(g) for g in gat)} (`loop.gatilho_autorizacao`). Otherwise, one action at a time.")
+        out.append(f"- BROAD execution only when the person says one of these: {', '.join(repr(g) for g in gat)} (`loop.authorization_triggers`). Otherwise, one action at a time.")
     kw = _lista(_get(p, "guardrails.approval_keywords"))
     if kw:
         out.append(f"- Words that count as human approval: {', '.join(repr(k) for k in kw)} (`guardrails.approval_keywords`). Nothing else counts.")
     if not out:
-        out.append("- The profile configured neither autonomy nor concurrency. Operate at the lowest level until someone fills `autonomia.default`.")
+        out.append("- The profile configured neither autonomy nor concurrency. Operate at the lowest level until someone fills `autonomy.default`.")
     return out
 
 
 def gerar_bloco(perfil: dict, perfil_nome: str, script_nome: str, hoje: str | None = None) -> str:
     hoje = hoje or _dt.date.today().isoformat()
-    exemplo = bool(perfil.get("_exemplo")) or perfil.get("projeto") in ("nome-do-projeto", "", None)
+    exemplo = bool(perfil.get("_exemplo")) or _get(perfil, "project") in ("nome-do-projeto", "", None)
     linhas = [BEGIN]
     if exemplo:
         linhas.append("> WARNING: THIS BLOCK WAS GENERATED FROM AN EXAMPLE PROFILE. The project below does not exist. Fill in `operator-profile.yaml` and regenerate.")
     linhas += [
-        f"# How to operate `{perfil.get('projeto', '?')}`",
+        f"# How to operate `{_get(perfil, 'project', '?')}`",
         "",
         "This block was generated from `operator-profile.yaml`. It says what you may do, what",
         "you do not decide, and where things live. **Read the floor before the inventories.**",
@@ -298,7 +306,7 @@ def _self_test() -> None:
         assert _get(perfil, ref, "__MISSING__") != "__MISSING__", f"cited a field that does not exist: {ref}"
 
     # piso nunca vazio, mesmo com perfil vazio
-    vazio = gerar_bloco({"projeto": "x"}, "p.yaml", "x.py", hoje="2026-09-20")
+    vazio = gerar_bloco({"project": "x"}, "p.yaml", "x.py", hoje="2026-09-20")
     assert "has not recorded any limit yet" in vazio
     assert "is not filled" in vazio
 
@@ -315,7 +323,7 @@ def _self_test() -> None:
         gravar(alvo, txt)
         assert "my notes" in alvo.read_text(encoding="utf-8")
         # perfil muda -> bloco substituido, e o de fora continua la
-        bloco2 = gerar_bloco({**perfil, "projeto": "other"}, "p.yaml", "x.py", hoje="2026-09-20")
+        bloco2 = gerar_bloco({**perfil, "project": "other"}, "p.yaml", "x.py", hoje="2026-09-20")
         st, txt = aplicar(alvo, bloco2); assert st == "replaced"; gravar(alvo, txt)
         t = alvo.read_text(encoding="utf-8")
         assert "my notes" in t and "other" in t and t.count(BEGIN) == 1
