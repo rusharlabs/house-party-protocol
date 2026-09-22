@@ -1,48 +1,48 @@
 #!/usr/bin/env python3
 """
-done_gate (Operator Kit) — Definition-of-Done programática, config-driven.
+done_gate (Operator Kit) -- programmatic, config-driven Definition-of-Done.
 
-Definition-of-Done programatica e config-driven: além de receber critérios
-soltos (argv/stdin), aceita `--profile <tipo>` e lê os comandos de
-`verification.done_criteria[<tipo>]` do operator-profile.yaml. É o gate
-determinístico entre "achei que terminei" e "está verificado": exit 0 SÓ se
-TODOS os critérios passarem (AND). Lista vazia = NÃO-done (nunca passa por omissão).
+Programmatic and config-driven Definition-of-Done: besides taking loose
+criteria (argv/stdin), it accepts `--profile <type>` and reads the commands
+from `verification.done_criteria[<type>]` in operator-profile.yaml. It's the
+deterministic gate between "I think I'm done" and "it's verified": exit 0 ONLY
+if ALL criteria pass (AND). Empty list = NOT-done (never passes by omission).
 
-Uso:
-    python done_gate.py "python -m pytest -q" "ruff check ."      # critérios soltos
-    python done_gate.py --profile py                              # lê do perfil (tipo 'py')
-    python done_gate.py --profile py --json                       # saída JSON p/ o loop
+Usage:
+    python done_gate.py "python -m pytest -q" "ruff check ."      # loose criteria
+    python done_gate.py --profile py                              # reads from the profile (type 'py')
+    python done_gate.py --profile py --json                       # JSON output for the loop
     echo '{"criteria":["pytest -q"]}' | python done_gate.py --stdin
     python done_gate.py --self-test
 
-TRÊS ESTADOS, e só um é proibido (v1.1.0):
+THREE STATES, and only one is forbidden (v1.1.0):
 
-    DONE                todos os critérios passaram E ninguém declarou pendência.  exit 0
-    PARCIAL-DECLARADO   quem executou DISSE o que falta (--declare-partial ou o
-                        campo `partial` do stdin). Não é verde — exit 1 — mas é
-                        um estado honesto, legível por máquina, com a lista do
-                        que falta. A declaração VENCE o verde: critérios todos
-                        passando + declaração = PARCIAL, porque quem executou
-                        sabe mais que os critérios.                             exit 1
-    NOT-DONE            falhou e ninguém declarou nada. É o estado que a casa
-                        chama de "parcial silencioso" — o único PROIBIDO. O
-                        gate não consegue impedir o silêncio, mas o NOMEIA na
-                        saída e diz o que fazer.                                exit 1
+    DONE                all criteria passed AND nobody declared pending work.  exit 0
+    PARCIAL-DECLARADO   whoever ran it SAID what is missing (--declare-partial or the
+                        `partial` field from stdin). Not green -- exit 1 -- but it's
+                        an honest, machine-readable state, with the list of what
+                        is missing. The declaration BEATS the green: all criteria
+                        passing + declaration = PARCIAL, because whoever ran it
+                        knows more than the criteria.                           exit 1
+    NOT-DONE            failed and nobody declared anything. It's the state this
+                        house calls "silent partial" -- the only one FORBIDDEN. The
+                        gate can't prevent the silence, but it NAMES it in the
+                        output and says what to do.                             exit 1
 
-    python done_gate.py "pytest -q" --declare-partial "faltam os testes de borda: X, Y"
+    python done_gate.py "pytest -q" --declare-partial "missing the edge-case tests: X, Y"
     echo '{"criteria":["pytest -q"],"partial":{"missing":["X","Y"],"reason":"..."}}' \
         | python done_gate.py --stdin
 
-    # Why: um gate binario empurra para um de dois erros — o agente pinta de verde o que nao
-    # terminou, ou o loop trava num NOT-DONE sem saber o que falta. O terceiro estado e a saida
-    # honesta: "nao terminei, e ESTE e o buraco". Downstream (handoff, ledger, o proprio loop)
-    # le `partial: true` + `declared.missing` e sabe onde retomar. O exit continua 1 nos dois
-    # casos nao-verdes: nada a jusante pode tratar parcial como pronto. A distincao mora no payload.
+    # Why: a binary gate pushes toward one of two errors -- the agent paints green over what wasn't
+    # finished, or the loop gets stuck on a NOT-DONE without knowing what's missing. The third state
+    # is the honest output: "I'm not done, and THIS is the gap". Downstream (handoff, ledger, the
+    # loop itself) reads `partial: true` + `declared.missing` and knows where to resume. Exit stays 1
+    # in both non-green cases: nothing downstream can treat partial as done. The distinction lives in the payload.
 
-Exit: 0 = DONE · 1 = PARCIAL-DECLARADO ou NOT-DONE · 2 = uso inválido.
-stdlib + PyYAML (só no modo --profile). Cross-platform (shell=True respeita o SO).
+Exit: 0 = DONE -- 1 = PARCIAL-DECLARADO or NOT-DONE -- 2 = invalid usage.
+stdlib + PyYAML (only in --profile mode). Cross-platform (shell=True respects the OS).
 
-v1.1.0 — 2026-09-20 (A4: três estados) · v1.0.0 — 2026-06-19 (Operator Kit · Tier 1)
+v1.1.0 -- 2026-09-20 (A4: three states) -- v1.0.0 -- 2026-06-19 (Operator Kit -- Tier 1)
 """
 from __future__ import annotations
 
@@ -51,17 +51,17 @@ import subprocess
 import sys
 from pathlib import Path
 
-# importa o loader compartilhado do kit (.../operator-kit/_lib/profile_loader.py)
+# import the shared kit loader (.../operator-kit/_lib/profile_loader.py)
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 try:
     from _lib.profile_loader import load_profile, get
-except Exception:  # noqa: BLE001 — sem loader, modo --profile fica indisponível mas o resto funciona
+except Exception:  # noqa: BLE001 -- without the loader, --profile mode is unavailable but the rest works
     load_profile = None  # type: ignore[assignment]
     get = None  # type: ignore[assignment]
 
 
 def run_criterion(cmd: str, cwd: str | None = None, timeout: int = 600) -> dict:
-    """Roda um comando-critério. Retorna {cmd, passed, exit_code, tail}. Nunca crasha."""
+    """Runs a criterion command. Returns {cmd, passed, exit_code, tail}. Never crashes."""
     try:
         r = subprocess.run(
             cmd, shell=True, cwd=cwd,
@@ -71,19 +71,19 @@ def run_criterion(cmd: str, cwd: str | None = None, timeout: int = 600) -> dict:
         return {"cmd": cmd, "passed": r.returncode == 0, "exit_code": r.returncode, "tail": tail}
     except subprocess.TimeoutExpired:
         return {"cmd": cmd, "passed": False, "exit_code": 124, "tail": f"timeout {timeout}s"}
-    except Exception as e:  # noqa: BLE001 — gate jamais crasha; falha = não-done
+    except Exception as e:  # noqa: BLE001 -- gate never crashes; failure = not-done
         return {"cmd": cmd, "passed": False, "exit_code": 1, "tail": f"error: {e}"}
 
 
-# Why: `cwd` mantem o kit configuravel para consumidores externos; o fluxo local usa o default.
+# Why: `cwd` keeps the kit configurable for external consumers; the local flow uses the default.
 def gate(criteria, cwd: str | None = None, timeout: int = 600):
-    """Roda todos os critérios (AND). Retorna (all_passed, results). Lista vazia = não-done."""
+    """Runs all criteria (AND). Returns (all_passed, results). Empty list = not-done."""
     results = [run_criterion(c, cwd=cwd, timeout=timeout) for c in criteria if str(c).strip()]
     return (bool(results) and all(r["passed"] for r in results)), results
 
 
 def criteria_from_profile(task_type: str) -> list[str]:
-    """Lê verification.done_criteria[<task_type>] do operator-profile.yaml. [] se ausente."""
+    """Reads verification.done_criteria[<task_type>] from operator-profile.yaml. [] if absent."""
     if load_profile is None or get is None:
         return []
     prof = load_profile()
@@ -97,10 +97,10 @@ NOT_DONE = "NOT-DONE"
 
 
 def parse_declaration(raw) -> dict | None:
-    """Normaliza a declaração de pendência. None = nada declarado.
+    """Normalizes the pending-work declaration. None = nothing declared.
 
-    Aceita texto livre ("faltam X e Y") ou dict {"missing": [...], "reason": "..."}.
-    Declaração VAZIA não é declaração — vira None, e o estado cai em NOT-DONE.
+    Accepts free text ("X and Y are missing") or dict {"missing": [...], "reason": "..."}.
+    An EMPTY declaration isn't a declaration -- it becomes None, and the state falls to NOT-DONE.
     """
     if raw is None:
         return None
@@ -119,16 +119,16 @@ def parse_declaration(raw) -> dict | None:
 
 
 def decide(all_passed: bool, declared: dict | None) -> str:
-    """O terceiro estado. A declaração VENCE o verde."""
+    """The third state. The declaration BEATS the green."""
     if declared is not None:
         return PARCIAL
     return DONE if all_passed else NOT_DONE
 
 
 def _self_test() -> None:
-    # Why: `python` a seco nao existe no macOS (so python3) e o self-test falhava com exit 127.
-    # O interprete certo e o que esta rodando ISTO; entre aspas porque shell=True e o caminho
-    # pode ter espaco.
+    # Why: plain `python` doesn't exist on macOS (only python3) and the self-test used to fail
+    # with exit 127. The right interpreter is the one running THIS; quoted because shell=True and
+    # the path may have a space.
     py = f'"{sys.executable}"'
     ok, res = gate([f'{py} -c "import sys; sys.exit(0)"'])
     assert ok and res[0]["passed"], "exit 0 should pass"
@@ -136,14 +136,14 @@ def _self_test() -> None:
     assert gate([f'{py} -c "pass"', f'{py} -c "raise SystemExit(1)"'])[0] is False, "AND: one failure sinks it"
     assert gate([])[0] is False, "empty list = not-done"
 
-    # os tres estados
+    # the three states
     assert decide(True, None) == DONE
     assert decide(False, None) == NOT_DONE
     assert decide(False, {"missing": ["x"], "reason": ""}) == PARCIAL
     assert decide(True, {"missing": ["x"], "reason": ""}) == PARCIAL, \
         "the DECLARATION BEATS the green: whoever ran it knows more than the criteria"
 
-    # declaracao vazia nao e declaracao
+    # an empty declaration isn't a declaration
     assert parse_declaration("") is None
     assert parse_declaration("   ") is None
     assert parse_declaration({}) is None
@@ -153,7 +153,7 @@ def _self_test() -> None:
     assert d == {"missing": ["X", "Y"], "reason": "no access to staging"}, d
     assert parse_declaration({"reason": "reason only"}) == {"missing": ["reason only"], "reason": "reason only"}
 
-    # o instrumento discrimina: os tres estados sao alcancaveis e distintos
+    # the instrument discriminates: the three states are reachable and distinct
     assert len({decide(True, None), decide(False, None), decide(False, {"missing": ["x"], "reason": ""})}) == 3
     print("self-test OK")
 
@@ -165,7 +165,7 @@ def main(argv) -> int:
     as_json = "--json" in argv
     argv = [a for a in argv if a != "--json"]
 
-    # --declare-partial "<texto>" pode vir em qualquer posicao
+    # --declare-partial "<text>" may come at any position
     declared_raw = None
     if "--declare-partial" in argv:
         i = argv.index("--declare-partial")

@@ -42,7 +42,7 @@ Módulo operacional do harness: gates executáveis, loops governados, pass@k/pas
 | skill | o que faz |
 |---|---|
 | `adversarial-refuter` | Before accepting "done/ready", dispatches read-only refuters that try to KNOCK DOWN the claim against the disk/live source |
-| `claude-md-from-profile` | Generates the project's CLAUDE.md block FROM operator-profile.yaml — floor first (what the AI does not decide), then where things live, the rules of done and the flow. Idempotent, signed; refuses to overwrite a hand-edited block |
+| `claude-md-from-profile` | Generates the project's CLAUDE.md block FROM operator-profile.yaml - floor first (what the AI does not decide), then where things live, the rules of done and the flow. Idempotent, signed; refuses to overwrite a hand-edited block |
 | `delegate-with-handback` | Delegates a long/independent task to a 2nd agent with explicit context and a verification gate on the return |
 | `doc-consolidator-dedup` | Merges N overlapping docs/plans into a single deduplicated work-list, archives the superseded ones with a stub-redirect — grep/ls before creating/classifying (LC-3) |
 | `dual-report-builder` | Generates TWO versions of the same analysis/report — INTERNAL (raw, failures exposed, dark) and EXTERNAL (premium, positive, no failures exposed, light) — as self-contained HTML with pure-CSS charts, print-friendly. The external version goes through a sober-register gate (banned phrases from the profile). Use when producing a report/dashboard with a dual audience (internal team + client/stakeholder). |
@@ -156,13 +156,13 @@ Ferramentas de construir ferramentas: skill-writer, hookify, plugin-dev, teachin
 | skill | o que faz |
 |---|---|
 | `architecture-decision-records` | Captures architectural decisions made during the session as structured ADRs (context, alternatives considered, consequences) in docs/adr/. Use when the user decides between significant alternatives (framework, database, pattern) or asks "why did we choose X?". |
-| `claude-dev-setup` | Installs the base Claude Code hooks in a new project — idempotent and reversible settings wiring (never overwrites someone else's config without --force) + chain-preserving git hook (never replaces an existing pre-commit hook). |
+| `claude-dev-setup` | Installs the base Claude Code hooks in a new project - idempotent and reversible settings wiring (never overwrites someone else's config without --force) + chain-preserving git hook (never replaces an existing pre-commit hook). |
 | `hookify` | Creates REAL hooks for Claude Code — executable scripts (stdin JSON, exit 0/1/2), registered via a plugin's hooks.json or pasted into settings.json. Use when the user wants to create a hook, a safety rule, a custom validation, a lifecycle hook. |
 | `plugin-dev` | Packages skills/hooks/commands into an installable Claude Code plugin — the real anatomy (.claude-plugin/plugin.json + hooks/hooks.json + ${CLAUDE_PLUGIN_ROOT}), no framework/build step. Use when the user wants to create a plugin, package an extension, or distribute a set of skills/hooks. |
-| `search-first` | Searches for an existing library/tool/pattern BEFORE writing new code — covers package registries (npm/PyPI), MCP and GitHub, in addition to the local grep. Use before creating a utility, helper, or new integration. |
+| `search-first` | Searches for an existing library/tool/pattern BEFORE writing new code - covers package registries (npm/PyPI), MCP and GitHub, in addition to the local grep. Use before creating a utility, helper, or new integration. |
 | `skill-scout` | Searches for skills locally, in the marketplace, on GitHub and on the web BEFORE creating a new skill — avoids duplicating work that already exists. Use when the user says "create a skill", "is there a skill for X?", or you are about to suggest creating a new skill. |
 | `skill-writer` | Guides the creation of Agent Skills for Claude Code — structure, frontmatter, effective descriptions, and validation against the SKILL-CONTRACT. Use when the user wants to create, write or structure a new skill. |
-| `teaching` | Turns any technical output (creation, structure, architectural decision) into a learning opportunity — a tree of where the element lives, an x-ray of what-it-is/where-it-sits/what-it-is-for, a connection map, a business analogy, and explained decisions. Always use in technical output for a non-programmer reader. |
+| `teaching` | Turns any technical output (creation, structure, architectural decision) into a learning opportunity - a tree of where the element lives, an x-ray of what-it-is/where-it-sits/what-it-is-for, a connection map, a business analogy, and explained decisions. Always use in technical output for a non-programmer reader. |
 
 **Hooks**
 
@@ -207,7 +207,7 @@ Squad com 12 papéis disponíveis como slash commands e subagents reais, tools e
 |---|---|
 | `pp-consolidate` | Parallel Process Consolidate - consolidates the outputs of parallel sessions/agents into a single, deduplicated, verifiable verdict |
 | `pp-discovery` | Parallel Process Discovery - token-safe inventory of repositories, folders and large artifacts before deep analysis |
-| `pp-raiox` | Parallel Process Raio-X - line-by-line reading of an external module/repo with evidence, risks and calls for the next investigation |
+| `pp-raiox` | Parallel Process X-Ray - line-by-line reading of an external module/repo with evidence, risks and calls for the next investigation |
 
 **Commands** — `/analyst` · `/architect` · `/data-engineer` · `/dev` · `/devops` · `/master` · `/pm` · `/po` · `/qa` · `/sm` · `/squad-creator` · `/ux-design-expert`
 

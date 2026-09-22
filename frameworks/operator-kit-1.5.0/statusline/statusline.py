@@ -1,28 +1,28 @@
 #!/usr/bin/env python3
 """
-statusline (Operator Kit) — barra de progresso viva no rodape do CLI/IDE, PORTATIL e COMPOSAVEL.
+statusline (Operator Kit) -- live progress bar in the CLI/IDE footer, PORTABLE and COMPOSABLE.
 
-A barra e montada a partir de SEGMENTOS configuraveis (statusline.segments no
-operator-profile.yaml); cada segmento e best-effort e DEGRADA p/ vazio se a
-fonte nao existir (nunca trava).
+The bar is assembled from configurable SEGMENTS (statusline.segments in
+operator-profile.yaml); each segment is best-effort and DEGRADES to empty if its
+source does not exist (it never hangs).
 
-Segmentos embutidos (todos opcionais, ordem definida pelo profile):
-  progress  -> 🧠 <projeto> <pct>% ████░░   (checklist do tracker_doc/state_ssot)
-  health    -> ⚕<up>/<tot>                   (cache de health — paths.health_cache; ver health_probe.py)
-  tokens    -> <stdout de statusline.token_cmd>  (ex: "◔41% $63/100"; vazio = omite)
-  autonomy  -> 🎚L<n>                         (statusline.autonomy_level 0-5; omite se null)
-  donegate  -> ✅DoD / ❌DoD                  (cache em statusline.donegate_cache; omite se ausente)
-  gates     -> gates:<n>                      (itens '- [ ]' abertos no paths.gate_sheet)
-  commits   -> <n>c hoje                      (git, commits de hoje)
+Built-in segments (all optional, order defined by the profile):
+  progress  -> 🧠 <project> <pct>% ████░░   (checklist from tracker_doc/state_ssot)
+  health    -> ⚕<up>/<tot>                   (health cache -- paths.health_cache; see health_probe.py)
+  tokens    -> <stdout of statusline.token_cmd>  (e.g. "◔41% $63/100"; empty = omit)
+  autonomy  -> 🎚L<n>                         (statusline.autonomy_level 0-5; omits if null)
+  donegate  -> ✅DoD / ❌DoD                  (cache in statusline.donegate_cache; omits if absent)
+  gates     -> gates:<n>                      (open '- [ ]' items in paths.gate_sheet)
+  commits   -> <n>c today                     (git, commits made today)
   branch    -> <branch>                       (git)
 
-Default (sem statusline.segments): ["progress","health","commits","branch"].
+Default (without statusline.segments): ["progress","health","commits","branch"].
 
-⚠️ statusLine NAO vai no plugin.json (limite do CC) — aponte o settings.json:
+⚠️ statusLine does NOT go in plugin.json (CC limitation) -- point settings.json to it:
   "statusLine": { "type": "command", "command": "python operator-kit/statusline/statusline.py --statusline", "padding": 0 }
 
-Modos: --statusline · --panel · --self-test. stdlib + PyYAML (via loader). Nunca crasha no caminho statusline.
-v2.1.0 — 2026-07-10 (Operator Kit · Tier 2 · segmento 'health' — remove vocabulario "brains"/"trinity")
+Modes: --statusline - --panel - --self-test. stdlib + PyYAML (via loader). Never crashes on the statusline path.
+v2.1.0 -- 2026-07-10 (Operator Kit - Tier 2 - 'health' segment -- removes "brains"/"trinity" vocabulary)
 """
 from __future__ import annotations
 
@@ -36,7 +36,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # .../operator-kit
 try:
     from _lib.profile_loader import load_profile, get, profile_path
-except Exception:  # noqa: BLE001 -- Why (2026-09-22): a statusline that raises replaces the bar with an error on every prompt. A partial install, a hand-edited loader or a missing PyYAML must degrade to the defaults below, silently.
+except Exception:  # noqa: BLE001 -- Why: a statusline that raises replaces the bar with an error on every prompt. A partial install, a hand-edited loader or a missing PyYAML must degrade to the defaults below, silently.
     load_profile = None  # type: ignore[assignment]
 
     def get(_p, _k, default=None):  # type: ignore[misc]
@@ -56,7 +56,7 @@ try:
     from _lib import profile_loader as _profile_loader  # type: ignore[import-not-found]
 
     _profile_loader.QUIET_DEPRECATION = _QUIET_FALLBACK
-except Exception:  # noqa: BLE001 -- Why (2026-09-22): with no loader there is nothing to mute, and raising here would kill the prompt line over a cosmetic setting.
+except Exception:  # noqa: BLE001 -- Why: with no loader there is nothing to mute, and raising here would kill the prompt line over a cosmetic setting.
     pass
 
 
@@ -167,7 +167,7 @@ def _services(root: Path) -> tuple[int, int]:
 
 
 def _services_detail(root: Path) -> dict:
-    """Retorna {name: online_bool} p/ segmentos que precisam do detalhe por-servico."""
+    """Returns {name: online_bool} for segments that need the per-service detail."""
     data = _health_cache(root)
     services = data.get("services") if isinstance(data, dict) else None
     if not isinstance(services, dict):
@@ -181,7 +181,7 @@ def _services_detail(root: Path) -> dict:
     return out
 
 
-# ---- SEGMENTOS (cada um retorna str; "" = omitir) ----
+# ---- SEGMENTS (each one returns str; "" = omit) ----
 
 def seg_progress(root: Path) -> str:
     prof = _prof()
@@ -202,7 +202,7 @@ def seg_health(root: Path) -> str:
 def seg_commits(root: Path) -> str:
     out = _git(root, ["log", "--since=midnight", "--oneline"])
     n = len([ln for ln in out.splitlines() if ln.strip()])
-    return f"{n}c hoje"
+    return f"{n}c today"
 
 
 def seg_branch(root: Path) -> str:
@@ -247,11 +247,11 @@ def seg_donegate(root: Path) -> str:
                 return f"{'✅' if p == t and t > 0 else '❌'}DoD {p}/{t}"
     except Exception:
         pass
-    # Why: a saida textual do done_gate traz "DONE-GATE: PARCIAL-DECLARADO" — contem "DONE" e
-    # nao contem "NOT-DONE", entao um fallback por substring pintava ✅ um estado que por
-    # contrato nao e verde; e procurar "PARCIAL" no texto inteiro pintava ⚠️ um NOT-DONE real,
-    # porque a dica "Se isto e PARCIAL, declare o que falta" contem a palavra. A regua e o
-    # TOKEN de estado na linha "DONE-GATE: <ESTADO>", nunca o texto em volta.
+    # Why: the done_gate's text output carries "DONE-GATE: PARCIAL-DECLARADO" -- it contains "DONE" and
+    # does not contain "NOT-DONE", so a substring fallback painted ✅ a state that by
+    # contract is not green; and searching the whole text for "PARCIAL" painted ⚠️ a real NOT-DONE,
+    # because the hint "Se isto e PARCIAL, declare o que falta" contains that word. The rule is the
+    # state TOKEN on the line "DONE-GATE: <ESTADO>", never the surrounding text.
     up = raw.upper()
     m = re.search(r"DONE-GATE:\s*([A-Z\-]+)", up)
     estado = m.group(1) if m else ""
@@ -261,7 +261,7 @@ def seg_donegate(root: Path) -> str:
         return "✅DoD"
     if estado:
         return "❌DoD"
-    # sem a linha de estado (cache de outra ferramenta): a regua antiga, sem o falso positivo
+    # without the state line (cache from another tool): the old rule, without the false positive
     return "✅DoD" if "DONE" in up and "NOT-DONE" not in up else "❌DoD"
 
 
@@ -321,12 +321,12 @@ def render_panel() -> str:
 
 def _self_test() -> None:
     assert _bar(50, 8) == "████░░░░" and _bar(0, 4) == "░░░░" and _bar(100, 4) == "████"
-    # segmentos puros nao dependem de rede; render nunca crasha e sempre retorna str
+    # pure segments do not depend on network; render never crashes and always returns str
     sl = render_statusline()
     assert isinstance(sl, str) and sl, "the statusline must return a non-empty string"
-    # default segments validos
+    # default segments are valid
     assert all(s in _SEGMENTS for s in _DEF_SEGMENTS)
-    # autonomy/tokens/donegate omitem quando ausentes (sem profile = "")
+    # autonomy/tokens/donegate omit when absent (no profile = "")
     print("self-test OK")
     print(sl)
 

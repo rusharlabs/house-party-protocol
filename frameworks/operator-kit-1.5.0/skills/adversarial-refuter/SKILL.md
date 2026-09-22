@@ -57,11 +57,11 @@ claim sobrevive: True
 (claim: "ip_pii_linter.py exists and has a self-test" — the refutation attempt FAILED, the claim survives.)
 
 ```console
-$ python -c "import os,sys; ok = os.path.exists('nao-existe-nunca.py'); print('claim REFUTADA (arquivo nao existe):', not ok); sys.exit(0 if ok else 1)"
-claim REFUTADA (arquivo nao existe): True
+$ python -c "import os,sys; ok = os.path.exists('never-exists-at-all.py'); print('claim REFUTED (the file does not exist):', not ok); sys.exit(0 if ok else 1)"
+claim REFUTED (the file does not exist): True
 ```
-<!-- executed: 2026-07-10 · exit=1 -->
-(claim: "nao-existe-nunca.py exists" — the refutation SUCCEEDED; exit 1 = the claim was false.)
+<!-- executed: 2026-09-22 · exit=1 -->
+(claim: "never-exists-at-all.py exists" — the refutation SUCCEEDED; exit 1 = the claim was false.)
 
 ```console
 $ python scripts/done_gate.py "python -c \"import os; assert os.path.exists('kit_assembler.py')\""

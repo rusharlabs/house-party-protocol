@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
 """
-install_git_hook — instalador de git hook CHAIN-PRESERVING (nunca substitui um hook alheio).
+install_git_hook -- CHAIN-PRESERVING git hook installer (never replaces someone else's hook).
 
-Um `.git/hooks/pre-commit` existente pode ser um wrapper importante; um instalador ingênuo
-substituiria essa proteção e criaria uma regressão silenciosa. Este instalador nunca sobrescreve:
-ele encadeia.
-se já existe um hook diferente do nosso, preserva-o como `<hook>.pre-kitforge` e escreve um novo
-`<hook>` que roda (1) o original preservado, (2) nosso payload — nesta ordem, com `set -e` (o
-original falhar aborta ANTES do nosso payload rodar; nunca pulamos o guard alheio).
+An existing `.git/hooks/pre-commit` can be an important wrapper; a naive installer
+would replace that protection and create a silent regression. This installer never overwrites:
+it chains.
+if a hook different from ours already exists, it preserves it as `<hook>.pre-kitforge` and writes a new
+`<hook>` that runs (1) the preserved original, (2) our payload -- in this order, with `set -e` (the
+original failing aborts BEFORE our payload runs; we never skip someone else's guard).
 
-Uso:
+Usage:
     python install_git_hook.py --repo <repo_dir> --hook-name pre-commit --payload <script.sh> [--self-test]
 
-Exit: 0 instalado ou já-encadeado (idempotente) · 3 erro (repo/.git/hooks ausente, payload ausente).
-stdlib only. v1.0.0 — 2026-07-10 (claude-dev-kit · Tier 1)
+Exit: 0 installed or already-chained (idempotent) - 3 error (repo/.git/hooks missing, payload missing).
+stdlib only. v1.0.0 -- 2026-07-10 (claude-dev-kit - Tier 1)
 """
 from __future__ import annotations
 
@@ -44,7 +44,7 @@ def _make_executable(path: Path) -> None:
     try:
         mode = path.stat().st_mode
         path.chmod(mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
-    except Exception:  # noqa: BLE001 — Windows sem chmod real; shebang basta pro git-bash
+    except Exception:  # noqa: BLE001 -- Windows has no real chmod; the shebang is enough for git-bash
         pass
 
 
@@ -64,14 +64,14 @@ def install(repo: Path, hook_name: str, payload_path: Path) -> tuple:
     if target.exists():
         existing_text = target.read_text(encoding="utf-8", errors="replace")
         if _MARKER in existing_text:
-            # já encadeado por nós — atualiza só o payload se mudou, idempotente no resto
+            # already chained by us -- update only the payload if it changed, idempotent otherwise
             if not payload_dst.exists() or payload_dst.read_text(encoding="utf-8") != payload_text:
                 payload_dst.write_text(payload_text, encoding="utf-8")
                 _make_executable(payload_dst)
                 return 0, {"status": "payload-updated", "hook": str(target)}
             return 0, {"status": "no-op", "hook": str(target)}
         else:
-            # hook alheio (não-nosso) — preserva chain-preserving, uma vez só
+            # someone else's hook (not ours) -- preserve chain-preserving, only once
             if not preserved.exists():
                 shutil.copy2(target, preserved)
                 _make_executable(preserved)
@@ -105,7 +105,7 @@ def _self_test() -> int:
         repo = tmp / "repo"
         (repo / ".git" / "hooks").mkdir(parents=True)
 
-        # cenário 1: sem hook prévio — instalação simples
+        # scenario 1: no prior hook -- simple install
         payload1 = tmp / "payload1.sh"
         payload1.write_text("#!/bin/sh\necho payload1-ran >> \"$1\"\n", encoding="utf-8")
         code1, report1 = install(repo, "pre-commit", payload1)
@@ -114,7 +114,7 @@ def _self_test() -> int:
         code1b, report1b = install(repo, "pre-commit", payload1)
         assert code1b == 0 and report1b["status"] == "no-op", f"2nd install should be a no-op: {report1b}"
 
-        # cenário 2: hook alheio já existente — deve encadear, não substituir
+        # scenario 2: an existing hook belonging to someone else -- should chain, not replace
         repo2 = tmp / "repo2"
         (repo2 / ".git" / "hooks").mkdir(parents=True)
         original_hook = repo2 / ".git" / "hooks" / "pre-commit"

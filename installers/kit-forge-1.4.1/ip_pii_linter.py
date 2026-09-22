@@ -1,27 +1,27 @@
 #!/usr/bin/env python3
 """
-ip_pii_linter — gate de pré-empacotamento contra segredo/cliente/infra/PII/marca/código-de-terceiro.
+ip_pii_linter -- pre-packaging gate against secret/client/infra/PII/brand/third-party-code.
 
-Varre uma pasta candidata a virar kit distribuível e falha (exit 2) se encontrar qualquer
-finding de severidade BLOCK. É o gate inquebrável que o kit_assembler.py roda ANTES de emitir
-um kit — não existe flag --skip-lint.
+Scans a folder that is a candidate to become a distributable kit and fails (exit 2) if it finds
+any finding with BLOCK severity. It is the unbreakable gate that kit_assembler.py runs BEFORE
+emitting a kit -- there is no --skip-lint flag.
 
-Uso:
-    python ip_pii_linter.py <pasta_alvo>
-        [--ruleset ip-ruleset.yaml]      # default: ip-ruleset.yaml ao lado deste script,
+Usage:
+    python ip_pii_linter.py <target_folder>
+        [--ruleset ip-ruleset.yaml]      # default: ip-ruleset.yaml next to this script,
                                          # fallback ip-ruleset.example.yaml
-        [--json <out.json>]              # relatório máquina (contrato: schemas/lint-report.schema.json)
-        [--baseline <b.json>]            # ratchet: só falha em findings NOVOS vs baseline
-        [--strict]                       # promove todo WARN -> BLOCK
+        [--json <out.json>]              # machine report (contract: schemas/lint-report.schema.json)
+        [--baseline <b.json>]            # ratchet: only fails on findings NEW vs baseline
+        [--strict]                       # promotes every WARN -> BLOCK
         [--category secret,client,infra,pii,identity,derived,hygiene]
-        [--self-test]                    # roda contra fixtures embutidas; exit 0 se detecção exata
+        [--self-test]                    # runs against embedded fixtures; exit 0 if detection is exact
 
-Exit: 0 limpo (zero BLOCK, zero WARN ou WARNs todos em baseline) · 1 WARNs presentes ·
-      2 >=1 BLOCK (pasta NÃO pode virar kit) · 3 erro de execução.
+Exit: 0 clean (zero BLOCK, zero WARN or all WARNs in baseline) | 1 WARNs present |
+      2 >=1 BLOCK (folder CANNOT become a kit) | 3 execution error.
 
-stdlib + PyYAML. Cross-platform (pathlib). Espelha o padrão --self-test de scripts/loop/done_gate.py.
+stdlib + PyYAML. Cross-platform (pathlib). Mirrors the --self-test pattern of scripts/loop/done_gate.py.
 
-v1.0.0 — 2026-07-10 (FASE 1 · kit-forge)
+v1.0.0 -- 2026-07-10 (PHASE 1 | kit-forge)
 """
 from __future__ import annotations
 
@@ -33,7 +33,7 @@ from pathlib import Path
 
 try:
     import yaml  # PyYAML
-except ImportError:  # degrade explícito — sem YAML não há como ler ruleset real (exit 3)
+except ImportError:  # explicit degrade -- without YAML there is no way to read a real ruleset (exit 3)
     yaml = None  # type: ignore[assignment]
 
 _ROOT = Path(__file__).resolve().parent
@@ -125,7 +125,7 @@ def _safe_read(path: Path):
     except Exception:
         return None
     if b"\x00" in raw[:8000]:
-        return None  # binário — só checks por nome de arquivo se aplicam
+        return None  # binary -- only filename checks apply
     try:
         return raw.decode("utf-8", errors="replace")
     except Exception:
@@ -149,19 +149,19 @@ _DIRS_FORA_DO_UNIVERSO = {".git"}
 
 
 def iter_target_files(target: Path):
-    # Why: `.git/` fica fora do universo. Config, logs e refs carregam o e-mail do committer —
-    # metadado que o GitHub nao serve como conteudo — e a identidade do commit e decisao de quem
-    # publica, nao achado de lint. O universo e declarado aqui, nao por flag, para o numero ser
-    # reproduzivel.
+    # Why: `.git/` stays out of the universe. Config, logs and refs carry the committer's e-mail --
+    # metadata that GitHub does not serve as content -- and commit identity is a decision for whoever
+    # publishes, not a lint finding. The universe is declared here, not via a flag, so the number is
+    # reproducible.
     for p in sorted(target.rglob("*")):
         if p.is_file() and not (_DIRS_FORA_DO_UNIVERSO & set(p.relative_to(target).parts[:-1])):
             yield p
 
 
 def _is_allowed(allow_entries: list, rel_path: str, category: str, raw_match: str) -> bool:
-    """Allowlist auditável (SKILL-CONTRACT): cada exceção tem path+categoria+pattern+dono+motivo.
-    Sem isto, findings genuínos de fixture de self-test (ex.: 'sk-ant-...' de teste) bloqueiam
-    a emissão de qualquer kit que se auto-testa — o que é TODO kit deste marketplace."""
+    """Auditable allowlist (SKILL-CONTRACT): each exception has path+category+pattern+owner+reason.
+    Without this, genuine self-test fixture findings (e.g.: test 'sk-ant-...') would block
+    the emission of any kit that self-tests -- which is EVERY kit in this marketplace."""
     for entry in allow_entries:
         if not isinstance(entry, dict):
             continue
@@ -178,26 +178,26 @@ def _is_allowed(allow_entries: list, rel_path: str, category: str, raw_match: st
 
 
 def _term_matcher(term: str):
-    """Compila um termo banido num matcher com fronteira de palavra.
+    """Compiles a banned term into a matcher with a word boundary.
 
-    # Why: o matcher era `term in line.lower()` — substring crua. Termo curto casava DENTRO de
-    # palavra legitima ("ray" em "array", "web" em "cobweb"), e gate que reprova palavra
-    # legitima e desligado antes de um dia estar certo. Os exemplos sao sinteticos de
-    # proposito: este arquivo viaja dentro do kit, e o documento que ensina a regra nao pode
-    # ser a violacao dela.
+    # Why: the matcher used to be `term in line.lower()` -- raw substring. A short term matched
+    # INSIDE a legitimate word ("ray" in "array", "web" in "cobweb"), and a gate that fails a
+    # legitimate word gets turned off before it is ever right for a single day. The examples are
+    # synthetic on purpose: this file travels inside the kit, and the document that teaches the
+    # rule cannot be the violation of it.
     #
-    # A fronteira e por FORMA do termo, nao por comprimento:
-    #   comeca E termina em alfanumerico -> lookaround [0-9a-z]. "ray" nao casa "array", mas
-    #     ainda casa "ray-core" e "ray_core", porque "-" e "_" nao sao [0-9a-z]. O miolo pode
-    #     ter ponto, espaco ou dois-pontos — re.escape cuida deles; a fronteira so olha as pontas.
-    #   pontuacao numa das pontas -> substring crua. Ali o lookaround olharia o caractere
-    #     errado: num termo iniciado por ":", o vizinho a esquerda e um digito do proprio endereco.
+    # The boundary is by the SHAPE of the term, not by length:
+    #   starts AND ends alphanumeric -> lookaround [0-9a-z]. "ray" does not match "array", but
+    #     it still matches "ray-core" and "ray_core", because "-" and "_" are not [0-9a-z]. The
+    #     middle can have a dot, space or colon -- re.escape handles them; the boundary only looks at the ends.
+    #   punctuation on either end -> raw substring. There the lookaround would look at the
+    #     wrong character: in a term starting with ":", the neighbor to the left is a digit from its own address.
     #
-    # Custo declarado: um termo nao casa a propria concatenacao sem separador ("web" nao casa
-    # "webv1") — um falso-negativo raro contra falsos positivos frequentes.
+    # Declared cost: a term does not match its own concatenation without a separator ("web" does
+    # not match "webv1") -- a rare false negative against frequent false positives.
     #
-    # Lookaround em vez de \b de proposito: escrita por um caminho que escapa, a sequencia vira
-    # o byte 0x08 (backspace) e a regex para de casar tudo, inclusive os verdadeiros positivos.
+    # Lookaround instead of \b on purpose: written through a path that escapes, the sequence turns
+    # into the 0x08 byte (backspace) and the regex stops matching everything, including true positives.
     """
     tl = term.lower()
     if tl and tl[0].isalnum() and tl[-1].isalnum():
@@ -212,20 +212,20 @@ def _term_hit(matcher, term_lower: str, line_lower: str) -> bool:
 
 
 def _is_encoded_blob(line: str) -> bool:
-    """Linha sem espaco e muito longa = base64/hex/minificado, nao prosa.
+    """A line with no space and very long = base64/hex/minified, not prose.
 
-    # Why: termo banido casado dentro de blob codificado e ruido por construcao — o byte casou,
-    # o SENTIDO nao existe. Nao vale para SEGREDO, que continua sendo procurado em toda linha.
+    # Why: a banned term matched inside an encoded blob is noise by construction -- the byte
+    # matched, the MEANING does not exist. Does not apply to SECRET, which keeps being searched on every line.
     """
-    # Why: uma URL ou caminho nu com mais de 200 caracteres nao tem espaco e seria tratado como
-    # blob — um link com nome proprio passaria. Blob codificado e so alfabeto de base64/hex/
-    # minificado; URL e caminho ficam FORA.
+    # Why: a bare URL or path over 200 characters has no space and would be treated as a
+    # blob -- a link with a proper name would slip through. An encoded blob is only base64/hex/
+    # minified alphabet; URL and path stay OUT.
     t = line.strip()
     if len(t) <= 200 or " " in t:
         return False
     if "://" in t or t.startswith(("/", "./", "~")) or "\\" in t:
         return False
-    if re.search(r"/[a-z]{3,}/", t):   # Why: segmento-palavra entre barras e caminho relativo, nao base64.
+    if re.search(r"/[a-z]{3,}/", t):   # Why: a word-segment between slashes is a relative path, not base64.
         return False
     return re.fullmatch(r"[A-Za-z0-9+/=_-]+", t) is not None
 
@@ -281,7 +281,7 @@ def scan(target: Path, ruleset: dict, categories: set | None = None) -> list:
                         data = json.loads(content)
                         if data not in ({}, [], None, {"faturas": []}):
                             add(rel, 0, "hygiene", "warn", "hygiene.registry_nonempty", f.name)
-                    except Exception:  # noqa: BLE001 — JSON malformado não é o que este check mede
+                    except Exception:  # noqa: BLE001 -- malformed JSON is not what this check measures
                         pass
 
         if "derived" in cats and name_lower in derived_filenames:
@@ -502,7 +502,7 @@ def main(argv) -> int:
 
     try:
         ruleset = load_ruleset(ruleset_path)
-    except Exception as e:  # noqa: BLE001 — qualquer erro de parsing vira exit 3, não crash
+    except Exception as e:  # noqa: BLE001 -- any parsing error becomes exit 3, not a crash
         print(f"ip_pii_linter: invalid ruleset ({ruleset_path}): {e}", file=sys.stderr)
         return 3
 

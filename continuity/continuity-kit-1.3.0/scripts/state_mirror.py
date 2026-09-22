@@ -1,30 +1,30 @@
 #!/usr/bin/env python3
 """
-state_mirror — espelha arquivos gitignored críticos p/ uma pasta TRACKED (durabilidade).
+state_mirror -- mirrors critical gitignored files into a TRACKED folder (durability).
 
-Generaliza um padrão de backup real (4 blocos hardcoded específicos de um repo — ex.:
-notas/sessions/mission-control/handoffs). Este script lê `paths.mirror_globs`
-de um profile YAML — cada entrada = {glob, dest_subdir, keep_latest} — e funciona em
-qualquer projeto. DURABILIDADE (não perder o arquivo se o .gitignore apagar o original)
-é um problema DIFERENTE de RETOMADA (o handoff-v1 do continuity-kit) — os dois se
-complementam, não se substituem.
+Generalizes a real backup pattern (4 hardcoded blocks specific to one repo -- e.g.:
+notes/sessions/mission-control/handoffs). This script reads `paths.mirror_globs`
+from a YAML profile -- each entry = {glob, dest_subdir, keep_latest} -- and works in
+any project. DURABILITY (not losing the file if .gitignore drops the original)
+is a DIFFERENT problem from RESUMPTION (the continuity-kit's handoff-v1) -- the two
+complement each other, they do not replace each other.
 
-Uso:
+Usage:
     python state_mirror.py --profile operator-profile.yaml
     python state_mirror.py --profile operator-profile.yaml --dry-run
     python state_mirror.py --self-test
 
-Config (paths.mirror_dir + paths.mirror_globs no profile):
+Config (paths.mirror_dir + paths.mirror_globs in the profile):
     paths:
       mirror_dir: docs/_state-mirror
       mirror_globs:
         - { glob: ".claude/notes/*.md", dest_subdir: "notes" }
         - { glob: ".claude/sessions/SESSION-*.md", dest_subdir: "sessions", keep_latest: 10 }
 
-Exit: 0 ok (mesmo com 0 globs configurados — vira no-op documentado) · 2 uso inválido.
-stdlib + PyYAML (degrada p/ {} sem PyYAML — profile fica vazio, no-op).
+Exit: 0 ok (even with 0 globs configured -- becomes a documented no-op) - 2 invalid usage.
+stdlib + PyYAML (degrades to {} without PyYAML -- profile stays empty, no-op).
 
-v1.0.0 — 2026-07-10 (continuity-kit · Tier 2 · mirror generico de durabilidade)
+v1.0.0 -- 2026-07-10 (continuity-kit - Tier 2 - generic durability mirror)
 """
 from __future__ import annotations
 
@@ -107,11 +107,20 @@ def mirror(profile: dict, root: Path, dry_run: bool = False) -> dict:
     return manifest
 
 
-_STATE_INDEX_THRESHOLD = 65536  # 64KB — A.1 item 3: proativo, não reativo (o padrão de referência só reagiu aos 107KB)
+_STATE_INDEX_THRESHOLD = 65536  # 64KB -- A.1 item 3: proactive, not reactive (the reference pattern only reacted at 107KB)
+
+
+# The headings of the state document became English in 2.5.2; a repo scaffolded before that
+# still carries the Portuguese ones, and it is the user's own document - we read both until
+# 2.7.0 rather than rewrite it. Same rule as the reader in `hooks/session_boot.py`.
+_SECTION_LEGACY = {"Now": "Agora", "OPEN ITEMS": "PENDÊNCIAS ABERTAS"}
+SECTIONS_LEGACY_REMOVED_IN = "2.7.0"
 
 
 def _section(text: str, title: str, limit: int = 1800) -> str:
     idx = text.find(f"## {title}")
+    if idx == -1 and title in _SECTION_LEGACY:
+        idx = text.find(f"## {_SECTION_LEGACY[title]}")
     if idx == -1:
         return ""
     rest = text[idx:]
@@ -120,8 +129,9 @@ def _section(text: str, title: str, limit: int = 1800) -> str:
 
 
 def generate_state_index(state_path: Path, threshold_bytes: int = _STATE_INDEX_THRESHOLD) -> dict | None:
-    """Se o STATE.md passar do teto, gera <state>.state-index.json com as seções vivas
-    (Agora, PENDÊNCIAS ABERTAS) — proativo: gera ANTES de virar problema de boot lento."""
+    """If STATE.md exceeds the cap, generates <state>.state-index.json with the live sections
+    (`Now`, `OPEN ITEMS`; the legacy spellings are read too) -- proactive: generates BEFORE it
+    becomes a slow-boot problem."""
     if not state_path.exists():
         return None
     size = state_path.stat().st_size
@@ -133,8 +143,8 @@ def generate_state_index(state_path: Path, threshold_bytes: int = _STATE_INDEX_T
         "size_bytes": size,
         "threshold_bytes": threshold_bytes,
         "generated_at": time.strftime("%Y-%m-%dT%H:%M:%S"),
-        "agora": _section(text, "Agora"),
-        "pendencias": _section(text, "PENDÊNCIAS ABERTAS"),
+        "now": _section(text, "Now"),
+        "open_items": _section(text, "OPEN ITEMS"),
     }
     index_path = state_path.with_suffix(state_path.suffix + ".state-index.json")
     index_path.write_text(json.dumps(index, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -180,17 +190,33 @@ def _self_test() -> int:
         assert report_empty["files_mirrored"] == 0, "no mirror_globs configured = no-op, not an error"
 
         small_state = tmp / "00-STATE-small.md"
-        small_state.write_text("## Agora\nfocus\n", encoding="utf-8")
+        small_state.write_text("## Now\nfocus\n", encoding="utf-8")
         assert generate_state_index(small_state) is None, "below the threshold it should not generate an index"
 
         big_state = tmp / "00-STATE-big.md"
-        big_state.write_text("## Agora\ncurrent focus\n\n## PENDÊNCIAS ABERTAS\n- [ ] x\n\n" + ("padding " * 10000), encoding="utf-8")
+        big_state.write_text("## Now\ncurrent focus\n\n## OPEN ITEMS\n- [ ] x\n\n" + ("padding " * 10000), encoding="utf-8")
         idx = generate_state_index(big_state, threshold_bytes=1000)
-        assert idx is not None and idx["agora"] and idx["pendencias"], f"above the threshold it should generate an index: {idx}"
+        assert idx is not None and idx["now"] and idx["open_items"], f"above the threshold it should generate an index: {idx}"
         assert big_state.with_suffix(".md.state-index.json").exists()
 
-        print("self-test OK — dry-run counts right without writing, keep_latest caps, manifest generated, "
-              "empty profile = no-op, state-index only generated above the threshold (proactive)")
+        # Dual read of the headings: a document scaffolded before 2.5.2 has them in Portuguese,
+        # and an index with two empty sections looks exactly like a document with nothing in it.
+        legacy_state = tmp / "00-STATE-legacy.md"
+        legacy_state.write_text("## Agora\nlegacy focus\n\n## PENDÊNCIAS ABERTAS\n- [ ] y\n\n" + ("padding " * 10000), encoding="utf-8")
+        idx_legacy = generate_state_index(legacy_state, threshold_bytes=1000)
+        assert idx_legacy is not None and "legacy focus" in idx_legacy["now"], "legacy Now heading must be read"
+        assert "- [ ] y" in idx_legacy["open_items"], "legacy OPEN ITEMS heading must be read"
+        # CONTROL: a document with neither heading indexes empty - this is what proves the two
+        # asserts above measure the HEADINGS, not merely that a big file was read.
+        other_state = tmp / "00-STATE-other.md"
+        other_state.write_text("## Something Else\nnot parsed\n\n" + ("padding " * 10000), encoding="utf-8")
+        idx_other = generate_state_index(other_state, threshold_bytes=1000)
+        assert idx_other is not None and not idx_other["now"] and not idx_other["open_items"], \
+            f"an unknown heading must not be picked up: {idx_other}"
+
+        print("self-test OK - dry-run counts right without writing, keep_latest caps, manifest generated, "
+              "empty profile = no-op, state-index only above the threshold (proactive), headings read "
+              "in English AND legacy")
         return 0
     finally:
         _sh.rmtree(tmp, ignore_errors=True)

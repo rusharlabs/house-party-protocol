@@ -1,9 +1,9 @@
-"""Validacao estrutural do hpp.manifest.json e sua coerencia com pyproject/__init__.
+"""Structural validation of hpp.manifest.json and its coherence with pyproject/__init__.
 
-Sem rede, sem `~/.claude`, sem variavel de ambiente da maquina: tudo le o proprio
-hpp.manifest.json e o pyproject.toml deste product-root, ou constroi um manifesto
-sintetico em tmp_path quando o teste precisa de um caso INVALIDO para servir de
-controle.
+No network, no `~/.claude`, no machine environment variable: everything reads the
+hpp.manifest.json and pyproject.toml of this product-root itself, or builds a
+synthetic manifest in tmp_path when the test needs an INVALID case to serve as
+a control.
 """
 from __future__ import annotations
 
@@ -29,12 +29,12 @@ PYPROJECT_PATH = PRODUCT_ROOT / "pyproject.toml"
 
 
 def _pyproject_version() -> str:
-    """Extrai `version = "X.Y.Z"` de dentro de `[project]`, sem depender de lib externa.
+    """Extracts `version = "X.Y.Z"` from inside `[project]`, with no external lib.
 
-    `tomllib` so existe na stdlib a partir do Python 3.11; a matriz de CI cobre
-    3.10 tambem. Isto NAO e um parser TOML geral -- e a leitura minima e explicita
-    do unico campo que este teste precisa, para nao trazer uma dependencia so por
-    causa de duas versoes de Python.
+    `tomllib` only exists in the stdlib from Python 3.11 on; the CI matrix also
+    covers 3.10. This is NOT a general TOML parser -- it is the minimal, explicit
+    reading of the single field this test needs, so as not to bring in a
+    dependency just because of two Python versions.
     """
     if sys.version_info >= (3, 11):
         import tomllib
@@ -58,23 +58,24 @@ def _manifest_dict() -> dict:
     return json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
 
 
-def test_manifesto_e_json_valido_com_raiz_objeto():
+def test_manifest_is_valid_json_with_an_object_root():
     data = _manifest_dict()
     assert isinstance(data, dict)
 
 
-def test_tres_fontes_de_versao_concordam():
+def test_the_three_version_sources_agree():
     """
-    Este teste sozinho ja pega uma classe de regressao real: basta uma sessao
-    atualizar hpp/__init__.py sem tocar hpp.manifest.json (ou pyproject.toml), ou
-    vice-versa, para o `--version` do CLI e o `doctor` divergirem em silencio.
+    This test alone already catches a real class of regression: it only takes
+    one session updating hpp/__init__.py without touching hpp.manifest.json (or
+    pyproject.toml), or vice versa, for the CLI's `--version` and `doctor` to
+    diverge silently.
     """
     manifest = _manifest_dict()
     assert manifest["product_version"] == __version__
     assert __version__ == _pyproject_version()
 
 
-def test_todo_modulo_declarado_tem_os_campos_obrigatorios_e_e_unico():
+def test_every_declared_module_has_the_required_fields_and_is_unique():
     manifest = _manifest_dict()
     modules = manifest["modules"]
     assert modules, "manifest with no module at all"
@@ -87,7 +88,7 @@ def test_todo_modulo_declarado_tem_os_campos_obrigatorios_e_e_unico():
         assert not module["path"].startswith(("/", "..")), f"{module['id']} with an absolute/escaping path"
 
 
-def test_bundle_reliable_coding_so_referencia_modulos_e_capacidades_existentes():
+def test_bundle_reliable_coding_only_references_existing_modules_and_capabilities():
     manifest = _manifest_dict()
     known_modules = {m["id"] for m in manifest["modules"]}
     known_capabilities = {c for m in manifest["modules"] for c in m["capabilities"]}
@@ -98,20 +99,20 @@ def test_bundle_reliable_coding_so_referencia_modulos_e_capacidades_existentes()
         assert not unknown_capabilities, f"bundle {name} references a capability that does not exist: {unknown_capabilities}"
 
 
-def test_exit_codes_do_manifesto_sao_0_ok_1_warn_2_block_3_error():
+def test_manifest_exit_codes_are_0_ok_1_warn_2_block_3_error():
     manifest = _manifest_dict()
     assert manifest["exit_codes"] == {"ok": 0, "warn": 1, "block": 2, "error": 3}
 
 
-def test_CONTROLE_manifesto_sem_modules_e_rejeitado():
-    """Controle: prova que o validador sabe REPROVAR, nao so aprovar o real."""
+def test_CONTROLE_manifest_with_no_modules_is_rejected():
+    """Control: proves that the validator knows how to FAIL, not just approve the real one."""
     broken = _manifest_dict()
     del broken["modules"]
     with pytest.raises(ManifestError):
         validate_manifest(broken)
 
 
-def test_CONTROLE_bundle_com_modulo_fantasma_e_rejeitado():
+def test_CONTROLE_bundle_with_a_phantom_module_is_rejected():
     broken = _manifest_dict()
     broken["bundles"]["reliable-coding"]["modules"] = [
         *broken["bundles"]["reliable-coding"]["modules"],
@@ -121,7 +122,7 @@ def test_CONTROLE_bundle_com_modulo_fantasma_e_rejeitado():
         validate_manifest(broken)
 
 
-def test_CONTROLE_ciclo_de_dependencia_entre_modulos_e_rejeitado():
+def test_CONTROLE_dependency_cycle_between_modules_is_rejected():
     broken = _manifest_dict()
     first_id = broken["modules"][0]["id"]
     second_id = broken["modules"][1]["id"]
@@ -131,42 +132,43 @@ def test_CONTROLE_ciclo_de_dependencia_entre_modulos_e_rejeitado():
         validate_manifest(broken)
 
 
-def test_manifesto_real_passa_no_proprio_validador():
-    # Sanity check simetrico aos tres controles acima: o real precisa continuar
-    # validando -- senao os controles estariam provando algo vazio.
+def test_the_real_manifest_passes_its_own_validator():
+    # Sanity check symmetric to the three controls above: the real one needs to
+    # keep validating -- otherwise the controls would be proving something empty.
     validate_manifest(_manifest_dict())
 
 
-def test_validate_distribution_em_modo_fonte_nao_exige_diretorio_fisico_de_modulo():
+def test_validate_distribution_in_source_mode_does_not_require_a_physical_module_directory():
     """
-    Este product-root nao tem marketplace.json nem os diretorios fisicos dos
-    modulos -- eles so existem na copia emitida, montada por outra etapa do
-    pipeline de publicacao. `validate_distribution` reconhece isso como o
-    contrato "source-contract": o manifesto e fonte de verdade mesmo sem o
-    conteudo fisico do modulo do lado dele.
+    This product-root has neither marketplace.json nor the physical module
+    directories -- they only exist in the emitted copy, assembled by another
+    stage of the publication pipeline. `validate_distribution` recognizes this
+    as the "source-contract": the manifest is the source of truth even without
+    the physical module content next to it.
     """
     manifest, path = load_manifest()
     if (path.parent / "marketplace.json").is_file():
-        # Why: a mesma suite roda na arvore-FONTE e na copia EMITIDA. Na emitida o marketplace e os
-        # diretorios de modulo existem, entao o contrato a verificar e o outro — e ele tem teste
-        # proprio. Pular aqui e honesto; afirmar "source-contract" na copia emitida seria falso.
+        # Why: the same suite runs on the SOURCE tree and on the EMITTED copy. In the emitted one the
+        # marketplace and the module directories exist, so the contract to verify is the other one --
+        # and it has its own test. Skipping here is honest; asserting "source-contract" on the emitted
+        # copy would be false.
         pytest.skip("copia emitida (tem marketplace.json) — o contrato de distribuicao completo e coberto pelo teste seguinte")
     result = validate_distribution(manifest, path.parent)
     assert result == {"checked": False, "status": "source-contract"}
 
 
-def test_find_manifest_cai_para_o_pacote_quando_nao_ha_manifesto_acima_do_cwd(tmp_path, monkeypatch):
+def test_find_manifest_falls_back_to_the_package_when_no_manifest_is_above_the_cwd(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     found = find_manifest()
     assert found.resolve() == MANIFEST_PATH.resolve()
 
 
-def test_find_manifest_explicito_mas_inexistente_falha():
+def test_find_manifest_explicit_but_nonexistent_fails():
     with pytest.raises(ManifestError):
         find_manifest(explicit=str(Path("this") / "path" / "does-not-exist" / "hpp.manifest.json"))
 
 
-def test_load_manifest_aceita_caminho_explicito_para_uma_copia(tmp_path):
+def test_load_manifest_accepts_an_explicit_path_to_a_copy(tmp_path):
     custom = tmp_path / "hpp.manifest.json"
     custom.write_text(MANIFEST_PATH.read_text(encoding="utf-8"), encoding="utf-8")
     data, path = load_manifest(str(custom))
@@ -174,7 +176,7 @@ def test_load_manifest_aceita_caminho_explicito_para_uma_copia(tmp_path):
     assert data["product_version"] == __version__
 
 
-def test_load_manifest_com_json_invalido_da_erro_legivel(tmp_path):
+def test_load_manifest_with_invalid_json_gives_a_readable_error(tmp_path):
     custom = tmp_path / "hpp.manifest.json"
     custom.write_text("{ nao e json valido", encoding="utf-8")
     with pytest.raises(ManifestError):

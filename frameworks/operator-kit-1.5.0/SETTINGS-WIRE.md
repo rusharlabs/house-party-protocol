@@ -72,7 +72,7 @@ Claude Code does not accept `statusLine` inside a plugin — it has to go in `se
 ```jsonc
 "statusLine": { "type": "command", "command": "python operator-kit/statusline/statusline.py --statusline", "padding": 0 }
 ```
-Reopen the session for it to appear in the footer. Render example (default segments `progress,health,commits,branch`): `🧠 meu-projeto 58% █████░░░ ▸ 34c hoje ▸ feat/minha-branch` (the `health` segment only appears if `health.probes` is configured — see `health-kit`).
+Reopen the session for it to appear in the footer. Render example (default segments `progress,health,commits,branch`): `🧠 meu-projeto 58% █████░░░ ▸ 34c today ▸ feat/minha-branch` (the `health` segment only appears if `health.probes` is configured — see `health-kit`).
 
 ## Post-wire smoke test
 ```bash

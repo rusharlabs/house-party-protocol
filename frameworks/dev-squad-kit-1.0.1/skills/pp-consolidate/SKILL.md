@@ -36,24 +36,24 @@ Turn several parallel answers or artifacts into a single traceable decision. The
 ## Expected Output
 
 ```md
-# PP Consolidate - <tema>
+# PP Consolidate - <topic>
 
 ## Inputs
-| id | fonte | data | confianca |
+| id | source | date | confidence |
 
-## Veredito
+## Verdict
 - status:
-- decisao:
-- bloqueios:
+- decision:
+- blockers:
 
-## Achados Deduplicados
-| rank | estado | achado | fontes | evidencia | acao |
+## Deduplicated Findings
+| rank | state | finding | sources | evidence | action |
 
-## Conflitos
-| tema | fonte A | fonte B | resolucao |
+## Conflicts
+| topic | source A | source B | resolution |
 
 ## Gaps
-| gap | dono | evidencia necessaria |
+| gap | owner | evidence needed |
 
 ## TOP-10
 1. ...
@@ -91,25 +91,25 @@ Turn several parallel answers or artifacts into a single traceable decision. The
 ## Executed examples
 
 ```console
-$ python -c "print('inputs=3 achados=2')"
-inputs=3 achados=2
+$ python -c "print('inputs=3 findings=2')"
+inputs=3 findings=2
 ```
-<!-- executed: 2026-09-20 · exit=0 -->
+<!-- executed: 2026-09-22 · exit=0 -->
 
 ```console
-$ python -c "print('conflitos=1 preservados=1')"
-conflitos=1 preservados=1
+$ python -c "print('conflicts=1 preserved=1')"
+conflicts=1 preserved=1
 ```
-<!-- executed: 2026-09-20 · exit=0 -->
+<!-- executed: 2026-09-22 · exit=0 -->
 
 ```console
-$ python -c "import sys; print('block: fonte ausente'); sys.exit(2)"
-block: fonte ausente
+$ python -c "import sys; print('block: missing source'); sys.exit(2)"
+block: missing source
 ```
-<!-- executed: 2026-09-20 · exit=2 -->
+<!-- executed: 2026-09-22 · exit=2 -->
 
 ## Proof
 
 ```bash
-python -c "print('inputs=3 achados=2')"
+python -c "print('inputs=3 findings=2')"
 ```

@@ -1,44 +1,44 @@
 #!/usr/bin/env python3
 """
-doc_rollup (continuity-kit) — mantem os docs de historico/evolucao de um projeto
-apos uma sessao significativa, SEM decair como os originais decairam.
+doc_rollup (continuity-kit) -- keeps a project's history/evolution docs current
+after a significant session, WITHOUT decaying the way the originals decayed.
 
-Generaliza o padrao real de manter documentos de historico (changelog + timeline
-narrativa + snapshot de estado + licoes + wrapup por sessao) espalhado por um
-`rollup.yaml` config-driven, em vez de hardcoded a um projeto especifico.
+Generalizes the real pattern of maintaining history documents (changelog +
+narrative timeline + state snapshot + lessons + per-session wrapup) scattered via a
+`rollup.yaml` config-driven file, instead of hardcoded to one specific project.
 
-Licao embutida desde o dia 1 (nao descoberta depois): documentos de narrativa manual
-crescem sem limite e viram lixo que ninguem le. Acima de `max_bytes` (default 65536)
-OU `max_entries` entradas gerenciadas, o rollup para de escrever a narrativa completa
-e passa a escrever so 1 linha-carimbo + ponteiro pro estado vivo (`pointer` do target).
+Lesson built in from day 1 (not discovered later): manual narrative documents
+grow without limit and become junk nobody reads. Above `max_bytes` (default 65536)
+OR `max_entries` managed entries, the rollup stops writing the full narrative
+and switches to writing just 1 stamp line + pointer to the live state (`pointer` of the target).
 
-Modos de escrita (NUNCA sobrescrevem o arquivo inteiro):
-  prepend-after-header  -> insere logo apos a 1a linha em branco do arquivo
-  append-section        -> anexa no final do arquivo
-  create-new            -> cria arquivo novo (path pode usar {date}); se ja existir
-                            no path resolvido, e NO-OP (nunca sobrescreve)
-  header-and-section     -> substitui SÓ o conteudo entre marcadores
-                            <!-- ROLLUP:SNAPSHOT:BEGIN/END --> (cria os marcadores se
-                            preciso); o resto do arquivo fica intocado.
+Write modes (NEVER overwrite the whole file):
+  prepend-after-header  -> inserts right after the file's 1st blank line
+  append-section        -> appends at the end of the file
+  create-new            -> creates a new file (path can use {date}); if it already
+                            exists at the resolved path, it is a NO-OP (never overwrites)
+  header-and-section     -> replaces ONLY the content between markers
+                            <!-- ROLLUP:SNAPSHOT:BEGIN/END --> (creates the markers if
+                            needed); the rest of the file stays untouched.
 
-Guardrails (codigo, nao so doutrina):
-  - backup `<path>.bak-rollup-<timestamp>` ANTES de editar arquivo existente
-  - escrita atomica (tmp + os.replace)
-  - colisao: mesmo `session_marker` ja presente no alvo -> aborta ESSE alvo (nao o run
-    inteiro), LC-4 (idempotencia — nao re-inserir o que ja foi inserido)
-  - `passive: true` no target -> RECUSA escrever, sempre, mesmo que o config peça
-    (defesa em profundidade p/ paths tipo mirror auto-gerado)
+Guardrails (code, not just doctrine):
+  - backup `<path>.bak-rollup-<timestamp>` BEFORE editing an existing file
+  - atomic write (tmp + os.replace)
+  - collision: same `session_marker` already present in the target -> aborts THAT
+    target (not the whole run), LC-4 (idempotency -- do not re-insert what was already inserted)
+  - `passive: true` on the target -> REFUSES to write, always, even if the config asks
+    (defense in depth for paths like an auto-generated mirror)
 
-Uso:
+Usage:
     echo '{...}' | python doc_rollup.py plan  --stdin --config rollup.yaml
     echo '{...}' | python doc_rollup.py apply --stdin --config rollup.yaml [--dry-run] [--force]
     python doc_rollup.py --self-test
 
-Exit: 0 ok (mesmo com targets pulados/degradados — isso e comportamento correto,
-não falha) · 1 payload invalido (falta session_marker/resumo/re_derive_cmd de uma
-métrica) · 2 uso invalido (JSON malformado, config ausente).
+Exit: 0 ok (even with skipped/degraded targets -- that is correct behavior,
+not failure) - 1 invalid payload (missing session_marker/resumo/re_derive_cmd of a
+metric) - 2 invalid usage (malformed JSON, missing config).
 stdlib + PyYAML.
-v1.0.0 — 2026-07-10 (continuity-kit · Tier 2 · doc-rollup generico)
+v1.0.0 -- 2026-07-10 (continuity-kit - Tier 2 - generic doc-rollup)
 """
 from __future__ import annotations
 
@@ -56,7 +56,7 @@ try:
 except ImportError:
     yaml = None  # type: ignore[assignment]
 
-_MAX_BYTES_DEFAULT = 65536  # mesma constante de hooks/_handoff_io.py deste kit
+_MAX_BYTES_DEFAULT = 65536  # same constant as hooks/_handoff_io.py in this kit
 _MAX_ENTRIES_DEFAULT = 30
 _SNAPSHOT_BEGIN = "<!-- ROLLUP:SNAPSHOT:BEGIN -->"
 _SNAPSHOT_END = "<!-- ROLLUP:SNAPSHOT:END -->"
@@ -77,7 +77,7 @@ def load_config(path: Path) -> dict:
 
 
 def validate_payload(payload: dict) -> list:
-    """Retorna lista de erros (vazia = valido). Guardrails LC-1/LC-4 aplicados aqui."""
+    """Returns list of errors (empty = valid). LC-1/LC-4 guardrails applied here."""
     errors = []
     if not isinstance(payload, dict):
         return ["payload is not a JSON object"]
@@ -118,7 +118,7 @@ def render_template(template: str, payload: dict) -> str:
     try:
         return template.format(**fields)
     except (KeyError, IndexError):
-        # template referencia campo desconhecido — nao quebra o run, so nao substitui
+        # template references an unknown field -- does not break the run, just does not substitute
         out = template
         for k, v in fields.items():
             out = out.replace("{" + k + "}", str(v))
@@ -162,22 +162,22 @@ def _read(path: Path) -> str:
 
 
 def _insert_prepend_after_header(existing: str, new_entry: str, session_marker: str) -> str:
-    """Insere a entrada mais nova no TOPO da pilha de entradas gerenciadas. Marca a
-    entrada com o session_marker num comentario HTML invisivel (p/ deteccao de colisao
-    E p/ achar o inicio da pilha em chamadas futuras — nao usar 'a 1a linha em branco'
-    como fronteira: uma entrada com blank line NO PROPRIO CORPO (comum — titulo em
-    branco antes do corpo) faria a proxima entrada ser inserida DENTRO da anterior)."""
+    """Inserts the newest entry at the TOP of the stack of managed entries. Marks the
+    entry with the session_marker in an invisible HTML comment (for collision detection
+    AND to find the start of the stack in future calls -- do not use 'the 1st blank line'
+    as the boundary: an entry with a blank line IN ITS OWN BODY (common -- blank title
+    before the body) would make the next entry get inserted INSIDE the previous one)."""
     marker_line = f"<!-- rollup:{session_marker} -->\n"
     block = marker_line + new_entry.rstrip("\n") + "\n\n"
     if not existing:
         return block
     idx = existing.find("<!-- rollup:")
     if idx != -1:
-        # ja existe >=1 entrada gerenciada -- empilha a nova IMEDIATAMENTE antes da
-        # primeira, preservando qualquer cabecalho humano acima delas.
+        # >=1 managed entry already exists -- stacks the new one IMMEDIATELY before the
+        # first one, preserving any human header above them.
         return existing[:idx] + block + existing[idx:]
-    # 1a entrada gerenciada deste arquivo -- pode haver cabecalho humano (titulo/intro)
-    # acima; insere apos a 1a linha em branco, ou no topo se nao houver nenhuma.
+    # 1st managed entry in this file -- there may be a human header (title/intro)
+    # above; inserts after the 1st blank line, or at the top if there is none.
     lines = existing.splitlines(keepends=True)
     for i, ln in enumerate(lines):
         if ln.strip() == "":
@@ -206,7 +206,7 @@ def _insert_header_and_section(existing: str, new_entry: str, session_marker: st
 
 
 def plan_target(target: dict, payload: dict, repo_root: Path) -> dict:
-    """Calcula a acao p/ um alvo, SEM tocar disco. Retorna relatorio por alvo."""
+    """Computes the action for a target, WITHOUT touching disk. Returns a report per target."""
     rel_path = str(target.get("path", ""))
     mode = str(target.get("mode", ""))
     result = {"path": rel_path, "mode": mode, "role": target.get("role", "")}
@@ -352,16 +352,16 @@ def _self_test() -> int:
             "aprendizados": ["always validate before applying"],
         }
 
-        # 1) validate_payload: payload valido -> sem erros
+        # 1) validate_payload: valid payload -> no errors
         assert validate_payload(payload) == []
-        # 1b) payload sem session_marker/resumo/re_derive_cmd -> rejeitado
+        # 1b) payload without session_marker/resumo/re_derive_cmd -> rejected
         bad = {"metricas": [{"nome": "x"}]}
         errs = validate_payload(bad)
         assert any("session_marker" in e for e in errs)
         assert any("resumo" in e for e in errs)
         assert any("re_derive_cmd" in e for e in errs)
 
-        # 2) prepend-after-header cria arquivo novo corretamente
+        # 2) prepend-after-header correctly creates a new file
         cfg = {
             "repos": [{
                 "name": "t", "root": str(tmp),
@@ -380,23 +380,23 @@ def _self_test() -> int:
         assert "doc_rollup self-test" in text1
         assert "sess-selftest-001" in text1
 
-        # 3) re-aplicar o MESMO session_marker -> colisao, NAO duplica
+        # 3) re-applying the SAME session_marker -> collision, does NOT duplicate
         rep2 = run(cfg, payload, dry_run=False)
         t2 = rep2["repos"][0]["targets"][0]
         assert t2["status"] == "skipped-collision", t2
         text2 = changelog_path.read_text(encoding="utf-8")
         assert text2.count("sess-selftest-001") == 1, "collision should have prevented the duplicate"
 
-        # 4) segunda sessao (marker diferente) -> aplica de novo, sem apagar a primeira
+        # 4) second session (different marker) -> applies again, without erasing the first
         payload3 = dict(payload, session_marker="sess-selftest-002", resumo="second session")
         rep3 = run(cfg, payload3, dry_run=False)
         assert rep3["repos"][0]["targets"][0]["status"] == "applied:prepend"
         text3 = changelog_path.read_text(encoding="utf-8")
         assert "sess-selftest-001" in text3 and "sess-selftest-002" in text3
-        # prepend: a entrada mais recente fica ANTES da mais antiga
+        # prepend: the most recent entry stays BEFORE the oldest one
         assert text3.index("sess-selftest-002") < text3.index("sess-selftest-001")
 
-        # 5) degradacao: max_entries=1 já atingido -> 3a sessao vira carimbo, nao narrativa completa
+        # 5) degradation: max_entries=1 already reached -> 3rd session becomes a stamp, not full narrative
         cfg_deg = json.loads(json.dumps(cfg))
         cfg_deg["repos"][0]["targets"][0]["max_entries"] = 1
         payload4 = dict(payload, session_marker="sess-selftest-003", resumo="third session (should degrade)")
@@ -407,7 +407,7 @@ def _self_test() -> int:
         assert "Stamp 2026-07-10" in text4
         assert "third session (should degrade)" in text4
 
-        # 6) path passive: true -> NUNCA escreve, mesmo que o config peça
+        # 6) path passive: true -> NEVER writes, even if the config asks for it
         cfg_passive = {
             "repos": [{"name": "t", "root": str(tmp), "targets": [
                 {"path": "mirror/should-not-exist.md", "role": "mirror-passive", "passive": True, "mode": "append-section"},
@@ -418,7 +418,7 @@ def _self_test() -> int:
         assert t5["status"] == "skipped-passive", t5
         assert not (tmp / "mirror" / "should-not-exist.md").exists()
 
-        # 7) create-new: 2a chamada no MESMO {date} -> no-op (nunca sobrescreve)
+        # 7) create-new: 2nd call on the SAME {date} -> no-op (never overwrites)
         cfg_new = {
             "repos": [{"name": "t", "root": str(tmp), "targets": [
                 {"path": "sessions/{date}-WRAPUP.md", "role": "session-wrapup", "mode": "create-new",
@@ -433,7 +433,7 @@ def _self_test() -> int:
         assert rep6b["repos"][0]["targets"][0]["status"] == "skipped-exists"
         assert wrapup_path.read_bytes() == original_bytes, "create-new should not overwrite"
 
-        # 8) header-and-section: substitui só a secao, preserva conteudo fora dela
+        # 8) header-and-section: replaces only the section, preserves content outside it
         section_path = tmp / "STATE.md"
         section_path.write_text("# State\n\ncontent preserved before\n", encoding="utf-8")
         cfg_snap = {
@@ -452,7 +452,7 @@ def _self_test() -> int:
         assert "state updated" in text8b
         assert "doc_rollup self-test" not in text8b, "header-and-section should REPLACE the previous section"
 
-        # 9) dry-run nunca toca disco
+        # 9) dry-run never touches disk
         fresh_path = tmp / "DRYRUN.md"
         cfg_dry = {"repos": [{"name": "t", "root": str(tmp), "targets": [
             {"path": "DRYRUN.md", "role": "changelog", "mode": "append-section", "template": "{resumo}\n"},
@@ -460,7 +460,7 @@ def _self_test() -> int:
         run(cfg_dry, payload, dry_run=True)
         assert not fresh_path.exists(), "dry-run should not create a file"
 
-        # 10) plan_target isolado nao toca disco (usado pelo subcomando `plan`)
+        # 10) isolated plan_target does not touch disk (used by the `plan` subcommand)
         _plan_only(cfg_dry, payload)
         assert not fresh_path.exists()
 

@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
 """
-concurrency — max concurrent agents, waves and rate-limit detection (Operator Kit).
+concurrency -- max concurrent agents, waves and rate-limit detection (Operator Kit).
 
-Materializa a lição "ondas de ≤3 vencem onde 8-16 explodem (rate-limit)". Lê
-`concurrency.*` do operator-profile.yaml (max_agents, wave_size, rate_limit_signals,
-fallback). Sem profile, defaults seguros (max_agents 3, fallback sequential-local).
+Materializes the lesson "waves of <=3 win where 8-16 blow up (rate-limit)". Reads
+`concurrency.*` from operator-profile.yaml (max_agents, wave_size, rate_limit_signals,
+fallback). Without a profile, safe defaults (max_agents 3, fallback sequential-local).
 
-Uso programático (em skills/scripts de dispatch):
+Programmatic use (in dispatch skills/scripts):
     from _lib.concurrency import max_agents, waves, is_rate_limited, fallback_mode
-    for lote in waves(tarefas):        # cada lote tem no máx `max_agents` itens
+    for batch in waves(tasks):        # each batch has at most `max_agents` items
         ...
-    if is_rate_limited(stderr): ...    # casa "429"/"rate limit"/"quota"/"overloaded"
+    if is_rate_limited(stderr): ...    # matches "429"/"rate limit"/"quota"/"overloaded"
 
-stdlib + (PyYAML via loader). Nunca crasha. --self-test sem rede/profile.
+stdlib + (PyYAML via loader). Never crashes. --self-test with no network/profile.
 
-v1.1.0 — 2026-09-22 (Operator Kit · Tier 2) — v1.0.0 2026-06-19
+v1.1.0 -- 2026-09-22 (Operator Kit - Tier 2) -- v1.0.0 2026-06-19
 """
 from __future__ import annotations
 
@@ -61,7 +61,7 @@ def wave_size() -> int:
 
 
 def waves(items, size: int | None = None):
-    """Gera lotes de tamanho <= `size` (ou wave_size do profile). [] p/ vazio."""
+    """Generates batches of size <= `size` (or the profile's wave_size). [] for empty."""
     items = list(items)
     n = max(1, int(size)) if size else wave_size()
     for i in range(0, len(items), n):

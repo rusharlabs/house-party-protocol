@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 """
-gotcha_preflight — PreToolUse hook (WARN-only): injeta as lições ANTES do comando.
+gotcha_preflight -- PreToolUse hook (WARN-only): injects the lessons BEFORE the command.
 
-Port standalone do `agentic_preflight.py` do repo-de-origem, reduzido ao loop de
-gotchas (o operation_guard/task_complexity ficam no operator-kit — este kit é só
-o ciclo falha→lição→prevenção). ANTES de cada Bash, deriva a task_key
-(description ou cmd[:80]) e, se houver gotchas curated/recorrentes que casem,
-imprime o preâmbulo no stderr — visível no chat, sem bloquear nada.
+Standalone port of the origin repo's `agentic_preflight.py`, reduced to the gotcha
+loop (the operation_guard/task_complexity stay in the operator-kit -- this kit is just
+the failure->lesson->prevention cycle). BEFORE every Bash, it derives the task_key
+(description or cmd[:80]) and, if there are matching curated/recurring gotchas, prints
+the preamble to stderr -- visible in the chat, without blocking anything.
 
-NUNCA bloqueia (WARN-not-block) — exit 0 sempre. Defensivo: qualquer erro -> exit 0.
+NEVER blocks (WARN-not-block) -- exit 0 always. Defensive: any error -> exit 0.
 
-v1.0.0 — 2026-07-11 (kit gotcha-memory)
+v1.0.0 -- 2026-07-11 (gotcha-memory kit)
 """
 import json
 import sys
@@ -21,9 +21,9 @@ if str(_LIB) not in sys.path:
     sys.path.insert(0, str(_LIB))
 try:
     import gotchas_memory as gm
-except Exception:  # noqa: BLE001 -- Why: um hook de preflight nunca pode derrubar o comando
-    # do usuario. Sem a lib (instalacao parcial, import quebrado) o hook vira no-op e sai 0;
-    # o unico efeito de remover esta guarda e transformar falha de import em falha do Bash.
+except Exception:  # noqa: BLE001 -- Why: a preflight hook can never bring down the user's
+    # command. Without the lib (partial install or a broken import) the hook no-ops and
+    # exits 0; removing this guard would only turn an import failure into a Bash failure.
     gm = None  # type: ignore[assignment]
 
 
@@ -35,7 +35,7 @@ def _stderr_utf8() -> None:
 
 
 def _task_key(data: dict) -> str:
-    """task_key = description do tool_input, senão cmd[:80]. '' se não for Bash com comando."""
+    """task_key = tool_input's description, else cmd[:80]. '' if it's not a Bash with a command."""
     if data.get("tool_name") != "Bash":
         return ""
     ti = data.get("tool_input") or {}
@@ -44,9 +44,9 @@ def _task_key(data: dict) -> str:
         return ""
     if ti.get("description"):
         return ti["description"]
-    # Why: a chave derivada do comando tem de casar com a que o postflight grava, e ele
-    # redige o comando ANTES de truncar — sem o mesmo passo aqui, a licao nunca dispara
-    # para um comando que carregava credencial.
+    # Why: the key derived from the command has to match the one the postflight writes, and it
+    # redacts the command BEFORE truncating -- without the same step here, the lesson never
+    # fires for a command that carried a credential.
     return (gm.redact_secrets(cmd) if gm is not None else cmd)[:80]
 
 
@@ -73,7 +73,7 @@ def main() -> None:
         if preamble:
             print(f"[gotcha-memory] {preamble}", file=sys.stderr)
     except Exception:
-        pass  # um hook de aprendizado jamais quebra o fluxo
+        pass  # a learning hook must never break the flow
 
     sys.exit(0)
 
@@ -84,7 +84,7 @@ def _self_test() -> None:
     assert _task_key({"tool_name": "Read", "tool_input": {"command": "ls"}}) == ""
     assert _task_key({"tool_name": "Bash", "tool_input": {}}) == ""
     assert _task_key({}) == ""
-    # ponta-a-ponta com store temporário: curated dispara no preâmbulo
+    # end-to-end with a temporary store: curated fires in the preamble
     import tempfile
     assert gm is not None, "lib vendorizada nao importou"
     with tempfile.TemporaryDirectory() as d:

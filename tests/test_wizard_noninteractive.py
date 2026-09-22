@@ -1,9 +1,9 @@
-"""Modo nao-interativo: zero `input()`; tudo por flag ou por arquivo de respostas.
+"""Non-interactive mode: zero `input()`; everything through a flag or an answers file.
 
-`builtins.input` e' substituido por uma funcao que EXPLODE. Se qualquer caminho
-nao-interativo chamasse `input`, o teste cairia com AssertionError, nao com um
-prompt pendurado. O controle no fim prova que o modo interativo, quando de fato
-ligado, chama o perguntador -- senao "nao chamou input" seria trivialmente verdade.
+`builtins.input` is replaced by a function that EXPLODES. If any non-interactive
+path called `input`, the test would fail with AssertionError, not with a hung
+prompt. The control at the end proves that interactive mode, when actually
+turned on, calls the asker -- otherwise "did not call input" would be trivially true.
 """
 from __future__ import annotations
 
@@ -52,9 +52,9 @@ def no_input(monkeypatch):
 
 
 @pytest.mark.parametrize("flags", [["--non-interactive"], ["--yes"], ["--json"], []])
-def test_nenhum_caminho_nao_interativo_chama_input(target, flags, capsys):
-    """Sem TTY (pytest captura stdout) nenhum dos quatro caminhos pode perguntar -- inclusive
-    o sem flag nenhuma, porque a deteccao de TTY e' parte da regra, nao um extra."""
+def test_no_non_interactive_path_calls_input(target, flags, capsys):
+    """With no TTY (pytest captures stdout) none of the four paths can prompt -- including
+    the one with no flag at all, because TTY detection is part of the rule, not an extra."""
     code = cli.main(["init", "--target", str(target), "--no-benchmark", "--no-animation", *flags])
     assert code == 0
     out = capsys.readouterr().out
@@ -62,7 +62,7 @@ def test_nenhum_caminho_nao_interativo_chama_input(target, flags, capsys):
         assert json.loads(out)["interactive"] is False
 
 
-def test_deteccao_de_interatividade_segue_tty_flags_e_ci(manifest, target):
+def test_interactivity_detection_follows_tty_flags_and_ci(manifest, target):
     assert wizard.prepare_options(_args(target=str(target)), manifest, env={}, stdin_tty=True, stdout_tty=True).interactive is True
     assert wizard.prepare_options(_args(target=str(target)), manifest, env={}, stdin_tty=False, stdout_tty=True).interactive is False
     assert wizard.prepare_options(_args(target=str(target)), manifest, env={}, stdin_tty=True, stdout_tty=False).interactive is False
@@ -72,7 +72,7 @@ def test_deteccao_de_interatividade_segue_tty_flags_e_ci(manifest, target):
     assert wizard.prepare_options(_args(target=str(target)), manifest, env={"CI": "true"}, stdin_tty=True, stdout_tty=True).interactive is False
 
 
-def test_arquivo_de_profile_responde_as_perguntas_e_flag_vence_arquivo(manifest, target, capsys):
+def test_profile_file_answers_the_questions_and_flag_wins_over_file(manifest, target, capsys):
     answers = target.parent / "answers.json"
     answers.write_text(json.dumps({"host": "codex", "policy_mode": "enforce"}), encoding="utf-8")
     code = cli.main(["init", "--target", str(target), "--profile", str(answers), "--policy-mode", "audit",
@@ -85,7 +85,7 @@ def test_arquivo_de_profile_responde_as_perguntas_e_flag_vence_arquivo(manifest,
     assert profile["pending_defaults"] == ["bundle"]
 
 
-def test_modules_substitui_o_bundle_e_vira_plano_custom(target, capsys):
+def test_modules_replaces_the_bundle_and_becomes_a_custom_plan(target, capsys):
     code = cli.main(["init", "--target", str(target), "--modules", "operator-kit, lane-kit", "--no-benchmark", "--json"])
     report = json.loads(capsys.readouterr().out)
     assert code == 0
@@ -101,7 +101,7 @@ def test_modules_substitui_o_bundle_e_vira_plano_custom(target, capsys):
     ('{"modules": []}', "non-empty list"),
     ('{"host": 3}', "must be a string"),
 ])
-def test_arquivo_de_profile_invalido_e_erro_de_uso(manifest, target, content, fragment):
+def test_invalid_profile_file_is_a_usage_error(manifest, target, content, fragment):
     answers = target.parent / "answers.json"
     answers.write_text(content, encoding="utf-8")
     with pytest.raises(wizard.InitUsageError, match=fragment):
@@ -113,17 +113,17 @@ def test_arquivo_de_profile_invalido_e_erro_de_uso(manifest, target, content, fr
     ("bundle", "nope", "unknown bundle"),
     ("modules", "operator-kit,ghost-kit", "unknown module"),
 ])
-def test_escolha_fora_do_manifesto_e_block_como_no_hpp_install(manifest, target, field, value, fragment):
+def test_choice_outside_the_manifest_is_block_like_in_hpp_install(manifest, target, field, value, fragment):
     with pytest.raises(InstallError, match=fragment):
         wizard.prepare_options(_args(target=str(target), **{field: value}), manifest, env={}, stdin_tty=False, stdout_tty=False)
 
 
-def test_modules_vazio_e_erro_de_uso(manifest, target):
+def test_empty_modules_is_a_usage_error(manifest, target):
     with pytest.raises(wizard.InitUsageError, match="at least one module"):
         wizard.prepare_options(_args(target=str(target), modules=" , "), manifest, env={}, stdin_tty=False, stdout_tty=False)
 
 
-def test_perguntador_interativo_enter_aceita_default_numero_escolhe_e_lixo_cai_no_default():
+def test_interactive_asker_enter_accepts_default_number_chooses_and_garbage_falls_to_default():
     console = Console(stream=io.StringIO(), tier="none", animate=False, width=80)
     question = {"id": "host", "prompt": "Which host?", "type": "choice", "options": ["claude-code", "codex"], "default": "claude-code"}
     scripted = iter(["", "2", "bogus", "99", "still-wrong"])
@@ -135,7 +135,7 @@ def test_perguntador_interativo_enter_aceita_default_numero_escolhe_e_lixo_cai_n
     assert "1) claude-code" in rendered and "(default)" in rendered and "not a valid choice" in rendered
 
 
-def test_perguntador_com_eof_no_stdin_volta_o_default_sem_estourar():
+def test_asker_with_eof_on_stdin_falls_back_to_default_without_raising():
     console = Console(stream=io.StringIO(), tier="none", animate=False, width=80)
     question = {"id": "host", "prompt": "Which host?", "type": "choice", "options": ["a", "b"], "default": "b"}
 
@@ -145,9 +145,9 @@ def test_perguntador_com_eof_no_stdin_volta_o_default_sem_estourar():
     assert wizard.make_asker(console, input_fn=eof)(question) == ("b", "default")
 
 
-def test_CONTROLE_modo_interativo_de_fato_pergunta(manifest, target):
-    """Controle: com `interactive=True` e um perguntador injetado, as tres perguntas sao
-    feitas -- prova que os testes acima nao passam por um modo interativo que nunca liga."""
+def test_CONTROLE_interactive_mode_actually_asks(manifest, target):
+    """Control: with `interactive=True` and an injected asker, the three questions are
+    asked -- proves that the tests above do not pass through an interactive mode that never turns on."""
     manifest_data, manifest_path = load_manifest()
     calls: list[str] = []
 

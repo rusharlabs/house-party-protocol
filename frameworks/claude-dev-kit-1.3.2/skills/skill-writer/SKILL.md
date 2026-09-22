@@ -66,17 +66,17 @@ skill-name/
 ```yaml
 ---
 name: skill-name
-description: O que faz + quando usar. Máx 1024 chars.
+description: What it does + when to use it. Max 1024 chars.
 ---
 ```
 ```markdown
-> **Auto-Trigger:** quando dispara automaticamente
-> **Keywords:** "termo1", "termo2", "termo3", "termo4" (mínimo 4, sem sintaxe de wikilink duplo-colchete)
+> **Auto-Trigger:** when it fires automatically
+> **Keywords:** "term1", "term2", "term3", "term4" (minimum 4, no double-bracket wikilink syntax)
 > **Priority:** HIGH | MEDIUM | LOW
-> **Tools:** lista explícita
+> **Tools:** explicit list
 
 ## When NOT to Activate
-- (≥2 bullets — nomeie a skill vizinha se há fronteira confundível)
+- (>=2 bullets - name the neighbouring skill when there is a confusable boundary)
 ```
 
 | Field | Rule |
@@ -87,11 +87,11 @@ description: O que faz + quando usar. Máx 1024 chars.
 
 ### 5. Write the description (formula: WHAT + WHEN + key triggers)
 ```yaml
-# Boa
-description: Extrai texto de PDFs, preenche formulários. Use quando o usuário mencionar PDFs ou extração de documentos.
+# Good
+description: Extracts text from PDFs and fills in forms. Use when the user mentions PDFs or document extraction.
 
-# Ruim
-description: Ajuda com documentos
+# Bad
+description: Helps with documents
 ```
 See `examples.md` for more good/bad description patterns.
 
@@ -136,19 +136,19 @@ Do the thing.
 
 $ python tools/skill_lint.py bad-skill/SKILL.md
 [FAIL] bad-skill/SKILL.md
-    FAIL L1b.auto-trigger             header sem linha '> **Auto-Trigger:**'
-    FAIL L1b.keywords                 header sem linha '> **Keywords:**'
-    FAIL L1b.prioridade               header sem linha '> **Prioridade:**'
-    FAIL L1b.tools                    header sem linha '> **Tools:**'
-    FAIL L1d.quando_nao_ativar        seção '## Quando NÃO Ativar' ausente
-    FAIL L2a.contrato_ausente         seção '## Contrato' ausente
-    FAIL L3a.exemplos_min3            0 exemplo(s) executado(s) < 3
-    FAIL L4a.prova_ausente            seção '## Prova' ausente
-    WARN L6a.corpo_sem_comando        apenas 0 bloco(s) de código no corpo — pode ser prosa sem comando literal
+    FAIL L1b.auto-trigger             header without line '> **Auto-Trigger:**'
+    FAIL L1b.keywords                 header without line '> **Keywords:**'
+    FAIL L1b.prioridade               header without line '> **Priority:**' (legacy 'Prioridade')
+    FAIL L1b.tools                    header without line '> **Tools:**'
+    FAIL L1d.quando_nao_ativar        section '## When NOT to Activate' (legacy '## Quando NÃO Ativar') missing
+    FAIL L2a.contrato_ausente         section '## Contract' (legacy '## Contrato') missing
+    FAIL L3a.exemplos_min3            0 executed example(s) < 3
+    FAIL L4a.prova_ausente            section '## Proof' (legacy '## Prova') missing
+    WARN L6a.corpo_sem_comando        only 0 code block(s) in the body — may be prose without a literal command
 
-skill_lint: 0 pass · 0 warn · 1 fail (de 1)
+skill_lint: 0 pass · 0 warn · 1 fail (of 1)
 ```
-<!-- executed: 2026-07-10 · exit=2 -->
+<!-- executed: 2026-09-22 · exit=2 -->
 (a vague description ("Helps with stuff") and an unstructured body fail 8 checks at once — exactly the "essay without a contract" the SKILL-CONTRACT exists to prevent.)
 
 ```console

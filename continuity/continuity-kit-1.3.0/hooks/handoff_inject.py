@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """
-handoff_inject — SessionStart: injeta o handoff válido mais novo (≤4KB) + grava 'consumed'.
+handoff_inject -- SessionStart: injects the newest valid handoff (<=4KB) + writes 'consumed'.
 
-Fail-open (padrão de um session_start.py de referência): qualquer erro = exit 0 sem output, nunca derruba
-o boot da sessão. Compat de transição: sem handoff JSON mas com RESUME-NEXT.md (legado da
-casa) → injeta só o ponteiro + a regra LC-4, sem inventar estrutura.
+Fail-open (pattern of a reference session_start.py): any error = exit 0 with no output, never brings
+down the session boot. Transition compat: no JSON handoff but with RESUME-NEXT.md (the house's
+legacy) -> injects only the pointer + the LC-4 rule, without inventing structure.
 
-Uso (hook): echo '{"hook_event_name":"SessionStart","session_id":"..."}' | python handoff_inject.py
-Exit: sempre 0.
+Usage (hook): echo '{"hook_event_name":"SessionStart","session_id":"..."}' | python handoff_inject.py
+Exit: always 0.
 
-stdlib only. v1.0.0 — 2026-07-10 (continuity-kit · Tier 1)
+stdlib only. v1.0.0 -- 2026-07-10 (continuity-kit - Tier 1)
 """
 from __future__ import annotations
 
@@ -80,7 +80,7 @@ def main(argv) -> int:
         ctx = build_context(payload)
         if ctx:
             print(json.dumps({"hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": ctx}}, ensure_ascii=False))
-    except Exception:  # noqa: BLE001 — fail-open total (padrão de referência)
+    except Exception:  # noqa: BLE001 -- total fail-open (reference pattern)
         pass
     return 0
 

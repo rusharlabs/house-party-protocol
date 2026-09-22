@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
 """
-lane_register — SessionStart: registra esta sessão como lane viva. PostToolUse: heartbeat.
+lane_register -- SessionStart: registers this session as a live lane. PostToolUse: heartbeat.
 
-Dois modos por argv (bare = register, --heartbeat = heartbeat), ambos delegando ao registry
-de `_lane_io.py`. Fail-open total: qualquer exceção vira `{}` no stdout e exit 0 — nunca
-derruba o boot da sessão nem um tool-call.
+Two modes by argv (bare = register, --heartbeat = heartbeat), both delegating to the registry
+in `_lane_io.py`. Total fail-open: any exception becomes `{}` on stdout and exit 0 -- never
+brings down the session boot or a tool-call.
 
-Identidade da lane resolvida (nesta ordem): env CLAUDE_LANE_ID / CLAUDE_LANE_ROLE /
-CLAUDE_LANE_MODEL, senão o payload do hook, senão defaults ("solo"/"adhoc"/"unknown").
+Lane identity resolved (in this order): env CLAUDE_LANE_ID / CLAUDE_LANE_ROLE /
+CLAUDE_LANE_MODEL, otherwise the hook payload, otherwise defaults ("solo"/"adhoc"/"unknown").
 
-Uso (hooks):
+Usage (hooks):
     echo '{"hook_event_name":"SessionStart","session_id":"..."}' | python lane_register.py
     echo '{"hook_event_name":"PostToolUse","session_id":"..."}'  | python lane_register.py --heartbeat
 
-Exit: sempre 0.
-stdlib only. v1.0.0 — 2026-07-10 (lane-kit)
+Exit: always 0.
+stdlib only. v1.0.0 -- 2026-07-10 (lane-kit)
 """
 from __future__ import annotations
 
@@ -120,7 +120,7 @@ def handle_register(payload: dict) -> dict:
 
     parts = []
     if not ok:
-        return {}  # lock contention: fail-open silencioso, não vale a pena avisar no boot
+        return {}  # lock contention: silent fail-open, not worth warning at boot
 
     parts.extend(_rescue_evicted(evicted))
 
@@ -160,7 +160,7 @@ def main(argv) -> int:
             result = handle_heartbeat(payload)
         else:
             result = handle_register(payload)
-    except Exception:  # noqa: BLE001 — fail-open total, nunca derruba o boot/tool-call
+    except Exception:  # noqa: BLE001 -- total fail-open, never brings down the boot/tool-call
         result = {}
 
     print(json.dumps(result, ensure_ascii=False))
@@ -183,19 +183,19 @@ def _self_test() -> int:
         os.environ["CLAUDE_LANE_ROLE"] = "executora"
         os.environ["CLAUDE_LANE_MODEL"] = "claude-opus-4-8"
         try:
-            # 1. register cria entry + additionalContext com hookEventName correto
+            # 1. register creates the entry + additionalContext with the correct hookEventName
             out1 = handle_register({"session_id": "s1"})
             assert out1["hookSpecificOutput"]["hookEventName"] == "SessionStart"
             assert "exec-a" in out1["hookSpecificOutput"]["additionalContext"]
 
-            # 2. re-register preserva started_at
+            # 2. re-register preserves started_at
             reg_before = _lane_io._read_registry()
             started_before = reg_before["lanes"]["exec-a"]["started_at"]
             handle_register({"session_id": "s1"})
             reg_after = _lane_io._read_registry()
             assert reg_after["lanes"]["exec-a"]["started_at"] == started_before, "re-register should not change started_at"
 
-            # 3. lane morta some após register
+            # 3. a dead lane disappears after register
             from datetime import datetime, timezone
             dead_ts = datetime.fromtimestamp(datetime.now(timezone.utc).timestamp() - 35 * 60, tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%S")
             reg = _lane_io._read_registry()
@@ -207,7 +207,7 @@ def _self_test() -> int:
             reg2 = _lane_io._read_registry()
             assert "exec-old" not in reg2["lanes"]
 
-            # 4. heartbeat avança heartbeat_at; throttle é no-op
+            # 4. heartbeat advances heartbeat_at; throttle is a no-op
             hb_before = _lane_io._read_registry()["lanes"]["exec-a"]["heartbeat_at"]
             import time as _time
             _time.sleep(0.05)
@@ -215,7 +215,7 @@ def _self_test() -> int:
             hb_after = _lane_io._read_registry()["lanes"]["exec-a"]["heartbeat_at"]
             assert hb_after >= hb_before
 
-            # 5. mailbox: mensagem endereçada a exec-b aparece; movida para _read/ some
+            # 5. mailbox: message addressed to exec-b shows up; moved to _read/ it disappears
             mailbox = _lane_io._LANES_DIR / "mailbox"
             mailbox.mkdir(parents=True)
             (mailbox / "msg1.md").write_text("## Para: exec-b\n## De: exec-a (executora)\n", encoding="utf-8")
@@ -227,7 +227,7 @@ def _self_test() -> int:
             out5b = handle_register({"session_id": "s2"})
             assert "mailbox" not in out5b.get("hookSpecificOutput", {}).get("additionalContext", "")
 
-            # 6. stdin/payload garbage -> {} , exit 0 (via main())
+            # 6. garbage stdin/payload -> {} , exit 0 (via main())
             import io as _io
             old_stdin = sys.stdin
             sys.stdin = _io.StringIO("isto nao e json")

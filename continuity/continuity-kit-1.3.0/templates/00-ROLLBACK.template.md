@@ -1,4 +1,4 @@
-# 00-ROLLBACK — {{project_name}} / {{mudanca_nome}}
+# 00-ROLLBACK — {{project_name}} / {{change_name}}
 
 > Rollback is an ARTIFACT here, not doctrine scattered in prose: every change that mutates
 > runtime/production/live data gets THIS document BEFORE being applied, with the literal
@@ -13,19 +13,19 @@
 ## Snapshot BEFORE (mandatory for destructive/migration)
 
 ```bash
-{{comando_de_backup_ou_snapshot}}
+{{backup_or_snapshot_command}}
 ```
 
 ## The EXACT command back (written BEFORE applying the change)
 
 ```bash
-{{comando_literal_de_rollback}}
+{{literal_rollback_command}}
 ```
 
 ## Post-rollback verify (proves it went back, does not presume)
 
 ```bash
-{{comando_que_confirma_estado_anterior}}
+{{command_that_confirms_previous_state}}
 ```
 
 ## Built-in lesson (LC-1 · deploy/routing)
@@ -37,4 +37,4 @@ in the path, confirm EACH hop, not just the end.
 
 ## Who authorises applying it
 
-{{quem_aprova_esta_mudanca}} — human gate if the change touches production/real data.
+{{who_approves_this_change}} — human gate if the change touches production/real data.

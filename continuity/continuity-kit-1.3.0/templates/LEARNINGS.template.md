@@ -8,11 +8,11 @@
 ## Entry format (mandatory)
 
 ```
-### {{data}} — {{titulo_da_licao}}
-**Context:** {{o_que_aconteceu}}
-**Evidence:** {{commit_ou_arquivo_ou_output_colado}}
-**Distilled rule:** {{o_que_fazer_diferente_a_partir_de_agora}}
-**Applies when:** {{condicao_de_gatilho}}
+### {{date}} — {{lesson_title}}
+**Context:** {{what_happened}}
+**Evidence:** {{commit_or_file_or_pasted_output}}
+**Distilled rule:** {{what_to_do_differently_from_now_on}}
+**Applies when:** {{trigger_condition}}
 ```
 
 ## Real example (proven format — generic, no client data)

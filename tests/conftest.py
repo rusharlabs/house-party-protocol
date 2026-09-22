@@ -1,10 +1,10 @@
-"""Configuracao compartilhada da suite de testes do HPP.
+"""Shared configuration for the HPP test suite.
 
-Garante que `import hpp` resolva para o pacote deste product-root, seja qual for
-o diretorio de onde `pytest`/`python -m pytest` foi invocado. `python -m pytest`
-ja poe o cwd em sys.path[0] por conta do proprio `-m`, mas um `pytest` invocado
-sem `-m` (ou de outro cwd) nao tem essa garantia -- este arquivo torna a suite
-robusta aos dois casos, sem exigir `pip install -e .` antes de rodar.
+Makes sure `import hpp` resolves to the package in this product root, whatever
+directory `pytest` / `python -m pytest` was invoked from. `python -m pytest`
+already puts the cwd on sys.path[0] because of the `-m` itself, but a `pytest`
+invoked without `-m` (or from another cwd) has no such guarantee -- this file makes
+the suite robust in both cases, without requiring `pip install -e .` first.
 """
 from __future__ import annotations
 

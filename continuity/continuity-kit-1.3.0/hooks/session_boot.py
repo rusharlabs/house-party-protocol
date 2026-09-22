@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
 """
-session_boot — SessionStart genérico e despersonalizado (sem persona/identidade de agente).
+session_boot -- generic and depersonalized SessionStart (no agent persona/identity).
 
-Fusão de um padrão real de session-start (963L, rico demais — persona embutida) com o
-`session_start.py` de um projeto de referência (88L, enxuto, `MAX_SECTION=3500`, fail-open). Este é o canônico
-DESPERSONALIZADO: git HEAD/branch/tags + seções vivas do state-doc (config-driven, não
-hardcoded) + delega ao `handoff_inject.py` a leitura do handoff-v1 (fecha o gap: escrita
-automática via handoff_guard.py + leitura automática aqui — nenhum kit anterior fazia as
-duas pontas antes da FASE 5).
+Merges a real session-start pattern (963L, too rich -- persona baked in) with the
+`session_start.py` of a reference project (88L, lean, `MAX_SECTION=3500`, fail-open). This is the
+canonical DEPERSONALIZED version: git HEAD/branch/tags + live sections of the state-doc
+(config-driven, not hardcoded) + delegates reading the handoff-v1 to `handoff_inject.py`
+(closes the gap: automatic write via handoff_guard.py + automatic read here -- no earlier
+kit did both ends before PHASE 5).
 
-Config (via profile, chave `paths.state_doc`; default `docs/plans/execution/00-STATE.md`).
+Config (via profile, key `paths.state_doc`; default `docs/plans/execution/00-STATE.md`).
 
-Uso (hook): echo '{"hook_event_name":"SessionStart","session_id":"..."}' | python session_boot.py
-Exit: sempre 0 (fail-open total — nunca derruba o boot da sessão).
+Usage (hook): echo '{"hook_event_name":"SessionStart","session_id":"..."}' | python session_boot.py
+Exit: always 0 (total fail-open -- never brings down the session boot).
 
-stdlib only. v1.0.0 — 2026-07-10 (continuity-kit · Tier 2 · TEMPLATE-SET item 14)
+stdlib only. v1.0.0 -- 2026-07-10 (continuity-kit - Tier 2 - TEMPLATE-SET item 14)
 """
 from __future__ import annotations
 
@@ -28,10 +28,10 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 try:
     import _handoff_io
-except Exception:  # noqa: BLE001 — funciona sem o handoff se o kit não estiver completo
+except Exception:  # noqa: BLE001 -- works without the handoff if the kit is not complete
     _handoff_io = None  # type: ignore[assignment]
 
-MAX_SECTION = 3500  # padrão de referência, provado em produção — cap por seção, não pelo total
+MAX_SECTION = 3500  # reference default, proven in production -- cap per section, not the total
 _PROJECT_ROOT = Path(os.environ.get("CLAUDE_PROJECT_DIR") or Path.cwd())
 _DEFAULT_STATE_DOC = "docs/plans/execution/00-STATE.md"
 # Why: the generated directory was renamed to English. A repo that already holds the old
@@ -56,6 +56,17 @@ def _resolve_state_doc(state_doc_rel: str) -> str:
     return _DEFAULT_STATE_DOC
 
 
+# The state document is SCAFFOLDED INTO THE USER'S REPO, so its section headings are text a
+# person reads and edits every day - which is why they are English from 2.5.2 on. A repo
+# scaffolded before that carries the Portuguese ones, and rewriting someone's own document is
+# not ours to do: the reader accepts both until 2.7.0, new spelling first.
+_SECTION_NOW = "## Now"
+_SECTION_OPEN = "## OPEN ITEMS"
+_LEGACY_SECTION_NOW = "## Agora"
+_LEGACY_SECTION_OPEN = "## PENDÊNCIAS ABERTAS"
+SECTIONS_LEGACY_REMOVED_IN = "2.7.0"
+
+
 def _read_section(text: str, start_marker: str, end_markers: list) -> str:
     i = text.find(start_marker)
     if i == -1:
@@ -66,6 +77,19 @@ def _read_section(text: str, start_marker: str, end_markers: list) -> str:
         if j != -1:
             end = min(end, j)
     return text[i:end].strip()[:MAX_SECTION]
+
+
+def _read_section_dual(text: str, new_marker: str, legacy_marker: str, end_markers: list) -> str:
+    """The new heading wins; the legacy one is read when the new one is absent.
+
+    Why both end-marker sets: a legacy document ends its `Now` section at `## PENDÊNCIAS`, an
+    English one at `## OPEN ITEMS`, and a half-migrated document may carry one of each. Passing
+    every candidate as a terminator costs nothing and stops a section from swallowing the next.
+    """
+    found = _read_section(text, new_marker, end_markers)
+    if found:
+        return found
+    return _read_section(text, legacy_marker, end_markers)
 
 
 def _git(args: list, timeout: int = 10) -> str:
@@ -86,10 +110,12 @@ def build_context(state_doc_rel: str = _DEFAULT_STATE_DOC) -> str:
         stale = " — ⚠️ STALE (>48h): treat as historical reference, reconfirm at the live source before acting" if age_h > 48 else ""
         out.append(f"[AUTO ANCHOR — session_boot] {state_doc_rel} is {age_h:.0f}h old{stale}.")
         text = state_path.read_text(encoding="utf-8", errors="replace")
-        agora = _read_section(text, "## Agora", ["## PENDÊNCIAS", "## Log"])
-        pend = _read_section(text, "## PENDÊNCIAS ABERTAS", ["## Log", "## Agora"])
-        if agora:
-            out.append(agora)
+        _ends_now = ["## OPEN ITEMS", "## PENDÊNCIAS", "## Log"]
+        _ends_open = ["## Log", _SECTION_NOW, _LEGACY_SECTION_NOW]
+        now = _read_section_dual(text, _SECTION_NOW, _LEGACY_SECTION_NOW, _ends_now)
+        pend = _read_section_dual(text, _SECTION_OPEN, _LEGACY_SECTION_OPEN, _ends_open)
+        if now:
+            out.append(now)
         if pend:
             out.append(pend)
 
@@ -103,7 +129,7 @@ def build_context(state_doc_rel: str = _DEFAULT_STATE_DOC) -> str:
             h = _handoff_io.newest_handoff(None)
             if h:
                 out.append(_handoff_io.render(h, cap_bytes=MAX_SECTION))
-        except Exception:  # noqa: BLE001 — fail-open: handoff quebrado não derruba o boot
+        except Exception:  # noqa: BLE001 -- fail-open: a broken handoff does not bring down the boot
             pass
 
     out.append(
@@ -124,16 +150,29 @@ def _self_test() -> int:
         _PROJECT_ROOT = tmp
         state_path = tmp / _DEFAULT_STATE_DOC
         state_path.parent.mkdir(parents=True)
-        state_path.write_text("## Agora\ntest focus\n\n## PENDÊNCIAS ABERTAS\n- [ ] x\n\n## Log\nobsolete-log-line\n", encoding="utf-8")
+        state_path.write_text(f"{_SECTION_NOW}\ntest focus\n\n{_SECTION_OPEN}\n- [ ] x\n\n## Log\nobsolete-log-line\n", encoding="utf-8")
 
         ctx = build_context()
-        assert "test focus" in ctx and "PENDÊNCIAS" in ctx and "LC-4" in ctx, f"incomplete context: {ctx}"
+        assert "test focus" in ctx and "OPEN ITEMS" in ctx and "LC-4" in ctx, f"incomplete context: {ctx}"
         assert "obsolete-log-line" not in ctx, "the Log section should not leak (cut by the end_marker)"
+
+        # Dual read of the SECTION HEADINGS: a document scaffolded before 2.5.2 carries them in
+        # Portuguese. Without this pair the hook would boot with an empty anchor on every repo
+        # already in the wild - and an empty anchor looks exactly like "nothing to report".
+        state_path.write_text(f"{_LEGACY_SECTION_NOW}\nlegacy focus\n\n{_LEGACY_SECTION_OPEN}\n- [ ] y\n\n## Log\nz\n", encoding="utf-8")
+        ctx_legacy = build_context()
+        assert "legacy focus" in ctx_legacy, "the legacy Now heading must still be read"
+        assert "- [ ] y" in ctx_legacy, "the legacy OPEN ITEMS heading must still be read"
+        # CONTROL: a document with neither heading yields nothing from that section - this is what
+        # proves the two asserts above measure the HEADINGS and not merely "the file was read".
+        state_path.write_text("## Something Else\nnot a section we parse\n", encoding="utf-8")
+        assert "not a section we parse" not in build_context(), "an unknown heading must not be picked up"
+        state_path.write_text(f"{_SECTION_NOW}\ntest focus\n\n{_SECTION_OPEN}\n- [ ] x\n\n## Log\nobsolete-log-line\n", encoding="utf-8")
 
         # dual read: a repo that only has the legacy spelling still boots
         legacy_path = tmp / _LEGACY_STATE_DOC
         legacy_path.parent.mkdir(parents=True)
-        legacy_path.write_text("## Agora\nlegacy focus\n\n## Log\nx\n", encoding="utf-8")
+        legacy_path.write_text(f"{_SECTION_NOW}\nlegacy focus\n\n## Log\nx\n", encoding="utf-8")
         assert "test focus" in build_context(), "the English path must win when both exist"
         state_path.unlink()
         assert "legacy focus" in build_context(), "the legacy path must still be read"
@@ -142,8 +181,8 @@ def _self_test() -> int:
         ctx2 = build_context()
         assert "LC-4" in ctx2, "without a state-doc it should still work (partial fail-open)"
 
-        print("self-test OK — extracts Agora+PENDÊNCIAS with a per-section cap, cuts at the right end_marker, "
-              "dual read (English path wins, legacy path still read), works without a state-doc")
+        print("self-test OK - extracts Now+OPEN ITEMS with a per-section cap, cuts at the right end_marker, "
+              "dual read of BOTH the path and the headings, works without a state-doc")
         return 0
     finally:
         _PROJECT_ROOT = orig
@@ -158,7 +197,7 @@ def main(argv) -> int:
         state_doc = os.environ.get("SESSION_BOOT_STATE_DOC", _DEFAULT_STATE_DOC)
         ctx = build_context(state_doc)
         print(json.dumps({"hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": ctx}}, ensure_ascii=False))
-    except Exception:  # noqa: BLE001 — fail-open total, igual ao padrão de referência original
+    except Exception:  # noqa: BLE001 -- total fail-open, same as the original reference pattern
         pass
     return 0
 

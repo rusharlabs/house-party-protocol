@@ -1,27 +1,27 @@
 #!/usr/bin/env python3
 """
-snapshot_rollback_gate (Operator Kit) — PreToolUse WARN-only: ao detectar um
-VERBO DESTRUTIVO num comando Bash, imprime um checklist de segurança
-(houve snapshot? plano de rollback? verify pós-ação?) — a menos que o operador
-já tenha confirmado via env SNAPSHOT_CONFIRMED=1.
+snapshot_rollback_gate (Operator Kit) -- PreToolUse WARN-only: upon detecting a
+DESTRUCTIVE VERB in a Bash command, prints a safety checklist
+(was there a snapshot? a rollback plan? a post-action verify?) -- unless the operator
+has already confirmed it via env SNAPSHOT_CONFIRMED=1.
 
-Por que existe: toda ação
-destrutiva exige SNAPSHOT + ROLLBACK + VERIFY. Este hook é o LEMBRETE no momento
-da ação. v1 NÃO detecta automaticamente se há backup (sem heurística de backup);
-apenas reconhece o verbo destrutivo e pede o checklist.
+Why it exists: every
+destructive action requires SNAPSHOT + ROLLBACK + VERIFY. This hook is the REMINDER at the
+moment of the action. v1 does NOT automatically detect whether a backup exists (no backup
+heuristic); it only recognizes the destructive verb and asks for the checklist.
 
-Lê JSON do stdin: tool_input.command.
-Verbos destrutivos reconhecidos (configurável):
-  rm -rf · git reset --hard · drop table · truncate · docker rm -f.
+Reads JSON from stdin: tool_input.command.
+Recognized destructive verbs (configurable):
+  rm -rf - git reset --hard - drop table - truncate - docker rm -f.
 
 Config (operator-profile.yaml):
-  guardrails.destructive_verbs: [lista de regex extra]  (opcional, ADICIONA aos defaults)
+  guardrails.destructive_verbs: [list of extra regex]  (optional, ADDS to the defaults)
 
 Bypass: env SNAPSHOT_CONFIRMED=1.
 
-WARN em stderr · exit 0 SEMPRE · qualquer erro -> exit 0 (defensivo).
+WARN on stderr - exit 0 ALWAYS - any error -> exit 0 (defensive).
 
-v1.0.0 — 2026-06-19 (Operator Kit · cluster guard-distinct)
+v1.0.0 -- 2026-06-19 (Operator Kit - cluster guard-distinct)
 """
 from __future__ import annotations
 
@@ -41,7 +41,7 @@ except Exception:  # noqa: BLE001
         return default
 
 
-# (rótulo legível, regex). Regex case-insensitive sobre o command.
+# (readable label, regex). Case-insensitive regex over the command.
 _DEFAULT_VERBS: list[tuple[str, str]] = [
     ("rm -rf",            r"\brm\b[^\n|;&]*-[a-zA-Z]*r[a-zA-Z]*f|\brm\b[^\n|;&]*-[a-zA-Z]*f[a-zA-Z]*r"),
     ("git reset --hard",  r"\bgit\s+reset\b[^\n|;&]*--hard\b"),
@@ -72,7 +72,7 @@ def _verbs(prof: dict) -> list[tuple[str, re.Pattern]]:
 
 
 def detect(command: str, verbs: list[tuple[str, re.Pattern]]) -> list[str]:
-    """Retorna os rótulos de verbos destrutivos encontrados no command."""
+    """Returns the labels of the destructive verbs found in the command."""
     if not command:
         return []
     hits: list[str] = []
@@ -126,26 +126,26 @@ def main() -> None:
 
 def _self_test() -> None:
     verbs = _verbs({})
-    # 1. rm -rf -> detecta
+    # 1. rm -rf -> detects
     assert detect("rm -rf build/", verbs) == ["rm -rf"], detect("rm -rf build/", verbs)
-    # 2. rm -fr (ordem trocada) -> detecta
+    # 2. rm -fr (swapped order) -> detects
     assert "rm -rf" in detect("rm -fr /tmp/x", verbs)
-    # 3. git reset --hard -> detecta
+    # 3. git reset --hard -> detects
     assert "git reset --hard" in detect("git reset --hard origin/main", verbs)
-    # 4. drop table -> detecta (case-insensitive)
+    # 4. drop table -> detects (case-insensitive)
     assert "drop table" in detect("DROP TABLE insights;", verbs)
-    # 5. truncate -> detecta
+    # 5. truncate -> detects
     assert "truncate" in detect("truncate -s 0 log.txt", verbs)
-    # 6. docker rm -f -> detecta
+    # 6. docker rm -f -> detects
     assert "docker rm -f" in detect("docker rm -f app-prod", verbs)
-    # 7. comando inofensivo -> nada
+    # 7. harmless command -> nothing
     assert detect("ls -la && git status", verbs) == [], detect("ls -la && git status", verbs)
-    # 8. rm sem -rf (só um arquivo) -> não casa o padrão -rf
+    # 8. rm without -rf (just one file) -> does not match the -rf pattern
     assert detect("rm file.txt", verbs) == [], detect("rm file.txt", verbs)
-    # 9. verbo extra via profile (regex custom)
+    # 9. extra verb via profile (custom regex)
     verbs_x = _verbs({"guardrails": {"destructive_verbs": [r"\bmkfs\b"]}})
     assert "\\bmkfs\\b" in detect("mkfs.ext4 /dev/sdb", verbs_x)
-    # 10. múltiplos verbos num comando encadeado
+    # 10. multiple verbs in a chained command
     multi = detect("git clean -fd && rm -rf node_modules", verbs)
     assert "rm -rf" in multi and "git clean -fd" in multi, multi
     print("self-test OK")

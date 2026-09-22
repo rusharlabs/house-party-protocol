@@ -1,32 +1,32 @@
 #!/usr/bin/env python3
 """
-statusline (health-kit) — barra de progresso viva no rodape do CLI/IDE, PORTATIL e COMPOSAVEL.
+statusline (health-kit) -- live progress bar in the CLI/IDE footer, PORTABLE and COMPOSABLE.
 
-Copia derivada de operator-kit/statusline/statusline.py, com UMA diferenca: o
-segmento `health` aqui mostra o detalhe POR-SERVICO ("api:OK db:DOWN"), nao so
-o agregado — porque a saude de servicos e o produto inteiro deste kit, nao
-"1 segmento entre 8" (ver seg_health). A barra e montada a partir de SEGMENTOS
-configuraveis (statusline.segments no operator-profile.yaml); cada segmento e
-best-effort e DEGRADA p/ vazio se a fonte nao existir (nunca trava).
+Derived copy of operator-kit/statusline/statusline.py, with ONE difference: the
+`health` segment here shows the PER-SERVICE detail ("api:OK db:DOWN"), not just
+the aggregate -- because service health is this kit's whole product, not
+"1 segment out of 8" (see seg_health). The bar is assembled from configurable
+SEGMENTS (statusline.segments in operator-profile.yaml); each segment is
+best-effort and DEGRADES to empty if the source does not exist (never crashes).
 
-Segmentos embutidos (todos opcionais, ordem definida pelo profile):
-  progress  -> 🧠 <project> <pct>% ████░░   (checklist do tracker_doc/state_ssot)
-  health    -> api:OK db:DOWN (ou ⚕<up>/<tot> acima de 6 servicos) — cache de health_probe.py
-  tokens    -> <stdout de statusline.token_cmd>  (ex: "◔41% $63/100"; vazio = omite)
-  autonomy  -> 🎚L<n>                         (statusline.autonomy_level 0-5; omite se null)
-  donegate  -> ✅DoD / ❌DoD                  (cache em statusline.donegate_cache; omite se ausente)
-  gates     -> gates:<n>                      (itens '- [ ]' abertos no paths.gate_sheet)
-  commits   -> <n>c hoje                      (git, commits de hoje)
+Built-in segments (all optional, order set by the profile):
+  progress  -> 🧠 <project> <pct>% ████░░   (checklist from tracker_doc/state_ssot)
+  health    -> api:OK db:DOWN (or ⚕<up>/<tot> above 6 services) -- cache from health_probe.py
+  tokens    -> <stdout of statusline.token_cmd>  (e.g. "◔41% $63/100"; empty = omits)
+  autonomy  -> 🎚L<n>                         (statusline.autonomy_level 0-5; omits if null)
+  donegate  -> ✅DoD / ❌DoD                  (cache in statusline.donegate_cache; omits if absent)
+  gates     -> gates:<n>                      (open '- [ ]' items in paths.gate_sheet)
+  commits   -> <n>c today                     (git, commits made today)
   branch    -> <branch>                       (git)
 
-Default (sem statusline.segments): ["progress","health","commits","branch"].
+Default (without statusline.segments): ["progress","health","commits","branch"].
 
-⚠️ statusLine NAO vai no plugin.json (limite do CC) — use `scripts/wire_statusline.py`
-   ou aponte manualmente o settings.json:
+⚠️ statusLine does NOT go in plugin.json (CC limit) -- use `scripts/wire_statusline.py`
+   or point the settings.json to it manually:
   "statusLine": { "type": "command", "command": "python health-kit/statusline/statusline.py --statusline", "padding": 0 }
 
-Modos: --statusline · --panel · --self-test. stdlib + PyYAML (via loader). Nunca crasha no caminho statusline.
-v1.0.0 — 2026-07-10 (health-kit · segmento 'health' com detalhe por-servico)
+Modes: --statusline - --panel - --self-test. stdlib + PyYAML (via loader). Never crashes on the statusline path.
+v1.0.0 -- 2026-07-10 (health-kit - 'health' segment with per-service detail)
 """
 from __future__ import annotations
 
@@ -40,7 +40,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # .../operator-kit
 try:
     from _lib.profile_loader import load_profile, get, profile_path
-except Exception:  # noqa: BLE001 -- Why (2026-09-22): a statusline that raises replaces the bar with an error on every prompt. A partial install, a hand-edited loader or a missing PyYAML must degrade to the defaults below, silently.
+except Exception:  # noqa: BLE001 -- Why: a statusline that raises replaces the bar with an error on every prompt. A partial install, a hand-edited loader or a missing PyYAML must degrade to the defaults below, silently.
     load_profile = None  # type: ignore[assignment]
 
     def get(_p, _k, default=None):  # type: ignore[misc]
@@ -60,7 +60,7 @@ try:
     from _lib import profile_loader as _profile_loader  # type: ignore[import-not-found]
 
     _profile_loader.QUIET_DEPRECATION = _QUIET_FALLBACK
-except Exception:  # noqa: BLE001 -- Why (2026-09-22): with no loader there is nothing to mute, and raising here would kill the prompt line over a cosmetic setting.
+except Exception:  # noqa: BLE001 -- Why: with no loader there is nothing to mute, and raising here would kill the prompt line over a cosmetic setting.
     pass
 
 
@@ -141,26 +141,26 @@ def _git(root: Path, args: list[str], timeout: int = 6) -> str:
 
 
 def _health_cache_state(root: Path) -> tuple[str, dict | None, str]:
-    """Le o cache que health_probe.py escreve. Retorna (estado, dados, detalhe), estado em
-    `absent` (arquivo nao existe: a sonda ainda nao rodou) · `ok` · `error` (existe e nao da
-    para ler: OSError, vazio, JSON invalido, JSON que nao e' objeto).
-    # Why: erro de leitura devolvido como "sem dado" some da statusline com a mesma cara de
-    # "ainda nao rodou" — um cache corrompido ou ilegivel precisa aparecer como tal."""
+    """Read the cache health_probe.py writes. Returns (state, data, detail), state in
+    `absent` (no file: the probe has not run yet) . `ok` . `error` (it exists and cannot be
+    read: OSError, empty, invalid JSON, JSON that is not an object).
+    # Why: a read error returned as "no data" vanishes from the statusline wearing the same
+    # face as "has not run yet" - a corrupted or unreadable cache has to show as such."""
     path = root / get(_prof(), "paths.health_cache", _DEF_HEALTH_CACHE)
     if not path.exists():
         return "absent", None, ""
     try:
         raw = path.read_text(encoding="utf-8", errors="replace")
     except OSError as e:
-        return "error", None, f"leitura falhou ({e.__class__.__name__})"
+        return "error", None, f"read failed ({e.__class__.__name__})"
     if not raw.strip():
-        return "error", None, "cache vazio"
+        return "error", None, "empty cache"
     try:
         data = json.loads(raw)
     except ValueError:
-        return "error", None, "JSON invalido"
+        return "error", None, "invalid JSON"
     if not isinstance(data, dict):
-        return "error", None, "JSON nao e' objeto"
+        return "error", None, "JSON is not an object"
     return "ok", data, ""
 
 
@@ -188,7 +188,7 @@ def _services(root: Path) -> tuple[int, int]:
 
 
 def _services_detail(root: Path) -> dict:
-    """Retorna {name: online_bool} p/ segmentos que precisam do detalhe por-servico."""
+    """Returns {name: online_bool} for segments that need the per-service detail."""
     data = _health_cache(root)
     services = data.get("services") if isinstance(data, dict) else None
     if not isinstance(services, dict):
@@ -202,7 +202,7 @@ def _services_detail(root: Path) -> dict:
     return out
 
 
-# ---- SEGMENTOS (cada um retorna str; "" = omitir) ----
+# ---- SEGMENTS (each one returns str; "" = omit) ----
 
 def seg_progress(root: Path) -> str:
     prof = _prof()
@@ -216,10 +216,10 @@ def seg_progress(root: Path) -> str:
 
 
 def seg_health(root: Path) -> str:
-    """health-kit: mostra o detalhe POR-SERVICO (ex.: 'api:OK db:DOWN'), nao so o agregado —
-    e o produto inteiro deste kit, entao o detalhe e o default. Acima de 6 servicos, degrada p/
-    agregado (⚕up/tot) pra nao estourar a largura da statusline. Cache ausente = segmento
-    omitido; cache ilegivel/corrompido = `⚕cache:ERR` (estado proprio, nao silencio)."""
+    """health-kit: shows the PER-SERVICE detail (e.g. 'api:OK db:DOWN'), not just the aggregate --
+    it is this kit's whole product, so the detail is the default. Above 6 services, it degrades to
+    the aggregate (⚕up/tot) so it does not blow out the statusline's width. Missing cache = segment
+    omitted; unreadable/corrupted cache = `⚕cache:ERR` (its own state, not silence)."""
     if _health_cache_state(root)[0] == "error":
         return "⚕cache:ERR"
     detail = _services_detail(root)
@@ -235,7 +235,7 @@ def seg_health(root: Path) -> str:
 def seg_commits(root: Path) -> str:
     out = _git(root, ["log", "--since=midnight", "--oneline"])
     n = len([ln for ln in out.splitlines() if ln.strip()])
-    return f"{n}c hoje"
+    return f"{n}c today"
 
 
 def seg_branch(root: Path) -> str:
@@ -339,12 +339,12 @@ def render_panel() -> str:
 
 def _self_test() -> None:
     assert _bar(50, 8) == "████░░░░" and _bar(0, 4) == "░░░░" and _bar(100, 4) == "████"
-    # segmentos puros nao dependem de rede; render nunca crasha e sempre retorna str
+    # pure segments do not depend on the network; render never crashes and always returns a str
     sl = render_statusline()
     assert isinstance(sl, str) and sl, "statusline deve retornar string nao-vazia"
-    # default segments validos
+    # valid default segments
     assert all(s in _SEGMENTS for s in _DEF_SEGMENTS)
-    # autonomy/tokens/donegate omitem quando ausentes (sem profile = "")
+    # autonomy/tokens/donegate omit when absent (no profile = "")
     print("self-test OK")
     print(sl)
 

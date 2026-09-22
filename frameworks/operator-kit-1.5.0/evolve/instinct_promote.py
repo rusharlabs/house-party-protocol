@@ -1,30 +1,30 @@
 #!/usr/bin/env python3
 """
-instinct_promote — candidatos-a-instinto a partir de FAILs do /ralph-gate; só humano promove.
+instinct_promote -- instinct candidates from /ralph-gate FAILs; only a human promotes.
 
-Padrão inspirado no "instinct + confidence-scoring" do ECC (continuous-learning-v2,
-github.com/affaan-m/ECC, MIT, © 2026 Affaan Mustafa) — ver NOTICE-ECC.md ao lado. NENHUMA
-linha de código do ECC foi copiada (o CLI de lá tem ~2000 linhas, XDG dirs, fetch remoto,
-promote/prune/evolve entre projetos); isto é uma reimplementação mínima e nova do PADRÃO:
-falha recorrente = candidato; confiança = contagem de recorrência; promoção é SEMPRE ato
-humano (nunca auto — mesmo espírito de partial-autonomy-slider: propor, não auto-executar
-em algo que persiste/ensina o time).
+Pattern inspired by the "instinct + confidence-scoring" idea in ECC (continuous-learning-v2,
+github.com/affaan-m/ECC, MIT, (c) 2026 Affaan Mustafa) -- see NOTICE-ECC.md alongside. NOT A
+SINGLE line of ECC code was copied (their CLI runs ~2000 lines, XDG dirs, remote fetch,
+promote/prune/evolve across projects); this is a minimal, new reimplementation of the PATTERN:
+recurring failure = candidate; confidence = recurrence count; promotion is ALWAYS a human
+act (never automatic -- same spirit as partial-autonomy-slider: propose, do not auto-execute
+on something that persists/teaches the team).
 
-Fluxo:
-  --scan  : lê .claude/handoff/HANDOFF-LEDGER.jsonl (eventos "gate-failed" do ralph_gate.py,
-            campo failed_cmds), agrupa por comando que falhou, incrementa contagem em
-            .claude/evolve/instincts.jsonl (cria candidato novo se ainda não visto).
-  --list  : lista candidatos (status=candidate) ordenados por contagem desc.
-  --promote <id> --to <arquivo.md> : anexa bloco formatado ao arquivo (estilo LEARNINGS.md) e
-            marca o candidato como promoted (uma próxima --scan não o ressurge).
+Flow:
+  --scan  : reads .claude/handoff/HANDOFF-LEDGER.jsonl ("gate-failed" events from ralph_gate.py,
+            field failed_cmds), groups by the command that failed, increments the count in
+            .claude/evolve/instincts.jsonl (creates a new candidate if not seen yet).
+  --list  : lists candidates (status=candidate) sorted by count desc.
+  --promote <id> --to <file.md> : appends a formatted block to the file (LEARNINGS.md style) and
+            marks the candidate as promoted (a later --scan will not resurface it).
 
-Uso:
+Usage:
     python instinct_promote.py --scan
     python instinct_promote.py --list
     python instinct_promote.py --promote inst-ab12cd --to LEARNINGS.md
     python instinct_promote.py --self-test
 
-Exit: 0 ok · 2 uso inválido.
+Exit: 0 ok - 2 invalid usage.
 stdlib only. v1.0.0 — 2026-07-10 (Operator Kit · Tier 3 · operator-kit/evolve)
 """
 from __future__ import annotations
@@ -49,7 +49,7 @@ def _store_path() -> Path:
 
 
 def _signature(cmd: str) -> str:
-    """Chave estável e curta por comando que falhou (mesmo comando = mesmo candidato)."""
+    """Stable, short key per command that failed (same command = same candidate)."""
     return "inst-" + hashlib.sha256(cmd.strip().encode("utf-8")).hexdigest()[:10]
 
 
@@ -69,7 +69,7 @@ def _read_jsonl(path: Path) -> list:
 
 
 def _load_store(store_path: Path) -> dict:
-    """Retorna {id: candidato} a partir do store (última ocorrência de cada id vence)."""
+    """Returns {id: candidate} from the store (the last occurrence of each id wins)."""
     by_id = {}
     for row in _read_jsonl(store_path):
         cid = row.get("id")
@@ -104,9 +104,9 @@ def _write_cursor(store_path: Path, n: int) -> None:
 
 
 def scan(ledger_path: Path, store_path: Path) -> dict:
-    """Lê SÓ as linhas novas do ledger (desde o cursor) buscando gate-failed, agrupa por cmd
-    e incrementa contagem no store. Idempotente: re-scan sem linha nova = zero efeito.
-    Retorna {"eventos_lidos": N, "candidatos_novos": N, "candidatos_atualizados": N}."""
+    """Reads ONLY the new lines of the ledger (since the cursor) looking for gate-failed, groups
+    by cmd and increments the count in the store. Idempotent: re-scan with no new line = no effect.
+    Returns {"eventos_lidos": N, "candidatos_novos": N, "candidatos_atualizados": N}."""
     by_id = _load_store(store_path)
     eventos = 0
     novos = 0
@@ -132,7 +132,7 @@ def scan(ledger_path: Path, store_path: Path) -> dict:
             cid = _signature(cmd)
             if cid in by_id:
                 if by_id[cid].get("status") == "promoted":
-                    continue  # já promovido — não ressurge
+                    continue  # already promoted -- does not resurface
                 by_id[cid]["count"] = by_id[cid].get("count", 1) + 1
                 by_id[cid]["last_seen"] = now
                 atualizados += 1
@@ -213,7 +213,7 @@ def _self_test() -> int:
         top = cands[0]
         assert top["cmd"] == "python -m pytest -q" and top["count"] == 3, f"pytest should have count=3 (top): {top}"
 
-        # re-scan sem linha nova (cursor já no fim) não deveria inflar contagem nem recontar
+        # re-scan with no new line (cursor already at the end) should not inflate the count or recount
         r2 = scan(ledger, store)
         assert r2 == {"eventos_lidos": 0, "candidatos_novos": 0, "candidatos_atualizados": 0}, \
             f"idempotent re-scan (cursor) should read zero new events: {r2}"
@@ -228,7 +228,7 @@ def _self_test() -> int:
         text = to_file.read_text(encoding="utf-8")
         assert "python -m pytest -q" in text and "3x" in text, f"malformed entry: {text}"
 
-        # promovido não ressurge em list nem em re-scan
+        # a promoted candidate does not resurface in list nor in re-scan
         cands2 = list_candidates(store)
         assert all(c["id"] != top["id"] for c in cands2), "promoted candidate should not appear in --list"
 
@@ -238,7 +238,7 @@ def _self_test() -> int:
         by_id = _load_store(store)
         assert by_id[top["id"]]["status"] == "promoted", "gate-failed after promotion should not reopen the candidate"
 
-        # promote de id inexistente -> falha limpa
+        # promote of a nonexistent id -> clean failure
         ok2, msg2 = promote(store, "inst-naoexiste", to_file)
         assert not ok2, "promote of a nonexistent id should fail"
 

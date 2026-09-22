@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""browse.py - menu interativo do marketplace House Party Protocol.
+"""browse.py - interactive menu for the House Party Protocol marketplace.
 
-Le marketplace.json (raiz do marketplace), lista os kits com descricao+categoria,
-deixa escolher por numero, e delega a instalacao real para kit_doctor.py install
-(--human primeiro, depois --apply so com confirmacao explicita). Nao reimplementa
-nenhuma logica de instalacao -- e so um menu fino sobre o mecanismo que ja existe.
+Reads marketplace.json (marketplace root), lists the kits with description+category,
+lets you choose by number, and delegates the real install to kit_doctor.py install
+(--human first, then --apply only with explicit confirmation). Does not reimplement
+any install logic -- it is just a thin menu over the mechanism that already exists.
 
-Uso:
+Usage:
     python tools/browse.py [--marketplace PATH] [--target PATH]
     python tools/browse.py --self-test
 """
@@ -20,7 +20,7 @@ from pathlib import Path
 def _find_marketplace(explicit: str | None) -> Path:
     if explicit:
         return Path(explicit)
-    # tools/ -> installers/kit-forge-X.Y.Z/ -> raiz do marketplace
+    # tools/ -> installers/kit-forge-X.Y.Z/ -> marketplace root
     here = Path(__file__).resolve()
     for parent in here.parents:
         candidate = parent / "marketplace.json"
@@ -99,14 +99,19 @@ def run_menu(marketplace_path: Path, target: str, input_fn=input, run_fn=subproc
 
 
 def _self_test() -> int:
-    """Self-test isolado: cria um marketplace.json fake + 1 plugin fake, roda o menu
-    em modo nao-interativo (input_fn/run_fn falsos), confirma que lista e escolhe certo."""
+    """Isolated self-test: creates a fake marketplace.json + 1 fake plugin, runs the menu
+    in non-interactive mode (fake input_fn/run_fn), confirms it lists and picks correctly."""
     import tempfile
 
     with tempfile.TemporaryDirectory() as td:
         root = Path(td)
-        (root / "instaladores" / "kit-forge-9.9.9").mkdir(parents=True)
-        (root / "instaladores" / "kit-forge-9.9.9" / "kit_doctor.py").write_text("# fake\n", encoding="utf-8")
+        # Why: the fixture has to use the SAME directory name `_resolve_kit_doctor` globs for.
+        # It said `instaladores/` - the layout name that 2.5.0 renamed to `installers/` - so this
+        # self-test has raised SystemExit on every run since that release, and nothing noticed
+        # because it is not part of the pytest suite. A rename that updates the code and forgets
+        # the fixture leaves a test that is red for a reason nobody reads.
+        (root / "installers" / "kit-forge-9.9.9").mkdir(parents=True)
+        (root / "installers" / "kit-forge-9.9.9" / "kit_doctor.py").write_text("# fake\n", encoding="utf-8")
         (root / "fake-kit-1.0.0").mkdir()
         mp = root / "marketplace.json"
         mp.write_text(json.dumps({

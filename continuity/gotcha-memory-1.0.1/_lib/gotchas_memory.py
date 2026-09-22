@@ -1,35 +1,35 @@
 """
-gotchas_memory (portable) — loop de aprendizado operacional: a falha vira conhecimento.
+gotchas_memory (portable) -- operational learning loop: failure becomes knowledge.
 
-Cópia versionada e DESPERSONALIZADA de `core/intelligence/gotchas_memory.py`
-(repo-de-origem) para o kit distribuível `gotcha-memory`. Diferenças da origem:
+Versioned, DEPERSONALIZED copy of `core/intelligence/gotchas_memory.py`
+(origin repo) for the distributable `gotcha-memory` kit. Differences from the origin:
 
-  1. Import de `error_strategy` é do SIBLING `_lib/` (vendorizado), não de `core.*`.
-  2. Store resolvido DINAMICAMENTE por chamada: profile (`paths.gotcha_store`)
-     → env `GOTCHA_STORE_DIR` → `.claude/gotchas/` sob a cwd do projeto.
-  3. O seed hardcoded de guardrails do dono-de-origem foi REMOVIDO (era
-     conteúdo pessoal/PII — proibido em kit distribuível). No lugar:
-     `seed_from_file(path)` lê lições curated de um YAML/JSONL SEU
-     (ver `curated.seed.example.yaml` na raiz do kit).
+  1. The `error_strategy` import is from the SIBLING `_lib/` (vendored), not from `core.*`.
+  2. The store is resolved DYNAMICALLY per call: profile (`paths.gotcha_store`)
+     -> env `GOTCHA_STORE_DIR` -> `.claude/gotchas/` under the project's cwd.
+  3. The origin owner's hardcoded guardrail seed was REMOVED (it was
+     personal content/PII -- forbidden in a distributable kit). In its place:
+     `seed_from_file(path)` reads curated lessons from a YAML/JSONL of YOUR OWN
+     (see `curated.seed.example.yaml` at the kit's root).
 
-PRINCÍPIO: quando uma tarefa falha, o evento é registrado e classificado (via
-error_strategy). Quando o MESMO tipo de falha recorre >= N vezes numa janela de
-tempo, vira um GOTCHA — uma lição ACIONÁVEL injetada como preâmbulo ANTES da
-próxima execução da mesma tarefa, pra o agente/cron não repetir o erro.
-Gotchas "curated" (seedados por você) são always-on quando a chave casa.
+PRINCIPLE: when a task fails, the event is recorded and classified (via
+error_strategy). When the SAME kind of failure recurs >= N times within a time
+window, it becomes a GOTCHA -- an ACTIONABLE lesson injected as a preamble BEFORE
+the next run of the same task, so the agent/cron doesn't repeat the error.
+"Curated" gotchas (seeded by you) are always-on when the key matches.
 
-FLUXO:
-    record_failure(task_key, erro)  ->  failures.jsonl  (append, classificado)
-    recurring_gotchas()             ->  agrupa por (task_key, family); >=min_count na janela
-    gotchas_for_task(task_key)      ->  curated(match) + recurring(match); top-N por severidade
-    inject_preamble(task_key)       ->  string "⚠️ GOTCHAS" pra colar no prompt pré-task
+FLOW:
+    record_failure(task_key, error)  ->  failures.jsonl  (append, classified)
+    recurring_gotchas()              ->  groups by (task_key, family); >=min_count in the window
+    gotchas_for_task(task_key)       ->  curated(match) + recurring(match); top-N by severity
+    inject_preamble(task_key)        ->  "⚠️ GOTCHAS" string to paste into the pre-task prompt
 
-I/O: só append/read em JSONL no store. stdlib only (+ error_strategy vendorizado;
-PyYAML é OPCIONAL — apenas para seed em YAML e profile). Determinístico: `now` é
-injetável (testes). NUNCA lança em uso normal: leitura de store ausente/corrompido
-degrada pra lista vazia (honestidade > crash).
+I/O: only append/read JSONL in the store. stdlib only (+ vendored error_strategy;
+PyYAML is OPTIONAL -- only for seeding from YAML and for the profile). Deterministic: `now` is
+injectable (tests). NEVER raises in normal use: reading a missing/corrupted store
+degrades to an empty list (honesty > crash).
 
-v1.0.0 — 2026-07-11 (kit gotcha-memory · extração standalone)
+v1.0.0 -- 2026-07-11 (gotcha-memory kit -- standalone extraction)
 """
 from __future__ import annotations
 
@@ -47,19 +47,19 @@ _LIB_DIR = Path(__file__).resolve().parent
 if str(_LIB_DIR) not in sys.path:
     sys.path.insert(0, str(_LIB_DIR))
 
-from error_strategy import select_strategy  # noqa: E402  (sibling vendorizado)
+from error_strategy import select_strategy  # noqa: E402  (vendored sibling)
 
 try:
-    import profile_loader  # sibling — config opcional via operator-profile.yaml
-except ImportError:  # degrade: sem profile, defaults
+    import profile_loader  # sibling -- optional config via operator-profile.yaml
+except ImportError:  # degrade: no profile, defaults
     profile_loader = None  # type: ignore[assignment]
 
-# Severidade base por família de erro (0-100). Famílias do error_strategy.
+# Base severity by error family (0-100). Families come from error_strategy.
 _FAMILY_SEVERITY = {
     "fatal": 100,
-    # Why: as familias instrument e lock nasceram no error_strategy e o consumidor nao as
-    # conhecia — caiam no default 35 e na licao de "unknown". instrument e a mais cara: o
-    # numero mente e ninguem repete.
+    # Why: the instrument and lock families were born in error_strategy and the consumer
+    # didn't know them -- they fell into the default 35 and the "unknown" lesson. instrument
+    # is the most expensive: the number lies and nobody repeats it.
     "instrument": 85,
     "lock": 50,
     "dependency": 75,
@@ -68,10 +68,10 @@ _FAMILY_SEVERITY = {
     "ratelimit": 55,
     "transient": 40,
     "unknown": 35,
-    "manual": 90,  # curated do dono = peso alto by design
+    "manual": 90,  # owner's curated = high weight by design
 }
 
-# Lição preventiva derivada da família (o "como evitar"). Fundida com a estratégia.
+# Preventive lesson derived from the family (the "how to avoid it"). Merged with the strategy.
 _FAMILY_PREVENTION = {
     "transient": "Recurring transient failure: retry with backoff/jitter before escalating; check upstream health.",
     "ratelimit": "Recurring rate limit: throttle preemptively (stop at ~80% of the cap) + honour Retry-After.",
@@ -96,13 +96,13 @@ _STRATEGY_HINT = {
 
 @dataclass(frozen=True)
 class Gotcha:
-    """Uma lição acionável aprendida (recurring) ou imposta (curated)."""
-    key: str            # task_key (recurring) ou tag/substring (curated; "*" = always-on)
+    """An actionable lesson, learned (recurring) or imposed (curated)."""
+    key: str            # task_key (recurring) or tag/substring (curated; "*" = always-on)
     family: str
     prevention: str
     severity: int       # 0-100
     source: str         # "recurring" | "curated"
-    count: int = 0      # quantas falhas na janela (0 p/ curated)
+    count: int = 0      # how many failures within the window (0 for curated)
     strategy: str = ""
     first_seen: float = 0.0
     last_seen: float = 0.0
@@ -118,7 +118,7 @@ class Gotcha:
 # ─────────────────────────── config / store ───────────────────────────
 
 def config() -> dict[str, Any]:
-    """Config efetiva do kit: profile (`gotchas.*`) por cima dos defaults. Nunca lança."""
+    """The kit's effective config: profile (`gotchas.*`) layered over the defaults. Never raises."""
     cfg: dict[str, Any] = {"window_hours": 24.0, "min_count": 3, "top": 5, "store_dir": None, "seed_file": None}
     if profile_loader is not None:
         try:
@@ -134,7 +134,7 @@ def config() -> dict[str, Any]:
 
 
 def _store(store_dir: str | Path | None) -> Path:
-    """Resolve o store: argumento > profile > env GOTCHA_STORE_DIR > .claude/gotchas/ na cwd."""
+    """Resolves the store: argument > profile > env GOTCHA_STORE_DIR > .claude/gotchas/ in the cwd."""
     if store_dir:
         return Path(store_dir)
     cfg_dir = config().get("store_dir")
@@ -146,10 +146,10 @@ def _store(store_dir: str | Path | None) -> Path:
     return Path.cwd() / ".claude" / "gotchas"
 
 
-# ─────────────────────────── helpers internos ───────────────────────────
+# ─────────────────────────── internal helpers ───────────────────────────
 
 def _read_jsonl(path: Path) -> list[dict[str, Any]]:
-    """Lê JSONL. Arquivo ausente -> []. Linhas corrompidas são puladas (degrada, não crasha)."""
+    """Reads JSONL. Missing file -> []. Corrupted lines are skipped (degrades, doesn't crash)."""
     if not path.exists():
         return []
     out: list[dict[str, Any]] = []
@@ -162,7 +162,7 @@ def _read_jsonl(path: Path) -> list[dict[str, Any]]:
                 try:
                     out.append(json.loads(line))
                 except (json.JSONDecodeError, ValueError):
-                    continue  # linha corrompida — pula
+                    continue  # corrupted line -- skip it
     except OSError:
         return []
     return out
@@ -175,7 +175,7 @@ def _append_jsonl(path: Path, record: dict[str, Any]) -> None:
 
 
 def _matches(gotcha_key: str, task_key: str) -> bool:
-    """Curated key casa com task_key se for '*' (always-on) ou substring (qualquer direção)."""
+    """Curated key matches task_key if it's '*' (always-on) or a substring (either direction)."""
     gk, tk = (gotcha_key or "").lower().strip(), (task_key or "").lower().strip()
     if gk in ("*", ""):
         return True
@@ -195,11 +195,11 @@ def _prevention(family: str, strategy: str) -> str:
     return f"{base} {hint}".strip()
 
 
-# ─────────────────────────── redação (antes de persistir) ───────────────────────────
-# Why: o erro e o comando que falhou vao para o disco e voltam ao transcript no proximo
-# hook; um token ecoado por um 401 ficaria gravado em claro. A redacao e por FORMA
-# (prefixo de provedor, cabecalho de autorizacao, chave=valor, credencial em URL, blob de
-# alta entropia) e registra so o TIPO e o COMPRIMENTO — nunca o valor.
+# ─────────────────────────── redaction (before persisting) ───────────────────────────
+# Why: the error and the command that failed go to disk and come back into the transcript on
+# the next hook; a token echoed by a 401 would end up written in the clear. Redaction is by
+# SHAPE (provider prefix, authorization header, key=value, credential in a URL, high-entropy
+# blob) and records only the TYPE and the LENGTH -- never the value.
 
 _REDACTED = "[REDACTED:{tipo}:{n}]"
 _KEYWORDS = (
@@ -207,7 +207,7 @@ _KEYWORDS = (
     r"|token|auth[_-]?token|private[_-]?key)"
 )
 _VALOR = r"[^\s\"'&;,]"
-# (tipo, regex, grupo que carrega o valor a redigir)
+# (type, regex, group that carries the value to redact)
 _REDACT_RULES: list[tuple[str, re.Pattern[str], int]] = [
     ("private-key", re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----.*?(?:-----END [A-Z ]*PRIVATE KEY-----|\Z)", re.DOTALL), 0),
     ("url-credential", re.compile(r"(?<=://)([^/\s@:]+:[^@\s/]+)(?=@)"), 1),
@@ -219,8 +219,8 @@ _REDACT_RULES: list[tuple[str, re.Pattern[str], int]] = [
         r"|AKIA[0-9A-Z]{12,}|AIza[0-9A-Za-z_\-]{20,})"), 0),
     ("jwt", re.compile(r"\beyJ[A-Za-z0-9_\-]{8,}\.[A-Za-z0-9_\-]{8,}\.[A-Za-z0-9_\-]{8,}"), 0),
     ("assignment", re.compile(r"(?i)\b" + _KEYWORDS + r"[\"']?\s*=\s*[\"']?(" + _VALOR + r"{4,})"), 1),
-    # forma `chave: valor` so quando o valor tem cara de credencial (digito/simbolo, >= 8),
-    # para nao apagar prosa como "token: expired".
+    # the `key: value` shape only when the value looks like a credential (digit/symbol, >= 8),
+    # so it doesn't erase prose like "token: expired".
     ("assignment", re.compile(r"(?i)\b" + _KEYWORDS + r"[\"']?\s*:\s*[\"']?((?=" + _VALOR + r"*[0-9_\-+/=.!@#$%^*~])" + _VALOR + r"{8,})"), 1),
     ("high-entropy", re.compile(r"(?<![A-Za-z0-9+=_\-])[A-Za-z0-9+=_\-]{32,}(?![A-Za-z0-9+=_\-])"), 0),
 ]
@@ -235,8 +235,8 @@ def _shannon_bits(s: str) -> float:
 
 
 def _looks_random(tok: str) -> bool:
-    """Blob de alta entropia: maiuscula + minuscula + digito e >= 4 bits/char. Hash hex
-    (so minusculas) e identificador camelCase ficam de fora."""
+    """High-entropy blob: uppercase + lowercase + digit and >= 4 bits/char. A hex hash
+    (lowercase only) and a camelCase identifier are left out."""
     return (
         any(c.islower() for c in tok) and any(c.isupper() for c in tok)
         and any(c.isdigit() for c in tok) and _shannon_bits(tok) >= 4.0
@@ -244,7 +244,7 @@ def _looks_random(tok: str) -> bool:
 
 
 def redact_secrets(text: str) -> str:
-    """Substitui segredos por `[REDACTED:<tipo>:<comprimento>]`. Texto sem segredo volta igual."""
+    """Replaces secrets with `[REDACTED:<type>:<length>]`. Text without a secret comes back unchanged."""
     if not text:
         return text
     out = text
@@ -270,7 +270,7 @@ def _redact_obj(obj: Any) -> Any:
     return obj
 
 
-# ─────────────────────────── API pública ───────────────────────────
+# ─────────────────────────── public API ───────────────────────────
 
 def record_failure(
     task_key: str,
@@ -284,14 +284,14 @@ def record_failure(
     now: float | None = None,
     dedupe_key: str | None = None,
 ) -> dict[str, Any]:
-    """Registra uma falha (classificada via error_strategy) em failures.jsonl. Retorna o evento.
+    """Records a failure (classified via error_strategy) into failures.jsonl. Returns the event.
 
-    Segredos em task_key/erro/contexto sao redigidos ANTES de truncar e de persistir.
+    Secrets in task_key/error/context are redacted BEFORE truncating and persisting.
 
-    `dedupe_key`: identidade da falha na origem (ex.: o tool_use_id do host). Se ja houver um
-    evento com a mesma chave em failures.jsonl, nada e' gravado e o evento existente volta.
-    # Why: a mesma falha pode chegar ao hook por mais de um evento do host; sem a chave, cada
-    # chegada vira um registro e a recorrencia (min_count) e' atingida sem recorrer de fato."""
+    `dedupe_key`: the failure's identity at the origin (e.g. the host's tool_use_id). If an event
+    with the same key exists in failures.jsonl, nothing is written and the existing one is returned.
+    # Why: the same failure can reach the hook via more than one host event; without the key, each
+    # arrival becomes a record and the recurrence (min_count) is reached without truly recurring."""
     ts = time.time() if now is None else now
     dec = select_strategy(error_message, attempt=attempt, max_retries=max_retries, is_critical=is_critical)
     event = {
@@ -320,13 +320,13 @@ def rotate_failures(
     store_dir: str | Path | None = None,
     now: float | None = None,
 ) -> dict[str, int]:
-    """Rotaciona failures.jsonl: o excedente vai para failures.archive.jsonl.
+    """Rotates failures.jsonl: the overflow goes to failures.archive.jsonl.
 
-    # Why: o append era sem teto (1,9 MB / 1.744 linhas em um mes) e o preflight rele o
-    # arquivo INTEIRO a cada comando Bash — crescer o store e latencia em toda sessao.
-    # keep_days=45 cobre a janela de revisao (30d) com folga; max_lines=5000 ~= 3 meses do
-    # pior mes medido. Best-effort e idempotente: sem excedente, e no-op. Rewrite atomico
-    # (tmp+replace) para nunca corromper o store se cair no meio.
+    # Why: the append had no ceiling (1.9 MB / 1,744 lines in a month) and the preflight
+    # re-reads the WHOLE file on every Bash command -- growing the store is latency in every
+    # session. keep_days=45 covers the review window (30d) with slack; max_lines=5000 ~= 3
+    # months of the worst month measured. Best-effort and idempotent: with no overflow, it's a
+    # no-op. Atomic rewrite (tmp+replace) so the store is never corrupted if it dies midway.
     """
     store = _store(store_dir)
     failures_path = store / "failures.jsonl"
@@ -337,7 +337,7 @@ def rotate_failures(
 
     cutoff = (time.time() if now is None else now) - keep_days * 86400
     in_window = sum(1 for e in events if float(e.get("ts", 0) or 0) >= cutoff)
-    # append-order == time-order (record_failure usa time.time()); mantem as trailing
+    # append-order == time-order (record_failure uses time.time()); keeps the trailing ones
     keep_count = min(in_window, max_lines)
     if keep_count >= n:
         return {"kept": n, "archived": 0}
@@ -365,7 +365,7 @@ def recurring_gotchas(
     store_dir: str | Path | None = None,
     now: float | None = None,
 ) -> list[Gotcha]:
-    """Agrupa falhas por (task_key, family) na janela; as que recorrem >= min_count viram Gotcha."""
+    """Groups failures by (task_key, family) within the window; those recurring >= min_count become a Gotcha."""
     ts = time.time() if now is None else now
     cutoff = ts - window_hours * 3600
     events = _read_jsonl(_store(store_dir) / "failures.jsonl")
@@ -388,7 +388,7 @@ def recurring_gotchas(
 
 
 def curated_gotchas(*, store_dir: str | Path | None = None) -> list[Gotcha]:
-    """Lê os gotchas curated (always-on quando a chave casa; seedados por você)."""
+    """Reads the curated gotchas (always-on when the key matches; seeded by you)."""
     out: list[Gotcha] = []
     for c in _read_jsonl(_store(store_dir) / "curated.jsonl"):
         out.append(Gotcha(
@@ -407,26 +407,26 @@ def add_curated_gotcha(
     severity: int = 90,
     store_dir: str | Path | None = None,
 ) -> bool:
-    """Adiciona um gotcha curated (idempotente por (key, prevention)). Retorna True se adicionou."""
+    """Adds a curated gotcha (idempotent by (key, prevention)). Returns True if it added one."""
     path = _store(store_dir) / "curated.jsonl"
     existing = _read_jsonl(path)
     for c in existing:
         if c.get("key") == key and c.get("prevention") == prevention:
-            return False  # já existe — não duplica
+            return False  # already exists -- don't duplicate
     _append_jsonl(path, {"key": key, "prevention": prevention, "family": family, "severity": int(severity)})
     return True
 
 
 def seed_from_file(seed_path: str | Path, *, store_dir: str | Path | None = None) -> int:
-    """Seeda gotchas curated de um arquivo SEU (.yaml lista de {key, prevention, severity?, family?}
-    ou .jsonl com os mesmos campos). Idempotente. Retorna nº adicionados. -1 se ilegível."""
+    """Seeds curated gotchas from a file of YOUR OWN (.yaml list of {key, prevention, severity?, family?}
+    or .jsonl with the same fields). Idempotent. Returns the number added. -1 if unreadable."""
     p = Path(seed_path)
     if not p.exists():
         return -1
     entries: list[dict[str, Any]] = []
     if p.suffix.lower() in (".yaml", ".yml"):
         try:
-            import yaml  # PyYAML — opcional
+            import yaml  # PyYAML -- optional
         except ImportError:
             return -1
         try:
@@ -457,7 +457,7 @@ def gotchas_for_task(
     store_dir: str | Path | None = None,
     now: float | None = None,
 ) -> list[Gotcha]:
-    """Gotchas relevantes p/ uma tarefa: curated(match) + recurring(match), top-N por severidade."""
+    """Gotchas relevant to a task: curated(match) + recurring(match), top-N by severity."""
     task_key = str(task_key)
     curated = [g for g in curated_gotchas(store_dir=store_dir) if _matches(g.key, task_key)]
     recurring = [
@@ -478,7 +478,7 @@ def inject_preamble(
     store_dir: str | Path | None = None,
     now: float | None = None,
 ) -> str:
-    """Renderiza os top-N gotchas como preâmbulo pra colar no prompt pré-task. '' se nenhum."""
+    """Renders the top-N gotchas as a preamble to paste into the pre-task prompt. '' if none."""
     gs = gotchas_for_task(task_key, top=top, window_hours=window_hours, min_count=min_count, store_dir=store_dir, now=now)
     if not gs:
         return ""
@@ -492,7 +492,7 @@ def inject_preamble(
 # ─────────────────────────── CLI / self-test / demo ───────────────────────────
 
 def _demo() -> None:
-    """Demo VISÍVEL: usa store temporário, simula 3 falhas, mostra o aprendizado."""
+    """VISIBLE demo: uses a temporary store, simulates 3 failures, shows the learning."""
     import tempfile
 
     with tempfile.TemporaryDirectory() as d:
@@ -503,7 +503,7 @@ def _demo() -> None:
         add_curated_gotcha("deploy", "Check that the BACKEND changed (a route exclusive to the new one), not just the auth gate.", store_dir=store)
         print("\n[1] 1 curated gotcha added (your rule, always-on when it matches)\n")
 
-        # Tarefa exemplo: um cron que bate rate-limit repetidamente
+        # Example task: a cron that repeatedly hits a rate limit
         t0 = 1_000_000.0
         ev: dict[str, Any] = {}
         for i in range(3):
@@ -537,7 +537,7 @@ def _self_test() -> None:
     with tempfile.TemporaryDirectory() as d:
         store = Path(d)
         t0 = 5_000_000.0
-        # 2 falhas NÃO viram gotcha; 3 viram
+        # 2 failures do NOT become a gotcha; 3 do
         record_failure("task:x", "ETIMEDOUT", store_dir=store, now=t0)
         record_failure("task:x", "ETIMEDOUT", store_dir=store, now=t0 + 10)
         assert recurring_gotchas(store_dir=store, now=t0 + 20, min_count=3) == [], "2 failures should not become a gotcha"
@@ -545,15 +545,15 @@ def _self_test() -> None:
         rec = recurring_gotchas(store_dir=store, now=t0 + 30, min_count=3)
         assert len(rec) == 1 and rec[0].count == 3, "3 failures should become 1 gotcha with count=3"
         assert rec[0].family == "transient", f"expected transient, got {rec[0].family}"
-        # Janela: falha velha fora da janela não conta
+        # Window: an old failure outside the window doesn't count
         assert recurring_gotchas(store_dir=store, now=t0 + 30 + 25 * 3600, window_hours=24, min_count=3) == [], "failures outside the window do not count"
-        # Curated idempotente
+        # Curated is idempotent
         assert add_curated_gotcha("deploy", "check the backend", store_dir=store) is True
         assert add_curated_gotcha("deploy", "check the backend", store_dir=store) is False, "re-add must be idempotent"
-        # Match curated por substring
+        # Curated match by substring
         pre = inject_preamble("touch the deploy of the service", store_dir=store, now=t0 + 30)
         assert "backend" in pre.lower(), "the deploy curated rule should fire"
-        # Seed de arquivo JSONL (stdlib) — idempotente
+        # Seed from a JSONL file (stdlib) -- idempotent
         seed = store / "seed.jsonl"
         seed.write_text(
             json.dumps({"key": "migration", "prevention": "back it up first", "severity": 95}) + "\n",
@@ -562,9 +562,9 @@ def _self_test() -> None:
         assert seed_from_file(seed, store_dir=store) == 1, "seed should add 1"
         assert seed_from_file(seed, store_dir=store) == 0, "re-seed must be idempotent (0)"
         assert seed_from_file(store / "does-not-exist.jsonl", store_dir=store) == -1, "missing file = -1"
-        # Store ausente degrada pra vazio (não crasha)
+        # Missing store degrades to empty (doesn't crash)
         assert curated_gotchas(store_dir=store / "sub" / "that-does-not-exist") == []
-        # Redação antes de persistir: o valor nunca chega ao disco; tipo + comprimento chegam
+        # Redaction before persisting: the value never reaches disk; type + length do
         record_failure(
             "task:auth", "401 Bearer " + "sk-" + "ant-EXEMPLO0000000000000000 token=" + "ghp" + "_EXEMPLOEXEMPLOEXEMPLOEXEMPLO12",
             context={"cmd": "curl -u user:SENHA-EXEMPLO-1 https://x"}, store_dir=store, now=t0,
@@ -577,7 +577,7 @@ def _self_test() -> None:
 
 
 if __name__ == "__main__":
-    # Console Windows é cp1252 — força utf-8 pra não quebrar nos chars ⚠️/•/═/✓.
+    # Windows console is cp1252 -- force utf-8 so it doesn't break on the special chars below.
     try:
         sys.stdout.reconfigure(encoding="utf-8")  # type: ignore[attr-defined]
     except (AttributeError, ValueError):

@@ -30,7 +30,7 @@ Use it while the request is still broad. If the question already demands a thesi
 2. Collect the structure with cheap commands:
    - `git status --short --branch`
    - `rg --files`
-   - `find <alvo> -maxdepth 3 -type f` when `rg` does not cover it.
+   - `find <target> -maxdepth 3 -type f` when `rg` does not cover it.
 3. Classify by type: code, docs, configs, data, logs, builds, vendored/deps.
 4. Read only headers, manifests and index files before reading large bodies.
 5. List candidates for the next analysis with a concrete reason.
@@ -38,23 +38,23 @@ Use it while the request is still broad. If the question already demands a thesi
 ## Expected Output
 
 ```md
-# PP Discovery - <alvo>
+# PP Discovery - <target>
 
-## Fonte
-- alvo:
+## Source
+- target:
 - branch/commit:
-- data:
+- date:
 
-## Mapa
-| area | tipo | tamanho/sinal | prioridade | motivo |
+## Map
+| area | type | size/signal | priority | reason |
 
-## Fontes De Verdade
-| arquivo | por que importa |
+## Sources Of Truth
+| file | why it matters |
 
-## Riscos
-| risco | evidencia | proximo check |
+## Risks
+| risk | evidence | next check |
 
-## Proxima Onda
+## Next Wave
 1. ...
 ```
 
@@ -90,25 +90,25 @@ Use it while the request is still broad. If the question already demands a thesi
 ## Executed examples
 
 ```console
-$ python -c "print('arquivos=12 fonte=rg')"
-arquivos=12 fonte=rg
+$ python -c "print('files=12 source=rg')"
+files=12 source=rg
 ```
-<!-- executed: 2026-09-20 · exit=0 -->
+<!-- executed: 2026-09-22 · exit=0 -->
 
 ```console
-$ python -c "print('fontes_de_verdade=2')"
-fontes_de_verdade=2
+$ python -c "print('sources_of_truth=2')"
+sources_of_truth=2
 ```
-<!-- executed: 2026-09-20 · exit=0 -->
+<!-- executed: 2026-09-22 · exit=0 -->
 
 ```console
-$ python -c "import sys; print('block: escopo ausente'); sys.exit(2)"
-block: escopo ausente
+$ python -c "import sys; print('block: missing scope'); sys.exit(2)"
+block: missing scope
 ```
-<!-- executed: 2026-09-20 · exit=2 -->
+<!-- executed: 2026-09-22 · exit=2 -->
 
 ## Proof
 
 ```bash
-python -c "print('arquivos=12 fonte=rg')"
+python -c "print('files=12 source=rg')"
 ```

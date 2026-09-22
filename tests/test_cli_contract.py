@@ -1,13 +1,13 @@
-"""Contrato de linha de comando: `--version`/`--help` funcionam, todo subcomando
-do parser tem uma funcao correspondente (e vice-versa), e o contrato de saida
-(0 ok / 1 warn / 2 block / 3 erro) e respeitado nos comandos que de fato o
-produzem.
+"""Command-line contract: `--version`/`--help` work, every subcommand of the
+parser has a matching function (and vice versa), and the exit contract
+(0 ok / 1 warn / 2 block / 3 error) is honored by the commands that actually
+produce it.
 
-Os testes de superficie externa (--version, --help, subcomando inexistente) vao
-por `subprocess` + `python -m hpp`, exatamente como um usuario real invocaria o
-pacote. O resto chama `hpp.cli.main()` em processo (mais rapido, mesmo
-comportamento) porque o que se quer testar e' a logica de despacho e os exit
-codes, nao o entrypoint do interpretador em si -- ja coberto pelos primeiros.
+The external-surface tests (--version, --help, nonexistent subcommand) go
+through `subprocess` + `python -m hpp`, exactly as a real user would invoke
+the package. The rest call `hpp.cli.main()` in-process (faster, same
+behavior) because what we want to test is the dispatch logic and the exit
+codes, not the interpreter entrypoint itself -- already covered by the first ones.
 """
 from __future__ import annotations
 
@@ -36,7 +36,7 @@ def _run_subprocess(argv: list[str]) -> subprocess.CompletedProcess:
 
 
 # ---------------------------------------------------------------------------
-# Superficie externa: python -m hpp, de verdade, fora de processo.
+# External surface: python -m hpp, for real, out of process.
 # ---------------------------------------------------------------------------
 
 
@@ -46,23 +46,23 @@ def test_version_via_python_dash_m_hpp():
     assert result.stdout.strip() == __version__
 
 
-def test_help_lista_uso_e_sai_zero():
+def test_help_lists_usage_and_exits_zero():
     result = _run_subprocess(["--help"])
     assert result.returncode == 0
     assert "usage" in result.stdout.lower()
 
 
-def test_CONTROLE_subcomando_inexistente_e_rejeitado_pelo_parser():
-    """Controle: prova que o parser de fato distingue um nome valido de um
-    invalido -- sem isto, 'todo subcomando existe' seria uma afirmacao vazia."""
+def test_CONTROLE_nonexistent_subcommand_is_rejected_by_the_parser():
+    """Control: proves that the parser actually distinguishes a valid name from
+    an invalid one -- without this, 'every subcommand exists' would be vacuous."""
     result = _run_subprocess(["bogus-command-that-does-not-exist"])
     assert result.returncode == 2
     assert "invalid choice" in result.stderr.lower()
 
 
 # ---------------------------------------------------------------------------
-# Todo subcomando do parser <-> toda funcao command_* do modulo (introspeccao,
-# sem lista hardcoded de nomes dos dois lados).
+# Every parser subcommand <-> every command_* function of the module
+# (introspection, no hardcoded list of names on either side).
 # ---------------------------------------------------------------------------
 
 
@@ -82,14 +82,14 @@ def _command_function_names() -> set[str]:
     return names
 
 
-def test_todo_subcomando_tem_funcao_command_e_toda_funcao_command_tem_subcomando():
+def test_every_subcommand_has_a_command_function_and_vice_versa():
     """
-    O manifesto publico (hpp.manifest.json) nao declara uma lista de subcomandos
-    de CLI -- ele descreve modulos, capacidades e o loop de eventos, nao a forma
-    do parser. O contrato real e' entre o parser (`build_parser`) e as funcoes
-    `command_*` do proprio `hpp/cli.py`: as duas listas abaixo vem de
-    introspeccao, nenhuma foi digitada a mao aqui -- entao um subcomando
-    adicionado sem sua funcao (ou vice-versa) derruba este teste.
+    The public manifest (hpp.manifest.json) does not declare a list of CLI
+    subcommands -- it describes modules, capabilities and the event loop, not
+    the shape of the parser. The real contract is between the parser
+    (`build_parser`) and the `command_*` functions of `hpp/cli.py` itself: the
+    two lists below come from introspection, neither was typed by hand here --
+    so a subcommand added without its function (or vice versa) fails this test.
     """
     subcommands = _top_level_subcommand_names()
     functions = _command_function_names()
@@ -99,19 +99,19 @@ def test_todo_subcomando_tem_funcao_command_e_toda_funcao_command_tem_subcomando
     )
 
 
-def test_CONTROLE_lista_de_subcomandos_nao_esta_vazia():
-    """Controle: a comparacao acima passaria trivialmente (conjunto vazio ==
-    conjunto vazio) se `build_parser` quebrasse silenciosamente."""
+def test_CONTROLE_the_subcommand_list_is_not_empty():
+    """Control: the comparison above would pass trivially (empty set ==
+    empty set) if `build_parser` broke silently."""
     assert len(_top_level_subcommand_names()) >= 10
 
 
 # ---------------------------------------------------------------------------
-# Cross-checks derivados do manifesto (nao hardcoded): o que o manifesto
-# declara sobre routing/maps bate com o que o parser de fato expõe.
+# Cross-checks derived from the manifest (not hardcoded): what the manifest
+# declares about routing/maps matches what the parser actually exposes.
 # ---------------------------------------------------------------------------
 
 
-def test_tiers_de_routing_do_manifesto_batem_com_as_escolhas_de_policy_no_parser():
+def test_manifest_routing_tiers_match_the_policy_choices_in_the_parser():
     manifest, _ = load_manifest()
     parser = cli.build_parser()
     route_subparser = next(
@@ -123,7 +123,7 @@ def test_tiers_de_routing_do_manifesto_batem_com_as_escolhas_de_policy_no_parser
     assert list(policy_action.choices) == manifest["routing"]["tiers"]
 
 
-def test_maps_do_manifesto_cobrem_as_views_de_graph_e_de_map_expostas_no_parser():
+def test_manifest_maps_cover_the_graph_and_map_views_exposed_in_the_parser():
     manifest, _ = load_manifest()
     declared_maps = set(manifest["maps"])
     parser = cli.build_parser()
@@ -145,11 +145,11 @@ def test_maps_do_manifesto_cobrem_as_views_de_graph_e_de_map_expostas_no_parser(
 
 
 # ---------------------------------------------------------------------------
-# Contrato de exit code: 0 ok, 1 warn, 2 block, 3 erro interno.
+# Exit code contract: 0 ok, 1 warn, 2 block, 3 internal error.
 # ---------------------------------------------------------------------------
 
 
-def test_exit_ok_via_doctor_e_via_benchmark(capsys):
+def test_exit_ok_via_doctor_and_via_benchmark(capsys):
     manifest, _ = load_manifest()
     assert cli.main(["doctor"]) == manifest["exit_codes"]["ok"]
     capsys.readouterr()
@@ -162,26 +162,26 @@ def test_exit_warn_via_policy_check_manual(capsys):
     assert code == manifest["exit_codes"]["warn"]
 
 
-def test_exit_block_via_policy_check_destrutivo(capsys):
+def test_exit_block_via_policy_check_destructive(capsys):
     manifest, _ = load_manifest()
     code = cli.main(["policy", "check", "--mode", "enforce", "--command", "rm -rf /tmp/example"])
     assert code == manifest["exit_codes"]["block"]
 
 
-def test_exit_error_e_produzido_pelo_ramo_defensivo_do_main(monkeypatch, capsys):
+def test_exit_error_is_produced_by_the_defensive_branch_of_main(monkeypatch, capsys):
     """
-    Nao existe, hoje, um argv 'legitimo' (sintaxe valida, contrato respeitado)
-    que alcance o exit 3: todo erro de dominio no harness (AttestationError,
+    There is no, today, a 'legitimate' argv (valid syntax, contract honored)
+    that reaches exit 3: every domain error in the harness (AttestationError,
     ManifestError, InstallError, StateError, EvalError, RoutingError, MapError,
-    WorkGraphError, ContextError) herda de ValueError e cai no ramo que devolve
-    2 -- ver `except (...) as exc: return 2` em hpp/cli.py. O ramo
-    `except Exception -> 3` e puramente defensivo (contra um bug futuro que
-    escape das excecoes de dominio conhecidas).
+    WorkGraphError, ContextError) inherits from ValueError and falls into the
+    branch that returns 2 -- see `except (...) as exc: return 2` in hpp/cli.py.
+    The `except Exception -> 3` branch is purely defensive (against a future
+    bug that escapes the known domain exceptions).
 
-    Isto prova que o ramo, quando alcancado, se comporta como o contrato promete
-    -- injetando uma falha real via monkeypatch (a unica forma de exercitar um
-    caminho que nenhum argv real alcanca hoje). NAO e' um teste de um argv
-    especifico; e' um teste do proprio `except Exception` em `main()`.
+    This proves that the branch, when reached, behaves as the contract promises
+    -- injecting a real failure via monkeypatch (the only way to exercise a
+    path that no real argv reaches today). It is NOT a test of a specific
+    argv; it is a test of `except Exception` itself in `main()`.
     """
     manifest, _ = load_manifest()
 
@@ -196,10 +196,10 @@ def test_exit_error_e_produzido_pelo_ramo_defensivo_do_main(monkeypatch, capsys)
     assert "RuntimeError" in captured.err
 
 
-def test_CONTROLE_erro_de_dominio_normal_continua_caindo_no_exit_block_nao_no_error(capsys):
-    """Controle: um ValueError de dominio real (comando sem manifesto valido)
-    continua caindo em 2, nao em 3 -- prova que o monkeypatch acima testou o
-    ramo certo, e nao acidentalmente os dois."""
+def test_CONTROLE_a_normal_domain_error_still_falls_into_exit_block_not_error(capsys):
+    """Control: a real domain ValueError (command with no valid manifest)
+    still falls into 2, not 3 -- proves that the monkeypatch above tested the
+    right branch, and not accidentally both."""
     manifest, _ = load_manifest()
     code = cli.main(["work", "waves", str(PRODUCT_ROOT / "this-file-does-not-exist.json")])
     assert code == manifest["exit_codes"]["block"]

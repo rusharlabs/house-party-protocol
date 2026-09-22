@@ -1,35 +1,35 @@
 ---
-status: FOR APPROVAL — {{aprovador_humano}}
-last_reviewed: {{data}}
+status: FOR APPROVAL — {{human_approver}}
+last_reviewed: {{date}}
 ---
 
 # 00-VISION — {{project_name}}
 
-> Read at the boot of every session (via `{{state_doc}}` §Agora or the `00-READ-FIRST`).
-> Changes RARELY — never written by automation. Only the human (`{{aprovador_humano}}`)
+> Read at the boot of every session (via `{{state_doc}}` §Now or the `00-READ-FIRST`).
+> Changes RARELY — never written by automation. Only the human (`{{human_approver}}`)
 > edits or approves changes here.
 
 ## Why this project exists (1 paragraph)
 
-{{visao_1_paragrafo}}
+{{vision_1_paragraph}}
 
 ## What success is (measurable)
 
-- {{metrica_de_sucesso_1}}
-- {{metrica_de_sucesso_2}}
+- {{success_metric_1}}
+- {{success_metric_2}}
 
 ## What is explicitly OUT of scope
 
-- {{fora_de_escopo_1}}
-- {{fora_de_escopo_2}}
+- {{out_of_scope_1}}
+- {{out_of_scope_2}}
 
 ## Non-negotiable constraints
 
-- {{restricao_1}}
-- {{restricao_2}}
+- {{constraint_1}}
+- {{constraint_2}}
 
 ## Stakeholders
 
 | Role | Who | What they decide |
 |---|---|---|
-| {{papel_1}} | {{pessoa_1}} | {{decisao_1}} |
+| {{role_1}} | {{person_1}} | {{decision_1}} |

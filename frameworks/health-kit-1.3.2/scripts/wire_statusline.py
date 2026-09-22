@@ -1,28 +1,28 @@
 #!/usr/bin/env python3
 """
-wire_statusline (health-kit) — arma a statusLine deste kit em settings.json/settings.local.json,
-de forma IDEMPOTENTE e REVERSÍVEL.
+wire_statusline (health-kit) -- arms this kit's statusLine in settings.json/settings.local.json,
+IDEMPOTENTLY and REVERSIBLY.
 
-Vendoriza o mecanismo provado de wire_settings.py (kit-forge): NUNCA sobrescreve um
-statusLine alheio sem --force. Backup automático antes de escrever, validação do JSON
-depois (rollback automático se quebrar), e undo-state gravado para `--undo` funcionar
-sem precisar lembrar o timestamp do backup.
+Vendors the proven mechanism from wire_settings.py (kit-forge): it NEVER overwrites a
+statusLine belonging to someone else without --force. Automatic backup before writing, JSON
+validation afterward (automatic rollback if it breaks), and undo-state written so `--undo`
+works without needing to remember the backup's timestamp.
 
-Por que um script novo em vez do `scripts/system/wire_statusline.py` legado da casa:
-aquele script tinha o defeito de sobrescrever um statusLine já configurado por outra
-ferramenta sem perguntar. Este NUNCA faz isso (ver `apply_spec`).
+Why a new script instead of the house's legacy `scripts/system/wire_statusline.py`:
+that script had the defect of overwriting a statusLine already configured by another
+tool without asking. This one NEVER does that (see `apply_spec`).
 
-Uso:
+Usage:
     python wire_statusline.py --target <settings.json> [--force]
     python wire_statusline.py --undo [--target <settings.json>]
     python wire_statusline.py --self-test
 
-O comando wired chama `statusline/statusline.py --statusline` (path resolvido a
-partir da localização deste script — funciona com ou sem `${CLAUDE_PLUGIN_ROOT}`).
+The wired command calls `statusline/statusline.py --statusline` (path resolved from
+this script's location -- works with or without `${CLAUDE_PLUGIN_ROOT}`).
 
-Exit: 0 ok (wired ou no-op) · 1 warn (conflito sem --force, nada sobrescrito) · 3 erro.
-stdlib apenas (sem PyYAML — a spec de wiring é fixa, nao vem de YAML externo).
-v1.0.0 — 2026-07-10 (health-kit · idempotente/--undo, modelado em kit-forge/wire_settings.py)
+Exit: 0 ok (wired or no-op) - 1 warn (conflict without --force, nothing overwritten) - 3 error.
+stdlib only (no PyYAML -- the wiring spec is fixed, it does not come from external YAML).
+v1.0.0 -- 2026-07-10 (health-kit - idempotent/--undo, modeled on kit-forge/wire_settings.py)
 """
 from __future__ import annotations
 
@@ -38,13 +38,13 @@ _MARKER = "--kit=health-kit"
 
 
 def _statusline_cmd() -> str:
-    # marca a origem com um TOKEN FIXO como argumento extra (ignorado por statusline.py,
-    # que so olha sys.argv[1]) — nao usar o path do script como marcador: a pasta emitida
-    # e versionada (health-kit-1.0.0), pode ser renomeada pelo usuario, e um
-    # path-substring colidiria com o statusline de outro kit que tambem termine em
-    # ".../statusline/statusline.py" (ex.: operator-kit). Um argv extra funciona igual
-    # em cmd.exe e em shells POSIX — sem depender de sintaxe de env-var-prefix (que
-    # cmd.exe nao entende).
+    # marks the origin with a FIXED TOKEN as an extra argument (ignored by statusline.py,
+    # which only looks at sys.argv[1]) -- do not use the script's path as the marker: the shipped
+    # folder is versioned (health-kit-1.0.0), can be renamed by the user, and a
+    # path-substring would collide with the statusline of another kit that also ends in
+    # ".../statusline/statusline.py" (e.g. operator-kit). An extra argv works the same
+    # in cmd.exe and in POSIX shells -- without depending on env-var-prefix syntax (which
+    # cmd.exe does not understand).
     plugin_root = os.environ.get("CLAUDE_PLUGIN_ROOT")
     if plugin_root:
         target = f"{Path(plugin_root).as_posix()}/statusline/statusline.py"
@@ -62,12 +62,12 @@ def _wiring_spec() -> dict:
 
 
 def apply_spec(data: dict, spec: dict, force: bool):
-    """Retorna (data, changed:bool, warning:str|None). Só toca 'statusLine' (sem hooks)."""
+    """Returns (data, changed:bool, warning:str|None). Only touches 'statusLine' (no hooks)."""
     marker = spec["match_substring"]
     cur = data.get("statusLine")
     cur_cmd = (cur or {}).get("command", "") if isinstance(cur, dict) else ""
     if isinstance(cur, dict) and marker in cur_cmd:
-        return data, False, None  # já wired — idempotente
+        return data, False, None  # already wired -- idempotent
     if not cur or force:
         data["statusLine"] = dict(spec["value"])
         return data, True, None
@@ -75,12 +75,12 @@ def apply_spec(data: dict, spec: dict, force: bool):
 
 
 def _write_json_atomic(target: Path, data: dict, backup: Path, *, expected_bytes: bytes | None = None) -> str:
-    """Grava `data` em `target` sem janela de corrupcao. Retorna "ok" | "invalid" | "conflict".
+    """Writes `data` to `target` with no window for corruption. Returns "ok" | "invalid" | "conflict".
 
-    # Why: escrever direto no alvo deixa um settings.json truncado se o processo cair no
-    # meio, e sobrescreve o que outro processo gravou entre a leitura e a escrita. O
-    # temporario fica no MESMO diretorio (os.replace so e atomico no mesmo volume) e a
-    # comparacao byte-a-byte com o que foi lido recusa a escrita em vez de perder a alheia.
+    # Why: writing straight to the target leaves a truncated settings.json if the process dies
+    # halfway through, and overwrites what another process wrote between the read and the write. The
+    # temp file stays in the SAME directory (os.replace is only atomic on the same volume) and the
+    # byte-by-byte comparison against what was read refuses the write instead of losing someone else's.
     """
     out = json.dumps(data, indent=2, ensure_ascii=False) + "\n"
     try:

@@ -8,7 +8,7 @@
 
 1. `00-READ-FIRST.md` (or the project's equivalent) — who you are, what to read.
 2. `{{vision_doc}}` §What success is — the north star.
-3. `{{state_doc}}` §Agora + §PENDÊNCIAS ABERTAS — the real state, LIVE (LC-1).
+3. `{{state_doc}}` §Now + §OPEN ITEMS — the real state, LIVE (LC-1).
 4. `{{goal_ledger_path}}` — the next repo-safe goal (`goal_ledger.py --next`).
 5. The most recent handoff of your lane (`.claude/handoff/HANDOFF-CURRENT-<lane>.json`), if it exists.
 
@@ -21,7 +21,7 @@ re-derive it from the live source (LC-1). Never re-execute on presumption.
 
 ## Objective of this round
 
-{{objetivo_1_frase}}
+{{objective_1_sentence}}
 
 ## Work-list (highest leverage first)
 
@@ -41,7 +41,7 @@ imminent irreversible risk → STOP and report.
 
 ## Completion promise
 
-When `{{objetivo_1_frase}}` is **literally and verifiably true** (not before),
+When `{{objective_1_sentence}}` is **literally and verifiably true** (not before),
 emit: `<promise>{{completion_promise_text}}</promise>`. `ralph_gate.py` runs the truth
 criteria before accepting — a false promise does not escape the loop, it only resets the cycle with the
 real failures attached.

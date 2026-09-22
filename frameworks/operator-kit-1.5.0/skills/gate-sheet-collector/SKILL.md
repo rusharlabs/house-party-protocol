@@ -9,9 +9,9 @@ description: Drains everything that depends on the human into ONE form (exact co
 > **Tools:** Read, Write, Edit
 > **Related doctrine:** `rules/learned-corrections.md` (LC-1: single source, no parallel list), `rules/gateguard.md` (human gate before anything destructive).
 
-# gate-sheet-collector — the wall becomes a form
+# gate-sheet-collector - the wall becomes a form
 
-What genuinely depends on the human **is never an excuse for the loop to stop** — it becomes a line in a single form that the human clears in one sitting.
+What genuinely depends on the human **is never an excuse for the loop to stop** - it becomes a line in a single form that the human clears in one sitting.
 
 ## Contract
 
@@ -30,7 +30,7 @@ What genuinely depends on the human **is never an excuse for the loop to stop** 
 
 | Resource | Reads/Writes | Purpose |
 |---|---|---|
-| SSoT (items marked by `ralph-loop-driver`) | Reads | the SINGLE source of the gates — never a 2nd parallel list |
+| SSoT (items marked by `ralph-loop-driver`) | Reads | the SINGLE source of the gates - never a 2nd parallel list |
 | `paths.gate_sheet` | Writes (append-only) | 1 line per gate |
 
 ## Process
@@ -38,50 +38,50 @@ What genuinely depends on the human **is never an excuse for the loop to stop** 
 2. **Do NOT block.** Leave the item **staged** (prepared + backup when applicable) and move on to the next autonomous item.
 3. **Drain into the gate-sheet** (`paths.gate_sheet`), one line per gate, in the format:
    `{gate · reason · EXACT command/step the human runs · what-it-unblocks when done}`.
-4. **Single source.** Drain from the items that `ralph-loop-driver` already marked in the SSoT — **do not keep a second parallel list** (two lists diverge → the classic error LC-1 catches).
+4. **Single source.** Drain from the items that `ralph-loop-driver` already marked in the SSoT - **do not keep a second parallel list** (two lists diverge → the classic error LC-1 catches).
 5. **Report at the end** the consolidated gate-sheet as the only thing missing for 100%.
 
 ## When NOT to Activate
 - Outside an autonomous loop (ask for the one-off approval on the spot).
-- When the item is actually doable autonomously (do not label as a gate what you can do yourself — prove it cannot be done first).
+- When the item is actually doable autonomously (do not label as a gate what you can do yourself - prove it cannot be done first).
 
 ## Executed examples
 
 ```console
 $ python -c '
 import re
-line = "billing · renovar assinatura vencendo 15/07 · acessar console e renovar · destrava: crons headless voltam"
+line = "billing · renew subscription due Jul 15 · access console and renew · unblocks: headless crons come back"
 pattern = re.compile(r"^[\w-]+ · .+ · .+ · .+$")
-print("formato valido:", bool(pattern.match(line)))
+print("valid format:", bool(pattern.match(line)))
 '
-formato valido: True
+valid format: True
 ```
-<!-- executed: 2026-07-10 · exit=0 -->
+<!-- executed: 2026-09-22 · exit=0 -->
 
 ```console
 $ python -c '
 import re, sys
 pattern = re.compile(r"^[\w-]+ · .+ · .+ · .+$")
-line = "so um texto solto sem separador"
+line = "just loose text with no separator"
 ok = bool(pattern.match(line))
-print("formato valido:", ok)
+print("valid format:", ok)
 sys.exit(0 if ok else 1)
 '
-formato valido: False
+valid format: False
 ```
-<!-- executed: 2026-07-10 · exit=1 -->
-(line without the 4 `·`-separated fields — rejected; that is what guarantees 1 parseable form, not free prose.)
+<!-- executed: 2026-09-22 · exit=1 -->
+(line without the 4 `·`-separated fields - rejected; that is what guarantees 1 parseable form, not free prose.)
 
 ```console
 $ python -c '
 import re
 lines = ["gate1 · m1 · c1 · d1", "gate2 · m2 · c2 · d2"]
 pattern = re.compile(r"^[\w-]+ · .+ · .+ · .+$")
-print("todas validas:", all(pattern.match(l) for l in lines))
+print("all valid:", all(pattern.match(l) for l in lines))
 '
-todas validas: True
+all valid: True
 ```
-<!-- executed: 2026-07-10 · exit=0 -->
+<!-- executed: 2026-09-22 · exit=0 -->
 
 ## Proof
 

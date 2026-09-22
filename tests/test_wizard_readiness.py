@@ -1,9 +1,9 @@
-"""Readiness honesto: cada item vem de uma verificacao que rodou, carrega o comando
-que a reproduz, e o que nao foi medido e' `not-verified` -- nunca 0 nem 100.
+"""Honest readiness: every item comes from a check that ran, carries the
+command that reproduces it, and what was not measured is `not-verified` -- never 0 nor 100.
 
-Os dois estados de "distribution integrity" e de "module checksums" sao ambos
-alcancados aqui (fixture de produto emitido montada em tmp a partir do manifesto
-real), para provar que o `not-verified` da arvore-fonte nao e' um estado fixo.
+Both states of "distribution integrity" and "module checksums" are reached
+here (emitted-product fixture assembled in tmp from the real manifest), to
+prove that the `not-verified` of the source tree is not a fixed state.
 """
 from __future__ import annotations
 
@@ -39,8 +39,8 @@ def _item(report: dict, item_id: str) -> dict:
 
 
 def _emitted_root(tmp_path: Path, *, corrupt: str | None = None) -> Path:
-    """Um 'produto emitido' minimo: manifesto real + marketplace coerente + um diretorio por
-    modulo com plugin.json e CHECKSUMS.txt corretos (ou um deles corrompido)."""
+    """A minimal 'emitted product': real manifest + coherent marketplace + one directory per
+    module with plugin.json and correct CHECKSUMS.txt (or one of them corrupted)."""
     manifest = json.loads((PRODUCT_ROOT / "hpp.manifest.json").read_text(encoding="utf-8"))
     root = tmp_path / "emitted"
     root.mkdir()
@@ -62,7 +62,7 @@ def _emitted_root(tmp_path: Path, *, corrupt: str | None = None) -> Path:
     return root
 
 
-def test_todo_item_tem_estado_valido_comando_e_a_soma_fecha(target, capsys):
+def test_every_item_has_a_valid_state_command_and_the_sum_closes(target, capsys):
     report = _report(target, capsys, "--no-benchmark")
     readiness = report["readiness"]
     assert readiness["items"]
@@ -74,16 +74,16 @@ def test_todo_item_tem_estado_valido_comando_e_a_soma_fecha(target, capsys):
     assert sum(readiness["cells"].values()) == wizard.READINESS_CELLS
 
 
-def test_o_que_nao_foi_medido_e_not_verified_nunca_zero_nem_cem(target, capsys):
+def test_what_was_not_measured_is_not_verified_never_zero_nor_a_hundred(target, capsys):
     report = _report(target, capsys, "--no-benchmark")
     assert _item(report, "benchmark")["status"] == "not-verified"
     assert "skipped" in _item(report, "benchmark")["evidence"]
     assert _item(report, "profile")["status"] == "not-verified"
     assert _item(report, "wiring")["status"] == "not-verified"
-    # Why: distribuicao e checksums dependem da ARVORE onde a suite roda. Na fonte nao ha
-    # marketplace.json nem diretorio de modulo, entao os dois sao nao-medidos; rodando de dentro
-    # da copia emitida eles EXISTEM e viram `verified`. Fixar `not-verified` prenderia o teste a
-    # uma das duas arvores e reprovaria a outra por estar completa.
+    # Why: distribution and checksums depend on the TREE where the suite runs. In the source
+    # there is neither marketplace.json nor a module directory, so both are unmeasured; running
+    # from inside the emitted copy they EXIST and become `verified`. Fixing `not-verified` would
+    # tie the test to one of the two trees and would fail the other for being complete.
     fonte = not (Path(wizard.__file__).resolve().parents[1] / "marketplace.json").is_file()
     esperado = "not-verified" if fonte else "verified"
     assert _item(report, "distribution")["status"] == esperado
@@ -91,14 +91,14 @@ def test_o_que_nao_foi_medido_e_not_verified_nunca_zero_nem_cem(target, capsys):
     assert 0 < report["readiness"]["verified"] < report["readiness"]["total"]
 
 
-def test_benchmark_vira_verified_quando_de_fato_roda(target, capsys):
+def test_benchmark_becomes_verified_when_it_actually_runs(target, capsys):
     report = _report(target, capsys)
     item = _item(report, "benchmark")
     assert item["status"] == "verified"
     assert "pass@k=" in item["evidence"] and item["command"] == "python -m hpp benchmark -k 1"
 
 
-def test_profile_vira_verified_so_depois_do_apply(target, capsys):
+def test_profile_becomes_verified_only_after_apply(target, capsys):
     before = _report(target, capsys, "--no-benchmark")
     assert _item(before, "profile")["status"] == "not-verified"
     after = _report(target, capsys, "--no-benchmark", "--apply", "--yes")
@@ -106,7 +106,7 @@ def test_profile_vira_verified_so_depois_do_apply(target, capsys):
     assert after["readiness"]["verified"] == before["readiness"]["verified"] + 1
 
 
-def test_distribution_e_checksums_viram_verified_num_produto_emitido_coerente(tmp_path, target, capsys):
+def test_distribution_and_checksums_become_verified_in_a_coherent_emitted_product(tmp_path, target, capsys):
     root = _emitted_root(tmp_path)
     report = _report(target, capsys, "--no-benchmark", "--manifest", str(root / "hpp.manifest.json"))
     assert report["exit_code"] == 0
@@ -118,7 +118,7 @@ def test_distribution_e_checksums_viram_verified_num_produto_emitido_coerente(tm
     assert all(module["checksum"]["status"] == "verified" for module in configure["detail"]["modules"])
 
 
-def test_checksum_divergente_e_failed_e_bloqueia_com_exit_2(tmp_path, target, capsys):
+def test_divergent_checksum_is_failed_and_blocks_with_exit_2(tmp_path, target, capsys):
     root = _emitted_root(tmp_path, corrupt="operator-kit")
     report = _report(target, capsys, "--no-benchmark", "--manifest", str(root / "hpp.manifest.json"))
     manifest, _ = load_manifest()
@@ -132,7 +132,7 @@ def test_checksum_divergente_e_failed_e_bloqueia_com_exit_2(tmp_path, target, ca
     assert "re-emit" in problem["next_step"]
 
 
-def test_marketplace_divergente_e_failed_no_prereqs_e_bloqueia(tmp_path, target, capsys):
+def test_divergent_marketplace_is_failed_in_prereqs_and_blocks(tmp_path, target, capsys):
     root = _emitted_root(tmp_path)
     marketplace = json.loads((root / "marketplace.json").read_text(encoding="utf-8"))
     marketplace["version"] = "0.0.1"
@@ -146,7 +146,7 @@ def test_marketplace_divergente_e_failed_no_prereqs_e_bloqueia(tmp_path, target,
     assert [stage["status"] for stage in report["stages"][2:]] == ["skipped"] * 4
 
 
-def test_git_ausente_vira_warn_com_comando_de_instalacao_e_exit_1(target, capsys, monkeypatch):
+def test_missing_git_becomes_warn_with_an_install_command_and_exit_1(target, capsys, monkeypatch):
     manifest, _ = load_manifest()
     monkeypatch.setattr(wizard.shutil, "which", lambda name: None)
     report = _report(target, capsys, "--no-benchmark")
@@ -160,7 +160,7 @@ def test_git_ausente_vira_warn_com_comando_de_instalacao_e_exit_1(target, capsys
     assert detect["detail"]["signals"]["git_commit_count"] is None
 
 
-def test_verify_checksums_distingue_ok_mismatch_e_ausente(tmp_path):
+def test_verify_checksums_distinguishes_ok_mismatch_and_missing(tmp_path):
     module_dir = tmp_path / "mod"
     module_dir.mkdir()
     (module_dir / "a.txt").write_text("alpha", encoding="utf-8")
@@ -174,10 +174,10 @@ def test_verify_checksums_distingue_ok_mismatch_e_ausente(tmp_path):
     assert failures == ["mismatch: a.txt", "missing: missing.txt", "malformed line: 'broken-line'"]
 
 
-def test_CONTROLE_os_tres_estados_sao_distinguiveis_no_mesmo_relatorio(target, capsys, monkeypatch):
-    """Controle: um relatorio com verified, failed E not-verified ao mesmo tempo -- prova que
-    o construtor nao colapsa estados (um readiness que so soubesse 'verified' passaria
-    em varios testes acima)."""
+def test_CONTROLE_the_three_states_are_distinguishable_in_the_same_report(target, capsys, monkeypatch):
+    """Control: a report with verified, failed AND not-verified at the same time -- proves that
+    the builder does not collapse states (a readiness that only knew 'verified' would pass
+    several tests above)."""
     monkeypatch.setattr(wizard, "assess", lambda command: {"action": "ALLOW", "rule": "allow", "reason": "broken"})
     report = _report(target, capsys, "--no-benchmark")
     statuses = {item["status"] for item in report["readiness"]["items"]}

@@ -1,31 +1,31 @@
 #!/usr/bin/env python3
 """
-distill_corrections (Operator Kit) — minera session logs e PROPOE regras destiladas.
+distill_corrections (Operator Kit) - mines session logs and PROPOSES distilled rules.
 
-Generaliza o padrao de minerar sessoes p/ regras destiladas (workflow que ja gerou a
-`learned-corrections.md`): lê os ultimos N session logs de `paths.logs_dir`
-(default .claude/sessions/), extrai linhas que parecem CORRECOES do operador
-(marcadores tipo NUNCA/SEMPRE/na verdade/errado/corrige/pare de), agrupa por
-similaridade simples (normalizacao + chave de tokens), e mantem SO as correcoes
-que recorrem em >= K sessoes DISTINTAS (distill.recurrence_threshold, default 3).
+Generalizes the pattern of mining sessions for distilled rules (the workflow that already
+produced `learned-corrections.md`): reads the last N session logs from `paths.logs_dir`
+(default .claude/sessions/), extracts lines that look like CORRECTIONS from the operator
+(markers like NEVER/ALWAYS/actually/wrong/fix/stop doing), groups them by simple
+similarity (normalization + token key), and keeps ONLY the corrections that recur in
+>= K DISTINCT sessions (distill.recurrence_threshold, default 3).
 
-Emite candidatas a regra (1 linha + evidencia de quais sessoes) e atualiza um
-ledger de REJEITADAS (distill.rejected_ledger) p/ nao re-propor o que ja foi
-descartado antes — as chaves que JA estao no ledger sao filtradas das candidatas.
+Emits rule candidates (1 line + evidence of which sessions) and updates a
+REJECTED ledger (distill.rejected_ledger) so it does not re-propose what has
+already been discarded - the keys already in the ledger are filtered out of the candidates.
 
-NAO aplica nada. NAO escreve na regra-alvo. So PROPOE (o agente/operador decide).
-Honesto por construcao: so agrega o que existe nos logs; nunca inventa correcao.
+Applies NOTHING. Writes NOTHING to the target rule. It only PROPOSES (the agent/operator decides).
+Honest by construction: it only aggregates what exists in the logs; it never invents a correction.
 
-Uso:
-    python distill_corrections.py                 # tabela legivel
-    python distill_corrections.py --n 30 --k 4    # janela e limiar custom
-    python distill_corrections.py --json          # saida JSON p/ pipeline
+Usage:
+    python distill_corrections.py                 # readable table
+    python distill_corrections.py --n 30 --k 4    # custom window and threshold
+    python distill_corrections.py --json          # JSON output for a pipeline
     python distill_corrections.py --self-test
 
-Exit: 0 sempre (ferramenta de proposta — nunca quebra o fluxo).
-stdlib + PyYAML (so p/ ler o profile). Cross-platform (pathlib).
+Exit: 0 always (proposal tool - never breaks the flow).
+stdlib + PyYAML (only to read the profile). Cross-platform (pathlib).
 
-v1.0.0 — 2026-06-19 (Operator Kit · Tier 2 · generaliza recurring-corrections-to-rules)
+v1.0.0 - 2026-06-19 (Operator Kit - Tier 2 - generalizes recurring-corrections-to-rules)
 """
 from __future__ import annotations
 
@@ -37,25 +37,25 @@ import unicodedata
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-# loader compartilhado: .../operator-kit/scripts/ -> parents[1] = operator-kit/
+# shared loader: .../operator-kit/scripts/ -> parents[1] = operator-kit/
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 try:
     from _lib.profile_loader import load_profile, get, profile_path
-except Exception:  # noqa: BLE001 — sem loader, cai p/ defaults seguros
+except Exception:  # noqa: BLE001 - without the loader, falls back to safe defaults
     load_profile = None  # type: ignore[assignment]
     get = None  # type: ignore[assignment]
     profile_path = None  # type: ignore[assignment]
 
 _BRT = timezone(timedelta(hours=-3))
 
-# Defaults seguros se nao houver profile
+# Safe defaults if there is no profile
 _DEF_LOGS_DIR = ".claude/sessions/"
 _DEF_LEDGER = ".claude/memory/_distill-rejeitadas.md"
 _DEF_N = 50
 _DEF_K = 3
 
-# Marcadores heuristicos de correcao do operador (case-insensitive).
-# Inclui os de feedback/enfase + verbos de correcao explicita.
+# Heuristic markers of an operator correction (case-insensitive).
+# Includes the feedback/emphasis ones + explicit correction verbs.
 _MARCADORES = (
     "nunca", "sempre", "na verdade", "errado", "errei", "corrige", "corrigir",
     "corrija", "pare de", "para de", "ja falei", "ja te falei", "toda vez",
@@ -64,7 +64,7 @@ _MARCADORES = (
 )
 _MARCADOR_RE = re.compile("|".join(re.escape(m) for m in _MARCADORES), re.IGNORECASE)
 
-# Stopwords pt-BR p/ a chave de agrupamento (reduz ruido na similaridade).
+# pt-BR stopwords for the grouping key (reduces noise in the similarity).
 _STOP = {
     "a", "o", "as", "os", "um", "uma", "de", "da", "do", "das", "dos", "e",
     "ou", "que", "para", "pra", "por", "com", "sem", "em", "no", "na", "nos",
@@ -87,17 +87,17 @@ def _normalize(text: str) -> str:
 
 
 def _key(text: str, ntokens: int = 6) -> str:
-    """Chave de agrupamento: top tokens significativos ordenados (similaridade simples)."""
+    """Grouping key: top significant tokens, sorted (simple similarity)."""
     norm = _normalize(text)
     toks = [t for t in norm.split() if len(t) > 2 and t not in _STOP]
     if not toks:
         return ""
-    # ordena alfabeticamente p/ que "X errado" e "errado X" colidam, pega os primeiros
+    # sorts alphabetically so that "X wrong" and "wrong X" collide, takes the first ones
     return " ".join(sorted(set(toks))[:ntokens])
 
 
 def _strip_log_prefix(line: str) -> str:
-    """Remove prefixos comuns de log (timestamp, bullet, '> ', 'Operador:', etc.)."""
+    """Removes common log prefixes (timestamp, bullet, '> ', 'Operador:', etc.)."""
     s = line.strip()
     s = re.sub(r"^[-*>#\s]+", "", s)
     s = re.sub(r"^\[?\d{4}-\d{2}-\d{2}[^\]]*\]?\s*", "", s)
@@ -106,14 +106,14 @@ def _strip_log_prefix(line: str) -> str:
 
 
 def _is_correction(line: str) -> bool:
-    """True se a linha parece uma correcao (tem marcador e e curta o suficiente p/ ser uma instrucao)."""
+    """True if the line looks like a correction (has a marker and is short enough to be an instruction)."""
     if not (3 < len(line) <= 400):
         return False
     return bool(_MARCADOR_RE.search(line))
 
 
 def _session_files(logs_dir: Path, n: int) -> list[Path]:
-    """Os N session logs mais recentes (.md/.jsonl), excluindo ponteiros/indices."""
+    """The N most recent session logs (.md/.jsonl), excluding pointers/indexes."""
     if not logs_dir.exists():
         return []
     skip_substr = ("INDEX", "POINTER", "LATEST", "CURRENT", "NEXT", "_archive", "archive")
@@ -131,7 +131,7 @@ def _session_files(logs_dir: Path, n: int) -> list[Path]:
 
 
 def _extract_from_file(path: Path) -> list[str]:
-    """Correcoes (texto limpo) achadas num arquivo de sessao."""
+    """Corrections (cleaned text) found in a session file."""
     out: list[str] = []
     try:
         raw = path.read_text(encoding="utf-8", errors="replace")
@@ -145,7 +145,7 @@ def _extract_from_file(path: Path) -> list[str]:
 
 
 def _load_ledger_keys(ledger: Path) -> set[str]:
-    """Le as chaves ja rejeitadas (marcadas como '<!-- key: ... -->' no ledger). set() se ausente."""
+    """Reads the keys already rejected (marked as '<!-- key: ... -->' in the ledger). set() if absent."""
     keys: set[str] = set()
     if not ledger.exists():
         return keys
@@ -154,7 +154,7 @@ def _load_ledger_keys(ledger: Path) -> set[str]:
             m = re.search(r"<!--\s*key:\s*(.+?)\s*-->", line)
             if m:
                 k = m.group(1).strip()
-                # ignora o placeholder de documentacao do cabecalho ('... ')
+                # ignore the header's documentation placeholder ('... ')
                 if k and k != "...":
                     keys.add(k)
     except OSError:
@@ -164,13 +164,13 @@ def _load_ledger_keys(ledger: Path) -> set[str]:
 
 def distill(logs_dir: Path, n: int, k: int, ledger_keys: set[str] | None = None) -> list[dict]:
     """
-    Retorna candidatas a regra ordenadas por recorrencia desc.
-    Cada item: {key, exemplo, n_sessoes, sessoes:[...], ocorrencias}.
-    So entram chaves que recorrem em >= k sessoes DISTINTAS e nao estao no ledger.
+    Returns rule candidates sorted by recurrence desc.
+    Each item: {key, exemplo, n_sessoes, sessoes:[...], ocorrencias}.
+    Only keys that recur in >= k DISTINCT sessions and are not in the ledger are included.
     """
     ledger_keys = ledger_keys or set()
     files = _session_files(logs_dir, n)
-    # chave -> {sessoes:set, exemplo:str, ocorrencias:int}
+    # key -> {sessoes:set, exemplo:str, ocorrencias:int}
     grupos: dict[str, dict] = {}
     for f in files:
         sess_name = f.name
@@ -182,7 +182,7 @@ def distill(logs_dir: Path, n: int, k: int, ledger_keys: set[str] | None = None)
             g = grupos.setdefault(key, {"sessoes": set(), "exemplo": corr, "ocorrencias": 0})
             g["ocorrencias"] += 1
             g["sessoes"].add(sess_name)
-            # mantem o exemplo mais curto (tende a ser a instrucao mais limpa)
+            # keeps the shortest exemplo (tends to be the cleanest instruction)
             if len(corr) < len(g["exemplo"]):
                 g["exemplo"] = corr
             seen_in_file.add(key)
@@ -205,7 +205,7 @@ def distill(logs_dir: Path, n: int, k: int, ledger_keys: set[str] | None = None)
 
 
 def _ensure_ledger(ledger: Path) -> None:
-    """Cria o ledger de rejeitadas com cabecalho se ainda nao existir."""
+    """Creates the rejected-candidates ledger with a header if it does not exist yet."""
     if ledger.exists():
         return
     try:
@@ -218,7 +218,7 @@ def _ensure_ledger(ledger: Path) -> None:
             encoding="utf-8",
         )
     except OSError:
-        pass  # ledger e best-effort; ausencia nao quebra o distill
+        pass  # the ledger is best-effort; its absence does not break the distill
 
 
 def _resolve_paths(root: Path):
@@ -231,7 +231,7 @@ def _resolve_paths(root: Path):
 
 
 def _project_root() -> Path:
-    """Raiz = onde vive o profile; senao sobe ate .git; senao cwd."""
+    """Root = where the profile lives; otherwise walks up to .git; otherwise cwd."""
     if profile_path is not None:
         try:
             p = profile_path()
@@ -304,20 +304,20 @@ def main(argv) -> int:
 def _self_test() -> None:
     import tempfile
 
-    # heuristicas puras
+    # pure heuristics
     assert _is_correction("NUNCA faca git push direto na main")
     assert _is_correction("na verdade o cliente e o Acme, errado de novo")
     assert not _is_correction("processando batch 3 de 8 com sucesso")
-    # ordem-invariante: mesmo conjunto de tokens significativos em ordens diferentes -> mesma chave
+    # order-invariant: the same set of significant tokens in different orders -> same key
     assert _key("git push main NUNCA") == _key("NUNCA main push git"), "chave deve ser ordem-invariante"
-    # conjuntos diferentes -> chaves diferentes
+    # different sets -> different keys
     assert _key("git push main") != _key("git push staging"), "tokens distintos -> chaves distintas"
     assert _strip_log_prefix("- [2026-06-19 10:00] Operador: NUNCA faz X") == "NUNCA faz X"
 
     with tempfile.TemporaryDirectory() as td:
         logs = Path(td) / "sessions"
         logs.mkdir()
-        # 3 sessoes distintas repetem a MESMA correcao -> deve virar candidata (k=3)
+        # 3 distinct sessions repeat the SAME correction -> should become a candidate (k=3)
         for d in ("01", "02", "03"):
             (logs / f"SESSION-2026-06-{d}.md").write_text(
                 "fizemos progresso no pipeline\n"
@@ -325,11 +325,11 @@ def _self_test() -> None:
                 "outro texto qualquer sem marcador\n",
                 encoding="utf-8",
             )
-        # 1 sessao com correcao unica -> NAO deve passar o limiar
+        # 1 session with a unique correction -> should NOT pass the threshold
         (logs / "SESSION-2026-06-04.md").write_text(
             "pare de criar arquivos na raiz do docs\n", encoding="utf-8"
         )
-        # ponteiro/index deve ser ignorado
+        # pointer/index should be ignored
         (logs / "SESSION-INDEX.json").write_text("{}", encoding="utf-8")
 
         cands = distill(logs, n=50, k=3)
@@ -337,14 +337,14 @@ def _self_test() -> None:
         assert cands[0]["n_sessoes"] == 3, "deve recorrer em 3 sessoes distintas"
         assert "8000" in cands[0]["exemplo"]
 
-        # k=4 nao deve achar nada (so recorreu em 3)
+        # k=4 should not find anything (it only recurred in 3)
         assert distill(logs, n=50, k=4) == [], "k=4 nao deveria achar candidatas"
 
-        # ledger filtra a chave -> some das candidatas
+        # ledger filters the key -> it disappears from the candidates
         key = cands[0]["key"]
         assert distill(logs, n=50, k=3, ledger_keys={key}) == [], "ledger deveria filtrar a chave"
 
-        # ledger criado e lido corretamente
+        # ledger created and read correctly
         ledger = Path(td) / "mem" / "_rej.md"
         _ensure_ledger(ledger)
         assert ledger.exists()

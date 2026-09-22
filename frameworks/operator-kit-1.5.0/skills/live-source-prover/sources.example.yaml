@@ -1,26 +1,30 @@
-# sources.yaml — map of domain -> LIVE verification command (live-source-prover)
+# sources.yaml - map of domain -> LIVE verification command (live-source-prover)
 # Copy to the project's sources.yaml and adjust the commands to the real stack.
 # The skill runs the command, pastes the output and labels it "live @ HH:MM + source".
-# NEVER use curl/wget if they are on the deny-list — prefer python -c urllib.
+# NEVER use curl/wget if they are on the deny-list - prefer python -c urllib.
 
+# NOTE: "contagens" (section name) and "agentes" (key) below are kept as-is on purpose -
+# they are the literal default section name and the --key example hardcoded in
+# scripts/live_count.py; renaming them here without also touching that script would break
+# the documented default (`live_count.py [--section contagens]`, `--key agentes`).
 contagens:
   agentes: "grep -rL 'status:.*draft' agents --include=AGENT.md | wc -l"
   skills:  "ls -1d .claude/skills/*/ | wc -l"
   hooks:   "ls -1 .claude/hooks/*.py | wc -l"
-  testes:  "python -m pytest --collect-only -q tests | tail -1"
+  tests:   "python -m pytest --collect-only -q tests | tail -1"
 
-servicos:
-  # health of a local service (urllib, not curl — respects the deny-list)
+services:
+  # health of a local service (urllib, not curl - respects the deny-list)
   api_health: "python -c \"import urllib.request,sys; print(urllib.request.urlopen('http://127.0.0.1:8080/health',timeout=5).status)\""
 
 deploy:
   # EXCLUSIVE route of the new build (not the auth gate) + build marker
-  rota_exclusiva: "python -c \"import urllib.request; r=urllib.request.urlopen('https://staging.exemplo.com/_health/rota-nova',timeout=8); print(r.status, r.read()[:200])\""
+  exclusive_route: "python -c \"import urllib.request; r=urllib.request.urlopen('https://staging.example.com/_health/new-route',timeout=8); print(r.status, r.read()[:200])\""
 
-plano:
+plan:
   # real completeness of a plan: see audit_plan.py
-  status_real: "python operator-kit/scripts/audit_plan.py docs/plans/SEU-PLANO.md --json"
+  real_status: "python operator-kit/scripts/audit_plan.py docs/plans/YOUR-PLAN.md --json"
 
 git:
-  ultimos_commits: "git log --oneline -5"
-  feito_recente: "git log --all -i --grep"   # append the term when using it
+  recent_commits: "git log --oneline -5"
+  recent_activity: "git log --all -i --grep"   # append the term when using it

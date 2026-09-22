@@ -1,6 +1,6 @@
 ---
 name: search-first
-description: Searches for an existing library/tool/pattern BEFORE writing new code — covers package registries (npm/PyPI), MCP and GitHub, in addition to the local grep. Use before creating a utility, helper, or new integration.
+description: Searches for an existing library/tool/pattern BEFORE writing new code - covers package registries (npm/PyPI), MCP and GitHub, in addition to the local grep. Use before creating a utility, helper, or new integration.
 ---
 
 > **Auto-Trigger:** Before writing a new utility/helper, adding a dependency, or when the user's request probably already has a ready-made solution.
@@ -10,18 +10,18 @@ description: Searches for an existing library/tool/pattern BEFORE writing new co
 
 ## When NOT to Activate
 - It is already known that no ready-made solution exists (a very business-specific domain).
-- It complements, not replaces, LC-3 (`learned-corrections.md`) — LC-3 is the local grep before
+- It complements, not replaces, LC-3 (`learned-corrections.md`) - LC-3 is the local grep before
   creating/classifying a file; this skill extends the search outside the repo (package
   registries, MCP, GitHub) before writing new code.
 
 ## Flow
 
 ```
-0. AVAILABILITY PREFLIGHT — check that the search channels exist before relying on them
-1. NEEDS ANALYSIS — what is needed, which language/framework
-2. SEARCH IN PARALLEL — npm/PyPI · local MCP/skills · GitHub/web
-3. EVALUATE — functionality, maintenance, community, docs, license, dependencies
-4. DECIDE — adopt as-is / extend-wrap / compose 2-3 packages / build custom
+0. AVAILABILITY PREFLIGHT - check that the search channels exist before relying on them
+1. NEEDS ANALYSIS - what is needed, which language/framework
+2. SEARCH IN PARALLEL - npm/PyPI · local MCP/skills · GitHub/web
+3. EVALUATE - functionality, maintenance, community, docs, license, dependencies
+4. DECIDE - adopt as-is / extend-wrap / compose 2-3 packages / build custom
 5. IMPLEMENT
 ```
 
@@ -29,10 +29,10 @@ description: Searches for an existing library/tool/pattern BEFORE writing new co
 
 | Signal | Action |
 |---|---|
-| Exact match, well maintained, MIT/Apache | **Adopt** — install and use directly |
-| Partial match, good base | **Extend** — install + thin wrapper |
-| Multiple weak matches | **Compose** — combine 2-3 small packages |
-| Nothing suitable found | **Build** — custom, but informed by the research |
+| Exact match, well maintained, MIT/Apache | **Adopt** - install and use directly |
+| Partial match, good base | **Extend** - install + thin wrapper |
+| Multiple weak matches | **Compose** - combine 2-3 small packages |
+| Nothing suitable found | **Build** - custom, but informed by the research |
 
 ## Quick mode (inline, before writing a utility)
 
@@ -52,7 +52,7 @@ description: Searches for an existing library/tool/pattern BEFORE writing new co
 ## Contract
 
 **Input:** a need for new functionality, before writing code.
-**Output:** a recorded decision (adopt/extend/compose/build) with the real search that grounded it —
+**Output:** a recorded decision (adopt/extend/compose/build) with the real search that grounded it -
 never "build" without first having searched the 4 applicable channels.
 
 **EXIT CODES:**
@@ -74,29 +74,29 @@ never "build" without first having searched the 4 applicable channels.
 ## Executed examples
 
 ```console
-$ python -c "print('local=consultado')"
-local=consultado
+$ python -c "print('local=consulted')"
+local=consulted
 ```
-<!-- executed: 2026-09-20 · exit=0 -->
+<!-- executed: 2026-09-22 · exit=0 -->
 
 ```console
-$ python -c "print('decisao=adotar')"
-decisao=adotar
+$ python -c "print('decision=adopt')"
+decision=adopt
 ```
-<!-- executed: 2026-09-20 · exit=0 -->
+<!-- executed: 2026-09-22 · exit=0 -->
 
 ```console
-$ python -c "import sys; print('block: construir sem busca'); sys.exit(2)"
-block: construir sem busca
+$ python -c "import sys; print('block: build without search'); sys.exit(2)"
+block: build without search
 ```
-<!-- executed: 2026-09-20 · exit=2 -->
+<!-- executed: 2026-09-22 · exit=2 -->
 
 ## Proof
 
-Research methodology — the minimum proof of the contract is:
+Research methodology - the minimum proof of the contract is:
 
 ```bash
-python -c "print('local=consultado')"
+python -c "print('local=consulted')"
 ```
 
 In real execution, the evidence is that the applicable search command ran before the new code.

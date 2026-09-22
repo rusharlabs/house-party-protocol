@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
-_handoff_io — lib única de IO do handoff (write/read/render/consume/validate).
+_handoff_io -- single IO lib for the handoff (write/read/render/consume/validate).
 
-Handoff = 1 artefato JSON por lane (`HANDOFF-CURRENT-<lane_id>.json`) + 1 ledger append-only
-(`HANDOFF-LEDGER.jsonl`). Materializa LC-1 (todo número carrega `re_derive_cmd`) e LC-4 (todo
-próximo passo carrega `verify_first_cmd` — "contexto restaurado é referência, não fila").
+Handoff = 1 JSON artifact per lane (`HANDOFF-CURRENT-<lane_id>.json`) + 1 append-only ledger
+(`HANDOFF-LEDGER.jsonl`). Materializes LC-1 (every number carries `re_derive_cmd`) and LC-4 (every
+next step carries `verify_first_cmd` -- "restored context is a reference, not a queue").
 
-Uso:
+Usage:
     echo '{...}' | python _handoff_io.py write --stdin
     python _handoff_io.py write --demo --lane solo
     python _handoff_io.py read --lane solo
@@ -15,11 +15,11 @@ Uso:
     python _handoff_io.py consume <handoff_id> --session <id>
     python _handoff_io.py --self-test
 
-Exit: 0 ok · 1 validação falhou (segredo detectado, campo obrigatório ausente, schema
-inválido) · 2 uso inválido. stdlib + PyYAML opcional (não usado; puro JSON aqui).
+Exit: 0 ok - 1 validation failed (secret detected, required field missing, invalid
+schema) - 2 invalid usage. stdlib + optional PyYAML (unused; pure JSON here).
 
-v1.0.0 — 2026-07-10 (continuity-kit · Tier 1 · deriva do design formal +
-         LOVABLE-PROD-REVIEW/.claude/hooks/{session_start,stop_state_guard}.py — método, não dado)
+v1.0.0 -- 2026-07-10 (continuity-kit - Tier 1 - derives from the formal design +
+         LOVABLE-PROD-REVIEW/.claude/hooks/{session_start,stop_state_guard}.py -- method, not data)
 """
 from __future__ import annotations
 
@@ -41,8 +41,8 @@ LEDGER_PATH = _HANDOFF_DIR / "HANDOFF-LEDGER.jsonl"
 _MAX_BYTES = 65536
 _REQUIRED_TOP = ("schema_version", "handoff_id", "created_at", "trigger", "quality", "session", "estado", "git", "valid_until")
 
-# Secret patterns — mesmo espírito do ip_pii_linter.py (kit-forge), cópia local: cada kit
-# deste marketplace é self-contained (C5 SKILL-CONTRACT), sem import cross-kit.
+# Secret patterns -- same spirit as ip_pii_linter.py (kit-forge), local copy: each kit
+# in this marketplace is self-contained (C5 SKILL-CONTRACT), no cross-kit import.
 _SECRET_PATTERNS = [
     re.compile(r"sk-ant-[A-Za-z0-9_\-]{10,}"),
     re.compile(r"sk-proj-[A-Za-z0-9_\-]{10,}"),
@@ -96,7 +96,7 @@ def scan_secrets(text: str) -> list:
 
 
 def validate(data: dict) -> list:
-    """Retorna lista de erros (vazia = válido). Regras LC-1/LC-4 embutidas no contrato."""
+    """Returns list of errors (empty = valid). LC-1/LC-4 rules built into the contract."""
     errors = []
     for field in _REQUIRED_TOP:
         if field not in data:
@@ -155,7 +155,7 @@ def current_path(lane_id: str) -> Path:
 
 
 def write(data: dict) -> tuple:
-    """Valida e grava atomicamente. Retorna (ok, errors_or_path)."""
+    """Validates and writes atomically. Returns (ok, errors_or_path)."""
     errors = validate(data)
     if errors:
         return False, errors
@@ -188,7 +188,7 @@ def newest_handoff(lane_id: str | None = None) -> dict | None:
 
 
 def is_stale(h: dict) -> tuple:
-    """(stale, reason). Checa valid_until E stale_when.head_moved (correção v1.1)."""
+    """(stale, reason). Checks valid_until AND stale_when.head_moved (v1.1 fix)."""
     valid_until = h.get("valid_until")
     if valid_until:
         try:
@@ -240,7 +240,7 @@ def consume(handoff_id: str, session_id: str, lane_id: str = "solo") -> None:
 
 def degraded_auto_aggregate(lane_id: str = "solo", session_id: str = "",
                             checkpoint_ref: str = "", checkpoint_commit: str = "") -> dict:
-    """Fallback quando a sessão morre sem /pre-clear (usado por handoff_guard.py)."""
+    """Fallback for when the session dies without /pre-clear (used by handoff_guard.py)."""
     now = _now_iso()
     ts_id = datetime.now().strftime("%Y%m%d-%H%M")
     log = _git(["log", "--oneline", "-5"])

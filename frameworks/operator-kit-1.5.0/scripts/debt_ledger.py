@@ -1,27 +1,27 @@
 #!/usr/bin/env python3
 """
-debt_ledger (Operator Kit) — rastreia dívida técnica declarada antes que "depois" vire "nunca".
+debt_ledger (Operator Kit) -- tracks declared technical debt before "later" becomes "never".
 
-Varre o projeto-alvo procurando o marcador `# debt: <teto>, <upgrade>` (ou `// debt:` em
-.js/.ts) e gera um ledger (reference/TECH-DEBT-LEDGER.md por padrão) com arquivo, linha,
-teto, upgrade e idade-git do arquivo. <teto> é uma data (YYYY-MM-DD) ou uma condição
-textual curta ("até migrar pro v2"); <upgrade> é o que fazer depois — sempre a partir da
-primeira vírgula após "debt:".
+Scans the target project looking for the `# debt: <teto>, <upgrade>` marker (or `// debt:` in
+.js/.ts) and generates a ledger (reference/TECH-DEBT-LEDGER.md by default) with file, line,
+teto, upgrade and the file's git-age. <teto> is a date (YYYY-MM-DD) or a short textual
+condition ("until migrating to v2"); <upgrade> is what to do afterward -- always starting
+from the first comma after "debt:".
 
-Uso:
-    python scripts/debt_ledger.py                       # varre cwd, escreve o ledger
-    python scripts/debt_ledger.py --root <dir>           # varre outra raiz
-    python scripts/debt_ledger.py --out <path>           # onde escrever (default: profile
-                                                          # paths.debt_ledger ou TECH-DEBT-LEDGER.md)
-    python scripts/debt_ledger.py --json                 # mesma info em JSON (stdout)
-    python scripts/debt_ledger.py --dry-run              # não escreve o .md, só imprime o que geraria
+Usage:
+    python scripts/debt_ledger.py                       # scans cwd, writes the ledger
+    python scripts/debt_ledger.py --root <dir>           # scans another root
+    python scripts/debt_ledger.py --out <path>           # where to write (default: profile
+                                                          # paths.debt_ledger or TECH-DEBT-LEDGER.md)
+    python scripts/debt_ledger.py --json                 # same info as JSON (stdout)
+    python scripts/debt_ledger.py --dry-run              # doesn't write the .md, just prints what it would generate
     python scripts/debt_ledger.py --self-test
 
-Exit: 0 = ok (zero marcadores OU todos bem-formados e dentro do teto) ·
-      1 = warn (marcador malformado OU teto vencido — data no passado) ·
-      3 = erro de uso.
-stdlib only (git é opcional — idade-git degrada para "" sem git ou fora de repo).
-v1.0.0 — 2026-07-11 (Operator Kit · ponytail #2 · `docs/plans/2026-06-29-PONYTAIL-ANALYSIS.md`)
+Exit: 0 = ok (zero markers OR all well-formed and within the teto) --
+      1 = warn (malformed marker OR expired teto -- date in the past) --
+      3 = usage error.
+stdlib only (git is optional -- git-age degrades to "" without git or outside a repo).
+v1.0.0 -- 2026-07-11 (Operator Kit -- ponytail #2 -- `docs/plans/2026-06-29-PONYTAIL-ANALYSIS.md`)
 """
 from __future__ import annotations
 
@@ -36,15 +36,15 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 try:
     from _lib.profile_loader import get, load_profile
-except Exception:  # noqa: BLE001 — sem loader, --out cai no default fixo
+except Exception:  # noqa: BLE001 -- without the loader, --out falls to the fixed default
     load_profile = None  # type: ignore[assignment]
     get = None  # type: ignore[assignment]
 
 _MARKER_RE = re.compile(r"(?:#|//)\s*debt:\s*(.+?)\s*$")
 _CODE_EXT = {".py", ".js", ".mjs", ".cjs", ".ts", ".tsx", ".jsx"}
 _IGNORE_DIRS = {".git", "__pycache__", "node_modules", ".venv", "venv", "dist", "build", ".next"}
-_SELF_NAME = Path(__file__).name  # o próprio debt_ledger.py documenta o marcador na docstring
-                                    # e embute exemplos no self-test -- excluído p/ não se autodetectar
+_SELF_NAME = Path(__file__).name  # debt_ledger.py itself documents the marker in the docstring
+                                    # and embeds examples in the self-test -- excluded so it doesn't self-detect
 
 
 def _iter_code_files(root: Path):
@@ -63,12 +63,12 @@ def _git_age(path: Path, root: Path) -> str:
             capture_output=True, text=True, timeout=10,
         )
         return (r.stdout or "").strip() if r.returncode == 0 else ""
-    except Exception:  # noqa: BLE001 — idade-git é informativa, nunca derruba o scan
+    except Exception:  # noqa: BLE001 -- git-age is informative, never brings the scan down
         return ""
 
 
 def _parse_marker(raw: str) -> dict:
-    """raw = tudo após 'debt:'. Retorna {teto, upgrade, malformed, vencido}."""
+    """raw = everything after 'debt:'. Returns {teto, upgrade, malformed, vencido}."""
     parts = raw.split(",", 1)
     if len(parts) != 2 or not parts[1].strip():
         return {"teto": raw.strip(), "upgrade": "", "malformed": True, "vencido": False}
@@ -78,12 +78,12 @@ def _parse_marker(raw: str) -> dict:
         teto_date = date.fromisoformat(teto_raw)
         vencido = teto_date < date.today()
     except ValueError:
-        pass  # condição textual — não checável automaticamente, não conta como vencida
+        pass  # textual condition -- not automatically checkable, doesn't count as expired
     return {"teto": teto_raw, "upgrade": upgrade, "malformed": False, "vencido": vencido}
 
 
 def scan(root: Path) -> list:
-    """Varre root por marcadores de dívida. Retorna lista de entradas (ordem de arquivo/linha)."""
+    """Scans root for debt markers. Returns a list of entries (file/line order)."""
     entries = []
     for f in _iter_code_files(root):
         try:
@@ -153,7 +153,7 @@ def _self_test() -> int:
         assert by_file["ok.py"]["malformed"] is False and by_file["ok.py"]["vencido"] is False, by_file["ok.py"]
         assert by_file["ok.py"]["upgrade"] == "swap polling for a webhook"
 
-        # CASO DE FALHA REAL: teto no passado -> vencido=True -> exit 1 no CLI real
+        # REAL FAILURE CASE: teto in the past -> vencido=True -> exit 1 in the real CLI
         assert by_file["vencido.py"]["vencido"] is True, by_file["vencido.py"]
 
         assert by_file["malformado.py"]["malformed"] is True, by_file["malformado.py"]
@@ -163,7 +163,7 @@ def _self_test() -> int:
 
         assert scan(tmp / "does-not-exist") == []  # nonexistent root = zero markers, not an error
 
-        # --dry-run não escreve; sem --dry-run escreve
+        # --dry-run doesn't write; without --dry-run it writes
         out = tmp / "out" / "LEDGER.md"
         assert not out.exists()
         code_dry = main(["--root", str(tmp), "--out", str(out), "--dry-run"])
@@ -172,7 +172,7 @@ def _self_test() -> int:
         code_real = main(["--root", str(tmp), "--out", str(out)])
         assert code_real == 1 and out.exists() and "EXPIRED" in out.read_text(encoding="utf-8")
 
-        # projeto limpo (só limpo.py) -> exit 0
+        # clean project (only limpo.py) -> exit 0
         clean_root = tmp / "clean"
         clean_root.mkdir()
         (clean_root / "a.py").write_text("nada = 1\n", encoding="utf-8")

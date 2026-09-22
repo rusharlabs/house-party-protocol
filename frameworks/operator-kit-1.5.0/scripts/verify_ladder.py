@@ -1,31 +1,31 @@
 #!/usr/bin/env python3
 """
-verify_ladder (Operator Kit) — escada de verificacao em 6 niveis, portatil e config-driven.
+verify_ladder (Operator Kit) -- 6-level verification ladder, portable and config-driven.
 
-Escada de verificacao em 6 niveis, agnostica de projeto: le a
-escada de `verification.ladder` do operator-profile.yaml (dict nivel->comando)
-e roda cada nivel que TEM comando. Os 6 niveis canonicos sao:
-    lint · test · build · visual · staging · security
+6-level verification ladder, project-agnostic: reads the
+`verification.ladder` ladder from operator-profile.yaml (dict level->command)
+and runs each level that HAS a command. The 6 canonical levels are:
+    lint - test - build - visual - staging - security
 
-Principio anti-verde-falso: um nivel com comando VAZIO/ausente nao "passa" — ele
-e SKIPPED e nao conta no score. O score e X/N onde N = numero de niveis com comando
-de verdade (os SKIPPED nao inflam o denominador nem o numerador).
+Anti-false-green principle: a level with an EMPTY/absent command does not "pass" -- it
+is SKIPPED and doesn't count toward the score. The score is X/N where N = number of levels
+with a real command (SKIPPED levels inflate neither the denominator nor the numerator).
 
-PASS/FAIL geral:
-    FAIL se QUALQUER nivel obrigatorio (verification.ladder_required) falhou,
-    OU se o score (niveis que passaram) < verification.ladder_min_score.
-    Caso contrario PASS. (Um obrigatorio sem comando = SKIPPED = nao satisfeito = FAIL.)
+Overall PASS/FAIL:
+    FAIL if ANY mandatory level (verification.ladder_required) failed,
+    OR if the score (levels that passed) < verification.ladder_min_score.
+    Otherwise PASS. (A mandatory level without a command = SKIPPED = not satisfied = FAIL.)
 
-Uso:
-    python verify_ladder.py                 # le ladder do operator-profile.yaml
-    python verify_ladder.py --json          # saida JSON estruturada
+Usage:
+    python verify_ladder.py                 # reads the ladder from operator-profile.yaml
+    python verify_ladder.py --json          # structured JSON output
     python verify_ladder.py --self-test
 
-Exit: 0 = PASS · 1 = FAIL · 2 = uso/config invalida (sem escada utilizavel).
-stdlib + PyYAML (via loader). Cross-platform (shell=True respeita o SO). Degrada
-para defaults seguros sem profile: sem escada -> nada a verificar -> FAIL (nunca verde-falso).
+Exit: 0 = PASS -- 1 = FAIL -- 2 = invalid usage/config (no usable ladder).
+stdlib + PyYAML (via loader). Cross-platform (shell=True respects the OS). Degrades
+to safe defaults without a profile: no ladder -> nothing to verify -> FAIL (never a false green).
 
-v1.0.0 — 2026-06-19 (Operator Kit · Tier 1 · generaliza verify-6-levels)
+v1.0.0 -- 2026-06-19 (Operator Kit -- Tier 1 -- generalizes verify-6-levels)
 """
 from __future__ import annotations
 
@@ -34,23 +34,23 @@ import subprocess
 import sys
 from pathlib import Path
 
-# importa o loader compartilhado do kit (.../operator-kit/_lib/profile_loader.py)
+# import the shared kit loader (.../operator-kit/_lib/profile_loader.py)
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 try:
     from _lib.profile_loader import load_profile, get
-except Exception:  # noqa: BLE001 — sem loader, modo profile fica indisponivel; resto funciona
+except Exception:  # noqa: BLE001 -- without the loader, profile mode is unavailable; the rest works
     load_profile = None  # type: ignore[assignment]
     get = None  # type: ignore[assignment]
 
-# Ordem canonica dos 6 niveis.
+# Canonical order of the 6 levels.
 NIVEIS_CANONICOS = ["lint", "test", "build", "visual", "staging", "security"]
 
 
 def run_nivel(nivel: str, cmd: str, cwd: str | None = None, timeout: int = 600) -> dict:
-    """Roda um nivel da escada. Sem comando -> status SKIPPED (nunca verde-falso).
+    """Runs one ladder level. No command -> SKIPPED status (never a false green).
 
-    Retorna dict {nivel, cmd, status, passed, exit_code, tail}.
-    status in {"PASS", "FAIL", "SKIPPED"}. SKIPPED nunca conta como passed.
+    Returns dict {nivel, cmd, status, passed, exit_code, tail}.
+    status in {"PASS", "FAIL", "SKIPPED"}. SKIPPED never counts as passed.
     """
     cmd = (cmd or "").strip()
     if not cmd:
@@ -68,34 +68,34 @@ def run_nivel(nivel: str, cmd: str, cwd: str | None = None, timeout: int = 600) 
     except subprocess.TimeoutExpired:
         return {"nivel": nivel, "cmd": cmd, "status": "FAIL",
                 "passed": False, "exit_code": 124, "tail": f"timeout {timeout}s"}
-    except Exception as e:  # noqa: BLE001 — escada jamais crasha; erro = nivel falho
+    except Exception as e:  # noqa: BLE001 -- the ladder never crashes; error = failed level
         return {"nivel": nivel, "cmd": cmd, "status": "FAIL",
                 "passed": False, "exit_code": 1, "tail": f"erro: {e}"}
 
 
 def evaluate(ladder: dict, obrigatorios=None, score_minimo: int = 1,
              cwd: str | None = None, timeout: int = 600) -> dict:
-    """Roda a escada inteira e avalia PASS/FAIL geral.
+    """Runs the whole ladder and evaluates overall PASS/FAIL.
 
-    ladder: dict {nivel: comando}. Niveis seguem NIVEIS_CANONICOS quando presentes,
-            extras (se houver) rodam no fim em ordem alfabetica.
-    obrigatorios: lista de niveis que DEVEM passar (default []).
-    score_minimo: minimo de niveis com PASS para nao falhar por score.
+    ladder: dict {nivel: comando}. Levels follow NIVEIS_CANONICOS when present,
+            extras (if any) run at the end in alphabetical order.
+    obrigatorios: list of levels that MUST pass (default []).
+    score_minimo: minimum number of PASS levels to not fail on score.
 
-    Retorna dict com results, score, total (niveis com comando), pass/fail e razao.
+    Returns dict with results, score, total (levels with a command), pass/fail and razao.
     """
     obrigatorios = list(obrigatorios or [])
-    # Ordena: canonicos primeiro (na ordem fixa), depois extras alfabeticos.
+    # Sorts: canonical first (in the fixed order), then alphabetical extras.
     chaves = [n for n in NIVEIS_CANONICOS if n in ladder]
     chaves += sorted(k for k in ladder if k not in NIVEIS_CANONICOS)
 
     results = [run_nivel(n, ladder.get(n, ""), cwd=cwd, timeout=timeout) for n in chaves]
 
     com_comando = [r for r in results if r["status"] != "SKIPPED"]
-    total = len(com_comando)                                  # N = niveis com comando real
-    score = sum(1 for r in com_comando if r["passed"])        # X = niveis que passaram
+    total = len(com_comando)                                  # N = levels with a real command
+    score = sum(1 for r in com_comando if r["passed"])        # X = levels that passed
 
-    # Obrigatorio satisfeito SO se status == PASS (SKIPPED ou FAIL nao contam).
+    # A mandatory level is satisfied ONLY if status == PASS (SKIPPED or FAIL don't count).
     status_por_nivel = {r["nivel"]: r["status"] for r in results}
     obrig_falhos = [n for n in obrigatorios if status_por_nivel.get(n) != "PASS"]
 
@@ -121,9 +121,9 @@ def evaluate(ladder: dict, obrigatorios=None, score_minimo: int = 1,
 
 
 def ladder_from_profile() -> tuple[dict, list, int]:
-    """Le verification.ladder / ladder_required / ladder_min_score do profile.
+    """Reads verification.ladder / ladder_required / ladder_min_score from the profile.
 
-    Retorna (ladder_dict, obrigatorios_list, score_minimo_int). Defaults seguros se ausente.
+    Returns (ladder_dict, obrigatorios_list, score_minimo_int). Safe defaults if absent.
     """
     if load_profile is None or get is None:
         return {}, [], 1
@@ -142,7 +142,7 @@ def ladder_from_profile() -> tuple[dict, list, int]:
 
 
 def _render(report: dict) -> str:
-    """Renderiza o relatorio humano (texto). Mostra tail por nivel, score e veredito."""
+    """Renders the human report (text). Shows the tail per level, score and verdict."""
     linhas = []
     for r in report["results"]:
         mark = {"PASS": "OK  ", "FAIL": "FAIL", "SKIPPED": "SKIP"}[r["status"]]
@@ -159,11 +159,11 @@ def _render(report: dict) -> str:
 
 
 def _self_test() -> None:
-    # ladder fake inline — sem profile, sem rede; comandos deterministicos cross-platform.
+    # fake inline ladder -- no profile, no network; deterministic cross-platform commands.
     ok_cmd = f'"{sys.executable}" -c "import sys; sys.exit(0)"'
     fail_cmd = f'"{sys.executable}" -c "import sys; sys.exit(1)"'
 
-    # 1) Nivel sem comando => SKIPPED, nao conta no total.
+    # 1) Level without a command => SKIPPED, doesn't count towards the total.
     rep = evaluate({"lint": "", "test": ok_cmd}, obrigatorios=["test"], score_minimo=1)
     assert rep["total"] == 1, f"SKIPPED should not count towards the total: {rep['total']}"
     assert rep["score"] == 1, f"score should be 1: {rep['score']}"
@@ -171,25 +171,25 @@ def _self_test() -> None:
     skip = next(r for r in rep["results"] if r["nivel"] == "lint")
     assert skip["status"] == "SKIPPED", "lint without a command must be SKIPPED"
 
-    # 2) Obrigatorio que falha => FAIL geral mesmo com outro nivel ok.
+    # 2) A mandatory level that fails => overall FAIL even with another level ok.
     rep2 = evaluate({"test": fail_cmd, "build": ok_cmd}, obrigatorios=["test"], score_minimo=1)
     assert rep2["passed"] is False, "mandatory test failed => FAIL"
     assert "test" in rep2["obrigatorios_falhos"]
 
-    # 3) Score abaixo do minimo => FAIL.
+    # 3) Score below the minimum => FAIL.
     rep3 = evaluate({"test": ok_cmd}, obrigatorios=[], score_minimo=2)
     assert rep3["passed"] is False, "score 1 < minimum 2 => FAIL"
 
-    # 4) Obrigatorio SEM comando (SKIPPED) NAO satisfaz => FAIL (anti-verde-falso).
+    # 4) A mandatory level WITHOUT a command (SKIPPED) does NOT satisfy => FAIL (anti-false-green).
     rep4 = evaluate({"security": ""}, obrigatorios=["security"], score_minimo=0)
     assert rep4["passed"] is False, "a SKIPPED mandatory level does not satisfy"
     assert "security" in rep4["obrigatorios_falhos"]
 
-    # 5) Escada vazia => total 0, nada verificado => FAIL.
+    # 5) Empty ladder => total 0, nothing verified => FAIL.
     rep5 = evaluate({}, obrigatorios=[], score_minimo=1)
     assert rep5["total"] == 0 and rep5["passed"] is False, "an empty ladder never passes"
 
-    # 6) Ordem canonica respeitada quando presente.
+    # 6) Canonical order respected when present.
     rep6 = evaluate({"security": ok_cmd, "lint": ok_cmd}, obrigatorios=[], score_minimo=1)
     ordem = [r["nivel"] for r in rep6["results"]]
     assert ordem == ["lint", "security"], f"wrong canonical order: {ordem}"

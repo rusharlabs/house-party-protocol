@@ -72,7 +72,7 @@ O Claude Code não aceita `statusLine` dentro de plugin — tem que ir no `setti
 ```jsonc
 "statusLine": { "type": "command", "command": "python operator-kit/statusline/statusline.py --statusline", "padding": 0 }
 ```
-Reabra a sessão p/ aparecer no rodapé. Exemplo de render (segmentos default `progress,health,commits,branch`): `🧠 meu-projeto 58% █████░░░ ▸ 34c hoje ▸ feat/minha-branch` (o segmento `health` só aparece se `health.probes` estiver configurado — ver `health-kit`).
+Reabra a sessão p/ aparecer no rodapé. Exemplo de render (segmentos default `progress,health,commits,branch`): `🧠 meu-projeto 58% █████░░░ ▸ 34c today ▸ feat/minha-branch` (o segmento `health` só aparece se `health.probes` estiver configurado — ver `health-kit`).
 
 ## Smoke test pós-wire
 ```bash

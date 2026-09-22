@@ -55,17 +55,17 @@ self-test OK
 <!-- executed: 2026-07-10 · exit=0 -->
 
 ```console
-$ python scripts/audit_plan.py plano-exemplo.md --no-git --json
+$ python scripts/audit_plan.py example-plan.md --no-git --json
 {
   "total": 2,
   "resumo": {"FEITO": 1, "PARCIAL": 0, "AUSENTE": 1},
   "itens": [
-    {"texto": "Criar `README.md`", "status": "FEITO", "on_disk": true},
-    {"texto": "Criar `arquivo-que-nao-existe-nunca.xyz`", "status": "AUSENTE", "on_disk": false}
+    {"texto": "Create `README.md`", "status": "FEITO", "on_disk": true},
+    {"texto": "Create `never-exists-at-all.xyz`", "status": "AUSENTE", "on_disk": false}
   ]
 }
 ```
-<!-- executed: 2026-07-10 · exit=0 -->
+<!-- executed: 2026-09-22 · exit=0 -->
 (proves step 2: nothing is "probably done" — what does not exist on disk becomes AUSENTE.)
 
 ```console

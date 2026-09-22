@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
-# collision-git-guard.sh — os 2 casos de colisão-git do lane-engine, via a interface REAL
-# do hook (stdin JSON -> stdout JSON), contra um repositório git de verdade. Roda 3x e
-# exige resultado idêntico (pass^k=1.00, k=3 — loop-passk REGRA 2).
+# collision-git-guard.sh - the 2 git-collision cases of the lane engine, through the REAL hook
+# interface (stdin JSON -> stdout JSON), against a real git repository. Runs 3x and demands an
+# identical result (pass^k=1.00, k=3 - loop-passk RULE 2).
 #
-# G1 · rival vivo + comando perigoso -> modo warn: avisa em stderr, sem decision, exit 0;
-#      modo block: decision:block + permissionDecision:deny, exit 0
-# G2 · comando seguro (pathspec explícito) sempre libera; solo libera mesmo com -am;
-#      lane com heartbeat de 35min (morta) = zero falso-positivo
-# Rider · 10 processos concorrentes de register/heartbeat -> registry.json continua JSON válido
+# G1 . live rival + a dangerous command -> warn mode: warns on stderr, no decision, exit 0;
+#      block mode: decision:block + permissionDecision:deny, exit 0
+# G2 . a safe command (explicit pathspec) always releases; solo releases even with -am;
+#      a lane with a 35min heartbeat (dead) = zero false positives
+# Rider . 10 concurrent register/heartbeat processes -> registry.json stays valid JSON
 #
-# Uso: bash evals/collision-git-guard.sh
-# Exit: 0 = 3/3 rodadas com todos os checks verdes · 1 = alguma rodada falhou
+# Usage: bash evals/collision-git-guard.sh
+# Exit: 0 = 3/3 runs with every check green . 1 = a run failed
 
 set -u
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -39,13 +39,13 @@ run_round() {
   ( cd "$WORK" && git init -q && git config user.email "eval@example.com" && git config user.name "Eval" \
       && echo "seed" > seed.txt && git add seed.txt && git commit -qm "seed" )
 
-  # registra rival vivo (exec-a) como "outra lane"
+  # register a live rival (exec-a) as "the other lane"
   python "$LANE_IO" register --lane exec-a --role executora --session s1 --model claude-opus-4-8 >/dev/null
 
   export CLAUDE_LANE_ID="exec-b"
   unset LANE_GIT_GUARD_BYPASS
 
-  # G1a — modo warn: avisa, sem decision
+  # G1a - warn mode: warns, no decision
   export LANE_GIT_GUARD_MODE="warn"
   STDERR_CAPTURE="$(mktemp)"
   OUT=$(invoke_guard "git commit -am x" 2>"$STDERR_CAPTURE")
@@ -56,25 +56,25 @@ run_round() {
     report 1 "round$round G1a failed: OUT=$OUT ERR=$ERR"
   fi
 
-  # G1b — modo block: decision:block + permissionDecision:deny
+  # G1b - block mode: decision:block + permissionDecision:deny
   export LANE_GIT_GUARD_MODE="block"
   OUT=$(invoke_guard "git commit -am x")
   echo "$OUT" | grep -q '"decision": *"block"' && echo "$OUT" | grep -q '"permissionDecision": *"deny"' \
     && report 0 "round$round G1b: block mode -> decision:block + permissionDecision:deny" \
     || report 1 "round$round G1b failed: OUT=$OUT"
 
-  # G2a — comando seguro (pathspec explicito) sempre libera, mesmo em modo block
+  # G2a - a safe command (explicit pathspec) always releases, even in block mode
   OUT=$(invoke_guard "git commit -m x -- file.py")
   [ "$OUT" = "{}" ] && report 0 "round$round G2a: an explicit pathspec releases even in block mode" \
     || report 1 "round$round G2a failed: OUT=$OUT"
 
-  # G2b — solo (evict exec-a) libera mesmo com -am
+  # G2b - solo (evict exec-a) releases even with -am
   python "$LANE_IO" evict --lane exec-a >/dev/null
   OUT=$(invoke_guard "git commit -am x")
   [ "$OUT" = "{}" ] && report 0 "round$round G2b: solo releases even with -am" \
     || report 1 "round$round G2b failed: OUT=$OUT"
 
-  # G2c — lane com heartbeat de 35min (morta) = zero falso-positivo
+  # G2c - a lane with a 35min heartbeat (dead) = zero false positives
   python "$LANE_IO" register --lane exec-a --role executora --session s1 --model claude-opus-4-8 >/dev/null
   python -c "
 import json, time
@@ -90,7 +90,7 @@ p.write_text(json.dumps(reg), encoding='utf-8')
   [ "$OUT" = "{}" ] && report 0 "round$round G2c: dead lane = zero false positives" \
     || report 1 "round$round G2c failed: OUT=$OUT"
 
-  # Rider — 10 processos concorrentes de register/heartbeat -> registry.json continua valido
+  # Rider - 10 concurrent register/heartbeat processes -> registry.json stays valid
   pids=()
   for i in $(seq 1 10); do
     if [ $((i % 2)) -eq 0 ]; then

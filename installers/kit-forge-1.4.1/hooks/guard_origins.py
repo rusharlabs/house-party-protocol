@@ -1,34 +1,34 @@
 #!/usr/bin/env python3
 """
-guard_origins — protege fontes vivas de escrita acidental, em 2 modos.
+guard_origins -- protects live sources from accidental writes, in 2 modes.
 
-MODO BIBLIOTECA (mecanismo principal — usado pelo próprio kit_assembler.py):
-  sweep(root, files)          -> {relpath: mtime} ANTES de copiar
-  verify(before, root, files) -> [relpath drifted/sumiu] DEPOIS de copiar
-  Detecta se algo na FONTE mudou durante a montagem (outra sessão editando o mesmo
-  staging enquanto o assembler lia) — falha de integridade de supply-chain, não de
-  permissão. kit_assembler chama sweep() antes do loop de cópia e verify() depois
-  (e de novo antes do swap final) — se houver drift, ABORTA a emissão.
+LIBRARY MODE (main mechanism -- used by kit_assembler.py itself):
+  sweep(root, files)          -> {relpath: mtime} BEFORE copying
+  verify(before, root, files) -> [relpath drifted/vanished] AFTER copying
+  Detects whether something in the SOURCE changed during assembly (another session
+  editing the same staging while the assembler was reading) -- a supply-chain
+  integrity failure, not a permission one. kit_assembler calls sweep() before the
+  copy loop and verify() after (and again before the final swap) -- if there is drift, it ABORTS the emission.
 
-MODO --hook (opcional — para sessões agênticas de extração/porting):
-  PreToolUse hook (stdin JSON -> exit code) que BLOQUEIA Edit/Write/MultiEdit/
-  NotebookEdit e comandos Bash destrutivos que alvejam um path listado em
-  `origins` (config/env — NUNCA hardcoded, diferente do guard-origens.js de
-  referência que tinha 4 paths fixos de um projeto específico).
+--hook MODE (optional -- for agentic extraction/porting sessions):
+  PreToolUse hook (stdin JSON -> exit code) that BLOCKS Edit/Write/MultiEdit/
+  NotebookEdit and destructive Bash commands that target a path listed in
+  `origins` (config/env -- NEVER hardcoded, unlike the reference guard-origens.js
+  which had 4 fixed paths from one specific project).
 
-Config das origens (modo --hook, primeira que existir):
-  1. --config <arquivo.json ou .yaml> com {"origins": ["path/substring", ...]}
-  2. env GUARD_ORIGINS="path1,path2" (separado por vírgula ou quebra de linha)
-  3. sem nenhuma -> lista vazia -> hook nunca bloqueia (fail-open, documentado)
+Origin config (--hook mode, first one that exists):
+  1. --config <file.json or .yaml> with {"origins": ["path/substring", ...]}
+  2. env GUARD_ORIGINS="path1,path2" (comma- or newline-separated)
+  3. none -> empty list -> hook never blocks (fail-open, documented)
 
-Uso:
-    from guard_origins import sweep, verify                          # modo biblioteca
+Usage:
+    from guard_origins import sweep, verify                          # library mode
     echo '{"tool_name":"Write","tool_input":{...}}' | python guard_origins.py --hook
     python guard_origins.py --self-test
 
-Exit (modo --hook): 0 permitido · 2 bloqueado (PreToolUse). Modo biblioteca não usa
-exit code (retorna dict/list para o chamador decidir).
-stdlib only (+ PyYAML opcional só p/ --config .yaml). v1.0.0 — 2026-07-10 (kit-forge)
+Exit (--hook mode): 0 allowed - 2 blocked (PreToolUse). Library mode does not use an
+exit code (returns dict/list for the caller to decide).
+stdlib only (+ optional PyYAML only for --config .yaml). v1.0.0 -- 2026-07-10 (kit-forge)
 """
 from __future__ import annotations
 
@@ -40,7 +40,7 @@ import sys
 from pathlib import Path
 
 try:
-    import yaml  # PyYAML — só para --config *.yaml
+    import yaml  # PyYAML -- only for --config *.yaml
 except ImportError:
     yaml = None  # type: ignore[assignment]
 
@@ -51,12 +51,12 @@ _WRITE_TOOLS = {"Edit", "Write", "MultiEdit", "NotebookEdit"}
 
 
 # ---------------------------------------------------------------------------
-# MODO BIBLIOTECA — usado por kit_assembler.py
+# LIBRARY MODE -- used by kit_assembler.py
 # ---------------------------------------------------------------------------
 
 def sweep(root: Path, files: list) -> dict:
-    """Snapshot de mtime (ns) de cada arquivo em `files` (paths relativos a `root`).
-    Arquivo ausente no momento do sweep = None (comparado depois em verify)."""
+    """Snapshot of the mtime (ns) of each file in `files` (paths relative to `root`).
+    A file missing at sweep time = None (compared later in verify)."""
     out = {}
     for rel in files:
         p = root / rel
@@ -68,8 +68,8 @@ def sweep(root: Path, files: list) -> dict:
 
 
 def verify(before: dict, root: Path, files: list) -> list:
-    """Retorna a lista de relpaths cujo mtime mudou (ou que sumiram/apareceram)
-    entre o `sweep()` anterior e agora. Lista vazia = fonte estável durante a janela."""
+    """Returns the list of relpaths whose mtime changed (or that vanished/appeared)
+    between the earlier `sweep()` and now. Empty list = source stable during the window."""
     drifted = []
     for rel in files:
         p = root / rel
@@ -83,7 +83,7 @@ def verify(before: dict, root: Path, files: list) -> list:
 
 
 # ---------------------------------------------------------------------------
-# MODO --hook — PreToolUse standalone
+# --hook MODE -- standalone PreToolUse
 # ---------------------------------------------------------------------------
 
 def _norm(s) -> str:
@@ -115,7 +115,7 @@ def load_origins(config_path: str | None) -> list:
 
 
 def decide(payload: dict, origins: list) -> tuple:
-    """Retorna (exit_code, mensagem). Logica isolada de stdin/exit p/ testar sem processo real."""
+    """Returns (exit_code, message). Logic isolated from stdin/exit so it can be tested without a real process."""
     if not origins:
         return 0, ""
 
@@ -155,7 +155,7 @@ def main(argv) -> int:
         raw = sys.stdin.read()
         payload = json.loads(raw) if raw.strip() else {}
     except json.JSONDecodeError:
-        return 0  # payload malformado nunca bloqueia — fail-safe
+        return 0  # a malformed payload never blocks -- fail-safe
 
     origins = load_origins(args.config)
     code, message = decide(payload, origins)
@@ -169,7 +169,7 @@ def _self_test() -> int:
     import tempfile
     import time
 
-    # --- modo biblioteca ---
+    # --- library mode ---
     tmp = Path(tempfile.mkdtemp(prefix="guard_origins_selftest_"))
     try:
         (tmp / "a.txt").write_text("A", encoding="utf-8")
@@ -196,7 +196,7 @@ def _self_test() -> int:
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 
-    # --- modo --hook ---
+    # --- --hook mode ---
     origins = ["Desktop/FONTE-VIVA"]
     code1, msg1 = decide({"tool_name": "Write", "tool_input": {"file_path": "Desktop/FONTE-VIVA/x.py"}}, origins)
     assert code1 == 2 and "BLOCKED" in msg1, (code1, msg1)

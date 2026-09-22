@@ -32,8 +32,9 @@ BOOT_LINES = {
 PROFILE_SCHEMA = "hpp.init/v1"
 REPORT_SCHEMA = "hpp.init-report/v1"
 PROFILE_RELPATH = Path(".hpp") / "profile.json"
-# Why: o piso vem do que a matriz de CI exercita, nao do que o codigo toleraria. O wizard
-# recusar 3.9 e a mesma promessa que o pyproject declara — duas fontes dizendo o mesmo.
+# Why: the floor comes from what the CI matrix exercises, not from what the code would
+# tolerate. The wizard refusing 3.9 is the same promise pyproject declares - two sources
+# saying the same thing.
 MIN_PYTHON = (3, 10)
 POLICY_MODES = ("audit", "enforce")
 # Why: the public marketplace is the channel the README documents; a flag overrides it for forks.

@@ -12,8 +12,8 @@
    ```
 2. **Without the lane-kit installed** — minimum heuristic before editing a shared file:
    - `git status --porcelain` — is there uncommitted work from another session?
-   - mtime of the target file — did it change in the last {{janela_minutos}} minutes from another source?
-3. **Exclusive territory** (if declared): `{{lista_de_paths_exclusivos_desta_lane}}` — outside
+   - mtime of the target file — did it change in the last {{window_minutes}} minutes from another source?
+3. **Exclusive territory** (if declared): `{{list_of_paths_exclusive_to_this_lane}}` — outside
    of it, assume shared and confirm before editing.
 
 ## Recovery — if something was overwritten/lost
@@ -30,4 +30,4 @@
 
 Backup/isolation covers files INSIDE the repo. If the source of truth lives outside it (e.g.
 a VM, an external database), this template does NOT cover that — declare explicitly
-the backup mechanism of that external system here: {{backup_externo_ou_gap_declarado}}.
+the backup mechanism of that external system here: {{external_backup_or_declared_gap}}.

@@ -21,7 +21,7 @@ refuses (exit 2) if the evidence does not match the level.
 | **Git** | commits docs only, with pathspec | commits with strict pathspec; NEVER push/merge | zero commits |
 | **Autonomy (slider 0-5)** | 2 | 2-3 (🟢🟠 auto; 🔴 proposes) | 0 (suggest-only by construction) |
 | **Forbidden** | mutating code/engine/VM; installing; wiring settings | closing its own item as VERIFIED; touching `00-STATE.md` (only its own LANE file); red zones | editing any file; being the same lane/model as the builder |
-| **Who approves** | {{humano}} (specs become a pasteable BOOT) | Reviewer (VERDICT) + {{humano}} (🔴 gates, merge) | {{humano}} (only they close a DEFERRED) |
+| **Who approves** | {{human}} (specs become a pasteable BOOT) | Reviewer (VERDICT) + {{human}} (🔴 gates, merge) | {{human}} (only they close a DEFERRED) |
 
 **Enforcement:** this matrix is not just discipline — `lane_board.py` (lane-kit) encodes it as a
 state machine: `CHECKPOINT-READY` only by the lane that claimed + evidence; `VERIFIED`/`NEEDS-FIX`

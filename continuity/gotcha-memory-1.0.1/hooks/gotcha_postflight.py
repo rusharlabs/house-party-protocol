@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
 """
-gotcha_postflight — PostToolUse hook (WARN-only) que FECHA o loop de aprendizado.
+gotcha_postflight -- PostToolUse hook (WARN-only) that CLOSES the learning loop.
 
-Port standalone do `agentic_postflight.py` do repo-de-origem, usando SÓ a lib
-vendorizada deste kit (zero dependência de core.*). DEPOIS de cada comando Bash,
-se ele FALHOU, chama `gotchas_memory.record_failure()`. Quando o MESMO tipo de
-falha recorre >= N vezes numa janela, vira um GOTCHA que o `gotcha_preflight`
-injeta ANTES da próxima execução da mesma tarefa. Preflight LÊ as lições,
-postflight ESCREVE as falhas.
+Standalone port of the origin repo's `agentic_postflight.py`, using ONLY this
+kit's vendored lib (zero dependency on core.*). AFTER every Bash command,
+if it FAILED, it calls `gotchas_memory.record_failure()`. When the SAME kind
+of failure recurs >= N times within a window, it becomes a GOTCHA that
+`gotcha_preflight` injects BEFORE the next run of the same task. Preflight
+READS the lessons, postflight WRITES the failures.
 
-NUNCA bloqueia (WARN-not-block) — exit 0 sempre. Defensivo: qualquer erro -> exit 0.
-Conservador na detecção: só registra falha com sinal CLARO de erro (exit-code != 0
-/ is_error / campo error) — NUNCA inventa falha (ambíguo = não-falha).
+NEVER blocks (WARN-not-block) -- exit 0 always. Defensive: any error -> exit 0.
+Conservative in detection: only records a failure with a CLEAR error signal
+(exit-code != 0 / is_error / error field) -- NEVER invents a failure (ambiguous = not-a-failure).
 
-v1.0.0 — 2026-07-11 (kit gotcha-memory)
+v1.0.0 -- 2026-07-11 (gotcha-memory kit)
 """
 import json
 import re
@@ -31,17 +31,17 @@ def _stderr_utf8() -> None:
 
 
 def _extract_failure(tool_response):
-    """Detecta falha no tool_response do Bash, CONSERVADOR. Retorna (is_fail, msg).
+    """Detects a failure in the Bash tool_response, CONSERVATIVE. Returns (is_fail, msg).
 
-    Só reporta falha com sinal CLARO: exit-code != 0, is_error True, ou campo
-    error não-vazio. Ambíguo -> não-falha (não inventa). msg = stderr/error
-    truncado. Aceita várias convenções de nome de campo (portabilidade de harness).
+    Only reports a failure with a CLEAR signal: exit-code != 0, is_error True, or a
+    non-empty error field. Ambiguous -> not-a-failure (never invents one). msg =
+    stderr/error, truncated. Accepts several field-name conventions (harness portability).
 
-    # Why: o harness real do Claude Code nao envia dict com exit code — uma falha de Bash chega
-    # como STRING "Error: Exit code N\n<saida>" (medido em transcripts reais: todas as falhas
-    # assim; todos os sucessos, dict). Sem este ramo o kit inteiro e vacuo: registra zero
-    # falhas e nunca aprende. Conservador de proposito: "Error: PreToolUse:..." (bloqueio de
-    # hook) e "Error: Permission..." (negacao) nao sao falha de execucao do comando e ficam de fora.
+    # Why: the real Claude Code harness doesn't send a dict with an exit code -- a Bash failure
+    # arrives as the STRING "Error: Exit code N\n<output>" (measured in real transcripts: every
+    # failure looks like that; every success is a dict). Without this branch the kit is vacuous: it
+    # records zero failures and never learns. Deliberately conservative: "Error: PreToolUse:..." (hook
+    # block) and "Error: Permission..." (denial) aren't command-execution failures, and are left out.
     """
     if isinstance(tool_response, str):
         import re
@@ -52,7 +52,7 @@ def _extract_failure(tool_response):
         return False, ""
     if not isinstance(tool_response, dict):
         return False, ""
-    # exit code em várias convenções (bool NÃO conta como exit code)
+    # exit code in several conventions (bool does NOT count as an exit code)
     for k in ("exit_code", "exitCode", "returncode", "return_code", "code", "status"):
         v = tool_response.get(k)
         if isinstance(v, bool):
@@ -60,29 +60,29 @@ def _extract_failure(tool_response):
         if isinstance(v, (int, float)) and int(v) != 0:
             err = str(tool_response.get("stderr") or tool_response.get("error") or "").strip()
             return True, (err or f"exit {int(v)}")[:500]
-    # flags de erro explícitas
+    # explicit error flags
     for k in ("is_error", "isError", "error_occurred"):
         if tool_response.get(k) is True:
             err = str(tool_response.get("stderr") or tool_response.get("error") or "").strip()
             return True, (err or "tool reported error")[:500]
-    # campo error string não-vazio
+    # non-empty error string field
     err_field = tool_response.get("error")
     if isinstance(err_field, str) and err_field.strip():
         return True, err_field.strip()[:500]
     return False, ""
 
 
-# bloqueio de hook e negacao de permissao nao sao falha de execucao do comando (conservador)
+# hook block and permission denial are not command-execution failures (conservative)
 _NAO_E_FALHA_DE_EXECUCAO = re.compile(r"^(?:Error:\s*)?(?:PreToolUse:|Permission to use\b)")
 
 
 def _extract_failure_event(data: dict):
-    """Detecta falha no payload INTEIRO do hook, seja qual for o evento. Retorna (is_fail, msg).
+    """Detects a failure in the hook's WHOLE payload, whatever the event. Returns (is_fail, msg).
 
-    # Why: o host emite `PostToolUseFailure` (campo `error`) quando a ferramenta falha e
-    # `PostToolUse` (campo `tool_response`) quando termina bem; um postflight que so' le
-    # `tool_response` nunca ve a falha de Bash — o unico evento que esta memoria existe para
-    # registrar. A forma legada (string "Error: Exit code N" em `tool_response`) continua aceita.
+    # Why: the host emits `PostToolUseFailure` (field `error`) when the tool fails, and
+    # `PostToolUse` (field `tool_response`) when it finishes fine; a postflight that only reads
+    # `tool_response` never sees the Bash failure -- the only event this memory exists to record.
+    # The legacy form (string "Error: Exit code N" in `tool_response`) is still accepted.
     """
     if data.get("hook_event_name") == "PostToolUseFailure":
         err = data.get("error")
@@ -111,7 +111,7 @@ def main() -> None:
 
     is_fail, err = _extract_failure_event(data)
     if not is_fail:
-        sys.exit(0)  # sucesso (ou ambíguo) -> nada a aprender
+        sys.exit(0)  # success (or ambiguous) -> nothing to learn
 
     try:
         if str(_LIB) not in sys.path:
@@ -119,22 +119,22 @@ def main() -> None:
         import gotchas_memory as gm
 
         _stderr_utf8()
-        # task_key CASA com o do gotcha_preflight: description or cmd[:80]
-        # Why: truncar antes de redigir pode cortar um token ao meio e deixar o prefixo
-        # dele fora do alcance da redacao; a redacao vem primeiro, o corte depois.
+        # task_key MATCHES the one in gotcha_preflight: description or cmd[:80]
+        # Why: truncating before redacting could cut a token in half and leave its
+        # prefix outside the redaction's reach; redaction comes first, truncation after.
         desc = gm.redact_secrets(ti.get("description") or gm.redact_secrets(cmd)[:80])
-        # a mesma chamada de ferramenta (tool_use_id) vira UM registro, por quantos eventos chegar
+        # the same tool call (tool_use_id) becomes ONE record, no matter how many events arrive
         tool_use_id = data.get("tool_use_id")
         dedupe_key = f"tool_use:{tool_use_id}" if isinstance(tool_use_id, str) and tool_use_id else None
         gm.record_failure(desc, err, context={"cmd": gm.redact_secrets(cmd)[:200]}, dedupe_key=dedupe_key)
         try:
-            # Why: o append era sem teto (1,9 MB / 1.744 linhas em um mes) e o preflight rele o
-            # arquivo INTEIRO a cada Bash.
+            # Why: the append had no ceiling (1.9 MB / 1,744 lines in a
+            # month) and the preflight re-reads the WHOLE file on every Bash.
             gm.rotate_failures()
-        except Exception:  # noqa: BLE001 — retencao e' conveniencia; nunca derruba o hook
+        except Exception:  # noqa: BLE001 -- retention is a convenience; it must never bring down the hook
             pass
 
-        # se a falha já fez recorrer >= min_count, a lição está ativa — avisa (transparência)
+        # if the failure has already recurred >= min_count, the lesson is active -- warn (transparency)
         try:
             if gm.gotchas_for_task(desc):
                 print(
@@ -145,7 +145,7 @@ def main() -> None:
         except Exception:
             pass
     except Exception:
-        pass  # um hook de aprendizado jamais quebra o fluxo
+        pass  # a learning hook must never break the flow
 
     sys.exit(0)
 
@@ -156,26 +156,26 @@ def _self_test() -> None:
     assert _extract_failure({"is_error": True, "error": "x"})[0] is True
     assert _extract_failure({"stdout": "ok"})[0] is False
     assert _extract_failure("not a dict")[0] is False
-    # a forma REAL do harness — estes 2 FALHAVAM antes do port de 2026-09-03
+    # the harness's REAL shape -- these 2 used to FAIL before the 2026-09-03 port
     assert _extract_failure("Error: Exit code 1\nboom") == (True, "boom")
     assert _extract_failure("Error: Exit code 143") == (True, "exit 143")
-    # controles: bloqueio de hook e negacao NAO sao falha (conservador)
+    # controls: hook block and denial are NOT a failure (conservative)
     assert _extract_failure("Error: PreToolUse:Bash hook blocked the command")[0] is False
     assert _extract_failure("Error: Permission to use Bash denied")[0] is False
     assert _extract_failure({"error": "failed hard"})[0] is True
-    assert _extract_failure({"exit_code": True})[0] is False  # bool não é exit code
+    assert _extract_failure({"exit_code": True})[0] is False  # bool is not an exit code
     assert _extract_failure({"returncode": 2})[0] is True
-    # o evento de falha do host (PostToolUseFailure) traz `error`, nao `tool_response`
+    # the host's failure event (PostToolUseFailure) carries `error`, not `tool_response`
     falha = {"hook_event_name": "PostToolUseFailure", "error": "Command exited with code 1: boom"}
     assert _extract_failure_event(falha) == (True, "Command exited with code 1: boom")
     assert _extract_failure_event({"hook_event_name": "PostToolUseFailure", "error": {"message": "m"}}) == (True, "m")
-    assert _extract_failure_event({"hook_event_name": "PostToolUseFailure"})[0] is True  # falha sem texto ainda e' falha
-    # controles: bloqueio de hook / negacao continuam fora, e a forma legada continua passando
+    assert _extract_failure_event({"hook_event_name": "PostToolUseFailure"})[0] is True  # a failure with no text is still a failure
+    # controls: hook block / denial stay out, and the legacy form keeps passing
     assert _extract_failure_event({"hook_event_name": "PostToolUseFailure", "error": "PreToolUse:Bash hook blocked"})[0] is False
     assert _extract_failure_event({"hook_event_name": "PostToolUseFailure", "error": "Permission to use Bash denied"})[0] is False
     assert _extract_failure_event({"hook_event_name": "PostToolUse", "tool_response": "Error: Exit code 1\nboom"}) == (True, "boom")
     assert _extract_failure_event({"tool_response": {"stdout": "ok"}})[0] is False
-    # ponta-a-ponta: registrar num store temporário via env (sem tocar o projeto)
+    # end-to-end: record into a temporary store via env (without touching the project)
     import os
     import tempfile
     if str(_LIB) not in sys.path:
@@ -185,12 +185,12 @@ def _self_test() -> None:
         ev = gm.record_failure("task:teste", "ETIMEDOUT", store_dir=d)
         assert ev["family"] == "transient"
         assert (Path(d) / "failures.jsonl").exists()
-        # a mesma chamada de ferramenta chegando duas vezes vira UM registro
+        # the same tool call arriving twice becomes ONE record
         gm.record_failure("task:dup", "boom", store_dir=d, dedupe_key="tool_use:x")
         gm.record_failure("task:dup", "boom", store_dir=d, dedupe_key="tool_use:x")
         linhas = (Path(d) / "failures.jsonl").read_text(encoding="utf-8").splitlines()
         assert sum(1 for l in linhas if '"tool_use:x"' in l) == 1
-        _ = os  # (env não usado no teste direto; record_failure recebe store_dir)
+        _ = os  # (env not used in the direct test; record_failure receives store_dir)
     print("self-test OK")
 
 

@@ -6,15 +6,15 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "house-party-protocol"
-version = "2.5.1"
+version = "2.5.2"
 description = "A local-first reliability harness for coding agents."
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
 authors = [{ name = "Max Parisi", email = "atendimento@rushar.com.br" }]
 maintainers = [{ name = "Rushar Labs", email = "atendimento@rushar.com.br" }]
-requires-python = ">=3.10"  # Why: a matriz de CI cobre 3.10-3.13. O codigo nao usa sintaxe
-# exclusiva de 3.10 e provavelmente roda em 3.9, mas nada mede isso — entao nao se promete.
+requires-python = ">=3.10"  # Why: the CI matrix covers 3.10-3.13. The code uses no syntax
+# exclusive to 3.10 and probably runs on 3.9, but nothing measures that - so nothing promises it.
 dependencies = []
 keywords = [
   "coding-agents", "claude-code", "codex-cli", "harness", "evidence", "attestation",

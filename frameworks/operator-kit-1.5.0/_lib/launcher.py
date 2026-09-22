@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
 """
-launcher — resolve o interpretador Python correto (nunca 'py' fora do Windows) + a raiz do
-projeto onde o kit foi instalado + um guard de UTF-8 para stdout/stderr.
+launcher -- resolves the correct Python interpreter (never 'py' outside Windows) + the root of
+the project where the kit was installed + a UTF-8 guard for stdout/stderr.
 
-Escopo: portado de WAVE2 §3.3 (`resolve_python_launcher()`), reduzido ao que o operator-kit
-precisa para comandos PERSISTIDOS (scheduler/subprocess/hooks) — decisão C6 do kickoff v2.
-Em PROSA de SKILL.md a troca é apenas `py` -> `python` (SKILL-CONTRACT cláusula C5); esta função
-é para código que RESOLVE o binário em runtime, não para o texto do comando documentado.
+Scope: ported from WAVE2 section 3.3 (`resolve_python_launcher()`), reduced to what the operator-kit
+needs for PERSISTED commands (scheduler/subprocess/hooks) -- decision C6 from kickoff v2.
+In SKILL.md PROSE the swap is just `py` -> `python` (SKILL-CONTRACT clause C5); this function
+is for code that RESOLVES the binary at runtime, not for the documented command text.
 
 API:
-    resolve_repo_root(start=None) -> Path      # CLAUDE_PROJECT_DIR, senão sobe até achar .git/
-                                                 # ou operator-profile.yaml, senão pai de _lib/
+    resolve_repo_root(start=None) -> Path      # CLAUDE_PROJECT_DIR, otherwise climbs up until it finds .git/
+                                                 # or operator-profile.yaml, otherwise the parent of _lib/
     resolve_python_launcher(repo_root=None) -> str
     utf8_guard() -> None                        # stdout/stderr -> utf-8, errors=replace
 
-v1.0.0 — 2026-07-10 (Operator Kit · Tier 2 · escopo reduzido)
+v1.0.0 -- 2026-07-10 (Operator Kit - Tier 2 - reduced scope)
 """
 from __future__ import annotations
 
@@ -35,7 +35,7 @@ def resolve_repo_root(start: Path | None = None) -> Path:
     return here.parent
 
 
-# Why: `repo_root` mantem o kit configuravel para consumidores externos; o fluxo local usa o default.
+# Why: `repo_root` keeps the kit configurable for external consumers; the local flow uses the default.
 def resolve_python_launcher(repo_root: Path | None = None) -> str:
     root = repo_root or resolve_repo_root()
     rels = (".venv/Scripts/python.exe",) if os.name == "nt" else (".venv/bin/python3", ".venv/bin/python")
@@ -84,7 +84,7 @@ def _self_test() -> int:
         import shutil as _sh
         _sh.rmtree(tmp, ignore_errors=True)
 
-    utf8_guard()  # não deve levantar
+    utf8_guard()  # must not raise
 
     print(f"self-test OK — launcher={launcher} root={root}")
     return 0

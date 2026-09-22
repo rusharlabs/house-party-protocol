@@ -1,18 +1,18 @@
 #!/usr/bin/env bash
-# handoff-roundtrip-C1-C4.sh — os 4 casos de aceite do continuity-kit, via a interface REAL
-# de hook (stdin JSON -> stdout JSON), contra _handoff_io.py / handoff_inject.py /
-# handoff_guard.py de verdade. Roda 3x e exige resultado idêntico (pass^k=1.00, k=3 —
-# loop-passk REGRA 2).
+# handoff-roundtrip-C1-C4.sh - the 4 acceptance cases of the continuity kit, through the REAL
+# hook interface (stdin JSON -> stdout JSON), against the real _handoff_io.py /
+# handoff_inject.py / handoff_guard.py. Runs 3x and demands an identical result
+# (pass^k=1.00, k=3 - loop-passk RULE 2).
 #
-# C1 · round-trip básico: write --demo -> handoff_inject imprime bloco LC-4 -> ledger tem "consumed"
-# C2 · staleness: valid_until expirado -> inject mostra STALE e NÃO mostra PRÓXIMO PASSO
-# C3 · degraded-auto: sem handoff, Stop 1a=block/state sobrevive, Stop 2a (stop_hook_active)
-#      =libera+grava degraded-auto, em <5s
-# C4 · anti-replay (LC-4): o verify_first_cmd injetado é extraído do texto e EXECUTADO de
-#      verdade, provando que a prova de idempotência é executável como entregue
+# C1 . basic round trip: write --demo -> handoff_inject prints the LC-4 block -> ledger has "consumed"
+# C2 . staleness: an expired valid_until -> inject shows STALE and does NOT show NEXT STEP
+# C3 . degraded-auto: with no handoff, Stop 1a=block/the state survives, Stop 2a (stop_hook_active)
+#      =releases and records degraded-auto, in <5s
+# C4 . anti-replay (LC-4): the injected verify_first_cmd is extracted from the text and really
+#      EXECUTED, proving the idempotence proof runs exactly as delivered
 #
-# Uso: bash evals/handoff-roundtrip-C1-C4.sh
-# Exit: 0 = 3/3 rodadas com C1-C4 todos verdes · 1 = alguma rodada falhou
+# Usage: bash evals/handoff-roundtrip-C1-C4.sh
+# Exit: 0 = 3/3 runs with C1-C4 all green . 1 = a run failed
 
 set -u
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -35,7 +35,7 @@ run_round() {
   WORK_N="$(to_native "$WORK")"
   export CLAUDE_PROJECT_DIR="$WORK_N"
 
-  # ---------- C1: round-trip básico ----------
+  # ---------- C1: basic round trip ----------
   python "$IO" write --demo --lane solo >/dev/null
   OUT1=$(echo '{"hook_event_name":"SessionStart","session_id":"s1","lane_id":"solo"}' | python "$INJECT")
   LEDGER="$WORK/.claude/handoff/HANDOFF-LEDGER.jsonl"
@@ -87,7 +87,7 @@ print(json.dumps(data))
   fi
   rm -f "$WORK/.claude/handoff/HANDOFF-CURRENT-solo.json" "$LEDGER"
 
-  # ---------- C4: anti-replay (LC-4) — o verify_first_cmd É executado de verdade ----------
+  # ---------- C4: anti-replay (LC-4) - the verify_first_cmd IS really executed ----------
   NONCE="$WORK/nonce.txt"
   NONCE_N="$(to_native "$NONCE")"
   NONCE_PATH="$NONCE_N" python -c "
@@ -110,9 +110,9 @@ print(json.dumps(data))
   OUT4=$(echo '{"hook_event_name":"SessionStart","session_id":"s1","lane_id":"solo"}' | python "$INJECT")
   HAS_JA_EXECUTADO=0
   echo "$OUT4" | grep -q "ALREADY EXECUTED" && HAS_JA_EXECUTADO=1
-  # Extrai o verify_first_cmd direto do JSON do handoff (UTF-8 explícito) em vez de recortar
-  # o texto renderizado — evita o gotcha de encoding do stdin do Python via pipe no Windows/git-bash,
-  # e prova a mesma coisa: render() só faz f-string do valor já presente no JSON.
+  # Take verify_first_cmd straight from the handoff JSON (explicit UTF-8) instead of slicing the
+  # rendered text - this avoids the stdin encoding gotcha of Python over a pipe on Windows/git-bash,
+  # and proves the same thing: render() only f-strings the value already present in the JSON.
   HANDOFF_JSON="$WORK_N/.claude/handoff/HANDOFF-CURRENT-solo.json"
   VERIFY_CMD=$(python -c "
 import json

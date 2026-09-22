@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
 """
-gate_sheet_panel (Operator Kit) — renderiza a gate-sheet (itens que dependem do humano).
+gate_sheet_panel (Operator Kit) -- renders the gate-sheet (items that depend on the human).
 
-Lê `paths.gate_sheet` do operator-profile.yaml e mostra, num painel, tudo que
-está esperando o humano (billing/OAuth/legal/cliente/deploy-go/secret/decisão) —
-o "/gates" do kit. Não decide nada; só consolida o que o loop / gate-sheet-collector
-já marcou, p/ o humano limpar numa sentada.
+Reads `paths.gate_sheet` from operator-profile.yaml and shows, in a panel, everything
+that's waiting on the human (billing/OAuth/legal/client/deploy-go/secret/decision) --
+the kit's "/gates". Decides nothing; it just consolidates what the loop / gate-sheet-collector
+has already marked, for the human to clear in one sitting.
 
-Extrai como gate:
-  • linhas de checkbox aberto  '- [ ]'
-  • linhas de tabela markdown  '| ... |' dentro de uma seção cujo header casa GATE/HUMANO/MAX
-  • linhas iniciadas por marcador 🔴/⛔/GATE:
+Extracts as a gate:
+  * lines with an open checkbox  '- [ ]'
+  * markdown table lines  '| ... |' inside a section whose header matches GATE/HUMANO/MAX
+  * lines starting with a 🔴/⛔/GATE: marker
 
-CLI: gate_sheet_panel.py [--json] [--sheet <path>]   ·   --self-test (fixture em tmp)
-exit 0 sempre. stdlib + PyYAML (via loader).
-v1.0.0 — 2026-06-19 (Operator Kit · Tier 2)
+CLI: gate_sheet_panel.py [--json] [--sheet <path>]   -- --self-test (fixture in tmp)
+exit 0 always. stdlib + PyYAML (via loader).
+v1.0.0 -- 2026-06-19 (Operator Kit -- Tier 2)
 """
 from __future__ import annotations
 
@@ -51,7 +51,7 @@ def _root() -> Path:
 
 
 def extract_gates(text: str) -> list[str]:
-    """Itens de gate a partir do markdown da gate-sheet. Dedup, ordem preservada."""
+    """Gate items from the gate-sheet's markdown. Dedup, order preserved."""
     gates: list[str] = []
     in_gate_section = False
     for line in text.splitlines():
@@ -67,7 +67,7 @@ def extract_gates(text: str) -> list[str]:
             cells = [c.strip() for c in s.strip("|").split("|")]
             if cells and not re.match(r"^[-:\s]+$", cells[0]) and cells[0].lower() not in ("gate", "item", "#"):
                 gates.append(" · ".join(c for c in cells if c))
-    # dedup preservando ordem
+    # dedup preserving order
     seen, out = set(), []
     for g in gates:
         if g and g not in seen:
@@ -123,7 +123,7 @@ def _self_test() -> None:
     assert any("billing" in g for g in gates), gates
     assert any("rotate the CF secret" in g for g in gates), gates
     assert "ordinary text, ignored" not in gates
-    assert "done" not in gates  # [x] não é gate aberto
+    assert "done" not in gates  # [x] is not an open gate
     with tempfile.TemporaryDirectory() as d:
         f = Path(d) / "gates.md"
         f.write_text(sample, encoding="utf-8")

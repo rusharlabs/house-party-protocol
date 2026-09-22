@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Valida pré-condições locais antes do done_gate.
+"""Validates local pre-conditions before done_gate.
 
-Inspiração conceitual: shanraisshan/claude-code-best-practice, MIT, commit
-bde3f03174714fff4145d21cfda41ddd2ffffb28. Implementação original do HPP.
+Conceptual inspiration: shanraisshan/claude-code-best-practice, MIT, commit
+bde3f03174714fff4145d21cfda41ddd2ffffb28. Original HPP implementation.
 
-Exit: 0 apto · 2 pré-condição bloqueante · 3 erro de uso.
+Exit: 0 ready -- 2 blocking pre-condition -- 3 usage error.
 """
 from __future__ import annotations
 

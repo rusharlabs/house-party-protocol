@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
 """
-live_count (Operator Kit) — re-deriva contagens/métricas AO VIVO (LC-1) de um sources.yaml.
+live_count (Operator Kit) -- re-derives counts/metrics LIVE (LC-1) from a sources.yaml.
 
-Materializa em código a skill `live-source-prover`: em vez de repetir um número
-stale de doc/memória, roda o comando canônico de cada métrica e imprime o valor
-rotulado 'live @ HH:MM'. Anti-alucinação: se não há comando, diz 'não verificado',
-nunca inventa.
+Materializes the `live-source-prover` skill in code: instead of repeating a
+stale number from a doc/memory, it runs the canonical command for each metric and prints the
+value labeled 'live @ HH:MM'. Anti-hallucination: if there is no command, it says 'not verified',
+never makes one up.
 
-sources.yaml (ver skills/live-source-prover/sources.example.yaml) tem seções
-domínio -> { chave: "comando shell" }. live_count roda uma seção (default 'contagens').
+sources.yaml (see skills/live-source-prover/sources.example.yaml) has sections
+domain -> { key: "shell command" }. live_count runs one section (default 'contagens').
 
 CLI:
   live_count.py [--sources <path>] [--section contagens] [--json]
-  live_count.py --key agentes            # só uma chave
-Resolução do sources.yaml: --sources > profile paths.sources_yaml > <root>/sources.yaml.
-exit 0 sempre. stdlib + PyYAML. --self-test em tmp (sem rede).
-v1.0.0 — 2026-06-19 (Operator Kit · Tier 2)
+  live_count.py --key agentes            # just one key
+Resolving sources.yaml: --sources > profile paths.sources_yaml > <root>/sources.yaml.
+exit 0 always. stdlib + PyYAML. --self-test in a tmp dir (no network).
+v1.0.0 -- 2026-06-19 (Operator Kit -- Tier 2)
 """
 from __future__ import annotations
 
@@ -70,7 +70,7 @@ def _resolve_sources(root: Path, argv) -> Path | None:
 
 def _run(cmd: str, root: Path, timeout: int = 15) -> tuple[bool, str]:
     try:
-        r = subprocess.run(cmd, shell=True, cwd=str(root),  # noqa: S602 — comando do sources.yaml (confiável)
+        r = subprocess.run(cmd, shell=True, cwd=str(root),  # noqa: S602 -- command from sources.yaml (trusted)
                           capture_output=True, text=True, timeout=timeout)
         out = (r.stdout or r.stderr or "").strip().splitlines()
         return (r.returncode == 0, (out[-1] if out else "").strip()[:80])
@@ -130,9 +130,9 @@ def _self_test() -> None:
     with tempfile.TemporaryDirectory() as d:
         root = Path(d)
         (root / "sources.yaml").write_text(
-            # Why: o fixture usa o interprete vivo (`python` a seco nao existe no macOS), num escalar
-            # YAML de aspas simples (barra invertida de caminho Windows nao vira escape) e com o
-            # caminho entre aspas (um .venv em pasta com espaco quebrava o comando em dois).
+            # Why: the fixture uses the live interpreter (plain `python` doesn't exist on macOS), in a
+            # single-quoted YAML scalar (a Windows path's backslash doesn't become an escape) and with
+            # the path quoted (a .venv in a folder with a space used to split the command in two).
             f"contagens:\n  dois: '\"{sys.executable.replace(chr(92), '/')}\" -c \"print(1+1)\"'\n  vazio: \"\"\n",
             encoding="utf-8",
         )

@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
-"""Instala um kit HPP no formato descoberto pelo Codex CLI.
+"""Installs an HPP kit in the format discovered by the Codex CLI.
 
-O runtime completo fica em ``.agents/hpp/<kit>`` e cada skill vira uma cópia
-namespaced em ``.agents/skills/hpp-<kit>-<skill>``. O gerador não ativa hooks:
-hooks do Claude Code não têm equivalência automática no Codex.
+The full runtime lives in ``.agents/hpp/<kit>`` and each skill becomes a namespaced
+copy at ``.agents/skills/hpp-<kit>-<skill>``. The generator does not activate hooks:
+Claude Code hooks have no automatic equivalent in Codex.
 
-Symlinks e junctions dentro do kit NÃO são seguidos: entram em ``links_ignored`` no relatório
-(exit 1). Nome de kit que não seja um segmento simples de caminho e duas skills que colapsem
-no mesmo slug são erro (exit 3), sem nada escrito.
+Symlinks and junctions inside the kit are NOT followed: they go into ``links_ignored`` in the
+report (exit 1). A kit name that is not a plain path segment, and two skills that collapse
+into the same slug, are an error (exit 3), with nothing written.
 
-Exit: 0 ok/no-op · 1 warn (links ignorados) · 2 conflito/bloqueio · 3 erro.
+Exit: 0 ok/no-op - 1 warn (ignored links) - 2 conflict/block - 3 error.
 """
 from __future__ import annotations
 
@@ -25,8 +25,8 @@ from pathlib import Path
 
 _TEXT_SUFFIXES = {".md", ".txt", ".yaml", ".yml", ".json", ".jsonc", ".toml", ".py", ".sh"}
 _IGNORED_NAMES = {"__pycache__", ".pytest_cache", "ip-ruleset.yaml", "operator-profile.yaml", "HANDOVER.md"}
-# Why: o nome do kit vira um segmento de caminho sob o target (`.agents/hpp/<kit>`); barra, `..`,
-# nome vazio ou iniciado por ponto o tirariam de dentro do alvo ou o esconderiam.
+# Why: the kit name becomes a path segment under the target (`.agents/hpp/<kit>`); a slash, `..`,
+# an empty name or one starting with a dot would take it out of the target or hide it.
 _KIT_NAME = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]*")
 
 
@@ -39,8 +39,8 @@ def _valid_kit_name(name: str) -> bool:
 
 
 def _kit_name(kit_dir: Path) -> str:
-    """Nome do kit (plugin.json > nome do diretorio sem sufixo de versao), validado como
-    segmento unico de caminho. Levanta ValueError quando o nome escaparia do alvo."""
+    """Kit name (plugin.json > directory name without version suffix), validated as a
+    single path segment. Raises ValueError when the name would escape the target."""
     plugin = kit_dir / ".claude-plugin" / "plugin.json"
     name = None
     if plugin.is_file():
@@ -62,8 +62,8 @@ def _slug(value: str) -> str:
 
 
 def _is_link(path: Path) -> bool:
-    # Why: is_file() segue symlink e junction; o que se copia tem de ser o que esta DENTRO da
-    # arvore do kit, nunca um `.env` ou diretorio de fora alcancado por um link.
+    # Why: is_file() follows symlink and junction; what gets copied has to be what is INSIDE the
+    # kit's tree, never an `.env` or an outside directory reached through a link.
     if path.is_symlink():
         return True
     is_junction = getattr(path, "is_junction", None)
@@ -71,7 +71,7 @@ def _is_link(path: Path) -> bool:
 
 
 def _walk(root: Path) -> tuple[list[Path], list[str]]:
-    """Arquivos regulares sob root SEM seguir links. Retorna (arquivos, links ignorados)."""
+    """Regular files under root WITHOUT following links. Returns (files, ignored links)."""
     files: list[Path] = []
     links: list[str] = []
     stack = [root]
@@ -185,8 +185,8 @@ def build_plan(kit_dir: Path, target: Path, apply: bool) -> tuple[dict, int]:
         for skill_dir in sorted(p for p in skill_root.iterdir() if p.is_dir() and (p / "SKILL.md").is_file()):
             dest_name = f"hpp-{_slug(kit_name)}-{_slug(skill_dir.name)}"
             if dest_name in slug_owner:
-                # Why: dois nomes de skill que colapsam no mesmo slug fariam a segunda sumir em
-                # silencio, com o plano dizendo que as duas foram copiadas.
+                # Why: two skill names that collapse into the same slug would make the second one
+                # vanish in silence, with the plan saying both were copied.
                 return {
                     "status": "error",
                     "detail": f"slug collision: skills {slug_owner[dest_name]!r} and {skill_dir.name!r} "
@@ -270,7 +270,7 @@ def _self_test() -> int:
         assert rc_rerun == 0 and all(a["action"] == "skip-same" for a in rerun["actions"])
         assert rerun["links_ignored"] == []
 
-        # nome que escaparia do alvo -> erro 3, nada escrito
+        # name that would escape the target -> error 3, nothing written
         escape = tmp / "escape-kit"
         (escape / ".claude-plugin").mkdir(parents=True)
         (escape / ".claude-plugin" / "plugin.json").write_text('{"name":"../../fora"}\n', encoding="utf-8")
@@ -278,7 +278,7 @@ def _self_test() -> int:
         assert rc_escape == 3 and rep_escape["status"] == "error", rep_escape
         assert not (tmp / "fora").exists()
 
-        # duas skills que colapsam no mesmo slug -> erro 3 explicito
+        # two skills that collapse into the same slug -> explicit error 3
         colisao = tmp / "colisao-kit"
         (colisao / ".claude-plugin").mkdir(parents=True)
         (colisao / ".claude-plugin" / "plugin.json").write_text('{"name":"colisao"}\n', encoding="utf-8")

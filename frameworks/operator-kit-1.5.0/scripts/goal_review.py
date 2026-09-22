@@ -1,24 +1,24 @@
 #!/usr/bin/env python3
 """
-goal_review — REVISÃO ADVERSARIAL de um GOAL inteiro (não de lote) · loop /goal.
+goal_review -- ADVERSARIAL REVIEW of a whole GOAL (not a batch) -- /goal loop.
 
-Enquanto done_gate responde "este LOTE compila/passa?", goal_review responde
-"o OBJETIVO entregou o valor prometido, AO VIVO?" (LC-1 · anti-R1 do
-MAPA-VERDADE: code-verde ≠ deployado ≠ wirado). Lê os critérios-de-aceitação
-(bloco DoD/shell do PRD do goal), roda cada um como probe LIVE (AND, via
-done_gate.gate), e emite logs/reviews/REVIEW-<goal>-<ts>.md com PASS/FAIL+gaps.
-FAIL = reabrir lotes no 00-STATE.
+While done_gate answers "does this BATCH compile/pass?", goal_review answers
+"did the OBJECTIVE deliver the promised value, LIVE?" (LC-1 -- anti-R1 from
+MAPA-VERDADE: green-code != deployed != wired). Reads the acceptance-criteria
+(DoD/shell block of the goal's PRD), runs each one as a LIVE probe (AND, via
+done_gate.gate), and emits logs/reviews/REVIEW-<goal>-<ts>.md with PASS/FAIL+gaps.
+FAIL = reopen the batches in 00-STATE.
 
-Uso:
+Usage:
     python scripts/goal_review.py --goal G-CONT
     python scripts/goal_review.py --prd docs/plans/_PRD/PRD-CONTINUIDADE-LOOP.md
     python scripts/goal_review.py "python -m pytest tests/python -q" --goal G-CONT
     python scripts/goal_review.py --self-test
-Exit: 0 = PASS · 1 = FAIL · 2 = uso inválido / sem critérios. stdlib-only.
+Exit: 0 = PASS -- 1 = FAIL -- 2 = invalid usage / no criteria. stdlib-only.
 
-v1.0.0 — 2026-06-27 (G-CONT · PRD-CONTINUIDADE-LOOP)
-v1.1.0 — 2026-07-10 (Operator Kit · Tier 2 · embarcado no operator-kit — raiz via
-         CLAUDE_PROJECT_DIR/${CLAUDE_PLUGIN_ROOT}/busca .git, não parents[N] fixo)
+v1.0.0 -- 2026-06-27 (G-CONT -- PRD-CONTINUIDADE-LOOP)
+v1.1.0 -- 2026-07-10 (Operator Kit -- Tier 2 -- embedded in operator-kit -- root via
+         CLAUDE_PROJECT_DIR/${CLAUDE_PLUGIN_ROOT}/searching for .git, no fixed parents[N])
 """
 from __future__ import annotations
 
@@ -52,7 +52,7 @@ _HERE = Path(__file__).resolve().parent
 _ROOT = _resolve_root()
 sys.path.insert(0, str(_HERE))
 try:
-    from done_gate import gate  # type: ignore  # reuso: AND de probes shell
+    from done_gate import gate  # type: ignore  # reuse: AND of shell probes
 except Exception:  # noqa: BLE001  # pragma: no cover
     gate = None  # type: ignore
 try:
@@ -72,7 +72,7 @@ _DOD_KW = (
 
 
 def extract_criteria(prd_text: str) -> list[str]:
-    """Extrai o 1º bloco ``` que segue um heading de DoD/aceitação. Pure/testável."""
+    """Extracts the 1st ``` block that follows a DoD/acceptance heading. Pure/testable."""
     crit: list[str] = []
     in_fence = False
     armed = False
@@ -92,8 +92,8 @@ def extract_criteria(prd_text: str) -> list[str]:
                     break
                 continue
         if in_fence:
-            # tira comentário shell trailing (" # ...") — done_gate roda via cmd.exe
-            # no Windows, onde '#' NÃO é comentário e viraria argumento.
+            # strips a trailing shell comment (" # ...") -- done_gate runs via cmd.exe
+            # on Windows, where '#' is NOT a comment and would become an argument.
             s = re.sub(r"\s+#\s.*$", "", line.strip()).strip()
             if s and not s.startswith("#"):
                 crit.append(s)

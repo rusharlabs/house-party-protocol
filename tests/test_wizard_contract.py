@@ -1,10 +1,11 @@
-"""Contrato do instalador aplicado ao `hpp init`: seis estagios em ordem fixa, o bloqueio
-pula os estagios seguintes em vez de fingir que rodaram, `wire-suggest` nao executa
-UMA operacao de escrita (guarda em `open`/`write_text`/`mkdir`), o bloco a colar
-distingue host nativo de comando explicito, e `--help` expoe todas as flags.
+"""Installer contract applied to `hpp init`: six stages in fixed order, a
+blockage skips the following stages instead of pretending they ran,
+`wire-suggest` does not execute A SINGLE write operation (guard on
+`open`/`write_text`/`mkdir`), the block to paste distinguishes native host
+from explicit command, and `--help` exposes all the flags.
 
-O controle prova que a guarda anti-escrita pega uma escrita real: aplicada ao
-estagio `profile` em modo --apply, ela estoura.
+The control proves that the anti-write guard catches a real write: applied to
+the `profile` stage in --apply mode, it raises.
 """
 from __future__ import annotations
 
@@ -47,7 +48,7 @@ def _context(target: Path, loaded, **overrides) -> wizard._Context:
 
 
 class _WriteGuard:
-    """Faz qualquer escrita em disco estourar enquanto ativa."""
+    """Makes any disk write raise while active."""
 
     def __init__(self, monkeypatch):
         real_open = builtins.open
@@ -67,7 +68,7 @@ class _WriteGuard:
         monkeypatch.setattr(pathlib.Path, "touch", forbidden)
 
 
-def test_os_seis_estagios_rodam_nesta_ordem_e_so_nesta(target, loaded, capsys):
+def test_the_six_stages_run_in_this_order_and_only_this_order(target, loaded, capsys):
     manifest, manifest_path = loaded
     report = wizard.run_init(_options(target), manifest, manifest_path)
     assert wizard.STAGES == ("detect", "prereqs", "profile", "configure", "wire-suggest", "smoke")
@@ -76,7 +77,7 @@ def test_os_seis_estagios_rodam_nesta_ordem_e_so_nesta(target, loaded, capsys):
     assert set(wizard.BOOT_LINES) == set(wizard.STAGES)
 
 
-def test_callbacks_de_boot_disparam_um_begin_e_um_end_por_estagio_na_ordem(target, loaded):
+def test_boot_callbacks_fire_one_begin_and_one_end_per_stage_in_order(target, loaded):
     manifest, manifest_path = loaded
     trace: list[tuple[str, str]] = []
     wizard.run_init(_options(target), manifest, manifest_path,
@@ -86,7 +87,7 @@ def test_callbacks_de_boot_disparam_um_begin_e_um_end_por_estagio_na_ordem(targe
     assert trace == expected
 
 
-def test_bloqueio_para_a_sequencia_e_os_estagios_seguintes_ficam_skipped(target, loaded):
+def test_a_blockage_stops_the_sequence_and_the_following_stages_are_skipped(target, loaded):
     manifest, manifest_path = loaded
     unsupported = next(module["id"] for module in manifest["modules"] if module["hosts"].get("codex") == "unsupported")
     options = _options(target, answers={"host": "codex", "modules": [unsupported]}, sources={"host": "flag", "modules": "flag"})
@@ -98,7 +99,7 @@ def test_bloqueio_para_a_sequencia_e_os_estagios_seguintes_ficam_skipped(target,
     assert all("configure failed" in stage["summary"] for stage in report["stages"][4:])
 
 
-def test_wire_suggest_nao_executa_nenhuma_escrita(target, loaded, monkeypatch):
+def test_wire_suggest_executes_no_write_at_all(target, loaded, monkeypatch):
     ctx = _context(target, loaded)
     wizard.stage_detect(ctx)
     wizard.stage_prereqs(ctx)
@@ -112,7 +113,7 @@ def test_wire_suggest_nao_executa_nenhuma_escrita(target, loaded, monkeypatch):
     assert "hooks" in result["detail"]["manual_gates"]
 
 
-def test_bloco_claude_code_instala_nativos_e_manda_o_instalador_para_os_explicitos(target, loaded):
+def test_claude_code_block_installs_natives_and_sends_the_installer_for_the_explicit_ones(target, loaded):
     manifest, _ = loaded
     ctx = _context(target, loaded, answers={"host": "claude-code"}, sources={"host": "flag"})
     for stage in (wizard.stage_detect, wizard.stage_prereqs, wizard.stage_profile, wizard.stage_configure):
@@ -131,7 +132,7 @@ def test_bloco_claude_code_instala_nativos_e_manda_o_instalador_para_os_explicit
     assert any(line.startswith("# .claude/settings.local.json") and "wrote nothing" in line for line in lines)
 
 
-def test_bloco_codex_tem_uma_linha_do_instalador_por_modulo_e_hooks_desligados(target, loaded):
+def test_codex_block_has_one_installer_line_per_module_and_hooks_off(target, loaded):
     manifest, _ = loaded
     ctx = _context(target, loaded, answers={"host": "codex"}, sources={"host": "flag"})
     for stage in (wizard.stage_detect, wizard.stage_prereqs, wizard.stage_profile, wizard.stage_configure):
@@ -146,7 +147,7 @@ def test_bloco_codex_tem_uma_linha_do_instalador_por_modulo_e_hooks_desligados(t
     assert not any(line.startswith("/plugin") for line in lines)
 
 
-def test_marketplace_e_substituivel_por_flag(target, capsys):
+def test_marketplace_is_replaceable_by_flag(target, capsys):
     code = cli.main(["init", "--target", str(target), "--no-benchmark", "--marketplace", "me/fork", "--json"])
     report = json.loads(capsys.readouterr().out)
     assert code == 0
@@ -154,7 +155,7 @@ def test_marketplace_e_substituivel_por_flag(target, capsys):
     assert "/plugin marketplace add me/fork" in lines
 
 
-def test_json_mode_e_parseavel_e_sem_ansi(target):
+def test_json_mode_is_parseable_and_has_no_ansi(target):
     result = subprocess.run([sys.executable, "-m", "hpp", "init", "--target", str(target), "--no-benchmark", "--json"],
                             cwd=PRODUCT_ROOT, capture_output=True, timeout=60)
     assert result.returncode == 0
@@ -164,7 +165,7 @@ def test_json_mode_e_parseavel_e_sem_ansi(target):
     assert report["mode"] == "plan" and report["writes"] == 0
 
 
-def test_help_expoe_todas_as_flags_do_contrato():
+def test_help_exposes_all_the_contract_flags():
     result = subprocess.run([sys.executable, "-m", "hpp", "init", "--help"], cwd=PRODUCT_ROOT, capture_output=True, text=True, timeout=60)
     assert result.returncode == 0
     for flag in ("--apply", "--yes", "--profile", "--modules", "--non-interactive", "--no-animation", "--json", "--target", "--host", "--bundle"):
@@ -172,9 +173,9 @@ def test_help_expoe_todas_as_flags_do_contrato():
     assert "detect, prereqs, profile, configure, wire-suggest, smoke" in result.stdout
 
 
-def test_CONTROLE_a_guarda_anti_escrita_pega_o_estagio_profile_em_apply(target, loaded, monkeypatch):
-    """Controle: a mesma guarda usada para provar que wire-suggest nao escreve ESTOURA
-    quando o estagio profile tenta gravar em --apply -- logo ela pega escrita real."""
+def test_CONTROLE_the_anti_write_guard_catches_the_profile_stage_in_apply(target, loaded, monkeypatch):
+    """Control: the same guard used to prove that wire-suggest does not write RAISES
+    when the profile stage tries to write in --apply -- so it does catch a real write."""
     ctx = _context(target, loaded, apply=True)
     wizard.stage_detect(ctx)
     wizard.stage_prereqs(ctx)

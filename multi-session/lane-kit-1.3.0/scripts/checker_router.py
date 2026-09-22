@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Detecta CLIs alternativas e escolhe um checker cross-provider sem executá-lo.
+"""Detects alternative CLIs and picks a cross-provider checker without running it.
 
-Inspiração conceitual: shanraisshan/claude-code-best-practice, MIT, commit
-bde3f03174714fff4145d21cfda41ddd2ffffb28. Implementação original do HPP.
+Conceptual inspiration: shanraisshan/claude-code-best-practice, MIT, commit
+bde3f03174714fff4145d21cfda41ddd2ffffb28. Original HPP implementation.
 
-Exit: 0 rota encontrada · 1 nenhuma rota (warn) · 2 rota obrigatória ausente · 3 erro.
+Exit: 0 route found - 1 no route (warn) - 2 required route missing - 3 error.
 """
 from __future__ import annotations
 

@@ -1,27 +1,27 @@
 #!/usr/bin/env python3
 """
-lane_git_guard — PreToolUse (Bash): impede que uma lane pise no índice git de outra.
+lane_git_guard -- PreToolUse (Bash): stops one lane from stepping on another's git index.
 
-Índice git é COMPARTILHADO entre sessões (lanes) rodando no mesmo repositório — um
-`git add -A`/`commit -a`/`commit` sem pathspec explícito varre TUDO que está no working
-tree, inclusive arquivos que outra lane deixou staged/modificados de propósito. Isto já
-causou incidentes reais de trabalho concorrente sendo corrompido por um commit alheio.
+The git index is SHARED between sessions (lanes) running in the same repository -- a
+`git add -A`/`commit -a`/`commit` without an explicit pathspec sweeps up EVERYTHING in the
+working tree, including files another lane deliberately left staged/modified. This has
+already caused real incidents of concurrent work being corrupted by someone else's commit.
 
-Detecta 6 famílias de comando git perigoso quando há outra lane VIVA: `add -A/--all/.`,
-`commit -a/-am/--all`, `commit` sem `-- <paths>` explícito, `stash` (exceto list/show),
-`reset --hard`, `checkout .`, `commit --amend`. Modo `warn` (default, nunca bloqueia de
-verdade) ou `block` (só depois de validar zero falso-positivo em produção — ver
-evals/collision-git-guard.sh). Solo ou só lanes mortas = tudo permitido.
+Detects 6 families of dangerous git command when another lane is ALIVE: `add -A/--all/.`,
+`commit -a/-am/--all`, `commit` without an explicit `-- <paths>`, `stash` (except list/show),
+`reset --hard`, `checkout .`, `commit --amend`. `warn` mode (default, never truly blocks)
+or `block` mode (only after validating zero false-positives in production -- see
+evals/collision-git-guard.sh). Solo or only dead lanes = everything allowed.
 
-Doutrina da casa: SEMPRE exit 0. A decisão viaja via JSON (`decision`/`permissionDecision`),
-nunca via exit-code — qualquer exceção interna também fail-open (exit 0, sem decision).
+House doctrine: ALWAYS exit 0. The decision travels via JSON (`decision`/`permissionDecision`),
+never via exit-code -- any internal exception also fails open (exit 0, no decision).
 
-Bypass de emergência: env LANE_GIT_GUARD_BYPASS=1.
-Override de modo: env LANE_GIT_GUARD_MODE=warn|block (tem precedência sobre lanes.yaml).
+Emergency bypass: env LANE_GIT_GUARD_BYPASS=1.
+Mode override: env LANE_GIT_GUARD_MODE=warn|block (takes precedence over lanes.yaml).
 
-Uso (hook): echo '{"tool_name":"Bash","tool_input":{"command":"git commit -am x"}}' | python lane_git_guard.py
-Exit: sempre 0.
-stdlib only. v1.0.0 — 2026-07-10 (lane-kit)
+Usage (hook): echo '{"tool_name":"Bash","tool_input":{"command":"git commit -am x"}}' | python lane_git_guard.py
+Exit: always 0.
+stdlib only. v1.0.0 -- 2026-07-10 (lane-kit)
 """
 from __future__ import annotations
 
@@ -62,7 +62,7 @@ def _extra_patterns(cfg: dict) -> list:
 
 
 def detect(command: str, cfg: dict | None = None) -> list:
-    """Retorna os rótulos de famílias perigosas encontradas no comando (dedupe)."""
+    """Returns the labels of dangerous families found in the command (dedupe)."""
     if not command or "git" not in command:
         return []
     cfg = cfg if cfg is not None else {}
@@ -134,7 +134,7 @@ def handle(payload: dict) -> dict:
                 f"Command: {command[:120]!r}. Families: {', '.join(hits)}. WARN-only, a heuristic never blocks."
             )
             sys.stderr.write(msg + "\n")
-        return {}  # solo (ou heurística) NUNCA bloqueia — no máximo warn acima
+        return {}  # solo (or heuristic) NEVER blocks -- at most a warn above
 
     only_suspect = all(state == "suspect" for _lid, _e, state in others)
     mode = os.environ.get("LANE_GIT_GUARD_MODE") or _lane_io.get(cfg, "git_guard.mode", "warn")
@@ -174,7 +174,7 @@ def main(argv) -> int:
 
     try:
         result = handle(payload)
-    except Exception:  # noqa: BLE001 — fail-open total
+    except Exception:  # noqa: BLE001 -- total fail-open
         result = {}
 
     print(json.dumps(result, ensure_ascii=False))
@@ -185,7 +185,7 @@ def _self_test() -> int:
     import shutil
     import tempfile
 
-    # --- detect() puro (sem I/O) ---
+    # --- detect() pure (no I/O) ---
     positives = {
         "git add -A": "git add -A",
         "git add --all": "git add --all",
@@ -222,7 +222,7 @@ def _self_test() -> int:
     hits_extra = detect("git restore .", {"git_guard": {"extra_patterns": [r"git\s+restore\s+\."]}})
     assert hits_extra, "extra_patterns deveria pegar git restore ."
 
-    # --- handle() com registry real (isolado em tempdir) ---
+    # --- handle() with a real registry (isolated in tempdir) ---
     tmp = Path(tempfile.mkdtemp(prefix="lane_git_guard_selftest_"))
     orig = (_lane_io._PROJECT_ROOT, _lane_io._LANES_DIR, _lane_io.REGISTRY_PATH, _lane_io.CONFIG_PATH)
     try:
@@ -231,14 +231,14 @@ def _self_test() -> int:
         _lane_io.REGISTRY_PATH = _lane_io._LANES_DIR / "registry.json"
         _lane_io.CONFIG_PATH = _lane_io._LANES_DIR / "lanes.yaml"
 
-        # solo: sem registry nenhum -> sempre {} (sem commit real no repo, heuristica nao dispara)
+        # solo: no registry at all -> always {} (no real commit in the repo, heuristic does not fire)
         os.environ.pop("LANE_GIT_GUARD_MODE", None)
         os.environ.pop("LANE_GIT_GUARD_BYPASS", None)
         os.environ["CLAUDE_LANE_ID"] = "solo"
         out_solo = handle({"tool_input": {"command": "git commit -am x"}})
         assert out_solo == {}, f"solo with no other lanes should release: {out_solo}"
 
-        # registra rival vivo
+        # registers a live rival
         _lane_io.register("exec-a", "executora", "s1", "claude-opus-4-8")
         os.environ["CLAUDE_LANE_ID"] = "exec-b"
 
@@ -251,7 +251,7 @@ def _self_test() -> int:
         assert out_block.get("decision") == "block", f"block mode should block: {out_block}"
         assert out_block["hookSpecificOutput"]["permissionDecision"] == "deny"
 
-        # comando seguro nao bloqueia mesmo em modo block
+        # a safe command does not block even in block mode
         out_safe = handle({"tool_input": {"command": "git commit -m x -- file.py"}})
         assert out_safe == {}, f"an explicit pathspec should not block: {out_safe}"
 
@@ -261,7 +261,7 @@ def _self_test() -> int:
         assert out_bypass == {}, "bypass should release even in block mode"
         os.environ.pop("LANE_GIT_GUARD_BYPASS", None)
 
-        # so lane suspeita -> forca warn mesmo em modo block
+        # only a suspect lane -> forces warn even in block mode
         import time as _time
         reg = _lane_io._read_registry()
         from datetime import datetime, timezone
@@ -271,7 +271,7 @@ def _self_test() -> int:
         out_suspect = handle({"tool_input": {"command": "git commit -am x"}})
         assert "decision" not in out_suspect, f"suspect-only should degrade to warn even in block mode: {out_suspect}"
 
-        # lane morta -> zero falso positivo
+        # dead lane -> zero false positive
         dead_ts = datetime.fromtimestamp(_time.time() - 35 * 60, tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%S")
         reg2 = _lane_io._read_registry()
         reg2["lanes"]["exec-a"]["heartbeat_at"] = dead_ts

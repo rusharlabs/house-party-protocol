@@ -1,20 +1,21 @@
 #!/usr/bin/env bash
-# pyrun.sh — resolve o interprete Python do PROJETO e roda o hook com ele.
+# pyrun.sh - resolve the PROJECT's Python interpreter and run the hook with it.
 #
-# Why: hooks.json chamava `python` a seco. macOS e a maioria dos Linux so tem `python3`;
-# Windows so tem `python` (e um `python3` que pode ser o stub da Microsoft Store, que abre a
-# loja e sai com erro). Um hook que nao acha o interprete falha em TODA ferramenta, em
-# silencio — o kit inteiro vira decoracao.
+# Why: hooks.json used to call a bare `python`. macOS and most Linux ship only `python3`;
+# Windows ships only `python` (plus a `python3` that may be the Microsoft Store stub, which
+# opens the Store and exits with an error). A hook that cannot find the interpreter fails in
+# EVERY tool, silently - and the whole kit becomes decoration.
 #
-# Ordem: .venv do projeto (CLAUDE_PROJECT_DIR, senao o cwd — o Claude Code roda hooks na
-# raiz do projeto) -> o binario certo para o SO -> o outro. Nunca `py`.
+# Order: the project .venv (CLAUDE_PROJECT_DIR, else the cwd - Claude Code runs hooks at the
+# project root) -> the right binary for this OS -> the other one. Never `py`.
 #
-# Duas ressalvas:
-#   · o .venv do projeto e executado com a confianca que voce da ao projeto aberto — o
-#     mesmo que qualquer ferramenta que respeita venv faz. Para desligar: HPP_PYRUN_NO_VENV=1.
-#   · no Windows sem Python, `command -v python` ACHA o alias de WindowsApps (o stub da
-#     Store, que aponta para Microsoft.DesktopAppInstaller); ele e pulado pelo ALVO do
-#     symlink — Python instalado pela Store/PythonManager tambem mora em WindowsApps e fica.
+# Two caveats:
+#   . the project .venv runs with the trust you already give the project you opened - the
+#     same thing any venv-aware tool does. To turn it off: HPP_PYRUN_NO_VENV=1.
+#   . on Windows without Python, `command -v python` FINDS the WindowsApps alias (the Store
+#     stub, which points at Microsoft.DesktopAppInstaller); it is skipped by the symlink
+#     TARGET - Python installed from the Store/PythonManager also lives in WindowsApps and
+#     is kept.
 root="${CLAUDE_PROJECT_DIR:-$PWD}"
 if [ -z "${HPP_PYRUN_NO_VENV:-}" ]; then
   for c in "$root/.venv/bin/python" "$root/.venv/Scripts/python.exe"; do
@@ -22,16 +23,16 @@ if [ -z "${HPP_PYRUN_NO_VENV:-}" ]; then
   done
 fi
 case "$(uname -s 2>/dev/null)" in
-  MINGW*|MSYS*|CYGWIN*) ordem="python python3" ;;
-  *)                    ordem="python3 python" ;;
+  MINGW*|MSYS*|CYGWIN*) order="python python3" ;;
+  *)                    order="python3 python" ;;
 esac
-for c in $ordem; do
+for c in $order; do
   bin="$(command -v "$c" 2>/dev/null || true)"
   [ -n "$bin" ] || continue
-  # o alias de WindowsApps e' um symlink: Python de verdade aponta para PythonSoftwareFoundation.*;
-  # o stub da Store aponta para Microsoft.DesktopAppInstaller_* (medido 2026-09-20). E' o alvo que decide.
+  # the WindowsApps alias is a symlink: the real Python points at PythonSoftwareFoundation.*;
+  # the Store stub points at Microsoft.DesktopAppInstaller_* (measured 2026-09-20). The target decides.
   case "$(readlink -f "$bin" 2>/dev/null || echo "$bin")" in *DesktopAppInstaller*) continue ;; esac
   exec "$bin" "$@"
 done
-echo "pyrun.sh: no Python interpreter found (python3/python) — hook did not run" >&2
-exit 0   # WARN-only: um hook sem Python nao pode derrubar a ferramenta (REGRA #29)
+echo "pyrun.sh: no Python interpreter found (python3/python) - hook did not run" >&2
+exit 0   # WARN-only: a hook without Python must never take the tool down (RULE #29)

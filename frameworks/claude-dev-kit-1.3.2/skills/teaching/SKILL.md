@@ -1,6 +1,6 @@
 ---
 name: teaching
-description: Turns any technical output (creation, structure, architectural decision) into a learning opportunity — a tree of where the element lives, an x-ray of what-it-is/where-it-sits/what-it-is-for, a connection map, a business analogy, and explained decisions. Always use in technical output for a non-programmer reader.
+description: Turns any technical output (creation, structure, architectural decision) into a learning opportunity - a tree of where the element lives, an x-ray of what-it-is/where-it-sits/what-it-is-for, a connection map, a business analogy, and explained decisions. Always use in technical output for a non-programmer reader.
 ---
 
 > **Auto-Trigger:** Always active in every technical output that involves creation, structure, or architectural decisions.
@@ -20,11 +20,11 @@ ALWAYS. In every output that involves:
 
 Even though it is "ALWAYS active" for technical output, do NOT apply the 5 teaching blocks when:
 
-- **Conversational/non-technical reply** (status, "where did we stop?", simple confirmation, business question with no technical element) — there is no file/structure/connection to teach.
-- **Purely factual output of live data** (metrics, health score, counts) — the focus is the verified data, not the architecture.
-- **Trivial edits** (typo, comma, 1-line tweak with no structural impact) — the teaching overhead becomes noise.
+- **Conversational/non-technical reply** (status, "where did we stop?", simple confirmation, business question with no technical element) - there is no file/structure/connection to teach.
+- **Purely factual output of live data** (metrics, health score, counts) - the focus is the verified data, not the architecture.
+- **Trivial edits** (typo, comma, 1-line tweak with no structural impact) - the teaching overhead becomes noise.
 - **Internal batch execution by a subagent** where the output goes to another agent/orchestrator, not to a human learner.
-- **When the user explicitly asks for brevity** ("just do it", "no explanation", "short answer") — respect the direct instruction.
+- **When the user explicitly asks for brevity** ("just do it", "no explanation", "short answer") - respect the direct instruction.
 
 ## Contract
 
@@ -36,13 +36,13 @@ Even though it is "ALWAYS active" for technical output, do NOT apply the 5 teach
 
 | Exit | Meaning |
 |---|---|
-| 0 | always — this is a FORMATTING/BEHAVIOR skill, there is no possible execution failure; the "contract" is about output completeness, verifiable via the validator in the Proof section |
+| 0 | always - this is a FORMATTING/BEHAVIOR skill, there is no possible execution failure; the "contract" is about output completeness, verifiable via the validator in the Proof section |
 
 **STATE IT TOUCHES:**
 
 | Resource | Reads/Writes | Purpose |
 |---|---|---|
-| (no file) | — | this skill reads/writes no state — it shapes the FORM of the model's reply |
+| (no file) | - | this skill reads/writes no state - it shapes the FORM of the model's reply |
 
 ## Mandatory format of every technical output
 
@@ -73,7 +73,7 @@ projeto-raiz/
 
 TREE RULES:
 - Always show the tree FROM THE ROOT of the project
-- Never show only the partial path — always the full context
+- Never show only the partial path - always the full context
 - Mark with ➡️ the element being created/modified/explained
 - If the project is very large, show the 2 most relevant levels + the full path down to the element
 
@@ -92,7 +92,7 @@ For EACH file or folder mentioned, you MUST answer:
 | **What is it connected to?** | List ALL the other files that connect to this one. Show the direction: who calls whom. |
 | **Who triggers it?** | What makes this file run? A command? A hook? Another workflow? |
 | **What is inside?** | Summarized internal structure. Which sections, fields or blocks exist inside this file. |
-| **Why this format?** | `.yml`, `.md`, `.json` — why this one and not another? What is the practical advantage? |
+| **Why this format?** | `.yml`, `.md`, `.json` - why this one and not another? What is the practical advantage? |
 | **What happens if I delete it?** | Real consequence. What breaks, what stops working. |
 | **Possible alternative?** | Was there another way to do this? If so, why did we choose this one? |
 
@@ -152,7 +152,7 @@ Whenever the agent makes any technical decision, it MUST explain:
 ```
 DECISION: I created the workflow as .yml, not .md
 WHY: Because .yml lets the system read and interpret the structure
-     automatically (parsing). A .md file is just human-readable text —
+     automatically (parsing). A .md file is just human-readable text -
      the system cannot extract steps from it without interpretation.
 ALTERNATIVE: It could be .json, but .json is harder to read and edit
              by hand. .yml is the middle ground: readable by humans AND by machines.
@@ -166,11 +166,11 @@ CONSEQUENCE: If in the future you want the system to run workflows automatically
 
 1. **Never shorten paths without context.**
    - ❌ "It lives in `/workflows/`"
-   - ✅ "It lives in `/projeto-raiz/workflows/qualificar-lead.yml` — the `workflows` folder is where ALL the project's orchestrated processes live, and it sits directly at the root."
+   - ✅ "It lives in `/projeto-raiz/workflows/qualificar-lead.yml` - the `workflows` folder is where ALL the project's orchestrated processes live, and it sits directly at the root."
 
 2. **Never use a technical term without an immediate translation.**
    - ❌ "This is a YAML parser"
-   - ✅ "This is an automatic reader of .yml files (YAML is just the file format — think of it as a simplified spreadsheet where each line has a key and a value)"
+   - ✅ "This is an automatic reader of .yml files (YAML is just the file format - think of it as a simplified spreadsheet where each line has a key and a value)"
 
 3. **Never assume the reader knows what is inside a folder.**
    - Always list the contents, even if it is "empty for now, but it will contain X"
@@ -261,47 +261,47 @@ This skill's contract (completeness of the 5 blocks) is verifiable with a small 
 ```console
 $ python -c "
 def missing_teaching_blocks(text):
-    checks = {'arvore': '🗺️' in text, 'raio-x': '🔍' in text, 'conexoes': '🔗' in text, 'analogia': '💡' in text, 'decisoes': '⚠️' in text}
+    checks = {'tree': '🗺️' in text, 'xray': '🔍' in text, 'connections': '🔗' in text, 'analogy': '💡' in text, 'decisions': '⚠️' in text}
     return [k for k, ok in checks.items() if not ok]
-completo = '🗺️ x\n🔍 x\n🔗 x\n💡 x\n⚠️ x'
-print('faltando:', missing_teaching_blocks(completo))
+complete = '🗺️ x\n🔍 x\n🔗 x\n💡 x\n⚠️ x'
+print('missing:', missing_teaching_blocks(complete))
 "
-faltando: []
+missing: []
 ```
-<!-- executed: 2026-07-10 · exit=0 -->
-(output with all 5 blocks present — Teaching Mode complete, 0 blocks missing.)
+<!-- executed: 2026-09-22 · exit=0 -->
+(output with all 5 blocks present - Teaching Mode complete, 0 blocks missing.)
 
 ```console
 $ python -c "
 def missing_teaching_blocks(text):
-    checks = {'arvore': '🗺️' in text, 'raio-x': '🔍' in text, 'conexoes': '🔗' in text, 'analogia': '💡' in text, 'decisoes': '⚠️' in text}
+    checks = {'tree': '🗺️' in text, 'xray': '🔍' in text, 'connections': '🔗' in text, 'analogy': '💡' in text, 'decisions': '⚠️' in text}
     return [k for k, ok in checks.items() if not ok]
-incompleto = 'Vou criar o arquivo X.'
-faltando = missing_teaching_blocks(incompleto)
-print('faltando:', faltando)
-import sys; sys.exit(1 if faltando else 0)
+incomplete = 'I will create the file X.'
+missing = missing_teaching_blocks(incomplete)
+print('missing:', missing)
+import sys; sys.exit(1 if missing else 0)
 "
-faltando: ['arvore', 'raio-x', 'conexoes', 'analogia', 'decisoes']
+missing: ['tree', 'xray', 'connections', 'analogy', 'decisions']
 ```
-<!-- executed: 2026-07-10 · exit=1 -->
-(a technical output with NONE of the 5 blocks — exactly what this skill exists to prevent.)
+<!-- executed: 2026-09-22 · exit=1 -->
+(a technical output with NONE of the 5 blocks - exactly what this skill exists to prevent.)
 
 ```console
 $ python -c "
 def missing_teaching_blocks(text):
-    checks = {'arvore': '🗺️' in text, 'raio-x': '🔍' in text, 'conexoes': '🔗' in text, 'analogia': '💡' in text, 'decisoes': '⚠️' in text}
+    checks = {'tree': '🗺️' in text, 'xray': '🔍' in text, 'connections': '🔗' in text, 'analogy': '💡' in text, 'decisions': '⚠️' in text}
     return [k for k, ok in checks.items() if not ok]
-parcial = '🗺️ x\n🔍 x'
-print('faltando:', missing_teaching_blocks(parcial))
+partial = '🗺️ x\n🔍 x'
+print('missing:', missing_teaching_blocks(partial))
 "
-faltando: ['conexoes', 'analogia', 'decisoes']
+missing: ['connections', 'analogy', 'decisions']
 ```
-<!-- executed: 2026-07-10 · exit=0 -->
-(PARTIAL output — only tree and x-ray — 3 blocks still missing; useful for reviewing an output in progress.)
+<!-- executed: 2026-09-22 · exit=0 -->
+(PARTIAL output - only tree and x-ray - 3 blocks still missing; useful for reviewing an output in progress.)
 
 ## Anti-patterns
 
-- ❌ Applying the 5 blocks to a purely conversational reply ("hi", "where did we stop?") — it becomes noise, see "When NOT to Activate".
+- ❌ Applying the 5 blocks to a purely conversational reply ("hi", "where did we stop?") - it becomes noise, see "When NOT to Activate".
 - ❌ Mentioning a folder without showing what is inside it.
 - ❌ Using a technical term (parser, hook, schema) without translating it in the same sentence.
 - ❌ Going beyond 2 levels of "why" without asking whether the reader wants to go deeper.
@@ -311,10 +311,10 @@ faltando: ['conexoes', 'analogia', 'decisoes']
 ```bash
 python -c "
 def missing_teaching_blocks(text):
-    checks = {'arvore': '🗺️' in text, 'raio-x': '🔍' in text, 'conexoes': '🔗' in text, 'analogia': '💡' in text, 'decisoes': '⚠️' in text}
+    checks = {'tree': '🗺️' in text, 'xray': '🔍' in text, 'connections': '🔗' in text, 'analogy': '💡' in text, 'decisions': '⚠️' in text}
     return [k for k, ok in checks.items() if not ok]
 assert missing_teaching_blocks('🗺️🔍🔗💡⚠️') == []
-assert len(missing_teaching_blocks('nada aqui')) == 5
+assert len(missing_teaching_blocks('nothing here')) == 5
 print('self-test OK')
 "
 ```

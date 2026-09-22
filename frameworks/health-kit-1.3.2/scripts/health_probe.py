@@ -1,22 +1,22 @@
 #!/usr/bin/env python3
 """
-health_probe (Operator Kit) — connector de saude GENERICO e config-driven.
+health_probe (Operator Kit) -- GENERIC, config-driven health connector.
 
-Sonda uma lista de servicos definida em `health.probes` do operator-profile.yaml,
-grava um cache JSON (paths.health_cache) que o segmento `health` da statusline le
-SEM tocar a rede, e imprime um resumo. Pensado p/ rodar no SessionStart / cron /
-sob demanda — NUNCA no caminho da statusline (que so le o cache).
+Probes a list of services defined in `health.probes` of operator-profile.yaml,
+writes a JSON cache (paths.health_cache) that the statusline's `health` segment reads
+WITHOUT touching the network, and prints a summary. Meant to run on SessionStart / cron /
+on demand -- NEVER on the statusline's path (which only reads the cache).
 
-Tipos de sonda (health.probes = lista de {name, type, target}):
-  http -> urllib GET; online se status < 400 (NUNCA usa curl/wget — deny-list)
-  cmd  -> subprocess shell; online se exit 0 (comando vem do profile = confiavel)
+Probe types (health.probes = list of {name, type, target}):
+  http -> urllib GET; online if status < 400 (NEVER uses curl/wget -- deny-list)
+  cmd  -> subprocess shell; online if exit 0 (the command comes from the profile = trusted)
 
-Cache (schema que a statusline entende):
+Cache (schema the statusline understands):
   {"health": {"services_online": N, "services_total": M}, "services": {name: {"online": bool, ...}}}
 
-CLI: health_probe.py [--json] [--quiet]  ·  --self-test (sonda cmd local, sem rede)
-exit 0 sempre (connector nao quebra fluxo). stdlib + PyYAML (via loader).
-v1.1.0 — 2026-07-10 (Operator Kit · Tier 2 · rename services/health, remove vocabulario "brains")
+CLI: health_probe.py [--json] [--quiet]  -  --self-test (local cmd probe, no network)
+exit 0 always (the connector never breaks the flow). stdlib + PyYAML (via loader).
+v1.1.0 -- 2026-07-10 (Operator Kit - Tier 2 - rename services/health, remove "brains" vocabulary)
 """
 from __future__ import annotations
 
@@ -62,7 +62,7 @@ def _root() -> Path:
 def probe_http(target: str, timeout: int = 5) -> bool:
     try:
         req = urllib.request.Request(target, method="GET")
-        with urllib.request.urlopen(req, timeout=timeout) as r:  # noqa: S310 — target do profile
+        with urllib.request.urlopen(req, timeout=timeout) as r:  # noqa: S310 -- target comes from the profile
             return getattr(r, "status", 200) < 400
     except Exception:
         return False
@@ -70,7 +70,7 @@ def probe_http(target: str, timeout: int = 5) -> bool:
 
 def probe_cmd(target: str, root: Path, timeout: int = 10) -> bool:
     try:
-        r = subprocess.run(target, shell=True, cwd=str(root),  # noqa: S602 — comando do profile (confiavel)
+        r = subprocess.run(target, shell=True, cwd=str(root),  # noqa: S602 -- command comes from the profile (trusted)
                           capture_output=True, text=True, timeout=timeout)
         return r.returncode == 0
     except Exception:
@@ -78,7 +78,7 @@ def probe_cmd(target: str, root: Path, timeout: int = 10) -> bool:
 
 
 def run_probes(probes: list, root: Path) -> dict:
-    """Roda cada sonda. Retorna o dict de cache (schema da statusline)."""
+    """Runs each probe. Returns the cache dict (statusline schema)."""
     services: dict = {}
     for p in probes:
         if not isinstance(p, dict):
@@ -117,7 +117,7 @@ def main(argv) -> int:
         return 0
     cache = run_probes(probes, root)
 
-    # grava o cache que a statusline le (paths.health_cache)
+    # writes the cache that the statusline reads (paths.health_cache)
     cache_path = root / get(load_profile() if load_profile else {}, "paths.health_cache", _DEF_HEALTH_CACHE)
     try:
         cache_path.parent.mkdir(parents=True, exist_ok=True)
@@ -146,7 +146,7 @@ def _self_test() -> None:
     assert cache["health"]["services_total"] == 2
     assert cache["services"]["ok"]["online"] is True
     assert cache["services"]["fail"]["online"] is False
-    assert _probes_cfg() == _probes_cfg()  # idempotente / nao crasha
+    assert _probes_cfg() == _probes_cfg()  # idempotent / does not crash
     print("self-test OK")
 
 

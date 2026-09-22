@@ -1,33 +1,33 @@
 #!/usr/bin/env python3
 """
-drift_check (Operator Kit) — confronta INTENÇÃO (doc) x REALIDADE (sondas).
+drift_check (Operator Kit) -- compares INTENTION (doc) vs REALITY (probes).
 
-Materializa LC-1 (auditar a fonte AO VIVO) e feedback_plans_lag_reality no nível
-de runtime: um doc DIZ que algo está no ar / implementado / por-design — esta
-ferramenta SONDA a realidade e rotula cada afirmação. Toda sonda compara o que
-o doc ESPERA com o que de fato acontece:
+Materializes LC-1 (audit the source LIVE) and feedback_plans_lag_reality at
+runtime level: a doc SAYS something is live / implemented / by-design -- this
+tool PROBES reality and labels each claim. Every probe compares what the
+doc EXPECTS against what actually happens:
 
-    bug          = o doc espera funcionando, mas a sonda falhou (drift real)
-    by-design    = o doc e a realidade concordam (ok — intencional)
-    aspiracional = o doc descreve algo NÃO esperado funcionar ainda (espera=False)
-                   e a realidade confirma que não funciona (sem drift; é roadmap)
+    bug          = the doc expects it working, but the probe failed (real drift)
+    by-design    = the doc and reality agree (ok -- intentional)
+    aspiracional = the doc describes something NOT expected to work yet (espera=False)
+                   and reality confirms it doesn't work (no drift; it's a roadmap)
 
-Cada sonda: {nome, tipo, alvo, espera}
-    tipo cmd   -> roda o comando (subprocess); real = (exit code 0)
-    tipo http  -> GET via urllib.request; real = (status 200)   [NUNCA curl/wget]
-    tipo glob  -> arquivo/pattern existe no disco; real = (achou algo)
-    espera     -> bool: o doc afirma que ISSO deve estar verdadeiro? (default True)
+Each probe: {nome, tipo, alvo, espera}
+    tipo cmd   -> runs the command (subprocess); real = (exit code 0)
+    tipo http  -> GET via urllib.request; real = (status 200)   [NEVER curl/wget]
+    tipo glob  -> file/pattern exists on disk; real = (found something)
+    espera     -> bool: does the doc claim this should be true? (default True)
 
-Sondas vêm de um YAML (--sondas arquivo.yaml) ou inline (--sonda nome=...).
+Probes come from a YAML (--sondas file.yaml) or inline (--sonda nome=...).
 
-Uso:
+Usage:
     python drift_check.py doc.md --sondas sondas.yaml
     python drift_check.py doc.md --sonda "health=http:http://127.0.0.1:8080/health"
     python drift_check.py doc.md --sonda "engine=cmd:python -c pass" --json
     python drift_check.py doc.md --sonda "cfg=glob:core/paths.py:espera=true"
     python drift_check.py --self-test
 
-Formato inline:  nome=TIPO:ALVO[:espera=true|false]
+Inline format:  nome=TIPO:ALVO[:espera=true|false]
     health=http:http://127.0.0.1:8080/health
     suite=cmd:python -m pytest -q:espera=true
     legado=glob:old/removido.py:espera=false
@@ -37,10 +37,10 @@ YAML (--sondas):
       - { nome: health, tipo: http, alvo: "http://127.0.0.1:8080/health", espera: true }
       - { nome: paths,  tipo: glob, alvo: "core/paths.py",                espera: true }
 
-Exit: 0 = rodou (independe de haver drift) · 2 = uso inválido.
-stdlib + PyYAML (só p/ --sondas). Cross-platform. HTTP por urllib (nunca curl/wget).
+Exit: 0 = ran (regardless of drift) -- 2 = invalid usage.
+stdlib + PyYAML (only for --sondas). Cross-platform. HTTP via urllib (never curl/wget).
 
-v1.0.0 — 2026-06-19 (Operator Kit · Tier 1 · materializa LC-1 + plans_lag_reality)
+v1.0.0 -- 2026-06-19 (Operator Kit -- Tier 1 -- materializes LC-1 + plans_lag_reality)
 """
 from __future__ import annotations
 
@@ -51,26 +51,26 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-# loader compartilhado do kit (.../operator-kit/_lib/profile_loader.py)
+# shared kit loader (.../operator-kit/_lib/profile_loader.py)
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 try:
-    from _lib.profile_loader import load_profile, get  # noqa: F401 (disponível p/ extensão)
-except Exception:  # noqa: BLE001 — degrade seguro
+    from _lib.profile_loader import load_profile, get  # noqa: F401 (available for extension)
+except Exception:  # noqa: BLE001 -- safe degrade
     load_profile = None  # type: ignore[assignment]
     get = None  # type: ignore[assignment]
 
 try:
-    import yaml  # PyYAML — só necessário p/ --sondas YAML
+    import yaml  # PyYAML -- only needed for --sondas YAML
 except Exception:  # noqa: BLE001
     yaml = None  # type: ignore[assignment]
 
 _TIPOS = ("cmd", "http", "glob")
 
 
-# ── execução de sondas ──────────────────────────────────────────────────────
+# ── probe execution ─────────────────────────────────────────────────────────
 
 def probe_cmd(alvo: str, timeout: int = 60) -> dict:
-    """Roda comando shell. real=True se exit 0. Nunca crasha."""
+    """Runs a shell command. real=True if exit 0. Never crashes."""
     try:
         r = subprocess.run(alvo, shell=True, capture_output=True, text=True, timeout=timeout)
         tail = ((r.stdout or "") + (r.stderr or "")).strip()[-200:]
@@ -82,24 +82,24 @@ def probe_cmd(alvo: str, timeout: int = 60) -> dict:
 
 
 def probe_http(alvo: str, timeout: int = 10) -> dict:
-    """GET via urllib. real=True se status 200. NUNCA usa curl/wget. Nunca crasha."""
+    """GET via urllib. real=True if status 200. NEVER uses curl/wget. Never crashes."""
     req = urllib.request.Request(alvo, method="GET", headers={"User-Agent": "operator-kit-drift_check/1.0"})
     try:
-        with urllib.request.urlopen(req, timeout=timeout) as resp:  # noqa: S310 (URL controlada pelo operador)
+        with urllib.request.urlopen(req, timeout=timeout) as resp:  # noqa: S310 (URL controlled by the operator)
             status = getattr(resp, "status", None) or resp.getcode()
             return {"real": status == 200, "detalhe": f"HTTP {status}", "tail": ""}
     except urllib.error.HTTPError as e:
         return {"real": e.code == 200, "detalhe": f"HTTP {e.code}", "tail": ""}
-    except Exception as e:  # noqa: BLE001 — conexão recusada, DNS, timeout...
+    except Exception as e:  # noqa: BLE001 -- connection refused, DNS, timeout...
         return {"real": False, "detalhe": f"no answer: {type(e).__name__}", "tail": ""}
 
 
 def probe_glob(alvo: str, repo_root: Path | None = None) -> dict:
-    """Arquivo/pattern existe? real=True se achar algo. Nunca crasha."""
+    """File/pattern exists? real=True if it finds something. Never crashes."""
     root = repo_root or Path.cwd()
     try:
         p = Path(alvo)
-        # caminho direto (abs ou relativo ao repo)
+        # direct path (abs or relative to the repo)
         if p.is_absolute() and p.exists():
             return {"real": True, "detalhe": "exists (abs)", "tail": str(p)}
         if (root / p).exists():
@@ -115,7 +115,7 @@ def probe_glob(alvo: str, repo_root: Path | None = None) -> dict:
 
 
 def run_probe(sonda: dict, repo_root: Path | None = None) -> dict:
-    """Executa uma sonda e rotula bug/by-design/aspiracional."""
+    """Runs a probe and labels it bug/by-design/aspiracional."""
     nome = str(sonda.get("nome", "sem-nome"))
     tipo = str(sonda.get("tipo", "")).lower()
     alvo = str(sonda.get("alvo", ""))
@@ -140,11 +140,11 @@ def run_probe(sonda: dict, repo_root: Path | None = None) -> dict:
 
 def rotular(espera: bool, real: bool) -> str:
     """
-    espera (doc afirma funcionar?) x real (sonda confirmou?):
-        espera=True,  real=True   -> by-design   (doc bate com realidade)
-        espera=True,  real=False  -> bug         (doc mente: prometeu e não tem)
-        espera=False, real=False  -> aspiracional (doc descreve roadmap; ok não ter)
-        espera=False, real=True   -> by-design   (existe e não era exigido; sem drift)
+    espera (does the doc claim it works?) x real (did the probe confirm it?):
+        espera=True,  real=True   -> by-design   (doc matches reality)
+        espera=True,  real=False  -> bug         (doc lies: promised and doesn't have it)
+        espera=False, real=False  -> aspiracional (doc describes a roadmap; ok not to have it)
+        espera=False, real=True   -> by-design   (exists and wasn't required; no drift)
     """
     if espera and real:
         return "by-design"
@@ -155,12 +155,12 @@ def rotular(espera: bool, real: bool) -> str:
     return "by-design"  # not espera and real
 
 
-# ── parsing de sondas ───────────────────────────────────────────────────────
+# ── probe parsing ────────────────────────────────────────────────────────────
 
 def parse_inline(spec: str) -> dict:
     """
-    'nome=TIPO:ALVO[:espera=true|false]' -> dict sonda.
-    Levanta ValueError se malformado (uso inválido -> exit 2 no main).
+    'nome=TIPO:ALVO[:espera=true|false]' -> probe dict.
+    Raises ValueError if malformed (invalid usage -> exit 2 in main).
     """
     if "=" not in spec:
         raise ValueError(f"inline probe without '=': {spec!r}")
@@ -170,7 +170,7 @@ def parse_inline(spec: str) -> dict:
     tipo, alvo = rest.split(":", 1)
     tipo = tipo.strip().lower()
     espera = True
-    # sufixo opcional ':espera=true|false' (só se o alvo não for http://)
+    # optional suffix ':espera=true|false' (only if the target isn't http://)
     low = alvo.lower()
     marker = ":espera="
     idx = low.rfind(marker)
@@ -185,7 +185,7 @@ def parse_inline(spec: str) -> dict:
 
 
 def load_sondas_yaml(path: Path) -> list[dict]:
-    """Lê sondas de um YAML. [] se PyYAML ausente ou arquivo ilegível."""
+    """Reads probes from a YAML. [] if PyYAML is missing or the file is unreadable."""
     if yaml is None:
         return []
     try:
@@ -208,11 +208,11 @@ def load_sondas_yaml(path: Path) -> list[dict]:
     return out
 
 
-# ── orquestração ────────────────────────────────────────────────────────────
+# ── orchestration ────────────────────────────────────────────────────────────
 
 def drift_check(doc_path: Path | None, sondas: list[dict],
                 repo_root: Path | None = None) -> dict:
-    """Roda todas as sondas e agrega o rótulo de drift."""
+    """Runs all probes and aggregates the drift label."""
     rows = [run_probe(s, repo_root) for s in sondas]
     resumo = {"bug": 0, "by-design": 0, "aspiracional": 0}
     for r in rows:
@@ -318,18 +318,18 @@ def _detect_repo_root(p: Path) -> Path:
     return Path.cwd()
 
 
-# ── self-test (sem rede; só cmd + glob locais) ──────────────────────────────
+# ── self-test (no network; only local cmd + glob) ───────────────────────────
 
 def _self_test() -> None:
     import tempfile
 
-    # rotulagem (matriz espera x real)
+    # labeling (espera x real matrix)
     assert rotular(True, True) == "by-design"
     assert rotular(True, False) == "bug"
     assert rotular(False, False) == "aspiracional"
     assert rotular(False, True) == "by-design"
 
-    # parse inline
+    # inline parse
     s = parse_inline("health=http:http://127.0.0.1:8080/health")
     assert s["tipo"] == "http" and s["alvo"] == "http://127.0.0.1:8080/health" and s["espera"] is True
     s2 = parse_inline("legado=glob:old/x.py:espera=false")
@@ -342,7 +342,7 @@ def _self_test() -> None:
     except ValueError:
         pass
 
-    # sondas cmd locais (sem rede)
+    # local cmd probes (no network)
     ok = run_probe({"nome": "exit0", "tipo": "cmd", "alvo": f'"{sys.executable}" -c "import sys; sys.exit(0)"', "espera": True})
     assert ok["real"] is True and ok["rotulo"] == "by-design", "cmd exit0 expected = by-design"
 
@@ -365,11 +365,11 @@ def _self_test() -> None:
         g_asp = run_probe({"nome": "g3", "tipo": "glob", "alvo": "removed.py", "espera": False}, repo_root=root)
         assert g_asp["rotulo"] == "aspiracional", "missing glob that was not expected = aspiracional"
 
-        # tipo inválido não crasha, vira bug se esperado
+        # invalid type doesn't crash, becomes bug if it was expected
         inv = run_probe({"nome": "bad", "tipo": "xyz", "alvo": "z", "espera": True})
         assert inv["real"] is False and inv["rotulo"] == "bug", "invalid type that was expected = bug"
 
-        # agregação + render
+        # aggregation + render
         sondas = [
             {"nome": "g1", "tipo": "glob", "alvo": "present.txt", "espera": True},
             {"nome": "g2", "tipo": "glob", "alvo": "absent.txt", "espera": True},
@@ -381,7 +381,7 @@ def _self_test() -> None:
         md = render_markdown(res)
         assert "Drift check" in md and "| Label |" in md
 
-        # sem sondas: render avisa, não crasha
+        # no probes: render warns, doesn't crash
         vazio = drift_check(None, [], repo_root=root)
         assert vazio["total"] == 0 and vazio["drift"] is False
         assert "No probe" in render_markdown(vazio)

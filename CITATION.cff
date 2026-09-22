@@ -3,7 +3,7 @@ message: "If you use House Party Protocol, please cite it as below."
 type: software
 title: "House Party Protocol"
 abstract: "House Party Protocol (HPP) is a local-first harness for coding agents. It sits around the work an agent does in Claude Code or Codex CLI and turns four questions into executable contracts: what may run, who may approve, what counts as proof, and where the next step comes from after an interruption. The order of work is not negotiated in the conversation: a spec compiles into a WorkGraph, the graph runs in topological waves, parallel sessions work in isolated lanes, and every wave closes on evidence, never on a sentence."
-version: "2.5.1"
+version: "2.5.2"
 date-released: "2026-09-21"
 license: MIT
 url: "https://rusharlabs.com"

@@ -1,34 +1,34 @@
 #!/usr/bin/env python3
 """
-wire_settings — patcher idempotente e reversível para settings.json/settings.local.json.
+wire_settings -- idempotent, reversible patcher for settings.json/settings.local.json.
 
-Generaliza o padrão provado de scripts/system/wire_statusline.py, corrigindo o defeito
-conhecido (linhas 47-49 daquele script): NUNCA sobrescreve um statusLine ou hook alheio sem
---force. Hooks são sempre aditivos (append numa lista); statusLine é um escalar único — só
-é sobrescrito se: (a) já contém o marcador esperado (idempotente, não conta como mudança),
-(b) está vazio, ou (c) --force foi passado.
+Generalizes the proven pattern from scripts/system/wire_statusline.py, fixing the known
+defect (lines 47-49 of that script): it NEVER overwrites a statusLine or hook belonging to
+someone else without --force. Hooks are always additive (appended to a list); statusLine is a
+single scalar -- it is only overwritten if: (a) it already contains the expected marker
+(idempotent, does not count as a change), (b) it is empty, or (c) --force was passed.
 
-Uso:
+Usage:
     python wire_settings.py --target <settings.json> --spec <wiring-spec.yaml> [--force]
     python wire_settings.py --undo [--target <settings.json>]
     python wire_settings.py --self-test
 
 wiring-spec.yaml:
     statusLine:
-      match_substring: "meu_marcador"
+      match_substring: "my_marker"
       value: {type: command, command: "...", padding: 0}
     hooks:
       Stop:
         matcher: "*"
-        match_substring: "meu_marcador"
+        match_substring: "my_marker"
         value: {type: command, command: "...", timeout: 30}
 
-Toda escrita gera backup `<target>.bak-<timestamp>` ANTES, valida o JSON DEPOIS (rollback
-automático se quebrar) e grava `<target>.wire-undo.json` apontando pro backup mais recente,
-para o --undo funcionar sem precisar lembrar o timestamp.
+Every write generates a backup `<target>.bak-<timestamp>` BEFORE, validates the JSON AFTER (automatic
+rollback if it breaks) and writes `<target>.wire-undo.json` pointing to the most recent backup,
+so --undo works without needing to remember the timestamp.
 
-Exit: 0 ok (wired ou no-op) · 1 warn (conflito sem --force, nada sobrescrito) · 3 erro.
-stdlib + PyYAML. v1.0.0 — 2026-07-10 (claude-dev-kit · Tier 1)
+Exit: 0 ok (wired or no-op) - 1 warn (conflict without --force, nothing overwritten) - 3 error.
+stdlib + PyYAML. v1.0.0 -- 2026-07-10 (claude-dev-kit - Tier 1)
 """
 from __future__ import annotations
 
@@ -51,7 +51,7 @@ def _has_marker(hook_list, marker):
 
 
 def apply_spec(data: dict, spec: dict, force: bool):
-    """Retorna (data, changed_keys, warnings)."""
+    """Returns (data, changed_keys, warnings)."""
     changed = []
     warnings = []
     data.setdefault("hooks", {})
@@ -62,7 +62,7 @@ def apply_spec(data: dict, spec: dict, force: bool):
         cur = data.get("statusLine")
         cur_cmd = (cur or {}).get("command", "") if isinstance(cur, dict) else ""
         if isinstance(cur, dict) and marker in cur_cmd:
-            pass  # já wired — idempotente
+            pass  # already wired -- idempotent
         elif not cur or force:
             data["statusLine"] = dict(status_spec["value"])
             changed.append("statusLine")
@@ -73,7 +73,7 @@ def apply_spec(data: dict, spec: dict, force: bool):
         marker = hook_spec["match_substring"]
         arr = data["hooks"].setdefault(event, [])
         if _has_marker(arr, marker):
-            continue  # idempotente
+            continue  # idempotent
         matcher = hook_spec.get("matcher", "*")
         group = next((e for e in arr if e.get("matcher") == matcher), None)
         if group is None:
@@ -86,12 +86,12 @@ def apply_spec(data: dict, spec: dict, force: bool):
 
 
 def _write_json_atomic(target: Path, data: dict, backup: Path, *, expected_bytes: bytes | None = None) -> str:
-    """Grava `data` em `target` sem janela de corrupcao. Retorna "ok" | "invalid" | "conflict".
+    """Writes `data` to `target` with no window for corruption. Returns "ok" | "invalid" | "conflict".
 
-    # Why: escrever direto no alvo deixa um settings.json truncado se o processo cair no
-    # meio, e sobrescreve o que outro processo gravou entre a leitura e a escrita. O
-    # temporario fica no MESMO diretorio (os.replace so e atomico no mesmo volume) e a
-    # comparacao byte-a-byte com o que foi lido recusa a escrita em vez de perder a alheia.
+    # Why: writing straight to the target leaves a truncated settings.json if the process dies
+    # halfway through, and overwrites what another process wrote between the read and the write. The
+    # temp file stays in the SAME directory (os.replace is only atomic on the same volume) and the
+    # byte-by-byte comparison against what was read refuses the write instead of losing someone else's.
     """
     out = json.dumps(data, indent=2, ensure_ascii=False) + "\n"
     try:

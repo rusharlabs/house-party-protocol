@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 """
-ralph_gate — Stop hook UNIFICADO: motor (re-alimenta até <promise>) + trava (done_gate real).
+ralph_gate - UNIFIED Stop hook: engine (re-feeds until <promise>) + latch (real done_gate).
 
-Funde o mecanismo do plugin oficial ralph-loop (Stop hook `decision:block` que re-alimenta
-o prompt até `<promise>TEXTO</promise>`) com o `done_gate.py` (exit-code real de subprocess,
-não tag de texto). A `<promise>` só destrava a parada se o done_gate passar, RE-EXECUTADO
-dentro do processo deste hook — depois da fala do modelo, fora do alcance dela. O modelo
-pode forjar qualquer texto no transcript; não pode forjar o exit-code de um subprocess do
-harness (ver evals/ralph-gate-T1-T4.sh, teste T3 — forja de evidência).
+Merges the mechanism of the official ralph-loop plugin (Stop hook `decision:block` that
+re-feeds the prompt until `<promise>TEXT</promise>`) with `done_gate.py` (real subprocess
+exit-code, not a text tag). The `<promise>` only unlatches the stop if done_gate passes,
+RE-RUN inside this hook's own process - after the model's turn, out of its reach. The
+model can forge any text in the transcript; it cannot forge the exit-code of a harness
+subprocess (see evals/ralph-gate-T1-T4.sh, test T3 - evidence forgery).
 
-Por que motor+trava no MESMO processo (modo A, default): o plugin oficial dá `rm` no state
-file ao ver a `<promise>`, ANTES de qualquer veto — se a trava rejeitar depois, o motor já
-morreu (bug de acoplamento). Aqui a trava roda ANTES de qualquer remoção de estado.
+Why engine+latch in the SAME process (mode A, default): the official plugin `rm`s the state
+file as soon as it sees the `<promise>`, BEFORE any veto - if the latch rejects afterward,
+the engine is already dead (a coupling bug). Here the latch runs BEFORE any state removal.
 
 CLI:
     ralph_gate.py start --charter "<prompt>" --criteria "<cmd1>" ["<cmd2>" ...]
@@ -19,14 +19,14 @@ CLI:
     ralph_gate.py status
     ralph_gate.py cancel
     ralph_gate.py --self-test
-    echo '{"session_id":"...","transcript_path":"..."}' | ralph_gate.py   # modo hook (Stop)
+    echo '{"session_id":"...","transcript_path":"..."}' | ralph_gate.py   # hook mode (Stop)
 
-Modo hook: lê JSON do stdin, imprime JSON no stdout. `{}` = permite a sessão parar.
-`{"decision":"block","reason":...}` = re-alimenta o prompt (Claude Code continua).
-Exit sempre 0 no modo hook — hooks Stop não devem falhar o processo do harness.
+Hook mode: reads JSON from stdin, prints JSON to stdout. `{}` = allows the session to stop.
+`{"decision":"block","reason":...}` = re-feeds the prompt (Claude Code keeps going).
+Exit always 0 in hook mode - Stop hooks must not fail the harness process.
 
-stdlib only (done_gate.py embarcado ao lado, sem dependência de rede).
-v1.0.0 — 2026-07-10 (Operator Kit · Tier 2)
+stdlib only (done_gate.py embedded alongside, no network dependency).
+v1.0.0 - 2026-07-10 (Operator Kit - Tier 2)
 """
 from __future__ import annotations
 
@@ -52,7 +52,7 @@ _PROMISE_RE = re.compile(r"<promise>(.*?)</promise>", re.DOTALL)
 
 
 def _done_gate():
-    """Importa done_gate.py embarcado (sibling script), sem tocar sys.path globalmente."""
+    """Imports the embedded done_gate.py (sibling script), without touching sys.path globally."""
     sys.path.insert(0, str(_SCRIPTS_DIR))
     import done_gate  # type: ignore[import-not-found]
     return done_gate
@@ -63,7 +63,7 @@ def load_state() -> dict | None:
         return None
     try:
         return json.loads(STATE_PATH.read_text(encoding="utf-8"))
-    except Exception:  # noqa: BLE001 — estado corrompido = tratar como ausente
+    except Exception:  # noqa: BLE001 - corrupted state = treat as absent
         return None
 
 
@@ -84,7 +84,7 @@ def append_ledger(event: str, **fields) -> None:
 
 
 def last_assistant_text(transcript_path: str) -> str:
-    """Extrai o último bloco de texto do último turno assistant (mesma técnica do plugin oficial)."""
+    """Extracts the last text block from the last assistant turn (same technique as the official plugin)."""
     p = Path(transcript_path) if transcript_path else None
     if not p or not p.exists():
         return ""
@@ -95,7 +95,7 @@ def last_assistant_text(transcript_path: str) -> str:
                 continue
             try:
                 obj = json.loads(line)
-            except Exception:  # noqa: BLE001 — linha corrompida não derruba o hook
+            except Exception:  # noqa: BLE001 - a corrupted line does not take down the hook
                 continue
             msg = obj.get("message", {})
             if msg.get("role") != "assistant":
@@ -107,13 +107,13 @@ def last_assistant_text(transcript_path: str) -> str:
 
 
 def hook_stop(payload: dict) -> dict:
-    """Núcleo do Stop hook. Retorna o dict a imprimir (json.dumps) no stdout."""
+    """Core of the Stop hook. Returns the dict to print (json.dumps) to stdout."""
     state = load_state()
     if state is None:
         return {}
 
     if state.get("session_id") and payload.get("session_id") and state["session_id"] != payload["session_id"]:
-        return {}  # loop de outra sessão — não toca (isolamento, igual ao plugin oficial)
+        return {}  # loop from another session - do not touch it (isolation, same as the official plugin)
 
     max_it = state.get("max_iterations", 0)
     if max_it and state.get("iteration", 0) >= max_it:
@@ -205,21 +205,21 @@ def _self_test() -> int:
             line = json.dumps({"message": {"role": "assistant", "content": [{"type": "text", "text": text}]}})
             transcript.write_text(line + "\n", encoding="utf-8")
 
-        # T1: sem promise -> block, state sobrevive, iteration incrementa
+        # T1: no promise -> block, state survives, iteration increments
         save_state({"session_id": "s1", "charter": "continue", "criteria": [f'"{sys.executable}" -c "pass"'], "max_iterations": 0, "iteration": 0})
         write_transcript("still working, no tag at all")
         out = hook_stop({"session_id": "s1", "transcript_path": str(transcript)})
         assert out.get("decision") == "block", f"T1 expected block: {out}"
         assert load_state()["iteration"] == 1, "T1: iteration should increment"
 
-        # T1b: promise presente mas critério FALHA -> block, state sobrevive (não incrementa iteration)
+        # T1b: promise present but the criterion FAILS -> block, state survives (does not increment iteration)
         save_state({"session_id": "s1", "charter": "continue", "criteria": [f'"{sys.executable}" -c "import sys; sys.exit(1)"'], "max_iterations": 0, "iteration": 0})
         write_transcript("finished <promise>DONE</promise>")
         out = hook_stop({"session_id": "s1", "transcript_path": str(transcript)})
         assert out.get("decision") == "block", f"T1b expected block (failing criterion): {out}"
         assert load_state() is not None, "T1b: state should survive the FAIL"
 
-        # T2: promise + critério PASSA -> {} (permite parar), state removido, ledger tem gate-passed
+        # T2: promise + criterion PASSES -> {} (allows stop), state removed, ledger has gate-passed
         save_state({"session_id": "s1", "charter": "continue", "criteria": [f'"{sys.executable}" -c "pass"'], "max_iterations": 0, "iteration": 0})
         write_transcript("finished <promise>DONE</promise>")
         out = hook_stop({"session_id": "s1", "transcript_path": str(transcript)})
@@ -228,7 +228,7 @@ def _self_test() -> int:
         ledger_lines = LEDGER_PATH.read_text(encoding="utf-8").splitlines()
         assert any(json.loads(l)["event"] == "gate-passed" for l in ledger_lines), "T2: ledger without gate-passed"
 
-        # T3: forja de evidência no transcript ("DONE-GATE: DONE" fake) + critério cria nonce mas FALHA de verdade
+        # T3: evidence forgery in the transcript (fake "DONE-GATE: DONE") + criterion creates a nonce but really FAILS
         nonce = tmp / "nonce.txt"
         nonce.unlink(missing_ok=True)
         fake_cmd = f'"{sys.executable}" -c "open(r\'{nonce}\', \'w\').write(\'x\'); import sys; sys.exit(1)"'
@@ -238,7 +238,7 @@ def _self_test() -> int:
         assert out.get("decision") == "block", f"T3: forged text must NOT fool the gate: {out}"
         assert nonce.exists(), "T3: nonce should exist — proof the criterion REALLY RAN inside the hook process"
 
-        # T4: teto de iterações -> paused-budget, remove state, permite parar (não block eterno)
+        # T4: iteration cap -> paused-budget, removes state, allows stop (not an eternal block)
         save_state({"session_id": "s1", "charter": "continue", "criteria": [f'"{sys.executable}" -c "pass"'], "max_iterations": 2, "iteration": 2})
         write_transcript("still no promise")
         out = hook_stop({"session_id": "s1", "transcript_path": str(transcript)})
@@ -247,7 +247,7 @@ def _self_test() -> int:
         ledger_lines = LEDGER_PATH.read_text(encoding="utf-8").splitlines()
         assert any(json.loads(l)["event"] == "paused-budget" for l in ledger_lines), "T4: ledger without paused-budget"
 
-        # isolamento de sessão: loop de outra sessão não é tocado
+        # session isolation: a loop from another session is not touched
         save_state({"session_id": "s1", "charter": "continue", "criteria": [f'"{sys.executable}" -c "pass"'], "max_iterations": 0, "iteration": 0})
         out = hook_stop({"session_id": "s2-other-session", "transcript_path": str(transcript)})
         assert out == {}, f"session isolation failed: {out}"
@@ -290,10 +290,10 @@ def main(argv) -> int:
     if args.cmd == "cancel":
         return cmd_cancel()
 
-    # modo hook: stdin JSON -> stdout JSON, exit sempre 0
+    # hook mode: stdin JSON -> stdout JSON, exit always 0
     try:
         payload = json.loads(sys.stdin.read() or "{}")
-    except Exception:  # noqa: BLE001 — stdin malformado nunca derruba o hook
+    except Exception:  # noqa: BLE001 - malformed stdin never takes down the hook
         payload = {}
     result = hook_stop(payload)
     print(json.dumps(result, ensure_ascii=False))

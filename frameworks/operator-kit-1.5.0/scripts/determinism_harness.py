@@ -1,32 +1,32 @@
 #!/usr/bin/env python3
 """
-determinism_harness (Operator Kit) — caca flaky: roda um validador N vezes e
-exige UM unico hash de stdout. Saida que muda entre runs = teste nao-deterministico
-(flaky) = FAIL. Validador deterministico = todos os runs com o mesmo hash = PASS.
+determinism_harness (Operator Kit) -- flaky hunter: runs a validator N times and
+requires ONE single stdout hash. Output that changes between runs = non-deterministic test
+(flaky) = FAIL. Deterministic validator = all runs with the same hash = PASS.
 
-Por que existe: um gate de verificacao so vale se for estavel. Um teste flaky
-"passa" as vezes e cria verde-falso. Aqui medimos a estabilidade da saida (hash
-do stdout) ao longo de N execucoes — N vem de verification.determinism_runs (default 5).
+Why it exists: a verification gate is only worth it if it's stable. A flaky test
+"passes" sometimes and creates a false green. Here we measure the stability of the output
+(stdout hash) across N runs -- N comes from verification.determinism_runs (default 5).
 
-Controle negativo (Monte-Carlo do proprio gate): --negative recebe um comando que
-DEVE falhar (exit != 0). Se esse comando "passar" (exit 0), o gate esta quebrado/
-permissivo demais e o harness reporta FAIL. E o teste-do-teste: prova que o gate
-ainda sabe reprovar.
+Negative control (Monte-Carlo of the gate itself): --negative takes a command that
+MUST fail (exit != 0). If that command "passes" (exit 0), the gate is broken/
+too permissive and the harness reports FAIL. It's the test-of-the-test: it proves the
+gate still knows how to fail things.
 
-Veredito PASS exige: (a) validador com hash unico em todos os runs E exit 0 em todos;
-(b) se ha --negative, ele DEVE ter falhado (exit != 0). Qualquer violacao => FAIL.
+PASS verdict requires: (a) a validator with a single hash across all runs AND exit 0 in all;
+(b) if there is --negative, it MUST have failed (exit != 0). Any violation => FAIL.
 
-Uso:
+Usage:
     python determinism_harness.py "python -m pytest -q"
-    python determinism_harness.py "<validador>" --negative "<cmd-que-deve-falhar>"
-    python determinism_harness.py "<validador>" --runs 8 --json
+    python determinism_harness.py "<validator>" --negative "<cmd-that-must-fail>"
+    python determinism_harness.py "<validator>" --runs 8 --json
     python determinism_harness.py --self-test
 
-Exit: 0 = PASS (deterministico + controle ok) · 1 = FAIL (flaky/erro/negativo passou)
-      · 2 = uso invalido.
-stdlib + PyYAML (via loader, so p/ ler default de runs). Cross-platform (shell=True).
+Exit: 0 = PASS (deterministic + control ok) -- 1 = FAIL (flaky/error/negative passed)
+      -- 2 = invalid usage.
+stdlib + PyYAML (via loader, only to read the default runs). Cross-platform (shell=True).
 
-v1.0.0 — 2026-06-19 (Operator Kit · Tier 1)
+v1.0.0 -- 2026-06-19 (Operator Kit -- Tier 1)
 """
 from __future__ import annotations
 
@@ -36,11 +36,11 @@ import subprocess
 import sys
 from pathlib import Path
 
-# importa o loader compartilhado do kit (.../operator-kit/_lib/profile_loader.py)
+# import the shared kit loader (.../operator-kit/_lib/profile_loader.py)
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 try:
     from _lib.profile_loader import load_profile, get
-except Exception:  # noqa: BLE001 — sem loader, usa default de runs; resto funciona
+except Exception:  # noqa: BLE001 -- without the loader, uses the default runs; the rest works
     load_profile = None  # type: ignore[assignment]
     get = None  # type: ignore[assignment]
 
@@ -48,13 +48,13 @@ DEFAULT_RUNS = 5
 
 
 def _hash(texto: str) -> str:
-    """SHA-256 (12 chars) do stdout normalizado (newlines unificadas)."""
+    """SHA-256 (12 chars) of the normalized stdout (unified newlines)."""
     norm = (texto or "").replace("\r\n", "\n").replace("\r", "\n")
     return hashlib.sha256(norm.encode("utf-8", "replace")).hexdigest()[:12]
 
 
 def run_once(cmd: str, cwd: str | None = None, timeout: int = 600) -> dict:
-    """Roda o comando 1x. Retorna {exit_code, stdout_hash, tail}. Nunca crasha."""
+    """Runs the command once. Returns {exit_code, stdout_hash, tail}. Never crashes."""
     try:
         r = subprocess.run(
             cmd, shell=True, cwd=cwd,
@@ -64,20 +64,20 @@ def run_once(cmd: str, cwd: str | None = None, timeout: int = 600) -> dict:
                 "tail": ((r.stdout or "") + (r.stderr or "")).strip()[-300:]}
     except subprocess.TimeoutExpired:
         return {"exit_code": 124, "stdout_hash": "TIMEOUT", "tail": f"timeout {timeout}s"}
-    except Exception as e:  # noqa: BLE001 — harness jamais crasha; erro = run falho
+    except Exception as e:  # noqa: BLE001 -- the harness never crashes; error = failed run
         return {"exit_code": 1, "stdout_hash": "ERRO", "tail": f"erro: {e}"}
 
 
-# Why: `cwd` mantem o kit configuravel para consumidores externos; o fluxo local usa o default.
+# Why: `cwd` keeps the kit configurable for external consumers; the local flow uses the default.
 def harness(validador: str, runs: int = DEFAULT_RUNS, negative: str | None = None,
             cwd: str | None = None, timeout: int = 600) -> dict:
-    """Executa o protocolo completo. Retorna report estruturado com veredito.
+    """Runs the whole protocol. Returns a structured report with the verdict.
 
-    - Roda `validador` `runs` vezes; coleta hashes e exit codes.
-    - deterministic = um unico hash em todos os runs.
-    - all_exit_zero = todos os runs com exit 0.
-    - Se `negative`: roda 1x; negative_ok = exit != 0 (DEVE falhar).
-    - passed = deterministic AND all_exit_zero AND (negative_ok se houver negative).
+    - Runs `validador` `runs` times; collects hashes and exit codes.
+    - deterministic = a single hash across all runs.
+    - all_exit_zero = all runs with exit 0.
+    - If `negative`: runs it once; negative_ok = exit != 0 (MUST fail).
+    - passed = deterministic AND all_exit_zero AND (negative_ok if there is a negative).
     """
     runs = max(1, int(runs))
     resultados = [run_once(validador, cwd=cwd, timeout=timeout) for _ in range(runs)]
@@ -118,7 +118,7 @@ def harness(validador: str, runs: int = DEFAULT_RUNS, negative: str | None = Non
 
 
 def runs_from_profile() -> int:
-    """Le verification.determinism_runs do profile. Default 5 se ausente/invalido."""
+    """Reads verification.determinism_runs from the profile. Default 5 if absent/invalid."""
     if load_profile is None or get is None:
         return DEFAULT_RUNS
     prof = load_profile()
@@ -146,32 +146,32 @@ def _render(report: dict) -> str:
 
 
 def _self_test() -> None:
-    # Comandos deterministicos cross-platform via 'python -c' (sem rede, sem profile).
-    _py = f'"{sys.executable}"'  # Why: `python` a seco nao existe no macOS — o fixture usa o mesmo interprete que roda o self-test.
-    determ = f'{_py} -c "print(42)"'                    # mesma saida sempre
-    flaky = f'{_py} -c "import random; print(random.random())"'  # saida muda
-    falha = f'{_py} -c "import sys; sys.exit(1)"'        # exit != 0 (bom negativo)
-    passa = f'{_py} -c "import sys; sys.exit(0)"'        # exit 0 (negativo RUIM)
+    # Cross-platform deterministic commands via 'python -c' (no network, no profile).
+    _py = f'"{sys.executable}"'  # Why: plain `python` doesn't exist on macOS -- the fixture uses the same interpreter running the self-test.
+    determ = f'{_py} -c "print(42)"'                    # same output always
+    flaky = f'{_py} -c "import random; print(random.random())"'  # output changes
+    falha = f'{_py} -c "import sys; sys.exit(1)"'        # exit != 0 (good negative)
+    passa = f'{_py} -c "import sys; sys.exit(0)"'        # exit 0 (BAD negative)
 
-    # 1) Validador deterministico => PASS.
+    # 1) Deterministic validator => PASS.
     r1 = harness(determ, runs=4)
     assert r1["deterministic"] is True and r1["passed"] is True, "deterministico deveria passar"
     assert len(r1["hashes_unicos"]) == 1
 
-    # 2) Validador flaky => FAIL (mais de 1 hash). >1 run para detectar variacao.
+    # 2) Flaky validator => FAIL (more than 1 hash). >1 run to detect the variation.
     r2 = harness(flaky, runs=6)
     assert r2["deterministic"] is False and r2["passed"] is False, "flaky deveria falhar"
     assert len(r2["hashes_unicos"]) > 1
 
-    # 3) Negativo que falha (exit 1) => negative_ok True, nao derruba PASS.
+    # 3) Negative that fails (exit 1) => negative_ok True, doesn't sink PASS.
     r3 = harness(determ, runs=3, negative=falha)
     assert r3["negative_ok"] is True and r3["passed"] is True, "negativo que falha = controle ok"
 
-    # 4) Negativo que PASSA (exit 0) => gate quebrado => FAIL.
+    # 4) Negative that PASSES (exit 0) => broken gate => FAIL.
     r4 = harness(determ, runs=3, negative=passa)
     assert r4["negative_ok"] is False and r4["passed"] is False, "negativo que passa = gate quebrado"
 
-    # 5) Validador deterministico mas com exit != 0 => FAIL.
+    # 5) Deterministic validator but with exit != 0 => FAIL.
     r5 = harness(falha, runs=3)
     assert r5["deterministic"] is True and r5["all_exit_zero"] is False and r5["passed"] is False
 
@@ -186,7 +186,7 @@ def main(argv) -> int:
     as_json = "--json" in argv
     argv = [a for a in argv if a != "--json"]
 
-    # parse flags simples (--negative VAL, --runs N) + posicional (validador)
+    # simple flag parsing (--negative VAL, --runs N) + positional (validador)
     validador = None
     negative = None
     runs = None

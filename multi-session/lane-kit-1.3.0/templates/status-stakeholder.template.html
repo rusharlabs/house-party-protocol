@@ -1,8 +1,8 @@
 <!doctype html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Lane Board — Status {{project_name}}</title>
+<title>Lane Board - Status {{project_name}}</title>
 <style>
   :root { color-scheme: dark; }
   body { background:#0d1117; color:#c9d1d9; font-family:-apple-system,Segoe UI,sans-serif; margin:0; padding:2rem; }
@@ -26,11 +26,11 @@
 </style>
 </head>
 <body>
-  <h1>Lane Board — {{project_name}}</h1>
-  <div class="sub">Gerado {{generated_at}} · fonte: .claude/lanes/board.jsonl (read-only — este HTML NUNCA edita o board)</div>
+  <h1>Lane Board - {{project_name}}</h1>
+  <div class="sub">Generated {{generated_at}} · source: .claude/lanes/board.jsonl (read-only - this HTML NEVER edits the board)</div>
 
   <table>
-    <thead><tr><th>Item</th><th>Estado</th><th>Lane</th><th>Papel</th><th>Última atualização</th></tr></thead>
+    <thead><tr><th>Item</th><th>Status</th><th>Lane</th><th>Role</th><th>Last updated</th></tr></thead>
     <tbody>
       <!-- {{#items}} -->
       <tr>
@@ -44,7 +44,7 @@
     </tbody>
   </table>
 
-  <div class="sub">Lanes vivas: {{lanes_vivas}} · Itens MERGED: {{total_merged}}/{{total_itens}}</div>
+  <div class="sub">Live lanes: {{lanes_vivas}} · MERGED items: {{total_merged}}/{{total_itens}}</div>
   <div class="meter"><div style="width:{{pct_merged}}%"></div></div>
 </body>
 </html>

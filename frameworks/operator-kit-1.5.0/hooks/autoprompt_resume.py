@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
 """
-autoprompt_resume (Operator Kit) — Stop hook portátil de retomada cross-sessão.
+autoprompt_resume (Operator Kit) -- portable cross-session resume Stop hook.
 
-Generaliza .claude/hooks/autoprompt_resume.py: em vez de paths hardcoded
-(00-STATE / PLANO-MESTRE), lê `paths.state_ssot`, `paths.boot_doc` e
-`paths.resume_pointer` do operator-profile.yaml (fallback p/ defaults seguros).
-Quando a sessão PARA, grava o ponteiro de retomada: aponta o boot-doc, extrai as
-pendências ABERTAS ('- [ ]') do SSoT e os últimos commits. A próxima sessão (ou
-um ScheduleWakeup) lê e re-entra onde parou.
+Generalizes .claude/hooks/autoprompt_resume.py: instead of hardcoded paths
+(00-STATE / PLANO-MESTRE), it reads `paths.state_ssot`, `paths.boot_doc` and
+`paths.resume_pointer` from operator-profile.yaml (fallback to safe defaults).
+When the session STOPS, it writes the resume pointer: points to the boot-doc, extracts the
+OPEN pending items ('- [ ]') from the SSoT, and the latest commits. The next session (or
+a ScheduleWakeup) reads it and re-enters where it left off.
 
-NÃO inventa estado — só AGREGA o que existe (SSoT + git). Honesto por construção.
-NUNCA bloqueia (exit 0 sempre). Idempotente (sobrescreve o ponteiro).
+Does NOT invent state -- only AGGREGATES what exists (SSoT + git). Honest by construction.
+NEVER blocks (exit 0 always). Idempotent (overwrites the pointer).
 
-Wire: settings.local.json hooks.Stop (timeout 30). Ver SETTINGS-WIRE.md.
-⚠️ Ao wirar, adicionar o `paths.resume_pointer` ao `.gitignore`.
+Wire: settings.local.json hooks.Stop (timeout 30). See SETTINGS-WIRE.md.
+⚠️ When wiring it, add `paths.resume_pointer` to `.gitignore`.
 
-v1.0.0 — 2026-06-19 (Operator Kit · Tier 1 · Stop hook portatil de retomada)
+v1.0.0 -- 2026-06-19 (Operator Kit - Tier 1 - portable resume Stop hook)
 """
 from __future__ import annotations
 
@@ -24,7 +24,7 @@ import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-# loader compartilhado: .../operator-kit/hooks/ -> parents[1] = operator-kit/
+# shared loader: .../operator-kit/hooks/ -> parents[1] = operator-kit/
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 try:
     from _lib.profile_loader import load_profile, get, profile_path
@@ -33,7 +33,7 @@ except Exception:  # noqa: BLE001
 
 _BRT = timezone(timedelta(hours=-3))
 
-# Defaults seguros se não houver profile
+# Safe defaults if there is no profile
 _DEF_STATE = "docs/plans/execution/00-STATE.md"
 _LEGACY_STATE = "docs/plans/execucao/00-STATE.md"
 
@@ -60,11 +60,11 @@ _DEF_POINTER = ".claude/RESUME-NEXT.md"
 
 
 def _project_root() -> Path:
-    """Raiz = onde vive o operator-profile.yaml; senão sobe até achar .git; senão cwd."""
+    """Root = where operator-profile.yaml lives; otherwise climbs up until it finds .git; otherwise cwd."""
     if load_profile is not None:
         p = profile_path()
         if p is not None:
-            # profile na raiz do projeto OU em (staging/)operator-kit/ -> sobe até a raiz real
+            # profile at the project root OR in (staging/)operator-kit/ -> climbs to the real root
             d = p.parent
             for cand in (d, *d.parents):
                 if (cand / ".git").exists():
@@ -93,7 +93,7 @@ def _cfg(root: Path):
 
 
 def _open_pendencias(state: Path, limit: int = 25) -> list[str]:
-    """Linhas '- [ ]' (pendências abertas) do SSoT. [] se ausente/erro."""
+    """Lines '- [ ]' (open pending items) from the SSoT. [] if absent/error."""
     if not state.exists():
         return []
     out: list[str] = []
@@ -154,7 +154,7 @@ def _build() -> str:
 def main() -> None:
     try:
         try:
-            sys.stdin.read()  # Stop hook envia JSON; só precisamos do trigger
+            sys.stdin.read()  # the Stop hook sends JSON; we only need the trigger
         except Exception:
             pass
         root = _project_root()
@@ -162,7 +162,7 @@ def main() -> None:
         pointer.parent.mkdir(parents=True, exist_ok=True)
         pointer.write_text(_build(), encoding="utf-8")
     except Exception:
-        pass  # hook de retomada jamais quebra o fluxo
+        pass  # a resume hook must never break the flow
     sys.exit(0)
 
 

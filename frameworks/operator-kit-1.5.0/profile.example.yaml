@@ -50,7 +50,7 @@ guardrails:                         # config-driven operation-guard
   operation_guard_mode: audit       # audit warns; enforce returns exit 2 for a reliable BLOCK
   protected_paths: ["src/**", "app/**", "engine/**", ".git/**"]
   protected_branches: ["main", "master", "release/*"]
-  block_families: ["rm-rf-codigo-vivo", "git-push-force", "drop-truncate", "curl-pipe-bash"]
+  block_families: ["rm-rf-live-code", "git-push-force", "drop-truncate", "curl-pipe-bash"]
   warn_families:  ["git-push-feature", "npm-floating-specifier"]
   ban_floating_npm: true            # blocks @latest, ^, ~, *
   secret_scan_on_write: warn

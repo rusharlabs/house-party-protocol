@@ -1,5 +1,5 @@
-"""WorkGraph: rejeita ciclo (direto, indireto e auto-dependencia) e produz waves
-topologicas estaveis e deterministicas entre execucoes.
+"""WorkGraph: rejects a cycle (direct, indirect and self-dependency) and
+produces topological waves that are stable and deterministic across runs.
 """
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ def _item(item_id, depends_on=None, tier="economy"):
     return {"id": item_id, "depends_on": depends_on or [], "acceptance": [f"{item_id} done"], "tier": tier}
 
 
-def test_waves_respeitam_dependencia_em_ordem_topologica():
+def test_waves_respect_dependency_in_topological_order():
     spec = _spec(
         _item("spec"),
         _item("build", depends_on=["spec"], tier="balanced"),
@@ -33,7 +33,7 @@ def test_waves_respeitam_dependencia_em_ordem_topologica():
     assert {edge["from"] for edge in compiled["edges"]} <= {"spec", "build", "docs"}
 
 
-def test_ordem_dentro_da_mesma_wave_e_alfabetica_e_deterministica_entre_execucoes():
+def test_order_within_the_same_wave_is_alphabetical_and_deterministic_across_runs():
     spec = _spec(
         _item("z"),
         _item("a"),
@@ -46,7 +46,7 @@ def test_ordem_dentro_da_mesma_wave_e_alfabetica_e_deterministica_entre_execucoe
     assert first["waves"][1] == {"index": 2, "work": ["m"]}
 
 
-def test_ciclo_direto_entre_dois_itens_e_rejeitado():
+def test_direct_cycle_between_two_items_is_rejected():
     spec = _spec(
         _item("a", depends_on=["b"]),
         _item("b", depends_on=["a"]),
@@ -55,7 +55,7 @@ def test_ciclo_direto_entre_dois_itens_e_rejeitado():
         compile_workgraph(spec)
 
 
-def test_ciclo_indireto_de_tres_itens_e_rejeitado():
+def test_indirect_cycle_of_three_items_is_rejected():
     spec = _spec(
         _item("a", depends_on=["c"]),
         _item("b", depends_on=["a"]),
@@ -65,44 +65,44 @@ def test_ciclo_indireto_de_tres_itens_e_rejeitado():
         compile_workgraph(spec)
 
 
-def test_auto_dependencia_e_um_ciclo_de_tamanho_um():
+def test_self_dependency_is_a_cycle_of_size_one():
     spec = _spec(_item("a", depends_on=["a"]))
     with pytest.raises(WorkGraphError, match="dependency cycle"):
         compile_workgraph(spec)
 
 
-def test_dependencia_para_item_inexistente_e_rejeitada():
+def test_dependency_on_a_nonexistent_item_is_rejected():
     spec = _spec(_item("a", depends_on=["fantasma"]))
     with pytest.raises(WorkGraphError, match="unknown dependency"):
         compile_workgraph(spec)
 
 
-def test_id_duplicado_e_rejeitado():
+def test_duplicate_id_is_rejected():
     spec = _spec(_item("a"), {"id": "a", "acceptance": ["outro"], "tier": "economy"})
     with pytest.raises(WorkGraphError, match="duplicate work id"):
         compile_workgraph(spec)
 
 
-def test_item_sem_criterio_de_aceitacao_e_rejeitado():
+def test_item_with_no_acceptance_criterion_is_rejected():
     spec = _spec({"id": "a", "acceptance": [], "tier": "economy"})
     with pytest.raises(WorkGraphError):
         compile_workgraph(spec)
 
 
-def test_item_com_tier_invalido_e_rejeitado():
+def test_item_with_invalid_tier_is_rejected():
     spec = _spec({"id": "a", "acceptance": ["x"], "tier": "premium"})
     with pytest.raises(WorkGraphError, match="invalid tier"):
         compile_workgraph(spec)
 
 
-def test_lista_de_trabalho_vazia_e_rejeitada():
+def test_empty_work_list_is_rejected():
     with pytest.raises(WorkGraphError):
         compile_workgraph({"work": []})
 
 
-def test_CONTROLE_spec_sem_ciclo_compila_normalmente():
-    """Controle: prova que o detector so reprova quando ha ciclo de verdade --
-    uma cadeia linear legitima passa."""
+def test_CONTROLE_spec_with_no_cycle_compiles_normally():
+    """Control: proves that the detector only fails when there is a real
+    cycle -- a legitimate linear chain passes."""
     spec = _spec(_item("a"), _item("b", depends_on=["a"]), _item("c", depends_on=["b"]))
     compiled = compile_workgraph(spec)
     assert compiled["waves"] == [
@@ -112,9 +112,9 @@ def test_CONTROLE_spec_sem_ciclo_compila_normalmente():
     ]
 
 
-def test_CONTROLE_dependencia_compartilhada_nao_e_confundida_com_ciclo():
-    """Controle: dois itens dependendo do MESMO item, sem depender um do outro,
-    nao e ciclo -- devem cair na mesma wave."""
+def test_CONTROLE_shared_dependency_is_not_mistaken_for_a_cycle():
+    """Control: two items depending on the SAME item, without depending on
+    each other, is not a cycle -- they must fall into the same wave."""
     spec = _spec(_item("base"), _item("left", depends_on=["base"]), _item("right", depends_on=["base"]))
     compiled = compile_workgraph(spec)
     assert compiled["waves"][1]["work"] == ["left", "right"]

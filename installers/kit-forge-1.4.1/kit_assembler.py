@@ -1,25 +1,25 @@
 #!/usr/bin/env python3
 """
-kit_assembler — do manifesto ao kit distribuível, com o ip_pii_linter como GATE inquebrável.
+kit_assembler -- from manifest to distributable kit, with ip_pii_linter as an unbreakable GATE.
 
-Lê um manifesto YAML, resolve o conjunto de arquivos (include - exclude), copia para um
-staging temporário, aplica sanitizações determinísticas, gera LICENSE/SANITIZATION.md (+ o par
-SANITIZATION.pt-BR.md)/CHECKSUMS.txt, roda o ip_pii_linter como gate e SÓ ENTÃO troca
-atomicamente para o destino final (+ zip determinístico). Não existe --skip-lint — o gate não
-tem porta dos fundos.
+Reads a YAML manifest, resolves the file set (include - exclude), copies it to a
+temporary staging area, applies deterministic sanitizations, generates LICENSE/SANITIZATION.md
+(+ the SANITIZATION.pt-BR.md pair)/CHECKSUMS.txt, runs ip_pii_linter as a gate, and ONLY THEN
+swaps atomically to the final destination (+ deterministic zip). There is no --skip-lint -- the
+gate has no back door.
 
-Uso:
+Usage:
     python kit_assembler.py --manifest <manifest.yaml>
-        [--out <dir>]           # default: dist/ ao lado deste script
-        [--dry-run]             # imprime o plano (IN/OUT/ações) e para — zero escrita
-        [--json <out.json>]     # relatório máquina
-        [--strict]              # repassa --strict ao linter
+        [--out <dir>]           # default: dist/ next to this script
+        [--dry-run]             # prints the plan (IN/OUT/actions) and stops -- zero writes
+        [--json <out.json>]     # machine report
+        [--strict]              # passes --strict through to the linter
         [--self-test]
 
-Exit: 0 emitido limpo (ou no-op idempotente) · 1 emitido com warns · 2 lint BLOCK (nada emitido) ·
-      3 erro (manifesto inválido, plugin.json divergente, IO).
+Exit: 0 emitted clean (or idempotent no-op) | 1 emitted with warnings | 2 lint BLOCK (nothing
+      emitted) | 3 error (invalid manifest, divergent plugin.json, IO).
 
-stdlib + PyYAML. v1.0.0 — 2026-07-10 (FASE 1 · kit-forge)
+stdlib + PyYAML. v1.0.0 -- 2026-07-10 (PHASE 1 | kit-forge)
 """
 from __future__ import annotations
 
@@ -41,7 +41,7 @@ except ImportError:
 
 _ROOT = Path(__file__).resolve().parent
 _LINTER = _ROOT / "ip_pii_linter.py"
-_ZIP_EPOCH = (2020, 1, 1, 0, 0, 0)  # timestamp fixo -> zip determinístico
+_ZIP_EPOCH = (2020, 1, 1, 0, 0, 0)  # fixed timestamp -> deterministic zip
 
 # Why (English-first docs): human docs ship English-first with a pt-BR pair. The sanitization
 # record is generated, so the pair is generated too — same numbers, same headings, pair link at
@@ -67,7 +67,7 @@ _SANITIZATION_TEXT = {
 sys.path.insert(0, str(_ROOT / "hooks"))
 try:
     from guard_origins import sweep as _go_sweep, verify as _go_verify
-except ImportError:  # noqa: BLE001 — degrade seguro se guard_origins não estiver presente
+except ImportError:  # noqa: BLE001 -- safe fallback if guard_origins is not present
     _go_sweep = None  # type: ignore[assignment]
     _go_verify = None  # type: ignore[assignment]
 
@@ -96,7 +96,7 @@ SOFTWARE.
 
 
 def _glob_to_regex(pattern: str):
-    """Converte um glob (suporta ** cross-slash, * e ?) para regex ancorada."""
+    """Converts a glob (supports ** cross-slash, * and ?) into an anchored regex."""
     tokens = []
     i = 0
     while i < len(pattern):
@@ -144,7 +144,7 @@ def load_manifest(path: Path) -> dict:
 
 
 def validate_manifest(manifest: dict) -> list:
-    """Retorna lista de erros (vazia = válido)."""
+    """Returns a list of errors (empty = valid)."""
     errors = []
     kit = manifest.get("kit")
     if not isinstance(kit, dict):
@@ -157,7 +157,7 @@ def validate_manifest(manifest: dict) -> list:
         errors.append(f"kit.version '{version}' is not semver")
     if not manifest.get("include"):
         errors.append("'include' missing or empty")
-    plugin_json = kit.get("_plugin_json_check")  # injetado por quem chama, se aplicável
+    plugin_json = kit.get("_plugin_json_check")  # injected by the caller, if applicable
     if plugin_json:
         if plugin_json.get("version") and plugin_json["version"] != version:
             errors.append(f"plugin.json version ({plugin_json['version']}) diverges from the manifest ({version})")
@@ -197,16 +197,16 @@ def write_zip(staging: Path, files: list, zip_path: Path) -> None:
             zf.writestr(info, p.read_bytes())
 
 
-# --- A PROVA DO ARTEFATO QUE VIAJA ------------------------------------------
-# Why: o assembler escrevia o .zip e nunca mais o abria, e o kit_doctor verifica o
-# CHECKSUMS.txt dentro do DIRETORIO do kit, nao no zip. Um zip truncado, com entrada que
-# escapa do diretorio de extracao, ou carregando .bak/.env/ip-ruleset.yaml sairia com
-# exit 0. O diretorio e o que foi montado; o zip e o que viaja. Sao dois artefatos, e os
-# dois precisam de regua.
+# --- THE PROOF OF THE ARTIFACT THAT TRAVELS ------------------------------------------
+# Why: the assembler used to write the .zip and never open it again, and kit_doctor verifies
+# the CHECKSUMS.txt inside the kit's DIRECTORY, not in the zip. A truncated zip, with an entry
+# that escapes the extraction directory, or carrying .bak/.env/ip-ruleset.yaml would exit with
+# 0. The directory is what got assembled; the zip is what travels. They are two artifacts, and
+# both need a check.
 
-# Why: a mesma lista dos 10 manifestos (exclude de .bak) mais o que
-# NUNCA pode sair de casa. O ip-ruleset.yaml real carrega nome de cliente e de
-# infra interna — so o .example e publicavel.
+# Why: the same list from the 10 manifests (exclude .bak) plus what must
+# NEVER leave home. The real ip-ruleset.yaml carries client names and
+# internal infra -- only the .example is publishable.
 _ZIP_PROIBIDO = (
     "*.bak",
     "*.bak-*",
@@ -229,19 +229,19 @@ _ZIP_PROIBIDO = (
 
 
 def _entrada_proibida(nome: str) -> str | None:
-    """Devolve o padrao que reprova a entrada, ou None. Case o BASENAME e cada
-    componente de diretorio — `a/__pycache__/b.txt` reprova pelo diretorio."""
+    """Returns the pattern that fails the entry, or None. Matches the BASENAME and each
+    directory component -- `a/__pycache__/b.txt` fails via the directory."""
     import fnmatch
 
     partes = nome.split("/")
     base = partes[-1]
-    # Why: o .gitignore de distribuicao nega .env.example de proposito; a regua tem
-    # de negar junto, senao o gate reprova o arquivo que ele quer que exista.
+    # Why: the distribution .gitignore negates .env.example on purpose; the check has
+    # to negate it too, or the gate fails the file it wants to exist.
     if base.endswith(".example"):
         return None
-    # Why: fnmatch.fnmatch e case-insensitive so no Windows — "X.BAK" reprovaria o zip aqui e
-    # passaria no macOS. A regua do artefato que viaja nao pode depender do SO de quem emite:
-    # fnmatchcase sobre minusculas, sempre.
+    # Why: fnmatch.fnmatch is case-insensitive only on Windows -- "X.BAK" would fail the zip here
+    # and pass on macOS. The check for the artifact that travels cannot depend on the emitter's
+    # OS: fnmatchcase over lowercase, always.
     for padrao in _ZIP_PROIBIDO:
         for parte in partes:
             if fnmatch.fnmatchcase(parte.lower(), padrao.lower()):
@@ -250,19 +250,19 @@ def _entrada_proibida(nome: str) -> str | None:
 
 
 def verify_zip(zip_path: Path, source_dir: Path, expected: list) -> dict:
-    """Reabre o .zip emitido e prova que ele e o que deveria ser.
+    """Reopens the emitted .zip and proves it is what it should be.
 
-    Quatro provas independentes — uma so nao basta, e cada uma pega um modo de
-    falha que as outras nao veem:
+    Four independent proofs -- one alone is not enough, and each one catches a
+    failure mode the others do not see:
 
-      1. INTEGRIDADE  testzip() valida o CRC de cada membro (zip truncado)
-      2. FIDELIDADE   sha256 do membro == sha256 do arquivo no disco
-      3. ESTRUTURA    nenhum caminho absoluto, nenhuma travessia `..`
-      4. HIGIENE      nenhuma entrada proibida (.bak, .env, ip-ruleset.yaml)
+      1. INTEGRITY  testzip() validates the CRC of each member (truncated zip)
+      2. FIDELITY   sha256 of the member == sha256 of the file on disk
+      3. STRUCTURE  no absolute path, no `..` traversal
+      4. HYGIENE    no forbidden entry (.bak, .env, ip-ruleset.yaml)
 
-    Mais a COMPLETUDE: todo arquivo resolvido pelo manifesto tem de estar la.
+    Plus COMPLETENESS: every file resolved by the manifest has to be there.
 
-    Nunca levanta — devolve {"ok", "entries", "errors"} para o chamador decidir.
+    Never raises -- returns {"ok", "entries", "errors"} for the caller to decide.
     """
     errors: list = []
     nomes: list = []
@@ -278,8 +278,8 @@ def verify_zip(zip_path: Path, source_dir: Path, expected: list) -> dict:
 
             nomes = zf.namelist()
             for nome in nomes:
-                # 3 - ESTRUTURA. Uma entrada que escapa do diretorio de extracao
-                # sobrescreve arquivo de quem instala. Nao e higiene, e seguranca.
+                # 3 - STRUCTURE. An entry that escapes the extraction directory
+                # overwrites a file belonging to whoever installs it. This is not hygiene, it is security.
                 if nome.startswith("/") or (len(nome) > 1 and nome[1] == ":"):
                     errors.append(f"absolute path in zip: {nome}")
                     continue
@@ -287,18 +287,18 @@ def verify_zip(zip_path: Path, source_dir: Path, expected: list) -> dict:
                     errors.append(f"directory traversal in zip: {nome}")
                     continue
                 if chr(92) in nome:
-                    # Why: chr(92) e a barra invertida. Escrita literal, a sequencia barra-b pode virar o
-                    # byte 0x08 (backspace) e o gate para de casar tudo, inclusive os verdadeiros
-                    # positivos. Aqui ela nao tem como se perder.
+                    # Why: chr(92) is the backslash. Written literally, the backslash-b sequence could turn
+                    # into the 0x08 byte (backspace) and the gate would stop matching everything, including
+                    # true positives. Written this way, it has no way of getting lost.
                     errors.append(f"Windows separator in zip: {nome}")
                     continue
 
-                # 4 - HIGIENE
+                # 4 - HYGIENE
                 padrao = _entrada_proibida(nome)
                 if padrao is not None:
                     errors.append(f"forbidden entry in zip: {nome} (matches {padrao})")
 
-                # 2 - FIDELIDADE
+                # 2 - FIDELITY
                 disco = source_dir / nome
                 if not disco.exists():
                     errors.append(f"zip entry with no counterpart on disk: {nome}")
@@ -316,41 +316,41 @@ def verify_zip(zip_path: Path, source_dir: Path, expected: list) -> dict:
     return {"ok": not errors, "entries": len(nomes), "errors": errors}
 
 
-# --- SANITIZACAO CONSCIENTE DE ESTRUTURA (A12) ------------------------------
-# Why: a deteccao (ip_pii_linter) tem fronteira de palavra; a MUTACAO era
-# `text.replace(find, repl)` cru — o mesmo defeito, na metade que escreve. A primeira
-# regra de sanitize que alguem escreve e justamente para trocar um nome antes de
-# publicar, que e o caso exato em que substring crua destroi a palavra vizinha.
+# --- STRUCTURE-AWARE SANITIZATION (A12) ------------------------------
+# Why: detection (ip_pii_linter) has a word boundary; the MUTATION was a raw
+# `text.replace(find, repl)` -- the same defect, in the writing half. The first
+# sanitize rule anyone writes is exactly to swap a name before
+# publishing, which is the exact case where a raw substring destroys the neighboring word.
 #
-# Tres coisas que o `text.replace` cru nao tinha e agora tem:
-#   MODO declarado    word (default) | literal | regex — substring crua virou uma ESCOLHA,
-#                     nao o comportamento silencioso
-#   CONTAGEM          quantos hits por arquivo. Uma regra que esperava 2 e fez 400 fica
-#                     visivel no report em vez de virar diff misterioso
-#   VACUIDADE         regra com ZERO hits e avisada: ela foi escrita por um motivo e nao
-#                     fez nada
+# Three things the raw `text.replace` did not have and now does:
+#   declared MODE     word (default) | literal | regex -- raw substring became a CHOICE,
+#                     not silent behavior
+#   COUNT             how many hits per file. A rule that expected 2 and made 400 becomes
+#                     visible in the report instead of turning into a mysterious diff
+#   VACUITY           a rule with ZERO hits gets a warning: it was written for a reason and
+#                     did nothing
 _SANITIZE_MODOS = ("word", "literal", "regex")
 
 
 def _compila_replace(find: str, modo: str):
-    """Devolve o padrao compilado, ou None para substring cru."""
+    """Returns the compiled pattern, or None for a raw substring."""
     if modo == "regex":
         return re.compile(find)
     if modo == "literal":
         return None
-    # "word" — o DEFAULT, e a razao desta funcao existir.
-    # A fronteira olha so as PONTAS: o miolo pode ter ponto, espaco ou
-    # dois-pontos a vontade, porque re.escape cuida deles. Mesmo criterio do
-    # ip_pii_linter, de proposito — deteccao e mutacao nao podem divergir.
+    # "word" -- the DEFAULT, and the reason this function exists.
+    # The boundary only looks at the ENDS: the middle can have a dot, space or
+    # colon freely, because re.escape takes care of them. Same criterion as
+    # ip_pii_linter, on purpose -- detection and mutation must not diverge.
     if find and find[0].isalnum() and find[-1].isalnum():
         return re.compile("(?<![0-9A-Za-z])" + re.escape(find) + "(?![0-9A-Za-z])")
     return None
 
 
 def _le_preservando_quebra(path: Path) -> str:
-    # Why: read_text/write_text traduzem quebra de linha. Num checkout com arquivos CRLF,
-    # reescrever um arquivo por causa de UMA substituicao converteria o arquivo inteiro em
-    # silencio — e `git diff --numstat` e cego a isso.
+    # Why: read_text/write_text translate line breaks. In a checkout with CRLF files,
+    # rewriting a whole file because of ONE substitution would silently convert the
+    # entire file -- and `git diff --numstat` is blind to it.
     with open(path, encoding="utf-8", newline="") as fh:
         return fh.read()
 
@@ -361,19 +361,19 @@ def _escreve_preservando_quebra(path: Path, texto: str) -> None:
 
 
 def _escreve_lf(path: Path, texto: str) -> None:
-    """Arquivo GERADO pelo assembler sai sempre em LF — em qualquer SO."""
+    """A file GENERATED by the assembler always comes out in LF -- on any OS."""
     with open(path, "w", encoding="utf-8", newline="\n") as fh:
         fh.write(texto)
 
 
 def _copia_normalizando_eol(src: Path, dst: Path) -> None:
-    """Copia para o staging normalizando texto para LF; binario vai byte a byte.
+    """Copies to staging normalizing text to LF; binary goes byte for byte.
 
-    # Why: um kit emitido no Windows carregava arquivos CRLF (LICENSE/CHECKSUMS/SANITIZACAO
-    # gerados por write_text, e fontes que o checkout local mantem em CRLF). Um repo com
-    # `* text=auto eol=lf` normaliza tudo para LF no primeiro clone, e o CHECKSUMS.txt — que
-    # guarda o hash dos bytes CRLF — passa a reprovar o kit que ele mesmo descreve. E o zip
-    # deixa de ser deterministico entre SOs. LF na copia fecha as duas coisas.
+    # Why: a kit emitted on Windows used to carry CRLF files (LICENSE/CHECKSUMS/SANITIZATION
+    # generated by write_text, and sources that the local checkout keeps in CRLF). A repo with
+    # `* text=auto eol=lf` normalizes everything to LF on the first clone, and CHECKSUMS.txt --
+    # which holds the hash of the CRLF bytes -- ends up failing the kit it describes itself. And
+    # the zip stops being deterministic across OSes. LF in the copy closes both things.
     """
     raw = src.read_bytes()
     if b"\x00" in raw[:8000] or src.suffix.lower() in _BINARIOS:
@@ -387,9 +387,9 @@ _BINARIOS = {".png", ".jpg", ".jpeg", ".gif", ".ico", ".pdf", ".zip", ".woff", "
 
 
 def apply_replaces(staging: Path, regras: list) -> tuple[list, list, list]:
-    """Aplica as substituicoes do manifesto. Devolve (aplicadas, avisos, erros).
+    """Applies the manifest's substitutions. Returns (aplicadas, avisos, erros).
 
-    Nunca levanta: erro de manifesto vira item em `erros` e o chamador decide.
+    Never raises: a manifest error becomes an item in `erros` and the caller decides.
     """
     aplicadas: list = []
     avisos: list = []
@@ -426,9 +426,9 @@ def apply_replaces(staging: Path, regras: list) -> tuple[list, list, list]:
             continue
 
         if modo == "word" and padrao is None:
-            # Why: find com ponta nao-alfanumerica ("-core", "/x/", "@org/") nao tem fronteira
-            # possivel e cai em substring crua — e o report ainda dizia mode "word". O report diz o
-            # que ACONTECEU.
+            # Why: a find with a non-alphanumeric end ("-core", "/x/", "@org/") has no possible
+            # boundary and falls back to a raw substring -- and the report still said mode "word".
+            # The report says what HAPPENED.
             avisos.append(
                 f"sanitize.replaces[{i}]: mode 'word' requested, but the 'find' starts or ends in a "
                 "non-alphanumeric — no word boundary is possible; applied as 'literal' "
@@ -451,17 +451,17 @@ def apply_replaces(staging: Path, regras: list) -> tuple[list, list, list]:
                 novo = text.replace(find, repl)
                 n = text.count(find)
             elif modo == "regex":
-                # backreferencia permitida — quem pediu regex pediu isto
+                # backreference allowed -- whoever asked for regex asked for this
                 novo, n = padrao.subn(repl, text)
             else:
-                # funcao de substituicao: o texto vai VERBATIM, sem o re
-                # interpretar escape nenhum dentro dele
+                # substitution function: the text goes in VERBATIM, without re
+                # interpreting any escape inside it
                 novo, n = padrao.subn(lambda _m: repl, text)
             if n:
                 _escreve_preservando_quebra(target, novo)
                 aplicadas.append(
                     {"file": rel_file, "find": find, "replace": repl,
-                     # Why: o relatorio registra o modo aplicado, nao apenas o solicitado.
+                     # Why: the report records the mode that was applied, not just the one requested.
                      "mode": ("literal (degraded from word)" if modo == "word" and padrao is None else modo),
                      "hits": n}
                 )
@@ -477,12 +477,12 @@ def apply_replaces(staging: Path, regras: list) -> tuple[list, list, list]:
 
 
 def run_pipeline(manifest: dict, manifest_dir: Path, out_dir: Path, dry_run: bool, strict: bool, plugin_json: dict | None = None):
-    """Executa o pipeline. Retorna (exit_code, report_dict)."""
+    """Runs the pipeline. Returns (exit_code, report_dict)."""
     manifest = dict(manifest)
     if plugin_json is None:
-        # Why: a checagem de versao existia em validate_manifest e nenhum call site a alimentava
-        # — um kit podia sair declarando no plugin.json uma versao diferente da do manifesto. Sem
-        # carregar o plugin.json da fonte, o gate e vacuo.
+        # Why: the version check existed in validate_manifest and no call site fed it -- a kit
+        # could ship declaring a version in plugin.json different from the manifest's. Without
+        # loading the source plugin.json, the gate is vacuous.
         kit0 = manifest.get("kit") or {}
         if kit0.get("source_root"):
             cand = (manifest_dir / kit0["source_root"]).resolve() / ".claude-plugin" / "plugin.json"
@@ -581,12 +581,12 @@ def run_pipeline(manifest: dict, manifest_dir: Path, out_dir: Path, dry_run: boo
             return 2, {"status": "block", "lint": lint_report, "reason": "fail_on=warn"}
 
         if generate.get("sanitizacao_md", True):
-            # NUNCA ecoar os padroes de 'exclude' literalmente aqui: um exclude existe
-            # justamente para OCULTAR um nome sensivel (ex.: um script/arquivo com IP de
-            # terceiro) -- imprimir o padrao de volta no artefato publico anularia a propria
-            # exclusao (o nome do que foi escondido vazaria no relatorio). Só a CONTAGEM
-            # é reportada; o mesmo vale para 'replaces' (o 'find' pode conter o texto
-            # sensível que está sendo substituído).
+            # NEVER echo the 'exclude' patterns literally here: an exclude exists
+            # precisely to HIDE a sensitive name (e.g.: a script/file with a third
+            # party's IP) -- printing the pattern back into the public artifact would negate the
+            # exclusion itself (the name of what was hidden would leak into the report). Only the
+            # COUNT is reported; the same goes for 'replaces' (the 'find' can contain the
+            # sensitive text being replaced).
             for fname in _SANITIZATION_FILES:
                 t = _SANITIZATION_TEXT[fname]
                 lines = [_SANITIZATION_PAIR_LINK, "", f"# {fname}", "", f"Kit: {name} {version}", "",
@@ -629,12 +629,12 @@ def run_pipeline(manifest: dict, manifest_dir: Path, out_dir: Path, dry_run: boo
             zip_path = out_dir / f"{name}-{version}.zip"
             write_zip(final_dir, files, zip_path)
 
-            # Why: escrever nao e provar. O zip e o artefato que viaja, e precisa ser reaberto depois
-            # de escrito.
+            # Why: writing is not proving. The zip is the artifact that travels, and needs to be
+            # reopened after being written.
             zip_check = verify_zip(zip_path, final_dir, files)
             if not zip_check["ok"]:
-                # Parado, nao apagado: um zip que reprovou e EVIDENCIA. Mas ele
-                # nao pode ficar com o nome do artefato bom, ou alguem instala.
+                # Halted, not deleted: a zip that failed is EVIDENCE. But it
+                # cannot keep the name of the good artifact, or someone will install it.
                 invalido = zip_path.parent / (zip_path.name + ".INVALIDO")
                 if invalido.exists():
                     invalido.unlink()
@@ -660,9 +660,9 @@ def run_pipeline(manifest: dict, manifest_dir: Path, out_dir: Path, dry_run: boo
             "zip_entries": zip_check["entries"] if zip_check else None,
             "files": len(emitted_files),
             "lint": lint_report,
-            # Why: os valores de find/replace ficam FORA do report pelo mesmo
-            # motivo que ficam fora do SANITIZATION.md — o 'find' costuma ser
-            # exatamente o texto sensivel que se esta escondendo.
+            # Why: the find/replace values stay OUT of the report for the same
+            # reason they stay out of SANITIZATION.md -- the 'find' is usually
+            # exactly the sensitive text being hidden.
             "sanitize": {
                 "aplicadas": [
                     {"file": a["file"], "mode": a["mode"], "hits": a["hits"]}
@@ -736,8 +736,8 @@ def _self_test() -> int:
         code5, report5 = run_pipeline(bad_manifest, tmp, out_dir, dry_run=False, strict=False)
         assert code5 == 3, f"invalid manifest should exit 3: {report5}"
 
-        # O teste que FORCA A REPROVAR (gateguard § NASCIMENTO DE GATE): plugin.json na fonte
-        # com versao divergente do manifesto tem de dar exit 3 SEM ninguem injetar plugin_json.
+        # The test that FORCES A FAIL (gateguard section NASCIMENTO DE GATE): plugin.json in the
+        # source with a version diverging from the manifest has to exit 3 WITHOUT anyone injecting plugin_json.
         (src / ".claude-plugin").mkdir()
         (src / ".claude-plugin" / "plugin.json").write_text('{"name": "fixture-kit", "version": "9.9.9"}\n', encoding="utf-8")
         code6, report6 = run_pipeline(manifest, tmp, out_dir, dry_run=True, strict=False)

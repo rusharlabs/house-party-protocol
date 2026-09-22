@@ -1,23 +1,24 @@
 #!/usr/bin/env python3
 """
-rule_capture (Operator Kit) — UserPromptSubmit hook que CAPTURA instrucoes enfaticas.
+rule_capture (Operator Kit) - UserPromptSubmit hook that CAPTURES emphatic instructions.
 
-Implementa o gatilho da REGRA #10 (auto-atualizacao) sem AGIR sobre o CLAUDE.md:
-quando o operador da uma instrucao com marcador de enfase
-(memory.emphasis_markers do profile — default SEMPRE/NUNCA/ja falei/toda vez/
-pare de), o hook ANEXA o texto LITERAL da instrucao + timestamp BRT a um arquivo
-duravel em `paths.memory_dir` (default .claude/memory/_captured-rules.md). Isso
-preserva a regra entre sessoes p/ depois o `distill_corrections.py` / o agente
-decidirem se ela vira regra canonica.
+Implements the trigger for RULE #10 (self-update) without ACTING on CLAUDE.md:
+when the operator gives an instruction with an emphasis marker
+(memory.emphasis_markers from the profile - the default list is in the operator's own
+language, `SEMPRE`/`NUNCA`/`ja falei`/`toda vez`/`pare de`; replace it with yours), the
+hook APPENDS the LITERAL text of the instruction + a BRT timestamp to a
+durable file at `paths.memory_dir` (default .claude/memory/_captured-rules.md). This
+preserves the rule across sessions so that `distill_corrections.py` / the agent can
+later decide whether it becomes a canonical rule.
 
-NUNCA interpreta nem reescreve a instrucao — grava verbatim (AGENT-INTEGRITY).
-WARN-only: imprime nota em stderr confirmando a captura; NUNCA bloqueia (exit 0).
-Defensivo: qualquer erro -> exit 0 sem efeito. Append idempotente-ish (de-dup
-por linha literal ja presente no arquivo, p/ nao spammar a mesma regra repetida).
+NEVER interprets or rewrites the instruction - records it verbatim (AGENT-INTEGRITY).
+WARN-only: prints a note to stderr confirming the capture; NEVER blocks (exit 0).
+Defensive: any error -> exit 0 with no effect. Append idempotent-ish (de-dup by
+literal line already present in the file, to avoid spamming the same repeated rule).
 
-Wire: settings.local.json hooks.UserPromptSubmit (timeout 30). Ver SETTINGS-WIRE.md.
+Wire: settings.local.json hooks.UserPromptSubmit (timeout 30). See SETTINGS-WIRE.md.
 
-v1.0.0 — 2026-06-19 (Operator Kit · Tier 2 · gatilho da REGRA #10 sem agir)
+v1.0.0 - 2026-06-19 (Operator Kit - Tier 2 - RULE #10 trigger without acting)
 """
 from __future__ import annotations
 
@@ -26,11 +27,11 @@ import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-# loader compartilhado: .../operator-kit/hooks/ -> parents[1] = operator-kit/
+# shared loader: .../operator-kit/hooks/ -> parents[1] = operator-kit/
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 try:
     from _lib.profile_loader import load_profile, get, profile_path
-except Exception:  # noqa: BLE001 — sem loader, cai p/ defaults seguros
+except Exception:  # noqa: BLE001 - no loader, falls back to safe defaults
     load_profile = None  # type: ignore[assignment]
     get = None  # type: ignore[assignment]
     profile_path = None  # type: ignore[assignment]
@@ -43,7 +44,7 @@ _DEF_MARCADORES = ["SEMPRE", "NUNCA", "ja falei", "toda vez", "pare de"]
 
 
 def _read_prompt_from_stdin() -> str:
-    """Le o JSON do hook e extrai o texto do prompt. '' se algo falhar."""
+    """Reads the hook's JSON and extracts the prompt text. '' if anything fails."""
     try:
         raw = sys.stdin.read()
     except Exception:  # noqa: BLE001
@@ -52,7 +53,7 @@ def _read_prompt_from_stdin() -> str:
         return ""
     try:
         data = json.loads(raw)
-    except Exception:  # noqa: BLE001 — payload nao-JSON: trata o raw como o proprio prompt
+    except Exception:  # noqa: BLE001 - non-JSON payload: treat the raw text as the prompt itself
         return raw.strip()
     if isinstance(data, dict):
         for key in ("prompt", "user_prompt", "userPrompt", "message", "text", "content"):
@@ -63,25 +64,25 @@ def _read_prompt_from_stdin() -> str:
 
 
 def detect_markers(prompt: str, marcadores) -> list[str]:
-    """Quais marcadores de enfase aparecem no prompt (case-insensitive). Ordem do profile."""
+    """Which emphasis markers appear in the prompt (case-insensitive). Order from the profile."""
     low = prompt.lower()
     return [m for m in marcadores if str(m).strip() and str(m).lower() in low]
 
 
 def _already_captured(capture_file: Path, prompt: str) -> bool:
-    """True se o texto literal do prompt ja consta no arquivo (de-dup best-effort)."""
+    """True if the prompt's literal text is already in the file (best-effort de-dup)."""
     if not capture_file.exists():
         return False
     try:
         existing = capture_file.read_text(encoding="utf-8", errors="replace")
     except OSError:
         return False
-    needle = " ".join(prompt.split())  # normaliza whitespace p/ comparacao
+    needle = " ".join(prompt.split())  # normalizes whitespace for comparison
     return needle != "" and needle in " ".join(existing.split())
 
 
 def build_entry(prompt: str, hits: list[str], now: str) -> str:
-    """Bloco a anexar: timestamp + marcadores + texto LITERAL (em blockquote, sem interpretar)."""
+    """Block to append: timestamp + markers + LITERAL text (in blockquote, uninterpreted)."""
     quoted = "\n".join(f"> {ln}" for ln in prompt.splitlines()) or "> (empty)"
     return (
         f"\n## {now} — capture (markers: {', '.join(hits)})\n"
@@ -133,8 +134,8 @@ def _project_root() -> Path:
 
 def capture(prompt: str, capture_file: Path, marcadores) -> list[str]:
     """
-    Detecta marcadores; se houver, anexa a entry. Retorna a lista de marcadores casados
-    (vazia = nada capturado). Nao escreve duplicata exata. Best-effort (erro -> []).
+    Detects markers; if there are any, appends the entry. Returns the list of matched markers
+    (empty = nothing captured). Does not write an exact duplicate. Best-effort (error -> []).
     """
     if not prompt.strip():
         return []
@@ -144,12 +145,12 @@ def capture(prompt: str, capture_file: Path, marcadores) -> list[str]:
     try:
         _ensure_header(capture_file)
         if _already_captured(capture_file, prompt):
-            return hits  # ja registrado: reporta o match mas nao re-anexa
+            return hits  # already recorded: reports the match but does not re-append
         now = datetime.now(_BRT).strftime("%Y-%m-%d %H:%M BRT")
         with capture_file.open("a", encoding="utf-8") as fh:
             fh.write(build_entry(prompt, hits, now))
     except OSError:
-        return hits  # falha de IO nao deve esconder que houve match
+        return hits  # an IO failure should not hide that a match happened
     return hits
 
 
@@ -167,13 +168,13 @@ def main() -> None:
                         f"-> {capture_file}",
                         file=sys.stderr,
                     )
-    except Exception:  # noqa: BLE001 — hook jamais quebra o fluxo
+    except Exception:  # noqa: BLE001 - hook must never break the flow
         pass
     sys.exit(0)
 
 
 # ---------------------------------------------------------------------------
-# self-test (sem rede, sem profile real — escreve so em tmp)
+# self-test (no network, no real profile - writes only to tmp)
 # ---------------------------------------------------------------------------
 def _self_test() -> None:
     import tempfile
@@ -184,7 +185,7 @@ def _self_test() -> None:
     assert detect_markers("processar batch 3", marc) == [], "without a marker it must not detect"
     assert "SEMPRE" in detect_markers("voce SEMPRE esquece e ja falei isso", marc)
 
-    # JSON de stdin parseado nos varios campos
+    # JSON from stdin parsed across the several fields
     with tempfile.TemporaryDirectory() as td:
         cap = Path(td) / "mem" / "_captured-rules.md"
 
@@ -195,17 +196,17 @@ def _self_test() -> None:
         assert "> NUNCA faca git push direto na main" in body, "literal text should be appended"
         assert "capture" in body
 
-        # de-dup: mesma instrucao nao re-anexa
+        # de-dup: the same instruction does not get re-appended
         capture("NUNCA faca git push direto na main", cap, marc)
         body2 = cap.read_text(encoding="utf-8")
         assert body2.count("> NUNCA faca git push direto na main") == 1, "should not duplicate"
 
-        # prompt sem marcador nao escreve nada novo
+        # a prompt with no marker writes nothing new
         n_antes = len(cap.read_text(encoding="utf-8"))
         assert capture("apenas continue o trabalho normal", cap, marc) == []
         assert len(cap.read_text(encoding="utf-8")) == n_antes, "no marker, no write"
 
-        # build_entry preserva quebras de linha verbatim
+        # build_entry preserves line breaks verbatim
         entry = build_entry("linha1\nNUNCA linha2", ["NUNCA"], "2026-06-19 10:00 BRT")
         assert "> linha1" in entry and "> NUNCA linha2" in entry
 

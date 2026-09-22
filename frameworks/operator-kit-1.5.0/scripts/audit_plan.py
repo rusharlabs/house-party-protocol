@@ -1,35 +1,36 @@
 #!/usr/bin/env python3
 """
-audit_plan (Operator Kit) — auditor de plano vs realidade.
+audit_plan (Operator Kit) - plan vs reality auditor.
 
-Materializa LC-3 e feedback_plans_lag_reality: um plano NUNCA define o status —
-o filesystem + o git log definem. Esta ferramenta recebe um arquivo de plano
-markdown, EXTRAI os deliverables declarados (checkboxes, paths/arquivos citados
-em backticks, seções "Deliverable") e, para CADA um, confronta com a realidade:
+Materializes LC-3 and feedback_plans_lag_reality: a plan NEVER defines the status -
+the filesystem + the git log do. This tool takes a markdown plan file, EXTRACTS the
+declared deliverables (checkboxes, paths/files cited in backticks, "Deliverable"
+sections) and, for EACH one, checks it against reality:
 
-    - existe no disco? (Path direto OU glob)
-    - aparece no histórico git? (git log --grep <termo>)
+    - does it exist on disk? (direct Path OR glob)
+    - does it show up in the git history? (git log --grep <term>)
 
-Devolve uma tabela FEITO / PARCIAL / AUSENTE (markdown ou --json). Não inventa:
-o que não dá pra confirmar vira AUSENTE, nunca "provavelmente feito".
+Returns a `FEITO` / `PARCIAL` / `AUSENTE` table (markdown or --json). It does not invent:
+what cannot be confirmed becomes `AUSENTE`, never "probably done". Those three are the
+literal status strings the code assigns and compares - they are values, not prose.
 
-Classificação:
-    FEITO    = arquivo existe no disco (confirmação forte)
-    PARCIAL  = não existe no disco, mas aparece no git log (mencionado/iniciado)
-    AUSENTE  = não existe e não aparece no git log
+Classification:
+    `FEITO`   = the file exists on disk (strong confirmation)
+    `PARCIAL` = does not exist on disk, but shows up in the git log (mentioned/started)
+    `AUSENTE` = does not exist and does not show up in the git log
 
-Uso:
+Usage:
     python audit_plan.py docs/plans/2026-06-19-X.md
-    python audit_plan.py plano.md --json
-    python audit_plan.py plano.md --no-git              # pula git log (offline)
-    python audit_plan.py plano.md --repo /caminho/repo  # raiz p/ resolver paths
-    python audit_plan.py plano.md --extra-regex '`([^`]+\\.sql)`'
+    python audit_plan.py plan.md --json
+    python audit_plan.py plan.md --no-git               # skip git log (offline)
+    python audit_plan.py plan.md --repo /path/to/repo   # root to resolve paths
+    python audit_plan.py plan.md  --extra-regex '`([^`]+\\.sql)`'
     python audit_plan.py --self-test
 
-Exit: 0 = rodou (independe do resultado da auditoria) · 2 = uso inválido.
-stdlib SOMENTE. Cross-platform (pathlib). Nunca usa curl/wget.
+Exit: 0 = ran (independent of the audit result) - 2 = invalid usage.
+stdlib ONLY. Cross-platform (pathlib). Never uses curl/wget.
 
-v1.0.0 — 2026-06-19 (Operator Kit · Tier 1 · materializa LC-3 + plans_lag_reality)
+v1.0.0 - 2026-06-19 (Operator Kit - Tier 1 - materializes LC-3 + plans_lag_reality)
 """
 from __future__ import annotations
 
@@ -39,28 +40,28 @@ import subprocess
 import sys
 from pathlib import Path
 
-# loader compartilhado do kit (.../operator-kit/_lib/profile_loader.py)
+# shared kit loader (.../operator-kit/_lib/profile_loader.py)
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 try:
     from _lib.profile_loader import load_profile, get
-except Exception:  # noqa: BLE001 — sem loader o resto funciona (defaults seguros)
+except Exception:  # noqa: BLE001 - without the loader the rest still works (safe defaults)
     load_profile = None  # type: ignore[assignment]
     get = None  # type: ignore[assignment]
 
-# ── extração de deliverables ────────────────────────────────────────────────
+# ── deliverable extraction ────────────────────────────────────────────────
 
 # checkbox markdown: "- [ ] foo" / "- [x] bar" / "* [X] baz"
 RE_CHECKBOX = re.compile(r"^\s*[-*]\s*\[(?P<mark>[ xX])\]\s*(?P<text>.+?)\s*$")
-# path/arquivo citado em backticks: `core/paths.py`, `scripts/x.py`
+# path/file cited in backticks: `core/paths.py`, `scripts/x.py`
 RE_BACKTICK_PATH = re.compile(r"`([^`\n]+)`")
-# seção "Deliverable: ..." / "Entregável: ..." (linha ou heading)
+# "Deliverable: ..." / "Entregável: ..." section (line or heading)
 RE_DELIVERABLE = re.compile(
     r"^\s*#{0,6}\s*(?:deliverable|entreg[áa]vel|artefato)s?\s*[:\-]\s*(?P<text>.+?)\s*$",
     re.IGNORECASE,
 )
-# heurística: um token parece um path/arquivo? (tem / ou \ ou uma extensão)
+# heuristic: does a token look like a path/file? (has / or \ or an extension)
 RE_LOOKS_LIKE_PATH = re.compile(r"[\\/]|\.[A-Za-z0-9]{1,6}(\b|$)")
-# extensões "de arquivo" plausíveis (evita capturar `R$100K` ou `8-12%`)
+# plausible "file" extensions (avoids capturing `R$100K` or `8-12%`)
 _PLAUSIBLE_EXT = {
     "py", "md", "yaml", "yml", "json", "js", "ts", "tsx", "jsx", "sql", "sh",
     "ps1", "bat", "html", "css", "txt", "toml", "ini", "cfg", "env", "jsonl",
@@ -68,10 +69,10 @@ _PLAUSIBLE_EXT = {
 
 
 def _looks_like_path(token: str) -> bool:
-    """True se o token em backtick parece um path/arquivo (não uma métrica/comando)."""
+    """True if the backticked token looks like a path/file (not a metric/command)."""
     t = token.strip()
     if not t or " " in t.split("/")[-1] and "/" not in t:
-        # tokens com espaço e sem barra raramente são paths (ex.: `git status`)
+        # tokens with a space and no slash are rarely paths (e.g.: `git status`)
         pass
     if "/" in t or "\\" in t:
         return True
@@ -83,9 +84,9 @@ def _looks_like_path(token: str) -> bool:
 
 def extract_deliverables(text: str, extra_regexes=None) -> list[dict]:
     """
-    Extrai deliverables de um plano markdown. Cada item:
+    Extracts deliverables from a markdown plan. Each item:
         {tipo, texto, path (str|None), checked (bool|None)}
-    Dedup por (tipo, texto-normalizado).
+    Dedup by (tipo, normalized texto).
     """
     items: list[dict] = []
     seen: set[tuple] = set()
@@ -107,7 +108,7 @@ def extract_deliverables(text: str, extra_regexes=None) -> list[dict]:
         if m:
             txt = m.group("text").strip()
             checked = m.group("mark").lower() == "x"
-            # se o texto do checkbox contém um path em backtick, captura como path
+            # if the checkbox text contains a backticked path, capture it as path
             path = None
             bt = RE_BACKTICK_PATH.findall(txt)
             for cand in bt:
@@ -128,13 +129,13 @@ def extract_deliverables(text: str, extra_regexes=None) -> list[dict]:
             add("deliverable", txt, path=path)
             continue
 
-        # paths citados em backticks em qualquer linha
+        # paths cited in backticks on any line
         for cand in RE_BACKTICK_PATH.findall(line):
             cand = cand.strip()
             if _looks_like_path(cand):
                 add("path", cand, path=cand)
 
-    # regex extras customizáveis (capturam grupo 1 como path)
+    # customizable extra regexes (capture group 1 as path)
     for pat in (extra_regexes or []):
         try:
             rx = re.compile(pat)
@@ -148,10 +149,10 @@ def extract_deliverables(text: str, extra_regexes=None) -> list[dict]:
     return items
 
 
-# ── confronto com a realidade ───────────────────────────────────────────────
+# ── checking against reality ───────────────────────────────────────────────
 
 def path_exists(path_str: str, repo_root: Path) -> bool:
-    """Existe no disco? Tenta Path direto (abs e relativo ao repo) e glob."""
+    """Does it exist on disk? Tries a direct Path (abs and relative to the repo) and glob."""
     if not path_str:
         return False
     p = Path(path_str)
@@ -164,7 +165,7 @@ def path_exists(path_str: str, repo_root: Path) -> bool:
                 return True
         except OSError:
             pass
-    # glob (suporta wildcards e match parcial pelo nome do arquivo)
+    # glob (supports wildcards and partial match by filename)
     try:
         if any(ch in path_str for ch in "*?[]"):
             if list(repo_root.glob(path_str)):
@@ -172,7 +173,7 @@ def path_exists(path_str: str, repo_root: Path) -> bool:
         else:
             name = Path(path_str).name
             if name:
-                # match raso por nome de arquivo, limitado p/ não varrer o mundo
+                # shallow match by filename, limited so it does not scan the whole world
                 hits = 0
                 for _ in repo_root.rglob(name):
                     hits += 1
@@ -185,11 +186,11 @@ def path_exists(path_str: str, repo_root: Path) -> bool:
 
 
 def git_log_mentions(term: str, repo_root: Path, timeout: int = 20) -> bool:
-    """git log --grep <term> achou commit? False em qualquer falha (sem git, etc.)."""
+    """Did git log --grep <term> find a commit? False on any failure (no git, etc.)."""
     term = (term or "").strip()
     if not term:
         return False
-    # usa o nome do arquivo se for um path (mais provável de aparecer em commit)
+    # use the filename if it is a path (more likely to show up in a commit)
     needle = Path(term).name if (_looks_like_path(term)) else term
     needle = needle.strip()
     if not needle:
@@ -201,12 +202,12 @@ def git_log_mentions(term: str, repo_root: Path, timeout: int = 20) -> bool:
             capture_output=True, text=True, timeout=timeout,
         )
         return r.returncode == 0 and bool(r.stdout.strip())
-    except Exception:  # noqa: BLE001 — git ausente/erro => não menciona
+    except Exception:  # noqa: BLE001 - git missing/error => does not mention
         return False
 
 
 def classify(item: dict, repo_root: Path, use_git: bool) -> dict:
-    """Classifica um deliverable em FEITO/PARCIAL/AUSENTE com evidências."""
+    """Classifies a deliverable as FEITO/PARCIAL/AUSENTE with evidence."""
     probe = item.get("path") or item.get("texto") or ""
     on_disk = path_exists(item["path"], repo_root) if item.get("path") else False
     in_git = git_log_mentions(probe, repo_root) if use_git else False
@@ -218,15 +219,15 @@ def classify(item: dict, repo_root: Path, use_git: bool) -> dict:
     else:
         status = "AUSENTE"
 
-    # checkbox marcado [x] mas sem evidência no disco/git: sinaliza como suspeito
+    # checkbox marked [x] but with no evidence on disk/git: flag as suspect
     if item.get("checked") and status == "AUSENTE":
-        status = "AUSENTE"  # mantemos AUSENTE — o ponto do LC-3 é não confiar no [x]
+        status = "AUSENTE"  # keep AUSENTE - the point of LC-3 is not to trust the [x]
     return {**item, "status": status, "on_disk": on_disk, "in_git": in_git}
 
 
 def audit(plan_path: Path, repo_root: Path, use_git: bool = True,
           extra_regexes=None) -> dict:
-    """Lê o plano, extrai e classifica todos os deliverables."""
+    """Reads the plan, extracts and classifies all deliverables."""
     text = plan_path.read_text(encoding="utf-8", errors="replace")
     items = extract_deliverables(text, extra_regexes=extra_regexes)
     rows = [classify(it, repo_root, use_git) for it in items]
@@ -315,7 +316,7 @@ def main(argv) -> int:
 
 
 def _detect_repo_root(plan_path: Path) -> Path:
-    """Sobe do plano até achar uma raiz de repo (.git); fallback = cwd."""
+    """Walks up from the plan until it finds a repo root (.git); fallback = cwd."""
     base = plan_path.resolve().parent
     for d in (base, *base.parents):
         if (d / ".git").exists():
@@ -323,7 +324,7 @@ def _detect_repo_root(plan_path: Path) -> Path:
     return Path.cwd()
 
 
-# ── self-test (sem rede; usa tmp + fixture) ─────────────────────────────────
+# ── self-test (no network; uses tmp + fixture) ─────────────────────────────
 
 def _self_test() -> None:
     import tempfile
@@ -341,17 +342,17 @@ def _self_test() -> None:
         "Path quoted: `subdir/profundo.txt`\n"
     )
 
-    # extração
+    # extraction
     items = extract_deliverables(plano)
     paths = [it["path"] for it in items if it["path"]]
     assert "existe_no_disco.py" in paths, "should extract the checkbox path"
     assert "nao_existe_jamais_xyz.py" in paths, "should extract the 2nd checkbox path"
     assert "outro_arquivo_inexistente_abc.md" in paths, "should extract the Deliverable path"
     assert "subdir/profundo.txt" in paths, "should extract a backticked path"
-    # métricas/comandos NÃO devem virar path
+    # metrics/commands must NOT become a path
     assert "R$100K" not in paths, "R$100K is not a path"
     assert "git status" not in paths, "a command is not a path"
-    # checkbox sem path vira item, mas sem path
+    # a checkbox with no path becomes an item, but without a path
     assert any(it["tipo"] == "checkbox" and it["path"] is None for it in items), \
         "a checkbox without a path must still be an item"
 
@@ -375,11 +376,11 @@ def _self_test() -> None:
         assert res["git_consultado"] is False
         assert res["resumo"]["FEITO"] >= 2
 
-        # render markdown não pode crashar e deve conter o cabeçalho
+        # rendering markdown must not crash and must contain the header
         md = render_markdown(res)
         assert "Plan audit" in md and "| Status |" in md
 
-        # plano sem deliverables não crasha
+        # a plan with no deliverables does not crash
         vazio = root / "vazio.md"
         vazio.write_text("# nothing here\nplain text\n", encoding="utf-8")
         rv = audit(vazio, root, use_git=False)

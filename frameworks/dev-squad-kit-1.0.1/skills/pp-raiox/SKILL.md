@@ -1,6 +1,6 @@
 ---
 name: pp-raiox
-description: "Parallel Process Raio-X - line-by-line reading of an external module/repo with evidence, risks and calls for the next investigation"
+description: "Parallel Process X-Ray - line-by-line reading of an external module/repo with evidence, risks and calls for the next investigation"
 type: skill
 ---
 
@@ -41,26 +41,26 @@ Use it after a discovery, or when the user has already provided a scope small en
 ## Expected Output
 
 ```md
-# PP Raio-X - <alvo>
+# PP X-Ray - <target>
 
-## Escopo
-- incluido:
-- excluido:
+## Scope
+- included:
+- excluded:
 
-## Arquivos Lidos
-| arquivo | linhas | papel |
+## Files Read
+| file | lines | role |
 
-## Achados
-| severidade | arquivo:linha | fato | impacto |
+## Findings
+| severity | file:line | fact | impact |
 
-## Fluxos
-1. entrada -> processamento -> saida
+## Flows
+1. input -> processing -> output
 
 ## Gaps
-| gap | por que impede certeza | como verificar |
+| gap | why it blocks certainty | how to verify |
 
-## Recomendacoes
-| prioridade | acao | motivo |
+## Recommendations
+| priority | action | reason |
 ```
 
 ## Guardrails
@@ -95,25 +95,25 @@ Use it after a discovery, or when the user has already provided a scope small en
 ## Executed examples
 
 ```console
-$ python -c "print('arquivos_lidos=4')"
-arquivos_lidos=4
+$ python -c "print('files_read=4')"
+files_read=4
 ```
-<!-- executed: 2026-09-20 · exit=0 -->
+<!-- executed: 2026-09-22 · exit=0 -->
 
 ```console
-$ python -c "print('achados=2 gaps=1')"
-achados=2 gaps=1
+$ python -c "print('findings=2 gaps=1')"
+findings=2 gaps=1
 ```
-<!-- executed: 2026-09-20 · exit=0 -->
+<!-- executed: 2026-09-22 · exit=0 -->
 
 ```console
-$ python -c "import sys; print('block: evidencia ausente'); sys.exit(2)"
-block: evidencia ausente
+$ python -c "import sys; print('block: missing evidence'); sys.exit(2)"
+block: missing evidence
 ```
-<!-- executed: 2026-09-20 · exit=2 -->
+<!-- executed: 2026-09-22 · exit=2 -->
 
 ## Proof
 
 ```bash
-python -c "print('arquivos_lidos=4')"
+python -c "print('files_read=4')"
 ```

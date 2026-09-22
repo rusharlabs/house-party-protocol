@@ -1,37 +1,37 @@
 #!/usr/bin/env python3
 """
-wizard — scaffold de projeto novo em 6 passos (método genérico de setup-wizard,
-REESCRITO DO ZERO — nenhuma linha de código de terceiro. Ver "O QUE NÃO FAZER" do
-kickoff: extrai-se o MÉTODO — checar ambiente, configurar, validar, gerar +
-resumo — não o código de nenhum instalador específico).
+wizard -- new-project scaffold in 6 steps (generic setup-wizard method,
+REWRITTEN FROM SCRATCH -- not one line of third-party code. See "WHAT NOT TO DO" in
+the kickoff: the METHOD is extracted -- check environment, configure, validate, generate +
+summary -- not the code of any specific installer).
 
-Os 6 passos:
-  1. check_python()      — ambiente tem Python >= 3.9?
-  2. check_git()          — ambiente tem git? (projeto-alvo é sempre um repo)
-  3. check_deps()         — PyYAML disponível? (única dependência real do wizard)
-  4. configure()          — nome do projeto + escada R0-R4 + quais templates instanciar
-                            (--demo = defaults sensatos; --answers = respostas prontas;
-                            nenhum dos dois = NotImplementedError intencional — use
-                            --interview primeiro para obter o schema de perguntas)
-  5. validate()           — o profile resultante é bem-formado? (campos obrigatórios)
-  6. generate_and_summary() — escreve operator-profile.yaml + templates escolhidos + resumo
-                            (NUNCA sobrescreve arquivo customizado — --force ignora a proteção)
+The 6 steps:
+  1. check_python()      -- does the environment have Python >= 3.9?
+  2. check_git()          -- does the environment have git? (the target project is always a repo)
+  3. check_deps()         -- is PyYAML available? (the wizard's only real dependency)
+  4. configure()          -- project name + R0-R4 ladder + which templates to instantiate
+                            (--demo = sensible defaults; --answers = ready-made answers;
+                            neither = intentional NotImplementedError -- use
+                            --interview first to get the question schema)
+  5. validate()           -- is the resulting profile well-formed? (required fields)
+  6. generate_and_summary() -- writes operator-profile.yaml + chosen templates + summary
+                            (NEVER overwrites a customized file -- --force ignores the protection)
 
-Uso:
-    python wizard.py --interview                        # imprime o schema de perguntas (JSON), sai 0
-    python wizard.py --demo --out <dir>                  # scaffold não-interativo com defaults
-    python wizard.py --answers respostas.json --out <dir>  # scaffold a partir de respostas prontas
-    python wizard.py --demo --out <dir> --force          # sobrescreve customização de propósito
+Usage:
+    python wizard.py --interview                        # prints the question schema (JSON), exits 0
+    python wizard.py --demo --out <dir>                  # non-interactive scaffold with defaults
+    python wizard.py --answers respostas.json --out <dir>  # scaffold from ready-made answers
+    python wizard.py --demo --out <dir> --force          # overwrites customization on purpose
     python wizard.py --self-test
 
-Nenhum modo bloqueia em stdin — o operador real deste ecossistema é frequentemente um
-agente atuando pelo humano; --interview/--answers é o "Confirm" (agente lê o schema,
-pergunta ao humano na conversa, re-invoca com --answers), nunca um input() de terminal.
+No mode blocks on stdin -- the real operator of this ecosystem is often an
+agent acting on behalf of the human; --interview/--answers is the "Confirm" (the agent reads the schema,
+asks the human in the conversation, re-invokes with --answers), never a terminal input().
 
-Exit: 0 ok (inclusive re-run = no-op ou skip-customized) · 2 ambiente sem pré-requisito
-(python/git/PyYAML ausente) ou uso inválido (nem --demo, nem --answers, nem --interview).
-stdlib + PyYAML. v1.1.0 — 2026-07-11 (agent-framework-wizard · corrige NotImplementedError
-do modo interativo + overwrite incondicional — ver INSTALL-CONTRACT.md)
+Exit: 0 ok (including re-run = no-op or skip-customized) - 2 environment missing a prerequisite
+(python/git/PyYAML missing) or invalid usage (neither --demo, nor --answers, nor --interview).
+stdlib + PyYAML. v1.1.0 -- 2026-07-11 (agent-framework-wizard - fixes the NotImplementedError
+of interactive mode + unconditional overwrite -- see INSTALL-CONTRACT.md)
 """
 from __future__ import annotations
 
@@ -99,10 +99,10 @@ def _available_templates() -> list:
 
 
 def questions() -> list:
-    """Schema de perguntas do wizard — MESMO formato consumido por kit_doctor.py
-    stage_configure (ver INSTALL-CONTRACT.md 'Schema de perguntas'): id/prompt/type/
-    options/default. Usado por --interview (imprime este schema) e --answers (resolve
-    contra ele). 'responder perguntas' tem UM formato só neste marketplace."""
+    """The wizard's question schema -- the SAME format consumed by kit_doctor.py's
+    stage_configure (see INSTALL-CONTRACT.md 'Question schema'): id/prompt/type/
+    options/default. Used by --interview (prints this schema) and --answers (resolves
+    against it). 'answering questions' has ONE format only in this marketplace."""
     return [
         {
             "id": "project_name",
@@ -147,15 +147,15 @@ def configure(demo: bool, project_name: str | None, templates: list | None, answ
             "templates": _resolve_template_names(templates or list(_DEFAULT_TEMPLATES)),
         }
     if answers is not None:
-        # --answers: mesmo schema de questions() — campo ausente cai no default da pergunta.
+        # --answers: same schema as questions() -- a missing field falls back to the question's default.
         defaults = {q["id"]: q["default"] for q in questions()}
         return {
             "project_name": answers.get("project_name") or project_name or defaults["project_name"],
             "escada": _ESCADA_DEFAULT,
             "templates": _resolve_template_names(answers.get("templates") or templates or list(defaults["templates"])),
         }
-    # Nem --demo nem --answers: sem stdin real não há como resolver. Use --interview
-    # primeiro (imprime o schema de perguntas) e re-invoque com --answers <file>.
+    # Neither --demo nor --answers: with no real stdin there is no way to resolve. Use --interview
+    # first (it prints the question schema) and re-invoke with --answers <file>.
     raise NotImplementedError("interactive mode requires --demo or --answers <file> (see --interview for the schema)")
 
 
@@ -183,9 +183,9 @@ def _sha256_dir(out_dir: Path) -> str:
 
 
 def _write_if_safe(dest: Path, content: str, force: bool, rel: str, written: list, skipped: list) -> None:
-    """Nunca sobrescreve customização por padrão (mesmo espírito de stage_profile do
-    kit_doctor.py): se o alvo já existe com conteúdo DIFERENTE do que seria gerado
-    agora, marca skip-customized em vez de clobbar. --force ignora essa proteção."""
+    """Never overwrites a customization by default (same spirit as stage_profile in
+    kit_doctor.py): if the target already exists with content DIFFERENT from what would be
+    generated now, it marks skip-customized instead of clobbering. --force ignores this protection."""
     if dest.exists() and not force:
         existing = dest.read_text(encoding="utf-8")
         if existing != content:
@@ -233,12 +233,12 @@ def generate_and_summary(config: dict, out_dir: Path, force: bool = False) -> di
     return summary
 
 
-# Why: `templates` mantem o kit configuravel para consumidores externos; o fluxo local usa o default.
+# Why: `templates` keeps the kit configurable for external consumers; the local flow uses the default.
 def run_wizard(
     demo: bool, out_dir: Path, project_name: str | None = None, templates: list | None = None,
     answers: dict | None = None, force: bool = False,
 ) -> tuple:
-    """Retorna (exit_code, summary_or_errors)."""
+    """Returns (exit_code, summary_or_errors)."""
     ok_py, msg_py = check_python()
     step(1, 6, f"check_python — {msg_py}")
     if not ok_py:
@@ -289,7 +289,7 @@ def _self_test() -> int:
         content = (out_dir.joinpath(*_DOCS_SUBDIR, "00-READ-FIRST.md")).read_text(encoding="utf-8")
         assert "agente-teste" in content and "{{project_name}}" not in content, "placeholder not substituted"
 
-        # --- Bug A: --interview (schema) + --answers (não-interativo, sem NotImplementedError) ---
+        # --- Bug A: --interview (schema) + --answers (non-interactive, no NotImplementedError) ---
         qs = questions()
         assert len(qs) >= 2 and {"id", "prompt", "type", "default"} <= set(qs[0].keys())
         try:
@@ -303,7 +303,7 @@ def _self_test() -> int:
         assert code_a == 0 and r_a["project_name"] == "via-answers", f"--answers should configure without stdin: {r_a}"
         assert (answers_out / "operator-profile.yaml").exists()
 
-        # --- Bug B: skip-exists — edição manual sobrevive a re-run (nunca clobber sem --force) ---
+        # --- Bug B: skip-exists -- a manual edit survives a re-run (never clobber without --force) ---
         edited_file = out_dir.joinpath(*_DOCS_SUBDIR, "00-STATE.md")
         edited_file.write_text("USER CUSTOMIZATION — DO NOT OVERWRITE\n", encoding="utf-8")
         code3, r3 = run_wizard(demo=True, out_dir=out_dir)
@@ -313,7 +313,7 @@ def _self_test() -> int:
         assert edited_file.read_text(encoding="utf-8") == "USER CUSTOMIZATION — DO NOT OVERWRITE\n", \
             "generate_and_summary overwrote a customization without --force"
 
-        # --force ignora a proteção de propósito
+        # --force ignores the protection on purpose
         code4, r4 = run_wizard(demo=True, out_dir=out_dir, force=True)
         assert code4 == 0 and any(w.endswith("00-STATE.md") for w in r4["files_written"]), f"--force should overwrite: {r4}"
         assert "agente-teste" in edited_file.read_text(encoding="utf-8"), "--force should have regenerated the file"

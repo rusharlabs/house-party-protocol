@@ -1,27 +1,27 @@
 #!/usr/bin/env python3
 """
-project_root_confirm (Operator Kit) — PreToolUse WARN-only: detecta ação
-(git / Write / Edit) cujo alvo cai FORA da raiz de projeto fixada, sinalizando
-possível operação cross-project (ex.: editar outro repo por engano).
+project_root_confirm (Operator Kit) - PreToolUse WARN-only: detects an action
+(git / Write / Edit) whose target falls OUTSIDE the pinned project root, flagging
+a possible cross-project operation (e.g. editing another repo by mistake).
 
-Por que existe: quem trabalha com vários repos vizinhos abertos ao mesmo tempo
-(ex.: um monorepo + 2-3 repos-satélite no mesmo Desktop) corre o risco de editar
-o repo errado por engano — um erro caro e silencioso. Este hook compara a raiz
-git do ALVO/cwd com a raiz ESPERADA.
+Why it exists: whoever works with several neighboring repos open at the same time
+(e.g. a monorepo + 2-3 satellite repos on the same Desktop) risks editing
+the wrong repo by mistake - an expensive, silent error. This hook compares the
+TARGET/cwd git root against the EXPECTED root.
 
-Matcher (no wire): Bash(git) | Write | Edit.
-Lê JSON do stdin: tool_input.{file_path, command, cwd}.
+Matcher (not wired): Bash(git) | Write | Edit.
+Reads JSON from stdin: tool_input.{file_path, command, cwd}.
 
-Raiz esperada (precedência):
+Expected root (precedence):
   1. env EXPECTED_ROOT
-  2. paths.expected_root do profile
-  3. git toplevel da cwd
+  2. paths.expected_root from the profile
+  3. git toplevel of the cwd
 
-Bypass: env ALLOW_CROSS_ROOT=1  (ou guardrails.allow_cross_root: true no profile).
+Bypass: env ALLOW_CROSS_ROOT=1  (or guardrails.allow_cross_root: true in the profile).
 
-WARN em stderr · exit 0 SEMPRE · qualquer erro -> exit 0 (defensivo).
+WARN to stderr - exit 0 ALWAYS - any error -> exit 0 (defensive).
 
-v1.0.0 — 2026-06-19 (Operator Kit · cluster guard-distinct)
+v1.0.0 - 2026-06-19 (Operator Kit - guard-distinct cluster)
 """
 from __future__ import annotations
 
@@ -42,7 +42,7 @@ except Exception:  # noqa: BLE001
 
 
 def _git_toplevel(start: Path) -> Path | None:
-    """git rev-parse --show-toplevel a partir de `start` (dir existente)."""
+    """git rev-parse --show-toplevel starting from `start` (existing dir)."""
     try:
         d = start if start.is_dir() else start.parent
         r = subprocess.run(
@@ -61,7 +61,7 @@ def _norm(p: Path | None) -> str:
 
 
 def expected_root(prof: dict, cwd: Path) -> Path | None:
-    """Raiz esperada por env > profile > git toplevel da cwd."""
+    """Expected root by env > profile > git toplevel of the cwd."""
     env = os.environ.get("EXPECTED_ROOT")
     if env:
         return Path(env).resolve()
@@ -72,7 +72,7 @@ def expected_root(prof: dict, cwd: Path) -> Path | None:
 
 
 def target_dir(tool_input: dict, cwd: Path) -> Path:
-    """Diretório do alvo: dir do file_path, senão cwd do command, senão cwd."""
+    """Target directory: file_path's dir, else the command's cwd, else cwd."""
     fp = tool_input.get("file_path") or tool_input.get("path")
     if fp:
         p = Path(str(fp))
@@ -87,19 +87,19 @@ def target_dir(tool_input: dict, cwd: Path) -> Path:
 
 def evaluate(tool_input: dict, cwd: Path, prof: dict) -> tuple[str, str] | None:
     """
-    Compara raiz do alvo vs raiz esperada. Retorna (raiz_esperada, raiz_alvo)
-    se divergirem; None se ok ou indeterminado. Determinístico (recebe roots já
-    resolvidos via deps), testável sem git através de paths absolutos.
+    Compares target root vs expected root. Returns (expected_root, target_root)
+    if they diverge; None if ok or indeterminate. Deterministic (receives roots
+    already resolved via deps), testable without git through absolute paths.
     """
     exp = expected_root(prof, cwd)
     if exp is None:
-        return None  # sem âncora confiável -> não avisa (defensivo)
+        return None  # no reliable anchor -> does not warn (defensive)
     tgt = target_dir(tool_input, cwd)
     tgt_root = _git_toplevel(tgt) or tgt
     exp_n, tgt_n = _norm(exp), _norm(tgt_root)
     if not exp_n or not tgt_n:
         return None
-    # ok se o alvo está dentro da raiz esperada
+    # ok if the target is inside the expected root
     if tgt_n == exp_n or tgt_n.startswith(exp_n + "/"):
         return None
     return (str(exp), str(tgt_root))
@@ -157,19 +157,19 @@ def _self_test() -> None:
         (repo_a / "sub").mkdir(parents=True)
         repo_b.mkdir()
         prof = {"paths": {"expected_root": str(repo_a)}}
-        # 1. alvo DENTRO da raiz esperada -> sem aviso
+        # 1. target INSIDE the expected root -> no warning
         v1 = evaluate({"file_path": str(repo_a / "sub" / "x.md")}, repo_a, prof)
         assert v1 is None, f"internal target should not warn: {v1}"
-        # 2. alvo em OUTRO repo -> avisa
+        # 2. target in ANOTHER repo -> warns
         v2 = evaluate({"file_path": str(repo_b / "y.md")}, repo_a, prof)
         assert v2 is not None, "cross-root target should warn"
         assert _norm(Path(v2[0])) == _norm(repo_a)
-        # 3. sem âncora (sem env/profile/git) -> None (não quebra)
-        #    força profile vazio e cwd fora de qualquer git no tmp
+        # 3. no anchor (no env/profile/git) -> None (does not break)
+        #    forces an empty profile and a cwd outside any git repo in tmp
         v3 = evaluate({"file_path": str(repo_b / "z.md")}, base, {})
-        # base não é git; expected_root cai em git toplevel da cwd (None no tmp)
+        # base is not git; expected_root falls back to git toplevel of the cwd (None in tmp)
         assert v3 is None, f"without an anchor it should be None: {v3}"
-        # 4. env EXPECTED_ROOT sobrepõe
+        # 4. env EXPECTED_ROOT overrides
         os.environ["EXPECTED_ROOT"] = str(repo_a)
         try:
             v4 = evaluate({"file_path": str(repo_b / "y.md")}, base, {})
@@ -183,7 +183,7 @@ def _self_test() -> None:
         finally:
             del os.environ["ALLOW_CROSS_ROOT"]
         assert _allowed({"guardrails": {"allow_cross_root": True}}) is True
-        # 6. target_dir resolve file_path relativo contra cwd
+        # 6. target_dir resolves a relative file_path against cwd
         tdv = target_dir({"file_path": "sub/x.md"}, repo_a)
         assert _norm(tdv) == _norm(repo_a / "sub"), f"wrong relative target_dir: {tdv}"
     print("self-test OK")

@@ -1,26 +1,26 @@
 #!/usr/bin/env python3
 """
-secret_scan_on_write (Operator Kit) — PreToolUse WARN-only: detecta segredos
-em plaintext sendo escritos em arquivos PERSISTENTES (memory / CLAUDE.md /
-docs/*.md / rules/*.md), e sugere referenciar o `.env`.
+secret_scan_on_write (Operator Kit) - PreToolUse WARN-only: detects secrets
+in plaintext being written to PERSISTENT files (memory / CLAUDE.md /
+docs/*.md / rules/*.md), and suggests referencing `.env`.
 
-Por que existe: a regra `no-secrets-in-memory.md` proíbe credenciais cruas em
-arquivos commitados/persistentes. O BLOCK de verdade é responsabilidade do
-pre-commit (git); este hook é o aviso EARLY, no momento da escrita — WARN-only,
-nunca bloqueia (REGRA #29). Complementa, não duplica, o gate de commit.
+Why it exists: the `no-secrets-in-memory.md` rule forbids raw credentials in
+committed/persistent files. The real BLOCK is the pre-commit's (git) job;
+this hook is the EARLY warning, at write time - WARN-only,
+never blocks (RULE #29). Complements, does not duplicate, the commit gate.
 
 Matcher: Edit | Write | MultiEdit.
-Lê JSON do stdin: tool_input.{file_path, content, new_string, edits[].new_string}.
-Só dispara quando (a) o file_path casa um glob persistente E (b) o conteúdo casa
-um regex de segredo E (c) o trecho NÃO é um placeholder allowlistado (<YOUR_KEY>).
+Reads JSON from stdin: tool_input.{file_path, content, new_string, edits[].new_string}.
+Only fires when (a) the file_path matches a persistent glob AND (b) the content matches
+a secret regex AND (c) the snippet is NOT an allowlisted placeholder (<YOUR_KEY>).
 
 Config (operator-profile.yaml):
   guardrails.secret_scan_on_write: "warn" | "off"   (default "warn")
-  guardrails.secret_persistent_globs: [lista de globs]  (opcional; sobrepõe defaults)
+  guardrails.secret_persistent_globs: [list of globs]  (optional; overrides defaults)
 
-WARN em stderr · exit 0 SEMPRE · qualquer erro -> exit 0 (defensivo).
+WARN to stderr - exit 0 ALWAYS - any error -> exit 0 (defensive).
 
-v1.0.0 — 2026-06-19 (Operator Kit · cluster guard-distinct)
+v1.0.0 - 2026-06-19 (Operator Kit - guard-distinct cluster)
 """
 from __future__ import annotations
 
@@ -30,18 +30,18 @@ import re
 import sys
 from pathlib import Path
 
-# loader compartilhado: .../operator-kit/hooks/ -> parents[1] = operator-kit/
+# shared loader: .../operator-kit/hooks/ -> parents[1] = operator-kit/
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 try:
     from _lib.profile_loader import load_profile, get
-except Exception:  # noqa: BLE001 — degrade seguro
+except Exception:  # noqa: BLE001 - safe degrade
     load_profile = None  # type: ignore[assignment]
 
     def get(_p, _d, default=None):  # type: ignore[misc]
         return default
 
 
-# Globs de arquivos PERSISTENTES onde segredo cru é especialmente perigoso.
+# Globs of PERSISTENT files where a raw secret is especially dangerous.
 _DEFAULT_PERSISTENT_GLOBS = [
     "*MEMORY.md",
     "**/MEMORY.md",
@@ -53,10 +53,10 @@ _DEFAULT_PERSISTENT_GLOBS = [
     "docs/**/*.md",
     "**/docs/**/*.md",
     "**/rules/**/*.md",
-    "*.md",  # qualquer markdown commitável
+    "*.md",  # any committable markdown
 ]
 
-# Regexes de segredos comuns (provedores reais). Conservador p/ evitar falso-positivo.
+# Regexes for common secrets (real providers). Conservative to avoid false positives.
 _SECRET_PATTERNS = [
     re.compile(r"sk-ant-[A-Za-z0-9_\-]{8,}"),          # Anthropic
     re.compile(r"sk-[A-Za-z0-9]{16,}"),                # OpenAI-style
@@ -64,12 +64,12 @@ _SECRET_PATTERNS = [
     re.compile(r"xox[baprs]-[A-Za-z0-9\-]{8,}"),       # Slack token
     re.compile(r"AKIA[0-9A-Z]{12,}"),                  # AWS access key id
     re.compile(r"Bearer\s+[A-Za-z0-9_\-\.=]{16,}"),    # Authorization: Bearer ...
-    re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----"), # chave privada PEM
+    re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----"), # PEM private key
     re.compile(r"AIza[0-9A-Za-z_\-]{20,}"),            # Google API key
 ]
 
-# Placeholders aceitáveis (não são segredo real) — se o match estiver dentro de
-# uma linha que contenha um destes, ignora.
+# Acceptable placeholders (not a real secret) - if the match is inside
+# a line that contains one of these, ignore it.
 _PLACEHOLDER_TOKENS = [
     "<your_key>", "<your-key>", "your_key_here", "xxxx", "example",
     "placeholder", "<token>", "<api_key>", "redacted", "dummy", "fake",
@@ -96,7 +96,7 @@ def _is_persistent(file_path: str, globs: list[str]) -> bool:
 
 
 def _extract_texts(tool_input: dict) -> list[str]:
-    """Junta todos os campos textuais relevantes de um tool_input de escrita."""
+    """Joins all relevant text fields from a write tool_input."""
     out: list[str] = []
     for key in ("content", "new_string", "new_str"):
         v = tool_input.get(key)
@@ -118,7 +118,7 @@ def _line_is_placeholder(line: str) -> bool:
 
 
 def scan(file_path: str, texts: list[str], globs: list[str]) -> list[str]:
-    """Retorna lista de descrições de segredo encontrado (vazia = nada)."""
+    """Returns a list of descriptions of the secrets found (empty = nothing)."""
     if not _is_persistent(file_path, globs):
         return []
     hits: list[str] = []
@@ -132,7 +132,7 @@ def scan(file_path: str, texts: list[str], globs: list[str]) -> list[str]:
                     frag = m.group(0)
                     shown = frag[:8] + "..." if len(frag) > 8 else frag
                     hits.append(f"pattern `{shown}`")
-                    break  # 1 por linha basta
+                    break  # 1 per line is enough
     return hits
 
 
@@ -154,7 +154,7 @@ def main() -> None:
         sys.exit(0)
     try:
         data = json.loads(raw) if raw.strip() else {}
-    except Exception:  # noqa: BLE001 — não é chamada de hook válida
+    except Exception:  # noqa: BLE001 - not a valid hook call
         sys.exit(0)
     try:
         prof = load_profile() if load_profile is not None else {}
@@ -171,35 +171,35 @@ def main() -> None:
         hits = scan(str(file_path), texts, _persistent_globs(prof))
         if hits:
             _warn(str(file_path), hits)
-    except Exception:  # noqa: BLE001 — hook jamais quebra o fluxo
+    except Exception:  # noqa: BLE001 - hook must never break the flow
         pass
     sys.exit(0)
 
 
 def _self_test() -> None:
     globs = _DEFAULT_PERSISTENT_GLOBS
-    # 1. segredo em arquivo persistente -> hit
+    # 1. secret in a persistent file -> hit
     h = scan("docs/notes/MEMORY.md", ["api: sk-ant-abc123DEF456ghi789"], globs)
     assert h, f"should detect an Anthropic secret, got {h}"
-    # 2. mesmo segredo mas arquivo NÃO persistente (código) -> sem hit
+    # 2. same secret but file is NOT persistent (code) -> no hit
     h2 = scan("core/intelligence/foo.py", ["api: sk-ant-abc123DEF456ghi789"], globs)
     assert not h2, f".py code is not persistent-md, should not warn: {h2}"
-    # 3. placeholder allowlistado -> sem hit
+    # 3. allowlisted placeholder -> no hit
     h3 = scan("CLAUDE.md", ["key: stored in `.env` as FOO; example sk-xxxxxxxxxxxxxxxx"], globs)
     assert not h3, f"placeholder/.env should not warn: {h3}"
-    # 4. GitHub PAT em md de docs -> hit
+    # 4. GitHub PAT in a docs md -> hit
     h4 = scan("docs/x.md", ["token " + "ghp" + "_0123456789abcdefABCD"], globs)
     assert h4, f"should detect ghp_, got {h4}"
     # 5. PEM private key -> hit
     h5 = scan("notes/MEMORY.md", ["-----BEGIN " + "RSA PRIVATE KEY-----"], globs)
     assert h5, f"should detect PEM, got {h5}"
-    # 6. texto inofensivo -> sem hit
+    # 6. harmless text -> no hit
     h6 = scan("docs/x.md", ["just ordinary text with no secret"], globs)
     assert not h6, f"ordinary text should not warn: {h6}"
-    # 7. _extract_texts pega edits[].new_string
+    # 7. _extract_texts picks up edits[].new_string
     txts = _extract_texts({"edits": [{"new_string": "sk-ant-zzz999AAA888bbb"}]})
     assert any("sk-ant" in t for t in txts), "extract should pick up edits"
-    # 8. glob de não-persistente
+    # 8. non-persistent glob
     assert not _is_persistent("engine/src/app.ts", globs)
     assert _is_persistent("a/b/MEMORY.md", globs)
     print("self-test OK")

@@ -1,24 +1,24 @@
 #!/usr/bin/env python3
 """
-handoff_guard — Stop + PreCompact: garante que um handoff fresco existe, sem NUNCA travar.
+handoff_guard -- Stop + PreCompact: ensures a fresh handoff exists, without EVER blocking.
 
-Fusão do design formal (pseudo-código: freshness<15min, degraded-auto no 2º Stop) com
-o mecanismo mais simples de um guard de referência (stop_state_guard.py): anti-loop via `stop_hook_active` puro
-(sem marker-file próprio) e checagem de frescor por mtime. Nunca bloqueia de verdade (o único
-"decision:block" é 1 pedido único de /pre-clear express no Stop; sem stop_hook_active isso não
-se repete — a 2ª vez vira degraded-auto e libera).
+Merges the formal design (pseudocode: freshness<15min, degraded-auto on the 2nd Stop) with
+the simpler mechanism of a reference guard (stop_state_guard.py): pure anti-loop via `stop_hook_active`
+(no marker-file of its own) and freshness check by mtime. Never truly blocks (the only
+"decision:block" is a single /pre-clear express request on Stop; without stop_hook_active it does
+not repeat -- the 2nd time it becomes degraded-auto and releases).
 
-Fluxo:
-  PreCompact: handoff fresco (<15min)? exit 0. Senão: additionalContext pedindo refresh, exit 0
-              (PreCompact NUNCA block — não há como recusar a compactação).
-  Stop:       handoff fresco? exit 0.
-              1ª vez (stop_hook_active ausente) → decision:block pedindo /pre-clear express.
-              2ª vez (stop_hook_active=true, já tentou) → grava degraded-auto, exit 0 (libera).
+Flow:
+  PreCompact: fresh handoff (<15min)? exit 0. Otherwise: additionalContext asking for a refresh, exit 0
+              (PreCompact NEVER blocks -- there is no way to refuse the compaction).
+  Stop:       fresh handoff? exit 0.
+              1st time (stop_hook_active absent) -> decision:block asking for /pre-clear express.
+              2nd time (stop_hook_active=true, already tried) -> writes degraded-auto, exit 0 (releases).
 
-Uso (hook): echo '{"hook_event_name":"Stop","session_id":"...","stop_hook_active":false}' | python handoff_guard.py
-Exit: sempre 0 (hook Stop/PreCompact não deve derrubar o processo do harness).
+Usage (hook): echo '{"hook_event_name":"Stop","session_id":"...","stop_hook_active":false}' | python handoff_guard.py
+Exit: always 0 (a Stop/PreCompact hook must never bring down the harness process).
 
-stdlib only. v1.0.0 — 2026-07-10 (continuity-kit · Tier 1)
+stdlib only. v1.0.0 -- 2026-07-10 (continuity-kit - Tier 1)
 """
 from __future__ import annotations
 
@@ -104,18 +104,18 @@ def handle(payload: dict) -> dict:
         _take_checkpoint(payload)
         return {"hookSpecificOutput": {"hookEventName": "PreCompact", "additionalContext": _PEDIDO_PRECOMPACT}}
 
-    # Stop: anti-loop puro via stop_hook_active (técnica de referência — mais simples que marker-file)
+    # Stop: pure anti-loop via stop_hook_active (reference technique -- simpler than a marker-file)
     if not payload.get("stop_hook_active"):
         return {"decision": "block", "reason": _PEDIDO_STOP}
 
     ckpt_ref, ckpt_commit = _take_checkpoint(payload)
 
-    # 2ª tentativa (já bloqueou uma vez nesta cadeia) — grava degraded-auto e libera. Nunca trava.
+    # 2nd attempt (already blocked once in this chain) -- writes degraded-auto and releases. Never blocks.
     degraded = _handoff_io.degraded_auto_aggregate(lane_id, payload.get("session_id", ""),
                                                     checkpoint_ref=ckpt_ref, checkpoint_commit=ckpt_commit)
     ok, result = _handoff_io.write(degraded)
     if not ok:
-        # mesmo se a validação falhar por algum motivo, NUNCA travar a sessão por causa disto
+        # even if validation fails for some reason, NEVER block the session because of this
         return {"systemMessage": f"handoff_guard: degraded-auto failed validation ({result}) — releasing anyway"}
     suffix = f" · checkpoint {ckpt_ref}" if ckpt_ref else ""
     return {"systemMessage": f"handoff_guard: degraded handoff written ({result}){suffix}"}
@@ -143,20 +143,20 @@ def _self_test() -> int:
         _handoff_io._HANDOFF_DIR = tmp / ".claude" / "handoff"
         _handoff_io.LEDGER_PATH = _handoff_io._HANDOFF_DIR / "HANDOFF-LEDGER.jsonl"
 
-        # sem handoff nenhum, Stop 1a vez -> block
+        # with no handoff at all, Stop 1st time -> block
         out1 = handle({"hook_event_name": "Stop", "session_id": "s1", "stop_hook_active": False, "lane_id": "solo"})
         assert out1.get("decision") == "block", f"1st Stop without handoff should block: {out1}"
 
-        # 2a vez (stop_hook_active=true) -> grava degraded-auto, libera
+        # 2nd time (stop_hook_active=true) -> writes degraded-auto, releases
         out2 = handle({"hook_event_name": "Stop", "session_id": "s1", "stop_hook_active": True, "lane_id": "solo"})
         assert "decision" not in out2, f"2nd Stop should release (degraded-auto): {out2}"
         assert _handoff_io.current_path("solo").exists(), "degraded-auto was not written"
 
-        # handoff fresco -> libera direto
+        # fresh handoff -> releases directly
         out3 = handle({"hook_event_name": "Stop", "session_id": "s1", "stop_hook_active": False, "lane_id": "solo"})
         assert out3 == {}, f"fresh handoff should release without block: {out3}"
 
-        # PreCompact sem handoff fresco -> additionalContext, nunca block
+        # PreCompact without a fresh handoff -> additionalContext, never block
         _handoff_io.current_path("solo").unlink()
         out4 = handle({"hook_event_name": "PreCompact", "session_id": "s1", "lane_id": "solo"})
         assert "decision" not in out4 and "additionalContext" in out4.get("hookSpecificOutput", {}), f"PreCompact should only warn: {out4}"
@@ -180,11 +180,11 @@ def main(argv) -> int:
         return _self_test()
     try:
         payload = json.loads(sys.stdin.read() or "{}")
-    except Exception:  # noqa: BLE001 — fail-open sempre
+    except Exception:  # noqa: BLE001 -- always fail-open
         payload = {}
     try:
         result = handle(payload)
-    except Exception as e:  # noqa: BLE001 — fail-open: nunca travar a sessão por bug do hook
+    except Exception as e:  # noqa: BLE001 -- fail-open: never block the session because of a hook bug
         result = {"systemMessage": f"handoff_guard: internal error ignored (fail-open): {e}"}
     print(json.dumps(result, ensure_ascii=False))
     return 0

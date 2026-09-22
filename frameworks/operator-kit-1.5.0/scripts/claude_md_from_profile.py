@@ -1,40 +1,40 @@
 #!/usr/bin/env python3
 """
-claude_md_from_profile (Operator Kit) — gera o bloco do CLAUDE.md a partir do operator-profile.yaml.
+claude_md_from_profile (Operator Kit) - generates the CLAUDE.md block from operator-profile.yaml.
 
-O CLAUDE.md nasce do MODELO, nao da memoria: le o `operator-profile.yaml` e escreve quatro
-secoes que ensinam qualquer agente a operar ESTE projeto — e a calar onde a decisao nao e
-dele. O piso vem PRIMEIRO, por cruzamento de campos, nunca por opiniao: cada linha sai de
-um campo do perfil; se o campo nao esta la, a linha nao existe.
+CLAUDE.md is born from the MODEL, not from memory: it reads `operator-profile.yaml` and writes
+four sections that teach any agent to operate THIS project - and to stay silent where the
+decision is not its to make. The floor comes FIRST, by crossing fields, never by opinion: each
+line comes from a field in the profile; if the field is not there, the line does not exist.
 
-    ## O QUE VOCE NAO DECIDE      <- autonomy · guardrails · loop.forbidden_boundaries
-    ## ONDE AS COISAS MORAM       <- paths.*
-    ## AS REGRAS DO PRONTO        <- verification.done_criteria · ladder
-    ## O FLUXO                    <- concurrency · loop · autonomy.default
+    ## WHAT YOU DO NOT DECIDE     <- autonomy - guardrails - loop.forbidden_boundaries
+    ## WHERE THINGS LIVE          <- paths.*
+    ## THE RULES OF DONE          <- verification.done_criteria - ladder
+    ## THE FLOW                   <- concurrency - loop - autonomy.default
 
-O script governa SOMENTE o bloco entre os marcadores:
+The script governs ONLY the block between the markers:
 
     <!-- operator-kit:claude-md:begin -->
     ...
     <!-- operator-kit:claude-md:end -->
 
-O que esta fora dos marcadores e da pessoa e nunca e tocado. Dentro, a ultima linha e a
-ASSINATURA (hash do perfil + data). Se o bloco foi editado a mao — a assinatura nao bate
-com o conteudo — o script RECUSA sobrescrever, mostra o que mudaria e para.
+What is outside the markers belongs to the person and is never touched. Inside, the last line
+is the SIGNATURE (hash of the profile + date). If the block was hand-edited - the signature does
+not match the content - the script REFUSES to overwrite, shows what would change, and stops.
 
-Uso:
-    python claude_md_from_profile.py                       # acha o perfil, grava ./CLAUDE.md
+Usage:
+    python claude_md_from_profile.py                       # finds the profile, writes ./CLAUDE.md
     python claude_md_from_profile.py --profile p.yaml --out CLAUDE.md
-    python claude_md_from_profile.py --dry-run             # imprime o bloco, nao grava
-    python claude_md_from_profile.py --force               # sobrescreve bloco editado a mao
+    python claude_md_from_profile.py --dry-run             # prints the block, does not write
+    python claude_md_from_profile.py --force               # overwrites a hand-edited block
     python claude_md_from_profile.py --self-test
 
-Exit: 0 gravado ou no-op · 1 bloco editado a mao, recusado (use --force) ·
-      2 uso/perfil invalido · 3 escrita recusada pela maquina (ver INSTRUCOES-DO-CLAUDE.md)
+Exit: 0 written or no-op - 1 hand-edited block, refused (use --force) -
+      2 invalid usage/profile - 3 write refused by the machine (see INSTRUCOES-DO-CLAUDE.md)
 
-# Why: nenhum dos kits gerava CLAUDE.md a partir de um modelo estruturado — o perfil do
-# operador era lido por scripts e nunca escrito para o agente ler. A geracao e CODIGO, nao
-# prosa: "todo campo citado existe" tem de ser verdade por construcao, nao por disciplina.
+# Why: none of the kits generated CLAUDE.md from a structured model - the operator's profile
+# was read by scripts and never written for the agent to read. Generation is CODE, not prose:
+# "every cited field exists" has to be true by construction, not by discipline.
 
 stdlib + PyYAML. v1.0.0 — 2026-09-20 (Operator Kit · A14)
 """
@@ -50,7 +50,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 try:
     from _lib.profile_loader import get as _loader_get  # type: ignore[import-not-found]
     from _lib.profile_loader import profile_path as find_profile
-except Exception:  # noqa: BLE001 -- Why: sem o loader, --profile explicito continua funcionando; so a descoberta automatica cai
+except Exception:  # noqa: BLE001 -- Why: without the loader, an explicit --profile keeps working; only automatic discovery falls back
     find_profile = None  # type: ignore[assignment]
     _loader_get = None  # type: ignore[assignment]
 
@@ -61,13 +61,13 @@ except ImportError:
 
 BEGIN = "<!-- operator-kit:claude-md:begin -->"
 END = "<!-- operator-kit:claude-md:end -->"
-FALLBACK_NAME = "INSTRUCOES-DO-CLAUDE.md"  # literal: e este nome que a pessoa vai procurar
+FALLBACK_NAME = "INSTRUCOES-DO-CLAUDE.md"  # literal: this is the name the person will look for
 
-# Why: a assinatura e o que separa "gerado" (pode sobrescrever) de "editado a mao" (nao pode).
-# Ela carrega o hash do CONTEUDO gerado, entao qualquer edicao dentro do bloco a invalida.
-# Why: a assinatura aponta para a skill (que resolve o caminho por ${CLAUDE_PLUGIN_ROOT}), nao
-# para `python <script>`: o script mora no plugin, nao na raiz do projeto, e `python` a seco
-# nao existe no macOS.
+# Why: the signature is what separates "generated" (can overwrite) from "hand-edited" (cannot).
+# It carries the hash of the generated CONTENT, so any edit inside the block invalidates it.
+# Why: the signature points to the skill (which resolves the path via ${CLAUDE_PLUGIN_ROOT}), not
+# to `python <script>`: the script lives in the plugin, not at the project root, and bare
+# `python` does not exist on macOS.
 _ASSINATURA = "*Bloco gerado do `{perfil}` em {data} - assinatura {hash} - para regerar: skill `claude-md-from-profile` (operator-kit; script {script}). Se editar este bloco a mao, a assinatura deixa de bater e eu paro de sobrescrever.*"
 
 
@@ -91,10 +91,10 @@ def _lista(x) -> list:
 
 
 # --------------------------------------------------------------------------
-# as quatro secoes — cada linha rastreia a UM campo do perfil
+# the four sections - each line traces back to ONE field in the profile
 # --------------------------------------------------------------------------
 def secao_nao_decide(p: dict) -> list:
-    """O piso. Nunca sai vazia: se nada cruzou, uma linha honesta."""
+    """The floor. Never comes out empty: if nothing crossed, one honest line."""
     out = []
     by_action = _get(p, "autonomy.by_action", {}) or {}
     if isinstance(by_action, dict):
@@ -213,7 +213,7 @@ def gerar_bloco(perfil: dict, perfil_nome: str, script_nome: str, hoje: str | No
 
 
 # --------------------------------------------------------------------------
-# o bloco dentro do arquivo
+# the block inside the file
 # --------------------------------------------------------------------------
 def _extrai_bloco(texto: str):
     i = texto.find(BEGIN)
@@ -224,7 +224,7 @@ def _extrai_bloco(texto: str):
 
 
 def _bloco_foi_editado(bloco: str) -> bool:
-    """True se a assinatura nao bate com o conteudo — alguem mexeu dentro do bloco."""
+    """True if the signature does not match the content - someone edited inside the block."""
     linhas = bloco.rstrip("\n").split("\n")
     if len(linhas) < 3 or linhas[-1] != END:
         return True
@@ -241,13 +241,13 @@ def aplicar(alvo: Path, bloco: str, force: bool = False) -> tuple:
     if not alvo.exists():
         return "new", bloco
     bruto = io.open(alvo, encoding="utf-8", newline="").read()
-    # Why: um CLAUDE.md salvo em CRLF faria a assinatura nunca bater (o hash e do texto LF) e o
-    # arquivo seria "editado a mao" para sempre. Trabalha-se em LF e devolve-se no EOL original.
+    # Why: a CLAUDE.md saved in CRLF would make the signature never match (the hash is of the LF
+    # text) and the file would be "hand-edited" forever. Work is done in LF, returned in the original EOL.
     eol = "\r\n" if "\r\n" in bruto else "\n"
     atual = bruto.replace("\r\n", "\n")
     antigo = _extrai_bloco(atual)
     if antigo is None:
-        # o bloco vai no TOPO: o piso e a primeira coisa que a IA le, antes do texto da pessoa
+        # the block goes at the TOP: the floor is the first thing the AI reads, before the person's text
         status, texto = "new", bloco + "\n" + atual
     elif _sem_assinatura_igual(antigo, bloco):
         return "no-op", bruto
@@ -259,7 +259,7 @@ def aplicar(alvo: Path, bloco: str, force: bool = False) -> tuple:
 
 
 def _sem_assinatura_igual(a: str, b: str) -> bool:
-    """Compara os blocos IGNORANDO a linha de assinatura (que carrega a data)."""
+    """Compares the blocks IGNORING the signature line (which carries the date)."""
     def miolo(x):
         ls = x.rstrip("\n").split("\n")
         return "\n".join(l for l in ls if "assinatura " not in l)
@@ -267,15 +267,15 @@ def _sem_assinatura_igual(a: str, b: str) -> bool:
 
 
 def gravar(alvo: Path, texto: str) -> Path:
-    """Grava; se a maquina recusar, cai no nome literal de fallback e devolve ELE."""
+    """Writes; if the machine refuses, falls back to the literal fallback name and returns IT."""
     try:
         with open(alvo, "w", encoding="utf-8", newline="") as fh:
             fh.write(texto)
         return alvo
     except OSError:
-        # Why: algumas maquinas recusam a escrita de CLAUDE.md em silencio. Nao contornar por shell
-        # nem por outro caminho — a recusa e protecao da maquina. O nome de fallback e LITERAL:
-        # e ele que a pessoa vai procurar.
+        # Why: some machines silently refuse to write CLAUDE.md. Do not work around it via shell
+        # or any other path - the refusal is the machine's protection. The fallback name is LITERAL:
+        # it is what the person will look for.
         fb = alvo.parent / FALLBACK_NAME
         cab = ("<!-- This file should be called CLAUDE.md. Writing under that name was\n"
                "     refused by this machine. RENAME IT TO CLAUDE.md and delete this block -->\n\n")
@@ -292,7 +292,7 @@ def _self_test() -> None:
     perfil = yaml.safe_load(io.open(exemplo, encoding="utf-8"))
     bloco = gerar_bloco(perfil, "profile.example.yaml", "x.py", hoje="2026-09-20")
 
-    # forma
+    # form
     assert "{{" not in bloco, "placeholder not substituted"
     for sec in ("## WHAT YOU DO NOT DECIDE", "## WHERE THINGS LIVE", "## THE RULES OF DONE", "## THE FLOW"):
         assert sec in bloco, sec
@@ -300,44 +300,44 @@ def _self_test() -> None:
     assert "EXAMPLE PROFILE" in bloco, "profile.example must be stamped as an example"
     assert bloco.startswith(BEGIN) and bloco.rstrip("\n").endswith(END)
 
-    # todo campo citado existe: cada `chave.sub` citada esta no perfil
+    # every cited field exists: each cited `key.sub` is in the profile
     import re
     for ref in set(re.findall(r"\(`([a-z_]+(?:\.[a-z_]+)+)`", bloco)):
         assert _get(perfil, ref, "__MISSING__") != "__MISSING__", f"cited a field that does not exist: {ref}"
 
-    # piso nunca vazio, mesmo com perfil vazio
+    # floor never empty, even with an empty profile
     vazio = gerar_bloco({"project": "x"}, "p.yaml", "x.py", hoje="2026-09-20")
     assert "has not recorded any limit yet" in vazio
     assert "is not filled" in vazio
 
     with tempfile.TemporaryDirectory() as td:
         alvo = Path(td) / "CLAUDE.md"
-        # 1a vez: novo
+        # 1st time: new
         st, txt = aplicar(alvo, bloco); assert st == "new"; gravar(alvo, txt)
-        # 2a vez: no-op (idempotente)
+        # 2nd time: no-op (idempotent)
         st, _ = aplicar(alvo, bloco); assert st == "no-op", st
-        # arquivo com conteudo da pessoa FORA do bloco: preservado
+        # file with the person's content OUTSIDE the block: preserved
         alvo.write_text("# My project\n\nmy notes\n", encoding="utf-8")
         st, txt = aplicar(alvo, bloco)
         assert st == "new" and txt.startswith(BEGIN) and txt.rstrip("\r\n").endswith("my notes"), "block on TOP, the person's text WHOLE below"
         gravar(alvo, txt)
         assert "my notes" in alvo.read_text(encoding="utf-8")
-        # perfil muda -> bloco substituido, e o de fora continua la
+        # profile changes -> block replaced, and what's outside stays there
         bloco2 = gerar_bloco({**perfil, "project": "other"}, "p.yaml", "x.py", hoje="2026-09-20")
         st, txt = aplicar(alvo, bloco2); assert st == "replaced"; gravar(alvo, txt)
         t = alvo.read_text(encoding="utf-8")
         assert "my notes" in t and "other" in t and t.count(BEGIN) == 1
-        # edicao A MAO dentro do bloco -> recusado; --force -> substitui
+        # HAND edit inside the block -> refused; --force -> replaces
         t2 = t.replace("## THE FLOW", "## THE FLOW (I edited this)")
         alvo.write_text(t2, encoding="utf-8")
         st, _ = aplicar(alvo, bloco2); assert st == "refused", "a hand edit must be refused"
         st, txt = aplicar(alvo, bloco2, force=True); assert st == "replaced"
-        # o instrumento discrimina: bloco intacto NAO e "editado"
+        # the instrument discriminates: an intact block is NOT "edited"
         assert not _bloco_foi_editado(bloco2)
         assert _bloco_foi_editado(bloco2.replace("## THE FLOW", "## THE FLOW x"))
-        # recusa de escrita -> fallback literal
+        # write refusal -> literal fallback
         ro = Path(td) / "ro"; ro.mkdir()
-        alvo_ro = ro / "CLAUDE.md"; alvo_ro.mkdir()   # um DIRETORIO com esse nome: open() falha
+        alvo_ro = ro / "CLAUDE.md"; alvo_ro.mkdir()   # a DIRECTORY with that name: open() fails
         dest = gravar(alvo_ro, bloco)
         assert dest.name == FALLBACK_NAME and dest.exists()
         assert "RENAME IT TO CLAUDE.md" in dest.read_text(encoding="utf-8")
@@ -359,7 +359,7 @@ def main(argv) -> int:
             prof_path = Path(args[i + 1]); i += 2; continue
         if args[i] == "--out" and i + 1 < len(args):
             out_path = Path(args[i + 1]); i += 2; continue
-        print(__doc__.split("Uso:")[1].split("Exit:")[0], file=sys.stderr)
+        print(__doc__.split("Usage:")[1].split("Exit:")[0], file=sys.stderr)
         return 2
 
     if yaml is None:
@@ -378,7 +378,7 @@ def main(argv) -> int:
     prof_path = Path(prof_path)
     try:
         perfil = yaml.safe_load(io.open(prof_path, encoding="utf-8")) or {}
-    except Exception as exc:  # noqa: BLE001 -- Why: YAML quebrado vira exit 2 com a mensagem do parser, nunca um bloco gerado pela metade
+    except Exception as exc:  # noqa: BLE001 -- Why: broken YAML becomes exit 2 with the parser's message, never a half-generated block
         print(f"claude_md_from_profile: unreadable profile ({exc}). I do not fix it blind — correct the YAML.", file=sys.stderr)
         return 2
     if not isinstance(perfil, dict):

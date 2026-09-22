@@ -6,9 +6,9 @@ description: Scaffold of a Supabase Edge Function with correct CORS + service-ro
 > **Auto-Trigger:** When creating a new Supabase Edge Function / Supabase serverless endpoint
 > **Keywords:** "edge function", "supabase function", "new edge", "/edge-new", "deno deploy supabase", "supabase serverless function"
 > **Priority:** MEDIUM
-> **Tools:** Write, Read, MCP Supabase by capability — `deploy_edge_function`, `list_edge_functions` (the tool prefix varies per installation, e.g. `mcp__claude_ai_Supabase__deploy_edge_function` or `mcp__supabase__deploy_edge_function` — never hardcode the full prefix)
+> **Tools:** Write, Read, MCP Supabase by capability - `deploy_edge_function`, `list_edge_functions` (the tool prefix varies per installation, e.g. `mcp__claude_ai_Supabase__deploy_edge_function` or `mcp__supabase__deploy_edge_function` - never hardcode the full prefix)
 
-# supabase-edge-scaffold — an edge function born right
+# supabase-edge-scaffold - an edge function born right
 
 Every new edge function repeats the same boilerplate (CORS, OPTIONS preflight, service-role via env, JSON error). This skill generates the correct skeleton.
 
@@ -23,14 +23,14 @@ Every new edge function repeats the same boilerplate (CORS, OPTIONS preflight, s
 | Exit | Meaning |
 |---|---|
 | 0 | TypeScript type-checks clean (1st time downloads deps from jsr.io/npm; subsequent runs = local cache, offline) |
-| ≠0 | syntax/type error in the generated skeleton — do not commit like this |
+| ≠0 | syntax/type error in the generated skeleton - do not commit like this |
 
 **STATE IT TOUCHES:**
 
 | Resource | Reads/Writes | Purpose |
 |---|---|---|
 | `supabase/functions/<nome>/index.ts` | Writes | the skeleton |
-| `Deno.env` (at runtime, not here) | — | service-role NEVER hardcoded/committed |
+| `Deno.env` (at runtime, not here) | - | service-role NEVER hardcoded/committed |
 
 ## Process
 1. **Name + purpose** of the function (kebab-case).
@@ -47,13 +47,13 @@ Every new edge function repeats the same boilerplate (CORS, OPTIONS preflight, s
    Deno.serve(async (req) => {
      if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
      try {
-       // service-role: NUNCA hardcode — vem do ambiente da function
+       // service-role: NEVER hardcode - comes from the function's environment
        const supabase = createClient(
          Deno.env.get("SUPABASE_URL")!,
          Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
        );
        const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
-       // ... lógica ...
+       // ... logic ...
        return new Response(JSON.stringify({ ok: true }), {
          headers: { ...CORS, "Content-Type": "application/json" },
        });
@@ -64,7 +64,7 @@ Every new edge function repeats the same boilerplate (CORS, OPTIONS preflight, s
      }
    });
    ```
-3. **Guardrails:** service-role only via `Deno.env` (never in code/commit — `no-secrets`); error always JSON+CORS (does not leak the stack); validate input before touching the DB.
+3. **Guardrails:** service-role only via `Deno.env` (never in code/commit - `no-secrets`); error always JSON+CORS (does not leak the stack); validate input before touching the DB.
 4. **Deploy** when ready: `deploy_edge_function` (MCP) or `supabase functions deploy <nome>`. **Deploy = human gate** (no auto-deploy without an ok).
 
 ## When NOT to Activate
@@ -76,25 +76,25 @@ Every new edge function repeats the same boilerplate (CORS, OPTIONS preflight, s
 ```console
 $ deno check supabase/functions/exemplo/index.ts
 Download https://jsr.io/@supabase/supabase-js/meta.json
-[... resolve deps na 1a vez ...]
+[... resolves deps the 1st time ...]
 Check index.ts
 ```
 <!-- executed: 2026-07-10 · exit=0 -->
-(the EXACT skeleton of this skill type-checks clean — it is not pseudocode.)
+(the EXACT skeleton of this skill type-checks clean - it is not pseudocode.)
 
 ```console
 $ time deno check supabase/functions/exemplo/index.ts
 real 0m0.236s
 ```
 <!-- executed: 2026-07-10 · exit=0 -->
-(2nd call = local cache, 0.236s — from here on `deno check` is offline and works as a quick Proof.)
+(2nd call = local cache, 0.236s - from here on `deno check` is offline and works as a quick Proof.)
 
 ```console
 $ grep -c "Access-Control-Allow-Origin\|OPTIONS\|Deno.env.get\|catch (e)" supabase/functions/exemplo/index.ts
 4
 ```
 <!-- executed: 2026-07-10 · exit=0 -->
-(confirms the 4 guardrails of step 3 are present in the generated file: CORS, preflight, env — never hardcoded, and error handling.)
+(confirms the 4 guardrails of step 3 are present in the generated file: CORS, preflight, env - never hardcoded, and error handling.)
 
 ```console
 $ deno check broken.ts
@@ -104,7 +104,7 @@ Found 2 errors.
 error: Type checking failed.
 ```
 <!-- executed: 2026-07-10 · exit=1 -->
-(real reproduction: removing the `!` non-null assertion from the original skeleton's `Deno.env.get(...)!` BREAKS the type-check — that is exactly why step 2 requires the `!`.)
+(real reproduction: removing the `!` non-null assertion from the original skeleton's `Deno.env.get(...)!` BREAKS the type-check - that is exactly why step 2 requires the `!`.)
 
 ## Proof
 

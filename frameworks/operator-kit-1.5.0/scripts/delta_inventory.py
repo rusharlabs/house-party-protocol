@@ -1,31 +1,31 @@
 #!/usr/bin/env python3
 """
-delta_inventory (Operator Kit) — inventario antes/depois/delta com CONTAGEM REAL.
+delta_inventory (Operator Kit) -- before/after/delta inventory with a REAL COUNT.
 
-Materializa a preferencia do CLAUDE.md: "tabelas comparativas (antes/depois/delta)"
-e "inventario final com contagem de arquivos apos tarefas de geracao em massa".
-Conta arquivos por glob no filesystem REAL (LC-1: nunca chuta numero) e compara
-contra um snapshot anterior.
+Materializes the CLAUDE.md preference: "comparison tables (before/after/delta)"
+and "final inventory with file count after mass-generation tasks".
+Counts files by glob on the REAL filesystem (LC-1: never guesses a number) and compares
+against a previous snapshot.
 
-Dois modos:
-    snapshot <out.json> <glob...>      grava {glob: contagem} do estado atual
-    report   <baseline.json> <glob...> compara baseline vs estado atual e imprime
-                                       tabela ANTES | DEPOIS | DELTA + total
+Two modes:
+    snapshot <out.json> <glob...>      writes {glob: count} of the current state
+    report   <baseline.json> <glob...> compares baseline vs current state and prints
+                                       the BEFORE | AFTER | DELTA table + total
 
-Globs sao relativos a cwd (use aspas no shell p/ nao expandir antes). Padrao de
-glob recursivo suportado via '**' (ex.: "agents/**/AGENT.md").
+Globs are relative to cwd (quote them in the shell so they don't expand early). A
+recursive glob pattern is supported via '**' (e.g. "agents/**/AGENT.md").
 
-Uso:
+Usage:
     python delta_inventory.py snapshot before.json "agents/**/*.md" "docs/**/*.md"
-    # ... faz o trabalho ...
+    # ... do the work ...
     python delta_inventory.py report before.json "agents/**/*.md" "docs/**/*.md"
     python delta_inventory.py report before.json "agents/**/*.md" --json
     python delta_inventory.py --self-test
 
-Exit: 0 sempre que conseguir produzir a saida; 2 = uso invalido. stdlib (pathlib + glob).
-Independe do profile (opera sobre globs passados) — mas importa o loader p/ consistencia.
+Exit: 0 whenever it manages to produce output; 2 = invalid usage. stdlib (pathlib + glob).
+Independent of the profile (operates on the globs passed) -- but imports the loader for consistency.
 
-v1.0.0 — 2026-06-19 (Operator Kit · Tier 1)
+v1.0.0 -- 2026-06-19 (Operator Kit -- Tier 1)
 """
 from __future__ import annotations
 
@@ -33,31 +33,31 @@ import json
 import sys
 from pathlib import Path
 
-# importa o loader compartilhado (consistencia do kit; aqui nao e obrigatorio)
+# import the shared loader (kit consistency; not mandatory here)
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 try:
-    from _lib.profile_loader import load_profile  # noqa: F401  (disponivel p/ extensoes futuras)
-except Exception:  # noqa: BLE001 — nunca crasha por causa do loader
+    from _lib.profile_loader import load_profile  # noqa: F401  (available for future extensions)
+except Exception:  # noqa: BLE001 -- never crashes because of the loader
     load_profile = None  # type: ignore[assignment]
 
 
 def count_glob(pattern: str, root: str | Path | None = None) -> int:
-    """Conta arquivos (nao diretorios) que casam com o glob, a partir de root (default cwd)."""
+    """Counts files (not directories) that match the glob, starting from root (default cwd)."""
     base = Path(root or Path.cwd())
     try:
         return sum(1 for p in base.glob(pattern) if p.is_file())
-    except Exception:  # noqa: BLE001 — glob invalido => 0, sem crashar
+    except Exception:  # noqa: BLE001 -- invalid glob => 0, without crashing
         return 0
 
 
 def snapshot(patterns, root: str | Path | None = None) -> dict:
-    """Retorna {glob: contagem} para a lista de globs."""
+    """Returns {glob: count} for the list of globs."""
     return {pat: count_glob(pat, root) for pat in patterns}
 
 
 def compute_delta(baseline: dict, current: dict) -> list[dict]:
-    """Cruza baseline x current por glob. Retorna linhas {glob, antes, depois, delta}."""
-    keys = list(dict.fromkeys([*baseline.keys(), *current.keys()]))  # uniao preservando ordem
+    """Crosses baseline x current by glob. Returns rows {`glob`, `antes`, `depois`, `delta`}."""
+    keys = list(dict.fromkeys([*baseline.keys(), *current.keys()]))  # union preserving order
     linhas = []
     for k in keys:
         antes = int(baseline.get(k, 0) or 0)
@@ -102,7 +102,7 @@ def render_table(linhas: list[dict]) -> str:
 
 
 def _load_baseline(path: str | Path) -> dict:
-    """Le um snapshot json. {} se ausente/ilegivel (degrade seguro)."""
+    """Reads a json snapshot. {} if missing/unreadable (safe degrade)."""
     p = Path(path)
     if not p.exists():
         return {}
@@ -118,7 +118,7 @@ def _self_test() -> None:
 
     with tempfile.TemporaryDirectory() as td:
         root = Path(td)
-        # estado inicial: 2 .md em docs/
+        # initial state: 2 .md in docs/
         (root / "docs").mkdir()
         (root / "docs" / "a.md").write_text("x", encoding="utf-8")
         (root / "docs" / "b.md").write_text("y", encoding="utf-8")
@@ -128,7 +128,7 @@ def _self_test() -> None:
         snap = snapshot(["docs/*.md", "agents/*.md", "missing/*.txt"], root=root)
         assert snap == {"docs/*.md": 2, "agents/*.md": 1, "missing/*.txt": 0}, snap
 
-        # grava baseline e altera estado: +1 md em docs, -1 em agents
+        # write baseline and change the state: +1 md in docs, -1 in agents
         baseline_path = root / "before.json"
         baseline_path.write_text(json.dumps(snap), encoding="utf-8")
         (root / "docs" / "c.md").write_text("c", encoding="utf-8")
@@ -141,19 +141,19 @@ def _self_test() -> None:
         assert by["agents/*.md"]["delta"] == -1, by["agents/*.md"]
         assert by["missing/*.txt"]["delta"] == 0
 
-        # glob recursivo: docs/ tem a.md, b.md, c.md + sub/d.md = 4
+        # recursive glob: docs/ has a.md, b.md, c.md + sub/d.md = 4
         (root / "docs" / "sub").mkdir()
         (root / "docs" / "sub" / "d.md").write_text("d", encoding="utf-8")
         assert count_glob("docs/**/*.md", root=root) == 4, count_glob("docs/**/*.md", root=root)
 
-        # render nunca crasha + contem totais
+        # render never crashes + contains totals
         tbl = render_table(linhas)
         assert "DELTA INVENTORY" in tbl and "TOTAL" in tbl
 
-        # baseline ausente => {} (degrade)
+        # missing baseline => {} (degrade)
         assert _load_baseline(root / "does-not-exist.json") == {}
 
-    # tabela vazia
+    # empty table
     assert "no glob" in render_table([])
     print("self-test OK")
 

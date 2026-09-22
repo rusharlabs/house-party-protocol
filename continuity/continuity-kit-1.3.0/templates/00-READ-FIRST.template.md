@@ -8,8 +8,8 @@
 
 | If you are... | Read now | Then |
 |---|---|---|
-| **Planner** (architect) | `{{vision_doc}}` (VISION) → `{{state_doc}}` (§Agora) | `{{goal_ledger_path}}` (next goal) |
-| **Executor** (builder) | `.claude/handoff/HANDOFF-CURRENT-<your-lane>.json` (if it exists) | `{{state_doc}}` §PENDÊNCIAS + your item on the board |
+| **Planner** (architect) | `{{vision_doc}}` (VISION) → `{{state_doc}}` (§Now) | `{{goal_ledger_path}}` (next goal) |
+| **Executor** (builder) | `.claude/handoff/HANDOFF-CURRENT-<your-lane>.json` (if it exists) | `{{state_doc}}` §OPEN ITEMS + your item on the board |
 | **Reviewer** (auditor) | the item in `UNDER-REVIEW` on the board (`lane_board.py status <item>`) | `{{review_template}}` for the verdict format |
 | **Solo** (single session, no lanes) | `{{state_doc}}` in full | `{{goal_ledger_path}}` |
 

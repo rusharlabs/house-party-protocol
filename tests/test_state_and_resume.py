@@ -1,8 +1,8 @@
-"""Event log append-only, projecao de status e resume que nunca reexecuta um
-passo ja concluido.
+"""Append-only event log, status projection, and resume that never re-runs a
+step already completed.
 
-Todo teste passa `tmp_path` explicitamente para `event_path`/`append_event` --
-nenhum depende do cwd real nem de ordem de execucao entre si.
+Every test passes `tmp_path` explicitly to `event_path`/`append_event` --
+none depends on the real cwd nor on execution order between them.
 """
 from __future__ import annotations
 
@@ -20,11 +20,11 @@ def manifest():
     return data
 
 
-def test_event_path_deriva_do_workspace_informado_nao_do_cwd(tmp_path):
+def test_event_path_derives_from_the_given_workspace_not_the_cwd(tmp_path):
     assert event_path(tmp_path) == tmp_path.resolve() / ".hpp" / "events.jsonl"
 
 
-def test_log_ausente_projeta_o_estado_inicial_declarado_pelo_manifesto(manifest, tmp_path):
+def test_missing_log_projects_the_initial_state_declared_by_the_manifest(manifest, tmp_path):
     path = event_path(tmp_path)
     assert not path.exists()
     status = project(read_events(path), manifest)
@@ -34,7 +34,7 @@ def test_log_ausente_projeta_o_estado_inicial_declarado_pelo_manifesto(manifest,
     assert status["next_step"]
 
 
-def test_sequencia_completa_avanca_ate_o_ultimo_estado_do_loop(manifest, tmp_path):
+def test_full_sequence_advances_to_the_last_state_of_the_loop(manifest, tmp_path):
     path = event_path(tmp_path)
     ordered_events = [transition["event"] for transition in manifest["loop"]["transitions"]]
     result = None
@@ -45,7 +45,7 @@ def test_sequencia_completa_avanca_ate_o_ultimo_estado_do_loop(manifest, tmp_pat
     assert result["evidence_count"] >= 1
 
 
-def test_event_log_e_append_only_registros_antigos_nunca_sao_reescritos(manifest, tmp_path):
+def test_event_log_is_append_only_old_records_are_never_rewritten(manifest, tmp_path):
     path = event_path(tmp_path)
     append_event(path, "work_started", manifest)
     append_event(path, "evidence_recorded", manifest)
@@ -59,42 +59,43 @@ def test_event_log_e_append_only_registros_antigos_nunca_sao_reescritos(manifest
     append_event(path, "check_passed", manifest)
     lines_after_three = path.read_text(encoding="utf-8").splitlines()
     assert len(lines_after_three) == 3
-    # as duas primeiras linhas continuam byte-a-byte identicas: append-only de verdade
+    # the first two lines remain byte-for-byte identical: real append-only
     assert lines_after_three[0] == lines_after_two[0]
     assert lines_after_three[1] == lines_after_two[1]
 
 
-def test_transicao_que_pula_etapas_do_loop_e_rejeitada_e_nada_e_escrito(manifest, tmp_path):
+def test_transition_that_skips_loop_steps_is_rejected_and_nothing_is_written(manifest, tmp_path):
     path = event_path(tmp_path)
     with pytest.raises(StateError):
-        append_event(path, "human_approved", manifest)  # do estado inicial direto pro fim
+        append_event(path, "human_approved", manifest)  # from the initial state straight to the end
     assert not path.exists()
 
 
-def test_resume_nao_reexecuta_um_evento_ja_aplicado(manifest, tmp_path):
+def test_resume_does_not_re_run_an_event_already_applied(manifest, tmp_path):
     """
-    'resume' deriva o proximo passo do log de eventos, nunca de uma lista de
-    tarefas externa -- entao reaplicar um evento que ja levou o loop adiante nao
-    e uma transicao valida a partir do estado atual, e o log permanece intacto.
+    'resume' derives the next step from the event log, never from an external
+    task list -- so reapplying an event that already moved the loop forward is
+    not a valid transition from the current state, and the log stays intact.
     """
     path = event_path(tmp_path)
     append_event(path, "work_started", manifest)
     status_before = project(read_events(path), manifest)
 
     with pytest.raises(StateError):
-        append_event(path, "work_started", manifest)  # 'active' nao aceita 'work_started' de novo
+        append_event(path, "work_started", manifest)  # 'active' does not accept 'work_started' again
 
     status_after = project(read_events(path), manifest)
     assert status_after == status_before
 
 
-def test_verified_exige_evidencia_mesmo_sob_um_loop_customizado_com_atalho():
+def test_verified_requires_evidence_even_under_a_custom_loop_with_a_shortcut():
     """
-    Sob as transicoes do manifesto real, este caminho e inalcancavel (o unico
-    jeito de chegar em 'approved' passa por 'evidenced', que exige
-    'evidence_recorded'). O invariante em `project()` e testado aqui isolado,
-    direto na funcao, com um loop minimo que declara um atalho sem evidencia --
-    prova que a checagem nao depende da topologia do manifesto real para valer.
+    Under the real manifest's transitions, this path is unreachable (the only
+    way to reach 'approved' goes through 'evidenced', which requires
+    'evidence_recorded'). The invariant in `project()` is tested here in
+    isolation, directly on the function, with a minimal loop that declares a
+    shortcut with no evidence -- proves that the check does not depend on the
+    real manifest's topology to hold.
     """
     shortcut_manifest = {
         "loop": {
@@ -110,7 +111,7 @@ def test_verified_exige_evidencia_mesmo_sob_um_loop_customizado_com_atalho():
         project(events, shortcut_manifest)
 
 
-def test_CONTROLE_log_com_linha_json_corrompida_e_detectado(tmp_path):
+def test_CONTROLE_a_log_with_a_corrupted_json_line_is_detected(tmp_path):
     path = event_path(tmp_path)
     path.parent.mkdir(parents=True)
     path.write_text("isto nao e json\n", encoding="utf-8")
@@ -118,7 +119,7 @@ def test_CONTROLE_log_com_linha_json_corrompida_e_detectado(tmp_path):
         read_events(path)
 
 
-def test_CONTROLE_seq_nao_contiguo_e_rejeitado(tmp_path):
+def test_CONTROLE_non_contiguous_seq_is_rejected(tmp_path):
     path = event_path(tmp_path)
     path.parent.mkdir(parents=True)
     record = json.dumps({"seq": 5, "id": "event:5", "type": "work_started"})
@@ -127,7 +128,7 @@ def test_CONTROLE_seq_nao_contiguo_e_rejeitado(tmp_path):
         read_events(path)
 
 
-def test_CONTROLE_id_que_nao_bate_com_a_linha_e_rejeitado(tmp_path):
+def test_CONTROLE_id_that_does_not_match_the_line_is_rejected(tmp_path):
     path = event_path(tmp_path)
     path.parent.mkdir(parents=True)
     record = json.dumps({"seq": 1, "id": "event:999", "type": "work_started"})
@@ -136,9 +137,9 @@ def test_CONTROLE_id_que_nao_bate_com_a_linha_e_rejeitado(tmp_path):
         read_events(path)
 
 
-def test_CONTROLE_log_vazio_de_verdade_nao_e_confundido_com_log_corrompido(tmp_path):
-    """Controle: um arquivo vazio (ou so com linhas em branco) e um log VALIDO e
-    vazio, nao um erro -- prova que o detector de corrupcao nao grita a toa."""
+def test_CONTROLE_a_truly_empty_log_is_not_mistaken_for_a_corrupted_log(tmp_path):
+    """Control: an empty file (or one with only blank lines) is a VALID and
+    empty log, not an error -- proves that the corruption detector does not shout for nothing."""
     path = event_path(tmp_path)
     path.parent.mkdir(parents=True)
     path.write_text("\n\n", encoding="utf-8")

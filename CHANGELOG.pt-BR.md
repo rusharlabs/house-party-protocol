@@ -9,6 +9,50 @@ cada módulo mantém sua própria versão no `plugin.json` e no `marketplace.jso
 
 ## [Unreleased]
 
+## [2.5.2] — 2026-09-22
+
+A release que torna "English-first" verdade sobre o código, e não apenas sobre os documentos.
+Três réguas foram construídas para medir o quanto isso era falso, e cada uma achou algo a que a
+anterior era cega.
+
+### Changed
+
+- **O documento de estado que o harness instala no seu repositório está em inglês.** Os dois
+  cabeçalhos que ele parseia agora são `## Now` e `## OPEN ITEMS`, e todo `{{placeholder}}` dos
+  nove templates instalados está em inglês (37 renomeados, mesmo nome em toda ocorrência). **Um
+  repositório instalado antes desta release continua funcionando sem ação**: os dois leitores — o
+  hook `session_boot` e o `state_mirror.py` — aceitam a grafia antiga até a 2.7.0, com a nova
+  vencendo. Os campos do `state-index.json` são `now` e `open_items`.
+- **Todo comentário e docstring do Python publicado está em inglês** — 471 trechos em 78
+  arquivos. Eles eram invisíveis ao censo de idioma até agora, porque um censo construído sobre
+  tokens STRING do `tokenize` nunca vê um token `COMMENT`: um arquivo escrito de ponta a ponta em
+  comentários portugueses media zero. O censo agora lê comentário e docstring, distingue prosa de
+  citação (termo português entre backticks, ou num parêntese `(legacy: ...)`, é citação e não
+  conta) e trava os dez módulos em zero com um ratchet.
+- **A família de regra `rm-rf-codigo-vivo` virou `rm-rf-live-code`** — era o único nome em
+  português entre cinco irmãos ingleses, e chegava ao operador duas vezes: no profile que ele
+  edita e no campo `rule` do veredito de BLOCK que ele lê. Um profile que ainda liste o nome
+  antigo continua armando a família até a 2.7.0.
+- O segmento de commits da barra de status diz `Nc today`. A CLI de estratégia de erro explica
+  cada família em inglês. A statusline do health-kit reporta cache quebrado em inglês.
+- 130 dos 198 nomes de teste, e três nomes de arquivo de teste, estão em inglês. Minha régua dizia
+  90 - era piso, não valor, e a contagem voltou corrigida de quem fez o trabalho.
+
+### Fixed
+
+- **Duas skills documentavam uma saída que as ferramentas já não produzem.** O `claude-dev-setup`
+  mostrava o aviso `statusLine already taken` em português e o `skill-writer` mostrava a tabela de
+  achados do `skill_lint` em português — as duas ferramentas emitem inglês há tempos. As
+  transcrições foram re-executadas e re-datadas, porque um exemplo documentado que não bate com a
+  ferramenta é pior que um exemplo no idioma errado.
+- **O `browse.py --self-test` falhava desde a 2.5.0 e ninguém tinha visto.** O rename de layout da
+  2.5.0 trocou `instaladores/` por `installers/`, atualizou o código que faz o glob do
+  `kit_doctor.py` e deixou a fixture do próprio self-test criando o diretório antigo — então o
+  teste levantava `SystemExit: kit_doctor.py not found` em toda execução. Foi achado rodando
+  **todos** os `--self-test` dos dez módulos de uma vez (72 deles; este era o único vermelho), e a
+  varredura virou hábito: um rename que atualiza o código e esquece a fixture deixa um teste
+  vermelho por um motivo que ninguém lê.
+
 ## [2.5.1] — 2026-09-22
 
 ### Alterado

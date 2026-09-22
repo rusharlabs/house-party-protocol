@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
-# collision-territory-guard.sh — os 2 casos de território do lane-engine, via a interface
-# REAL do hook (stdin JSON -> stdout JSON). Roda 3x e exige resultado idêntico
-# (pass^k=1.00, k=3 — loop-passk REGRA 2).
+# collision-territory-guard.sh - the 2 territory cases of the lane engine, through the hook's
+# REAL interface (stdin JSON -> stdout JSON). Runs 3x and demands an identical result
+# (pass^k=1.00, k=3 - loop-passk RULE 2).
 #
-# T1 · território exclusivo: outra lane viva reivindicou o path -> avisa (nome+idade),
-#      path fora do território -> silêncio
-# T2 · zona vermelha: avisa mesmo com registry vazio (solo); lane com heartbeat de 35min
-#      (morta) reivindicando território = zero falso-positivo
+# T1 . exclusive territory: another live lane claimed the path -> warns (name+age),
+#      a path outside the territory -> silence
+# T2 . red zone: warns even with an empty registry (solo); a lane with a 35min heartbeat
+#      (dead) claiming territory = zero false positives
 #
-# Uso: bash evals/collision-territory-guard.sh
-# Exit: 0 = 3/3 rodadas com todos os checks verdes · 1 = alguma rodada falhou
+# Usage: bash evals/collision-territory-guard.sh
+# Exit: 0 = 3/3 runs with every check green . 1 = a run failed
 
 set -u
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -43,7 +43,7 @@ run_round() {
 
   export CLAUDE_LANE_ID="exec-b"
 
-  # T1a — dentro do território exclusivo de exec-a -> avisa (nome + idade), sem "decision"
+  # T1a - inside exec-a exclusive territory -> warns (name + age), with no "decision"
   OUT=$(invoke_guard "$WORK_N/scripts/vm/x.py")
   ERR=$(cat "$STDERR_TMP" 2>/dev/null)
   if [ "$OUT" = "{}" ] && echo "$ERR" | grep -q "exec-a" && echo "$ERR" | grep -qE "[0-9]+min"; then
@@ -52,14 +52,14 @@ run_round() {
     report 1 "round$round T1a failed: OUT=$OUT ERR=$ERR"
   fi
 
-  # T1b — fora do território -> silêncio
+  # T1b - outside the territory -> silence
   : > "$STDERR_TMP"
   OUT=$(invoke_guard "$WORK_N/scripts/other/y.py")
   ERR=$(cat "$STDERR_TMP" 2>/dev/null)
   [ "$OUT" = "{}" ] && [ -z "$ERR" ] && report 0 "round$round T1b: outside the territory = silence" \
     || report 1 "round$round T1b failed: OUT=$OUT ERR=$ERR"
 
-  # T1c — dono editando o próprio território -> silêncio
+  # T1c - the owner editing its own territory -> silence
   : > "$STDERR_TMP"
   export CLAUDE_LANE_ID="exec-a"
   OUT=$(invoke_guard "$WORK_N/scripts/vm/x.py")
@@ -68,21 +68,21 @@ run_round() {
     || report 1 "round$round T1c failed: OUT=$OUT ERR=$ERR"
   export CLAUDE_LANE_ID="exec-b"
 
-  # T2a — zona vermelha com registry existente mas SEM outras lanes reivindicando -> avisa mesmo assim
+  # T2a - red zone with an existing registry but NO other lane claiming -> warns anyway
   : > "$STDERR_TMP"
   OUT=$(invoke_guard "$WORK_N/.claude/settings.local.json")
   ERR=$(cat "$STDERR_TMP" 2>/dev/null)
   [ "$OUT" = "{}" ] && echo "$ERR" | grep -q "RED ZONE" && report 0 "round$round T2a: red zone warns (settings.local.json)" \
     || report 1 "round$round T2a failed: OUT=$OUT ERR=$ERR"
 
-  # T2b — glob ** casa MEMORY.md aninhado
+  # T2b - the ** glob matches a nested MEMORY.md
   : > "$STDERR_TMP"
   OUT=$(invoke_guard "$WORK_N/deep/nested/MEMORY.md")
   ERR=$(cat "$STDERR_TMP" 2>/dev/null)
   [ "$OUT" = "{}" ] && echo "$ERR" | grep -q "RED ZONE" && report 0 "round$round T2b: glob ** matches a nested MEMORY.md" \
     || report 1 "round$round T2b failed: OUT=$OUT ERR=$ERR"
 
-  # T2c — exec-a com heartbeat de 35min (morta) reivindicando territorio -> zero falso-positivo
+  # T2c - exec-a with a 35min heartbeat (dead) claiming territory -> zero false positives
   python -c "
 import json, time
 from pathlib import Path
@@ -102,7 +102,7 @@ p.write_text(json.dumps(reg), encoding='utf-8')
     report 1 "round$round T2c failed: OUT=$OUT ERR=$ERR"
   fi
 
-  # verificação estrutural: em NENHUM caso acima o stdout continha "decision" (WARN-only por construção)
+  # structural check: in NONE of the cases above did stdout carry "decision" (WARN-only by construction)
   unset CLAUDE_LANE_ID
   rm -f "$STDERR_TMP"
   rm -rf "$WORK" 2>/dev/null

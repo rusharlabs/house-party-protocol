@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-"""Runner standalone de pass@k e pass^k para suites JSON reproduzíveis.
+"""Standalone pass@k and pass^k runner for reproducible JSON suites.
 
-O runner não chama modelos nem depende do projeto em que o kit foi instalado. Cada
-caso usa uma de duas fontes verificáveis:
+The runner does not call models nor depend on the project the kit was installed in. Each
+case uses one of two verifiable sources:
 
-- ``replay``: resultados booleanos declarados na fixture;
-- ``command``: um argv executado sem shell, com exit/output esperados.
+- ``replay``: boolean outcomes declared in the fixture;
+- ``command``: an argv executed without a shell, with expected exit/output.
 
-Exit codes: 0=gate aprovado, 2=gate bloqueou, 3=erro de uso/execução.
+Exit codes: 0=gate approved, 2=gate blocked, 3=usage/execution error.
 """
 from __future__ import annotations
 
@@ -28,7 +28,7 @@ CAPACITY_THRESHOLD = 0.90
 
 
 class SuiteError(ValueError):
-    """Suite inválida ou impossível de executar."""
+    """Invalid suite or impossible to run."""
 
 
 @dataclass(frozen=True)

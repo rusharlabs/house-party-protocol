@@ -1,23 +1,23 @@
 #!/usr/bin/env python3
 """
-kit_doctor — verifica, instala e rastreia kits deste marketplace. 3 subcomandos.
+kit_doctor -- verifies, installs and tracks kits from this marketplace. 3 subcommands.
 
-verify   (v1.0.0 — PRESERVADO, chamada posicional continua funcionando): recalcula
-          sha256 de cada arquivo em CHECKSUMS.txt e compara.
-install  (v3.0.0 — 6 estágios): detect -> prereqs -> profile -> configure ->
-          wire-sugerido -> smoke. Ver INSTALL-CONTRACT.md (raiz do marketplace) para
-          o contrato completo. Genérico o bastante pra rodar em QUALQUER kit deste
-          marketplace porque se apoia no contrato uniforme `--self-test` da casa
-          (SKILL-CONTRACT C4) + no manifesto declarativo `install/kit.install.yaml`
-          por-kit — NUNCA conhecimento kit-específico hardcoded aqui.
-          PLAN-FIRST: por padrão só mostra o plano (zero escrita); `--apply` age de
-          verdade. NUNCA auto-arma settings/hooks (gate humano, sempre).
-registry (v2.0.0): grava/lista instalações em ~/.claude-kits/registry.json, agora
-          chaveado por (kit_dir, target_dir) — o mesmo kit pode ser instalado em
-          vários projetos-alvo sem colidir.
+verify   (v1.0.0 -- PRESERVED, positional call still works): recomputes
+          the sha256 of every file in CHECKSUMS.txt and compares it.
+install  (v3.0.0 -- 6 stages): detect -> prereqs -> profile -> configure ->
+          wire-suggest -> smoke. See INSTALL-CONTRACT.md (marketplace root) for
+          the full contract. Generic enough to run against ANY kit in this
+          marketplace because it relies on the house's uniform `--self-test` contract
+          (SKILL-CONTRACT C4) + the declarative `install/kit.install.yaml` manifest
+          per kit -- NEVER kit-specific knowledge hardcoded here.
+          PLAN-FIRST: by default it only shows the plan (zero writes); `--apply` acts
+          for real. NEVER auto-wires settings/hooks (human gate, always).
+registry (v2.0.0): records/lists installs in ~/.claude-kits/registry.json, now
+          keyed by (kit_dir, target_dir) -- the same kit can be installed into
+          several target projects without colliding.
 
-Uso:
-    python kit_doctor.py <kit_dir> [--json out.json]        # forma antiga = verify
+Usage:
+    python kit_doctor.py <kit_dir> [--json out.json]        # old form = verify
     python kit_doctor.py verify <kit_dir> [--json out.json]
     python kit_doctor.py install --kit <kit_dir> [--target <dir>] [--host claude-code|codex]
                                   [--answers <file>] [--apply] [--human]
@@ -25,13 +25,13 @@ Uso:
     python kit_doctor.py registry [--registry-path <path>]
     python kit_doctor.py --self-test
 
-Exit (verify): 0 íntegro · 1 íntegro com extras (WARN) · 2 corrupção · 3 erro.
-Exit (install): 0 plano impresso OU aplicado com sucesso · 1 smoke falhou · 3 erro.
-Exit (registry): 0 sempre (list/register nunca falham de forma bloqueante).
+Exit (verify): 0 intact - 1 intact with extras (WARN) - 2 corruption - 3 error.
+Exit (install): 0 plan printed OR applied successfully - 1 smoke failed - 3 error.
+Exit (registry): 0 always (list/register never fail in a blocking way).
 
-stdlib only (+ PyYAML opcional p/ kit.install.yaml/--answers *.yaml).
-v3.0.0 — 2026-07-11 (kit-forge · 6 estágios: detect+configure novos, plan-first+--apply,
-seam de host HOSTS, compatibilidade posicional preservada, regressão zero em verify/registry)
+stdlib only (+ optional PyYAML for kit.install.yaml/--answers *.yaml).
+v3.0.0 -- 2026-07-11 (kit-forge - 6 stages: detect+configure new, plan-first+--apply,
+HOSTS host seam, positional compatibility preserved, zero regression in verify/registry)
 """
 from __future__ import annotations
 
@@ -60,7 +60,7 @@ _IGNORE_SUFFIXES = {".pyc", ".pyo"}
 _SUBCOMMANDS = ("verify", "install", "registry", "marketplace")
 _DEFAULT_REGISTRY = Path.home() / ".claude-kits" / "registry.json"
 
-# Seam de host (cross-host, ver INSTALL-CONTRACT.md).
+# Host seam (cross-host, see INSTALL-CONTRACT.md).
 HOSTS = {
     "claude-code": {
         "settings_path": ".claude/settings.local.json",
@@ -82,7 +82,7 @@ def _brt_now_iso() -> str:
 
 
 # ---------------------------------------------------------------------------
-# VERIFY (preservado de v1.0.0 — mesma lógica, mesmo contrato)
+# VERIFY (preserved from v1.0.0 -- same logic, same contract)
 # ---------------------------------------------------------------------------
 
 def _sha256(path: Path) -> str:
@@ -108,10 +108,10 @@ def parse_checksums(text: str) -> dict:
 
 
 def _relpath_seguro(kit_dir: Path, relpath: str) -> bool:
-    """Entrada do inventário tem de apontar para DENTRO do kit: relativa, sem `..`, sem drive/raiz.
+    """An inventory entry must point to INSIDE the kit: relative, no `..`, no drive/root.
 
-    # Why: `kit_dir / relpath` aceita `../fora` e caminho absoluto (o join descarta a base),
-    # e o verificador passava a atestar um arquivo que nao esta no kit.
+    # Why: `kit_dir / relpath` accepts `../outside` and an absolute path (the join drops
+    # the base), and the verifier ended up attesting a file that is not in the kit.
     """
     if not relpath:
         return False
@@ -134,8 +134,8 @@ def check_kit(kit_dir: Path) -> dict:
 
     expected = parse_checksums(checksums_path.read_text(encoding="utf-8"))
     if not expected:
-        # Why: inventario vazio nao atesta arquivo nenhum — tratar como integro faria o
-        # verificador aprovar um kit cujo CHECKSUMS.txt foi esvaziado.
+        # Why: an empty inventory attests to no file at all -- treating it as intact would make the
+        # verifier approve a kit whose CHECKSUMS.txt was emptied out.
         return {
             "status": "corrupt", "kit_dir": str(kit_dir), "total_tracked": 0,
             "mismatches": [], "missing": [], "extras": [], "unsafe_paths": [],
@@ -197,23 +197,23 @@ def _verify_exit(report: dict) -> int:
 
 
 # ---------------------------------------------------------------------------
-# MARKETPLACE — o contrato do CATÁLOGO publicado (o `verify` acima olha UM kit)
+# MARKETPLACE -- the contract of the published CATALOGUE (the `verify` above looks at ONE kit)
 # ---------------------------------------------------------------------------
-# Why: o gate de versão do kit_assembler compara plugin.json x manifesto YAML — o lado da
-# fábrica. Ninguém comparava marketplace.json x plugin.json, que é o lado que o usuário lê
-# no `/plugin install <kit>@<marketplace>`. Um fecha o buraco de baixo; este fecha o de cima.
+# Why: kit_assembler's version gate compares plugin.json against the YAML manifest -- the
+# factory side. Nobody compared marketplace.json against plugin.json, which is the side the
+# user reads at `/plugin install <kit>@<marketplace>`. One closes the hole below; this closes the one above.
 
 _MARKETPLACE_REL = Path(".claude-plugin") / "marketplace.json"
 
 
 def check_marketplace(root: Path) -> dict:
-    """Valida o contrato de um marketplace publicado. 4 modos de falha, todos medidos.
+    """Validates the contract of a published marketplace. 4 failure modes, all measured.
 
-    O manifesto canônico é `<root>/.claude-plugin/marketplace.json` — provado em
-    2026-09-03 contra os dois marketplaces REAIS instalados nesta máquina
-    (claude-plugins-official, thedotmack): os dois o têm ali, nenhum na raiz. Os
-    `source` relativos resolvem a partir da RAIZ do marketplace, não de dentro do
-    `.claude-plugin/` (o oficial usa `./plugins/<x>` e o diretório está na raiz).
+    The canonical manifest is `<root>/.claude-plugin/marketplace.json` -- proven on
+    2026-09-03 against the two REAL marketplaces installed on this machine
+    (claude-plugins-official, thedotmack): both have it there, neither at the root. The
+    relative `source` values resolve from the marketplace ROOT, not from inside
+    `.claude-plugin/` (the official one uses `./plugins/<x>` and the directory is at the root).
     """
     root = Path(root)
     rel: dict = {
@@ -250,13 +250,13 @@ def check_marketplace(root: Path) -> dict:
     rel["manifest"] = str(canonico)
     try:
         doc = json.loads(canonico.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as e:  # noqa: BLE001 — o erro vira achado, não silêncio
+    except (OSError, json.JSONDecodeError) as e:  # noqa: BLE001 -- the error becomes a finding, not silence
         rel["status"] = "error"
         _achado("manifesto-ilegivel", f"{canonico}: {e}")
         return rel
 
-    # Modo 4 — duas cópias do mesmo manifesto que já não são a mesma coisa.
-    # A cópia IDÊNTICA passa de propósito: é o estado real do marketplace hoje.
+    # Mode 4 -- two copies of the same manifest that are no longer the same thing.
+    # The IDENTICAL copy passes on purpose: it is the real state of the marketplace today.
     if na_raiz.exists() and _sha256(na_raiz) != _sha256(canonico):
         _achado(
             "copia-da-raiz-derivou",
@@ -273,17 +273,17 @@ def check_marketplace(root: Path) -> dict:
         nome = entry.get("name", "<unnamed>")
         source = entry.get("source")
         if not isinstance(source, str):
-            continue  # source remoto (git-subdir etc.) — não é nosso para resolver
+            continue  # remote source (git-subdir etc.) -- not ours to resolve
         alvo = (root / source).resolve()
         if not alvo.is_dir():
             _achado("source-nao-resolve", f"{nome}: source `{source}` does not exist")
             continue
         pj = alvo / ".claude-plugin" / "plugin.json"
         if not pj.exists():
-            # Why: no catálogo oficial da Anthropic (set/2026), 14 das 291 entradas (os `*-lsp`) são
-            # dirs só com LICENSE+README — a metadata inteira mora na entrada do marketplace. Reprovar
-            # isso reprovaria a implementação de referência em 4,8%, e gate que grita com inocente é
-            # desligado antes de um dia estar certo. WARN: não dá para cruzar a versão.
+            # Why: in Anthropic's official catalogue (sep/2026), 14 of the 291 entries (the `*-lsp`
+            # ones) are dirs with only LICENSE+README -- the entire metadata lives in the marketplace
+            # entry. Failing this would fail the reference implementation at 4.8%, and a gate that
+            # yells at the innocent gets turned off before it is ever right. WARN: the version cannot be cross-checked.
             _achado(
                 "kit-sem-plugin-json",
                 f"{nome}: {source} has no .claude-plugin/plugin.json — version not cross-checkable",
@@ -295,9 +295,9 @@ def check_marketplace(root: Path) -> dict:
         except (OSError, json.JSONDecodeError) as e:  # noqa: BLE001
             _achado("plugin-json-ilegivel", f"{nome}: {e}")
             continue
-        # Why: `version` é OPCIONAL na entrada — só 14 das 291 entradas do marketplace oficial da
-        # Anthropic o declaram (set/2026). Comparar `None != "1.2.1"` reprovaria o catálogo
-        # inteiro. Quem não declara não pode divergir: ali o plugin.json é a fonte única.
+        # Why: `version` is OPTIONAL in the entry -- only 14 of the 291 entries in Anthropic's
+        # official marketplace declare it (sep/2026). Comparing `None != "1.2.1"` would fail the
+        # whole catalogue. Whoever does not declare it cannot diverge: there the plugin.json is the single source.
         v_mk = entry.get("version")
         if v_mk is not None and v_mk != v_kit:
             _achado(
@@ -311,7 +311,7 @@ def check_marketplace(root: Path) -> dict:
 
 
 def _marketplace_exit(rel: dict) -> int:
-    """Mesma convenção do `verify`: 0 ok · 1 warn · 2 quebra de contrato · 3 erro."""
+    """Same convention as `verify`: 0 ok - 1 warn - 2 contract breach - 3 error."""
     status = rel.get("status")
     if status == "error":
         return 3
@@ -321,7 +321,7 @@ def _marketplace_exit(rel: dict) -> int:
 
 
 # ---------------------------------------------------------------------------
-# INSTALL — 6 estágios: detect -> prereqs -> profile -> configure -> wire-sugerido -> smoke
+# INSTALL -- 6 stages: detect -> prereqs -> profile -> configure -> wire-suggest -> smoke
 # ---------------------------------------------------------------------------
 
 def _load_kit_install_yaml(kit_dir: Path) -> dict:
@@ -330,14 +330,14 @@ def _load_kit_install_yaml(kit_dir: Path) -> dict:
         return {}
     try:
         return yaml.safe_load(p.read_text(encoding="utf-8")) or {}
-    except Exception:  # noqa: BLE001 — manifesto malformado degrada pra {} (nao quebra o instalador)
+    except Exception:  # noqa: BLE001 -- a malformed manifest degrades to {} (does not break the installer)
         return {}
 
 
 def stage_detect(kit_dir: Path, target_dir: Path, registry_path: Path) -> dict:
-    """Classifica o projeto-alvo: greenfield / in-progress / re-run. SEMPRE read-only —
-    não escreve nada. `kit_dir` = onde o kit vive; `target_dir` = raiz do projeto onde
-    ele está sendo instalado (podem ser o mesmo diretório)."""
+    """Classifies the target project: greenfield / in-progress / re-run. ALWAYS read-only --
+    writes nothing. `kit_dir` = where the kit lives; `target_dir` = root of the project where
+    it is being installed (they can be the same directory)."""
     signals: dict = {}
     existing_config: list = []
 
@@ -401,7 +401,7 @@ def stage_prereqs(kit_dir: Path) -> dict:
     if yaml is not None:
         checks["pyyaml"] = True
     else:
-        checks["pyyaml"] = any(kit_dir.rglob("*.yaml")) is False  # só exige se o kit usa yaml
+        checks["pyyaml"] = any(kit_dir.rglob("*.yaml")) is False  # only required if the kit uses yaml
     ok = all(checks.values())
     return {"stage": "prereqs", "status": "ok" if ok else "warn", "checks": checks}
 
@@ -512,15 +512,15 @@ def stage_profile(kit_dir: Path, target_dir: Path, dry_run: bool, host: str) -> 
         except json.JSONDecodeError:
             codex_report = {"status": "error", "detail": (proc.stdout + proc.stderr)[-500:]}
         if proc.returncode == 1:
-            status = "warn"  # o gerador copiou, mas deixou algo de fora e listou (ex.: links ignorados)
+            status = "warn"  # the generator copied but left something out and listed it (e.g.: ignored links)
         elif proc.returncode != 0:
             status = "fail"
     return {"stage": "profile", "status": status, "actions": actions, "codex": codex_report}
 
 
 def stage_configure(kit_dir: Path, answers_path: str | None) -> dict:
-    """Lê questions: de install/kit.install.yaml. Sem --answers, resolve com os
-    defaults e lista quais perguntas ficaram pendentes de decisão humana."""
+    """Reads questions: from install/kit.install.yaml. Without --answers, resolves with the
+    defaults and lists which questions were left pending a human decision."""
     manifest = _load_kit_install_yaml(kit_dir)
     questions = manifest.get("questions") or []
 
@@ -556,8 +556,8 @@ def stage_configure(kit_dir: Path, answers_path: str | None) -> dict:
 
 
 def stage_wire_suggest(kit_dir: Path, host: str) -> dict:
-    """NUNCA auto-arma settings/hooks — só detecta os caminhos disponíveis e sugere.
-    Mutar settings.json/settings.local.json é gate humano nesta doutrina."""
+    """NEVER auto-wires settings/hooks -- only detects the available paths and suggests.
+    Mutating settings.json/settings.local.json is a human gate in this doctrine."""
     suggestions = []
     if host == "codex":
         suggestions.append({
@@ -596,11 +596,11 @@ def stage_wire_suggest(kit_dir: Path, host: str) -> dict:
 
 
 def stage_smoke(kit_dir: Path, timeout: float = 30) -> dict:
-    """Roda --self-test em todo .py do kit que suporta o contrato uniforme da casa
-    (SKILL-CONTRACT C4). Scripts sem --self-test são ignorados (não é falha). Sempre
-    roda, mesmo em modo plano — não escreve nada no target, só valida que o kit
-    funciona ANTES de comprometer a instalação. Self-test que estoura `timeout` conta
-    como FALHA (status `timeout`), nunca como ok."""
+    """Runs --self-test on every .py in the kit that supports the house's uniform contract
+    (SKILL-CONTRACT C4). Scripts without --self-test are ignored (not a failure). Always
+    runs, even in plan mode -- writes nothing to the target, only validates that the kit
+    works BEFORE committing to the install. A self-test that blows past `timeout` counts
+    as FAILURE (status `timeout`), never as ok."""
     results = []
     kit_dir_abs = kit_dir.resolve()
     for py_file in sorted(kit_dir.rglob("*.py")):
@@ -613,8 +613,8 @@ def stage_smoke(kit_dir: Path, timeout: float = 30) -> dict:
                 timeout=timeout, cwd=str(kit_dir_abs),
             )
         except subprocess.TimeoutExpired:
-            # Why: um self-test que nunca responde nao provou nada; caindo no except generico ele
-            # virava `error`, que nao entrava na contagem de falhas, e o smoke aprovava o kit.
+            # Why: a self-test that never answers proved nothing; falling into the generic except it
+            # turned into `error`, which was not counted among the failures, and smoke approved the kit.
             results.append({
                 "file": str(py_file.relative_to(kit_dir)), "status": "timeout",
                 "detail": f"no answer in {timeout:g}s", "timeout_s": timeout,
@@ -626,7 +626,7 @@ def stage_smoke(kit_dir: Path, timeout: float = 30) -> dict:
         out = (proc.stdout or "") + (proc.stderr or "")
         low_out = out.lower()
         if ("usage:" in low_out or "uso:" in low_out) and proc.returncode != 0 and "self-test" not in low_out:
-            # script não suporta --self-test (imprimiu uso genérico) -> não conta como falha
+            # script does not support --self-test (printed generic usage) -> does not count as failure
             results.append({"file": str(py_file.relative_to(kit_dir)), "status": "skipped"})
             continue
         results.append({
@@ -678,9 +678,9 @@ _RENDER_CLASS_GLOSS = {
 
 
 def render_plan(report: dict) -> str:
-    """Formatação humana do plano (--human).
-    A ESTRUTURA (ordem dos 6 estágios, campos do report) é contrato congelado
-    (INSTALL-CONTRACT.md); esta função só apresenta — nunca decide, nunca escreve."""
+    """Human formatting of the plan (--human).
+    The STRUCTURE (order of the 6 stages, report fields) is a frozen contract
+    (INSTALL-CONTRACT.md); this function only presents -- it never decides, never writes."""
     kit_name = Path(report["kit_dir"]).name
     is_plan = report["mode"] == "plan"
 
@@ -763,7 +763,7 @@ def render_plan(report: dict) -> str:
 
 
 # ---------------------------------------------------------------------------
-# REGISTRY — ~/.claude-kits/registry.json (chaveado por kit_dir + target_dir)
+# REGISTRY -- ~/.claude-kits/registry.json (keyed by kit_dir + target_dir)
 # ---------------------------------------------------------------------------
 
 def _load_registry(path: Path) -> dict:
@@ -836,8 +836,8 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def _normalize_argv(argv: list) -> list:
-    """Compatibilidade posicional: `kit_doctor.py <dir> [--json x]` continua funcionando
-    (vira `verify <dir> [--json x]`) — sem exigir a keyword `verify`."""
+    """Positional compatibility: `kit_doctor.py <dir> [--json x]` keeps working
+    (becomes `verify <dir> [--json x]`) -- without requiring the `verify` keyword."""
     if not argv:
         return argv
     if argv[0] in _SUBCOMMANDS or argv[0].startswith("-"):
@@ -921,7 +921,7 @@ def _self_test() -> int:
 
     tmp = Path(tempfile.mkdtemp(prefix="kit_doctor_selftest_"))
     try:
-        # --- verify (comportamento preservado de v1.0.0) ---
+        # --- verify (behaviour preserved from v1.0.0) ---
         kit_dir = tmp / "fixture-kit-1.0.0"
         kit_dir.mkdir()
         (kit_dir / "README.md").write_text("# Fixture\n", encoding="utf-8")
@@ -948,14 +948,14 @@ def _self_test() -> int:
         report_error = check_kit(no_checksums_dir)
         assert report_error["status"] == "error" and _verify_exit(report_error) == 3
 
-        # inventário VAZIO não atesta nada -> corrupt (exit 2), com mensagem
+        # an EMPTY inventory attests to nothing -> corrupt (exit 2), with a message
         vazio_dir = tmp / "inventario-vazio"
         vazio_dir.mkdir()
         (vazio_dir / "CHECKSUMS.txt").write_text("\n", encoding="utf-8")
         report_vazio = check_kit(vazio_dir)
         assert report_vazio["status"] == "corrupt" and _verify_exit(report_vazio) == 2 and report_vazio["errors"], report_vazio
 
-        # caminho que escapa do kit (`../` e absoluto) -> corrupt, listado em unsafe_paths
+        # path that escapes the kit (`../` and absolute) -> corrupt, listed in unsafe_paths
         fora = tmp / "fora.txt"
         fora.write_text("outside the kit\n", encoding="utf-8")
         escape_dir = tmp / "escape-kit"
@@ -967,13 +967,13 @@ def _self_test() -> int:
         assert report_escape["status"] == "corrupt" and _verify_exit(report_escape) == 2, report_escape
         assert sorted(report_escape["unsafe_paths"]) == sorted(["../fora.txt", fora.as_posix()]), report_escape
 
-        # --- compatibilidade posicional: kit_doctor.py <dir> == verify <dir> ---
+        # --- positional compatibility: kit_doctor.py <dir> == verify <dir> ---
         assert _normalize_argv([str(kit_dir)]) == ["verify", str(kit_dir)]
         assert _normalize_argv(["verify", str(kit_dir)]) == ["verify", str(kit_dir)]
         assert _normalize_argv(["--self-test"]) == ["--self-test"]
         assert _normalize_argv(["install", str(kit_dir)]) == ["install", str(kit_dir)]
 
-        # --- install: fixture minimal com kit.install.yaml + 1 script --self-test ---
+        # --- install: minimal fixture with kit.install.yaml + 1 --self-test script ---
         install_kit = tmp / "install-fixture"
         install_kit.mkdir()
         (install_kit / "profile.example.yaml").write_text("chave: valor\n", encoding="utf-8")
@@ -1000,7 +1000,7 @@ def _self_test() -> int:
 
         reg_path = tmp / "registry.json"
 
-        # 1) modo PLANO (default): zero escrita, detect=greenfield (fixture nova, sem .claude/ nem git)
+        # 1) PLAN mode (default): zero writes, detect=greenfield (new fixture, no .claude/ nor git)
         report_plan = run_install(install_kit, install_kit, apply=False, host="claude-code",
                                    answers_path=None, registry_path=reg_path)
         assert report_plan["mode"] == "plan" and report_plan["status"] == "ok", report_plan
@@ -1012,7 +1012,7 @@ def _self_test() -> int:
         configure_plan = report_plan["stages"][3]
         assert configure_plan["resolved"]["modo"] == "full" and configure_plan["pending_defaults"] == ["modo"]
 
-        # 2) --answers aplica de verdade em cima do default
+        # 2) --answers applies for real on top of the default
         answers_path = tmp / "answers.json"
         answers_path.write_text(json.dumps({"modo": "lite"}), encoding="utf-8")
         report_answers = run_install(install_kit, install_kit, apply=False, host="claude-code",
@@ -1020,7 +1020,7 @@ def _self_test() -> int:
         configure_answers = report_answers["stages"][3]
         assert configure_answers["resolved"]["modo"] == "lite" and configure_answers["pending_defaults"] == []
 
-        # 3) --apply de verdade: escreve profile, roda smoke, registra
+        # 3) --apply for real: writes profile, runs smoke, registers
         report_apply = run_install(install_kit, install_kit, apply=True, host="claude-code",
                                     answers_path=None, registry_path=reg_path)
         assert report_apply["mode"] == "apply" and report_apply["status"] == "ok", report_apply
@@ -1040,11 +1040,11 @@ def _self_test() -> int:
         profile_rerun = report_rerun["stages"][2]
         assert profile_rerun["actions"][0]["action"] == "skip-exists", "profile already there -> never overwritten"
 
-        # 5) render_plan() produz texto legível (não quebra, contém as seções esperadas)
+        # 5) render_plan() produces readable text (does not break, contains the expected sections)
         human = render_plan(report_rerun)
         assert "PLAN" in human and "detect" in human and "classification=re-run" in human
 
-        # --- install com script que FALHA no self-test -> stage smoke = fail, exit 1 ---
+        # --- install with a script that FAILS the self-test -> stage smoke = fail, exit 1 ---
         script_bad = install_kit / "scripts" / "bad_tool.py"
         script_bad.write_text(
             "import sys\n"
@@ -1058,7 +1058,7 @@ def _self_test() -> int:
         assert report_fail["status"] == "fail", report_fail
         script_bad.unlink()
 
-        # --- registry: registra/atualiza sem duplicar, chaveado por (kit_dir, target_dir) ---
+        # --- registry: registers/updates without duplicating, keyed by (kit_dir, target_dir) ---
         assert list_installs(tmp / "registry-vazio.json") == []
         installs = list_installs(reg_path)
         assert len(installs) == 1 and installs[0]["kit_dir"] == str(install_kit.resolve())
@@ -1066,12 +1066,12 @@ def _self_test() -> int:
         installs2 = list_installs(reg_path)
         assert len(installs2) == 1 and installs2[0]["verify_status"] == "warn", "same (kit,target) pair -> updates, does not duplicate"
 
-        # --- HOSTS/seam: Claude Code e Codex compartilham os seis estágios ---
+        # --- HOSTS/seam: Claude Code and Codex share the six stages ---
         assert _DEFAULT_HOST in HOSTS
         assert HOSTS["claude-code"]["path_token"] == "${CLAUDE_PLUGIN_ROOT}"
         assert HOSTS["codex"]["skills_path"] == ".agents/skills"
 
-        # --- marketplace: o caso que FORÇA a reprovar + o controle que exige silêncio ---
+        # --- marketplace: the case that FORCES a failure + the control that demands silence ---
         mk = tmp / "mk"
         kit_pub = mk / "kits" / "fixture-kit-1.0.0"
         (kit_pub / ".claude-plugin").mkdir(parents=True)
@@ -1084,20 +1084,20 @@ def _self_test() -> int:
         }
         (mk / "marketplace.json").write_text(json.dumps(doc_mk), encoding="utf-8")
 
-        rel_fora = check_marketplace(mk)  # manifesto SÓ na raiz -> o modo #1
+        rel_fora = check_marketplace(mk)  # manifest ONLY at the root -> mode #1
         assert rel_fora["status"] == "fail" and _marketplace_exit(rel_fora) == 2
         assert any(a["code"] == "manifesto-fora-do-lugar" for a in rel_fora["achados"])
 
         (mk / ".claude-plugin").mkdir()
         (mk / ".claude-plugin" / "marketplace.json").write_text(json.dumps(doc_mk), encoding="utf-8")
-        rel_ok = check_marketplace(mk)  # CONTROLE: no lugar certo + cópia idêntica -> silêncio
+        rel_ok = check_marketplace(mk)  # CONTROL: in the right place + identical copy -> silence
         assert rel_ok["status"] == "ok" and rel_ok["achados"] == [], rel_ok["achados"]
         assert rel_ok["plugins"] == 1
 
         (kit_pub / ".claude-plugin" / "plugin.json").write_text(
             json.dumps({"name": "fixture-kit", "version": "9.9.9"}), encoding="utf-8"
         )
-        rel_drift = check_marketplace(mk)  # o defeito do item 1, uma camada acima
+        rel_drift = check_marketplace(mk)  # the defect from item 1, one layer up
         assert any(a["code"] == "versao-divergente" for a in rel_drift["achados"])
 
         assert _marketplace_exit(check_marketplace(tmp / "does-not-exist")) == 3

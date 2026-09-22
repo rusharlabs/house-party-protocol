@@ -1,10 +1,10 @@
-"""`hpp init`: plano nao escreve, --apply escreve UM arquivo dentro do alvo, a segunda
-rodada e no-op, conflito nunca sobrescreve, e cada codigo de saida do contrato
-(0 ok · 1 warn · 2 block · 3 erro) e produzido por um caminho real.
+"""`hpp init`: plan does not write, --apply writes ONE file inside the target,
+the second run is a no-op, conflict never overwrites, and every exit code of
+the contract (0 ok - 1 warn - 2 block - 3 error) is produced by a real path.
 
-A prova de "nao escreveu" e um hash da arvore do alvo antes e depois -- nao a
-ausencia de um arquivo especifico. O controle no fim mostra que o hash de fato
-muda quando algo e escrito, senao a comparacao seria vacua.
+The proof of "did not write" is a hash of the target tree before and after --
+not the absence of a specific file. The control at the end shows that the
+hash does change when something is written, otherwise the comparison would be vacuous.
 """
 from __future__ import annotations
 
@@ -48,7 +48,7 @@ def target(tmp_path):
     return workspace
 
 
-def test_plano_sem_apply_nao_escreve_nada_no_alvo(target, exit_codes, capsys):
+def test_plan_without_apply_writes_nothing_to_the_target(target, exit_codes, capsys):
     before = _tree_hash(target)
     code = _init(target)
     out = capsys.readouterr().out
@@ -58,7 +58,7 @@ def test_plano_sem_apply_nao_escreve_nada_no_alvo(target, exit_codes, capsys):
     assert not (target / ".hpp").exists()
 
 
-def test_plano_nao_escreve_fora_do_alvo(tmp_path, target, capsys):
+def test_plan_does_not_write_outside_the_target(tmp_path, target, capsys):
     outside = tmp_path / "sibling"
     outside.mkdir()
     (outside / "keep.txt").write_text("untouched", encoding="utf-8")
@@ -71,7 +71,7 @@ def test_plano_nao_escreve_fora_do_alvo(tmp_path, target, capsys):
     assert (registry.exists(), registry.stat().st_mtime_ns if registry.exists() else None) == registry_state
 
 
-def test_apply_escreve_exatamente_o_profile_dentro_do_alvo(target, exit_codes, capsys):
+def test_apply_writes_exactly_the_profile_inside_the_target(target, exit_codes, capsys):
     code = _init(target, "--apply", "--non-interactive")
     out = capsys.readouterr().out
     assert code == exit_codes["ok"]
@@ -85,7 +85,7 @@ def test_apply_escreve_exatamente_o_profile_dentro_do_alvo(target, exit_codes, c
     assert "APPLIED" in out and "1 file(s) written" in out
 
 
-def test_segundo_apply_e_no_op_e_nao_muda_um_byte(target, exit_codes, capsys):
+def test_second_apply_is_a_no_op_and_does_not_change_a_byte(target, exit_codes, capsys):
     _init(target, "--apply", "--yes")
     capsys.readouterr()
     after_first = _tree_hash(target)
@@ -101,7 +101,7 @@ def test_segundo_apply_e_no_op_e_nao_muda_um_byte(target, exit_codes, capsys):
     assert any("nothing to do" in step for step in report["next"])
 
 
-def test_conflito_com_profile_existente_e_warn_e_nunca_sobrescreve(target, exit_codes, capsys):
+def test_conflict_with_existing_profile_is_warn_and_never_overwrites(target, exit_codes, capsys):
     _init(target, "--apply", "--yes", "--host", "claude-code")
     capsys.readouterr()
     profile_path = target / ".hpp" / "profile.json"
@@ -116,7 +116,7 @@ def test_conflito_com_profile_existente_e_warn_e_nunca_sobrescreve(target, exit_
     assert profile["problems"] and "host" in profile["problems"][0]["measured"]
 
 
-def test_apply_nao_toca_settings_do_claude_nem_agents_md_existentes(target, capsys):
+def test_apply_does_not_touch_existing_claude_settings_or_agents_md(target, capsys):
     claude_dir = target / ".claude"
     claude_dir.mkdir()
     settings = claude_dir / "settings.local.json"
@@ -137,18 +137,18 @@ def test_apply_nao_toca_settings_do_claude_nem_agents_md_existentes(target, caps
 
 
 # ---------------------------------------------------------------------------
-# Codigos de saida: cada um por um caminho real do wizard.
+# Exit codes: each one through a real wizard path.
 # ---------------------------------------------------------------------------
 
 
-def test_exit_0_no_plano_limpo(target, exit_codes, capsys):
+def test_exit_0_on_a_clean_plan(target, exit_codes, capsys):
     assert _init(target) == exit_codes["ok"]
 
 
-def test_exit_1_quando_o_smoke_reprova(target, exit_codes, capsys, monkeypatch):
-    """Um classificador de politica que deixa `rm -rf` passar e' exatamente o que o smoke
-    existe para pegar: o estagio reprova, a sequencia nao para (e' o ultimo), e o
-    contrato do instalador manda exit 1 para smoke reprovado."""
+def test_exit_1_when_smoke_fails(target, exit_codes, capsys, monkeypatch):
+    """A policy classifier that lets `rm -rf` through is exactly what smoke
+    exists to catch: the stage fails, the sequence does not stop (it is the
+    last one), and the installer contract mandates exit 1 for a failed smoke."""
     monkeypatch.setattr(wizard, "assess", lambda command: {"action": "ALLOW", "rule": "allow", "reason": "broken"})
     code = _init(target, "--json")
     report = json.loads(capsys.readouterr().out)
@@ -160,7 +160,7 @@ def test_exit_1_quando_o_smoke_reprova(target, exit_codes, capsys, monkeypatch):
     assert policy_item["status"] == "failed"
 
 
-def test_exit_2_quando_um_modulo_nao_e_suportado_no_host(target, exit_codes, capsys):
+def test_exit_2_when_a_module_is_not_supported_on_the_host(target, exit_codes, capsys):
     manifest, _ = load_manifest()
     unsupported = next(module["id"] for module in manifest["modules"] if module["hosts"].get("codex") == "unsupported")
     code = _init(target, "--host", "codex", "--modules", unsupported, "--json")
@@ -173,19 +173,19 @@ def test_exit_2_quando_um_modulo_nao_e_suportado_no_host(target, exit_codes, cap
     assert report["writes"] == 0
 
 
-def test_exit_2_para_bundle_desconhecido_via_main(target, exit_codes, capsys):
+def test_exit_2_for_an_unknown_bundle_via_main(target, exit_codes, capsys):
     code = _init(target, "--bundle", "does-not-exist")
     assert code == exit_codes["block"]
     assert "unknown bundle" in capsys.readouterr().err
 
 
-def test_exit_3_quando_o_alvo_nao_e_diretorio(tmp_path, exit_codes, capsys):
+def test_exit_3_when_the_target_is_not_a_directory(tmp_path, exit_codes, capsys):
     code = cli.main(["init", "--target", str(tmp_path / "missing"), "--no-benchmark"])
     assert code == exit_codes["error"]
     assert "not a directory" in capsys.readouterr().err
 
 
-def test_exit_3_quando_o_arquivo_de_profile_nao_e_json(target, exit_codes, capsys):
+def test_exit_3_when_the_profile_file_is_not_json(target, exit_codes, capsys):
     answers = target.parent / "answers.json"
     answers.write_text("{not json", encoding="utf-8")
     code = _init(target, "--profile", str(answers))
@@ -193,17 +193,17 @@ def test_exit_3_quando_o_arquivo_de_profile_nao_e_json(target, exit_codes, capsy
     assert "not valid JSON" in capsys.readouterr().err
 
 
-def test_CONTROLE_hash_da_arvore_detecta_uma_escrita(target):
-    """Controle: o hash usado acima muda quando um arquivo aparece -- sem isto,
-    'plano nao escreve' poderia passar com um hash que ignora o conteudo."""
+def test_CONTROLE_tree_hash_detects_a_write(target):
+    """Control: the hash used above changes when a file appears -- without this,
+    'plan does not write' could pass with a hash that ignores the content."""
     before = _tree_hash(target)
     (target / "novo.txt").write_text("x", encoding="utf-8")
     assert _tree_hash(target) != before
 
 
-def test_CONTROLE_profile_diferente_e_detectado_como_conflito_pelo_proprio_estagio(target, capsys):
-    """Controle simetrico: o estagio profile distingue 'igual' de 'diferente' -- prova que
-    o no-op acima nao e' um estagio que sempre diz unchanged."""
+def test_CONTROLE_different_profile_is_detected_as_a_conflict_by_the_stage_itself(target, capsys):
+    """Symmetric control: the profile stage distinguishes 'same' from 'different' --
+    proves that the no-op above is not a stage that always says unchanged."""
     _init(target, "--apply", "--yes")
     capsys.readouterr()
     path = target / ".hpp" / "profile.json"

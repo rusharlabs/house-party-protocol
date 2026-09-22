@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 """
-lane_board — quadro-branco com máquina de estados p/ N sessões (lanes) sem colisão.
+lane_board -- whiteboard with a state machine for N sessions (lanes) without collision.
 
-Único writer do board.jsonl (append-only, lock por diretório). Enforcement EM CÓDIGO
-(não disciplina textual): CHECKPOINT-READY só quem claimou + evidência; VERIFIED/NEEDS-FIX
-só revisora de OUTRA lane E OUTRA família de modelo que o builder (maker≠checker); checker
-indisponível → só DEFERRED; MERGED exige VERIFIED prévio (+ gate humano para itens 🔴, via
---tag red exigindo --human-approved).
+Sole writer of board.jsonl (append-only, per-directory lock). Enforcement IN CODE
+(not textual discipline): CHECKPOINT-READY only by whoever claimed it + evidence; VERIFIED/NEEDS-FIX
+only by a reviewer from ANOTHER lane AND ANOTHER model family than the builder (maker!=checker); an
+unavailable checker -> only DEFERRED; MERGED requires a prior VERIFIED (+ human gate for red items, via
+--tag red requiring --human-approved).
 
-Estados: CLAIMED -> BUILDING -> CHECKPOINT-READY -> UNDER-REVIEW -> VERIFIED|NEEDS-FIX -> MERGED
-                                                                   -> DEFERRED (checker indisponível)
+States: CLAIMED -> BUILDING -> CHECKPOINT-READY -> UNDER-REVIEW -> VERIFIED|NEEDS-FIX -> MERGED
+                                                                  -> DEFERRED (checker unavailable)
 
-Uso:
+Usage:
     python lane_board.py claim <item_id> --lane <id> --role <role> --model <model> [--tag green|red]
     python lane_board.py --set <item_id> <estado> --lane <id> --role <role> --model <model>
                           [--evidencia "..."] [--verdict-by-lane <id>] [--verdict-by-model <m>]
@@ -20,8 +20,8 @@ Uso:
     python lane_board.py render
     python lane_board.py --self-test
 
-Exit: 0 ok · 1 transição inválida/enforcement recusou · 2 uso inválido/lock não obtido.
-stdlib only. v1.0.0 — 2026-07-10 (lane-kit)
+Exit: 0 ok - 1 invalid transition/enforcement refused - 2 invalid usage/lock not acquired.
+stdlib only. v1.0.0 -- 2026-07-10 (lane-kit)
 """
 from __future__ import annotations
 
@@ -100,7 +100,7 @@ class _Lock:
 
 
 def _model_family(model: str) -> str:
-    """Extrai a família de um id de modelo (heurística): 'claude-opus-4-8' -> 'claude'."""
+    """Extracts the family from a model id (heuristic): 'claude-opus-4-8' -> 'claude'."""
     if not model:
         return ""
     m = re.match(r"^([a-zA-Z]+)", model)
@@ -118,7 +118,7 @@ def _read_events(item_id: str | None = None) -> list:
         try:
             e = json.loads(line)
         except json.JSONDecodeError:
-            continue  # linha corrompida (nunca deveria ocorrer com o lock) — ignora, não crasha
+            continue  # corrupted line (should never happen with the lock) -- ignore, do not crash
         if item_id is None or e.get("item_id") == item_id:
             events.append(e)
     return events
@@ -138,7 +138,7 @@ def _append_event(event: dict) -> None:
 def _validate_transition(item_id: str, new_state: str, lane_id: str, role: str, model: str,
                           evidencia: str = "", verdict_by_lane: str = "", verdict_by_model: str = "",
                           checker_indisponivel: bool = False, human_approved: bool = False, tag: str = "green") -> str | None:
-    """Retorna None se válido, ou a mensagem de erro."""
+    """Returns None if valid, or the error message."""
     current = _latest_state(item_id)
     cur_state = current["estado"] if current else None
 
@@ -151,7 +151,7 @@ def _validate_transition(item_id: str, new_state: str, lane_id: str, role: str, 
             return "item already MERGED — cannot be reopened with CLAIMED"
 
     if new_state == "CHECKPOINT-READY":
-        builder = current  # o evento BUILDING/CLAIMED mais recente é o "dono"
+        builder = current  # the most recent BUILDING/CLAIMED event is the "owner"
         if role != "executora":
             return f"CHECKPOINT-READY only with role=executora (got: {role})"
         if not builder or builder.get("lane_id") != lane_id:
@@ -162,7 +162,7 @@ def _validate_transition(item_id: str, new_state: str, lane_id: str, role: str, 
     if new_state in ("VERIFIED", "NEEDS-FIX"):
         if role != "revisora":
             return f"{new_state} only with role=revisora (got: {role})"
-        # acha o builder original (evento CLAIMED)
+        # find the original builder (CLAIMED event)
         claimed = next((e for e in reversed(_read_events(item_id)) if e["estado"] == "CLAIMED"), None)
         builder_lane = claimed.get("lane_id") if claimed else None
         builder_model = claimed.get("model") if claimed else None
@@ -215,7 +215,7 @@ def _reserve_effect(item_id: str, new_state: str) -> str:
 
 
 def set_state(item_id: str, new_state: str, lane_id: str, role: str, model: str, **kwargs) -> tuple:
-    """Retorna (ok, message_or_error). Grava sob lock."""
+    """Returns (ok, message_or_error). Writes under lock."""
     try:
         with _Lock(_LANES_DIR):
             err = _validate_transition(item_id, new_state, lane_id, role, model, **kwargs)

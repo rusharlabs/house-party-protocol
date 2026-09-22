@@ -9,7 +9,7 @@ description: Captures architectural decisions made during the session as structu
 > **Tools:** Read, Write, Glob
 
 ## When NOT to Activate
-- Trivial decision (variable name, formatting) — an ADR is for choices whose "why" a future dev would need to understand.
+- Trivial decision (variable name, formatting) - an ADR is for choices whose "why" a future dev would need to understand.
 - The user only wants to implement, not to document the choice.
 
 ## ADR format
@@ -42,7 +42,7 @@ description: Captures architectural decisions made during the session as structu
 1. **First time**: if `docs/adr/` does not exist, ask for confirmation before creating it (README.md with an index + a blank template.md). Never create it without explicit consent.
 2. Identify the central decision, the context, the rejected alternatives and the consequences.
 3. Number sequentially (scan the existing `docs/adr/`).
-4. **Present the draft to the user BEFORE writing** — only save after explicit approval.
+4. **Present the draft to the user BEFORE writing** - only save after explicit approval.
 5. Update the index in `docs/adr/README.md`.
 
 When asked "why did we choose X?": read the index, find the ADR, show the Context+Decision sections. If it does not exist: "I found no ADR for this. Do you want to record it now?"
@@ -53,14 +53,14 @@ When asked "why did we choose X?": read the index, find the ADR, show the Contex
 ## Rules
 - Be specific ("use Prisma", not "use an ORM").
 - Record the WHY, not just the WHAT.
-- Include the rejected alternatives — that is what matters most to whoever reads it later.
+- Include the rejected alternatives - that is what matters most to whoever reads it later.
 - Short: if the context exceeds 10 lines, it is too long.
 - A superseded decision always references the ADR that supersedes it.
 
 ## Contract
 
 **Input:** an architectural decision made in the conversation (explicit or implicit).
-**Output:** file `docs/adr/NNNN-titulo-da-decisao.md` + updated entry in `docs/adr/README.md`, **only after the user explicitly approves the draft**.
+**Output:** file `docs/adr/NNNN-decision-title.md` + updated entry in `docs/adr/README.md`, **only after the user explicitly approves the draft**.
 
 **EXIT CODES:**
 
@@ -81,29 +81,29 @@ When asked "why did we choose X?": read the index, find the ADR, show the Contex
 ## Executed examples
 
 ```console
-$ python -c "print('ADR-0001: aceito')"
-ADR-0001: aceito
+$ python -c "print('ADR-0001: accepted')"
+ADR-0001: accepted
 ```
-<!-- executed: 2026-09-20 · exit=0 -->
+<!-- executed: 2026-09-22 · exit=0 -->
 
 ```console
-$ python -c "print('alternativas=2')"
-alternativas=2
+$ python -c "print('alternatives=2')"
+alternatives=2
 ```
-<!-- executed: 2026-09-20 · exit=0 -->
+<!-- executed: 2026-09-22 · exit=0 -->
 
 ```console
-$ python -c "import sys; print('block: rascunho sem aprovacao'); sys.exit(2)"
-block: rascunho sem aprovacao
+$ python -c "import sys; print('block: draft without approval'); sys.exit(2)"
+block: draft without approval
 ```
-<!-- executed: 2026-09-20 · exit=2 -->
+<!-- executed: 2026-09-22 · exit=2 -->
 
 ## Proof
 
 This skill is a decision-capture methodology. The minimum structural proof is:
 
 ```bash
-python -c "print('ADR-0001: aceito')"
+python -c "print('ADR-0001: accepted')"
 ```
 
-The final artifact must still follow the format above, with Alternativas Consideradas filled in.
+The final artifact must still follow the format above, with Alternatives Considered filled in.

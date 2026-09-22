@@ -1,15 +1,16 @@
-"""Verificacao de integridade dos modulos distribuidos, via CHECKSUMS.txt.
+"""Integrity check of the distributed modules, via CHECKSUMS.txt.
 
-A arvore-FONTE nao contem os diretorios fisicos dos modulos nem marketplace.json --
-eles so existem na COPIA EMITIDA, montada por outra etapa do pipeline. Rodando de
-dentro da copia emitida (o caso de quem instalou, e o do CI sobre o conteudo
-publicado), a raiz e o proprio diretorio acima de `tests/`; rodando da fonte, nao ha
-o que conferir e o teste PULA, explicitamente.
+The SOURCE tree contains neither the physical module directories nor
+marketplace.json -- they only exist in the EMITTED COPY, assembled by another
+stage of the pipeline. Running from inside the emitted copy (the case of
+whoever installed it, and CI's case over the published content), the root is
+the directory right above `tests/`; running from source, there is nothing to
+check and the test SKIPS, explicitly.
 
-# Why: o caminho era absoluto e carregava o nome de usuario de UMA maquina. Um teste
-# assim nunca roda em lugar nenhum alem dela, e o caminho pessoal viaja dentro do
-# pacote publicado. A raiz se DERIVA da posicao do arquivo; HPP_EMITTED_COPY permite
-# apontar para outra arvore sem editar codigo.
+# Why: the path was absolute and carried the username of ONE machine. A test
+# like that never runs anywhere but there, and the personal path travels
+# inside the published package. The root is DERIVED from the file's position;
+# HPP_EMITTED_COPY allows pointing at another tree without editing code.
 """
 from __future__ import annotations
 
@@ -62,14 +63,14 @@ def _checksum_failures(module_dir: Path, checksums_file: Path) -> list[str]:
     return failures
 
 
-def test_marketplace_declara_pelo_menos_um_modulo():
+def test_marketplace_declares_at_least_one_module():
     reason = _skip_reason()
     if reason:
         pytest.skip(reason)
     assert _declared_modules(), "marketplace.json declared no module at all"
 
 
-def test_checksums_de_cada_modulo_distribuido_conferem():
+def test_checksums_of_every_distributed_module_check_out():
     reason = _skip_reason()
     if reason:
         pytest.skip(reason)
@@ -86,8 +87,8 @@ def test_checksums_de_cada_modulo_distribuido_conferem():
         failures = _checksum_failures(module_dir, checksums_file)
         all_failures.extend(f"{name}: {item}" for item in failures)
 
-    # Denominador zero e' tao suspeito quanto uma falha: se NENHUM modulo publica
-    # CHECKSUMS.txt, esta verificacao passaria vazia e pareceria ok sem checar nada.
+    # A zero denominator is as suspicious as a failure: if NO module publishes
+    # CHECKSUMS.txt, this check would pass empty and look ok without checking anything.
     assert modules_with_checksums > 0, (
         "none of the modules declared in marketplace.json publishes CHECKSUMS.txt "
         "-- the denominator of this check would be zero"
@@ -95,11 +96,11 @@ def test_checksums_de_cada_modulo_distribuido_conferem():
     assert not all_failures, "\n".join(all_failures)
 
 
-def test_CONTROLE_deteccao_de_hash_adulterado_funciona(tmp_path):
+def test_CONTROLE_tampered_hash_detection_works(tmp_path):
     """
-    Controle, independente da copia emitida (roda sempre): prova que
-    `_checksum_failures` -- a MESMA logica usada acima -- de fato REPROVA uma
-    divergencia real de hash, e nao so confirma o caminho feliz.
+    Control, independent of the emitted copy (always runs): proves that
+    `_checksum_failures` -- the SAME logic used above -- actually FAILS on a
+    real hash divergence, and not just confirms the happy path.
     """
     module_dir = tmp_path / "modulo-fake"
     module_dir.mkdir()
@@ -113,7 +114,7 @@ def test_CONTROLE_deteccao_de_hash_adulterado_funciona(tmp_path):
     assert "hash mismatch" in failures[0]
 
 
-def test_CONTROLE_arquivo_listado_e_ausente_e_detectado(tmp_path):
+def test_CONTROLE_a_listed_and_missing_file_is_detected(tmp_path):
     module_dir = tmp_path / "modulo-fake-2"
     module_dir.mkdir()
     checksums_file = module_dir / "CHECKSUMS.txt"
@@ -125,8 +126,8 @@ def test_CONTROLE_arquivo_listado_e_ausente_e_detectado(tmp_path):
     assert "missing on disk" in failures[0]
 
 
-def test_CONTROLE_checksums_correto_nao_produz_falso_positivo(tmp_path):
-    """Controle simetrico: um CHECKSUMS.txt genuinamente correto nao reprova."""
+def test_CONTROLE_correct_checksums_do_not_produce_a_false_positive(tmp_path):
+    """Symmetric control: a genuinely correct CHECKSUMS.txt does not fail."""
     module_dir = tmp_path / "modulo-ok"
     module_dir.mkdir()
     target = module_dir / "file.txt"

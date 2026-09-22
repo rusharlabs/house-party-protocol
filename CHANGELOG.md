@@ -9,6 +9,50 @@ keeps its own version in `plugin.json` and in `marketplace.json`.
 
 ## [Unreleased]
 
+## [2.5.2] — 2026-09-22
+
+The release that makes "English-first" true of the code and not only of the documents. Three
+rulers were built to find out how untrue it was, and each one found something the previous one
+was blind to.
+
+### Changed
+
+- **The state document the harness scaffolds into your repository is English.** Its two parsed
+  headings are now `## Now` and `## OPEN ITEMS`, and every `{{placeholder}}` in the nine
+  scaffolded templates is English (37 renamed, same name everywhere it recurs). **A repository
+  scaffolded before this release keeps working with no action**: both readers — the
+  `session_boot` hook and `state_mirror.py` — accept the old spellings until 2.7.0, new spelling
+  first. The `state-index.json` fields are `now` and `open_items`.
+- **Every comment and docstring in the shipped Python is English** — 471 passages across 78
+  files. They were invisible to the language census until now, because a census built on
+  `tokenize` STRING tokens never sees a `COMMENT` token: a file written end to end in Portuguese
+  comments measured zero. The census now reads comments and docstrings too, distinguishes prose
+  from a citation (a Portuguese token inside backticks, or in a `(legacy: ...)` parenthetical, is
+  a citation and does not count), and holds all ten modules at zero with a ratchet.
+- **The `rm-rf-codigo-vivo` rule family is `rm-rf-live-code`** — the one Portuguese name among
+  five English siblings, and it reached the operator twice: in the profile they edit and in the
+  `rule` field of the BLOCK verdict they read. A profile that still lists the old name keeps
+  arming the family until 2.7.0.
+- The commits segment of the status bar reads `Nc today`. The error-strategy CLI explains each
+  error family in English. The health-kit statusline reports a broken cache in English.
+- 130 of the 198 test names, and three test file names, are English. My own ruler had said 90 -
+  it was a floor, not a value, and the count came back corrected from the pass that did the work.
+
+### Fixed
+
+- **Two skills documented output their tools no longer produce.** `claude-dev-setup` showed the
+  `statusLine already taken` warning in Portuguese and `skill-writer` showed a `skill_lint`
+  finding table in Portuguese — both tools have emitted English for a while. The transcripts were
+  re-run and re-dated, because a documented example that does not match the tool is worse than one
+  in the wrong language.
+- **`browse.py --self-test` has been failing since 2.5.0 and nobody noticed.** The 2.5.0 layout
+  rename moved `instaladores/` to `installers/`, updated the code that globs for `kit_doctor.py`,
+  and left the self-test's own fixture creating the old directory — so the test raised
+  `SystemExit: kit_doctor.py not found` on every run. It was found by running every `--self-test`
+  in all ten modules at once (72 of them; this was the one red), and the sweep is the new habit:
+  a rename that updates the code and forgets the fixture leaves a test that is red for a reason
+  nobody reads.
+
 ## [2.5.1] — 2026-09-22
 
 ### Changed

@@ -1,25 +1,25 @@
 #!/usr/bin/env python3
 """
-status_now (Operator Kit) — responde "onde estamos?" num template fixo.
+status_now (Operator Kit) -- answers "where are we?" in a fixed template.
 
-Le `paths.state_ssot` do operator-profile.yaml e extrai, do markdown do SSoT:
-  - ETAPA / FASE   (linha que comeca com '#', '## Fase', 'Etapa:', 'Fase:'...)
-  - PROGRESSO %    (primeiro 'NN%' encontrado no doc)
-  - BLOQUEIOS      (contagem de pendencias abertas '- [ ]')
-  - PROXIMA ACAO   (texto da 1a pendencia aberta '- [ ]')
+Reads `paths.state_ssot` from operator-profile.yaml and extracts, from the SSoT markdown:
+  - STAGE / PHASE   (line starting with '#', '## Fase', 'Etapa:', 'Fase:'...)
+  - PROGRESS %      (first 'NN%' found in the doc)
+  - BLOCKERS        (count of open pending items '- [ ]')
+  - NEXT ACTION     (text of the 1st open pending item '- [ ]')
 
-REGRA INQUEBRAVEL (AGENT-INTEGRITY / LC-1): campo nao-encontrado vira '--' com
-uma nota explicita — NUNCA inventa numero, etapa ou proxima acao. Sem profile
-ou sem SSoT, degrada para um template honesto que aponta o que falta configurar.
+UNBREAKABLE RULE (AGENT-INTEGRITY / LC-1): a field not found becomes '--' with
+an explicit note -- NEVER invents a number, stage or next action. Without a profile
+or SSoT, it degrades to an honest template that points out what's missing to configure.
 
-Uso:
-    python status_now.py            # imprime o template "onde estamos?"
-    python status_now.py --json     # mesma info, JSON estavel p/ consumo programatico
+Usage:
+    python status_now.py            # prints the "where are we?" template
+    python status_now.py --json     # same info, stable JSON for programmatic consumption
     python status_now.py --self-test
 
-Exit: 0 sempre (relatorio de status nunca e um gate). stdlib + PyYAML (via loader).
+Exit: 0 always (a status report is never a gate). stdlib + PyYAML (via loader).
 
-v1.0.0 — 2026-06-19 (Operator Kit · Tier 1)
+v1.0.0 -- 2026-06-19 (Operator Kit -- Tier 1)
 """
 from __future__ import annotations
 
@@ -28,25 +28,25 @@ import re
 import sys
 from pathlib import Path
 
-# importa o loader compartilhado do kit (.../operator-kit/_lib/profile_loader.py)
+# import the shared kit loader (.../operator-kit/_lib/profile_loader.py)
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 try:
     from _lib.profile_loader import load_profile, get, profile_path
-except Exception:  # noqa: BLE001 — sem loader, degrade para defaults seguros (NUNCA crasha)
+except Exception:  # noqa: BLE001 -- without the loader, degrade to safe defaults (NEVER crashes)
     load_profile = None  # type: ignore[assignment]
     get = None  # type: ignore[assignment]
     profile_path = None  # type: ignore[assignment]
 
-# marcador honesto para campo nao-encontrado (nunca inventar)
+# honest marker for a field not found (never make one up)
 _NA = "--"
 
-# regex de extracao
+# extraction regexes
 _RE_PCT = re.compile(r"(\d{1,3})\s*%")
 _RE_OPEN_TODO = re.compile(r"^\s*[-*]\s+\[\s\]\s+(.*\S)?\s*$")
 _RE_DONE_TODO = re.compile(r"^\s*[-*]\s+\[[xX]\]\s")
-# rotulos que costumam carregar a etapa/fase atual.
-# Captura a frase INTEIRA a partir do rotulo (inclusive a palavra "Fase"/"Etapa"),
-# tolerando heading markdown (#) e ':' opcional logo apos o rotulo.
+# labels that usually carry the current stage/phase.
+# Captures the WHOLE phrase starting at the label (including the word "Fase"/"Etapa"),
+# tolerating a markdown heading (#) and an optional ':' right after the label.
 _RE_ETAPA_LABEL = re.compile(
     r"^\s*#{0,6}\s*((?:etapa|fase|stage|phase|sprint|milestone)\b\s*:?\s*.*\S)",
     re.IGNORECASE,
@@ -54,19 +54,19 @@ _RE_ETAPA_LABEL = re.compile(
 
 
 def _resolve_ssot_path(profile: dict, base: Path) -> Path | None:
-    """Resolve o caminho absoluto do SSoT a partir de paths.state_ssot (relativo a raiz do projeto)."""
+    """Resolves the SSoT's absolute path from paths.state_ssot (relative to the project root)."""
     if get is None:
         return None
     rel = get(profile, "paths.state_ssot", None)
     if not rel:
         return None
-    # raiz do projeto = pasta que contem o profile, subindo de staging/operator-kit se for o caso
+    # project root = folder that contains the profile, going up from staging/operator-kit if that's the case
     root = base
     if profile_path is not None:
         p = profile_path()
         if p is not None:
             root = p.resolve().parent
-            # se o profile vive em .../staging/operator-kit, a raiz do projeto sobe 2 niveis
+            # if the profile lives in .../staging/operator-kit, the project root is 2 levels up
             parts = root.parts
             if len(parts) >= 2 and parts[-1] == "operator-kit" and parts[-2] == "staging":
                 root = root.parents[1]
@@ -77,7 +77,7 @@ def _resolve_ssot_path(profile: dict, base: Path) -> Path | None:
 
 
 def extract_status(text: str) -> dict:
-    """Extrai etapa/%/bloqueios/proxima-acao do markdown do SSoT. Campos ausentes => _NA + nota."""
+    """Extracts stage/%/blockers/next-action from the SSoT markdown. Missing fields => _NA + note."""
     etapa = _NA
     pct = _NA
     open_todos: list[str] = []
@@ -85,7 +85,7 @@ def extract_status(text: str) -> dict:
 
     lines = text.splitlines()
 
-    # ETAPA: primeiro rotulo explicito (Etapa:/Fase:/##Fase...) com conteudo; senao 1o heading nao-vazio
+    # STAGE: first explicit label (Etapa:/Fase:/##Fase...) with content; otherwise the 1st non-empty heading
     for ln in lines:
         m = _RE_ETAPA_LABEL.match(ln)
         if m and (m.group(1) or "").strip():
@@ -102,14 +102,14 @@ def extract_status(text: str) -> dict:
     if etapa is _NA:
         notas.append("stage not found in the SSoT (no heading/label Fase|Etapa|Stage|Phase)")
 
-    # PROGRESSO %: primeira ocorrencia 'NN%'
+    # PROGRESS %: first occurrence of 'NN%'
     mpct = _RE_PCT.search(text)
     if mpct:
         pct = f"{int(mpct.group(1))}%"
     else:
         notas.append("progress % not found in the SSoT")
 
-    # BLOQUEIOS / PROXIMA ACAO: pendencias abertas '- [ ]'
+    # BLOCKERS / NEXT ACTION: open pending items '- [ ]'
     for ln in lines:
         m = _RE_OPEN_TODO.match(ln)
         if m:
@@ -130,7 +130,7 @@ def extract_status(text: str) -> dict:
 
 
 def build_status(start: Path | None = None) -> dict:
-    """Monta o status completo: resolve profile -> SSoT -> extrai. Degrada sem crashar."""
+    """Builds the complete status: resolves profile -> SSoT -> extracts. Degrades without crashing."""
     base = Path(start or Path.cwd())
     profile = load_profile() if load_profile is not None else {}
     ssot_rel = get(profile, "paths.state_ssot", None) if get is not None else None
@@ -160,7 +160,7 @@ def build_status(start: Path | None = None) -> dict:
 
     try:
         text = ssot.read_text(encoding="utf-8", errors="replace")
-    except Exception as e:  # noqa: BLE001 — nunca crasha
+    except Exception as e:  # noqa: BLE001 -- never crashes
         data["notas"].append(f"failed to read the SSoT: {e}")
         return data
 
@@ -201,7 +201,7 @@ def render_template(data: dict) -> str:
 def _self_test() -> None:
     import tempfile
 
-    # fixture: SSoT com etapa, %, e pendencias
+    # fixture: SSoT with a stage, %, and pending items
     ssot_text = (
         "# Demo Project\n"
         "## Phase 2 - Pipeline\n"
@@ -216,7 +216,7 @@ def _self_test() -> None:
     assert parsed["bloqueios_abertos"] == 2, parsed["bloqueios_abertos"]
     assert parsed["proxima_acao"] == "Process BATCH-004", parsed["proxima_acao"]
 
-    # fixture vazia: tudo '--' + notas (NUNCA inventa)
+    # empty fixture: everything '--' + notes (NEVER invents)
     parsed2 = extract_status("text with nothing structured in it\n")
     assert parsed2["etapa"] == _NA
     assert parsed2["progresso"] == _NA
@@ -224,7 +224,7 @@ def _self_test() -> None:
     assert parsed2["bloqueios_abertos"] == 0
     assert len(parsed2["notas"]) >= 2
 
-    # build_status sem profile (cwd tmp isolado) degrada sem crashar
+    # build_status without a profile (isolated tmp cwd) degrades without crashing
     with tempfile.TemporaryDirectory() as td:
         import os
         env_bak = os.environ.pop("OPERATOR_PROFILE", None)
@@ -232,14 +232,14 @@ def _self_test() -> None:
             data = build_status(start=Path(td))
             assert isinstance(data, dict)
             assert "notas" in data
-            # render nunca crasha
+            # render never crashes
             out = render_template(data)
             assert "WHERE ARE WE?" in out
         finally:
             if env_bak is not None:
                 os.environ["OPERATOR_PROFILE"] = env_bak
 
-    # render de fixture completa contem os valores extraidos
+    # render of a complete fixture contains the extracted values
     data_full = {
         "projeto": "demo", "ssot_rel": "x.md", "etapa": "Phase 2",
         "progresso": "37%", "bloqueios_abertos": 2, "proxima_acao": "do X", "notas": [],

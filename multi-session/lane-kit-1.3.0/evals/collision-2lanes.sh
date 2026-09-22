@@ -1,13 +1,12 @@
 #!/usr/bin/env bash
-# collision-2lanes.sh — 2+ writers concorrentes, 1 board.jsonl, zero corrupção.
+# collision-2lanes.sh - 2+ concurrent writers, 1 board.jsonl, zero corruption.
 #
-# Dispara N processos `lane_board.py claim` SIMULTANEAMENTE (mesmo instante, via
-# background + wait) contra o MESMO board.jsonl. O lock (os.mkdir + spin ≤2s) deve
-# serializar as escritas: nenhuma linha corrompida/interleaved, todos os N eventos
-# presentes, JSON válido linha-a-linha.
+# Fires N `lane_board.py claim` processes SIMULTANEOUSLY (same instant, via background +
+# wait) against the SAME board.jsonl. The lock (os.mkdir + a spin of <=2s) has to serialise
+# the writes: no corrupted or interleaved line, all N events present, valid JSON line by line.
 #
-# Uso: bash evals/collision-2lanes.sh [N]   (default N=10)
-# Exit: 0 = zero corrupção, N/N eventos presentes · 1 = corrupção ou evento perdido
+# Usage: bash evals/collision-2lanes.sh [N]   (default N=10)
+# Exit: 0 = zero corruption, N/N events present . 1 = corruption or a lost event
 
 set -u
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

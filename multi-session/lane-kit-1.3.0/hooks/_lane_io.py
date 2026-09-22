@@ -1,28 +1,28 @@
 #!/usr/bin/env python3
 """
-_lane_io — registry de lanes vivas (quem está trabalhando, onde, desde quando).
+_lane_io -- registry of live lanes (who is working, where, since when).
 
-Biblioteca + CLI usada por lane_register.py, lane_git_guard.py e lane_territory_guard.py
-para saber quais sessões (lanes) estão vivas agora e qual território cada uma reivindicou.
-Lock próprio (`.registry.lock`, separado do `.lock` do lane_board.py) porque o heartbeat
-dispara a cada tool-call e não pode contender com escritas no board.
+Library + CLI used by lane_register.py, lane_git_guard.py and lane_territory_guard.py
+to know which sessions (lanes) are alive right now and which territory each one claimed.
+Its own lock (`.registry.lock`, separate from lane_board.py's `.lock`) because the heartbeat
+fires on every tool-call and cannot contend with writes to the board.
 
-Liveness (config em `.claude/lanes/lanes.yaml`, ver templates/lanes.example.yaml):
+Liveness (config in `.claude/lanes/lanes.yaml`, see templates/lanes.example.yaml):
     heartbeat < liveness.alive_minutes (default 10)  -> "alive"
-    entre alive_minutes e dead_minutes (default 30)  -> "suspect"
-    > dead_minutes ou heartbeat ilegível              -> "dead" (evict no próximo register)
+    between alive_minutes and dead_minutes (default 30)  -> "suspect"
+    > dead_minutes or unreadable heartbeat            -> "dead" (evicted on the next register)
 
-Uso:
+Usage:
     python _lane_io.py register --lane <id> --role <r> --session <s> --model <m>
         [--branch <b>] [--exclusive <glob> ...]
-    python _lane_io.py heartbeat --lane <id> [--session <s>] [--throttle <segundos>]
+    python _lane_io.py heartbeat --lane <id> [--session <s>] [--throttle <seconds>]
     python _lane_io.py evict --lane <id>
     python _lane_io.py who-owns <path>
     python _lane_io.py status
     python _lane_io.py --self-test
 
-Exit: 0 ok · 1 lock não obtido (WARN, nunca trava o hook chamador) · 2 uso inválido.
-stdlib + PyYAML opcional (degrada para defaults sem ele). v1.0.0 — 2026-07-10 (lane-kit)
+Exit: 0 ok - 1 lock not acquired (WARN, never blocks the calling hook) - 2 invalid usage.
+stdlib + optional PyYAML (degrades to defaults without it). v1.0.0 -- 2026-07-10 (lane-kit)
 """
 from __future__ import annotations
 
@@ -244,7 +244,7 @@ def register(lane_id: str, role: str, session_id: str, model: str,
             reg = _read_registry()
             lanes = reg.setdefault("lanes", {})
 
-            # evict lanes mortas antes de registrar (spec: evict no próximo register)
+            # evict dead lanes before registering (spec: evict on the next register)
             for lid in list(lanes):
                 if liveness(lanes[lid], cfg) == "dead":
                     if evicted_out is not None:
@@ -367,7 +367,7 @@ def _self_test() -> int:
         REGISTRY_PATH = _LANES_DIR / "registry.json"
         CONFIG_PATH = _LANES_DIR / "lanes.yaml"
 
-        # 1. register cria registry.json válido
+        # 1. register creates a valid registry.json
         ok1, e1 = register("exec-a", "executora", "s1", "claude-opus-4-8", branch="main",
                             territory={"paths": ["src/**"], "exclusive": ["src/api/**"]})
         assert ok1 and REGISTRY_PATH.exists(), f"register should create the registry: {e1}"
@@ -377,7 +377,7 @@ def _self_test() -> int:
             "worktree", "status"
         }, f"incomplete schema: {reg}"
 
-        # 2. heartbeat(throttle=0) avança; throttle normal é no-op
+        # 2. heartbeat(throttle=0) advances; normal throttle is a no-op
         first_hb = reg["lanes"]["exec-a"]["heartbeat_at"]
         time.sleep(0.05)
         ok2, msg2 = heartbeat("exec-a", throttle_seconds=0)
@@ -389,7 +389,7 @@ def _self_test() -> int:
         assert ok3 and msg3 == "throttled"
         assert REGISTRY_PATH.stat().st_mtime == mtime_before, "throttled should not write"
 
-        # 3. liveness: 5/15/35 min atrás -> alive/suspect/dead
+        # 3. liveness: 5/15/35 min ago -> alive/suspect/dead
         cfg = {"liveness": {"alive_minutes": 10, "dead_minutes": 30}}
         e_alive = {"heartbeat_at": datetime.fromtimestamp(_now().timestamp() - 5 * 60, tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%S")}
         e_suspect = {"heartbeat_at": datetime.fromtimestamp(_now().timestamp() - 15 * 60, tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%S")}
@@ -414,14 +414,14 @@ def _self_test() -> int:
         assert "exec-old" not in reg4["lanes"], "register should have evicted exec-old (dead)"
         assert "exec-b" in reg4["lanes"]
 
-        # 5. who_owns: hit exclusivo, miss não-exclusivo, miss lane morta, glob ** funciona
+        # 5. who_owns: exclusive hit, non-exclusive miss, dead lane miss, glob ** works
         owners = who_owns("src/api/handler.py")
         assert any(o[0] == "exec-a" for o in owners), f"should find exec-a under src/api/**: {owners}"
         assert not who_owns("src/other/x.py"), "should not find an owner outside the exclusive list"
         assert _glob_to_regex("**/MEMORY.md").match("a/b/MEMORY.md")
         assert _glob_to_regex("**/MEMORY.md").match("MEMORY.md")
 
-        # dead lane não deveria aparecer em who_owns
+        # a dead lane should not show up in who_owns
         reg5 = _read_registry()
         reg5["lanes"]["exec-dead-territory"] = {
             "role": "executora", "session_id": "d", "model": "x", "branch": "",
@@ -431,13 +431,13 @@ def _self_test() -> int:
         _write_registry(reg5)
         assert not who_owns("deadzone/file.py"), "a dead lane should not claim territory"
 
-        # 6. alive_others exclui self; alive_count correto
+        # 6. alive_others excludes self; alive_count correct
         others = alive_others("exec-a")
         assert all(o[0] != "exec-a" for o in others)
         assert any(o[0] == "exec-b" for o in others)
         assert alive_count() >= 2
 
-        # 7. lock contention: hook nunca trava, retorna (False, msg) em ~2s
+        # 7. lock contention: the hook never hangs, returns (False, msg) in ~2s
         _LANES_DIR.mkdir(parents=True, exist_ok=True)
         lock_dir = _LANES_DIR / ".registry.lock"
         lock_dir.mkdir(exist_ok=True)
@@ -449,7 +449,7 @@ def _self_test() -> int:
         ok_after, _ = register("exec-c", "executora", "s3", "claude-opus-4-8")
         assert ok_after, "register should work once the lock is released"
 
-        # 8. registry corrompido degrada para vazio, próximo register reescreve limpo
+        # 8. corrupt registry degrades to empty, next register rewrites it clean
         REGISTRY_PATH.write_text("{ isto nao e json valido", encoding="utf-8")
         reg_corrupt = _read_registry()
         assert reg_corrupt == {"schema_version": "1.0", "lanes": {}}

@@ -1,28 +1,28 @@
 #!/usr/bin/env python3
 """
-goal_ledger — leitor/escritor do _GOAL-LEDGER (loop autônomo /goal · 2026-06-27).
+goal_ledger -- reader/writer for the _GOAL-LEDGER (autonomous /goal loop -- 2026-06-27).
 
-SSoT dos goals do ecossistema: docs/plans/_GOAL-LEDGER.md (tabela markdown
-goal↔tier↔PRD↔status↔critério↔review). Análogo a loop_state.py, mas no nível de
-GOAL (não de lote): reporta o PRÓXIMO goal repo-safe (🟢) não-pronto, o resumo
-de progresso, e — opcional — escreve o status de um goal (--set, edição cirúrgica
-da célula Status). É a peça que o loop usa p/ saber "qual objetivo atacar agora"
-e p/ marcar progresso sem drift.
+SSoT for the ecosystem's goals: docs/plans/_GOAL-LEDGER.md (markdown table
+goal<->tier<->PRD<->status<->criterion<->review). Analogous to loop_state.py, but at the
+GOAL level (not batch): reports the NEXT repo-safe (🟢) not-done goal, the progress
+summary, and -- optionally -- writes the status of a goal (--set, surgical edit
+of the Status cell). It's the piece the loop uses to know "which objective to tackle now"
+and to mark progress without drift.
 
-Uso:
-    python scripts/goal_ledger.py                 # próximo goal + resumo
+Usage:
+    python scripts/goal_ledger.py                 # next goal + summary
     python scripts/goal_ledger.py --json
-    python scripts/goal_ledger.py --next          # só o id do próximo goal
-    python scripts/goal_ledger.py --set G-CONT "✅ pronto (LIVE 2026-06-27)"
+    python scripts/goal_ledger.py --next          # just the id of the next goal
+    python scripts/goal_ledger.py --set G-CONT "✅ done (LIVE 2026-06-27)"
     python scripts/goal_ledger.py --self-test
-Exit: 0 = ok · 1 = --set não encontrou o goal · 2 = ledger ausente/uso inválido.
-stdlib-only. Leitura NÃO muta; --set faz edição cirúrgica só da célula Status.
+Exit: 0 = ok -- 1 = --set did not find the goal -- 2 = ledger missing/invalid usage.
+stdlib-only. Reading does NOT mutate; --set does a surgical edit of only the Status cell.
 
-v1.0.0 — 2026-06-27 (G-CONT · PRD-CONTINUIDADE-LOOP)
-v1.1.0 — 2026-07-10 (Operator Kit · Tier 2 · embarcado no operator-kit — raiz resolvida via
-         CLAUDE_PROJECT_DIR/${CLAUDE_PLUGIN_ROOT}/busca por .git, não mais parents[N] fixo:
-         a profundidade do arquivo muda quando o kit é instalado em outro projeto — o mesmo
-         off-by-one que já pegou o dual-report-builder. Lógica de parsing/ledger intacta.)
+v1.0.0 -- 2026-06-27 (G-CONT -- PRD-CONTINUIDADE-LOOP)
+v1.1.0 -- 2026-07-10 (Operator Kit -- Tier 2 -- embedded in operator-kit -- root resolved via
+         CLAUDE_PROJECT_DIR/${CLAUDE_PLUGIN_ROOT}/searching for .git, no longer a fixed parents[N]:
+         the file's depth changes when the kit is installed in another project -- the same
+         off-by-one that already bit the dual-report-builder. Parsing/ledger logic intact.)
 """
 from __future__ import annotations
 
@@ -70,7 +70,7 @@ def _is_separator(cells: list[str]) -> bool:
 
 
 def parse(text: str) -> dict:
-    """Parseia a 1ª tabela markdown com colunas Goal+Status. Retorna {col, goals}."""
+    """Parses the 1st markdown table with Goal+Status columns. Returns {col, goals}."""
     header = None
     col: dict[str, int] = {}
     goals: list[dict] = []
@@ -141,7 +141,7 @@ def tier_kind(tier: str) -> set[str]:
 
 
 def actionable(goal: dict) -> bool:
-    """Repo-safe (🟢) e ainda não-pronto = o loop pode atacar autônomo (LC-2)."""
+    """Repo-safe (🟢) and still not-done = the loop can tackle it autonomously (LC-2)."""
     return "repo" in tier_kind(goal["tier"]) and status_kind(goal["status"]) != "done"
 
 
@@ -165,8 +165,8 @@ def summary(goals: list[dict]) -> dict:
 
 
 def set_column(text: str, goal_id: str, column_key: str, new_value: str) -> tuple[str, bool]:
-    """Edição cirúrgica genérica: troca SÓ a célula de `column_key` (ex.: 'status',
-    'readiness') da linha cujo id == goal_id. Generaliza set_status()."""
+    """Generic surgical edit: swaps ONLY the cell for `column_key` (e.g. 'status',
+    'readiness') on the row whose id == goal_id. Generalizes set_status()."""
     p = parse(text)
     ci = p["col"].get(column_key)
     ii = p["col"].get("id", 0)
@@ -188,15 +188,15 @@ def set_column(text: str, goal_id: str, column_key: str, new_value: str) -> tupl
 
 
 def set_status(text: str, goal_id: str, new_status: str) -> tuple[str, bool]:
-    """Edição cirúrgica: troca SÓ a célula Status da linha cujo id == goal_id."""
+    """Surgical edit: swaps ONLY the Status cell on the row whose id == goal_id."""
     return set_column(text, goal_id, "status", new_status)
 
 
-# ───────────────────────── escada de prontidao R0->R4 ──────────────────────────
+# ───────────────────────── R0->R4 readiness ladder ──────────────────────────
 _READINESS_LEVELS = ("R0", "R1", "R2", "R3", "R4")
 
 _READINESS_EVIDENCE_RE = {
-    # R0 (Declarado) não exige evidência — é a palavra do maker.
+    # R0 (Declared) does not require evidence -- it's the maker's word.
     "R1": re.compile(r"(?i)(self-test|pytest|test).{0,40}(ok|pass|exit\s*=?\s*0|passed)"),
     "R2": re.compile(r"(?i)done_gate.{0,40}(exit\s*=?\s*0|DONE)"),
     "R3": re.compile(r"(?i)REVIEW-[\w\-]+\.md"),
@@ -205,9 +205,9 @@ _READINESS_EVIDENCE_RE = {
 
 
 def validate_readiness(level: str, evidence: str) -> str | None:
-    """Retorna None se a evidência satisfaz o nível, ou a mensagem de recusa (exit 2).
+    """Returns None if the evidence satisfies the level, or the refusal message (exit 2).
 
-    Regra dura (A.2): ninguém declara readiness maior que a evidência.
+    Hard rule (A.2): nobody declares a readiness higher than the evidence.
     """
     if level not in _READINESS_LEVELS:
         return f"invalid level: {level!r} (valid: {_READINESS_LEVELS})"
@@ -226,7 +226,7 @@ def validate_readiness(level: str, evidence: str) -> str | None:
 
 
 def set_readiness(text: str, goal_id: str, level: str, evidence: str) -> tuple[str, bool, str | None]:
-    """Retorna (novo_texto, changed, error). error != None = recusado, texto inalterado."""
+    """Returns (new_text, changed, error). error != None = refused, text unchanged."""
     err = validate_readiness(level, evidence)
     if err:
         return text, False, err
@@ -267,7 +267,7 @@ def _self_test() -> None:
     assert "| G-B | bar |" in new.replace("  ", " ") or "G-B" in new, "other rows intact"
     assert parse(new)["goals"][0]["status"] == "🔄 in-progress", "the new status did not persist"
 
-    # escada R0->R4 (A.2)
+    # R0->R4 ladder (A.2)
     sample_r = _SAMPLE.replace(
         "| # | Goal | Tier | PRD-source | Status | Criterion-of-DONE (LIVE) | Review |",
         "| # | Goal | Tier | PRD-source | Status | Criterion-of-DONE (LIVE) | Review | Readiness |",
@@ -275,7 +275,7 @@ def _self_test() -> None:
         "|---|------|------|------------|--------|--------------------------|--------|",
         "|---|------|------|------------|--------|--------------------------|--------|-----------|",
     )
-    # adiciona célula Readiness (R0) em cada linha de dado (goals G-A/G-B/G-C)
+    # add a Readiness cell (R0) to each data row (goals G-A/G-B/G-C)
     lines_r = []
     for ln in sample_r.splitlines():
         if ln.startswith("| G-"):
