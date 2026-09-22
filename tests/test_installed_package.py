@@ -271,7 +271,8 @@ def test_doctor_degrades_to_ascii_on_a_cp1252_stream(site: Path, tmp_path: Path)
     empty.mkdir()
     result = _run(site, empty, "-m", "hpp", "doctor", env={"PYTHONIOENCODING": "cp1252"}, encoding="cp1252")
     assert result.returncode == 0, result.stderr
-    assert result.stdout.strip() == "HPP doctor: ok - modules=10 - hosts=claude-code, codex", result.stdout
+    assert result.stdout.strip() == ("HPP doctor: ok - modules=10 - hosts=claude-code, codex "
+                                     "- hooks=18 (permission gates=9 - llm egress=0)"), result.stdout
     assert result.stdout.isascii(), result.stdout
 
 
@@ -280,4 +281,5 @@ def test_CONTROLE_doctor_keeps_the_middle_dot_on_a_utf8_stream(site: Path, tmp_p
     empty.mkdir()
     result = _run(site, empty, "-m", "hpp", "doctor", env={"PYTHONIOENCODING": "utf-8"})
     assert result.returncode == 0, result.stderr
-    assert result.stdout.strip() == "HPP doctor: ok · modules=10 · hosts=claude-code, codex", result.stdout
+    assert result.stdout.strip() == ("HPP doctor: ok · modules=10 · hosts=claude-code, codex "
+                                     "· hooks=18 (permission gates=9 · llm egress=0)"), result.stdout

@@ -26,9 +26,11 @@ cobertura por host e monitores.
 **Não é:** um protocolo de rede, um formato de prompt ou um guia de estilo. Nada no protocol
 depende de qual modelo está do outro lado.
 
-**Verifique:** `python -m hpp doctor` rejeita um manifesto cujo `protocol_version` não seja `2.0`,
+**Verifique:** `python -m hpp doctor` rejeita um manifesto cujo `protocol_version` não seja `2.1`,
 cujos códigos de saída desviem de `0/1/2/3`, ou cujos módulos referenciem módulos ou hosts
-desconhecidos.
+desconhecidos. O `2.1` acrescentou duas chaves obrigatórias no topo, `hook_capabilities` e
+`hooks`; um manifesto 2.0 que não declara hook nenhum é recusado, o que é mudança de contrato e
+não acréscimo.
 
 ## módulo
 
@@ -54,6 +56,19 @@ de CLI) ou `unsupported` (nenhum mecanismo verificado).
 **Verifique:** `python -m hpp init --target . --host codex --modules claude-dev-kit --json` para
 em `configure`, porque esse módulo é `unsupported` no Codex CLI.
 
+**Medido em 2026-09-22, Codex CLI 0.153.4:** o host *tem* superfície nativa de hook —
+`codex features list` imprime `hooks  stable  true`, e `codex --help` traz
+`--dangerously-bypass-hook-trust` ("run enabled hooks without requiring persisted hook trust"),
+então ligar um é decisão explícita de confiança. Isso **não** promoveu nenhum módulo a `native`
+no Codex, e o mesmo censo diz por quê: `plugin_hooks` imprime `removed  false`, e a string
+`codex-hooks.json` não aparece no binário instalado (`hooks.json`, `SessionStart`, `PreToolUse`
+e `hook_trust` aparecem). Um módulo instalado por cópia de arquivo continua, portanto, sem
+conseguir wirar os próprios hooks nesse host; o operador cola no arquivo de hooks do Codex e
+aceita o prompt de confiança. `explicit-command` segue sendo a cobertura honesta. Dois
+instrumentos foram testados e recusados para esta pergunta porque não discriminam:
+`codex features list` e `codex doctor` produzem saída idêntica byte a byte com um `hooks.json`
+propositalmente malformado em `CODEX_HOME` e sem nenhum.
+
 ## gate
 
 **É:** uma condição nomeada, com resposta mensurável, que um pedaço de trabalho precisa satisfazer
@@ -66,6 +81,30 @@ não pode ser forçado a falhar por um teste é uma hipótese de proteção, nã
 e `closure` (`python -m hpp graph --view operational --format mermaid`). Acrescentar `verified`
 como primeiro evento é recusado antes de qualquer escrita: `python -m hpp event append --type verified`
 sai com 2 e não cria `.hpp/`.
+
+## hook capability
+
+**É:** o que um hook é capaz de fazer, declarado no manifesto antes de você instalá-lo, a partir
+de um vocabulário fechado de seis grupos: `automatic-source-writes` (escreve arquivos dentro do
+seu projeto por conta própria), `command-rewrite-and-process-control` (muda o que roda, ou o que
+o modelo recebe antes de rodar), `transcript-derived-llm-egress` (manda texto derivado do
+transcript para um modelo), `mcp-network-and-process-activity` (sonda a rede, fala com um servidor
+MCP ou dispara um processo), `automatic-permission-gates` (pode recusar ou avisar sobre uma
+chamada de ferramenta) e `session-observation-and-cost-records` (lê estado de sessão e mantém
+registros). Cada hook também declara seus `events` e um `exit_policy` de `observe` (sempre exit 0),
+`warn` (pode sair 1) ou `block` (pode sair 2, ou emitir uma decisão que bloqueia).
+
+**Não é:** uma descrição do que o hook *serve*, e não é opcional. Hook sem declaração é recusado;
+lista `capabilities` vazia é recusada; módulo que declara o componente `hooks` e não declara hook
+nenhum é recusado. Ausente nunca se lê como vazio — uma declaração faltando que valesse como "não
+faz nada" seria a permissão mais ampla do manifesto, escrita como silêncio.
+
+**Verifique:** `python -m hpp doctor` imprime `hooks=<n>` com as contagens de permission gate e de
+egresso a LLM, e o `--json` carrega o censo completo por grupo — inclusive os grupos que contam
+zero, para que o zero seja medição e não omissão. `python -m hpp init` imprime a tabela de
+capacidades dos módulos escolhidos *antes* dos comandos para colar; escolha um módulo sem hooks e
+a tabela vem vazia, não ausente. Remova o `capabilities` de um hook no manifesto e o mesmo
+`doctor` sai 2.
 
 ## evidência
 

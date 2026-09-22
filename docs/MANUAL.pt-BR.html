@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>House Party Protocol — Manual do harness</title>
-  <meta name="description" content="Manual operacional do harness House Party Protocol 2.4.3: init, mapas, loop, política, prova, hosts e exit codes, cada afirmação com o comando que a reproduz.">
+  <meta name="description" content="Manual operacional do harness House Party Protocol 2.5.0: init, mapas, loop, política, prova, hosts e exit codes, cada afirmação com o comando que a reproduz.">
   <link rel="alternate" hreflang="en" href="MANUAL.html">
   <link rel="alternate" hreflang="pt-BR" href="MANUAL.pt-BR.html">
   <style>
@@ -66,9 +66,9 @@
   <header class="hero">
     <div class="wrap">
       <img src="../assets/hpp-logo-dark.svg" alt="House Party Protocol — by Rushar Labs">
-      <p class="eyebrow">Manual do harness · v2.4.3 · Claude Code e Codex CLI</p>
+      <p class="eyebrow">Manual do harness · v2.5.0 · Claude Code e Codex CLI</p>
       <h1>Da spec à prova.<br><span class="signal">Sem salto de confiança.</span></h1>
-      <p>Um guia operacional do harness: como o <code>hpp init</code> instala, o que cada mapa projeta, como o loop avança, o que a política bloqueia e o que conta como prova. Toda afirmação abaixo carrega o comando que a reproduz; as saídas citadas foram medidas em 2026-09-21 contra a versão 2.4.3, a partir de um clone deste repositório e de uma instalação por pip da mesma versão, e cada bloco diz qual.</p>
+      <p>Um guia operacional do harness: como o <code>hpp init</code> instala, o que cada mapa projeta, como o loop avança, o que a política bloqueia e o que conta como prova. Toda afirmação abaixo carrega o comando que a reproduz; as saídas citadas foram medidas em 2026-09-21 contra a versão 2.5.0, a partir de um clone deste repositório e de uma instalação por pip da mesma versão, e cada bloco diz qual.</p>
     </div>
   </header>
   <nav aria-label="Capítulos"><div class="wrap"><a href="#model">Modelo</a><a href="#start">Começar</a><a href="#init">Init</a><a href="#maps">Mapas</a><a href="#loop">Loop</a><a href="#policy">Política</a><a href="#proof">Prova</a><a href="#hosts">Hosts</a><a href="#exit">Exit codes</a></div></nav>
@@ -101,7 +101,7 @@ python -m hpp init --target ../seu-repo
 python -m hpp init --target ../seu-repo --apply
 python -m hpp benchmark -k 3</pre>
       <p>O <code>hpp doctor</code> valida o manifesto. Neste repositório ele imprime <code>HPP doctor: ok · modules=10 · hosts=claude-code, codex</code> e, porque o <code>marketplace.json</code> está ao lado do manifesto, também cruza cada caminho de módulo, versão e manifesto de plugin; esse resultado só aparece com <code>--json</code>, onde <code>distribution</code> lê <code>{"checked": true, "modules": 10, "status": "ok"}</code>. A partir de uma instalação por pip a linha única é a mesma e o campo lê <code>{"checked": false, "status": "source-contract"}</code> — o comando diz o que não pôde verificar em vez de reportar uma checagem que não rodou.</p>
-      <p><code>hpp install --bundle reliable-coding --host codex --target ../seu-repo</code> imprime um recibo com <code>"mode": "plan-only"</code> e não copia nada. A cópia é feita pelo instalador de módulos, que faz parte deste repositório em <code>instaladores/kit-forge-1.4.0/kit_doctor.py</code>, ao lado dos diretórios de módulo a partir dos quais ele instala (uma instalação por pip não carrega nem um nem outro): <code>python instaladores/kit-forge-1.4.0/kit_doctor.py install --kit &lt;caminho-do-módulo&gt; --host &lt;host&gt; --target ../seu-repo</code> imprime um plano, e o mesmo comando com <code>--apply</code> o executa. O <code>hpp init</code> imprime essas linhas para você no bloco de wiring.</p>
+      <p><code>hpp install --bundle reliable-coding --host codex --target ../seu-repo</code> imprime um recibo com <code>"mode": "plan-only"</code> e não copia nada. A cópia é feita pelo instalador de módulos, que faz parte deste repositório em <code>installers/kit-forge-1.4.1/kit_doctor.py</code>, ao lado dos diretórios de módulo a partir dos quais ele instala (uma instalação por pip não carrega nem um nem outro): <code>python installers/kit-forge-1.4.1/kit_doctor.py install --kit &lt;caminho-do-módulo&gt; --host &lt;host&gt; --target ../seu-repo</code> imprime um plano, e o mesmo comando com <code>--apply</code> o executa. O <code>hpp init</code> imprime essas linhas para você no bloco de wiring.</p>
       <p class="measured">Requisitos: Python 3.10 ou mais novo (<code>pyproject.toml</code>), <code>git</code> no <code>PATH</code> para a atestação e para a contagem de commits do <code>detect</code>; nenhum pacote de terceiro.</p>
     </div></section>
 
@@ -120,7 +120,7 @@ python -m hpp benchmark -k 3</pre>
       <h3>Prontidão é contada, não estimada</h3>
       <p>Onze itens, cada um <code>verified</code>, <code>not verified</code> ou <code>failed</code>, cada um com o comando que o reproduz. O que não foi medido aparece como não verificado — nunca como zero e nunca como cem. Esta é a sequência de abertura e a linha de prontidão medidas num target vazio a partir de um clone deste repositório, que carrega os diretórios de módulo, seus <code>CHECKSUMS.txt</code> e o <code>marketplace.json</code>:</p>
       <pre>&gt; detecting host...           ✓ greenfield · 0 existing item(s) preserved
-&gt; checking prerequisites...   ✓ python 3.14.3 · protocol 2.0
+&gt; checking prerequisites...   ✓ python 3.14.3 · protocol 2.1
 &gt; mounting profile...         ✓ would-write · host=claude-code · bundle=reliable-coding · policy=audit · 3 default(s)
 &gt; loading modules...          ✓ 6 modules · reliable-coding · claude-code · 6/6 checksums verified
 &gt; wiring suggestions...       ✓ 7 commands to paste · 0 files written
@@ -132,7 +132,7 @@ python -m hpp benchmark -k 3</pre>
       <p class="measured">Os dois não verificados são os dois que só uma ação posterior prova: o profile (só plano; <code>--apply</code> o escreve) e o wiring do host (uma colagem que você mesmo faz). Comando: <code>python -m hpp init --target &lt;dir-vazio&gt; --non-interactive --no-animation</code>; o diretório-alvo tinha 0 arquivos depois.</p>
       <p>A partir de uma instalação por pip da mesma versão, que carrega o harness, o manifesto e a suíte de benchmark, mas nenhum diretório de módulo e nenhum <code>marketplace.json</code>, o mesmo comando no mesmo target mostra:</p>
       <pre>&gt; detecting host...           ✓ greenfield · 0 existing item(s) preserved
-&gt; checking prerequisites...   ✓ python 3.14.3 · protocol 2.0
+&gt; checking prerequisites...   ✓ python 3.14.3 · protocol 2.1
 &gt; mounting profile...         ✓ would-write · host=claude-code · bundle=reliable-coding · policy=audit · 3 default(s)
 &gt; loading modules...          ✓ 6 modules · reliable-coding · claude-code
 &gt; wiring suggestions...       ✓ 7 commands to paste · 0 files written

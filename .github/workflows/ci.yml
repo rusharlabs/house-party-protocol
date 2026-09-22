@@ -69,8 +69,8 @@ jobs:
       # bytes on disk. `shell: python` runs this identically on all three
       # platforms (Actions invokes `python <tmp-script>`), so no OS branching
       # is needed. The published repository is the emitted distribution: every
-      # module directory (frameworks-com-plugins/, instaladores/, continuidade/,
-      # multi-sessao/, wizards/) carries a CHECKSUMS.txt written by the forge,
+      # module directory (frameworks/, installers/, continuity/,
+      # multi-session/, wizards/) carries a CHECKSUMS.txt written by the forge,
       # so here this step is a real gate over every shipped module file. The
       # same workflow also runs in the harness source tree, which has no module
       # directories; there the step says that nothing was found and exits 0,

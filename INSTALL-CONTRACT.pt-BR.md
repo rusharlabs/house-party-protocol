@@ -2,7 +2,7 @@
 
 # INSTALL-CONTRACT — o contrato de instalação de qualquer kit deste marketplace
 
-> **Versão:** 1.0.0 · **Enforcement:** `instaladores/kit-forge/kit_doctor.py` (subcomando `install`)
+> **Versão:** 1.0.0 · **Enforcement:** `installers/kit-forge/kit_doctor.py` (subcomando `install`)
 > **Irmão de:** `SKILL-CONTRACT.md` (contrato de SKILL.md) — este é o contrato do INSTALADOR.
 
 ## Princípio

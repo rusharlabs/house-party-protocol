@@ -159,7 +159,7 @@ value per module, not changing the six stages.
 
 The published tree is emitted by the forge from module sources. Each module directory carries
 `CHECKSUMS.txt` (sha256 per file) and a `.zip` with the same bytes; `marketplace.json` lists the
-modules with `source` and `version`; the installer (`instaladores/kit-forge-<version>/kit_doctor.py`)
+modules with `source` and `version`; the installer (`installers/kit-forge-<version>/kit_doctor.py`)
 runs the six install stages, verifies checksums and executes the module's declared smokes.
 
 ```text

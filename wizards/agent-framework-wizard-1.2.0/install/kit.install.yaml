@@ -1,0 +1,36 @@
+kit: agent-framework-wizard
+requires:
+  python: ">=3.9"
+  pyyaml: true
+  external_services: []
+questions:
+  - id: project_name
+    prompt: "What is the project/agent name? (it goes into the generated files; e.g. my-agent)"
+    type: string
+    default: agente-teste
+  - id: templates
+    prompt: "Which base documents should be generated? You may pick more than one (default: all 4 — 00-READ-FIRST, 00-STATE, 00-VISION, 00-PROCESSES)"
+    type: choice
+    options:
+      - "00-PROCESSES"
+      - "00-READ-FIRST"
+      - "00-STATE"
+      - "00-VISION"
+    default:
+      - "00-READ-FIRST"
+      - "00-STATE"
+      - "00-VISION"
+      - "00-PROCESSES"
+verification:
+  - "python wizard.py --self-test"
+hosts:
+  claude-code:
+    plugin: true
+    manual_gates: []
+  codex:
+    plugin: false
+    agents: AGENTS.md
+    skills_path: .agents/skills
+    runtime_path: .agents/hpp/agent-framework-wizard
+    manual_gates: [hooks]
+docs: README.md

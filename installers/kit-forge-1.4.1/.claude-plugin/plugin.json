@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "kit-forge",
+  "displayName": "Kit Forge",
+  "version": "1.4.1",
+  "description": "The IP/PII gate plus the kit assembler. ip_pii_linter + kit_assembler (with guard_origins built in) + kit_doctor (verify/install/registry, 6 stages: detect/prereqs/profile/configure/wire-suggest/smoke) + guard_origins + wire_settings + install_git_hook + skill_lint + tools/browse.py (interactive marketplace menu), single exit contract (0 ok/no-op, 1 warn, 2 block, 3 error). No --skip-lint.",
+  "author": { "name": "Max Parisi", "url": "https://rusharlabs.com" },
+  "license": "MIT",
+  "keywords": [
+    "ip-scanner",
+    "pii",
+    "kit-builder",
+    "skill-lint",
+    "governance",
+    "installer-engine"
+  ]
+}
