@@ -1,0 +1,19 @@
+{
+  "_comment": "settings-continuidade.template.json — parameterized deny-rules for the continuity strict mode. ADDITIVE: merge into the 'deny' array that already exists in settings.json/settings.local.json. Without this, strict mode can be disarmed by the session itself (whatever edits settings is exactly what continuity is trying to protect).",
+  "permissions": {
+    "deny": [
+      "Edit(.claude/handoff/**)",
+      "Edit(.claude/hooks/handoff_guard.py)",
+      "Edit(.claude/hooks/handoff_inject.py)",
+      "Edit(.claude/hooks/_handoff_io.py)",
+      "Edit(.claude/lanes/**)",
+      "Edit(.claude/settings.json)",
+      "Edit(.claude/settings.local.json)",
+      "Bash(git push:*)",
+      "Bash(git push --force:*)",
+      "Bash(git reset --hard:*)",
+      "Bash(git clean -fd:*)"
+    ]
+  },
+  "_uso": "Copy the 'deny' array above INTO the 'permissions.deny' that already exists (never replace the whole file). '${CLAUDE_PLUGIN_ROOT}' does not apply here — deny paths are always relative to the target project. The profile setting 'continuidade.enforcement: strict' in operator-profile.yaml turns on the RECOMMENDATION to apply this block; applying it is always a human gate (the classifier blocks auto-edits of settings)."
+}

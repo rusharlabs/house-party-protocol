@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "supabase-pack",
+  "displayName": "Supabase Pack",
+  "version": "1.1.1",
+  "description": "Two SKILL-CONTRACT-compliant skills for projects on Supabase: rls-audit (real RLS via pg_policies + get_advisors, not just the relrowsecurity flag) and supabase-edge-scaffold (TypeScript Edge Function with CORS + service-role via env + deno check smoke test). MCP tools declared by capability, never by hardcoded prefix.",
+  "author": { "name": "Max Parisi", "url": "https://rusharlabs.com" },
+  "license": "MIT",
+  "keywords": ["supabase", "rls", "row-level-security", "edge-function", "postgres", "security-audit", "deno", "mcp", "database"]
+}

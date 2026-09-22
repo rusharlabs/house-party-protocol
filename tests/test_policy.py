@@ -41,7 +41,7 @@ def test_comandos_destrutivos_sao_bloqueados(command, rule):
 
 
 ALLOW_CASES = [
-    "rm -f /tmp/arquivo-unico.txt",  # so forca, sem recursividade: nao e a combinacao perigosa
+    "rm -f /tmp/single-file.txt",  # force only, not recursive: not the dangerous combination
     "rm -r /tmp/apenas-recursivo",  # so recursivo, sem forca
     "rm relatorio.txt",
     "ls -la",

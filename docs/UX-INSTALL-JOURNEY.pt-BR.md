@@ -4,7 +4,7 @@
 
 > **Versão:** 2.0.0 — camada de apresentação sobre dois contratos congelados.
 > **Caminho 1** é o `hpp init`, o instalador do harness (`hpp/wizard.py`, seis estágios, plano e
-> depois `--apply`). **Caminho 2** é o instalador de módulos, `instaladores/kit-forge-1.4.0/kit_doctor.py`,
+> depois `--apply`). **Caminho 2** é o instalador de módulos, `installers/kit-forge-1.4.1/kit_doctor.py`,
 > cuja mecânica vive em `INSTALL-CONTRACT.md` e cujo README por módulo segue o
 > `INSTALL-GUIDE-TEMPLATE.md`; os dois viajam na raiz deste repositório. Este documento descreve
 > a EXPERIÊNCIA: como um AGENTE (Claude Code ou Codex CLI) guia um HUMANO pela instalação, numa
@@ -104,7 +104,7 @@ manifesto — um plano contra um alvo vazio mostra:
 
 ```text
 > detecting host...           ✓ greenfield · 0 existing item(s) preserved
-> checking prerequisites...   ✓ python 3.14.3 · protocol 2.0
+> checking prerequisites...   ✓ python 3.14.3 · protocol 2.1
 > mounting profile...         ✓ would-write · host=claude-code · bundle=reliable-coding · policy=audit · 3 default(s)
 > loading modules...          ✓ 6 modules · reliable-coding · claude-code · 6/6 checksums verified
 > wiring suggestions...       ✓ 7 commands to paste · 0 files written
@@ -176,7 +176,7 @@ explícita.
 
 ### A jornada em 5 passos (igual nos 4 cenários)
 
-1. **Plano.** O agente roda `python instaladores/kit-forge-1.4.0/kit_doctor.py install --kit <dir-do-módulo> --host <host> --target <projeto> --human`
+1. **Plano.** O agente roda `python installers/kit-forge-1.4.1/kit_doctor.py install --kit <dir-do-módulo> --host <host> --target <projeto> --human`
    (`--human` escolhe o relatório legível). Modo plano é o default: nenhuma escrita acontece,
    exit 0.
 2. **Tradução.** O agente cola na conversa o bloco de confirmação (molde na seção "Bloco de
@@ -309,7 +309,7 @@ I ran the {kit} installer in plan mode -- nothing has been written yet. Summary:
 
 Módulo: `operator-kit-1.1.0`. Comando que o agente rodou (saída real abaixo). Esta captura é
 datada: ela é anterior ao caminho versionado do instalador. Na distribuição atual o módulo é o
-`operator-kit-1.4.0` e o instalador vive em `instaladores/kit-forge-1.4.0/kit_doctor.py`; os
+`operator-kit-1.5.0` e o instalador vive em `installers/kit-forge-1.4.1/kit_doctor.py`; os
 estágios, as flags (`--target`, `--host`, `--answers`, `--apply`, `--human`) e a forma da saída
 são os mesmos.
 

@@ -139,7 +139,7 @@ def language_pairs() -> dict:
         parts = set(path.relative_to(ROOT).parts[:-1])
         if parts & {".github", "hpp", "tests", "assets", "__pycache__", "examples", "skills", "commands", "rules"}:
             continue
-        if any(part.startswith(("frameworks-", "instaladores", "continuidade", "multi-sessao", "wizards", "_superseded")) for part in parts):
+        if any(part.startswith(("frameworks", "installers", "continuity", "multi-session", "wizards", "_superseded")) for part in parts):
             continue  # emitted module directories carry their own pair gate in the forge
         if path.name.endswith(PT):
             sibling = path.with_name(path.name[: -len(PT)] + ".md")

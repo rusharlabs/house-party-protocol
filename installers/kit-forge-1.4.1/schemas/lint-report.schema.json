@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "lint-report.schema.json",
+  "title": "IP/PII Lint Report v1",
+  "description": "Contract of the --json emitted by ip_pii_linter.py.",
+  "type": "object",
+  "required": ["status", "counts", "findings"],
+  "additionalProperties": false,
+  "properties": {
+    "status": { "type": "string", "enum": ["ok", "warn", "block"] },
+    "counts": {
+      "type": "object",
+      "additionalProperties": { "type": "integer" }
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["file", "line", "category", "severity", "rule_id", "match_redacted"],
+        "additionalProperties": false,
+        "properties": {
+          "file": { "type": "string" },
+          "line": { "type": "integer" },
+          "category": { "type": "string", "enum": ["secret", "client", "infra", "pii", "identity", "derived", "hygiene"] },
+          "severity": { "type": "string", "enum": ["block", "warn"] },
+          "rule_id": { "type": "string" },
+          "match_redacted": { "type": "string" }
+        }
+      }
+    }
+  }
+}

@@ -13,7 +13,7 @@ from hpp.context import compile_context
 from hpp.evals import EvalError, exit_for as eval_exit_for, packaged_suite, run_suite
 from hpp.graph import build_graph, to_mermaid
 from hpp.install import InstallError, installation_plan
-from hpp.manifest import ManifestError, load_manifest, validate_distribution
+from hpp.manifest import ManifestError, hook_capability_census, load_manifest, validate_distribution
 from hpp.maps import build_agent_map, build_context_map, build_lane_map, build_monitor_map
 from hpp.policy import assess, exit_for as policy_exit_for
 from hpp.routing import route
@@ -57,13 +57,20 @@ def _read_json(path: str, expected: type) -> Any:
 def command_doctor(args: argparse.Namespace) -> int:
     manifest, path = _manifest(args)
     distribution = validate_distribution(manifest, path.parent)
+    # Why (A4, 2026-09-22): load_manifest already refuses a hook without a declaration, so
+    # reaching this line IS the pass. The census is printed so the answer to "what can the
+    # hooks I am about to paste do?" is a number, not a reading of nine Python files.
+    hooks = hook_capability_census(manifest)
     result = {"status": "ok", "version": __version__, "manifest": str(path),
               "modules": len(manifest["modules"]), "bundles": sorted(manifest["bundles"]),
-              "hosts": manifest["hosts"], "distribution": distribution}
+              "hosts": manifest["hosts"], "distribution": distribution, "hooks": hooks}
     if args.json:
         _json(result)
     else:
-        _line(f"HPP doctor: ok · modules={result['modules']} · hosts={', '.join(result['hosts'])}")
+        gates = hooks["by_capability"].get("automatic-permission-gates", 0)
+        egress = hooks["by_capability"].get("transcript-derived-llm-egress", 0)
+        _line(f"HPP doctor: ok · modules={result['modules']} · hosts={', '.join(result['hosts'])} "
+              f"· hooks={hooks['declared']} (permission gates={gates} · llm egress={egress})")
     return 0
 
 
