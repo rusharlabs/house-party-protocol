@@ -1,0 +1,16 @@
+# gotcha-memory — the subset of operator-profile.yaml that this kit reads.
+# Copy these sections into YOUR project's operator-profile.yaml (or use as is).
+# Without a profile, the kit degrades to the defaults commented below — it never breaks.
+
+paths:
+  # Where failures.jsonl + curated.jsonl live. Recommended to gitignore
+  # (it is local operational memory, regenerable — losing it = zero structural damage).
+  gotcha_store: .claude/gotchas          # default: .claude/gotchas/ under the cwd
+
+gotchas:
+  window_hours: 24                       # window in which a failure counts as "recurring" (default 24)
+  min_count: 3                           # >= N identical failures in the window become a gotcha (default 3)
+  top: 5                                 # maximum number of lessons in the injected preamble (default 5)
+  # Initial curated lessons (optional). Format: see curated.seed.example.yaml.
+  # Seed with: python _lib/gotchas_memory.py --seed <file>
+  # seed_file: gotcha-memory/curated.seed.example.yaml

@@ -55,9 +55,9 @@ seção 4 como único caminho.
 ```bash
 cp -r <kit-dir> <seu-projeto>/<nome-do-kit>
 cd <seu-projeto>
-python <nome-do-kit>/instaladores/kit-forge/kit_doctor.py install <nome-do-kit> --target . --human
+python <nome-do-kit>/installers/kit-forge/kit_doctor.py install <nome-do-kit> --target . --human
 #                                                                                   ^ mostra o PLANO, zero escrita
-python <nome-do-kit>/instaladores/kit-forge/kit_doctor.py install <nome-do-kit> --target . --apply
+python <nome-do-kit>/installers/kit-forge/kit_doctor.py install <nome-do-kit> --target . --apply
 #                                                                                   ^ aplica de verdade
 ```
 (ajustar o path do `kit_doctor.py` para onde o kit-forge foi copiado/instalado — ele é o

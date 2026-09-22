@@ -26,8 +26,10 @@ monitors.
 **Is not:** a network protocol, a prompt format or a style guide. Nothing about the protocol
 depends on which model is on the other side.
 
-**Verify:** `python -m hpp doctor` rejects a manifest whose `protocol_version` is not `2.0`,
+**Verify:** `python -m hpp doctor` rejects a manifest whose `protocol_version` is not `2.1`,
 whose exit codes deviate from `0/1/2/3`, or whose modules reference unknown modules or hosts.
+`2.1` added two required top-level keys, `hook_capabilities` and `hooks`; a 2.0 manifest that
+declares no hook is refused, which is a contract change and not an addition.
 
 ## module
 
@@ -53,6 +55,19 @@ or `unsupported` (no verified mechanism).
 **Verify:** `python -m hpp init --target . --host codex --modules claude-dev-kit --json` halts at
 `configure`, because that module is `unsupported` on Codex CLI.
 
+**Measured, 2026-09-22, Codex CLI 0.153.4:** the host *does* have a native hook surface —
+`codex features list` prints `hooks  stable  true`, and `codex --help` carries
+`--dangerously-bypass-hook-trust` ("run enabled hooks without requiring persisted hook trust"),
+so enabling one is an explicit trust decision. That did **not** promote any module to `native`
+on Codex, and the same census says why: `plugin_hooks` prints `removed  false`, and the string
+`codex-hooks.json` does not appear in the installed binary (`hooks.json`, `SessionStart`,
+`PreToolUse` and `hook_trust` do). A module installed by file copy therefore still cannot wire
+its own hooks on this host; the operator pastes them into a Codex hook configuration and
+accepts the trust prompt. `explicit-command` stays the honest coverage. Two instruments were
+tried and rejected for this question because they do not discriminate: `codex features list`
+and `codex doctor` produce byte-identical output with a deliberately malformed `hooks.json` in
+`CODEX_HOME` and with none at all.
+
 ## gate
 
 **Is:** a named condition, with a measurable answer, that a piece of work must satisfy before it
@@ -65,6 +80,31 @@ fail by a test is a hypothesis of protection, not a gate.
 `closure` (`python -m hpp graph --view operational --format mermaid`). Appending `verified` as the
 first event is refused before anything is written: `python -m hpp event append --type verified`
 exits 2 and creates no `.hpp/`.
+
+## hook capability
+
+**Is:** what a hook is able to do, declared in the manifest before you install it, from a
+closed vocabulary of six groups: `automatic-source-writes` (it writes files inside your project
+on its own), `command-rewrite-and-process-control` (it changes what runs, or what the model is
+given before it runs), `transcript-derived-llm-egress` (it sends transcript-derived text to a
+model), `mcp-network-and-process-activity` (it probes the network, talks to an MCP server or
+spawns a process), `automatic-permission-gates` (it can refuse or warn on a tool call) and
+`session-observation-and-cost-records` (it reads session state and keeps records). Each hook
+also declares its `events` and an `exit_policy` of `observe` (always exit 0), `warn` (may exit
+1) or `block` (may exit 2, or emit a blocking decision).
+
+**Is not:** a description of what the hook is *for*, and not optional. A hook with no
+declaration is refused; an empty `capabilities` list is refused; a module that declares the
+`hooks` component and declares no hook is refused. Absent is never read as empty — a missing
+declaration that validated as "does nothing" would be the widest permission in the manifest,
+written as silence.
+
+**Verify:** `python -m hpp doctor` prints `hooks=<n>` with the permission-gate and LLM-egress
+counts, and `--json` carries the full census per group — including the groups that count zero,
+so the zero is a measurement and not an omission. `python -m hpp init` prints the capability
+table of the modules you chose *before* the commands to paste; choose a module with no hooks
+and the table is empty rather than absent. Remove a hook's `capabilities` from the manifest and
+the same `doctor` exits 2.
 
 ## evidence
 

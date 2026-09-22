@@ -15,7 +15,7 @@ from hpp.brand import closing_line, logo_lines, pick_closing, PALETTE
 from hpp.evals import EvalError, run_suite
 from hpp.graph import build_graph
 from hpp.install import InstallError, installation_plan
-from hpp.manifest import ManifestError, validate_distribution
+from hpp.manifest import ManifestError, hooks_for_modules, validate_distribution, PROTOCOL_VERSION
 from hpp.policy import assess, exit_for as policy_exit_for
 from hpp.state import StateError, event_path, project, read_events
 from hpp.term import Console
@@ -342,7 +342,7 @@ def stage_prereqs(ctx: _Context) -> dict[str, Any]:
     manifest = ctx.manifest
     checks.append({"id": "manifest", "ok": True,
                    "measured": f"protocol {manifest['protocol_version']} · {len(manifest['modules'])} modules · {len(manifest['hosts'])} hosts",
-                   "expected": "protocol 2.0, validated", "command": "python -m hpp doctor"})
+                   "expected": f"protocol {PROTOCOL_VERSION}, validated", "command": "python -m hpp doctor"})
     try:
         distribution = validate_distribution(manifest, ctx.root)
     except ManifestError as exc:
@@ -543,9 +543,20 @@ def stage_wire_suggest(ctx: _Context) -> dict[str, Any]:
         lines.append(f"# {installer_rel} is not in this source tree; it ships with the emitted distribution")
     lines.append("")
     lines.append(f"# command policy as configured: python -m hpp policy check --mode {ctx.answers['policy_mode']} --command \"<cmd>\"")
+    # Why (A4, 2026-09-22): the block above says WHICH hooks to paste; the table below says what
+    # each one is capable of. Consent to a list of filenames is consent to nothing.
+    capabilities = [
+        {"id": hook["id"], "module": hook["module"], "events": list(hook["events"]),
+         "capabilities": list(hook["capabilities"]), "exit_policy": hook["exit_policy"]}
+        for hook in hooks_for_modules(manifest, [module["id"] for module in modules])
+    ]
     detail = {"host": host, "settings_path": seam.get("settings_path"), "manual_gates": list(seam["manual_gates"]),
-              "installer": installer_rel, "installer_present": installer_present, "lines": lines, "writes": 0}
-    return _stage("wire-suggest", "ok", f"{len([line for line in lines if line and not line.startswith('#')])} commands to paste · 0 files written", detail)
+              "installer": installer_rel, "installer_present": installer_present, "lines": lines, "writes": 0,
+              "hook_capabilities": capabilities}
+    summary = f"{len([line for line in lines if line and not line.startswith('#')])} commands to paste · 0 files written"
+    if capabilities:
+        summary += f" · {len(capabilities)} hooks declaring capabilities"
+    return _stage("wire-suggest", "ok", summary, detail)
 
 
 def stage_smoke(ctx: _Context) -> dict[str, Any]:
@@ -889,6 +900,16 @@ def render_report(report: dict[str, Any], console: Console) -> None:
         _section(console, "MODULES", configure["summary"])
 
     wire = by_name.get("wire-suggest", {})
+    capabilities = wire.get("detail", {}).get("hook_capabilities") or []
+    if capabilities:
+        _section(console, "HOOK CAPABILITIES",
+                 "what each hook you are about to paste is able to do — read it before the block below")
+        for index, hook in enumerate(capabilities):
+            branch = console.glyph("corner") if index == len(capabilities) - 1 else console.glyph("tee")
+            events = ",".join(hook["events"])
+            console.write(f"    {branch} {hook['id'].ljust(40)} {events.ljust(25)} "
+                          f"{console.paint(hook['exit_policy'], orange)}")
+            console.write(console.paint(f"        {', '.join(hook['capabilities'])}", dim=True))
     if wire.get("detail", {}).get("lines"):
         _section(console, "WIRE", "paste it yourself — hpp never edits settings or hooks")
         for line in wire["detail"]["lines"]:

@@ -1,0 +1,26 @@
+# profile.example.yaml — health-kit (copy to the target project's operator-profile.yaml)
+
+# project name — used by the statusline's 'progress' segment
+projeto: "meu-projeto"
+
+health:
+  # probes for health_probe.py — http (urllib GET, no curl/wget) or cmd (subprocess shell)
+  probes:
+    - { name: "service-a", type: "http", target: "http://127.0.0.1:8080/health" }
+    - { name: "service-b", type: "cmd", target: "python -c \"import sys; sys.exit(0)\"" }
+
+paths:
+  # cache that health_probe.py writes and the statusline reads WITHOUT touching the network
+  health_cache: ".claude/health-cache.json"
+  # optional: doc with <!-- CHECKLIST --> for the 'progress' segment (empty = uses state_ssot)
+  tracker_doc: ""
+  state_ssot: ""
+
+statusline:
+  # order of the displayed segments. 'health' here shows per-service detail (api:OK db:DOWN)
+  # up to 6 services; above that it degrades to the aggregate (⚕up/tot). See statusline/statusline.py.
+  segments: ["progress", "health", "commits", "branch"]
+  # optional: command whose stdout becomes the 'tokens' segment (e.g. "◔41% $63/100"); empty = omitted
+  token_cmd: ""
+  # optional: autonomy level 0-5 for the 'autonomy' segment; omitted (null) = the segment does not appear
+  autonomy_level: null

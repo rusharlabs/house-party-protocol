@@ -77,14 +77,14 @@ def test_tres_fontes_de_versao_concordam():
 def test_todo_modulo_declarado_tem_os_campos_obrigatorios_e_e_unico():
     manifest = _manifest_dict()
     modules = manifest["modules"]
-    assert modules, "manifesto sem nenhum modulo"
+    assert modules, "manifest with no module at all"
     ids = [module["id"] for module in modules]
-    assert len(ids) == len(set(ids)), "modulo duplicado no manifesto"
+    assert len(ids) == len(set(ids)), "duplicate module in the manifest"
     for module in modules:
         for field in ("id", "version", "path", "capabilities", "hosts", "requires", "integrates_with"):
-            assert field in module, f"{module.get('id')} sem campo {field}"
-        assert module["path"], f"{module['id']} com path vazio"
-        assert not module["path"].startswith(("/", "..")), f"{module['id']} com path absoluto/escapando"
+            assert field in module, f"{module.get('id')} without the field {field}"
+        assert module["path"], f"{module['id']} with an empty path"
+        assert not module["path"].startswith(("/", "..")), f"{module['id']} with an absolute/escaping path"
 
 
 def test_bundle_reliable_coding_so_referencia_modulos_e_capacidades_existentes():
@@ -94,8 +94,8 @@ def test_bundle_reliable_coding_so_referencia_modulos_e_capacidades_existentes()
     for name, bundle in manifest["bundles"].items():
         unknown_modules = set(bundle["modules"]) - known_modules
         unknown_capabilities = set(bundle["capabilities"]) - known_capabilities
-        assert not unknown_modules, f"bundle {name} referencia modulo inexistente: {unknown_modules}"
-        assert not unknown_capabilities, f"bundle {name} referencia capacidade inexistente: {unknown_capabilities}"
+        assert not unknown_modules, f"bundle {name} references a module that does not exist: {unknown_modules}"
+        assert not unknown_capabilities, f"bundle {name} references a capability that does not exist: {unknown_capabilities}"
 
 
 def test_exit_codes_do_manifesto_sao_0_ok_1_warn_2_block_3_error():
@@ -115,7 +115,7 @@ def test_CONTROLE_bundle_com_modulo_fantasma_e_rejeitado():
     broken = _manifest_dict()
     broken["bundles"]["reliable-coding"]["modules"] = [
         *broken["bundles"]["reliable-coding"]["modules"],
-        "modulo-que-nao-existe",
+        "module-that-does-not-exist",
     ]
     with pytest.raises(ManifestError):
         validate_manifest(broken)

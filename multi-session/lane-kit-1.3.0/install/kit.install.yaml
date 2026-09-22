@@ -1,0 +1,25 @@
+kit: lane-kit
+requires:
+  python: ">=3.9"
+  pyyaml: true
+  external_services: []
+verification:
+  - "python hooks/_lane_io.py --self-test"
+  - "python hooks/lane_register.py --self-test"
+  - "python hooks/lane_git_guard.py --self-test"
+  - "python hooks/lane_territory_guard.py --self-test"
+  - "python scripts/lane_board.py --self-test"
+  - "python scripts/lane_rescue.py --self-test"
+  - "python scripts/lane_effects.py --self-test"
+hosts:
+  claude-code:
+    plugin: true
+    wiring_spec: install/wiring.settings.jsonc
+    manual_gates: [hooks, SessionStart, PreToolUse, PostToolUse]
+  codex:
+    plugin: false
+    agents: AGENTS.md
+    skills_path: .agents/skills
+    runtime_path: .agents/hpp/lane-kit
+    manual_gates: [hooks, SessionStart, PreToolUse, PostToolUse]
+docs: LANE-KIT.md

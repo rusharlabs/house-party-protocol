@@ -24,7 +24,7 @@ Then the first event is recorded, and the loop leaves `planned`.
 ```bash
 python -m hpp work plan SPEC.json
 python -m hpp work waves SPEC.json
-python multi-sessao/lane-kit-1.2.0/scripts/lane_board.py claim --help
+python multi-session/lane-kit-1.3.0/scripts/lane_board.py claim --help
 python -m hpp event append --type work_started --data '{"work":"ITEM-1","actor":"maker-a"}'
 ```
 
@@ -43,8 +43,8 @@ output lives. The loop moves to `evidenced`. It cannot move to `verified` withou
 such record.
 
 ```bash
-python frameworks-com-plugins/operator-kit-1.4.0/scripts/done_gate.py "python -m pytest -q" "python -m py_compile app.py"
-python frameworks-com-plugins/operator-kit-1.4.0/scripts/done_gate.py "python -m pytest -q" --declare-partial "external target not yet validated"
+python frameworks/operator-kit-1.5.0/scripts/done_gate.py "python -m pytest -q" "python -m py_compile app.py"
+python frameworks/operator-kit-1.5.0/scripts/done_gate.py "python -m pytest -q" --declare-partial "external target not yet validated"
 python -m hpp event append --type evidence_recorded --data '{"work":"ITEM-1","ref":"artifacts/pytest.txt"}'
 ```
 
@@ -86,7 +86,7 @@ done, not as done by the maker.
 The checker's pass is an event. The loop moves from `evidenced` to `checked`.
 
 ```bash
-python multi-sessao/lane-kit-1.2.0/scripts/checker_router.py --maker claude --require
+python multi-session/lane-kit-1.3.0/scripts/checker_router.py --maker claude --require
 python -m hpp event append --type check_passed --data '{"work":"ITEM-1","checker":"checker-b"}'
 ```
 
@@ -105,10 +105,10 @@ extend the budget or close the work. Extending the budget is a human decision, n
 the loop grants itself.
 
 ```bash
-python frameworks-com-plugins/operator-kit-1.4.0/hooks/ralph_gate.py start \
+python frameworks/operator-kit-1.5.0/hooks/ralph_gate.py start \
   --charter "<objective>" --criteria "python -m pytest -q" --max-iterations 10
-python frameworks-com-plugins/operator-kit-1.4.0/hooks/ralph_gate.py status
-python frameworks-com-plugins/operator-kit-1.4.0/hooks/ralph_gate.py cancel
+python frameworks/operator-kit-1.5.0/hooks/ralph_gate.py status
+python frameworks/operator-kit-1.5.0/hooks/ralph_gate.py cancel
 ```
 
 ## 6. Resume after an interruption
@@ -165,8 +165,8 @@ person to paste, and the doctor is run afterwards to confirm the result.
 ```bash
 python -m hpp init --target ../your-repo
 python -m hpp init --target ../your-repo --apply
-python instaladores/kit-forge-1.4.0/kit_doctor.py install --kit <module-dir> --host codex --target ../your-repo
-python instaladores/kit-forge-1.4.0/kit_doctor.py install --kit <module-dir> --host codex --target ../your-repo --apply
+python installers/kit-forge-1.4.1/kit_doctor.py install --kit <module-dir> --host codex --target ../your-repo
+python installers/kit-forge-1.4.1/kit_doctor.py install --kit <module-dir> --host codex --target ../your-repo --apply
 python -m hpp doctor
 ```
 

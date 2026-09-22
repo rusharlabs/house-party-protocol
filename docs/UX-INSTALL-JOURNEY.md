@@ -4,7 +4,7 @@
 
 > **Version:** 2.0.0 — a presentation layer over two frozen contracts.
 > **Path 1** is `hpp init`, the harness installer (`hpp/wizard.py`, six stages, plan then
-> `--apply`). **Path 2** is the module installer, `instaladores/kit-forge-1.4.0/kit_doctor.py`,
+> `--apply`). **Path 2** is the module installer, `installers/kit-forge-1.4.1/kit_doctor.py`,
 > whose mechanics live in `INSTALL-CONTRACT.md` and whose per-module README follows
 > `INSTALL-GUIDE-TEMPLATE.md`; both ship at the root of this repository. This document describes
 > the EXPERIENCE: how an AGENT (Claude Code or Codex CLI) guides a HUMAN through the installation,
@@ -104,7 +104,7 @@ plan against an empty target reads:
 
 ```text
 > detecting host...           ✓ greenfield · 0 existing item(s) preserved
-> checking prerequisites...   ✓ python 3.14.3 · protocol 2.0
+> checking prerequisites...   ✓ python 3.14.3 · protocol 2.1
 > mounting profile...         ✓ would-write · host=claude-code · bundle=reliable-coding · policy=audit · 3 default(s)
 > loading modules...          ✓ 6 modules · reliable-coding · claude-code · 6/6 checksums verified
 > wiring suggestions...       ✓ 7 commands to paste · 0 files written
@@ -175,7 +175,7 @@ module's declared smokes; it plans first and applies only on a second, explicit 
 
 ### The journey in 5 steps (the same in the 4 scenarios)
 
-1. **Plan.** The agent runs `python instaladores/kit-forge-1.4.0/kit_doctor.py install --kit <module-dir> --host <host> --target <project> --human`
+1. **Plan.** The agent runs `python installers/kit-forge-1.4.1/kit_doctor.py install --kit <module-dir> --host <host> --target <project> --human`
    (`--human` selects the human-readable report). Plan mode is the default: nothing is written,
    exit 0.
 2. **Translation.** The agent pastes the confirmation block into the conversation (template in
@@ -309,7 +309,7 @@ I ran the {kit} installer in plan mode -- nothing has been written yet. Summary:
 
 Module: `operator-kit-1.1.0`. Command the agent ran (real output below). This capture is dated:
 it predates the versioned installer path. In the current distribution the module is
-`operator-kit-1.4.0` and the installer lives at `instaladores/kit-forge-1.4.0/kit_doctor.py`;
+`operator-kit-1.5.0` and the installer lives at `installers/kit-forge-1.4.1/kit_doctor.py`;
 the stages, the flags (`--target`, `--host`, `--answers`, `--apply`, `--human`) and the shape of
 the output are the same.
 

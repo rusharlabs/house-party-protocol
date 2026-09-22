@@ -1,0 +1,36 @@
+# lanes.example.yaml — lane-engine config (registry + concurrency guards)
+#
+# Copy to .claude/lanes/lanes.yaml in your project (that one IS tracked in git — it is
+# config, unlike registry.json/board.jsonl, which are runtime state and belong in
+# .gitignore). Every field is optional; without PyYAML installed or without this file,
+# _lane_io.py uses the defaults below, built into the code.
+
+schema_version: "1.0"
+
+git_guard:
+  mode: warn                 # warn (default) | block — recommended: 1 week in warn with
+                              # zero false positives before switching to block (see evals/collision-git-guard.sh)
+  fallback_heuristic: true   # without registry.json (e.g. another lane has not installed the kit yet):
+                              # WARN if the repo's last commit is < heuristic_minutes old — NEVER block on a heuristic
+  heuristic_minutes: 10
+  extra_patterns: []         # additional regexes for dangerous git commands, beyond the 6 built-in families
+                              # examples: ["git\\s+restore\\s+\\.", "git\\s+reset\\b(?!.*--hard)"]
+
+liveness:
+  alive_minutes: 10          # heartbeat newer than this = lane ALIVE
+  dead_minutes: 30           # heartbeat older than this = lane DEAD (evicted on the next register)
+                              # between alive_minutes and dead_minutes = SUSPECT (guards degrade to warn)
+  heartbeat_throttle_seconds: 60   # heartbeats more frequent than this are a no-op (cheap on the hot path)
+
+zonas_vermelhas:              # WARN on EDITS to these paths, even for a solo lane
+  - ".claude/settings*.json"
+  - "**/MEMORY.md"
+  # - "docs/plans/execution/00-STATE.md"   # example: the single-writer state doc, if your project has one
+
+territories: {}               # optional: pre-claim exclusive paths per lane_id at register time
+  # exec-a: { paths: ["src/**"], exclusive: ["src/api/**"] }
+  # exec-b: { paths: ["docs/**"], exclusive: [] }
+
+mailbox:
+  dir: ".claude/lanes/mailbox"
+  check_on_register: true    # warns at SessionStart if there is an unread message addressed to this lane
