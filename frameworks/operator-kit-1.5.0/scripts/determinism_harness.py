@@ -150,7 +150,7 @@ def _self_test() -> None:
     _py = f'"{sys.executable}"'  # Why: plain `python` doesn't exist on macOS -- the fixture uses the same interpreter running the self-test.
     determ = f'{_py} -c "print(42)"'                    # same output always
     flaky = f'{_py} -c "import random; print(random.random())"'  # output changes
-    falha = f'{_py} -c "import sys; sys.exit(1)"'        # exit != 0 (good negative)
+    failure = f'{_py} -c "import sys; sys.exit(1)"'        # exit != 0 (good negative)
     passa = f'{_py} -c "import sys; sys.exit(0)"'        # exit 0 (BAD negative)
 
     # 1) Deterministic validator => PASS.
@@ -164,15 +164,15 @@ def _self_test() -> None:
     assert len(r2["hashes_unicos"]) > 1
 
     # 3) Negative that fails (exit 1) => negative_ok True, doesn't sink PASS.
-    r3 = harness(determ, runs=3, negative=falha)
-    assert r3["negative_ok"] is True and r3["passed"] is True, "negativo que falha = controle ok"
+    r3 = harness(determ, runs=3, negative=failure)
+    assert r3["negative_ok"] is True and r3["passed"] is True, "a negative that fails = control ok"
 
     # 4) Negative that PASSES (exit 0) => broken gate => FAIL.
     r4 = harness(determ, runs=3, negative=passa)
     assert r4["negative_ok"] is False and r4["passed"] is False, "negativo que passa = gate quebrado"
 
     # 5) Deterministic validator but with exit != 0 => FAIL.
-    r5 = harness(falha, runs=3)
+    r5 = harness(failure, runs=3)
     assert r5["deterministic"] is True and r5["all_exit_zero"] is False and r5["passed"] is False
 
     print("self-test OK")

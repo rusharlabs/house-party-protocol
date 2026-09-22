@@ -8,7 +8,7 @@ paths to the emitted directory and read the plan before using `--apply`.
 ### 1. Inventory before creating
 
 ```bash
-rg --files | rg '(^|/)(nome|termo)'
+rg --files | rg '(^|/)(name|termo)'
 ```
 
 ### 2. Measure the Git tree without confusing untracked files

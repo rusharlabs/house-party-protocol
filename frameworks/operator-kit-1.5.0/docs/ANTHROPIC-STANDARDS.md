@@ -110,7 +110,7 @@ This document defines the MANDATORY rules for conformance with Anthropic's offic
 │  REGRA: Todo SKILL.md DEVE ter header padronizado                            │
 ├──────────────────────────────────────────────────────────────────────────────┤
 │                                                                              │
-│  HEADER OBRIGATÓRIO (primeiras linhas):                                      │
+│  HEADER OBRIGATÓRIO (primeiras lines):                                      │
 │                                                                              │
 │  > **Auto-Trigger:** [Quando ativar automaticamente]                         │
 │  > **Keywords:** "keyword1", "keyword2", "keyword3"                          │

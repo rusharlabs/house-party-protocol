@@ -49,12 +49,12 @@ CANONICAL_LEVELS = ["lint", "test", "build", "visual", "staging", "security"]
 def run_level(level: str, cmd: str, cwd: str | None = None, timeout: int = 600) -> dict:
     """Runs one ladder level. No command -> SKIPPED status (never a false green).
 
-    Returns dict {nivel, cmd, status, passed, exit_code, tail}.
+    Returns dict {level, cmd, status, passed, exit_code, tail}.
     status in {"PASS", "FAIL", "SKIPPED"}. SKIPPED never counts as passed.
     """
     cmd = (cmd or "").strip()
     if not cmd:
-        return {"nivel": level, "cmd": "", "status": "SKIPPED",
+        return {"level": level, "cmd": "", "status": "SKIPPED",
                 "passed": False, "exit_code": None, "tail": "sem comando configurado"}
     try:
         r = subprocess.run(
@@ -63,13 +63,13 @@ def run_level(level: str, cmd: str, cwd: str | None = None, timeout: int = 600) 
         )
         tail = ((r.stdout or "") + (r.stderr or "")).strip()[-400:]
         passed = r.returncode == 0
-        return {"nivel": level, "cmd": cmd, "status": "PASS" if passed else "FAIL",
+        return {"level": level, "cmd": cmd, "status": "PASS" if passed else "FAIL",
                 "passed": passed, "exit_code": r.returncode, "tail": tail}
     except subprocess.TimeoutExpired:
-        return {"nivel": level, "cmd": cmd, "status": "FAIL",
+        return {"level": level, "cmd": cmd, "status": "FAIL",
                 "passed": False, "exit_code": 124, "tail": f"timeout {timeout}s"}
     except Exception as e:  # noqa: BLE001 -- the ladder never crashes; error = failed level
-        return {"nivel": level, "cmd": cmd, "status": "FAIL",
+        return {"level": level, "cmd": cmd, "status": "FAIL",
                 "passed": False, "exit_code": 1, "tail": f"erro: {e}"}
 
 
@@ -77,7 +77,7 @@ def evaluate(ladder: dict, obrigatorios=None, score_minimo: int = 1,
              cwd: str | None = None, timeout: int = 600) -> dict:
     """Runs the whole ladder and evaluates overall PASS/FAIL.
 
-    ladder: dict {nivel: comando}. Levels follow CANONICAL_LEVELS when present,
+    ladder: dict {level: comando}. Levels follow CANONICAL_LEVELS when present,
             extras (if any) run at the end in alphabetical order.
     obrigatorios: list of levels that MUST pass (default []).
     score_minimo: minimum number of PASS levels to not fail on score.
@@ -96,7 +96,7 @@ def evaluate(ladder: dict, obrigatorios=None, score_minimo: int = 1,
     score = sum(1 for r in with_command if r["passed"])        # X = levels that passed
 
     # A mandatory level is satisfied ONLY if status == PASS (SKIPPED or FAIL don't count).
-    status_by_level = {r["nivel"]: r["status"] for r in results}
+    status_by_level = {r["level"]: r["status"] for r in results}
     obrig_falhos = [n for n in obrigatorios if status_by_level.get(n) != "PASS"]
 
     ok = (not obrig_falhos) and (score >= score_minimo)
@@ -147,7 +147,7 @@ def _render(report: dict) -> str:
     for r in report["results"]:
         mark = {"PASS": "OK  ", "FAIL": "FAIL", "SKIPPED": "SKIP"}[r["status"]]
         ec = "" if r["exit_code"] is None else f" exit {r['exit_code']}"
-        lines.append(f"  [{mark}] {r['nivel']:<9}{ec}  {r['cmd'] or '(no command)'}")
+        lines.append(f"  [{mark}] {r['level']:<9}{ec}  {r['cmd'] or '(no command)'}")
         if r["status"] == "FAIL" and r["tail"]:
             lines.append(f"          ^ {r['tail'][-200:]}")
     verdict = "PASS" if report["passed"] else "FAIL"
@@ -168,7 +168,7 @@ def _self_test() -> None:
     assert rep["total"] == 1, f"SKIPPED should not count towards the total: {rep['total']}"
     assert rep["score"] == 1, f"score should be 1: {rep['score']}"
     assert rep["passed"] is True, "mandatory test passed and score>=min => PASS"
-    skip = next(r for r in rep["results"] if r["nivel"] == "lint")
+    skip = next(r for r in rep["results"] if r["level"] == "lint")
     assert skip["status"] == "SKIPPED", "lint without a command must be SKIPPED"
 
     # 2) A mandatory level that fails => overall FAIL even with another level ok.
@@ -191,7 +191,7 @@ def _self_test() -> None:
 
     # 6) Canonical order respected when present.
     rep6 = evaluate({"security": ok_cmd, "lint": ok_cmd}, obrigatorios=[], score_minimo=1)
-    order = [r["nivel"] for r in rep6["results"]]
+    order = [r["level"] for r in rep6["results"]]
     assert order == ["lint", "security"], f"wrong canonical order: {order}"
 
     print("self-test OK")

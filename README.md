@@ -66,6 +66,25 @@ Each failure above has a mechanism in the code, and each mechanism has a command
 | one lucky run | `pass@k` and `pass^k` measured separately over `k` executions | `hpp eval run` · `hpp benchmark` |
 | installer that writes before you read | `hpp init` prints a plan; `--apply` writes one file; host wiring stays a paste | `hpp init` |
 
+## Cross-model by construction
+
+The harness never assumes one brain. Two independent mechanisms, neither of which names a model:
+
+| claim | mechanism | command |
+|---|---|---|
+| the reviewer is not the author | maker and checker must differ or the attestation is refused; module checkers ship without write tools | `hpp attest create --maker a --checker a` → exit 2 |
+| the verdict records WHICH reviewer | the wave-review record carries the reviewing lane and the reviewing model, so a verdict can be traced to the brain that gave it | `--verdict-by-lane` · `--verdict-by-model` |
+| a missing reviewer is a state, not a silence | when no independent checker is reachable, the loop records the deferral instead of passing | `--checker-unavailable` |
+| the work is routed by TIER, not by vendor | a declared request resolves to a provider id from a declared list, with a risk floor and fallback only upward | `hpp route --policy economy\|balanced\|frontier` |
+
+The last row is the part that keeps this honest: routing returns a route, never a vendor, a model
+or a price. The mapping from tier to model is the operator's, declared outside the harness and
+auditable in the request — so switching one side of a maker/checker pair costs a line of config,
+not a change here.
+
+Hosts today are **Claude Code** and **Codex CLI**: same protocol, same exit codes, same maps. A
+lane driven by one and reviewed from the other is the ordinary case, not an integration project.
+
 ## Quickstart
 
 > [!WARNING]
@@ -80,7 +99,7 @@ third-party packages. CI exercises Python 3.10 to 3.13 on Linux, macOS and Windo
 (`.github/workflows/ci.yml`); older interpreters are not promised because nothing measures them.
 
 ```bash
-pip install git+https://github.com/rushar-labs/house-party-protocol@v2.5.4
+pip install git+https://github.com/rushar-labs/house-party-protocol@v2.5.5
 hpp doctor
 hpp init --target ../your-repo
 ```

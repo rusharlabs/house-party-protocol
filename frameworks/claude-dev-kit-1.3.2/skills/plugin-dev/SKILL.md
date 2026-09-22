@@ -145,7 +145,7 @@ import json
 def validate_plugin_manifest(data):
     required = ['name', 'version', 'description']
     return [k for k in required if k not in data]
-sample = {'name':'exemplo-kit','version':'1.0.0','description':'kit de exemplo','hooks':'./hooks/hooks.json'}
+sample = {'name':'exemplo-kit','version':'1.0.0','description':'kit de example','hooks':'./hooks/hooks.json'}
 missing = validate_plugin_manifest(sample)
 assert missing == [], missing
 print('plugin.json valido: campos obrigatorios presentes')

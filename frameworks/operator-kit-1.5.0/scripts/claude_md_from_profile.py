@@ -68,7 +68,13 @@ END = "<!-- operator-kit:claude-md:end -->"
 # omitted, and the installer's smoke test failed on the flagship kit. Both spellings are read
 # until 2.7.0: a profile written before the rename must keep getting its warning.
 _EXAMPLE_FLAG_KEYS = ("_example", "_exemplo")
-_EXAMPLE_PROJECT_NAMES = ("your-project-name", "nome-do-projeto", "", None)
+# Why `meu-projeto` is here: the cross-model checker found that `health-kit/profile.example.yaml`
+# carried a THIRD placeholder, and its own header tells the reader to copy the file to
+# `operator-profile.yaml`. Whoever obeyed got a block describing a project that does not exist,
+# with the warning silently omitted — the exact symptom this list exists to prevent, through the
+# one example file the first fix did not look at. The placeholder itself was unified, and the
+# spelling stays readable here because a copy of it may already sit in someone's project.
+_EXAMPLE_PROJECT_NAMES = ("your-project-name", "nome-do-projeto", "meu-projeto", "", None)
 EXAMPLE_SENTINELS_LEGACY_REMOVED_IN = "2.7.0"
 FALLBACK_NAME = "INSTRUCOES-DO-CLAUDE.md"  # literal: this is the name the person will look for
 

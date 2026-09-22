@@ -34,7 +34,7 @@ artifacts of another lane. Golden rule: **"read-only produces its OWN artifact, 
 someone else's"**. Line format (append-only, 1 line per observation):
 
 ```
-<ISO-8601> <observador> <resumo de 1 linha do que observou>
+<ISO-8601> <observador> <summary de 1 linha do que observou>
 2026-07-10T16:00:00-03:00 status-dashboard-cron 3 lanes vivas, 2 itens em UNDER-REVIEW, 0 itens travados >30min
 ```
 

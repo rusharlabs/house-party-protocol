@@ -5,7 +5,7 @@
 Kit: supabase-pack 1.1.1
 
 ## Sanitização aplicada
-- 7 padrão(ões) de exclusão de arquivo (ver manifesto interno da build — não distribuído)
+- 9 padrão(ões) de exclusão de arquivo (ver manifesto interno da build — não distribuído)
 - 0 substituição(ões) de texto aplicada(s)
 
 ## Resultado do lint

@@ -74,7 +74,7 @@ Every new edge function repeats the same boilerplate (CORS, OPTIONS preflight, s
 ## Executed examples
 
 ```console
-$ deno check supabase/functions/exemplo/index.ts
+$ deno check supabase/functions/example/index.ts
 Download https://jsr.io/@supabase/supabase-js/meta.json
 [... resolve deps na 1a vez ...]
 Check index.ts
@@ -83,14 +83,14 @@ Check index.ts
 (the EXACT skeleton of this skill type-checks clean — it is not pseudocode.)
 
 ```console
-$ time deno check supabase/functions/exemplo/index.ts
+$ time deno check supabase/functions/example/index.ts
 real 0m0.236s
 ```
 <!-- executed: 2026-07-10 · exit=0 -->
 (2nd call = local cache, 0.236s — from here on `deno check` is offline and fits as a quick Proof.)
 
 ```console
-$ grep -c "Access-Control-Allow-Origin\|OPTIONS\|Deno.env.get\|catch (e)" supabase/functions/exemplo/index.ts
+$ grep -c "Access-Control-Allow-Origin\|OPTIONS\|Deno.env.get\|catch (e)" supabase/functions/example/index.ts
 4
 ```
 <!-- executed: 2026-07-10 · exit=0 -->

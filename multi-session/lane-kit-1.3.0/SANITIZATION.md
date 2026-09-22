@@ -5,7 +5,7 @@
 Kit: lane-kit 1.3.0
 
 ## Sanitization applied
-- 7 file exclusion pattern(s) (see the build's internal manifest — not distributed)
+- 9 file exclusion pattern(s) (see the build's internal manifest — not distributed)
 - 0 text replacement(s) applied
 
 ## Lint result

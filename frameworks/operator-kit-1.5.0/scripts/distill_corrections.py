@@ -165,7 +165,7 @@ def _load_ledger_keys(ledger: Path) -> set[str]:
 def distill(logs_dir: Path, n: int, k: int, ledger_keys: set[str] | None = None) -> list[dict]:
     """
     Returns rule candidates sorted by recurrence desc.
-    Each item: {key, exemplo, n_sessoes, sessoes:[...], ocorrencias}.
+    Each item: {key, example, n_sessions, sessions:[...], ocorrencias}.
     Only keys that recur in >= k DISTINCT sessions and are not in the ledger are included.
     """
     ledger_keys = ledger_keys or set()
@@ -179,28 +179,28 @@ def distill(logs_dir: Path, n: int, k: int, ledger_keys: set[str] | None = None)
             key = _key(corr)
             if not key:
                 continue
-            g = groups.setdefault(key, {"sessoes": set(), "exemplo": corr, "ocorrencias": 0})
+            g = groups.setdefault(key, {"sessions": set(), "example": corr, "ocorrencias": 0})
             g["ocorrencias"] += 1
-            g["sessoes"].add(sess_name)
+            g["sessions"].add(sess_name)
             # keeps the shortest exemplo (tends to be the cleanest instruction)
-            if len(corr) < len(g["exemplo"]):
-                g["exemplo"] = corr
+            if len(corr) < len(g["example"]):
+                g["example"] = corr
             seen_in_file.add(key)
 
     candidates: list[dict] = []
     for key, g in groups.items():
         if key in ledger_keys:
             continue
-        session_count = len(g["sessoes"])
+        session_count = len(g["sessions"])
         if session_count >= k:
             candidates.append({
                 "key": key,
-                "exemplo": g["exemplo"],
-                "n_sessoes": session_count,
-                "sessoes": sorted(g["sessoes"]),
+                "example": g["example"],
+                "n_sessions": session_count,
+                "sessions": sorted(g["sessions"]),
                 "ocorrencias": g["ocorrencias"],
             })
-    candidates.sort(key=lambda c: (c["n_sessoes"], c["ocorrencias"]), reverse=True)
+    candidates.sort(key=lambda c: (c["n_sessions"], c["ocorrencias"]), reverse=True)
     return candidates
 
 
@@ -269,9 +269,9 @@ def main(argv) -> int:
     now = datetime.now(_BRT).strftime("%Y-%m-%d %H:%M BRT")
     if args.json:
         print(json.dumps({
-            "gerado": now,
+            "generated": now,
             "logs_dir": str(logs_dir),
-            "janela_n": n,
+            "window_n": n,
             "limiar_k": k,
             "rejeitadas_no_ledger": len(ledger_keys),
             "candidatas": candidates,
@@ -289,8 +289,8 @@ def main(argv) -> int:
         return 0
     print(f"\n{len(candidates)} rule candidate(s) (recurrence >= {k}):\n")
     for i, c in enumerate(candidates, 1):
-        print(f"{i}. [{c['n_sessoes']} sessions / {c['ocorrencias']} occurrences] {c['exemplo']}")
-        print(f"   evidence: {', '.join(c['sessoes'])}")
+        print(f"{i}. [{c['n_sessions']} sessions / {c['ocorrencias']} occurrences] {c['example']}")
+        print(f"   evidence: {', '.join(c['sessions'])}")
         print(f"   <!-- key: {c['key']} -->  (paste into the ledger to reject)")
         print()
     print("PROPOSAL only — nothing was applied. Decide which ones become rules in "
@@ -333,9 +333,9 @@ def _self_test() -> None:
         (logs / "SESSION-INDEX.json").write_text("{}", encoding="utf-8")
 
         cands = distill(logs, n=50, k=3)
-        assert len(cands) == 1, f"esperava 1 candidata, veio {len(cands)}"
-        assert cands[0]["n_sessoes"] == 3, "deve recorrer em 3 sessoes distintas"
-        assert "8000" in cands[0]["exemplo"]
+        assert len(cands) == 1, f"expected 1 candidate, got {len(cands)}"
+        assert cands[0]["n_sessions"] == 3, "must recur across 3 distinct sessions"
+        assert "8000" in cands[0]["example"]
 
         # k=4 should not find anything (it only recurred in 3)
         assert distill(logs, n=50, k=4) == [], "k=4 nao deveria achar candidatas"

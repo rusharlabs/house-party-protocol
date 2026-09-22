@@ -58,10 +58,10 @@ self-test OK
 $ python scripts/audit_plan.py example-plan.md --no-git --json
 {
   "total": 2,
-  "resumo": {"FEITO": 1, "PARCIAL": 0, "AUSENTE": 1},
+  "summary": {"FEITO": 1, "PARCIAL": 0, "AUSENTE": 1},
   "itens": [
-    {"texto": "Create `README.md`", "status": "FEITO", "on_disk": true},
-    {"texto": "Create `never-exists-at-all.xyz`", "status": "AUSENTE", "on_disk": false}
+    {"text": "Create `README.md`", "status": "FEITO", "on_disk": true},
+    {"text": "Create `never-exists-at-all.xyz`", "status": "AUSENTE", "on_disk": false}
   ]
 }
 ```

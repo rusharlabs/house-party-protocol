@@ -123,8 +123,8 @@ def extract_status(text: str) -> dict:
         "etapa": stage,
         "progresso": pct,
         "bloqueios_abertos": len(open_todos),
-        "proxima_acao": next_action,
-        "todos_abertos": open_todos,
+        "next_action": next_action,
+        "open_todos": open_todos,
         "notas": notes,
     }
 
@@ -143,8 +143,8 @@ def build_status(start: Path | None = None) -> dict:
         "etapa": _NA,
         "progresso": _NA,
         "bloqueios_abertos": _NA,
-        "proxima_acao": _NA,
-        "todos_abertos": [],
+        "next_action": _NA,
+        "open_todos": [],
         "notas": [],
     }
 
@@ -175,7 +175,7 @@ def render_template(data: dict) -> str:
     stage = data.get("etapa", _NA)
     pct = data.get("progresso", _NA)
     blockers = data.get("bloqueios_abertos", _NA)
-    next_action = data.get("proxima_acao", _NA)
+    next_action = data.get("next_action", _NA)
     ssot = data.get("ssot_rel", _NA)
     notes = data.get("notas", []) or []
 
@@ -214,13 +214,13 @@ def _self_test() -> None:
     assert parsed["etapa"] == "Phase 2 - Pipeline", parsed["etapa"]
     assert parsed["progresso"] == "37%", parsed["progresso"]
     assert parsed["bloqueios_abertos"] == 2, parsed["bloqueios_abertos"]
-    assert parsed["proxima_acao"] == "Process BATCH-004", parsed["proxima_acao"]
+    assert parsed["next_action"] == "Process BATCH-004", parsed["next_action"]
 
     # empty fixture: everything '--' + notes (NEVER invents)
     parsed2 = extract_status("text with nothing structured in it\n")
     assert parsed2["etapa"] == _NA
     assert parsed2["progresso"] == _NA
-    assert parsed2["proxima_acao"] == _NA
+    assert parsed2["next_action"] == _NA
     assert parsed2["bloqueios_abertos"] == 0
     assert len(parsed2["notas"]) >= 2
 
@@ -242,7 +242,7 @@ def _self_test() -> None:
     # render of a complete fixture contains the extracted values
     data_full = {
         "projeto": "demo", "ssot_rel": "x.md", "etapa": "Phase 2",
-        "progresso": "37%", "bloqueios_abertos": 2, "proxima_acao": "do X", "notas": [],
+        "progresso": "37%", "bloqueios_abertos": 2, "next_action": "do X", "notas": [],
     }
     out_full = render_template(data_full)
     assert "Phase 2" in out_full and "37%" in out_full and "do X" in out_full

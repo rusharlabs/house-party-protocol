@@ -235,7 +235,7 @@ _ZIP_PROIBIDO = (
 )
 
 
-def _entrada_proibida(name: str) -> str | None:
+def _forbidden_entry(name: str) -> str | None:
     """Returns the pattern that fails the entry, or None. Matches the BASENAME and each
     directory component -- `a/__pycache__/b.txt` fails via the directory."""
     import fnmatch
@@ -301,7 +301,7 @@ def verify_zip(zip_path: Path, source_dir: Path, expected: list) -> dict:
                     continue
 
                 # 4 - HYGIENE
-                pattern = _entrada_proibida(name)
+                pattern = _forbidden_entry(name)
                 if pattern is not None:
                     errors.append(f"forbidden entry in zip: {name} (matches {pattern})")
 
@@ -671,11 +671,11 @@ def run_pipeline(manifest: dict, manifest_dir: Path, out_dir: Path, dry_run: boo
             # reason they stay out of SANITIZATION.md -- the 'find' is usually
             # exactly the sensitive text being hidden.
             "sanitize": {
-                "aplicadas": [
+                "applied": [
                     {"file": a["file"], "mode": a["mode"], "hits": a["hits"]}
                     for a in applied_replaces
                 ],
-                "avisos": sanitize_warnings,
+                "warnings": sanitize_warnings,
             },
         }
         return (1 if lint_status == "warn" else 0), report

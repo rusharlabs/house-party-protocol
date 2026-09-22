@@ -222,12 +222,12 @@ def check_marketplace(root: Path) -> dict:
         "checked_at": _brt_now_iso(),
         "manifest": None,
         "plugins": 0,
-        "achados": [],
+        "findings": [],
         "status": "ok",
     }
 
     def _finding(code: str, detail: str, severity: str = "fail") -> None:
-        report["achados"].append({"code": code, "detalhe": detail, "severidade": severity})
+        report["findings"].append({"code": code, "detail": detail, "severity": severity})
 
     if not root.is_dir():
         report["status"] = "error"
@@ -241,7 +241,7 @@ def check_marketplace(root: Path) -> dict:
         report["status"] = "fail"
         where = "at the root only" if at_root.exists() else "nowhere"
         _finding(
-            "manifesto-fora-do-lugar",
+            "manifest-out-of-place",
             f"{_MARKETPLACE_REL.as_posix()} missing ({where}) — "
             "`/plugin marketplace add` cannot find the catalogue",
         )
@@ -301,12 +301,12 @@ def check_marketplace(root: Path) -> dict:
         v_mk = entry.get("version")
         if v_mk is not None and v_mk != v_kit:
             _finding(
-                "versao-divergente",
+                "version-mismatch",
                 f"{name}: the catalogue says {v_mk} and the plugin.json says {v_kit}",
             )
 
-    if report["status"] == "ok" and report["achados"]:
-        report["status"] = "fail" if any(a["severidade"] == "fail" for a in report["achados"]) else "warn"
+    if report["status"] == "ok" and report["findings"]:
+        report["status"] = "fail" if any(a["severity"] == "fail" for a in report["findings"]) else "warn"
     return report
 
 
@@ -1086,19 +1086,19 @@ def _self_test() -> int:
 
         report_outside = check_marketplace(mk)  # manifest ONLY at the root -> mode #1
         assert report_outside["status"] == "fail" and _marketplace_exit(report_outside) == 2
-        assert any(a["code"] == "manifesto-fora-do-lugar" for a in report_outside["achados"])
+        assert any(a["code"] == "manifest-out-of-place" for a in report_outside["findings"])
 
         (mk / ".claude-plugin").mkdir()
         (mk / ".claude-plugin" / "marketplace.json").write_text(json.dumps(doc_mk), encoding="utf-8")
         report_ok = check_marketplace(mk)  # CONTROL: in the right place + identical copy -> silence
-        assert report_ok["status"] == "ok" and report_ok["achados"] == [], report_ok["achados"]
+        assert report_ok["status"] == "ok" and report_ok["findings"] == [], report_ok["findings"]
         assert report_ok["plugins"] == 1
 
         (kit_pub / ".claude-plugin" / "plugin.json").write_text(
             json.dumps({"name": "fixture-kit", "version": "9.9.9"}), encoding="utf-8"
         )
         report_drift = check_marketplace(mk)  # the defect from item 1, one layer up
-        assert any(a["code"] == "versao-divergente" for a in report_drift["achados"])
+        assert any(a["code"] == "version-mismatch" for a in report_drift["findings"])
 
         assert _marketplace_exit(check_marketplace(tmp / "does-not-exist")) == 3
 

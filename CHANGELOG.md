@@ -9,6 +9,71 @@ keeps its own version in `plugin.json` and in `marketplace.json`.
 
 ## [Unreleased]
 
+## [2.5.5] — 2026-09-22
+
+The last Portuguese in the published SHAPE — output keys, CLI flags, label values — plus the two
+claims the harness could always make and never did. Both halves came from asking someone else:
+a cross-model review of 2.5.4 found nine things, **two of them holes in the gates that release had
+just added**, and one of them was 2.5.4's own headline fix landing incomplete.
+
+### Changed
+
+- **Every remaining Portuguese name in a published shape is English**, and the shape is what makes
+  this different from renaming a variable: `--json` output keys (`findings`, `severity`, `detail`,
+  `next_action`, `open_todos`), the keys a user writes in `rollup.yaml` (`before`, `after`,
+  `decisions`, `summary`, `metrics`, `name`) and in a drift probe (`target`, `kind`, `expect`,
+  `label`), the diagnostic codes the doctor emits (`version-mismatch`, `manifest-out-of-place`),
+  and the drift label value `aspirational`. 404 replacements across 37 files, none of them prose:
+  the rewriter worked on TOKENS, so a Portuguese word in a `.pt-BR` document was never eligible.
+- **The CLI speaks English too**: `--probe` / `--probes` (was `--sonda` / `--sondas`),
+  `--checker-unavailable`, and the inline probe mini-syntax is now
+  `name=KIND:TARGET[:expect=true|false]`.
+- **The README states the two cross-model claims** it always implemented and never made, with the
+  command for each: the reviewer is not the author, the verdict records WHICH reviewer (lane and
+  model), a missing reviewer is a recorded state rather than a silence, and work is routed by TIER
+  with a risk floor — `hpp route` returns a route, never a vendor, a model or a price. The short
+  description and the topics say `cross-model`, `maker-checker` and `provider-neutral`.
+
+### Fixed
+
+- 🔴 **2.5.4's headline fix was incomplete, and the cross-model checker found the file it missed.**
+  `health-kit/profile.example.yaml` carried a THIRD placeholder — and its own header tells the
+  reader to copy the file to `operator-profile.yaml`. Whoever obeyed got a block describing a
+  project that does not exist, with the EXAMPLE warning silently omitted: the exact symptom 2.5.4
+  claimed to have closed. The placeholder is unified and the reader knows all three spellings.
+- **The drift-check CLI would have required a word its own code no longer used.** Renaming the
+  `expect` key without renaming the `:espera=` the parser reads is the same "reader left behind"
+  defect this release line keeps finding — caught here by the rename tool's own pending list,
+  before it shipped. The counter that summarised labels had the twin bug: it read the old key, so
+  the count would have been permanently zero.
+- **The handoff's "single source" claim is now true.** The validator and its message read
+  `_ACCEPTED_SCHEMA_VERSIONS`; three WRITERS still spelled the version by hand, one of them the
+  degraded path that fires when a session dies without `/pre-clear`. A bump could have made
+  `write()` produce what `validate()` rejects.
+- **The collect-time exclude learned the snapshot convention.** 2.5.4 taught the post-write zip
+  proof about `*.pre[0-9]*` / `*.pre-*`; the ten module manifests still knew only `.bak`, so a
+  forgotten snapshot failed a module's whole emission instead of being filtered.
+
+### Added
+
+- **The artefact gate no longer passes on an empty smoke.** `✓ smoke` renders whenever nothing was
+  classified as failing — including a run where every self-test printed generic usage and NONE
+  executed. The gate now requires a floor of self-tests actually run, and its control renders four
+  synthetic reports through the shipped renderer to prove the needles separate a good run from a
+  bad one. The previous control asserted only that two strings existed in the installer's source,
+  which any file containing a ✓ satisfies.
+- **The artefact gates resolve versioned paths by glob**, so the next routine module bump cannot
+  turn them into a silent skip, and a misconfigured `HPP_PRODUTO` now FAILS instead of skipping —
+  a wrong path that skips quietly is how a gate stops existing without anyone deciding it should.
+
+### Known
+
+- The artefact gates run at RELEASE time on the machine that emits, not on every PR: a fresh CI
+  checkout has no product tree. CI proves the source; the release proves the product. Stated here
+  because the previous silence let a reader assume the merge gate covered both.
+- Three legacy Portuguese values remain readable on purpose until 2.7.0 — the sentinels and family
+  name a profile written before 2.5.1 still carries. They are read, never written.
+
 ## [2.5.4] — 2026-09-22
 
 2.5.3 renamed things. This release fixes what the renames **broke**, and every one of the five

@@ -76,7 +76,7 @@ REMEASURE = "remeasure"
 
 
 class Family(NamedTuple):
-    nome: str
+    name: str
     signals: tuple          # simple substrings, compared lowercase
     patterns: tuple         # compiled regexes, for what a substring can't express
     strategy: str
@@ -93,7 +93,7 @@ def _rx(*ps: str) -> tuple:
 # tried to open a remote host; "0" from a grep that actually worked).
 _FAMILIES: tuple = (
     Family(
-        nome="instrument",
+        name="instrument",
         signals=(
             # Why: bare "cannot connect to" and "resolve failed" matched NETWORK failure (docker daemon,
             # postgres) and, since instrument never escalates by ceiling, max_retries became a bypass. The
@@ -118,7 +118,7 @@ _FAMILIES: tuple = (
         ),
     ),
     Family(
-        nome="lock",
+        name="lock",
         signals=(
             "index.lock",
             "another git process",
@@ -137,7 +137,7 @@ _FAMILIES: tuple = (
         ),
     ),
     Family(
-        nome="ratelimit",
+        name="ratelimit",
         signals=(
             "rate limit", "rate-limit", "ratelimit",
             "overloaded",
@@ -156,7 +156,7 @@ _FAMILIES: tuple = (
         ),
     ),
     Family(
-        nome="transient",
+        name="transient",
         signals=(
             "timeout", "timed out", "etimedout",
             "econnrefused", "connection refused", "conexao recusada", "cannot connect to",
@@ -175,7 +175,7 @@ _FAMILIES: tuple = (
         ),
     ),
     Family(
-        nome="state",
+        name="state",
         signals=(
             "corrupt", "inconsistent", "out of sync", "out-of-sync",
             "invalid state", "stale",
@@ -191,7 +191,7 @@ _FAMILIES: tuple = (
         ),
     ),
     Family(
-        nome="config",
+        name="config",
         signals=(
             "not set", "nao definida", "nao definido", "undefined environment",
             "missing config", "config missing", "invalid config",
@@ -208,7 +208,7 @@ _FAMILIES: tuple = (
         ),
     ),
     Family(
-        nome="dependency",
+        name="dependency",
         signals=(
             "cannot find module", "module not found", "modulenotfounderror",
             "no module named",
@@ -225,7 +225,7 @@ _FAMILIES: tuple = (
         ),
     ),
     Family(
-        nome="fatal",
+        name="fatal",
         signals=(
             "fatal", "unrecoverable",
             "out of memory", "oom", "oomkilled", "heap out of memory", "memoryerror",
@@ -242,10 +242,10 @@ _FAMILIES: tuple = (
     ),
 )
 
-_STRATEGY_BY_FAMILY = {f.nome: f.strategy for f in _FAMILIES}
+_STRATEGY_BY_FAMILY = {f.name: f.strategy for f in _FAMILIES}
 _STRATEGY_BY_FAMILY["unknown"] = RETRY
 
-FAMILIES = tuple(f.nome for f in _FAMILIES) + ("unknown",)
+FAMILIES = tuple(f.name for f in _FAMILIES) + ("unknown",)
 
 
 class StrategyDecision(NamedTuple):
@@ -270,7 +270,7 @@ def _compile_signal(signal: str):
 
 
 _COMPILED_SIGNALS = {
-    fam.nome: tuple((s.lower(), _compile_signal(s)) for s in fam.signals) for fam in _FAMILIES
+    fam.name: tuple((s.lower(), _compile_signal(s)) for s in fam.signals) for fam in _FAMILIES
 }
 
 
@@ -295,18 +295,18 @@ def classify_error(error_message: str) -> str:
         return "unknown"
     low = _sem_acento(msg.lower())
     for fam in _FAMILIES:
-        if any(_matches(s, rx, low) for s, rx in _COMPILED_SIGNALS[fam.nome]):
-            return fam.nome
+        if any(_matches(s, rx, low) for s, rx in _COMPILED_SIGNALS[fam.name]):
+            return fam.name
         if any(p.search(msg) for p in fam.patterns):
-            return fam.nome
+            return fam.name
     return "unknown"
 
 
-def family_info(nome: str) -> Family | None:
+def family_info(name: str) -> Family | None:
     """The family's full entry (signals, strategy, why) -- for whoever
     wants to show the operator WHY the lesson exists."""
     for fam in _FAMILIES:
-        if fam.nome == nome:
+        if fam.name == name:
             return fam
     return None
 

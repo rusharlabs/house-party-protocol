@@ -40,9 +40,12 @@ LEDGER_PATH = _HANDOFF_DIR / "HANDOFF-LEDGER.jsonl"
 
 _MAX_BYTES = 65536
 _REQUIRED_TOP = ("schema_version", "handoff_id", "created_at", "trigger", "quality", "session", "state", "git", "valid_until")
-# The ONE place the accepted schema version is written. The validator reads it and the error
-# message is built from it, so a future bump cannot leave the message behind. v1.1 is absent
-# on purpose: it had zero files anywhere when it was renamed, so there is nothing to read.
+# The ONE place the accepted schema version is written — and the cross-model checker was right
+# that the claim was overstated before: the validator and its message read it, but three
+# WRITERS still spelled "2.0" by hand, one of them the degraded-handoff path that fires when
+# a session dies without /pre-clear. They read it now, so a bump cannot make write() produce
+# what validate() rejects. v1.1 is absent on purpose: it had zero files anywhere when it was
+# renamed, so a compatibility read would be dead code the day it was born.
 _ACCEPTED_SCHEMA_VERSIONS = ("2.0",)
 
 # Secret patterns -- same spirit as ip_pii_linter.py (kit-forge), local copy: each kit
@@ -253,7 +256,7 @@ def degraded_auto_aggregate(lane_id: str = "solo", session_id: str = "",
     ts_id = datetime.now().strftime("%Y%m%d-%H%M")
     log = _git(["log", "--oneline", "-5"])
     return {
-        "schema_version": "2.0",
+        "schema_version": _ACCEPTED_SCHEMA_VERSIONS[0],
         "handoff_id": f"HO-{ts_id}-{lane_id}",
         "created_at": now,
         "trigger": "degraded-auto",
@@ -275,7 +278,7 @@ def _demo_handoff(lane_id: str = "solo") -> dict:
     now = _now_iso()
     ts_id = datetime.now().strftime("%Y%m%d-%H%M")
     return {
-        "schema_version": "2.0",
+        "schema_version": _ACCEPTED_SCHEMA_VERSIONS[0],
         "handoff_id": f"HO-{ts_id}-{lane_id}",
         "created_at": now,
         "trigger": "manual",
@@ -308,7 +311,7 @@ def _self_test() -> int:
         LEDGER_PATH = _HANDOFF_DIR / "HANDOFF-LEDGER.jsonl"
 
         good = {
-            "schema_version": "2.0", "handoff_id": "HO-20260710-1500-solo",
+            "schema_version": _ACCEPTED_SCHEMA_VERSIONS[0], "handoff_id": "HO-20260710-1500-solo",
             "created_at": "2026-07-10T15:00:00-03:00", "trigger": "manual", "quality": "full",
             "session": {"session_id": "s1", "lane_id": "solo"},
             "state": {"summary": "test", "numbers": [{"metric": "x", "value": "1", "measured_at": "2026-07-10T15:00:00-03:00", "re_derive_cmd": "echo 1"}]},

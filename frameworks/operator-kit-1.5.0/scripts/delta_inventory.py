@@ -56,13 +56,13 @@ def snapshot(patterns, root: str | Path | None = None) -> dict:
 
 
 def compute_delta(baseline: dict, current: dict) -> list[dict]:
-    """Crosses baseline x current by glob. Returns rows {`glob`, `antes`, `depois`, `delta`}."""
+    """Crosses baseline x current by glob. Returns rows {`glob`, `before`, `after`, `delta`}."""
     keys = list(dict.fromkeys([*baseline.keys(), *current.keys()]))  # union preserving order
     rows = []
     for k in keys:
         before_count = int(baseline.get(k, 0) or 0)
         after_count = int(current.get(k, 0) or 0)
-        rows.append({"glob": k, "antes": before_count, "depois": after_count, "delta": after_count - before_count})
+        rows.append({"glob": k, "before": before_count, "after": after_count, "delta": after_count - before_count})
     return rows
 
 
@@ -87,11 +87,11 @@ def render_table(rows: list[dict]) -> str:
     for l in rows:
         g = l["glob"] if len(l["glob"]) <= glob_w else (l["glob"][: glob_w - 1] + "~")
         out.append(
-            f"| {g.ljust(glob_w)} | {str(l['antes']).rjust(7)} | "
-            f"{str(l['depois']).rjust(7)} | {fmt_delta(l['delta']).rjust(7)} |"
+            f"| {g.ljust(glob_w)} | {str(l['before']).rjust(7)} | "
+            f"{str(l['after']).rjust(7)} | {fmt_delta(l['delta']).rjust(7)} |"
         )
-        t_before += l["antes"]
-        t_after += l["depois"]
+        t_before += l["before"]
+        t_after += l["after"]
     out.append(sep)
     out.append(
         f"| {'TOTAL'.ljust(glob_w)} | {str(t_before).rjust(7)} | "
@@ -204,13 +204,13 @@ def main(argv) -> int:
         current = snapshot(patterns)
         rows = compute_delta(baseline, current)
         if as_json:
-            total_before = sum(l["antes"] for l in rows)
-            total_after = sum(l["depois"] for l in rows)
+            total_before = sum(l["before"] for l in rows)
+            total_after = sum(l["after"] for l in rows)
             print(json.dumps(
                 {
                     "baseline": argv[1],
-                    "linhas": rows,
-                    "total": {"antes": total_before, "depois": total_after,
+                    "lines": rows,
+                    "total": {"before": total_before, "after": total_after,
                               "delta": total_after - total_before},
                 },
                 ensure_ascii=False, indent=2,

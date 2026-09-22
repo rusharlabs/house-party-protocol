@@ -60,7 +60,7 @@ disparar**. Tudo cujo valor é específico de caminho declara `paths:`.
 | `loop-passk` | 3.720 | evals, caminhos de loop, `_autonomy-registry.yaml` | pass@k / pass^k vale quando você roda um eval ou promove um agente. |
 
 ⚠️ **Escopar não deixa a regra órfã.** As skills do kit citam regras pelo nome
-(`> **Related doctrine:** rules/<nome>.md`), e ler uma explicitamente sempre funciona. O
+(`> **Related doctrine:** rules/<name>.md`), e ler uma explicitamente sempre funciona. O
 `paths:` decide o que é *pré-carregado*, nunca o que está *disponível*.
 
 ## Ajustando o escopo ao seu repositório

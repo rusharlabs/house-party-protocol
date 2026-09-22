@@ -15,7 +15,7 @@ description: Keeps the project's history/evolution docs (changelog, narrative ti
 
 ## Contract
 
-**INPUT:** JSON payload via stdin, assembled by the model (only it knows what happened in this session): `session_marker` (unique string, mandatory — LC-4), `resumo` (mandatory), `date` (optional, default today BRT), `shipments[]`, `metricas[]` (each item NEEDS a `re_derive_cmd` — LC-1), `decisoes[]`, `aprendizados[]`. Config in `rollup.yaml` (copied from `rollup.example.yaml`).
+**INPUT:** JSON payload via stdin, assembled by the model (only it knows what happened in this session): `session_marker` (unique string, mandatory — LC-4), `summary` (mandatory), `date` (optional, default today BRT), `shipments[]`, `metrics[]` (each item NEEDS a `re_derive_cmd` — LC-1), `decisions[]`, `aprendizados[]`. Config in `rollup.yaml` (copied from `rollup.example.yaml`).
 
 **OUTPUT:** per-target JSON report (`{path, mode, role, status, ...}`) printed to stdout. Target files updated on disk (`plan` mode does not touch the disk).
 
@@ -24,7 +24,7 @@ description: Keeps the project's history/evolution docs (changelog, narrative ti
 | Exit | Meaning |
 |---|---|
 | 0 | processed (even with targets skipped for collision/passive — that is correct behavior) |
-| 1 | payload rejected (`session_marker`/`resumo` missing, or a metric without `re_derive_cmd`) |
+| 1 | payload rejected (`session_marker`/`summary` missing, or a metric without `re_derive_cmd`) |
 | 2 | invalid usage (missing config, malformed JSON, `--stdin` not passed) |
 
 **STATE IT TOUCHES:**
@@ -54,7 +54,7 @@ description: Keeps the project's history/evolution docs (changelog, narrative ti
 ## Executed examples
 
 ```console
-$ echo '{"session_marker":"doc-ex-001","date":"2026-07-10","resumo":"doc-rollup example","shipments":["rollup.yaml","doc_rollup.py"]}' | python scripts/doc_rollup.py apply --stdin --config rollup.yaml
+$ echo '{"session_marker":"doc-ex-001","date":"2026-07-10","summary":"doc-rollup example","shipments":["rollup.yaml","doc_rollup.py"]}' | python scripts/doc_rollup.py apply --stdin --config rollup.yaml
 {
   "repos": [
     {
@@ -79,15 +79,15 @@ $ echo '{"shipments":["x"]}' | python scripts/doc_rollup.py apply --stdin --conf
   "status": "rejected",
   "errors": [
     "session_marker missing (required for collision/idempotency detection — LC-4)",
-    "resumo missing"
+    "summary missing"
   ]
 }
 ```
 <!-- executed: 2026-09-21 · exit=1 -->
-(a payload without `session_marker`/`resumo` is REJECTED before touching any file.)
+(a payload without `session_marker`/`summary` is REJECTED before touching any file.)
 
 ```console
-$ echo '{"session_marker":"doc-ex-001","date":"2026-07-10","resumo":"attempt to re-insert the same session","shipments":["x"]}' | python scripts/doc_rollup.py apply --stdin --config rollup.yaml
+$ echo '{"session_marker":"doc-ex-001","date":"2026-07-10","summary":"attempt to re-insert the same session","shipments":["x"]}' | python scripts/doc_rollup.py apply --stdin --config rollup.yaml
 {
   "repos": [
     {

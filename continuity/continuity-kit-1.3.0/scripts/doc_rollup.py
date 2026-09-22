@@ -83,9 +83,9 @@ def validate_payload(payload: dict) -> list:
         return ["payload is not a JSON object"]
     if not str(payload.get("session_marker") or "").strip():
         errors.append("session_marker missing (required for collision/idempotency detection — LC-4)")
-    if not str(payload.get("resumo") or "").strip():
-        errors.append("resumo missing")
-    for i, m in enumerate(payload.get("metricas") or []):
+    if not str(payload.get("summary") or "").strip():
+        errors.append("summary missing")
+    for i, m in enumerate(payload.get("metrics") or []):
         if not isinstance(m, dict) or not str(m.get("re_derive_cmd") or "").strip():
             errors.append(f"metricas[{i}] without re_derive_cmd (LC-1: every number needs a command to re-derive it live)")
     return errors
@@ -102,17 +102,17 @@ def _metrics_table(metrics: list) -> str:
         return "_(no metrics this session)_"
     lines = ["| Metric | Before | After | Re-derive |", "|---|---|---|---|"]
     for m in rows:
-        lines.append(f"| {m.get('nome', '?')} | {m.get('antes', '?')} | {m.get('depois', '?')} | `{m.get('re_derive_cmd', '')}` |")
+        lines.append(f"| {m.get('name', '?')} | {m.get('before', '?')} | {m.get('after', '?')} | `{m.get('re_derive_cmd', '')}` |")
     return "\n".join(lines)
 
 
 def render_template(template: str, payload: dict) -> str:
     fields = {
         "date": payload.get("date") or _brt_today(),
-        "resumo": payload.get("resumo", ""),
+        "summary": payload.get("summary", ""),
         "shipments_bullets": _bullets(payload.get("shipments")),
-        "metricas_table": _metrics_table(payload.get("metricas")),
-        "decisoes_bullets": _bullets(payload.get("decisoes")),
+        "metricas_table": _metrics_table(payload.get("metrics")),
+        "decision_bullets": _bullets(payload.get("decisions")),
         "aprendizados_bullets": _bullets(payload.get("aprendizados")),
     }
     try:
@@ -127,8 +127,8 @@ def render_template(template: str, payload: dict) -> str:
 
 def render_stamp(payload: dict, pointer: str) -> str:
     date = payload.get("date") or _brt_today()
-    resumo = str(payload.get("resumo", ""))[:160]
-    return f"> **Stamp {date}:** {resumo} — {pointer or 'see the live state of the project'}.\n"
+    summary = str(payload.get("summary", ""))[:160]
+    return f"> **Stamp {date}:** {summary} — {pointer or 'see the live state of the project'}.\n"
 
 
 def _count_entries(text: str, marker: str | None) -> int:
@@ -345,20 +345,20 @@ def _self_test() -> int:
         payload = {
             "session_marker": "sess-selftest-001",
             "date": "2026-07-10",
-            "resumo": "doc_rollup self-test",
+            "summary": "doc_rollup self-test",
             "shipments": ["item A", "item B"],
-            "metricas": [{"nome": "files", "antes": "1", "depois": "2", "re_derive_cmd": "ls | wc -l"}],
-            "decisoes": ["use X instead of Y"],
+            "metrics": [{"name": "files", "before": "1", "after": "2", "re_derive_cmd": "ls | wc -l"}],
+            "decisions": ["use X instead of Y"],
             "aprendizados": ["always validate before applying"],
         }
 
         # 1) validate_payload: valid payload -> no errors
         assert validate_payload(payload) == []
         # 1b) payload without session_marker/resumo/re_derive_cmd -> rejected
-        bad = {"metricas": [{"nome": "x"}]}
+        bad = {"metrics": [{"name": "x"}]}
         errs = validate_payload(bad)
         assert any("session_marker" in e for e in errs)
-        assert any("resumo" in e for e in errs)
+        assert any("summary" in e for e in errs)
         assert any("re_derive_cmd" in e for e in errs)
 
         # 2) prepend-after-header correctly creates a new file
@@ -368,7 +368,7 @@ def _self_test() -> int:
                 "targets": [
                     {"path": "CHANGELOG.md", "role": "changelog", "mode": "prepend-after-header",
                      "entry_marker": r"^## \[", "max_bytes": 65536, "max_entries": 30,
-                     "pointer": "see git log", "template": "## [{date}] {resumo}\n\n{shipments_bullets}\n"},
+                     "pointer": "see git log", "template": "## [{date}] {summary}\n\n{shipments_bullets}\n"},
                 ],
             }],
         }
@@ -388,7 +388,7 @@ def _self_test() -> int:
         assert text2.count("sess-selftest-001") == 1, "collision should have prevented the duplicate"
 
         # 4) second session (different marker) -> applies again, without erasing the first
-        payload3 = dict(payload, session_marker="sess-selftest-002", resumo="second session")
+        payload3 = dict(payload, session_marker="sess-selftest-002", summary="second session")
         rep3 = run(cfg, payload3, dry_run=False)
         assert rep3["repos"][0]["targets"][0]["status"] == "applied:prepend"
         text3 = changelog_path.read_text(encoding="utf-8")
@@ -399,7 +399,7 @@ def _self_test() -> int:
         # 5) degradation: max_entries=1 already reached -> 3rd session becomes a stamp, not full narrative
         cfg_deg = json.loads(json.dumps(cfg))
         cfg_deg["repos"][0]["targets"][0]["max_entries"] = 1
-        payload4 = dict(payload, session_marker="sess-selftest-003", resumo="third session (should degrade)")
+        payload4 = dict(payload, session_marker="sess-selftest-003", summary="third session (should degrade)")
         rep4 = run(cfg_deg, payload4, dry_run=False)
         t4 = rep4["repos"][0]["targets"][0]
         assert t4["status"] == "applied:stamp-degrade", t4
@@ -422,14 +422,14 @@ def _self_test() -> int:
         cfg_new = {
             "repos": [{"name": "t", "root": str(tmp), "targets": [
                 {"path": "sessions/{date}-WRAPUP.md", "role": "session-wrapup", "mode": "create-new",
-                 "template": "# Wrapup {date}\n\n{resumo}\n"},
+                 "template": "# Wrapup {date}\n\n{summary}\n"},
             ]}],
         }
         rep6a = run(cfg_new, payload, dry_run=False)
         assert rep6a["repos"][0]["targets"][0]["status"] == "created"
         wrapup_path = tmp / "sessions" / "2026-07-10-WRAPUP.md"
         original_bytes = wrapup_path.read_bytes()
-        rep6b = run(cfg_new, dict(payload, resumo="overwrite attempt"), dry_run=False)
+        rep6b = run(cfg_new, dict(payload, summary="overwrite attempt"), dry_run=False)
         assert rep6b["repos"][0]["targets"][0]["status"] == "skipped-exists"
         assert wrapup_path.read_bytes() == original_bytes, "create-new should not overwrite"
 
@@ -439,14 +439,14 @@ def _self_test() -> int:
         cfg_snap = {
             "repos": [{"name": "t", "root": str(tmp), "targets": [
                 {"path": "STATE.md", "role": "snapshot", "mode": "header-and-section",
-                 "pointer": "see SSoT", "template": "{resumo}\n"},
+                 "pointer": "see SSoT", "template": "{summary}\n"},
             ]}],
         }
         run(cfg_snap, payload, dry_run=False)
         text8a = section_path.read_text(encoding="utf-8")
         assert "content preserved before" in text8a
         assert _SNAPSHOT_BEGIN in text8a and _SNAPSHOT_END in text8a
-        run(cfg_snap, dict(payload, session_marker="sess-selftest-999", resumo="state updated"), dry_run=False)
+        run(cfg_snap, dict(payload, session_marker="sess-selftest-999", summary="state updated"), dry_run=False)
         text8b = section_path.read_text(encoding="utf-8")
         assert "content preserved before" in text8b, "content outside the section should survive"
         assert "state updated" in text8b
@@ -455,7 +455,7 @@ def _self_test() -> int:
         # 9) dry-run never touches disk
         fresh_path = tmp / "DRYRUN.md"
         cfg_dry = {"repos": [{"name": "t", "root": str(tmp), "targets": [
-            {"path": "DRYRUN.md", "role": "changelog", "mode": "append-section", "template": "{resumo}\n"},
+            {"path": "DRYRUN.md", "role": "changelog", "mode": "append-section", "template": "{summary}\n"},
         ]}]}
         run(cfg_dry, payload, dry_run=True)
         assert not fresh_path.exists(), "dry-run should not create a file"

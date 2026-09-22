@@ -83,6 +83,6 @@ python operator-kit/scripts/done_gate.py --self-test
 
 ## O que NÃO é gate (já construído, sem tocar settings)
 - `operator-profile.yaml`, `profile.example.yaml`, `_lib/profile_loader.py`
-- `scripts/done_gate.py --profile <tipo>`
+- `scripts/done_gate.py --profile <kind>`
 - `templates/loop-charter-template.md`
 - `output-styles/direct-register.md`, `output-styles/execute-100pct.md` (ativar com `/output-style` após copiar p/ `.claude/output-styles/`)

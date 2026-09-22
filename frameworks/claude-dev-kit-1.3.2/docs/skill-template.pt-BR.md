@@ -1,6 +1,6 @@
 [English](skill-template.md) · [Português](skill-template.pt-BR.md)
 
-# skill-template.md — copie para `<seu-projeto>/.claude/skills/<nome>/SKILL.md`
+# skill-template.md — copie para `<seu-projeto>/.claude/skills/<name>/SKILL.md`
 
 > Scaffold vazio já estruturado nas 6 cláusulas do SKILL-CONTRACT (ver `docs/SKILL-CONTRACT.md`).
 > Preencha cada `<...>`, apague os comentários, rode `python tools/skill_lint.py <seu-arquivo>` até PASS.

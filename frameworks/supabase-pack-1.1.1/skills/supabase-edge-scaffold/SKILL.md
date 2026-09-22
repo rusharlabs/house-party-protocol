@@ -16,7 +16,7 @@ Every new edge function repeats the same boilerplate (CORS, OPTIONS preflight, s
 
 **INPUT:** kebab-case name of the function + (optional) specific logic to insert in the body.
 
-**OUTPUT:** `supabase/functions/<nome>/index.ts` with CORS + OPTIONS preflight + service-role via env + JSON error.
+**OUTPUT:** `supabase/functions/<name>/index.ts` with CORS + OPTIONS preflight + service-role via env + JSON error.
 
 **EXIT CODES** (`deno check` smoke test over the generated file):
 
@@ -29,12 +29,12 @@ Every new edge function repeats the same boilerplate (CORS, OPTIONS preflight, s
 
 | Resource | Reads/Writes | Purpose |
 |---|---|---|
-| `supabase/functions/<nome>/index.ts` | Writes | the skeleton |
+| `supabase/functions/<name>/index.ts` | Writes | the skeleton |
 | `Deno.env` (at runtime, not here) | - | service-role NEVER hardcoded/committed |
 
 ## Process
 1. **Name + purpose** of the function (kebab-case).
-2. **Generate `supabase/functions/<nome>/index.ts`** with this skeleton:
+2. **Generate `supabase/functions/<name>/index.ts`** with this skeleton:
    ```ts
    import { createClient } from "jsr:@supabase/supabase-js@2";
 
@@ -65,7 +65,7 @@ Every new edge function repeats the same boilerplate (CORS, OPTIONS preflight, s
    });
    ```
 3. **Guardrails:** service-role only via `Deno.env` (never in code/commit - `no-secrets`); error always JSON+CORS (does not leak the stack); validate input before touching the DB.
-4. **Deploy** when ready: `deploy_edge_function` (MCP) or `supabase functions deploy <nome>`. **Deploy = human gate** (no auto-deploy without an ok).
+4. **Deploy** when ready: `deploy_edge_function` (MCP) or `supabase functions deploy <name>`. **Deploy = human gate** (no auto-deploy without an ok).
 
 ## When NOT to Activate
 - Project without Supabase.
@@ -74,7 +74,7 @@ Every new edge function repeats the same boilerplate (CORS, OPTIONS preflight, s
 ## Executed examples
 
 ```console
-$ deno check supabase/functions/exemplo/index.ts
+$ deno check supabase/functions/example/index.ts
 Download https://jsr.io/@supabase/supabase-js/meta.json
 [... resolves deps the 1st time ...]
 Check index.ts
@@ -83,14 +83,14 @@ Check index.ts
 (the EXACT skeleton of this skill type-checks clean - it is not pseudocode.)
 
 ```console
-$ time deno check supabase/functions/exemplo/index.ts
+$ time deno check supabase/functions/example/index.ts
 real 0m0.236s
 ```
 <!-- executed: 2026-07-10 · exit=0 -->
 (2nd call = local cache, 0.236s - from here on `deno check` is offline and works as a quick Proof.)
 
 ```console
-$ grep -c "Access-Control-Allow-Origin\|OPTIONS\|Deno.env.get\|catch (e)" supabase/functions/exemplo/index.ts
+$ grep -c "Access-Control-Allow-Origin\|OPTIONS\|Deno.env.get\|catch (e)" supabase/functions/example/index.ts
 4
 ```
 <!-- executed: 2026-07-10 · exit=0 -->
@@ -111,7 +111,7 @@ error: Type checking failed.
 ```bash
 deno --version
 ```
-(quick, offline precondition: without `deno` on the PATH, the smoke-test step's `deno check` does not run. After generating a real scaffold, replace it with `deno check supabase/functions/<nome>/index.ts`.)
+(quick, offline precondition: without `deno` on the PATH, the smoke-test step's `deno check` does not run. After generating a real scaffold, replace it with `deno check supabase/functions/<name>/index.ts`.)
 
 ## See also
 `rls-audit` (data security), `secret_scan_on_write` (do not commit the service-role).

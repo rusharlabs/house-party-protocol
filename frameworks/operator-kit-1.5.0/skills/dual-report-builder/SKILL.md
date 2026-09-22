@@ -163,8 +163,8 @@ banned_phrases: ['consider it done', 'com certeza!', 'ótima pergunta', 'risco']
 ```console
 $ python -c "
 banidas = ['consider it done', 'com certeza!', 'risco']
-texto = 'O deploy foi tranquilo, consider it done, zero risco daqui pra frente.'
-ofensas = [f for f in banidas if f in texto.lower()]
+text = 'O deploy foi tranquilo, consider it done, zero risco daqui pra frente.'
+ofensas = [f for f in banidas if f in text.lower()]
 print('ofensas encontradas:', ofensas)
 import sys; sys.exit(1 if ofensas else 0)
 "
@@ -176,8 +176,8 @@ ofensas encontradas: ['consider it done', 'risco']
 ```console
 $ python -c "
 banidas = ['consider it done', 'com certeza!', 'risco']
-texto = 'O deploy concluiu com os 3 checks passando; monitoramento segue ativo nas proximas 24h.'
-ofensas = [f for f in banidas if f in texto.lower()]
+text = 'O deploy concluiu com os 3 checks passando; monitoramento segue ativo nas proximas 24h.'
+ofensas = [f for f in banidas if f in text.lower()]
 print('ofensas encontradas:', ofensas)
 import sys; sys.exit(1 if ofensas else 0)
 "
@@ -190,7 +190,7 @@ ofensas encontradas: []
 
 ```bash
 python -c "
-banidas = ['risco']; texto = 'monitoramento ativo nas proximas 24h'
-import sys; sys.exit(1 if any(b in texto.lower() for b in banidas) else 0)
+banidas = ['risco']; text = 'monitoramento ativo nas proximas 24h'
+import sys; sys.exit(1 if any(b in text.lower() for b in banidas) else 0)
 "
 ```

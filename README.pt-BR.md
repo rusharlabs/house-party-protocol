@@ -66,6 +66,26 @@ Cada falha acima tem um mecanismo no código, e cada mecanismo tem um comando qu
 | uma rodada com sorte | `pass@k` e `pass^k` medidos separadamente em `k` execuções | `hpp eval run` · `hpp benchmark` |
 | instalador que escreve antes de você ler | `hpp init` imprime um plano; `--apply` escreve um arquivo; o wiring do host continua sendo um colar | `hpp init` |
 
+## Cross-model by construction
+
+O harness nunca assume um cérebro só. Dois mecanismos independentes, e nenhum deles nomeia modelo:
+
+| afirmação | mecanismo | comando |
+|---|---|---|
+| o revisor não é o autor | maker e checker têm de diferir, ou a atestação é recusada; o checker de módulo viaja sem ferramenta de escrita | `hpp attest create --maker a --checker a` → exit 2 |
+| o veredito registra QUAL revisor | o registro de wave-review carrega a lane e o modelo revisores, então um veredito se rastreia até o cérebro que o deu | `--verdict-by-lane` · `--verdict-by-model` |
+| revisor ausente é um estado, não silêncio | quando nenhum checker independente está alcançável, o loop registra o deferimento em vez de passar | `--checker-unavailable` |
+| o trabalho é roteado por TIER, não por fornecedor | um pedido declarado resolve para um id de provider de uma lista declarada, com piso de risco e fallback só para cima | `hpp route --policy economy\|balanced\|frontier` |
+
+A última linha é o que mantém isso honesto: o roteamento devolve uma rota, nunca um fornecedor, um
+modelo ou um preço. O mapa de tier para modelo é do operador, declarado fora do harness e
+auditável no pedido — então trocar um lado do par maker/checker custa uma linha de config, não uma
+mudança aqui.
+
+Os hosts de hoje são **Claude Code** e **Codex CLI**: mesmo protocolo, mesmos exit codes, mesmos
+mapas. Uma lane conduzida por um e revisada pelo outro é o caso comum, não um projeto de
+integração.
+
 ## Quickstart
 
 > [!WARNING]
@@ -80,7 +100,7 @@ nenhum pacote de terceiro. A CI exercita Python 3.10 a 3.13 em Linux, macOS e Wi
 (`.github/workflows/ci.yml`); interpretadores mais antigos não são prometidos porque nada os mede.
 
 ```bash
-pip install git+https://github.com/rushar-labs/house-party-protocol@v2.5.4
+pip install git+https://github.com/rushar-labs/house-party-protocol@v2.5.5
 hpp doctor
 hpp init --target ../your-repo
 ```

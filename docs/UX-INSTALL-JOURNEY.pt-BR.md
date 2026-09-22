@@ -246,8 +246,8 @@ A pergunta ao humano vira: "quer re-aplicar mesmo assim, ou só queria conferir?
       self-tests: 1 ok · 0 sem suporte (ignorados)
       ⚠ FALHOU: scripts\bad_tool.py (exit 1)
 
-RESULTADO: smoke FALHOU — não aplique este kit antes de corrigir os self-tests acima.
-Depois de corrigir, rode o plano de novo para confirmar antes do --apply.
+RESULTADO: smoke FALHOU — não aplique este kit before de corrigir os self-tests acima.
+Depois de corrigir, rode o plano de novo para confirmar before do --apply.
 ```
 
 Exit code = 1. O que muda na conversa: **o agente NÃO oferece o `--apply`.** Ele reporta qual
@@ -328,7 +328,7 @@ INSTALL PLAN — operator-kit-1.5.0  (dry run: nothing was written)
       would copy: profile.example.yaml -> operator-profile.yaml
   ✓ configure
   ✓ wire-suggest
-      opção [plugin]: /plugin marketplace add . && /plugin install <nome>@<marketplace>
+      opção [plugin]: /plugin marketplace add . && /plugin install <name>@<marketplace>
       opção [doc]: seguir SETTINGS-WIRE.md
       (nenhuma é executada automaticamente — mexer em settings/hooks é decisão humana)
   ✓ smoke

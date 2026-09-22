@@ -201,7 +201,7 @@ def _prevention(family: str, strategy: str) -> str:
 # SHAPE (provider prefix, authorization header, key=value, credential in a URL, high-entropy
 # blob) and records only the TYPE and the LENGTH -- never the value.
 
-_REDACTED = "[REDACTED:{tipo}:{n}]"
+_REDACTED = "[REDACTED:{kind}:{n}]"
 _KEYWORDS = (
     r"(?:api[_-]?key|access[_-]?key|secret(?:[_-]?key)?|client[_-]?secret|password|passwd"
     r"|token|auth[_-]?token|private[_-]?key)"
@@ -248,12 +248,12 @@ def redact_secrets(text: str) -> str:
     if not text:
         return text
     out = text
-    for tipo, rx, grp in _REDACT_RULES:
-        def _sub(m: re.Match[str], tipo: str = tipo, grp: int = grp) -> str:
+    for kind, rx, grp in _REDACT_RULES:
+        def _sub(m: re.Match[str], kind: str = kind, grp: int = grp) -> str:
             val = m.group(grp)
-            if val.startswith("[REDACTED:") or (tipo == "high-entropy" and not _looks_random(val)):
+            if val.startswith("[REDACTED:") or (kind == "high-entropy" and not _looks_random(val)):
                 return m.group(0)
-            tag = _REDACTED.format(tipo=tipo, n=len(val))
+            tag = _REDACTED.format(kind=kind, n=len(val))
             s, e = m.start(grp) - m.start(0), m.end(grp) - m.start(0)
             return m.group(0)[:s] + tag + m.group(0)[e:]
         out = rx.sub(_sub, out)

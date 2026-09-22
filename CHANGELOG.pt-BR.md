@@ -9,6 +9,73 @@ cada módulo mantém sua própria versão no `plugin.json` e no `marketplace.jso
 
 ## [Unreleased]
 
+## [2.5.5] — 2026-09-22
+
+O último português na FORMA publicada — chaves de saída, flags de CLI, valores de rótulo — mais as
+duas afirmações que o harness sempre pôde fazer e nunca fez. As duas metades vieram de perguntar a
+outro: uma revisão cross-model da 2.5.4 achou nove coisas, **duas delas furos nos gates que aquela
+release tinha acabado de adicionar**, e uma delas era o conserto de manchete da 2.5.4 tendo saído
+incompleto.
+
+### Changed
+
+- **Todo nome português restante em forma publicada está em inglês**, e é a FORMA que separa isso de
+  renomear uma variável: chaves de saída `--json` (`findings`, `severity`, `detail`, `next_action`,
+  `open_todos`), as chaves que o usuário escreve no `rollup.yaml` (`before`, `after`, `decisions`,
+  `summary`, `metrics`, `name`) e numa sonda de drift (`target`, `kind`, `expect`, `label`), os
+  códigos de diagnóstico que o doctor emite (`version-mismatch`, `manifest-out-of-place`) e o valor
+  de rótulo `aspirational`. 404 substituições em 37 arquivos, nenhuma em prosa: o reescritor operou
+  sobre TOKENS, então uma palavra portuguesa num documento `.pt-BR` nunca foi elegível.
+- **O CLI também fala inglês**: `--probe` / `--probes` (era `--sonda` / `--sondas`),
+  `--checker-unavailable`, e a mini-sintaxe de sonda inline agora é
+  `name=KIND:TARGET[:expect=true|false]`.
+- **O README declara as duas afirmações cross-model** que ele sempre implementou e nunca fez, com o
+  comando de cada uma: o revisor não é o autor, o veredito registra QUAL revisor (lane e modelo),
+  revisor ausente é estado registrado em vez de silêncio, e o trabalho é roteado por TIER com piso
+  de risco — `hpp route` devolve uma rota, nunca um fornecedor, um modelo ou um preço. A descrição
+  curta e os topics dizem `cross-model`, `maker-checker` e `provider-neutral`.
+
+### Fixed
+
+- 🔴 **O conserto de manchete da 2.5.4 estava incompleto, e o checker cross-model achou o arquivo
+  que ele não olhou.** O `health-kit/profile.example.yaml` carregava um TERCEIRO placeholder — e o
+  header dele manda copiar o arquivo para `operator-profile.yaml`. Quem obedeceu recebeu um bloco
+  descrevendo um projeto que não existe, com o aviso de EXAMPLE omitido em silêncio: exatamente o
+  sintoma que a 2.5.4 dizia ter fechado. O placeholder foi unificado e o leitor conhece os três.
+- **O CLI do drift-check passaria a exigir uma palavra que o próprio código já não usava.**
+  Renomear a chave `expect` sem renomear o `:espera=` que o parser lê é o mesmo defeito de "leitor
+  deixado atrás" que esta linha de releases não para de achar — pego aqui pela própria lista de
+  pendentes da ferramenta de rename, antes de sair. O contador que somava rótulos tinha o bug
+  gêmeo: lia a chave velha, então a contagem seria permanentemente zero.
+- **A afirmação de "fonte única" do handoff agora é verdadeira.** O validador e a mensagem dele leem
+  `_ACCEPTED_SCHEMA_VERSIONS`; três ESCRITORES ainda escreviam a versão à mão, um deles o caminho
+  degradado que dispara quando uma sessão morre sem `/pre-clear`. Um bump poderia fazer o `write()`
+  produzir o que o `validate()` rejeita.
+- **O exclude de coleta aprendeu a convenção de snapshot.** A 2.5.4 ensinou `*.pre[0-9]*` /
+  `*.pre-*` à prova pós-escrita do zip; os dez manifestos de módulo ainda conheciam só `.bak`, então
+  um snapshot esquecido reprovava a emissão inteira do módulo em vez de ser filtrado.
+
+### Added
+
+- **O gate de artefato não passa mais num smoke vazio.** O `✓ smoke` aparece sempre que nada foi
+  classificado como falha — inclusive numa rodada em que todo self-test imprimiu usage genérico e
+  NENHUM executou. O gate agora exige um piso de self-tests de fato rodados, e o controle dele
+  renderiza quatro relatórios sintéticos pelo renderizador embarcado para provar que as agulhas
+  separam uma rodada boa de uma ruim. O controle anterior afirmava apenas que duas strings existiam
+  na fonte do instalador, o que qualquer arquivo contendo um ✓ satisfaz.
+- **Os gates de artefato resolvem caminho versionado por glob**, então o próximo bump rotineiro de
+  módulo não os transforma num skip silencioso, e um `HPP_PRODUTO` mal configurado agora FALHA em
+  vez de pular — um caminho errado que pula em silêncio é como um gate deixa de existir sem ninguém
+  decidir que devia.
+
+### Known
+
+- Os gates de artefato rodam no momento da RELEASE, na máquina que emite, não em cada PR: um
+  checkout novo de CI não tem a árvore do produto. O CI prova a fonte; a release prova o produto.
+  Declarado aqui porque o silêncio anterior deixava o leitor supor que o gate de merge cobria os dois.
+- Três valores portugueses legados seguem legíveis de propósito até a 2.7.0 — os sentinelas e o nome
+  de família que um profile escrito antes da 2.5.1 ainda carrega. São lidos, nunca escritos.
+
 ## [2.5.4] — 2026-09-22
 
 A 2.5.3 renomeou coisas. Esta release conserta o que os renames **quebraram**, e cada um dos cinco
@@ -455,7 +522,7 @@ anterior era cega.
   simula o crash entre reservar e gravar — o retry que de fato acontece — e o README diz quem marca
   `delivered`: o consumidor, nunca o board.
 - **Citação de spec malformada sumia** (`[spec: cap]`, `[spec: cap/first thing]`): nem coberta nem
-  desconhecida. Vira `malformed:<texto>` → `unknown`; placeholder que documenta a forma não é citação.
+  desconhecida. Vira `malformed:<text>` → `unknown`; placeholder que documenta a forma não é citação.
 - **O `lane_rescue` prometia round-trip byte-exato sem dizer onde isso para**: com
   `core.autocrlf=true` o git normaliza texto dos dois lados. O limite está dito na escrita, o meta
   registra `autocrlf`, e binário continua exato de qualquer jeito.

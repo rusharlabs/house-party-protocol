@@ -8,7 +8,7 @@ caminhos ao diretório emitido e leia o plano antes de usar `--apply`.
 ### 1. Inventarie antes de criar
 
 ```bash
-rg --files | rg '(^|/)(nome|termo)'
+rg --files | rg '(^|/)(name|termo)'
 ```
 
 ### 2. Meça a árvore Git sem confundir não rastreado

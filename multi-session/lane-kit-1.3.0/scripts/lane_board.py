@@ -15,7 +15,7 @@ Usage:
     python lane_board.py claim <item_id> --lane <id> --role <role> --model <model> [--tag green|red]
     python lane_board.py --set <item_id> <state> --lane <id> --role <role> --model <model>
                           [--evidence "..."] [--verdict-by-lane <id>] [--verdict-by-model <m>]
-                          [--checker-indisponivel] [--human-approved]
+                          [--checker-unavailable] [--human-approved]
     python lane_board.py status [<item_id>]
     python lane_board.py render
     python lane_board.py --self-test
@@ -137,7 +137,7 @@ def _append_event(event: dict) -> None:
 
 def _validate_transition(item_id: str, new_state: str, lane_id: str, role: str, model: str,
                           evidence: str = "", verdict_by_lane: str = "", verdict_by_model: str = "",
-                          checker_indisponivel: bool = False, human_approved: bool = False, tag: str = "green") -> str | None:
+                          checker_unavailable: bool = False, human_approved: bool = False, tag: str = "green") -> str | None:
     """Returns None if valid, or the error message."""
     current = _latest_state(item_id)
     cur_state = current["state"] if current else None
@@ -166,15 +166,15 @@ def _validate_transition(item_id: str, new_state: str, lane_id: str, role: str, 
         claimed = next((e for e in reversed(_read_events(item_id)) if e["state"] == "CLAIMED"), None)
         builder_lane = claimed.get("lane_id") if claimed else None
         builder_model = claimed.get("model") if claimed else None
-        if checker_indisponivel:
+        if checker_unavailable:
             return f"checker unavailable — only DEFERRED is accepted, not {new_state}"
         if verdict_by_lane == builder_lane:
             return f"maker≠checker violated: reviewer ({verdict_by_lane}) is the SAME lane as the builder ({builder_lane})"
         if _model_family(verdict_by_model) == _model_family(builder_model):
             return f"maker≠checker violated: reviewer and builder are from the SAME model family ({_model_family(verdict_by_model)})"
 
-    if new_state == "DEFERRED" and not checker_indisponivel:
-        return "DEFERRED only with --checker-indisponivel"
+    if new_state == "DEFERRED" and not checker_unavailable:
+        return "DEFERRED only with --checker-unavailable"
 
     if new_state == "MERGED":
         verified = next((e for e in reversed(_read_events(item_id)) if e["state"] == "VERIFIED"), None)
@@ -371,9 +371,9 @@ def _self_test() -> int:
         set_state("ITEM-3", "BUILDING", "exec-a", "executor", "claude-opus-4-8")
         set_state("ITEM-3", "CHECKPOINT-READY", "exec-a", "executor", "claude-opus-4-8", evidence="x")
         set_state("ITEM-3", "UNDER-REVIEW", "exec-a", "executor", "claude-opus-4-8")
-        ok15, r15 = set_state("ITEM-3", "VERIFIED", "exec-a", "reviewer", "claude-opus-4-8", checker_indisponivel=True, verdict_by_lane="rev-a", verdict_by_model="gpt-5.6")
+        ok15, r15 = set_state("ITEM-3", "VERIFIED", "exec-a", "reviewer", "claude-opus-4-8", checker_unavailable=True, verdict_by_lane="rev-a", verdict_by_model="gpt-5.6")
         assert not ok15 and "DEFERRED" in r15, f"an unavailable checker only accepts DEFERRED: {r15}"
-        ok16, r16 = set_state("ITEM-3", "DEFERRED", "exec-a", "reviewer", "claude-opus-4-8", checker_indisponivel=True)
+        ok16, r16 = set_state("ITEM-3", "DEFERRED", "exec-a", "reviewer", "claude-opus-4-8", checker_unavailable=True)
         assert ok16, f"DEFERRED with an unavailable checker should pass: {r16}"
 
         rendered = render()
@@ -419,7 +419,7 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--evidence", default="")
     s.add_argument("--verdict-by-lane", default="")
     s.add_argument("--verdict-by-model", default="")
-    s.add_argument("--checker-indisponivel", action="store_true")
+    s.add_argument("--checker-unavailable", action="store_true")
     s.add_argument("--human-approved", action="store_true")
     s.add_argument("--tag", default="green", choices=["green", "red"])
 
@@ -443,7 +443,7 @@ def main(argv) -> int:
         ok, result = set_state(
             args.item_id, args.state, args.lane, args.role, args.model,
             evidence=args.evidence, verdict_by_lane=args.verdict_by_lane, verdict_by_model=args.verdict_by_model,
-            checker_indisponivel=args.checker_indisponivel, human_approved=args.human_approved, tag=args.tag,
+            checker_unavailable=args.checker_unavailable, human_approved=args.human_approved, tag=args.tag,
         )
     elif args.cmd == "status":
         events = _read_events(args.item_id)

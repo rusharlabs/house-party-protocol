@@ -59,7 +59,7 @@ erro causal; não o substitua por um fallback vazio.
 
 ## 5. Fechamento
 
-Reporte `configurado · conectado · autorizado · operação positiva · caso alvo`
+Reporte `configurado · conectado · autorizado · operação positiva · caso target`
 como cinco estados separados. Inclua gaps que dependam de conta, credencial ou
 gate humano.
 

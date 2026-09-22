@@ -85,7 +85,7 @@ def _looks_like_path(token: str) -> bool:
 def extract_deliverables(text: str, extra_regexes=None) -> list[dict]:
     """
     Extracts deliverables from a markdown plan. Each item:
-        {tipo, texto, path (str|None), checked (bool|None)}
+        {kind, text, path (str|None), checked (bool|None)}
     Dedup by (tipo, normalized texto).
     """
     items: list[dict] = []
@@ -99,7 +99,7 @@ def extract_deliverables(text: str, extra_regexes=None) -> list[dict]:
         if key in seen:
             return
         seen.add(key)
-        items.append({"tipo": kind, "texto": text, "path": path, "checked": checked})
+        items.append({"kind": kind, "text": text, "path": path, "checked": checked})
 
     for raw in text.splitlines():
         line = raw.rstrip("\n")
@@ -208,7 +208,7 @@ def git_log_mentions(term: str, repo_root: Path, timeout: int = 20) -> bool:
 
 def classify(item: dict, repo_root: Path, use_git: bool) -> dict:
     """Classifies a deliverable as FEITO/PARCIAL/AUSENTE with evidence."""
-    probe = item.get("path") or item.get("texto") or ""
+    probe = item.get("path") or item.get("text") or ""
     on_disk = path_exists(item["path"], repo_root) if item.get("path") else False
     in_git = git_log_mentions(probe, repo_root) if use_git else False
 
@@ -239,7 +239,7 @@ def audit(plan_path: Path, repo_root: Path, use_git: bool = True,
         "repo": str(repo_root),
         "git_consultado": use_git,
         "total": len(rows),
-        "resumo": summary,
+        "summary": summary,
         "itens": rows,
     }
 
@@ -250,7 +250,7 @@ def render_markdown(result: dict) -> str:
     out: list[str] = []
     out.append(f"# Plan audit — {Path(result['plano']).name}")
     out.append("")
-    r = result["resumo"]
+    r = result["summary"]
     out.append(f"Deliverables: **{result['total']}** · "
                f"FEITO {r.get('FEITO', 0)} · PARCIAL {r.get('PARCIAL', 0)} · "
                f"AUSENTE {r.get('AUSENTE', 0)}"
@@ -262,13 +262,13 @@ def render_markdown(result: dict) -> str:
     out.append("| Status | Type | Deliverable | Disk | Git |")
     out.append("|--------|------|-------------|:----:|:---:|")
     for it in result["itens"]:
-        target = it.get("path") or it.get("texto") or ""
+        target = it.get("path") or it.get("text") or ""
         target = target.replace("|", "\\|")
         if len(target) > 70:
             target = target[:67] + "..."
         disk = "yes" if it["on_disk"] else "—"
         gitm = "yes" if it["in_git"] else "—"
-        out.append(f"| {it['status']} | {it['tipo']} | {target} | {disk} | {gitm} |")
+        out.append(f"| {it['status']} | {it['kind']} | {target} | {disk} | {gitm} |")
     return "\n".join(out)
 
 
@@ -353,7 +353,7 @@ def _self_test() -> None:
     assert "R$100K" not in paths, "R$100K is not a path"
     assert "git status" not in paths, "a command is not a path"
     # a checkbox with no path becomes an item, but without a path
-    assert any(it["tipo"] == "checkbox" and it["path"] is None for it in items), \
+    assert any(it["kind"] == "checkbox" and it["path"] is None for it in items), \
         "a checkbox without a path must still be an item"
 
     with tempfile.TemporaryDirectory() as td:
@@ -374,7 +374,7 @@ def _self_test() -> None:
         assert by_path["outro_arquivo_inexistente_abc.md"]["status"] == "AUSENTE", \
             "missing deliverable = AUSENTE"
         assert res["git_consultado"] is False
-        assert res["resumo"]["FEITO"] >= 2
+        assert res["summary"]["FEITO"] >= 2
 
         # rendering markdown must not crash and must contain the header
         md = render_markdown(res)
