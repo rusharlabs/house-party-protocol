@@ -21,7 +21,7 @@ Serviços externos: **nenhum — stdlib + PyYAML.**
 ## Instalar via plugin
 
 ```bash
-/plugin marketplace add rushar-labs/house-party-protocol
+/plugin marketplace add rusharlabs/house-party-protocol
 /plugin install agent-framework-wizard@house-party-protocol
 ```
 O plugin não tem hooks; a skill `agent-framework-scaffold` é auto-descoberta e o

@@ -54,7 +54,7 @@ gotcha-memory/
 ## Instalar via plugin (1 clique)
 
 ```bash
-/plugin marketplace add rushar-labs/house-party-protocol
+/plugin marketplace add rusharlabs/house-party-protocol
 /plugin install gotcha-memory@house-party-protocol
 ```
 

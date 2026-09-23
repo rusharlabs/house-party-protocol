@@ -240,7 +240,7 @@ python -m hpp attest verify att.json --repo .</pre>
       <p class="eyebrow">08 · hosts</p>
       <h2>Mesmo contrato, diferenças visíveis.</h2>
       <table><thead><tr><th></th><th>Claude Code</th><th>Codex CLI</th></tr></thead><tbody>
-        <tr><td>Distribuição</td><td>marketplace de plugins (<code>/plugin marketplace add rushar-labs/house-party-protocol</code>, depois <code>/plugin install &lt;módulo&gt;@house-party-protocol</code>)</td><td>cópia verificada por módulo via <code>kit_doctor.py install --host codex</code></td></tr>
+        <tr><td>Distribuição</td><td>marketplace de plugins (<code>/plugin marketplace add rusharlabs/house-party-protocol</code>, depois <code>/plugin install &lt;módulo&gt;@house-party-protocol</code>)</td><td>cópia verificada por módulo via <code>kit_doctor.py install --host codex</code></td></tr>
         <tr><td>Onde cai</td><td>o store de plugins do host; <code>.claude/settings.local.json</code> para hooks e statusLine</td><td><code>.agents/skills</code> para skills, <code>.agents/hpp/&lt;módulo&gt;</code> para runtime; <code>AGENTS.md</code> é o que o host lê</td></tr>
         <tr><td>Lifecycle hooks</td><td>nativos, depois que o wiring é colado (gate humano; o <code>hpp init</code> lista os módulos que declaram hooks)</td><td>nenhum; as mesmas capacidades são comandos explícitos</td></tr>
         <tr><td>Cobertura no manifesto</td><td>seis módulos <code>native</code>, quatro <code>explicit-command</code></td><td>nove <code>explicit-command</code>; <code>claude-dev-kit</code> é <code>unsupported</code>, e o <code>hpp init</code> interrompe em vez de planejá-lo ali</td></tr>

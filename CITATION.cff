@@ -7,7 +7,7 @@ version: "2.5.7"
 date-released: "2026-09-21"
 license: MIT
 url: "https://rusharlabs.com"
-repository-code: "https://github.com/rushar-labs/house-party-protocol"
+repository-code: "https://github.com/rusharlabs/house-party-protocol"
 authors:
   - family-names: "Parisi"
     given-names: "Max"

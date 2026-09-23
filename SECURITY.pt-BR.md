@@ -56,9 +56,9 @@ O projeto é publicado nestes lugares e em nenhum outro. Uma cópia encontrada e
 outra conta do GitHub, um índice de pacotes que a lista abaixo não nomeia, um site de download,
 um fork que mantém o nome — não é este projeto e não recebe suporte de segurança.
 
-- Fonte, issues, releases: `https://github.com/rushar-labs/house-party-protocol`
-- Canal de plugin do Claude Code: `/plugin marketplace add rushar-labs/house-party-protocol`
-- pip: `pip install git+https://github.com/rushar-labs/house-party-protocol@<tag>` (uma
+- Fonte, issues, releases: `https://github.com/rusharlabs/house-party-protocol`
+- Canal de plugin do Claude Code: `/plugin marketplace add rusharlabs/house-party-protocol`
+- pip: `pip install git+https://github.com/rusharlabs/house-party-protocol@<tag>` (uma
   publicação no PyPI, quando existir, é anunciada primeiro no `CHANGELOG.md` e no README)
 - Web: `https://rusharlabs.com` (o canal de contato para o que não cabe numa issue pública)
 

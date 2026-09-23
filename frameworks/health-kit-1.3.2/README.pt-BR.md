@@ -53,7 +53,7 @@ health-kit/
 ## Instalar via plugin (1 clique)
 
 ```bash
-/plugin marketplace add rushar-labs/house-party-protocol
+/plugin marketplace add rusharlabs/house-party-protocol
 /plugin install health-kit@house-party-protocol
 ```
 Instala o hook `SessionStart` (refresh automático do cache a cada sessão nova) via

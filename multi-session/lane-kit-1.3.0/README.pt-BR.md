@@ -24,7 +24,7 @@ Serviços externos: **nenhum — stdlib + PyYAML, só toca filesystem local + gi
 ## Instalar via plugin
 
 ```bash
-/plugin marketplace add rushar-labs/house-party-protocol
+/plugin marketplace add rusharlabs/house-party-protocol
 /plugin install lane-kit@house-party-protocol
 ```
 O `.claude-plugin/plugin.json` declara `hooks/hooks.json`, então o plugin arma quatro

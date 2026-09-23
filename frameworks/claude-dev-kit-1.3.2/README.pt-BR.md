@@ -37,7 +37,7 @@ Serviços externos: **nenhum — stdlib + PyYAML, só toca filesystem local + gi
 ## Instalar via plugin (auto-wire de 1 clique)
 
 ```bash
-/plugin marketplace add rushar-labs/house-party-protocol
+/plugin marketplace add rusharlabs/house-party-protocol
 /plugin install claude-dev-kit@house-party-protocol
 ```
 O `.claude-plugin/plugin.json` declara `hooks/hooks.json`, que arma

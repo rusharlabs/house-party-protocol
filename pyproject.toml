@@ -36,10 +36,10 @@ classifiers = [
 
 [project.urls]
 Homepage = "https://rusharlabs.com"
-Repository = "https://github.com/rushar-labs/house-party-protocol"
-Changelog = "https://github.com/rushar-labs/house-party-protocol/blob/main/CHANGELOG.md"
-Issues = "https://github.com/rushar-labs/house-party-protocol/issues"
-Security = "https://github.com/rushar-labs/house-party-protocol/blob/main/SECURITY.md"
+Repository = "https://github.com/rusharlabs/house-party-protocol"
+Changelog = "https://github.com/rusharlabs/house-party-protocol/blob/main/CHANGELOG.md"
+Issues = "https://github.com/rusharlabs/house-party-protocol/issues"
+Security = "https://github.com/rusharlabs/house-party-protocol/blob/main/SECURITY.md"
 
 [project.scripts]
 hpp = "hpp.cli:main"

@@ -38,7 +38,7 @@ PROFILE_RELPATH = Path(".hpp") / "profile.json"
 MIN_PYTHON = (3, 10)
 POLICY_MODES = ("audit", "enforce")
 # Why: the public marketplace is the channel the README documents; a flag overrides it for forks.
-DEFAULT_MARKETPLACE = "rushar-labs/house-party-protocol"
+DEFAULT_MARKETPLACE = "rusharlabs/house-party-protocol"
 BENCHMARK_SUITE = Path("examples") / "reliable-coding" / "benchmark-suite.json"
 READINESS_CELLS = 20
 

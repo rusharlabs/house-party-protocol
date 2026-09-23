@@ -87,8 +87,8 @@ integração.
 
 > [!WARNING]
 > **Só fontes oficiais.** Este projeto é publicado em
-> `github.com/rushar-labs/house-party-protocol` e pelo canal de plugin do Claude Code
-> `rushar-labs/house-party-protocol` — em nenhum outro lugar. Uma cópia em outra conta, ou num
+> `github.com/rusharlabs/house-party-protocol` e pelo canal de plugin do Claude Code
+> `rusharlabs/house-party-protocol` — em nenhum outro lugar. Uma cópia em outra conta, ou num
 > índice de pacotes que este README não nomeia, não é este projeto. Toda release traz `SHA256SUMS`
 > e todo módulo traz `CHECKSUMS.txt`; veja [SECURITY.pt-BR.md](SECURITY.pt-BR.md).
 
@@ -97,7 +97,7 @@ nenhum pacote de terceiro. A CI exercita Python 3.10 a 3.13 em Linux, macOS e Wi
 (`.github/workflows/ci.yml`); interpretadores mais antigos não são prometidos porque nada os mede.
 
 ```bash
-pip install git+https://github.com/rushar-labs/house-party-protocol@v2.5.7
+pip install git+https://github.com/rusharlabs/house-party-protocol@v2.5.7
 hpp doctor
 hpp init --target ../your-repo
 ```
@@ -115,7 +115,7 @@ então `hpp` — inclusive `hpp benchmark` e `hpp --self-test` — responde de q
 depois de instalado (`pipx install git+…` funciona igual). A partir de um checkout, a CLI é o módulo:
 
 ```bash
-git clone https://github.com/rushar-labs/house-party-protocol.git
+git clone https://github.com/rusharlabs/house-party-protocol.git
 cd house-party-protocol
 python -m hpp doctor
 ```
@@ -169,7 +169,7 @@ Depois do `--apply`, cole o bloco de wiring que o comando imprimiu. Para Claude 
 nativo de plugin:
 
 ```text
-/plugin marketplace add rushar-labs/house-party-protocol
+/plugin marketplace add rusharlabs/house-party-protocol
 /plugin install operator-kit@house-party-protocol
 ```
 

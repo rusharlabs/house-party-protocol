@@ -37,7 +37,7 @@ External services: **none — stdlib + PyYAML, touches only the local filesystem
 ## Install as a plugin (1-click auto-wire)
 
 ```bash
-/plugin marketplace add rushar-labs/house-party-protocol
+/plugin marketplace add rusharlabs/house-party-protocol
 /plugin install claude-dev-kit@house-party-protocol
 ```
 `.claude-plugin/plugin.json` declares `hooks/hooks.json`, which wires

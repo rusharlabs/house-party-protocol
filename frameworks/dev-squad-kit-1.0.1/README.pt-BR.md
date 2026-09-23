@@ -31,7 +31,7 @@ Serviços externos: **nenhum — stdlib only.** Os 12 agentes são arquivos `.md
 ## 3. Instalar via plugin
 
 ```bash
-/plugin marketplace add rushar-labs/house-party-protocol
+/plugin marketplace add rusharlabs/house-party-protocol
 /plugin install dev-squad-kit@house-party-protocol
 ```
 O `.claude-plugin/plugin.json` declara `commands/`; `agents/` e `skills/` são

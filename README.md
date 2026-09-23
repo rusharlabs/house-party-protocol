@@ -86,8 +86,8 @@ lane driven by one and reviewed from the other is the ordinary case, not an inte
 
 > [!WARNING]
 > **Official sources only.** This project is published at
-> `github.com/rushar-labs/house-party-protocol` and through the Claude Code plugin channel
-> `rushar-labs/house-party-protocol` — nowhere else. A copy under another account, or on a package
+> `github.com/rusharlabs/house-party-protocol` and through the Claude Code plugin channel
+> `rusharlabs/house-party-protocol` — nowhere else. A copy under another account, or on a package
 > index this README does not name, is not this project. Every release ships `SHA256SUMS` and
 > every module ships `CHECKSUMS.txt`; see [SECURITY.md](SECURITY.md).
 
@@ -96,7 +96,7 @@ third-party packages. CI exercises Python 3.10 to 3.13 on Linux, macOS and Windo
 (`.github/workflows/ci.yml`); older interpreters are not promised because nothing measures them.
 
 ```bash
-pip install git+https://github.com/rushar-labs/house-party-protocol@v2.5.7
+pip install git+https://github.com/rusharlabs/house-party-protocol@v2.5.7
 hpp doctor
 hpp init --target ../your-repo
 ```
@@ -114,7 +114,7 @@ The package has no runtime dependencies and ships its own manifest and benchmark
 (`pipx install git+…` works the same way). From a checkout, the CLI is the module:
 
 ```bash
-git clone https://github.com/rushar-labs/house-party-protocol.git
+git clone https://github.com/rusharlabs/house-party-protocol.git
 cd house-party-protocol
 python -m hpp doctor
 ```
@@ -168,7 +168,7 @@ After `--apply`, paste the wire block the command printed. For Claude Code that 
 plugin channel:
 
 ```text
-/plugin marketplace add rushar-labs/house-party-protocol
+/plugin marketplace add rusharlabs/house-party-protocol
 /plugin install operator-kit@house-party-protocol
 ```
 

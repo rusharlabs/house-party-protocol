@@ -31,7 +31,7 @@ declares name, version, description and keywords, and `marketplace.json` at the
 distribution root lists it under `installers`.
 
 ```bash
-/plugin marketplace add rushar-labs/house-party-protocol
+/plugin marketplace add rusharlabs/house-party-protocol
 /plugin install kit-forge@house-party-protocol
 ```
 

@@ -37,7 +37,7 @@ URL do projeto + anon key, configuradas no MCP do Supabase do seu ambiente (não
 ## Instalar via plugin
 
 ```bash
-/plugin marketplace add rushar-labs/house-party-protocol
+/plugin marketplace add rusharlabs/house-party-protocol
 /plugin install supabase-pack@house-party-protocol
 ```
 O plugin não tem hooks; as duas skills são auto-descobertas.

@@ -1012,10 +1012,10 @@ publishing.
 - Hooks resolve `.venv`, `python3` or `python` through `hooks/pyrun.sh`.
 - Kits are emitted in LF and carry checksums of the distributed bytes.
 
-[1.4.0]: https://github.com/rushar-labs/house-party-protocol/releases/tag/v1.4.0
-[1.5.0]: https://github.com/rushar-labs/house-party-protocol/releases/tag/v1.5.0
-[2.0.0]: https://github.com/rushar-labs/house-party-protocol/releases/tag/v2.0.0
-[2.1.0]: https://github.com/rushar-labs/house-party-protocol/releases/tag/v2.1.0
-[2.2.0]: https://github.com/rushar-labs/house-party-protocol/releases/tag/v2.2.0
-[2.3.0]: https://github.com/rushar-labs/house-party-protocol/releases/tag/v2.3.0
-[2.4.0]: https://github.com/rushar-labs/house-party-protocol/releases/tag/v2.4.0
+[1.4.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v1.4.0
+[1.5.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v1.5.0
+[2.0.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.0.0
+[2.1.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.1.0
+[2.2.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.2.0
+[2.3.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.3.0
+[2.4.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.4.0

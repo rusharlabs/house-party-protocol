@@ -80,7 +80,7 @@ operator-kit/
 ## Install as a plugin (1 click)
 
 ```bash
-/plugin marketplace add rushar-labs/house-party-protocol
+/plugin marketplace add rusharlabs/house-party-protocol
 /plugin install operator-kit@house-party-protocol
 ```
 `.claude-plugin/plugin.json` declares `hooks/hooks.json` and `commands/`: the 9 hooks are

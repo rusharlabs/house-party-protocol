@@ -31,7 +31,7 @@ not executable code, and call no API.
 ## 3. Install as a plugin
 
 ```bash
-/plugin marketplace add rushar-labs/house-party-protocol
+/plugin marketplace add rusharlabs/house-party-protocol
 /plugin install dev-squad-kit@house-party-protocol
 ```
 `.claude-plugin/plugin.json` declares `commands/`; `agents/` and `skills/` are

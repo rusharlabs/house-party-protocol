@@ -37,7 +37,7 @@ environment (not in this kit). **Never `ANTHROPIC_API_KEY`** — not applicable 
 ## Install as a plugin
 
 ```bash
-/plugin marketplace add rushar-labs/house-party-protocol
+/plugin marketplace add rusharlabs/house-party-protocol
 /plugin install supabase-pack@house-party-protocol
 ```
 The plugin has no hooks; the two skills are auto-discovered.

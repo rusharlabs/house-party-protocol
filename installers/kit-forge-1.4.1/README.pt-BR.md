@@ -32,7 +32,7 @@ declara nome, versão, descrição e keywords, e o `marketplace.json` da raiz da
 o lista em `installers`.
 
 ```bash
-/plugin marketplace add rushar-labs/house-party-protocol
+/plugin marketplace add rusharlabs/house-party-protocol
 /plugin install kit-forge@house-party-protocol
 ```
 
