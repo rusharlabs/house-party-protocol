@@ -9,6 +9,54 @@ cada módulo mantém sua própria versão no `plugin.json` e no `marketplace.jso
 
 ## [Unreleased]
 
+## [2.5.8] — 2026-09-23
+
+O repositório ficou público, e esta versão responde à pergunta que um repositório público precisa
+responder: o que alguém — ou o agente que trabalha para ele — faz depois de encontrá-lo. Ela
+também encerra uma contradição que o projeto vinha publicando, em que quatro páginas abriam com
+uma arte que o documento de marca ao lado delas veta.
+
+### Adicionado
+
+- **`INSTALL_FOR_AGENTS.md`, com o par em português** — um guia de instalação escrito para o
+  agente, não para o leitor. Ele identifica o host, confere os pré-requisitos em vez de presumi-los
+  e obriga o agente a ler em voz alta o plano do `hpp init` antes de um único arquivo ser escrito.
+  Um instalador que escreve antes de você ler é a falha que este harness existe para impedir;
+  instalá-lo violando-o seria a pior primeira impressão possível. Um teste amarra o comando pinado
+  dele ao do README e à versão do pacote, porque um quarto lugar que ensina a instalar é o lugar
+  que apodrece.
+- **O wizard nomeia a documentação que embarca.** Medido antes da mudança: `CATALOG` aparecia zero
+  vezes na CLI e `docs/` zero vezes, enquanto `hpp doctor` aparecia onze — ou seja, a régua via o
+  arquivo e o ponteiro é que não existia. Quem instalava terminava em "Welcome to the party" sem
+  saber que existiam quatro páginas de manual.
+- **O lane board no README, como SVG de terminal**, produzido dirigindo a máquina de estados de
+  verdade em vez de desenhar uma figura dela, para que a imagem não possa divergir do
+  comportamento.
+- **`workflow_dispatch` no workflow de release.** O GitHub não emite evento de tag quando um push
+  carrega mais de três; quatro releases se perderam assim e foram recuperadas à mão. O gatilho
+  exige a tag como entrada, então uma execução manual nunca publica o que estiver na branch, e
+  todos os portões continuam valendo.
+
+### Alterado
+
+- **A marca virou uma marca.** As quatro páginas HTML abriam com um símbolo desenhado um dia antes
+  do lockup aprovado, enquanto o `BRAND.md` diz desse lockup: "do not redraw, recolour or crop".
+  As páginas publicavam arte que o documento ao lado delas veta. Agora abrem com o lockup aprovado
+  redimensionado para 1440 px — redimensionar não é nenhum dos três — e os vetores anteriores
+  carregam lápide com o sucessor nomeado, em vez de serem apagados.
+- **O repositório pertence a uma organização.** Conta de usuário não aceita segundo administrador:
+  medido neste repositório, `admin`, `maintain` e `triage` foram os três recusados, e `write` era o
+  teto. Todas as URLs foram reescritas na fonte.
+
+### Corrigido
+
+- **O gate de publicação parou de reprovar cache de ferramenta.** `.pytest_cache`, `.ruff_cache` e
+  `.mypy_cache` saem do universo do linter; `__pycache__` fica nele de propósito, porque bytecode
+  dentro de um kit emitido é defeito de empacotamento, enquanto um node id do pytest que por acaso
+  contém `secret.pem` é nome de teste. O self-test agora exige silêncio dentro dos três e ruído
+  para os mesmos bytes fora deles — qualquer das metades sozinha passaria com o detector quebrado.
+
+
 ## [2.5.7] — 2026-09-22
 
 Nenhum endereço de e-mail é publicado mais neste repositório. Repositório público é colhido, e caixa

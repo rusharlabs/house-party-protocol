@@ -9,6 +9,53 @@ keeps its own version in `plugin.json` and in `marketplace.json`.
 
 ## [Unreleased]
 
+## [2.5.8] — 2026-09-23
+
+The repository became public, and this release answers the question a public repository has to
+answer: what someone — or the agent working for them — does after finding it. It also settles a
+contradiction the project was shipping, where four pages opened with artwork the brand document
+beside them forbids.
+
+### Added
+
+- **`INSTALL_FOR_AGENTS.md`, with its Portuguese pair** — an install guide written for the agent
+  rather than for the reader. It identifies the host, checks the preconditions instead of assuming
+  them, and requires the agent to read `hpp init`'s plan aloud before a single file is written. An
+  installer that writes before you read is the failure this harness exists to prevent; installing
+  it by violating it would be the worst possible first impression. A test ties its pinned command
+  to the README's and to the package version, because a fourth place that teaches installation is
+  the place that rots.
+- **The wizard names the documentation it ships.** Measured before the change: `CATALOG` appeared
+  zero times in the CLI and `docs/` zero times, while `hpp doctor` appeared eleven — so the ruler
+  could see the file and the pointer simply was not there. Whoever installed the harness finished
+  at "Welcome to the party" without learning four pages of manual existed.
+- **The lane board in the README, as a terminal SVG**, produced by driving the real state machine
+  rather than by drawing a picture of one, so the image cannot drift from the behaviour.
+- **`workflow_dispatch` on the release workflow.** GitHub emits no tag event when a single push
+  carries more than three tags; four releases were lost that way and recovered by hand. The
+  trigger demands the tag as an input, so a manual run can never publish whatever sits on the
+  branch, and every gate still applies.
+
+### Changed
+
+- **The brand is one brand.** The four HTML pages opened with a mark drawn a day before the
+  approved lockup, while `BRAND.md` states of that lockup: "do not redraw, recolour or crop". The
+  pages were publishing artwork the document beside them forbids. They now open with the approved
+  lockup resized to 1440 px — a resize is none of the three — and the earlier vectors carry a
+  tombstone naming their successor instead of being deleted.
+- **The repository belongs to an organization.** A user account cannot have a second
+  administrator: measured against this repository, `admin`, `maintain` and `triage` were all
+  refused and `write` was the ceiling. Every URL was rewritten at the source.
+
+### Fixed
+
+- **The publication gate stopped reproving a tool cache.** `.pytest_cache`, `.ruff_cache` and
+  `.mypy_cache` leave the linter's universe; `__pycache__` deliberately stays in it, because
+  bytecode inside an emitted kit is a packaging defect, while a pytest node id that happens to
+  contain `secret.pem` is a test name. The self-test now demands silence inside all three and
+  noise for the same bytes outside them — either half alone would pass with the detector broken.
+
+
 ## [2.5.7] — 2026-09-22
 
 No e-mail address is published in this repository any more. A public repository is harvested, and a

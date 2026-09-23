@@ -3,7 +3,7 @@
   "name": "house-party-protocol",
   "description": "House Party Protocol is a modular, cross-host harness for Claude Code and Codex CLI: executable gates, governed loops, cross-model review, provider-neutral routing by tier, continuity, deterministic evaluation and verifiable distribution.",
   "description_pt": "House Party Protocol é um harness modular e cross-host para Claude Code e Codex CLI: gates executáveis, loops governados, revisão cross-model, roteamento provider-neutral por tier, continuidade, avaliação determinística e distribuição verificável.",
-  "version": "2.5.7",
+  "version": "2.5.8",
   "owner": {
     "name": "Max Parisi",
     "url": "https://rusharlabs.com"
