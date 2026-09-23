@@ -46,7 +46,13 @@ OUTPUTS = {
     "en": {"md": "CATALOG.md", "html": "CATALOG.html"},
     "pt-BR": {"md": "CATALOG.pt-BR.md", "html": "CATALOG.pt-BR.html"},
 }
-OWN_FILES = frozenset(name for lang in OUTPUTS.values() for name in lang.values())
+# Why: the landing page is one of this tool's own outputs, so it belongs here for the same
+# reason the four do -- otherwise every run would list `index.html` as a "shared resource" of
+# the docs folder, and the list would grow by one self-reference per run.
+INDEX_HTML = "index.html"
+OWN_FILES = frozenset(
+    [INDEX_HTML] + [name for lang in OUTPUTS.values() for name in lang.values()]
+)
 # Why: BRAND.md declares exactly four tokens; any other hex in the page is palette drift.
 BRAND = {"black": "#000000", "ink": "#0F1113", "paper": "#F4F1EB", "signal": "#FF6A00"}
 # Why: the pair link and the regeneration command are identical on both sides on purpose — the
@@ -214,6 +220,16 @@ def build_model(root: Path) -> dict:
         "name": name,
         "display": display,
         "lockup": _lockup(root, display),
+        # Why: the landing page needs the publisher's own address and the product summary, and
+        # both already live in `marketplace.json`. Reading them here keeps the generator free of
+        # a hard-coded URL -- a literal address in a tool that ships inside every kit is the kind
+        # of thing that outlives the address.
+        "home": (mk.get("owner") or {}).get("url", ""),
+        "version": str(mk.get("version", "")),
+        "summary": {
+            "en": (mk.get("description") or "").strip(),
+            "pt-BR": (mk.get("description_pt") or mk.get("description") or "").strip(),
+        },
         "shared": shared,
         "kits": kits,
         "totals": totals,
@@ -451,6 +467,81 @@ def render_html(model: dict, lang: str) -> str:
     return "\n".join(lines) + "\n"
 
 
+_INDEX_T = {
+    "en": {
+        "lead": "Module catalogue and harness manual, generated from the emitted tree.",
+        "cat": "Module catalogue",
+        "cat_d": "What each kit installs, resource by resource.",
+        "man": "Harness manual",
+        "man_d": "How init installs, what each map projects, what the policy blocks.",
+        # Why: the publisher is named by the URL the manifest carries, never by a literal
+        # here. A name written into a tool that ships inside every kit outlives the name.
+        "home": "Publisher",
+        "home_d": "Who publishes this harness.",
+        "built": "Generated with",
+    },
+    "pt-BR": {
+        "lead": "Catálogo de módulos e manual do harness, gerados a partir da árvore emitida.",
+        "cat": "Catálogo de módulos",
+        "cat_d": "O que cada kit instala, recurso por recurso.",
+        "man": "Manual do harness",
+        "man_d": "Como o init instala, o que cada mapa projeta, o que a política bloqueia.",
+        "home": "Publicador",
+        "home_d": "Quem publica este harness.",
+        "built": "Gerado com",
+    },
+}
+
+
+def render_index(model: dict) -> str:
+    """The landing page for the docs site: one card per page, both languages on one page."""
+    esc = html.escape
+    display, version = model["display"], model["version"]
+    lines: list[str] = []
+    w = lines.append
+    w("<!doctype html>")
+    w('<html lang="en">')
+    w("  <head>")
+    w('    <meta charset="utf-8">')
+    w('    <meta name="viewport" content="width=device-width, initial-scale=1">')
+    w(f"    <title>{esc(display)} — documentation</title>")
+    w(f'    <meta name="description" content="{esc(_INDEX_T["en"]["lead"])}">')
+    w("    <style>")
+    w(_CSS.rstrip())
+    w("    </style>")
+    w("  </head>")
+    w("  <body>")
+    w('    <header class="hero"><div class="wrap">')
+    w(f"      {model['lockup']}")
+    w(f'      <p class="eyebrow">{esc(display)} · v{esc(version)}</p>')
+    w(f"      <h1>{esc(_INDEX_T['en']['lead'])}</h1>")
+    w(f'      <p lang="pt-BR">{esc(_INDEX_T["pt-BR"]["lead"])}</p>')
+    w("    </div></header>")
+    w('    <main class="wrap">')
+    for lang in LANGS:
+        t = _INDEX_T[lang]
+        rotulo = "English" if lang == "en" else "Português"
+        w(f'      <section lang="{lang}">')
+        w(f"        <h2>{rotulo}</h2>")
+        w("        <ul>")
+        w(f'          <li><a href="{OUTPUTS[lang]["html"]}">{esc(str(t["cat"]))}</a> — {esc(str(t["cat_d"]))}</li>')
+        manual = "MANUAL.html" if lang == "en" else "MANUAL.pt-BR.html"
+        w(f'          <li><a href="{manual}">{esc(str(t["man"]))}</a> — {esc(str(t["man_d"]))}</li>')
+        if model.get("home"):
+            w(f'          <li><a href="{esc(model["home"])}" rel="noopener">{esc(str(t["home"]))}</a> — {esc(str(t["home_d"]))}</li>')
+        w("        </ul>")
+        resumo = (model.get("summary") or {}).get(lang, "")
+        if resumo:
+            w(f"        <p>{esc(resumo)}</p>")
+        w("      </section>")
+    w(f'      <p class="five">{FIVE_WORDS}</p>')
+    w(f"      <p><small>{esc(_INDEX_T['en']['built'])} <code>{esc(REGEN_CMD)}</code></small></p>")
+    w("    </main>")
+    w("  </body>")
+    w("</html>")
+    return "\n".join(lines) + "\n"
+
+
 def render_all(root: Path) -> dict[str, str]:
     """{file name: content} for the four outputs, from one read of the tree."""
     model = build_model(root)
@@ -458,6 +549,11 @@ def render_all(root: Path) -> dict[str, str]:
     for lang in LANGS:
         out[OUTPUTS[lang]["md"]] = render_md(model, lang)
         out[OUTPUTS[lang]["html"]] = render_html(model, lang)
+    # Why: GitHub does not render `.html` from a repository -- it shows the source. Without a
+    # landing page the four pages are reachable only by someone who clones, and the site root
+    # answers 404. The index is generated from the same model as the pages it links, so it
+    # cannot drift from them, and it names no file that this run did not produce.
+    out[INDEX_HTML] = render_index(model)
     return out
 
 
