@@ -12,6 +12,7 @@
 </p>
 
 <p align="center"><sub>English &nbsp;·&nbsp; <a href="README.pt-BR.md">Português (Brasil)</a></sub></p>
+<p align="center"><sub><a href="https://rusharlabs.github.io/house-party-protocol/">Project site</a> &nbsp;·&nbsp; the catalogue, the manual and the design system, rendered</sub></p>
 
 # House Party Protocol
 
@@ -324,7 +325,7 @@ exist · [GRAPH-MODEL.md](docs/GRAPH-MODEL.md) · [LOOPS.md](docs/LOOPS.md) ·
 [BENCHMARK.md](docs/BENCHMARK.md) · [PROOF.md](docs/PROOF.md) · [BRAND.md](docs/BRAND.md) — the
 identity · [DESIGN.md](docs/DESIGN.md) — the tokens, the components and what a pull request with
 an interface has to satisfy ·
-[TIPS.md](docs/TIPS.md) · [manual](docs/MANUAL.html) · [catalogue](docs/CATALOG.html) ·
+[TIPS.md](docs/TIPS.md) · [manual](https://rusharlabs.github.io/house-party-protocol/MANUAL.html) · [catalogue](https://rusharlabs.github.io/house-party-protocol/CATALOG.html) ·
 [CHANGELOG.md](CHANGELOG.md) · [AGENTS.md](AGENTS.md) for agents working in this repository.
 
 ## Development
