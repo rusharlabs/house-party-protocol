@@ -58,3 +58,40 @@ def test_CONTROLE_o_detector_de_externo_acusa_quando_ha() -> None:
     # quebrado — um padrao que nao casa nada devolve lista vazia, e vazio parece aprovacao.
     assert EXTERNO.findall('<link href="https://cdn.example/x.css">'), "o detector nao ve um CSS externo"
     assert not EXTERNO.findall('<link href="style.css">'), "o detector acusa um CSS local"
+
+
+# Why (2026-09-23): a pagina de entrada linkava as quatro paginas e o site do publicador, e
+# NAO linkava o codigo. Quem chegasse ao site por um link compartilhado nao tinha caminho para
+# o repositorio -- o material vendia o harness e escondia onde baixa-lo. Medido no dia em que
+# o Pages entrou no ar: `href=` na pagina devolvia cinco alvos, nenhum deles o repositorio.
+REPO = re.compile(r'href="(https://github\.com/[^"]+)"')
+
+
+def _secoes() -> dict[str, str]:
+    """{idioma: html da secao} — a pagina carrega uma secao por lingua."""
+    return {p.split('"', 1)[0]: p for p in _texto().split('<section lang="')[1:]}
+
+
+def test_a_pagina_de_entrada_linka_o_repositorio() -> None:
+    assert REPO.findall(_texto()), "a pagina de entrada nao linka o repositorio do projeto"
+
+
+def test_o_repositorio_aparece_nas_DUAS_secoes_de_idioma() -> None:
+    # Why: um leitor le a secao do idioma dele e para. O link que existe so' na outra secao
+    # nao existe para ele.
+    secoes = _secoes()
+    assert set(secoes) == {"en", "pt-BR"}, f"secoes inesperadas: {sorted(secoes)}"
+    for lang, html_ in secoes.items():
+        assert REPO.findall(html_), f"a secao {lang} nao linka o repositorio"
+
+
+def test_o_endereco_do_repositorio_e_UM_so() -> None:
+    # Why: dois enderecos diferentes na mesma pagina significam que um deles esta errado, e
+    # nada na pagina diz qual.
+    assert len(set(REPO.findall(_texto()))) == 1, f"enderecos divergentes: {sorted(set(REPO.findall(_texto())))}"
+
+
+def test_CONTROLE_o_detector_de_repositorio_discrimina() -> None:
+    # Why (LC-1n): sem isto os tres testes acima passariam com o regex quebrado.
+    assert REPO.findall('<a href="https://github.com/org/repo">code</a>'), "o detector nao ve o repo"
+    assert not REPO.findall('<a href="https://example.com">publisher</a>'), "o detector acusa outro dominio"

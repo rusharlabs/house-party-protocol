@@ -231,6 +231,12 @@ def build_model(root: Path) -> dict:
         # a hard-coded URL -- a literal address in a tool that ships inside every kit is the kind
         # of thing that outlives the address.
         "home": (mk.get("owner") or {}).get("url", ""),
+        # Why (2026-09-23): a pagina de entrada linkava as quatro paginas e o publicador,
+        # e NAO o codigo. Quem chegava ao site por um link compartilhado nao tinha caminho
+        # para o repositorio. O endereco vem do manifesto pela mesma razao que o do
+        # publicador: um literal num gerador que viaja dentro de cada kit sobrevive ao
+        # endereco que ele nomeia.
+        "repo": str(mk.get("repository", "")),
         "version": str(mk.get("version", "")),
         "summary": {
             "en": (mk.get("description") or "").strip(),
@@ -482,6 +488,8 @@ _INDEX_T = {
         "man_d": "How init installs, what each map projects, what the policy blocks.",
         # Why: the publisher is named by the URL the manifest carries, never by a literal
         # here. A name written into a tool that ships inside every kit outlives the name.
+        "repo": "Source code",
+        "repo_d": "The repository, the releases and the issue tracker.",
         "home": "Publisher",
         "home_d": "Who publishes this harness.",
         "built": "Generated with",
@@ -492,6 +500,8 @@ _INDEX_T = {
         "cat_d": "O que cada kit instala, recurso por recurso.",
         "man": "Manual do harness",
         "man_d": "Como o init instala, o que cada mapa projeta, o que a política bloqueia.",
+        "repo": "Código-fonte",
+        "repo_d": "O repositório, as releases e o rastreador de issues.",
         "home": "Publicador",
         "home_d": "Quem publica este harness.",
         "built": "Gerado com",
@@ -533,6 +543,9 @@ def render_index(model: dict) -> str:
         w(f'          <li><a href="{OUTPUTS[lang]["html"]}">{esc(str(t["cat"]))}</a> — {esc(str(t["cat_d"]))}</li>')
         manual = "MANUAL.html" if lang == "en" else "MANUAL.pt-BR.html"
         w(f'          <li><a href="{manual}">{esc(str(t["man"]))}</a> — {esc(str(t["man_d"]))}</li>')
+        if model.get("repo"):
+            w(f'          <li><a href="{esc(model["repo"])}" rel="noopener">'
+              f'{esc(str(t["repo"]))}</a> — {esc(str(t["repo_d"]))}</li>')
         if model.get("home"):
             w(f'          <li><a href="{esc(model["home"])}" rel="noopener">{esc(str(t["home"]))}</a> — {esc(str(t["home_d"]))}</li>')
         w("        </ul>")

@@ -8,6 +8,7 @@
     "name": "Max Parisi",
     "url": "https://rusharlabs.com"
   },
+  "repository": "https://github.com/rusharlabs/house-party-protocol",
   "plugins": [
     {
       "name": "kit-forge",
