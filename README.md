@@ -82,6 +82,17 @@ Two honesties about that last row. The route it returns DOES name a provider —
 Hosts today are **Claude Code** and **Codex CLI**: same protocol, same exit codes, same maps. A
 lane driven by one and reviewed from the other is the ordinary case, not an integration project.
 
+Those three rows are a state machine, not a convention. `lane-kit` keeps one append-only board per
+repository and is its only writer: `CHECKPOINT-READY` only from the lane that claimed the item and
+only with evidence pasted in, a verdict only from another lane **and** another model family,
+`DEFERRED` the only verdict an unreachable checker can produce, and `MERGED` only on top of a
+`VERIFIED` that is already on the board.
+
+<p align="center">
+  <img alt="python lane_board.py render: four example items on one board — EXAMPLE-1 MERGED, EXAMPLE-2 VERIFIED and waiting on the human gate, EXAMPLE-3 DEFERRED for want of a checker, EXAMPLE-4 back to BUILDING after NEEDS-FIX — then the verdicts whose lane has not been told" src="assets/terminal/lane-board.svg" width="940">
+</p>
+<p align="center"><sub>The board those rows produce, as <code>multi-session/lane-kit-1.3.0/scripts/lane_board.py</code> prints it: four example items driven through the machine, every event naming the lane that wrote it, the evidence pasted at checkpoint, and — for a verdict — the lane and the model that gave it. Two attempts were refused on the way there, both <code>exit 1</code>: a verdict from the builder's own lane (<em>maker≠checker violated: reviewer (exec-b) is the SAME lane as the builder</em>) and merging a 🔴 item without <code>--human-approved</code>. The last block is the one nobody thinks to ask for — verdicts already decided whose lane has not been told. Text rendered from the command's real stdout by <code>scripts/render_terminal_svg.py</code>, like the two captures above.</sub></p>
+
 ## Quickstart
 
 > [!WARNING]
@@ -100,6 +111,13 @@ pip install git+https://github.com/rusharlabs/house-party-protocol@v2.5.7
 hpp doctor
 hpp init --target ../your-repo
 ```
+
+> **Installing with an agent?** Paste this URL at it and say to follow it:
+> `https://raw.githubusercontent.com/rusharlabs/house-party-protocol/main/INSTALL_FOR_AGENTS.md`
+>
+> [INSTALL_FOR_AGENTS.md](INSTALL_FOR_AGENTS.md) is written for the agent, not for you: it
+> detects the host, checks the preconditions instead of assuming them, and requires the agent to
+> read `hpp init`'s plan to you before a single file is written.
 
 <p align="center">
   <img alt="python -m hpp doctor: HPP doctor: ok · modules=10 · hosts=claude-code, codex" src="assets/terminal/hpp-doctor.svg" width="474">

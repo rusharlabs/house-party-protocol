@@ -12,6 +12,21 @@ fetched). Regenerate after any change to the wizard's output:
 The commands run with the repository root on PYTHONPATH from a temporary directory whose only
 content is an empty `your-repo/`, so the captured text carries no machine path: every command
 the wizard prints reads `--target your-repo`. Standard library only.
+
+`assets/terminal/lane-board.svg` is the third capture and the only one this script cannot
+re-capture on its own, because the board is not a command of `hpp`: it is
+`multi-session/lane-kit-1.3.0/scripts/lane_board.py`, and a board worth showing has to be
+DRIVEN first. To redo it, point `CLAUDE_PROJECT_DIR` at a throwaway directory (unset, the board
+lands wherever the cwd happens to be), drive four items with `claim` and `set` until they sit in
+different states -- MERGED, a red one held at VERIFIED, one DEFERRED with `--checker-unavailable`,
+one back to BUILDING after NEEDS-FIX -- then:
+
+    python .../lane_board.py render > board.txt
+    python scripts/render_terminal_svg.py --from-text board.txt \
+        --command "python lane_board.py render" --out assets/terminal/lane-board.svg --no-truncate
+
+Item ids in the capture are `EXAMPLE-*` on purpose: a board showing plausible-looking real ids
+would be read as somebody's actual work.
 """
 from __future__ import annotations
 
@@ -35,6 +50,11 @@ FONT_SIZE, LINE_H, CHAR_W, PAD, HEADER_H = 13, 20, 7.9, 24, 40
 # Lines that open a section the README does not need: the init capture stops before the first.
 DEFAULT_STOP = ("  PLAN", "  MODULES", "  WIRE", "  NEXT")
 _SECTION = re.compile(r"^(\s{2})([A-Z][A-Z ]+?)(\s{2,}.*)?$")
+# A Markdown ATX heading, which is how a captured board announces each item and its state
+# (`lane_board.py render` prints Markdown to stdout). Measured before this branch existed: the two
+# captures that already shipped contain ZERO lines matching it, so highlighting headings cannot
+# change them — the board rendered flat, in one colour, with the state names lost in the wall.
+_HEADING = re.compile(r"^(#{1,6})(\s+)(.+)$")
 
 
 def run_capture(argv: list[str], root: Path) -> str:
@@ -78,6 +98,10 @@ def paint(line: str) -> str:
         return ""
     if line.lstrip()[0] in "└│·":
         return _span(line, DIM)
+    heading = _HEADING.match(line)
+    if heading:
+        # The `#` marks are Markdown syntax, not content: dim them and accent what they announce.
+        return _span(heading.group(1) + heading.group(2), DIM) + _span(heading.group(3), ACCENT, "bold")
     match = _SECTION.match(line)
     if match and match.group(2).strip().isupper():
         return _span(match.group(1) + match.group(2), ACCENT, "bold") + _span(match.group(3) or "", DIM)

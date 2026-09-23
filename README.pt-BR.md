@@ -83,6 +83,17 @@ Os hosts de hoje são **Claude Code** e **Codex CLI**: mesmo protocolo, mesmos e
 mapas. Uma lane conduzida por um e revisada pelo outro é o caso comum, não um projeto de
 integração.
 
+Aquelas três linhas são uma máquina de estados, não uma convenção. O `lane-kit` mantém um board
+append-only por repositório e é o único escritor dele: `CHECKPOINT-READY` só da lane que reivindicou
+o item e só com evidência colada, veredito só de outra lane **e** de outra família de modelo,
+`DEFERRED` como único veredito que um checker inalcançável consegue produzir, e `MERGED` só sobre um
+`VERIFIED` que já está no board.
+
+<p align="center">
+  <img alt="python lane_board.py render: quatro itens de exemplo num board — EXAMPLE-1 MERGED, EXAMPLE-2 VERIFIED esperando o gate humano, EXAMPLE-3 DEFERRED por falta de checker, EXAMPLE-4 de volta a BUILDING depois de NEEDS-FIX — e então os vereditos cuja lane ainda não foi avisada" src="assets/terminal/lane-board.svg" width="940">
+</p>
+<p align="center"><sub>O board que aquelas linhas produzem, como o <code>multi-session/lane-kit-1.3.0/scripts/lane_board.py</code> o imprime: quatro itens de exemplo conduzidos pela máquina, cada evento nomeando a lane que o escreveu, a evidência colada no checkpoint e — no caso de veredito — a lane e o modelo que o deram. Duas tentativas foram recusadas no caminho, as duas com <code>exit 1</code>: um veredito vindo da própria lane que construiu (<em>maker≠checker violated: reviewer (exec-b) is the SAME lane as the builder</em>) e o merge de um item 🔴 sem <code>--human-approved</code>. O último bloco é o que ninguém pensa em pedir — vereditos já decididos cuja lane ainda não foi avisada. Texto renderizado da saída real do comando pelo <code>scripts/render_terminal_svg.py</code>, como as duas capturas acima.</sub></p>
+
 ## Quickstart
 
 > [!WARNING]
@@ -101,6 +112,13 @@ pip install git+https://github.com/rusharlabs/house-party-protocol@v2.5.7
 hpp doctor
 hpp init --target ../your-repo
 ```
+
+> **Instalando com um agente?** Cole esta URL nele e mande seguir:
+> `https://raw.githubusercontent.com/rusharlabs/house-party-protocol/main/INSTALL_FOR_AGENTS.pt-BR.md`
+>
+> O [INSTALL_FOR_AGENTS.pt-BR.md](INSTALL_FOR_AGENTS.pt-BR.md) é escrito para o agente, não para
+> o senhor: ele identifica o host, confere os pré-requisitos em vez de presumi-los, e obriga o
+> agente a ler o plano do `hpp init` para o senhor antes de um único arquivo ser escrito.
 
 <p align="center">
   <img alt="python -m hpp doctor: HPP doctor: ok · modules=10 · hosts=claude-code, codex" src="assets/terminal/hpp-doctor.svg" width="474">

@@ -145,7 +145,18 @@ def load_ruleset(path: Path) -> dict:
     return data
 
 
-_DIRS_OUTSIDE_UNIVERSE = {".git"}
+# Why: TOOL caches leave the universe; `__pycache__` STAYS in it. The boundary is not
+# "is it derived?" -- it is "does the emitted kit carry it?".
+#   .pytest_cache / .ruff_cache / .mypy_cache  ->  OUT. Not source, no kit ships them, and their
+#       content is the SUITE'S OWN VOCABULARY: `.pytest_cache/v/cache/nodeids` stores test names,
+#       and a test that asserts secret-like material is refused is NAMED after a PEM private-key
+#       header. Scanning that file matches `secret.pem` against a TEST NAME and blocks release
+#       over a structural false positive -- there is no secret there to find.
+#   __pycache__                                ->  IN, deliberately. Bytecode inside an already
+#       emitted kit IS a packaging defect, and the `hygiene.pycache` rule exists to shout about
+#       it. Do not conflate the two: one is tool noise in a working root, the other is unwanted
+#       payload in the artifact that reaches the customer.
+_DIRS_OUTSIDE_UNIVERSE = {".git", ".pytest_cache", ".ruff_cache", ".mypy_cache"}
 
 
 def iter_target_files(target: Path):
@@ -398,6 +409,32 @@ def _self_test() -> int:
             "based on genericeccref pattern\n# MIT-ATTRIBUTION-TAG\n", encoding="utf-8"
         )
 
+        # Why: TOOL caches are outside the universe, and the PAIR below is what proves the
+        # exclusion discriminates. `.pytest_cache/v/cache/nodeids` stores TEST NAMES, and a test
+        # that asserts secret-like material is refused is NAMED after a PEM private-key header:
+        # scanning it matches `secret.pem` against the test's own name and blocks release over
+        # something that is not source and that no kit ships. The CONTROL is the twin
+        # `outside-cache.txt`: the SAME fake secret, outside the cache, MUST still be reported --
+        # without it this pair would pass with the whole secret detector switched off.
+        # The literal is SPLIT, not excepted: the published tree carries no contiguous
+        # secret-shaped literal (tests/python/test_kits/test_produto_sem_literal_em_forma_de_segredo.py),
+        # and the split survives only in the source -- the runtime value is intact.
+        fake_pem = "-----BEGIN " "PRIVATE KEY-----\n"
+        tool_cache = tmp / ".pytest_cache" / "v" / "cache"
+        tool_cache.mkdir(parents=True)
+        (tool_cache / "nodeids").write_text(
+            '  "tests/test_context.py::test_secret_like_material_is_refused[' + fake_pem + ']",\n',
+            encoding="utf-8",
+        )
+        (tmp / "outside-cache.txt").write_text(fake_pem, encoding="utf-8")
+        # Why: the constant excludes THREE tool caches, and a self-test that exercised only one
+        # would let the other two ride on an untested claim -- which is how an exclusion grows
+        # wider than the defect that justified it.
+        for outra in (".ruff_cache", ".mypy_cache"):
+            d = tmp / outra
+            d.mkdir()
+            (d / "cached.txt").write_text(fake_pem, encoding="utf-8")
+
         hygiene_dir = tmp / "hygiene"
         hygiene_dir.mkdir()
         (hygiene_dir / "old.bak").write_text("stale\n", encoding="utf-8")
@@ -436,6 +473,19 @@ def _self_test() -> int:
 
         cpf_findings = [f for f in findings if f["rule_id"] == "pii.cpf"]
         assert cpf_findings and cpf_findings[0]["severity"] == "block", "valid CPF should be block"
+
+        # Why: the tool-cache x CONTROL pair. The 1st assertion demands SILENCE inside
+        # `.pytest_cache`; the 2nd demands NOISE for the same bytes outside it. Either one alone
+        # proves nothing: the silence one would pass with a broken linter, and the noise one would
+        # pass with the exclusion absent.
+        in_cache = [
+            f for f in findings
+            if f["file"].split("/")[0] in {".pytest_cache", ".ruff_cache", ".mypy_cache"}
+        ]
+        assert not in_cache, f"tool cache must not produce a finding: {in_cache}"
+        control_pem = [f for f in findings if f["file"] == "outside-cache.txt"]
+        assert control_pem, "CONTROL failed: the same fake secret OUTSIDE the cache must be reported"
+        assert control_pem[0]["rule_id"] == "secret.pem", f"CONTROL matched the wrong rule: {control_pem[0]}"
 
         assert "hygiene.bak" in by_rule, "hygiene .bak not detected"
         assert "hygiene.pycache" in by_rule, "hygiene __pycache__ not detected"

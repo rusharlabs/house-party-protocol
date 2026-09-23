@@ -42,6 +42,18 @@ DEFAULT_MARKETPLACE = "rusharlabs/house-party-protocol"
 BENCHMARK_SUITE = Path("examples") / "reliable-coding" / "benchmark-suite.json"
 READINESS_CELLS = 20
 
+# Why (2026-09-23): `CATALOG` and `docs/` measured ZERO occurrences across hpp/*.py while the
+# distribution shipped eight generated documentation pages - the installer ended without ever
+# naming one of them. The control that the ruler worked: `hpp doctor`, 11 hits in the same files.
+# Each entry lists its variants in preference order; the first one that EXISTS is the one named,
+# because a literal would be wrong in a source checkout, where docs/CATALOG.* is only written at
+# emission time, and wrong again in a wheel, which carries no docs/ at all.
+DOCUMENTATION: tuple[tuple[tuple[str, ...], str], ...] = (
+    (("INSTALL_FOR_AGENTS.md",), "how an agent installs this, step by step"),
+    (("docs/CATALOG.md", "docs/CATALOG.html"), "every module, host by host"),
+    (("docs/MANUAL.md", "docs/MANUAL.html"), "the harness end to end"),
+)
+
 # Why: the host seam mirrors the installer contract, so wire-suggest names the same paths the
 # module installer will touch, without hpp ever writing to them.
 HOSTS: dict[str, dict[str, Any]] = {
@@ -741,6 +753,7 @@ def run_init(options: InitOptions, manifest: dict[str, Any], manifest_path: Path
         "readiness": build_readiness(stages, ctx),
         "writes": sum(stage["detail"].get("writes", 0) for stage in stages),
         "next": next_steps,
+        "documentation": documentation_on_disk(ctx.root),
     }
 
 
@@ -766,6 +779,21 @@ def _next_steps(status: str, options: InitOptions, ctx: _Context, stages: list[d
         for problem in stage["problems"]:
             steps.append(problem["next_step"])
     return steps
+
+
+def documentation_on_disk(root: Path) -> list[dict[str, str]]:
+    """The documentation pages this copy actually carries, measured under `root`.
+
+    One entry per page, in the order of DOCUMENTATION, naming the first variant that exists.
+    A page nobody shipped is simply absent: the installer never prints a path it did not find.
+    """
+    found: list[dict[str, str]] = []
+    for variants, note in DOCUMENTATION:
+        for relative in variants:
+            if (root / relative).is_file():
+                found.append({"path": relative, "note": note})
+                break
+    return found
 
 
 # ---------------------------------------------------------------------------
@@ -929,6 +957,14 @@ def render_report(report: dict[str, Any], console: Console) -> None:
     _section(console, "NEXT")
     for step in report["next"]:
         console.write(f"    {console.paint(console.glyph('bullet'), orange)} {step}")
+
+    documentation = report.get("documentation") or []
+    if documentation:
+        _section(console, "DOCUMENTATION", "shipped with this copy — each path below was found on disk")
+        for index, page in enumerate(documentation):
+            branch = console.glyph("corner") if index == len(documentation) - 1 else console.glyph("tee")
+            console.write(f"    {branch} {console.paint(page['path'].ljust(24), white)}"
+                          f"{console.paint(page['note'], dim=True)}")
 
     if report["status"] != "halted":
         console.write()

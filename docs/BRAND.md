@@ -71,9 +71,17 @@ makes no external request.
 |---|---|
 | `assets/hpp-logo.png` | **the official lockup** — chrome on black, with the core in orange. It is the approved artwork; do not redraw, recolour or crop |
 | `assets/hpp-icon-512.png` · `-256` · `-128` · `-64` · `-32` | the badge alone, square — avatar, favicon and app icon. Derived from the lockup by cropping, never redrawn |
-| `assets/hpp-mark.svg` | the symbol as vector, for where raster does not serve (print, large scale) |
-| `assets/hpp-logo-light.svg` and `assets/hpp-logo-dark.svg` | inline lockup, for where raster does not fit |
-| `assets/hpp-banner-light.svg` and `assets/hpp-banner-dark.svg` | horizontal strip for page headers and presentation material — the README opens with the lockup, not with the strip |
+| `assets/hpp-logo-header.png` | the same lockup at 1440 px, for page headers. It is the approved artwork **resized** — not redrawn, not recoloured, not cropped — so a header and the README show one brand |
+| `assets/hpp-mark.svg` | the symbol as vector, for where raster does not serve (print, large scale). Drawn after the approved badge, so it reads as the same mark; where fidelity decides, use the raster lockup |
+
+⚰️ LEGADO 2026-09-23 · `assets/hpp-logo-light.svg` · `assets/hpp-logo-dark.svg` ·
+`assets/hpp-banner-light.svg` · `assets/hpp-banner-dark.svg` — substituídos por
+`assets/hpp-logo-header.png` (lockup) e `assets/hpp-mark.svg` (símbolo) · decidido em 2026-09-23,
+ao medir que os quatro carregam um desenho **anterior** ao lockup aprovado (nasceram em 20/09; a
+arte oficial, em 21/09) — flat em creme e laranja, não o cromado sobre preto. Esta tabela os
+descrevia como "o mesmo lockup em vetor", e não eram: as quatro páginas HTML abriam com uma marca
+que este documento veta na linha de cima. Os arquivos ficam no repositório como registro; usá-los
+publica a marca errada.
 
 The symbol does **not** encode the number of modules: the harness can grow without redrawing the
 brand.

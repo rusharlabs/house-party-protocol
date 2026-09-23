@@ -16,7 +16,7 @@ Kit descriptions come from `marketplace.json`: `plugins[].description` — the f
 Portuguese one. A kit without `description_pt` falls back to `description`, so the gap is visible
 on the Portuguese page instead of silently hidden.
 
-The HTML pair opens with the same lockup MANUAL.html opens with (`../assets/hpp-logo-dark.svg`,
+The HTML pair opens with the same lockup MANUAL.html opens with (`../assets/hpp-logo-header.png`,
 relative to `docs/`) and closes with the five words — the catalogue is a page of the product and
 looks like one.
 
@@ -59,7 +59,7 @@ COUNT_KEYS = ("skills", "commands", "agents", "hooks", "rules", "templates", "sc
 # kit-forge) never carries the brand credit itself: the IP gate bans that string here, while the
 # product page next to it declares the exception. Only a sibling `../assets/` path qualifies — an
 # absolute URL in the MANUAL would not be imported as a request into the catalogue.
-LOCKUP_SRC = "../assets/hpp-logo-dark.svg"
+LOCKUP_SRC = "../assets/hpp-logo-header.png"
 _LOCKUP = re.compile(r'<img\s[^>]*src="\.\./assets/[^"]+"[^>]*>')
 # Why: the five words are a label (BRAND.md), upper case and spaced, never a sentence.
 FIVE_WORDS = "AGENTS · EVIDENCE · MEMORY · PROTOCOL · CONTINUITY"
