@@ -21,7 +21,7 @@ Each probe: {name, kind, target, expect}
 Probes come from a YAML (--probes file.yaml) or inline (--probe nome=...).
 
 Usage:
-    python drift_check.py doc.md --probes sondas.yaml
+    python drift_check.py doc.md --probes probes.yaml
     python drift_check.py doc.md --probe "health=http:http://127.0.0.1:8080/health"
     python drift_check.py doc.md --probe "engine=cmd:python -c pass" --json
     python drift_check.py doc.md --probe "cfg=glob:core/paths.py:expect=true"
@@ -33,7 +33,7 @@ Inline format:  name=KIND:TARGET[:expect=true|false]
     legado=glob:old/removido.py:expect=false
 
 YAML (--probes):
-    sondas:
+    probes:
       - { name: health, kind: http, target: "http://127.0.0.1:8080/health", expect: true }
       - { name: paths,  kind: glob, target: "core/paths.py",                expect: true }
 
@@ -60,7 +60,7 @@ except Exception:  # noqa: BLE001 -- safe degrade
     get = None  # type: ignore[assignment]
 
 try:
-    import yaml  # PyYAML -- only needed for --sondas YAML
+    import yaml  # PyYAML -- only needed for --probes YAML
 except Exception:  # noqa: BLE001
     yaml = None  # type: ignore[assignment]
 
@@ -184,7 +184,7 @@ def parse_inline(spec: str) -> dict:
     return {"name": name.strip(), "kind": kind, "target": target.strip(), "expect": expect}
 
 
-def load_sondas_yaml(path: Path) -> list[dict]:
+def load_probes_yaml(path: Path) -> list[dict]:
     """Reads probes from a YAML. [] if PyYAML is missing or the file is unreadable."""
     if yaml is None:
         return []
@@ -262,14 +262,14 @@ def main(argv) -> int:
     argv = [a for a in argv if a != "--json"]
 
     probes: list[dict] = []
-    sondas_yaml: Path | None = None
+    probes_yaml: Path | None = None
     repo_root: Path | None = None
     doc_path: Path | None = None
     i = 0
     while i < len(argv):
         a = argv[i]
         if a == "--probes" and i + 1 < len(argv):
-            sondas_yaml = Path(argv[i + 1]); i += 2; continue
+            probes_yaml = Path(argv[i + 1]); i += 2; continue
         if a == "--probe" and i + 1 < len(argv):
             try:
                 probes.append(parse_inline(argv[i + 1]))
@@ -283,11 +283,11 @@ def main(argv) -> int:
             doc_path = Path(a); i += 1; continue
         i += 1
 
-    if sondas_yaml is not None:
-        if not sondas_yaml.exists():
-            print(f"drift_check: --sondas not found: {sondas_yaml}", file=sys.stderr)
+    if probes_yaml is not None:
+        if not probes_yaml.exists():
+            print(f"drift_check: --probes not found: {probes_yaml}", file=sys.stderr)
             return 2
-        loaded = load_sondas_yaml(sondas_yaml)
+        loaded = load_probes_yaml(probes_yaml)
         if not loaded and yaml is None:
             print("drift_check: PyYAML missing — --probes YAML unavailable", file=sys.stderr)
             return 2

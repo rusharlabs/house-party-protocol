@@ -57,7 +57,7 @@ Cada falha acima tem um mecanismo no código, e cada mecanismo tem um comando qu
 |---|---|---|
 | "pronto" sem prova | event log append-only; `verified` exige evidência registrada; evento fora de ordem é recusado antes de qualquer escrita | `hpp event append` · `hpp status` |
 | aprovação velha | attestation vinculada ao hash da spec, ao commit-base e a um snapshot completo de arquivos rastreados e não rastreados; qualquer divergência bloqueia o reuso | `hpp attest create` · `hpp attest verify` |
-| autor revisando o próprio trabalho | maker e checker precisam diferir (ignorando caixa) ou a attestation é recusada; os checkers dos módulos vêm sem ferramenta de escrita | `hpp attest create --maker a --checker a` → exit 2 |
+| autor revisando o próprio trabalho | maker e checker precisam diferir (ignorando caixa) ou a attestation é recusada; os checkers dos módulos vêm sem `Write` e sem `Edit` | `hpp attest create --maker a --checker a` → exit 2 |
 | lock morto, colisão de território | o Lane Map deriva `alive` / `suspect` / `dead` dos heartbeats; lane morta nunca produz colisão | `hpp map lane --now` |
 | serviço no ar, dado velho | o Monitor Map separa `healthy`, `stale`, `skew` e `unknown`, com frescor declarado e tolerância de relógio | `hpp map monitor --now` |
 | comando perigoso | o classificador de política devolve `ALLOW`, `MANUAL` ou `BLOCK`; `enforce` mapeia para exit 0, 1, 2 | `hpp policy check --mode enforce` |
@@ -72,15 +72,12 @@ O harness nunca assume um cérebro só. Dois mecanismos independentes, e nenhum 
 
 | afirmação | mecanismo | comando |
 |---|---|---|
-| o revisor não é o autor | maker e checker têm de diferir, ou a atestação é recusada; o checker de módulo viaja sem ferramenta de escrita | `hpp attest create --maker a --checker a` → exit 2 |
+| o revisor não é o autor | maker e checker têm de diferir, ou a atestação é recusada; o checker de módulo viaja sem `Write` e sem `Edit` | `hpp attest create --maker a --checker a` → exit 2 |
 | o veredito registra QUAL revisor | o registro de wave-review carrega a lane e o modelo revisores, então um veredito se rastreia até o cérebro que o deu | `--verdict-by-lane` · `--verdict-by-model` |
 | revisor ausente é um estado, não silêncio | quando nenhum checker independente está alcançável, o loop registra o deferimento em vez de passar | `--checker-unavailable` |
-| o trabalho é roteado por TIER, não por fornecedor | um pedido declarado resolve para um id de provider de uma lista declarada, com piso de risco e fallback só para cima | `hpp route --policy economy\|balanced\|frontier` |
+| o trabalho é roteado por TIER, não por fornecedor | um pedido declarado resolve para um dos ids de provider que VOCÊ declarou, com piso de risco e fallback só para cima | `hpp route --policy economy\|balanced\|frontier` |
 
-A última linha é o que mantém isso honesto: o roteamento devolve uma rota, nunca um fornecedor, um
-modelo ou um preço. O mapa de tier para modelo é do operador, declarado fora do harness e
-auditável no pedido — então trocar um lado do par maker/checker custa uma linha de config, não uma
-mudança aqui.
+Duas honestidades sobre essa última linha. A rota devolvida NOMEIA um provider — `{'provider': ..., 'tier': ...}` — mas só um que você listou no pedido: o harness nunca escolhe fornecedor que você não declarou, nunca os ranqueia e nunca lê preço. E o shell de que um checker precisa para inspecionar é promessa, não capacidade: `Write` e `Edit` estão ausentes por configuração, enquanto `Bash` é limitado por instrução — então onde isso importa a árvore de trabalho é capturada antes e depois da revisão e comparada; um checker que a tocou invalida os próprios achados (`rules/loop-maker-checker.md`).
 
 Os hosts de hoje são **Claude Code** e **Codex CLI**: mesmo protocolo, mesmos exit codes, mesmos
 mapas. Uma lane conduzida por um e revisada pelo outro é o caso comum, não um projeto de
@@ -100,7 +97,7 @@ nenhum pacote de terceiro. A CI exercita Python 3.10 a 3.13 em Linux, macOS e Wi
 (`.github/workflows/ci.yml`); interpretadores mais antigos não são prometidos porque nada os mede.
 
 ```bash
-pip install git+https://github.com/rushar-labs/house-party-protocol@v2.5.5
+pip install git+https://github.com/rushar-labs/house-party-protocol@v2.5.6
 hpp doctor
 hpp init --target ../your-repo
 ```

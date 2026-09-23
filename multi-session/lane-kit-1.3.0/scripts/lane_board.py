@@ -168,6 +168,15 @@ def _validate_transition(item_id: str, new_state: str, lane_id: str, role: str, 
         builder_model = claimed.get("model") if claimed else None
         if checker_unavailable:
             return f"checker unavailable — only DEFERRED is accepted, not {new_state}"
+        # Why: the two maker≠checker guards below compare the reviewer against the builder, and with
+        # the flags OMITTED they compared None against a real value — so neither could ever fire and
+        # an item reached VERIFIED, then MERGED, recording no reviewer at all. The guard existed and
+        # could not reach. Requiring both identities is what makes the two comparisons mean anything.
+        if not verdict_by_lane or not verdict_by_model:
+            faltando = " and ".join(
+                f"--verdict-by-{k}" for k, v in (("lane", verdict_by_lane), ("model", verdict_by_model)) if not v)
+            return (f"{new_state} requires the reviewer's identity: {faltando} missing. Without it the "
+                    f"maker≠checker check compares against nothing and the verdict records no reviewer.")
         if verdict_by_lane == builder_lane:
             return f"maker≠checker violated: reviewer ({verdict_by_lane}) is the SAME lane as the builder ({builder_lane})"
         if _model_family(verdict_by_model) == _model_family(builder_model):

@@ -111,6 +111,30 @@ applies the fix and re-submits to the checker. The loop closes when the checker 
 
 This is "suggest-only" made physical — aligned with `partial-autonomy-slider.md`.
 
+### `Bash(ro)` is a PROMISE, not a capability — so prove it
+
+The tools list above has no `Write` and no `Edit`, and that part is enforced by the host. `Bash` is
+different: the `(ro)` is an instruction in the checker's prompt, and a shell can mutate whatever it
+can reach. Some external checkers make this worse — a provider whose read-only sandbox is broken
+runs with full access, and then nothing but the prompt stands between the reviewer and the files it
+is reviewing.
+
+Where the guarantee is absent, replace it with evidence. Capture the working tree BEFORE the review
+and again AFTER, and compare:
+
+```bash
+git status --porcelain > /tmp/before.txt        # before dispatching the checker
+# ... the checker runs ...
+git status --porcelain > /tmp/after.txt
+diff -q /tmp/before.txt /tmp/after.txt && echo "checker wrote nothing — review VALID" \
+                                       || echo "tree changed — review INVALID, discard it"
+```
+
+A review whose checker touched the tree is not a weaker review; it is not a review. Discard it and
+run again, because you can no longer tell which findings describe the code you asked about and which
+describe code the reviewer changed. Compare the hash of the two captures rather than eyeballing
+them: a one-line difference is exactly the case a human scan misses.
+
 ### RULE 2b · ISOLATE the external checker — read-only BY CONSTRUCTION, and label the provider
 
 A sandbox flag can fail open; an empty room cannot. When the checker is an external CLI

@@ -9,6 +9,46 @@ keeps its own version in `plugin.json` and in `marketplace.json`.
 
 ## [Unreleased]
 
+## [2.5.6] — 2026-09-22
+
+An independent review from a different provider read 2.5.5 and found ten things. **Three of the four
+claims 2.5.5 added to the README were false or overstated** — and a false claim in a README is the
+most expensive defect in this repository, because it is the first thing a stranger reads. This
+release corrects the mechanism where one was owed and the sentence where the sentence was wrong.
+
+### Fixed
+
+- 🔴 **"module checkers ship without write tools" was imprecise in the direction that flatters.**
+  What the host enforces is the absence of `Write` and `Edit` — which is real and verifiable. `Bash`
+  is present, and a shell can mutate whatever it reaches, so the read-only part of a shell-capable
+  checker is a PROMISE. The sentence now says what is enforced, and `rules/loop-maker-checker.md`
+  gained the mechanism that closes the rest: capture the working tree before and after the review
+  and compare — a checker that touched it invalidates its own findings, because you can no longer
+  tell which findings describe your code and which describe the reviewer's changes.
+- 🔴 **"the verdict records WHICH reviewer" was false: both identity flags were OPTIONAL.** An item
+  could reach `VERIFIED`, then `MERGED`, with no reviewing lane and no reviewing model recorded. The
+  cause is worth naming — the two maker≠checker guards compared the reviewer against the builder,
+  and with the flags omitted they compared *nothing* against a real value, so neither could ever
+  fire. A guard that cannot reach is not a guard. Both identities are now required, and the six
+  cases (missing either, same lane, same model family, and a legitimate reviewer) each answer
+  differently.
+- 🔴 **"routing returns a route, never a vendor or a model" was false.** It returns
+  `{'provider': ..., 'tier': ...}`. What is true, and is what the sentence now says: the provider is
+  one YOU declared in the request — the harness never chooses a vendor you did not list, never ranks
+  them, and never reads a price.
+- **Five more readers left behind by the 2.5.5 rename**, none of them in a Python string, which is
+  why the rename tool's own pending list could not see them: a published `SKILL.md` prescribing a
+  flag the CLI now rejects (exit 2, and precisely when a checker is unavailable); the canonical
+  `rollup.example.yaml` still using retired template fields, so copying it — as its skill instructs
+  — wrote unresolved placeholders into changelogs; a YAML example whose root key made the loader
+  return ZERO probes; and two error messages naming the retired spelling, each sending the reader to
+  something the same tool refuses.
+- **Two gates added in 2.5.5 were themselves defective.** The smoke control's "good" fixture used a
+  shape the renderer does not read, so the good case rendered zero self-tests and the test never
+  asserted it passed — the positive branch was unproven, which is what makes the negative ones mean
+  anything. And the product-tree check accepted any directory holding a manifest, including the
+  SOURCE tree: the loud failure it promised did not happen.
+
 ## [2.5.5] — 2026-09-22
 
 The last Portuguese in the published SHAPE — output keys, CLI flags, label values — plus the two
@@ -23,7 +63,7 @@ just added**, and one of them was 2.5.4's own headline fix landing incomplete.
   `next_action`, `open_todos`), the keys a user writes in `rollup.yaml` (`before`, `after`,
   `decisions`, `summary`, `metrics`, `name`) and in a drift probe (`target`, `kind`, `expect`,
   `label`), the diagnostic codes the doctor emits (`version-mismatch`, `manifest-out-of-place`),
-  and the drift label value `aspirational`. 404 replacements across 37 files, none of them prose:
+  and the drift label value `aspirational`. 404 replacements by the rewriter across 36 files, none of them prose:
   the rewriter worked on TOKENS, so a Portuguese word in a `.pt-BR` document was never eligible.
 - **The CLI speaks English too**: `--probe` / `--probes` (was `--sonda` / `--sondas`),
   `--checker-unavailable`, and the inline probe mini-syntax is now

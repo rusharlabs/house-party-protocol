@@ -50,7 +50,7 @@ repos:
         max_entries: 30
         pointer: "see the git log and STATE.md for the recent history"
         template: |
-          ## [{date}] {resumo}
+          ## [{date}] {summary}
 
           ### Shipments
           {shipments_bullets}
@@ -59,7 +59,7 @@ repos:
           {metricas_table}
 
           ### Decisions
-          {decisoes_bullets}
+          {decision_bullets}
 
       - path: "docs/EVOLUTION.md"
         role: evolution
@@ -69,7 +69,7 @@ repos:
         max_entries: 30
         pointer: "see CHANGELOG.md and the git log for the recent detail"
         template: |
-          ## SESSAO {date} — {resumo}
+          ## SESSAO {date} — {summary}
 
           {shipments_bullets}
 
@@ -78,7 +78,7 @@ repos:
         mode: header-and-section
         pointer: "see STATE.md (SSoT) and the health probes for the live number"
         template: |
-          **Last session:** {date} — {resumo}
+          **Last session:** {date} — {summary}
 
           {metricas_table}
 
@@ -90,7 +90,7 @@ repos:
         max_entries: 60                # learnings accumulate more slowly than sessions
         pointer: "archive old entries by hand if you need to shrink it"
         template: |
-          ## [{date}] {resumo}
+          ## [{date}] {summary}
           {aprendizados_bullets}
 
       - path: "docs/sessions/{date}-SESSION-WRAPUP.md"
@@ -100,7 +100,7 @@ repos:
           # Session Wrap-up — {date}
 
           ## Summary
-          {resumo}
+          {summary}
 
           ## Shipments
           {shipments_bullets}
@@ -109,7 +109,7 @@ repos:
           {metricas_table}
 
           ## Decisions
-          {decisoes_bullets}
+          {decision_bullets}
 
           ## Learnings
           {aprendizados_bullets}
@@ -129,5 +129,5 @@ repos:
   #       role: learnings
   #       mode: append-section
   #       template: |
-  #         ## [{date}] {resumo}
+  #         ## [{date}] {summary}
   #         {aprendizados_bullets}

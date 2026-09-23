@@ -87,7 +87,7 @@ def validate_payload(payload: dict) -> list:
         errors.append("summary missing")
     for i, m in enumerate(payload.get("metrics") or []):
         if not isinstance(m, dict) or not str(m.get("re_derive_cmd") or "").strip():
-            errors.append(f"metricas[{i}] without re_derive_cmd (LC-1: every number needs a command to re-derive it live)")
+            errors.append(f"metrics[{i}] without re_derive_cmd (LC-1: every number needs a command to re-derive it live)")
     return errors
 
 

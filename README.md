@@ -57,7 +57,7 @@ Each failure above has a mechanism in the code, and each mechanism has a command
 |---|---|---|
 | "done" without proof | append-only event log; `verified` needs recorded evidence; an out-of-order event is refused before anything is written | `hpp event append` · `hpp status` |
 | stale approval | attestation bound to spec hash, base commit and a full snapshot of tracked and untracked files; any divergence blocks reuse | `hpp attest create` · `hpp attest verify` |
-| author reviewing own work | maker and checker must differ (case-insensitive) or the attestation is refused; module checkers ship without write tools | `hpp attest create --maker a --checker a` → exit 2 |
+| author reviewing own work | maker and checker must differ (case-insensitive) or the attestation is refused; module checkers ship with no `Write` and no `Edit` | `hpp attest create --maker a --checker a` → exit 2 |
 | stale lock, territory collision | Lane Map derives `alive` / `suspect` / `dead` from heartbeats; a dead lane never produces a collision | `hpp map lane --now` |
 | service up, data old | Monitor Map separates `healthy`, `stale`, `skew` and `unknown`, with declared freshness and clock tolerance | `hpp map monitor --now` |
 | dangerous command | policy classifier returns `ALLOW`, `MANUAL` or `BLOCK`; `enforce` maps them to exit 0, 1, 2 | `hpp policy check --mode enforce` |
@@ -72,15 +72,12 @@ The harness never assumes one brain. Two independent mechanisms, neither of whic
 
 | claim | mechanism | command |
 |---|---|---|
-| the reviewer is not the author | maker and checker must differ or the attestation is refused; module checkers ship without write tools | `hpp attest create --maker a --checker a` → exit 2 |
+| the reviewer is not the author | maker and checker must differ or the attestation is refused; module checkers ship with no `Write` and no `Edit` | `hpp attest create --maker a --checker a` → exit 2 |
 | the verdict records WHICH reviewer | the wave-review record carries the reviewing lane and the reviewing model, so a verdict can be traced to the brain that gave it | `--verdict-by-lane` · `--verdict-by-model` |
 | a missing reviewer is a state, not a silence | when no independent checker is reachable, the loop records the deferral instead of passing | `--checker-unavailable` |
-| the work is routed by TIER, not by vendor | a declared request resolves to a provider id from a declared list, with a risk floor and fallback only upward | `hpp route --policy economy\|balanced\|frontier` |
+| the work is routed by TIER, not by vendor | a declared request resolves to one of the provider ids YOU declared, with a risk floor and fallback only upward | `hpp route --policy economy\|balanced\|frontier` |
 
-The last row is the part that keeps this honest: routing returns a route, never a vendor, a model
-or a price. The mapping from tier to model is the operator's, declared outside the harness and
-auditable in the request — so switching one side of a maker/checker pair costs a line of config,
-not a change here.
+Two honesties about that last row. The route it returns DOES name a provider — `{'provider': ..., 'tier': ...}` — but only one that you listed in the request: the harness never chooses a vendor you did not declare, never ranks them, and never reads a price. And the shell a checker needs to inspect is a promise, not a capability: `Write` and `Edit` are absent by configuration, while `Bash` is constrained by instruction, so where that matters the working tree is captured before and after the review and compared — a checker that touched it invalidates its own findings (`rules/loop-maker-checker.md`).
 
 Hosts today are **Claude Code** and **Codex CLI**: same protocol, same exit codes, same maps. A
 lane driven by one and reviewed from the other is the ordinary case, not an integration project.
@@ -99,7 +96,7 @@ third-party packages. CI exercises Python 3.10 to 3.13 on Linux, macOS and Windo
 (`.github/workflows/ci.yml`); older interpreters are not promised because nothing measures them.
 
 ```bash
-pip install git+https://github.com/rushar-labs/house-party-protocol@v2.5.5
+pip install git+https://github.com/rushar-labs/house-party-protocol@v2.5.6
 hpp doctor
 hpp init --target ../your-repo
 ```

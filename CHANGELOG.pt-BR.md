@@ -9,6 +9,46 @@ cada módulo mantém sua própria versão no `plugin.json` e no `marketplace.jso
 
 ## [Unreleased]
 
+## [2.5.6] — 2026-09-22
+
+Uma revisão independente, de outro provedor, leu a 2.5.5 e achou dez coisas. **Três das quatro
+afirmações que a 2.5.5 acrescentou ao README eram falsas ou exageradas** — e afirmação falsa em
+README é o defeito mais caro deste repositório, porque é a primeira coisa que um estranho lê. Esta
+release conserta o mecanismo onde ele era devido e a frase onde a frase estava errada.
+
+### Fixed
+
+- 🔴 **"o checker de módulo viaja sem ferramenta de escrita" era imprecisa na direção que favorece.**
+  O que o host garante é a ausência de `Write` e `Edit` — isso é real e verificável. `Bash` está
+  presente, e um shell pode mutar o que alcançar, então o read-only de um checker com shell é uma
+  PROMESSA. A frase passou a dizer o que é garantido, e a `rules/loop-maker-checker.md` ganhou o
+  mecanismo que fecha o resto: capturar a árvore de trabalho antes e depois da revisão e comparar —
+  um checker que a tocou invalida os próprios achados, porque já não se distingue o que descreve o
+  seu código do que descreve a mudança do revisor.
+- 🔴 **"o veredito registra QUAL revisor" era falsa: os dois flags de identidade eram OPCIONAIS.** Um
+  item podia chegar a `VERIFIED`, depois a `MERGED`, sem lane e sem modelo do revisor registrados. E
+  a causa merece nome: as duas guardas de maker≠checker comparavam o revisor com o construtor, e com
+  os flags ausentes comparavam *nada* contra um valor real — então nenhuma das duas podia disparar.
+  Guarda que não alcança não é guarda. As duas identidades agora são exigidas, e os seis casos
+  (faltando cada um, mesma lane, mesma família de modelo, e um revisor legítimo) respondem
+  diferente.
+- 🔴 **"o roteamento devolve uma rota, nunca um fornecedor ou modelo" era falsa.** Ele devolve
+  `{'provider': ..., 'tier': ...}`. O que é verdade, e é o que a frase passou a dizer: o provider é
+  um que VOCÊ declarou no pedido — o harness nunca escolhe fornecedor que você não listou, nunca os
+  ranqueia e nunca lê preço.
+- **Mais cinco leitores deixados atrás pelo rename da 2.5.5**, nenhum deles em string de Python, que
+  é o motivo de a lista de pendentes da ferramenta não os ver: uma `SKILL.md` publicada prescrevendo
+  uma flag que o CLI agora recusa (exit 2, e justamente quando o checker está indisponível); o
+  `rollup.example.yaml` canônico ainda com campos de template aposentados, então copiá-lo — como a
+  skill manda — gravava placeholder cru em changelogs; um exemplo YAML cuja chave-raiz fazia o
+  loader devolver ZERO probes; e duas mensagens de erro nomeando a grafia aposentada, cada uma
+  mandando o leitor usar o que a própria ferramenta recusa.
+- **Dois gates nascidos na 2.5.5 eram eles mesmos defeituosos.** A fixture "boa" do controle do smoke
+  usava uma forma que o renderizador não lê, então o caso bom renderizava zero self-tests e o teste
+  nunca exigia que ele passasse — o ramo positivo estava sem prova, e é ele que dá sentido aos
+  negativos. E a checagem de árvore do produto aceitava qualquer diretório com manifesto, inclusive a
+  árvore-FONTE: a falha alta que ela prometia não acontecia.
+
 ## [2.5.5] — 2026-09-22
 
 O último português na FORMA publicada — chaves de saída, flags de CLI, valores de rótulo — mais as
@@ -24,7 +64,7 @@ incompleto.
   `open_todos`), as chaves que o usuário escreve no `rollup.yaml` (`before`, `after`, `decisions`,
   `summary`, `metrics`, `name`) e numa sonda de drift (`target`, `kind`, `expect`, `label`), os
   códigos de diagnóstico que o doctor emite (`version-mismatch`, `manifest-out-of-place`) e o valor
-  de rótulo `aspirational`. 404 substituições em 37 arquivos, nenhuma em prosa: o reescritor operou
+  de rótulo `aspirational`. 404 substituições do reescritor em 36 arquivos, nenhuma em prosa: o reescritor operou
   sobre TOKENS, então uma palavra portuguesa num documento `.pt-BR` nunca foi elegível.
 - **O CLI também fala inglês**: `--probe` / `--probes` (era `--sonda` / `--sondas`),
   `--checker-unavailable`, e a mini-sintaxe de sonda inline agora é

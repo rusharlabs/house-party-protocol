@@ -44,7 +44,7 @@ CLAIMED → BUILDING → CHECKPOINT-READY → UNDER-REVIEW → VERIFIED | NEEDS-
 
 - **CHECKPOINT-READY**: only `role=executor`, only the lane that did `CLAIMED`, and requires a non-empty `--evidence` (pasted hash/exit code — never "I ran it").
 - **VERIFIED/NEEDS-FIX**: only `role=reviewer`, with `--verdict-by-lane` DIFFERENT from the lane that built AND `--verdict-by-model` from a DIFFERENT family (cross-model maker≠checker, in code — cannot be bypassed).
-- **Checker unavailable** (`--checker-indisponivel`): only `DEFERRED` is accepted — never `VERIFIED`.
+- **Checker unavailable** (`--checker-unavailable`): only `DEFERRED` is accepted — never `VERIFIED`.
 - **MERGED**: requires a `VERIFIED` in the item's history; if `--tag red`, also requires `--human-approved` (literal human gate).
 
 ## Process
