@@ -9,6 +9,7 @@
     "url": "https://rusharlabs.com"
   },
   "repository": "https://github.com/rusharlabs/house-party-protocol",
+  "site": "https://rusharlabs.github.io/house-party-protocol/",
   "plugins": [
     {
       "name": "kit-forge",

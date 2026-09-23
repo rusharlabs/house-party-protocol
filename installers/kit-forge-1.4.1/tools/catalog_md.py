@@ -16,7 +16,7 @@ Kit descriptions come from `marketplace.json`: `plugins[].description` — the f
 Portuguese one. A kit without `description_pt` falls back to `description`, so the gap is visible
 on the Portuguese page instead of silently hidden.
 
-The HTML pair opens with the same lockup MANUAL.html opens with (`../assets/hpp-logo-header.png`,
+The HTML pair opens with the same lockup MANUAL.html opens with (`assets/hpp-logo-header.png`,
 relative to `docs/`) and closes with the five words — the catalogue is a page of the product and
 looks like one.
 
@@ -69,10 +69,15 @@ COUNT_KEYS = ("skills", "commands", "agents", "hooks", "rules", "templates", "sc
 # Why: the header is the MANUAL's header — the lockup is read from `docs/MANUAL.html` next to the
 # outputs, so the two pages cannot drift apart, and this tool (which ships inside every copy of
 # kit-forge) never carries the brand credit itself: the IP gate bans that string here, while the
-# product page next to it declares the exception. Only a sibling `../assets/` path qualifies — an
+# product page next to it declares the exception. Only a local `assets/` path qualifies — an
 # absolute URL in the MANUAL would not be imported as a request into the catalogue.
-LOCKUP_SRC = "../assets/hpp-logo-header.png"
-_LOCKUP = re.compile(r'<img\s[^>]*src="\.\./assets/[^"]+"[^>]*>')
+#
+# Why (2026-09-23, medido contra o site vivo): o caminho era `../assets/`, e o Pages publica
+# `docs/` como RAIZ -- `../` sai da raiz publicada e a logo dava 503 no topo das cinco
+# paginas. Nenhum teste via, porque todos rodam com o arquivo no disco, onde `..` resolve.
+# `assets/` com uma copia do ativo dentro de `docs/` vale nos DOIS contextos.
+LOCKUP_SRC = "assets/hpp-logo-header.png"
+_LOCKUP = re.compile(r'<img\s[^>]*src="assets/[^"]+"[^>]*>')
 # Why: the five words are a label (BRAND.md), upper case and spaced, never a sentence.
 FIVE_WORDS = "AGENTS · EVIDENCE · MEMORY · PROTOCOL · CONTINUITY"
 _HOOK_SCRIPT = re.compile(r"hooks/([A-Za-z0-9_.-]+\.(?:py|sh))\"?")
@@ -237,6 +242,7 @@ def build_model(root: Path) -> dict:
         # publicador: um literal num gerador que viaja dentro de cada kit sobrevive ao
         # endereco que ele nomeia.
         "repo": str(mk.get("repository", "")),
+        "site": str(mk.get("site", "")),
         "version": str(mk.get("version", "")),
         "summary": {
             "en": (mk.get("description") or "").strip(),
@@ -522,6 +528,18 @@ def render_index(model: dict) -> str:
     w('    <meta name="viewport" content="width=device-width, initial-scale=1">')
     w(f"    <title>{esc(display)} — documentation</title>")
     w(f'    <meta name="description" content="{esc(_INDEX_T["en"]["lead"])}">')
+    # Why (2026-09-23): sem cartao, o link do site compartilhado numa rede social sai sem
+    # titulo e sem imagem. O endereco absoluto vem do manifesto: um crawler nao resolve
+    # caminho relativo, e um literal aqui sobreviveria ao endereco que ele nomeia.
+    site = model.get("site", "")
+    if site:
+        cartao = f'{site.rstrip("/")}/assets/social-preview-1280x640.png'
+        w(f'    <meta property="og:title" content="{esc(display)}">')
+        w(f'    <meta property="og:description" content="{esc(_INDEX_T["en"]["lead"])}">')
+        w(f'    <meta property="og:image" content="{esc(cartao)}">')
+        w(f'    <meta property="og:url" content="{esc(site)}">')
+        w('    <meta property="og:type" content="website">')
+        w('    <meta name="twitter:card" content="summary_large_image">')
     w("    <style>")
     w(_CSS.rstrip())
     w("    </style>")
