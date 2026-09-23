@@ -24,7 +24,9 @@ funcionar para você:
 1. **GitHub → aba Security → "Report a vulnerability"** (relato privado). Se o botão não
    estiver lá — relato privado é uma configuração do repositório — use o canal de e-mail; ele
    não é um fallback de menor valor.
-2. **E-mail:** `atendimento@rushar.com.br` com o assunto `[house-party-protocol] security`.
+2. **Canal de contato no site:** `https://rusharlabs.com`. Nenhum endereço cru é publicado aqui de
+   propósito: caixa de e-mail em repositório público é colhida, e caixa colhida é canal que deixa
+   de ser lido.
 
 Inclua: o módulo e a versão (`.claude-plugin/plugin.json`), como reproduzir, e o impacto que você
 mediu. Resposta inicial em até 5 dias úteis por qualquer dos dois canais; correção publicada como
@@ -58,7 +60,7 @@ um fork que mantém o nome — não é este projeto e não recebe suporte de seg
 - Canal de plugin do Claude Code: `/plugin marketplace add rushar-labs/house-party-protocol`
 - pip: `pip install git+https://github.com/rushar-labs/house-party-protocol@<tag>` (uma
   publicação no PyPI, quando existir, é anunciada primeiro no `CHANGELOG.md` e no README)
-- Web: `https://rusharlabs.com` · e-mail: `atendimento@rushar.com.br`
+- Web: `https://rusharlabs.com` (o canal de contato para o que não cabe numa issue pública)
 
 Todo diretório de módulo traz `CHECKSUMS.txt`, e toda GitHub Release traz `SHA256SUMS`; um
 arquivo cujo hash não está neles não veio daqui.

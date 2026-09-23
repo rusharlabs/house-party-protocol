@@ -6,13 +6,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "house-party-protocol"
-version = "2.5.6"
+version = "2.5.7"
 description = "A local-first reliability harness for coding agents."
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
-authors = [{ name = "Max Parisi", email = "atendimento@rushar.com.br" }]
-maintainers = [{ name = "Rushar Labs", email = "atendimento@rushar.com.br" }]
+authors = [{ name = "Rushar Labs", email = "325975192+rushar-labs@users.noreply.github.com" }]
+maintainers = [{ name = "Rushar Labs", email = "325975192+rushar-labs@users.noreply.github.com" }]
 requires-python = ">=3.10"  # Why: the CI matrix covers 3.10-3.13. The code uses no syntax
 # exclusive to 3.10 and probably runs on 3.9, but nothing measures that - so nothing promises it.
 dependencies = []

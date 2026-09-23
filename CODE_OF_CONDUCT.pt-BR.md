@@ -55,7 +55,8 @@ social ou atuar como representante designado num evento online ou presencial.
 ## Aplicação
 
 Casos de comportamento abusivo, de assédio ou de outra forma inaceitável podem ser reportados aos
-líderes da comunidade responsáveis pela aplicação em `atendimento@rushar.com.br`, com o assunto
+líderes da comunidade responsáveis pela aplicação pelo canal de contato em
+`https://rusharlabs.com`, com o assunto
 `[house-party-protocol] conduct`. Todas as reclamações serão analisadas e investigadas com
 rapidez e justiça.
 

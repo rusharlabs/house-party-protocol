@@ -53,7 +53,8 @@ as an appointed representative at an online or offline event.
 ## Enforcement
 
 Instances of abusive, harassing, or otherwise unacceptable behavior may be reported to the
-community leaders responsible for enforcement at `atendimento@rushar.com.br`, with the subject
+community leaders responsible for enforcement through the contact channel at
+`https://rusharlabs.com`, with the subject
 `[house-party-protocol] conduct`. All complaints will be reviewed and investigated promptly and
 fairly.
 

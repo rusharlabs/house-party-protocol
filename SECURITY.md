@@ -24,7 +24,9 @@ works for you:
 1. **GitHub → Security tab → "Report a vulnerability"** (private report). If the button is not
    there — private reporting is a repository setting — use the e-mail channel; it is not a
    fallback of lesser standing.
-2. **E-mail:** `atendimento@rushar.com.br` with the subject `[house-party-protocol] security`.
+2. **Contact channel on the site:** `https://rusharlabs.com`. No raw address is published here on
+   purpose: an inbox in a public repository is harvested, and a harvested inbox is a channel that
+   stops being read.
 
 Include: the module and its version (`.claude-plugin/plugin.json`), how to reproduce it, and the
 impact you measured. First response within 5 business days on either channel; the fix is
@@ -58,7 +60,7 @@ keeps the name — is not this project and receives no security support.
 - Claude Code plugin channel: `/plugin marketplace add rushar-labs/house-party-protocol`
 - pip: `pip install git+https://github.com/rushar-labs/house-party-protocol@<tag>` (a PyPI
   release, when it exists, is announced in `CHANGELOG.md` and in the README first)
-- Web: `https://rusharlabs.com` · e-mail: `atendimento@rushar.com.br`
+- Web: `https://rusharlabs.com` (the contact channel for anything not suited to a public issue)
 
 Every module directory ships `CHECKSUMS.txt`, and every GitHub Release ships `SHA256SUMS`; a
 file whose hash is not in them did not come from here.

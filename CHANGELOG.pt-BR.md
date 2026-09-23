@@ -9,6 +9,24 @@ cada módulo mantém sua própria versão no `plugin.json` e no `marketplace.jso
 
 ## [Unreleased]
 
+## [2.5.7] — 2026-09-22
+
+Nenhum endereço de e-mail é publicado mais neste repositório. Repositório público é colhido, e caixa
+colhida é canal que deixa de ser lido — então o canal foi substituído por outros melhores, não
+apenas escondido.
+
+### Changed
+
+- **O `SECURITY.md` nomeia dois canais e nenhum é caixa de e-mail**: o formulário privado do GitHub
+  ("Report a vulnerability", que mantém o relato privado e rastreado dentro do GitHub) e o canal de
+  contato em `https://rusharlabs.com`. O motivo está escrito no próprio arquivo, porque quem não
+  encontra endereço merece saber que é decisão e não esquecimento.
+- **O `CODE_OF_CONDUCT.md` encaminha a aplicação pelo mesmo canal do site**, nos dois idiomas.
+- **O `pyproject.toml` declara o endereço no-reply do GitHub** em `authors` e `maintainers` —
+  metadado de pacote é espelhado por todo índice que copia o PyPI, a superfície mais ampla possível
+  para uma caixa de entrada.
+- **O config do template de issue** aponta para o formulário e para o site, não para um endereço.
+
 ## [2.5.6] — 2026-09-22
 
 Uma revisão independente, de outro provedor, leu a 2.5.5 e achou dez coisas. **Três das quatro
@@ -602,7 +620,7 @@ anterior era cega.
 ### Adicionado
 
 - **Arquivos de comunidade para o repositório público.** `CODE_OF_CONDUCT.md` (Contributor
-  Covenant 2.1, contato `atendimento@rushar.com.br`) nas duas línguas; `.github/CODEOWNERS`,
+  Covenant 2.1, com canal de contato declarado) nas duas línguas; `.github/CODEOWNERS`,
   `.github/dependabot.yml` (só GitHub Actions, semanal), três formulários de issue (`problem`,
   `feedback`, `idea`) com um `config.yml` que encaminha relatos de segurança ao canal privado,
   um template de pull request com a prova e o checklist bilíngue, e `.github/labels.json`

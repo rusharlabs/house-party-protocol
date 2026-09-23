@@ -9,6 +9,24 @@ keeps its own version in `plugin.json` and in `marketplace.json`.
 
 ## [Unreleased]
 
+## [2.5.7] — 2026-09-22
+
+No e-mail address is published in this repository any more. A public repository is harvested, and a
+harvested inbox is a channel that stops being read — so the channel was replaced by better ones
+rather than merely hidden.
+
+### Changed
+
+- **`SECURITY.md` names two channels and neither is an inbox**: GitHub's private advisory form
+  ("Report a vulnerability", which keeps the report private and tracked inside GitHub) and the
+  contact channel at `https://rusharlabs.com`. The reasoning is stated in the file itself, because a
+  reader who finds no address deserves to know it is a decision and not an omission.
+- **`CODE_OF_CONDUCT.md` routes enforcement through the same site channel**, in both languages.
+- **`pyproject.toml` declares the project's GitHub no-reply address** for `authors` and
+  `maintainers` — package metadata is mirrored by every index that copies PyPI, which is the widest
+  possible surface for an inbox.
+- **The issue-template config** points at the advisory form and the site instead of an address.
+
 ## [2.5.6] — 2026-09-22
 
 An independent review from a different provider read 2.5.5 and found ten things. **Three of the four
@@ -594,7 +612,7 @@ was blind to.
 ### Added
 
 - **Community files for the public repository.** `CODE_OF_CONDUCT.md` (Contributor Covenant 2.1,
-  contact `atendimento@rushar.com.br`) in both languages; `.github/CODEOWNERS`,
+  with a declared contact channel) in both languages; `.github/CODEOWNERS`,
   `.github/dependabot.yml` (GitHub Actions only, weekly), three issue forms (`problem`,
   `feedback`, `idea`) with a `config.yml` that routes security reports to the private channel,
   a pull request template with the proof and bilingual checklist, and `.github/labels.json`
