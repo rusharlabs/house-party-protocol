@@ -324,7 +324,9 @@ a versão em português. [MANIFESTO.pt-BR.md](MANIFESTO.pt-BR.md) — o que o pr
 [METHOD.pt-BR.md](docs/METHOD.pt-BR.md) — o método de trabalho, um comando por prática ·
 [ARCHITECTURE.pt-BR.md](docs/ARCHITECTURE.pt-BR.md) — como as peças se encaixam e o que deliberadamente não
 existe · [GRAPH-MODEL.pt-BR.md](docs/GRAPH-MODEL.pt-BR.md) · [LOOPS.pt-BR.md](docs/LOOPS.pt-BR.md) ·
-[BENCHMARK.pt-BR.md](docs/BENCHMARK.pt-BR.md) · [PROOF.pt-BR.md](docs/PROOF.pt-BR.md) · [BRAND.pt-BR.md](docs/BRAND.pt-BR.md) ·
+[BENCHMARK.pt-BR.md](docs/BENCHMARK.pt-BR.md) · [PROOF.pt-BR.md](docs/PROOF.pt-BR.md) · [BRAND.pt-BR.md](docs/BRAND.pt-BR.md) — a identidade ·
+[DESIGN.pt-BR.md](docs/DESIGN.pt-BR.md) — os tokens, os componentes e o que um pull request com
+interface tem de satisfazer ·
 [TIPS.pt-BR.md](docs/TIPS.pt-BR.md) · [manual](docs/MANUAL.html) · [catálogo](docs/CATALOG.pt-BR.html) ·
 [CHANGELOG.pt-BR.md](CHANGELOG.pt-BR.md) · [AGENTS.pt-BR.md](AGENTS.pt-BR.md) para agentes trabalhando neste
 repositório.

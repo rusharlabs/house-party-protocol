@@ -321,7 +321,9 @@ compares every file of a module against its `CHECKSUMS.txt`, and
 [METHOD.md](docs/METHOD.md) — the working method, one command per practice ·
 [ARCHITECTURE.md](docs/ARCHITECTURE.md) — how the pieces fit and what deliberately does not
 exist · [GRAPH-MODEL.md](docs/GRAPH-MODEL.md) · [LOOPS.md](docs/LOOPS.md) ·
-[BENCHMARK.md](docs/BENCHMARK.md) · [PROOF.md](docs/PROOF.md) · [BRAND.md](docs/BRAND.md) ·
+[BENCHMARK.md](docs/BENCHMARK.md) · [PROOF.md](docs/PROOF.md) · [BRAND.md](docs/BRAND.md) — the
+identity · [DESIGN.md](docs/DESIGN.md) — the tokens, the components and what a pull request with
+an interface has to satisfy ·
 [TIPS.md](docs/TIPS.md) · [manual](docs/MANUAL.html) · [catalogue](docs/CATALOG.html) ·
 [CHANGELOG.md](CHANGELOG.md) · [AGENTS.md](AGENTS.md) for agents working in this repository.
 

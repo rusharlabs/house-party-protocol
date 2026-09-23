@@ -69,6 +69,11 @@ O que cada comando do passo 3 diz:
 
 ## O que o pull request carrega
 
+> Vai construir uma página, um relatório ou um front end? Leia o
+> [DESIGN.pt-BR.md](docs/DESIGN.pt-BR.md) primeiro: ele entrega a folha de estilo como arquivo, os
+> componentes que já existem, e as sete regras que um revisor vai conferir. Reusá-los é como uma
+> contribuição fica parecida com o projeto sem ninguém lhe pedir para refazer.
+
 - **O diff, confinado a arquivos dentro de um módulo** (mais o par `README.md` /
   `README.pt-BR.md` do módulo quando o comportamento que você mudou está documentado ali). Nada em
   `CHECKSUMS.txt`, `*.zip`, campos de versão do `.claude-plugin/plugin.json` ou `marketplace.json`.

@@ -50,8 +50,14 @@ OUTPUTS = {
 # reason the four do -- otherwise every run would list `index.html` as a "shared resource" of
 # the docs folder, and the list would grow by one self-reference per run.
 INDEX_HTML = "index.html"
+# Why: the stylesheet is emitted as a FILE as well as inlined in every page. The pages stay
+# self-contained -- a site that fetches a stylesheet from someone else's domain stops working the
+# day that domain does -- and a contributor who wants to build in the project's language gets a
+# real file instead of a string locked inside this generator. One constant, two consumers, so
+# they cannot drift: `tests/test_design_system.py` asserts the file and the inline block match.
+STYLESHEET = "hpp.css"
 OWN_FILES = frozenset(
-    [INDEX_HTML] + [name for lang in OUTPUTS.values() for name in lang.values()]
+    [INDEX_HTML, STYLESHEET] + [name for lang in OUTPUTS.values() for name in lang.values()]
 )
 # Why: BRAND.md declares exactly four tokens; any other hex in the page is palette drift.
 BRAND = {"black": "#000000", "ink": "#0F1113", "paper": "#F4F1EB", "signal": "#FF6A00"}
@@ -554,6 +560,7 @@ def render_all(root: Path) -> dict[str, str]:
     # answers 404. The index is generated from the same model as the pages it links, so it
     # cannot drift from them, and it names no file that this run did not produce.
     out[INDEX_HTML] = render_index(model)
+    out[STYLESHEET] = _CSS.rstrip() + "\n"
     return out
 
 

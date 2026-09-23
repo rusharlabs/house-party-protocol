@@ -66,6 +66,11 @@ What each command in step 3 tells you:
 
 ## What the pull request carries
 
+> Building a page, a report or a front end? Read
+> [DESIGN.md](docs/DESIGN.md) first: it gives you the stylesheet as a file, the components that
+> already exist, and the seven rules a reviewer will check. Reusing them is how a contribution
+> looks like the project without anyone asking you to redo it.
+
 - **The diff, confined to files inside one module** (plus the module's `README.md` /
   `README.pt-BR.md` pair when the behaviour you changed is documented there). Nothing under
   `CHECKSUMS.txt`, `*.zip`, `.claude-plugin/plugin.json` version fields or `marketplace.json`.
