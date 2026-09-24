@@ -12,15 +12,15 @@ Documentos válidos para todos os kits: [`ARCHITECTURE.md`](ARCHITECTURE.md) · 
 | kit | versão | skills | commands | agents | hooks | rules | templates | scripts |
 |---|---|---:|---:|---:|---:|---:|---:|---:|
 | [kit-forge](#kit-forge) | 1.4.2 | 0 | 0 | 0 | 1 | 0 | 0 | 0 |
-| [operator-kit](#operator-kit) | 1.6.0 | 13 | 2 | 2 | 10 | 13 | 1 | 17 |
-| [continuity-kit](#continuity-kit) | 1.4.0 | 2 | 0 | 0 | 3 | 0 | 12 | 2 |
-| [lane-kit](#lane-kit) | 1.4.0 | 1 | 0 | 0 | 4 | 0 | 4 | 4 |
+| [operator-kit](#operator-kit) | 1.6.1 | 13 | 2 | 2 | 10 | 13 | 1 | 17 |
+| [continuity-kit](#continuity-kit) | 1.4.1 | 2 | 0 | 0 | 3 | 0 | 12 | 2 |
+| [lane-kit](#lane-kit) | 1.4.1 | 1 | 0 | 0 | 4 | 0 | 4 | 4 |
 | [health-kit](#health-kit) | 1.3.3 | 2 | 0 | 0 | 1 | 0 | 0 | 3 |
 | [claude-dev-kit](#claude-dev-kit) | 1.3.3 | 8 | 0 | 0 | 1 | 0 | 0 | 2 |
 | [supabase-pack](#supabase-pack) | 1.1.2 | 2 | 0 | 0 | 0 | 0 | 0 | 0 |
 | [agent-framework-wizard](#agent-framework-wizard) | 1.2.1 | 1 | 0 | 0 | 0 | 0 | 5 | 0 |
-| [dev-squad-kit](#dev-squad-kit) | 1.1.0 | 3 | 12 | 12 | 0 | 0 | 0 | 0 |
-| [gotcha-memory](#gotcha-memory) | 1.0.2 | 1 | 0 | 0 | 3 | 0 | 0 | 0 |
+| [dev-squad-kit](#dev-squad-kit) | 1.1.1 | 3 | 12 | 12 | 0 | 0 | 0 | 0 |
+| [gotcha-memory](#gotcha-memory) | 1.0.3 | 1 | 0 | 0 | 3 | 0 | 0 | 0 |
 | **total** | | **33** | **14** | **14** | **23** | **13** | **22** | **28** |
 
 ## kit-forge

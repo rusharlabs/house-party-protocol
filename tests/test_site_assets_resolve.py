@@ -22,11 +22,28 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+import pytest
+
 PRODUCT_ROOT = Path(__file__).resolve().parent.parent
 DOCS = PRODUCT_ROOT / "docs"
 
 IMG = re.compile(r'<img\s[^>]*src="([^"]+)"')
 OG_IMAGE = re.compile(r'<meta\s+property="og:image"\s+content="([^"]+)"')
+
+# Why (2.6.1): `docs/hpp.css`, `docs/index.html` and `docs/CATALOG*.html` are GENERATED into the
+# emitted tree by kit-forge's `tools/catalog_md.py` (run by the release step), so the SOURCE tree
+# never has them and these tests failed there with FileNotFoundError -- red that proved nothing.
+# The emitted tree is recognised the way the rest of this suite recognises it (`marketplace.json`
+# beside the manifest). There a missing page is still a FAILURE, never a skip.
+EMITTED = (PRODUCT_ROOT / "marketplace.json").is_file()
+
+
+def _generated(path: Path) -> Path:
+    """The generated page, or a skip that names why -- only in the source tree."""
+    if not EMITTED and not path.is_file():
+        pytest.skip(f"{path.relative_to(PRODUCT_ROOT).as_posix()} is generated into the emitted tree "
+                    f"by kit-forge's tools/catalog_md.py; this is the source tree, where it never exists")
+    return path
 
 
 def _pages() -> list[Path]:
@@ -36,7 +53,10 @@ def _pages() -> list[Path]:
 def test_there_are_pages_to_measure() -> None:
     # Why: without this, the tests below would pass while scanning zero files, and a loop that
     # never iterates looks like a pass.
-    assert len(_pages()) >= 5, f"expected the 5 pages of docs/, found {len(_pages())}"
+    # The two MANUAL pages are hand-written and exist in both trees; index.html and the CATALOG pair
+    # are generated, so only the emitted tree has all five. The guard stays on in the source tree.
+    expected = 5 if EMITTED else 2
+    assert len(_pages()) >= expected, f"expected {expected} pages in docs/, found {len(_pages())}"
 
 
 def test_no_page_requests_an_image_ABOVE_docs() -> None:
@@ -64,7 +84,7 @@ def test_every_local_image_exists_relative_to_docs() -> None:
 def test_the_landing_page_declares_a_card_with_an_ABSOLUTE_image() -> None:
     # Why: a social-network crawler does not resolve a relative path. Without an absolute URL the
     # shared link goes out with no image -- and this project already carries a ready social-preview.
-    text = (DOCS / "index.html").read_text(encoding="utf-8")
+    text = _generated(DOCS / "index.html").read_text(encoding="utf-8")
     found = OG_IMAGE.findall(text)
     assert found, "the landing page does not declare og:image"
     for url in found:

@@ -3,7 +3,7 @@
   "name": "house-party-protocol",
   "description": "House Party Protocol is a modular, cross-host harness for Claude Code and Codex CLI: executable gates, governed loops, cross-model review, provider-neutral routing by tier, continuity, deterministic evaluation and verifiable distribution.",
   "description_pt": "House Party Protocol é um harness modular e cross-host para Claude Code e Codex CLI: gates executáveis, loops governados, revisão cross-model, roteamento provider-neutral por tier, continuidade, avaliação determinística e distribuição verificável.",
-  "version": "2.6.0",
+  "version": "2.6.1",
   "owner": {
     "name": "Max Parisi",
     "url": "https://rusharlabs.com"
@@ -31,10 +31,10 @@
     {
       "name": "operator-kit",
       "displayName": "Operator Kit",
-      "source": "./frameworks/operator-kit-1.6.0",
+      "source": "./frameworks/operator-kit-1.6.1",
       "description": "The harness's operational module: executable gates, governed loops, standalone pass@k/pass^k, audit/enforce policy, preflight, spec-driven planning and two read-only checkers.",
       "description_pt": "Módulo operacional do harness: gates executáveis, loops governados, pass@k/pass^k standalone, política audit/enforce, preflight, planejamento spec-driven e dois checkers read-only.",
-      "version": "1.6.0",
+      "version": "1.6.1",
       "category": "productivity",
       "keywords": [
         "operator",
@@ -50,10 +50,10 @@
     {
       "name": "continuity-kit",
       "displayName": "Continuity Kit",
-      "source": "./continuity/continuity-kit-1.4.0",
+      "source": "./continuity/continuity-kit-1.4.1",
       "description": "Handoff-v1.1: a session survives a stop/clear/crash without losing its next step. Schema with git-block + re_derive_cmd (every number carries the command that re-derives it live) + verify_first_cmd (check live before replaying any action the handoff describes), Stop/PreCompact/SessionStart hooks. Includes doc-rollup (history/evolution with built-in degradation) + pre-clear (long-term + short-term).",
       "description_pt": "Handoff-v1.1: uma sessao sobrevive a parada/clear/crash sem perder o proximo passo. Schema com git-block + re_derive_cmd (todo numero carrega o comando que o re-deriva ao vivo) + verify_first_cmd (conferir ao vivo antes de repetir qualquer acao que o handoff descreve), hooks Stop/PreCompact/SessionStart. Inclui doc-rollup (historico/evolucao com degradacao embutida) + pre-clear (longo-prazo + curto-prazo).",
-      "version": "1.4.0",
+      "version": "1.4.1",
       "category": "productivity",
       "keywords": [
         "handoff",
@@ -67,10 +67,10 @@
     {
       "name": "lane-kit",
       "displayName": "Lane Kit",
-      "source": "./multi-session/lane-kit-1.4.0",
+      "source": "./multi-session/lane-kit-1.4.1",
       "description": "N sessions without collisions. Lane board, cross-model maker!=checker, per-directory lock, git-guard and territory-guard. The checker_router detects Codex, Cursor and Gemini and picks a provider different from the maker's. Best-of-N: compete/select record which of N competing attempts won.",
       "description_pt": "N sessoes sem colisao. Lane board, maker!=checker cross-model, lock por diretorio, git-guard e territory-guard. O checker_router detecta Codex, Cursor e Gemini e escolhe um provider diferente do maker. Best-of-N: compete/select registram qual de N tentativas concorrentes venceu.",
-      "version": "1.4.0",
+      "version": "1.4.1",
       "category": "productivity",
       "keywords": [
         "multi-session",
@@ -146,10 +146,10 @@
     {
       "name": "dev-squad-kit",
       "displayName": "Dev Squad Kit",
-      "source": "./frameworks/dev-squad-kit-1.1.0",
+      "source": "./frameworks/dev-squad-kit-1.1.1",
       "description": "A squad of 12 roles available as slash commands and real subagents, with explicit tools and read-only QA, plus 3 token-safe parallel reading/consolidation skills. Ships no tasks/templates tree: the role commands that expect one (*create, *task, *workflow) need your own.",
       "description_pt": "Squad com 12 papéis disponíveis como slash commands e subagents reais, tools explícitos e QA read-only, mais 3 skills de leitura/consolidação paralela token-safe. Não traz árvore de tasks/templates: os comandos de papel que a esperam (*create, *task, *workflow) precisam da sua.",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "category": "agents",
       "keywords": [
         "agents",
@@ -163,10 +163,10 @@
     {
       "name": "gotcha-memory",
       "displayName": "Gotcha Memory",
-      "source": "./continuity/gotcha-memory-1.0.2",
+      "source": "./continuity/gotcha-memory-1.0.3",
       "description": "Standalone operational learning loop: a failure becomes knowledge. After every Bash command that fails, the postflight records the event classified by error family; when the same type recurs N times within a window it becomes a GOTCHA -- an actionable lesson the preflight injects BEFORE the next run of the same task. Curated gotchas (your rules) are always-on. Conservative detection: only a clear error signal counts, ambiguous is not a failure. Two WARN-only hooks (always exit 0) -- the learning loop never blocks the flow. stdlib only.",
       "description_pt": "Loop de aprendizado operacional standalone: a falha vira conhecimento. Depois de cada comando Bash que falha, o postflight registra o evento classificado por familia de erro; quando o mesmo tipo recorre N vezes numa janela, vira um GOTCHA -- uma licao acionavel que o preflight injeta ANTES da proxima execucao da mesma tarefa. Gotchas curated (suas regras) sao always-on. Deteccao conservadora: so sinal claro de erro conta, ambiguo nao e falha. Dois hooks WARN-only (exit 0 sempre) -- o loop de aprendizado jamais bloqueia o fluxo. stdlib only.",
-      "version": "1.0.2",
+      "version": "1.0.3",
       "category": "productivity",
       "keywords": [
         "learning-loop",

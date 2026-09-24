@@ -34,7 +34,7 @@ da pessoa, não contorne a ausência do `git`.
 ## Passo 2 — instale a CLI
 
 ```bash
-pip install git+https://github.com/rusharlabs/house-party-protocol@v2.6.0
+pip install git+https://github.com/rusharlabs/house-party-protocol@v2.6.1
 ```
 
 `pipx install git+…` funciona igual. O pacote traz o próprio manifesto e a própria suíte de

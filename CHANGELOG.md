@@ -9,6 +9,34 @@ keeps its own version in `plugin.json` and in `marketplace.json`.
 
 ## [Unreleased]
 
+## [2.6.1] — 2026-09-24
+
+Closes what the 2.6.0 reviews left open. No new instrument.
+
+### Added
+
+- **lane-kit 1.4.1 — a competition can lose a candidate.** `lane_board.py withdraw --task <T> --item <X>`
+  records why a candidate left (its lane died, the attempt was abandoned); the withdrawn item stops
+  counting for readiness and selection, its lane is owed the news like a loser, and `render` and
+  `status <task>` show it. Before this, one dead lane left the task undecidable and every other
+  candidate unmergeable.
+- A product test runs the lane board self-test with the core importable, so the branch that
+  verifies an `hpp evidence` record is exercised in CI, not only on a developer machine.
+
+### Fixed
+
+- **continuity-kit 1.4.1:** an evidence record is recognised by its file name wherever `--out` put
+  it and with Windows separators; the templates call lane-kit's board through a `{{lane_board}}`
+  placeholder instead of a path that resolved inside continuity-kit.
+- **dev-squad-kit 1.1.1:** `*evidence-check` maps a failed recorded run to FAIL and every other
+  non-pass to CONCERNS; `--out` for QA's own record is stated as relative and inside the workspace.
+- **gotcha-memory 1.0.3:** the offline relabel loop checks the decider's exit code and writes no
+  record for a failed call.
+- **operator-kit 1.6.1:** rules no longer point at protocols the kit does not ship; the report
+  builder reads the style keys it defines; an example path is neutral.
+- The site generator and the tests agree on the pages they check, and the release links in this
+  file are complete (`[2.1.0]` points at the release that first shipped it).
+
 ## [2.6.0] — 2026-09-24
 
 Four instruments that turn a claim into something a checker can re-derive — evidence bundles, a
@@ -1211,8 +1239,21 @@ publishing.
 [1.4.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v1.4.0
 [1.5.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v1.5.0
 [2.0.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.0.0
-[2.1.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.1.0
+[2.1.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.2.0
 [2.2.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.2.0
 [2.3.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.3.0
 [2.4.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.4.0
+[2.4.1]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.4.1
+[2.4.2]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.4.2
+[2.4.3]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.4.3
+[2.5.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.5.0
+[2.5.1]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.5.1
+[2.5.2]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.5.2
+[2.5.3]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.5.3
+[2.5.4]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.5.4
+[2.5.5]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.5.5
+[2.5.6]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.5.6
+[2.5.7]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.5.7
+[2.5.8]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.5.8
 [2.6.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.0
+[2.6.1]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.1

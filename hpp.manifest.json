@@ -1,6 +1,6 @@
 {
   "protocol_version": "2.1",
-  "product_version": "2.6.0",
+  "product_version": "2.6.1",
   "name": "house-party-protocol",
   "hosts": [
     "claude-code",
@@ -92,8 +92,8 @@
   "modules": [
     {
       "id": "operator-kit",
-      "version": "1.6.0",
-      "path": "frameworks/operator-kit-1.6.0",
+      "version": "1.6.1",
+      "path": "frameworks/operator-kit-1.6.1",
       "requires": [],
       "integrates_with": [
         "continuity-kit",
@@ -141,8 +141,8 @@
     },
     {
       "id": "lane-kit",
-      "version": "1.4.0",
-      "path": "multi-session/lane-kit-1.4.0",
+      "version": "1.4.1",
+      "path": "multi-session/lane-kit-1.4.1",
       "requires": [],
       "integrates_with": [
         "continuity-kit",
@@ -165,8 +165,8 @@
     },
     {
       "id": "continuity-kit",
-      "version": "1.4.0",
-      "path": "continuity/continuity-kit-1.4.0",
+      "version": "1.4.1",
+      "path": "continuity/continuity-kit-1.4.1",
       "requires": [],
       "integrates_with": [
         "lane-kit",
@@ -271,8 +271,8 @@
     },
     {
       "id": "dev-squad-kit",
-      "version": "1.1.0",
-      "path": "frameworks/dev-squad-kit-1.1.0",
+      "version": "1.1.1",
+      "path": "frameworks/dev-squad-kit-1.1.1",
       "requires": [],
       "integrates_with": [
         "operator-kit",
@@ -296,8 +296,8 @@
     },
     {
       "id": "gotcha-memory",
-      "version": "1.0.2",
-      "path": "continuity/gotcha-memory-1.0.2",
+      "version": "1.0.3",
+      "path": "continuity/gotcha-memory-1.0.3",
       "requires": [],
       "integrates_with": [
         "continuity-kit",

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>House Party Protocol — Harness manual</title>
-  <meta name="description" content="Operating manual for the House Party Protocol harness 2.6.0: init, maps, loop, policy, proof, hosts and exit codes, each claim with the command that reproduces it.">
+  <meta name="description" content="Operating manual for the House Party Protocol harness 2.6.1: init, maps, loop, policy, proof, hosts and exit codes, each claim with the command that reproduces it.">
   <link rel="alternate" hreflang="en" href="MANUAL.html">
   <link rel="alternate" hreflang="pt-BR" href="MANUAL.pt-BR.html">
   <style>
@@ -66,7 +66,7 @@
   <header class="hero">
     <div class="wrap">
       <img src="assets/hpp-logo-header.png" alt="House Party Protocol — by Rushar Labs">
-      <p class="eyebrow">Harness manual · v2.6.0 · Claude Code and Codex CLI</p>
+      <p class="eyebrow">Harness manual · v2.6.1 · Claude Code and Codex CLI</p>
       <h1>From spec to proof.<br><span class="signal">Without a leap of trust.</span></h1>
       <p>An operating guide to the harness: how <code>hpp init</code> installs, what each map projects, how the loop advances, what the policy blocks, and what counts as proof. Every claim below carries the command that reproduces it; the outputs quoted were measured on 2026-09-23 against version 2.5.8, from a clone of this repository at the <code>v2.5.8</code> tag and from a pip install of the same version, and each block says which. What is marked <em>new in 2.6.0</em> had its outputs measured from a checkout of <code>main</code> before that release.</p>
     </div>
@@ -183,8 +183,8 @@ python -m hpp benchmark -k 3</pre>
       <h3>Competitions: choosing one of N is pass@N</h3>
       <p class="label">New in 2.6.0</p>
       <p>The lane-kit board (<code>lane_board.py</code>) runs a best-of-N: N lanes each build their own item for one task, <code>compete</code> declares them candidates, and <code>select</code> records one winner. The reviewer who selects must be on another lane and of another model family than every candidate's builders, and every candidate must be <code>CHECKPOINT-READY</code> with evidence, or <code>VERIFIED</code>. The losers become <code>NOT-SELECTED</code>, a terminal state; no candidate reaches <code>MERGED</code> before its task has a winner; <code>select --checker-unavailable</code> records <code>DEFERRED</code>, never a winner. Choosing one of N is pass@N, not reliability: the winner still needs its own <code>VERIFIED</code> before <code>MERGED</code>, and pass^k before anyone calls it reliable.</p>
-      <pre>python multi-session/lane-kit-1.4.0/scripts/lane_board.py compete --task TASK-1 --items ITEM-A,ITEM-B --lane lane-a --model claude-opus-4-8
-python multi-session/lane-kit-1.4.0/scripts/lane_board.py select --task TASK-1 --winner ITEM-B --lane lane-r --model gpt-5.6 --reason "same tests, half the diff"</pre>
+      <pre>python multi-session/lane-kit-1.4.1/scripts/lane_board.py compete --task TASK-1 --items ITEM-A,ITEM-B --lane lane-a --model claude-opus-4-8
+python multi-session/lane-kit-1.4.1/scripts/lane_board.py select --task TASK-1 --winner ITEM-B --lane lane-r --model gpt-5.6 --reason "same tests, half the diff"</pre>
       <p class="measured">Measured from a checkout of main on a scratch board where <code>ITEM-A</code> (lane <code>lane-a</code>, <code>claude-opus-4-8</code>) and <code>ITEM-B</code> (lane <code>lane-b</code>, <code>claude-sonnet-4-6</code>) were each claimed, built and <code>CHECKPOINT-READY</code> with evidence: <code>compete</code> → exit 0; <code>select</code> by <code>claude-haiku-4-5</code> → <code>maker≠checker violated: … SAME model family (claude)</code>, exit 1; <code>select</code> by <code>gpt-5.6</code> → winner <code>ITEM-B</code>, <code>not_selected</code> <code>ITEM-A</code>, exit 0. Afterwards <code>ITEM-A</code> could not move (<code>NOT-SELECTED -&gt; UNDER-REVIEW</code> refused) and <code>ITEM-B</code> could not go from <code>CHECKPOINT-READY</code> to <code>MERGED</code>, exit 1 each. The board exits 0 ok · 1 refused · 2 invalid usage.</p>
       <h3>Context compile: whole blocks under a budget</h3>
       <p><code>hpp context compile INPUTS --budget N</code> reads a JSON array of blocks — <code>source</code> (unique), <code>priority</code> (an integer) and <code>content</code> — and fills a character budget in priority order. A block enters whole or not at all: one that does not fit is listed as omitted, never sliced, and the next block is still tried. The separator between two blocks (two newlines) is charged to the budget. Every block, included or omitted, carries its <code>chars</code> and its <code>sha256</code>; the result carries <code>used</code>, <code>remaining</code> and the compiled <code>text</code>. Secret-like content — a key, token, secret or password assignment, a PEM header, an <code>sk-</code> token — is refused before anything is compiled, and the refusal names the source.</p>

@@ -9,6 +9,36 @@ cada módulo mantém sua própria versão no `plugin.json` e no `marketplace.jso
 
 ## [Unreleased]
 
+## [2.6.1] — 2026-09-24
+
+Fecha o que as revisões da 2.6.0 deixaram aberto. Nenhum instrumento novo.
+
+### Adicionado
+
+- **lane-kit 1.4.1 — uma competição pode perder um candidato.** `lane_board.py withdraw --task <T> --item <X>`
+  registra por que um candidato saiu (a lane morreu, a tentativa foi abandonada); o item retirado
+  deixa de contar para prontidão e seleção, a lane dele recebe o aviso como um perdedor, e o
+  `render` e o `status <task>` mostram isso. Antes, uma lane morta deixava a tarefa sem decisão e
+  todo outro candidato sem merge.
+- Um teste do produto roda o self-test do lane board com o núcleo importável, então o ramo que
+  verifica um registro do `hpp evidence` é exercitado no CI, e não só na máquina de quem desenvolve.
+
+### Corrigido
+
+- **continuity-kit 1.4.1:** um registro de evidência é reconhecido pelo nome do arquivo onde quer
+  que o `--out` o tenha posto e com separadores do Windows; os templates chamam o board do lane-kit
+  por um placeholder `{{lane_board}}` em vez de um caminho que caía dentro do continuity-kit.
+- **dev-squad-kit 1.1.1:** o `*evidence-check` mapeia execução registrada que falhou para FAIL e
+  todo outro não-passou para CONCERNS; o `--out` do registro próprio do QA é declarado relativo e
+  dentro do workspace.
+- **gotcha-memory 1.0.3:** o loop offline de reclassificação confere o exit code do decisor e não
+  grava registro para uma chamada que falhou.
+- **operator-kit 1.6.1:** as regras não apontam mais para protocolos que o kit não distribui; o
+  construtor de relatório lê as chaves de estilo que ele mesmo define; um caminho de exemplo ficou
+  neutro.
+- O gerador do site e os testes concordam sobre as páginas que conferem, e os links de release
+  deste arquivo estão completos (`[2.1.0]` aponta para a release que o trouxe primeiro).
+
 ## [2.6.0] — 2026-09-24
 
 Quatro instrumentos que transformam uma afirmação em algo que um checker consegue re-derivar —
@@ -1232,8 +1262,21 @@ publicar.
 [1.4.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v1.4.0
 [1.5.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v1.5.0
 [2.0.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.0.0
-[2.1.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.1.0
+[2.1.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.2.0
 [2.2.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.2.0
 [2.3.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.3.0
 [2.4.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.4.0
+[2.4.1]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.4.1
+[2.4.2]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.4.2
+[2.4.3]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.4.3
+[2.5.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.5.0
+[2.5.1]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.5.1
+[2.5.2]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.5.2
+[2.5.3]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.5.3
+[2.5.4]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.5.4
+[2.5.5]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.5.5
+[2.5.6]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.5.6
+[2.5.7]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.5.7
+[2.5.8]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.5.8
 [2.6.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.0
+[2.6.1]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.1

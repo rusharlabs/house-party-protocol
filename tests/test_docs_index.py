@@ -13,6 +13,8 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+import pytest
+
 PRODUCT_ROOT = Path(__file__).resolve().parent.parent
 DOCS = PRODUCT_ROOT / "docs"
 INDEX = DOCS / "index.html"
@@ -23,13 +25,28 @@ INDEX = DOCS / "index.html"
 EXTERNAL = re.compile(r'(?:src|href)="https?://[^"]+\.(?:js|css)"')
 HREF = re.compile(r'href="([^"]+)"')
 
+# Why (2.6.1): `docs/hpp.css`, `docs/index.html` and `docs/CATALOG*.html` are GENERATED into the
+# emitted tree by kit-forge's `tools/catalog_md.py` (run by the release step), so the SOURCE tree
+# never has them and these tests failed there with FileNotFoundError -- red that proved nothing.
+# The emitted tree is recognised the way the rest of this suite recognises it (`marketplace.json`
+# beside the manifest). There a missing page is still a FAILURE, never a skip.
+EMITTED = (PRODUCT_ROOT / "marketplace.json").is_file()
+
+
+def _generated(path: Path) -> Path:
+    """The generated page, or a skip that names why -- only in the source tree."""
+    if not EMITTED and not path.is_file():
+        pytest.skip(f"{path.relative_to(PRODUCT_ROOT).as_posix()} is generated into the emitted tree "
+                    f"by kit-forge's tools/catalog_md.py; this is the source tree, where it never exists")
+    return path
+
 
 def _text() -> str:
-    return INDEX.read_text(encoding="utf-8")
+    return _generated(INDEX).read_text(encoding="utf-8")
 
 
 def test_the_landing_page_exists() -> None:
-    assert INDEX.is_file(), "docs/index.html does not exist — the Pages root would answer 404"
+    assert _generated(INDEX).is_file(), "docs/index.html does not exist — the Pages root would answer 404"
 
 
 def test_it_links_the_four_pages_and_all_of_them_exist() -> None:
@@ -38,7 +55,7 @@ def test_it_links_the_four_pages_and_all_of_them_exist() -> None:
     missing = targets - hrefs
     assert not missing, f"the landing page does not link: {sorted(missing)}"
     for target in targets:
-        assert (DOCS / target).is_file(), f"the landing page links {target}, which does not exist"
+        assert _generated(DOCS / target).is_file(), f"the landing page links {target}, which does not exist"
 
 
 def test_does_not_fetch_third_party_css_or_js() -> None:

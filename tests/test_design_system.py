@@ -16,6 +16,8 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+import pytest
+
 PRODUCT_ROOT = Path(__file__).resolve().parent.parent
 DOCS = PRODUCT_ROOT / "docs"
 CSS = DOCS / "hpp.css"
@@ -39,18 +41,33 @@ RGBA = re.compile(r"rgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})")
 # self-contained material makes no external request."
 EXTERNAL = re.compile(r"@import|url\(\s*['\"]?https?://|@font-face")
 
+# Why (2.6.1): `docs/hpp.css`, `docs/index.html` and `docs/CATALOG*.html` are GENERATED into the
+# emitted tree by kit-forge's `tools/catalog_md.py` (run by the release step), so the SOURCE tree
+# never has them and these tests failed there with FileNotFoundError -- red that proved nothing.
+# The emitted tree is recognised the way the rest of this suite recognises it (`marketplace.json`
+# beside the manifest). There a missing page is still a FAILURE, never a skip.
+EMITTED = (PRODUCT_ROOT / "marketplace.json").is_file()
+
+
+def _generated(path: Path) -> Path:
+    """The generated page, or a skip that names why -- only in the source tree."""
+    if not EMITTED and not path.is_file():
+        pytest.skip(f"{path.relative_to(PRODUCT_ROOT).as_posix()} is generated into the emitted tree "
+                    f"by kit-forge's tools/catalog_md.py; this is the source tree, where it never exists")
+    return path
+
 
 def _palette(text: str) -> set[str]:
     return {h.upper() for h in HEX.findall(text)}
 
 
 def test_the_stylesheet_is_a_file() -> None:
-    assert CSS.is_file(), "docs/hpp.css does not exist — the CSS is back to living only inside the generator"
+    assert _generated(CSS).is_file(), "docs/hpp.css does not exist — the CSS is back to living only inside the generator"
     assert CSS.stat().st_size > 1000, "hpp.css exists but is empty or truncated"
 
 
 def test_the_CSS_palette_is_exactly_the_BRAND_palette() -> None:
-    from_css = _palette(CSS.read_text(encoding="utf-8"))
+    from_css = _palette(_generated(CSS).read_text(encoding="utf-8"))
     from_brand = _palette(BRAND.read_text(encoding="utf-8"))
     assert from_brand, "BRAND.md stopped declaring hex values — without them there is nothing to compare against"
     assert from_css == from_brand, (
@@ -70,12 +87,12 @@ def _brand_triples() -> set[tuple[str, str, str]]:
 def test_no_fifth_colour_arrives_through_rgba() -> None:
     allowed = _brand_triples()
     assert allowed, "no hex in BRAND.md means no allowed universe — not reportable"
-    outside = [t for t in RGBA.findall(CSS.read_text(encoding="utf-8")) if t not in allowed]
+    outside = [t for t in RGBA.findall(_generated(CSS).read_text(encoding="utf-8")) if t not in allowed]
     assert not outside, f"rgb() that is not a BRAND token: {outside}"
 
 
 def test_the_CSS_makes_no_external_request() -> None:
-    found = EXTERNAL.findall(CSS.read_text(encoding="utf-8"))
+    found = EXTERNAL.findall(_generated(CSS).read_text(encoding="utf-8"))
     assert not found, f"external request in the stylesheet: {found}"
 
 
@@ -83,9 +100,9 @@ def test_every_page_inlines_the_SAME_stylesheet() -> None:
     # Why: the pages stay self-contained (inline), and the file exists for contributors. They are
     # two consumers of the same constant; this test is what proves they are still the same thing
     # after any edit.
-    stylesheet = CSS.read_text(encoding="utf-8").strip()
+    stylesheet = _generated(CSS).read_text(encoding="utf-8").strip()
     for name in GENERATED:
-        p = DOCS / name
+        p = _generated(DOCS / name)
         assert p.is_file(), f"{name} does not exist"
         assert stylesheet in p.read_text(encoding="utf-8"), f"{name} inlines a CSS different from the file"
 

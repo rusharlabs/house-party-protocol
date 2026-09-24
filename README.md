@@ -97,7 +97,7 @@ only with evidence pasted in, a verdict only from another lane **and** another m
 <p align="center">
   <img alt="python lane_board.py render: four example items on one board — EXAMPLE-1 MERGED, EXAMPLE-2 VERIFIED and waiting on the human gate, EXAMPLE-3 DEFERRED for want of a checker, EXAMPLE-4 back to BUILDING after NEEDS-FIX — then the verdicts whose lane has not been told" src="assets/terminal/lane-board.svg" width="940">
 </p>
-<p align="center"><sub>The board those rows produce, as <code>multi-session/lane-kit-1.4.0/scripts/lane_board.py</code> prints it: four example items driven through the machine, every event naming the lane that wrote it, the evidence pasted at checkpoint, and — for a verdict — the lane and the model that gave it. Two attempts were refused on the way there, both <code>exit 1</code>: a verdict from the builder's own lane (<em>maker≠checker violated: reviewer (exec-b) is the SAME lane as the builder</em>) and merging a 🔴 item without <code>--human-approved</code>. The last block is the one nobody thinks to ask for — verdicts already decided whose lane has not been told. Text rendered from the command's real stdout by <code>scripts/render_terminal_svg.py</code>, like the two captures above.</sub></p>
+<p align="center"><sub>The board those rows produce, as <code>multi-session/lane-kit-1.4.1/scripts/lane_board.py</code> prints it: four example items driven through the machine, every event naming the lane that wrote it, the evidence pasted at checkpoint, and — for a verdict — the lane and the model that gave it. Two attempts were refused on the way there, both <code>exit 1</code>: a verdict from the builder's own lane (<em>maker≠checker violated: reviewer (exec-b) is the SAME lane as the builder</em>) and merging a 🔴 item without <code>--human-approved</code>. The last block is the one nobody thinks to ask for — verdicts already decided whose lane has not been told. Text rendered from the command's real stdout by <code>scripts/render_terminal_svg.py</code>, like the two captures above.</sub></p>
 
 ## Quickstart
 
@@ -113,7 +113,7 @@ third-party packages. CI exercises Python 3.10 to 3.13 on Linux, macOS and Windo
 (`.github/workflows/ci.yml`); older interpreters are not promised because nothing measures them.
 
 ```bash
-pip install git+https://github.com/rusharlabs/house-party-protocol@v2.6.0
+pip install git+https://github.com/rusharlabs/house-party-protocol@v2.6.1
 hpp doctor
 hpp init --target ../your-repo
 ```
@@ -206,9 +206,9 @@ plans first and applies only on a second, explicit invocation:
 
 ```bash
 python installers/kit-forge-1.4.2/kit_doctor.py install \
-  --kit frameworks/operator-kit-1.6.0 --host codex --target ../your-repo
+  --kit frameworks/operator-kit-1.6.1 --host codex --target ../your-repo
 python installers/kit-forge-1.4.2/kit_doctor.py install \
-  --kit frameworks/operator-kit-1.6.0 --host codex --target ../your-repo --apply
+  --kit frameworks/operator-kit-1.6.1 --host codex --target ../your-repo --apply
 ```
 
 The installer is part of this repository, at `installers/kit-forge-1.4.2/kit_doctor.py`, next
@@ -260,14 +260,14 @@ returns the same answer as JSON. Neither asks a model to remember anything.
 
 | module | version | one line |
 |---|---|---|
-| `operator-kit` | 1.6.0 | done gate with real exit codes, command policy in `audit` or `enforce`, governed loops with charter and stop conditions, standalone `pass@k` / `pass^k` runner, preflight, two checker agents shipped without `Write` or `Edit` |
-| `lane-kit` | 1.4.0 | a lane board for concurrent sessions: claim, territory, liveness, maker ≠ checker, and a router that picks a checker from a different provider |
-| `continuity-kit` | 1.4.0 | handoff written before a stop or compaction, re-derivation commands instead of remembered state, guards against replaying finished steps |
+| `operator-kit` | 1.6.1 | done gate with real exit codes, command policy in `audit` or `enforce`, governed loops with charter and stop conditions, standalone `pass@k` / `pass^k` runner, preflight, two checker agents shipped without `Write` or `Edit` |
+| `lane-kit` | 1.4.1 | a lane board for concurrent sessions: claim, territory, liveness, maker ≠ checker, and a router that picks a checker from a different provider |
+| `continuity-kit` | 1.4.1 | handoff written before a stop or compaction, re-derivation commands instead of remembered state, guards against replaying finished steps |
 | `health-kit` | 1.3.3 | config-driven service probes that write a cache a statusline reads without touching the network; service health kept apart from data health |
-| `gotcha-memory` | 1.0.2 | records failed commands by error family, detects recurrence, injects the lesson before the next run; warn-only, secrets redacted by shape |
+| `gotcha-memory` | 1.0.3 | records failed commands by error family, detects recurrence, injects the lesson before the next run; warn-only, secrets redacted by shape |
 | `kit-forge` | 1.4.2 | assembles modules from source, lints for IP and PII, installs in six stages, writes and verifies `CHECKSUMS.txt`, checks the marketplace |
 | `claude-dev-kit` | 1.3.3 | authoring of skills, hooks and plugins for Claude Code, reversible settings wiring, secret scan on write |
-| `dev-squad-kit` | 1.1.0 | twelve development roles as commands and subagents with explicit tools, plus parallel read-and-consolidate skills |
+| `dev-squad-kit` | 1.1.1 | twelve development roles as commands and subagents with explicit tools, plus parallel read-and-consolidate skills |
 | `agent-framework-wizard` | 1.2.1 | six-step scaffold for a new agent or skill project, answerable from a file for non-interactive runs |
 | `supabase-pack` | 1.1.2 | RLS audit through `pg_policies` and advisors instead of a table flag; Edge Function scaffold |
 

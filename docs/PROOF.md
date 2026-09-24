@@ -18,7 +18,7 @@ A public claim only enters here with a reproduction.
 | retrieval ruler, control | `python -m hpp retrieval eval examples/retrieval/suite.json --retriever-command '["python", "-c", "import sys; sys.exit(3)"]'` | exit 1, seven instrument failures, null metrics, never 0% |
 | citation check | `python -m hpp cite check --text examples/citations/answer.md --context examples/citations/context.json` | exit 0, verdict `ok` |
 | citation check, control | the same on a copy of `answer.md` with `[ID:glossary]` changed to `[ID:glossary-v2]` | exit 2, `UNKNOWN_ID` |
-| best-of-N selection | `python multi-session/lane-kit-1.4.0/scripts/lane_board.py --self-test` | exit 0; the competitions block passes every check |
+| best-of-N selection | `python multi-session/lane-kit-1.4.1/scripts/lane_board.py --self-test` | exit 0; the competitions block passes every check |
 | best-of-N selection, control | `lane_board.py select` on a declared competition, by a reviewer of the same model family as one builder | exit 1, `SAME model family`; no winner recorded |
 | intact artifacts | `python installers/kit-forge-1.4.2/kit_doctor.py marketplace .` | status ok |
 
