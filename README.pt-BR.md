@@ -117,10 +117,13 @@ nenhum pacote de terceiro. A CI exercita Python 3.10 a 3.13 em Linux, macOS e Wi
 (`.github/workflows/ci.yml`); interpretadores mais antigos não são prometidos porque nada os mede.
 
 ```bash
-pip install git+https://github.com/rusharlabs/house-party-protocol@v2.6.4
+pip install git+https://github.com/rusharlabs/house-party-protocol@v2.6.5
 hpp doctor
 hpp init --target ../your-repo
 ```
+
+A partir da 2.6.5, toda release é publicada também no PyPI pelo workflow de release, sem token
+armazenado: `pip install house-party-protocol==<version>` instala o mesmo wheel.
 
 > **Instalando com um agente?** Cole esta URL nele e mande seguir:
 > `https://raw.githubusercontent.com/rusharlabs/house-party-protocol/main/INSTALL_FOR_AGENTS.pt-BR.md`

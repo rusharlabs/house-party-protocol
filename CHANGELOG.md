@@ -9,6 +9,18 @@ keeps its own version in `plugin.json` and in `marketplace.json`.
 
 ## [Unreleased]
 
+## [2.6.5] — 2026-09-24
+
+### Added
+
+- **Published to PyPI.** From this release on, `pip install house-party-protocol` installs the
+  wheel the release workflow built and attested, uploaded by trusted publishing with no stored token.
+- **The provenance bundle is attached to every release** as
+  `house_party_protocol-<version>.intoto.jsonl`, so a release can be checked offline and scanners
+  that look for signature files among the assets find it. v2.6.4 received it by hand.
+- **CI compiles every Python file with warnings as errors** (`python -X dev -W error -m compileall`)
+  before the tests, so a syntax or deprecation warning fails the build instead of scrolling past.
+
 ## [2.6.4] — 2026-09-24
 
 ### Added
@@ -1295,3 +1307,4 @@ publishing.
 [2.6.2]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.2
 [2.6.3]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.3
 [2.6.4]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.4
+[2.6.5]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.5

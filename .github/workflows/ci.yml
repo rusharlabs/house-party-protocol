@@ -46,6 +46,12 @@ jobs:
       - name: Install the test runner (the package itself needs nothing)
         run: python -m pip install --disable-pip-version-check pytest
 
+      # Why (2026-09-24): no step treated a warning as a failure, so a SyntaxWarning (an invalid
+      # escape in a regex, say) or a DeprecationWarning at import time would scroll past a green
+      # build. `-X dev -W error` turns both into errors while every file is compiled.
+      - name: Compile with warnings as errors
+        run: python -X dev -W error -m compileall -q -f hpp tests scripts
+
       # Why: `python -m pytest` (as opposed to a bare `pytest`) puts the current
       # working directory on sys.path[0], which is what lets `import hpp`
       # resolve without an install step; tests/conftest.py adds a defensive

@@ -9,6 +9,18 @@ cada módulo mantém sua própria versão no `plugin.json` e no `marketplace.jso
 
 ## [Unreleased]
 
+## [2.6.5] — 2026-09-24
+
+### Adicionado
+
+- **Publicado no PyPI.** A partir desta release, `pip install house-party-protocol` instala o wheel
+  que o workflow de release construiu e atestou, enviado por trusted publishing sem token armazenado.
+- **O bundle de proveniência é anexado a toda release** como
+  `house_party_protocol-<version>.intoto.jsonl`, para que a release possa ser conferida offline e
+  scanners que procuram arquivos de assinatura entre os assets o encontrem. A v2.6.4 o recebeu à mão.
+- **O CI compila todo arquivo Python com warnings como erro** (`python -X dev -W error -m compileall`)
+  antes dos testes, para que um warning de sintaxe ou de depreciação reprove o build em vez de passar batido.
+
 ## [2.6.4] — 2026-09-24
 
 ### Adicionado
@@ -1318,3 +1330,4 @@ publicar.
 [2.6.2]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.2
 [2.6.3]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.3
 [2.6.4]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.4
+[2.6.5]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.5

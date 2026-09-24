@@ -67,8 +67,9 @@ keeps the name — is not this project and receives no security support.
 
 - Source, issues, releases: `https://github.com/rusharlabs/house-party-protocol`
 - Claude Code plugin channel: `/plugin marketplace add rusharlabs/house-party-protocol`
-- pip: `pip install git+https://github.com/rusharlabs/house-party-protocol@<tag>` (a PyPI
-  release, when it exists, is announced in `CHANGELOG.md` and in the README first)
+- pip: `pip install git+https://github.com/rusharlabs/house-party-protocol@<tag>`, or from 2.6.5 on
+  `pip install house-party-protocol` from PyPI (project `house-party-protocol`, published only by
+  this repository's release workflow)
 - Web: `https://rusharlabs.com` (the contact channel for anything not suited to a public issue)
 
 Every module directory ships `CHECKSUMS.txt`, and every GitHub Release ships `SHA256SUMS`; a
@@ -79,4 +80,11 @@ signed statement that the release workflow, at the tagged commit, produced those
 
 ```bash
 gh attestation verify <file> --repo rusharlabs/house-party-protocol
+```
+
+The same statement is attached to the release as `house_party_protocol-<version>.intoto.jsonl`,
+for an offline check:
+
+```bash
+gh attestation verify <file> --bundle house_party_protocol-<version>.intoto.jsonl --repo rusharlabs/house-party-protocol
 ```

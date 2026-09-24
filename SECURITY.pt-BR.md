@@ -66,8 +66,9 @@ um fork que mantém o nome — não é este projeto e não recebe suporte de seg
 
 - Fonte, issues, releases: `https://github.com/rusharlabs/house-party-protocol`
 - Canal de plugin do Claude Code: `/plugin marketplace add rusharlabs/house-party-protocol`
-- pip: `pip install git+https://github.com/rusharlabs/house-party-protocol@<tag>` (uma
-  publicação no PyPI, quando existir, é anunciada primeiro no `CHANGELOG.md` e no README)
+- pip: `pip install git+https://github.com/rusharlabs/house-party-protocol@<tag>`, ou a partir da 2.6.5
+  `pip install house-party-protocol` pelo PyPI (projeto `house-party-protocol`, publicado só pelo
+  workflow de release deste repositório)
 - Web: `https://rusharlabs.com` (o canal de contato para o que não cabe numa issue pública)
 
 Todo diretório de módulo traz `CHECKSUMS.txt`, e toda GitHub Release traz `SHA256SUMS`; um
@@ -78,4 +79,11 @@ declaração assinada de que o workflow de release, no commit da tag, produziu e
 
 ```bash
 gh attestation verify <file> --repo rusharlabs/house-party-protocol
+```
+
+A mesma declaração vem anexada à release como `house_party_protocol-<version>.intoto.jsonl`,
+para conferência offline:
+
+```bash
+gh attestation verify <file> --bundle house_party_protocol-<version>.intoto.jsonl --repo rusharlabs/house-party-protocol
 ```

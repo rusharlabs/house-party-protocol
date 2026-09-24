@@ -34,7 +34,7 @@ person's interpreter, do not work around a missing `git`.
 ## Step 2 — install the CLI
 
 ```bash
-pip install git+https://github.com/rusharlabs/house-party-protocol@v2.6.4
+pip install git+https://github.com/rusharlabs/house-party-protocol@v2.6.5
 ```
 
 `pipx install git+…` works the same way. The package ships its own manifest and benchmark
