@@ -9,6 +9,17 @@ cada módulo mantém sua própria versão no `plugin.json` e no `marketplace.jso
 
 ## [Unreleased]
 
+## [2.6.3] — 2026-09-24
+
+### Alterado
+
+- **O site é publicado por um workflow.** Um workflow `Pages` publica `docs/` a cada push na
+  `main` (e sob demanda), com actions fixadas por commit e escrita no Pages só no job de deploy. O
+  builder legado por branch não rodou em três releases seguidas.
+- **Uma release só chega à `main` depois que os checks passam.** O commit sobe numa branch de
+  release, os três checks obrigatórios rodam no pull request dela, e a `main` avança para esse
+  mesmo commit — as regras de proteção agora valem também para administradores.
+
 ## [2.6.2] — 2026-09-24
 
 ### Corrigido
@@ -1290,3 +1301,4 @@ publicar.
 [2.6.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.0
 [2.6.1]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.1
 [2.6.2]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.2
+[2.6.3]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.3

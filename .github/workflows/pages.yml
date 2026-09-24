@@ -1,0 +1,41 @@
+name: Pages
+
+# Why: the legacy branch builder (main, /docs) did not run for three consecutive pushes, and each
+# site update had to be requested by hand. This workflow deploys docs/ on every push to main, so
+# the site follows the code and a failed deploy is visible in the run list like any other job.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Why: read-only by default; only the deploy job may write to Pages.
+permissions:
+  contents: read
+
+# Why: one deploy at a time, and a deploy already running is allowed to finish.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Configure Pages
+        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
+      - name: Upload the site
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: docs
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1

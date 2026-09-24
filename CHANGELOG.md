@@ -9,6 +9,17 @@ keeps its own version in `plugin.json` and in `marketplace.json`.
 
 ## [Unreleased]
 
+## [2.6.3] — 2026-09-24
+
+### Changed
+
+- **The site is published by a workflow.** A `Pages` workflow deploys `docs/` on every push to
+  `main` (and on demand), with actions pinned to commits and write access to Pages only in the
+  deploy job. The legacy branch builder did not run for three consecutive releases.
+- **A release reaches `main` only after its checks pass.** The commit goes up on a release
+  branch, the three required checks run on its pull request, and `main` then moves to that same
+  commit — the protection rules now apply to administrators too.
+
 ## [2.6.2] — 2026-09-24
 
 ### Fixed
@@ -1267,3 +1278,4 @@ publishing.
 [2.6.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.0
 [2.6.1]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.1
 [2.6.2]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.2
+[2.6.3]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.3
