@@ -73,3 +73,10 @@ keeps the name — is not this project and receives no security support.
 
 Every module directory ships `CHECKSUMS.txt`, and every GitHub Release ships `SHA256SUMS`; a
 file whose hash is not in them did not come from here.
+
+From 2.6.4 on, the wheel and the sdist of every release also carry build provenance: a
+signed statement that the release workflow, at the tagged commit, produced those bytes.
+
+```bash
+gh attestation verify <file> --repo rusharlabs/house-party-protocol
+```

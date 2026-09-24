@@ -72,3 +72,10 @@ um fork que mantém o nome — não é este projeto e não recebe suporte de seg
 
 Todo diretório de módulo traz `CHECKSUMS.txt`, e toda GitHub Release traz `SHA256SUMS`; um
 arquivo cujo hash não está neles não veio daqui.
+
+A partir da 2.6.4, o wheel e o sdist de toda release trazem também proveniência de build: uma
+declaração assinada de que o workflow de release, no commit da tag, produziu esses bytes.
+
+```bash
+gh attestation verify <file> --repo rusharlabs/house-party-protocol
+```

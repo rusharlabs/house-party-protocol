@@ -9,6 +9,21 @@ keeps its own version in `plugin.json` and in `marketplace.json`.
 
 ## [Unreleased]
 
+## [2.6.4] — 2026-09-24
+
+### Added
+
+- **Build provenance for every release.** The wheel and the sdist are attested by the release
+  workflow after they were installed and run on three systems; `gh attestation verify <file>
+  --repo rusharlabs/house-party-protocol` checks where the bytes came from. The identity token
+  lives in a job of its own, never on the runner that downloads build packages.
+- **OpenSSF Scorecard.** A weekly analysis (and one on every push to `main` and every change to
+  branch protection) publishes the score and sends its findings to code scanning.
+- **PyPI publishing, ready and off.** A trusted-publishing job uploads the release with no stored
+  token once the repository variable `PYPI_PUBLISH` is `true`; until the publisher is registered
+  on PyPI it does not run, and installation stays `pip install git+…@<tag>`.
+- **Live badges.** The README shows the CI state, the latest release and the Scorecard score.
+
 ## [2.6.3] — 2026-09-24
 
 ### Changed
@@ -1279,3 +1294,4 @@ publishing.
 [2.6.1]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.1
 [2.6.2]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.2
 [2.6.3]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.3
+[2.6.4]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.4

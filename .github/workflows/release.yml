@@ -251,9 +251,40 @@ jobs:
           run(sys.executable, "-m", "hpp", "benchmark", "-k", "3")
           run(sys.executable, "-m", "hpp", "init", "--target", "your-repo", "--non-interactive", "--no-animation")
 
+  # Why: a checksum proves the file did not change after it was listed; it does not prove where
+  # the file came from. Build provenance signs the statement "this workflow, at this commit, made
+  # these bytes", and `gh attestation verify <file> --repo rusharlabs/house-party-protocol`
+  # checks it. It runs in a job of its own, after the wheel was installed and run on three
+  # systems, so the identity token never shares a runner with the build's package downloads.
+  attest:
+    name: build provenance for the wheel and sdist
+    needs: [build, install]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    steps:
+      - name: Fetch the distribution files
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: dist
+          path: dist
+
+      - name: Verify SHA256SUMS against the downloaded files
+        working-directory: dist
+        run: sha256sum --check SHA256SUMS
+
+      - name: Attest
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: |
+            dist/*.whl
+            dist/*.tar.gz
+
   release:
     name: GitHub Release
-    needs: [verify, build, install]
+    needs: [verify, build, install, attest]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -287,3 +318,36 @@ jobs:
             --title "$TAG" \
             --notes-file notes/release-notes.md \
             --verify-tag
+
+  # Why: PyPI is where `pip install house-party-protocol` looks, and trusted publishing lets this
+  # job upload without any stored token -- PyPI accepts the identity of this workflow, in the
+  # `pypi` environment, and nothing else. The job stays off until the repository variable
+  # PYPI_PUBLISH is `true`, which is set only after the publisher is registered on PyPI; before
+  # that, a release would go red on an upload that was never going to be accepted.
+  pypi:
+    name: publish to PyPI
+    needs: [verify, release]
+    if: vars.PYPI_PUBLISH == 'true'
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/project/house-party-protocol/${{ needs.verify.outputs.version }}/
+    permissions:
+      id-token: write
+    steps:
+      - name: Fetch the distribution files
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: dist
+          path: dist
+
+      # Why: the uploader takes every file in dist/, and SHA256SUMS is not a distribution.
+      - name: Verify, then keep only the wheel and the sdist
+        working-directory: dist
+        run: |
+          sha256sum --check SHA256SUMS
+          rm SHA256SUMS
+          ls -l
+
+      - name: Publish
+        uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2

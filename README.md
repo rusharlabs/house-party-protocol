@@ -6,6 +6,9 @@
 <p align="center"><sub>spec-driven &nbsp;·&nbsp; wave-driven &nbsp;·&nbsp; lane-isolated</sub></p>
 
 <p align="center">
+  <a href="https://github.com/rusharlabs/house-party-protocol/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/rusharlabs/house-party-protocol/actions/workflows/ci.yml/badge.svg?branch=main"></a>
+  <a href="https://github.com/rusharlabs/house-party-protocol/releases/latest"><img alt="Release" src="https://img.shields.io/github/v/release/rusharlabs/house-party-protocol?color=FF6A00"></a>
+  <a href="https://scorecard.dev/viewer/?uri=github.com/rusharlabs/house-party-protocol"><img alt="OpenSSF Scorecard" src="https://api.scorecard.dev/projects/github.com/rusharlabs/house-party-protocol/badge"></a>
   <a href="LICENSE"><img alt="MIT" src="https://img.shields.io/badge/license-MIT-0F1113"></a>
   <a href="#quickstart"><img alt="Python 3.10+" src="https://img.shields.io/badge/Python-3.10%2B-FF6A00"></a>
   <img alt="Claude Code and Codex CLI" src="https://img.shields.io/badge/hosts-Claude%20Code%20%7C%20Codex%20CLI-F4F1EB">
@@ -113,7 +116,7 @@ third-party packages. CI exercises Python 3.10 to 3.13 on Linux, macOS and Windo
 (`.github/workflows/ci.yml`); older interpreters are not promised because nothing measures them.
 
 ```bash
-pip install git+https://github.com/rusharlabs/house-party-protocol@v2.6.3
+pip install git+https://github.com/rusharlabs/house-party-protocol@v2.6.4
 hpp doctor
 hpp init --target ../your-repo
 ```
