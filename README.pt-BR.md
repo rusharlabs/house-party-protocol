@@ -114,7 +114,7 @@ nenhum pacote de terceiro. A CI exercita Python 3.10 a 3.13 em Linux, macOS e Wi
 (`.github/workflows/ci.yml`); interpretadores mais antigos não são prometidos porque nada os mede.
 
 ```bash
-pip install git+https://github.com/rusharlabs/house-party-protocol@v2.6.1
+pip install git+https://github.com/rusharlabs/house-party-protocol@v2.6.2
 hpp doctor
 hpp init --target ../your-repo
 ```
@@ -207,9 +207,9 @@ primeiro e aplica só numa segunda invocação explícita:
 
 ```bash
 python installers/kit-forge-1.4.2/kit_doctor.py install \
-  --kit frameworks/operator-kit-1.6.1 --host codex --target ../your-repo
+  --kit frameworks/operator-kit-1.6.2 --host codex --target ../your-repo
 python installers/kit-forge-1.4.2/kit_doctor.py install \
-  --kit frameworks/operator-kit-1.6.1 --host codex --target ../your-repo --apply
+  --kit frameworks/operator-kit-1.6.2 --host codex --target ../your-repo --apply
 ```
 
 O instalador faz parte deste repositório, em `installers/kit-forge-1.4.2/kit_doctor.py`, ao
@@ -262,7 +262,7 @@ mesma resposta em JSON. Nenhum dos dois pede a um modelo que lembre de alguma co
 
 | módulo | versão | uma linha |
 |---|---|---|
-| `operator-kit` | 1.6.1 | done gate com exit code real, política de comando em `audit` ou `enforce`, loops governados com charter e condições de parada, runner standalone de `pass@k` / `pass^k`, preflight, dois agentes checkers entregues sem `Write` nem `Edit` |
+| `operator-kit` | 1.6.2 | done gate com exit code real, política de comando em `audit` ou `enforce`, loops governados com charter e condições de parada, runner standalone de `pass@k` / `pass^k`, preflight, dois agentes checkers entregues sem `Write` nem `Edit` |
 | `lane-kit` | 1.4.1 | um quadro de lanes para sessões concorrentes: claim, território, liveness, maker ≠ checker, e um roteador que escolhe checker de outro provedor |
 | `continuity-kit` | 1.4.1 | handoff escrito antes de parada ou compactação, comandos de re-derivação em vez de estado lembrado, guardas contra replay de passo concluído |
 | `health-kit` | 1.3.3 | sondas de serviço config-driven que gravam um cache que a statusline lê sem tocar a rede; saúde de serviço separada de saúde de dado |

@@ -255,6 +255,10 @@ def _block_was_edited(block: str) -> bool:
 def apply_block(target: Path, block: str, force: bool = False) -> tuple:
     """Returns (status, final_text). status: new | replaced | no-op | refused."""
     if not target.exists():
+        # Why: once a CLAUDE.md exists, Claude Code reads it instead of AGENTS.md. A project that kept
+        # its rules in AGENTS.md would lose them silently, so the new file imports it.
+        if (target.parent / "AGENTS.md").exists():
+            return "new", block + "\n@AGENTS.md\n"
         return "new", block
     raw = io.open(target, encoding="utf-8", newline="").read()
     # Why: a CLAUDE.md saved in CRLF would make the signature never match (the hash is of the LF
@@ -272,6 +276,13 @@ def apply_block(target: Path, block: str, force: bool = False) -> tuple:
     else:
         status, text = "replaced", current.replace(old, block, 1)
     return status, (text.replace("\n", eol) if eol != "\n" else text)
+
+
+def agents_md_shadowed(target: Path) -> bool:
+    """True when an AGENTS.md sits next to an existing CLAUDE.md that does not import it."""
+    if not target.is_file() or not (target.parent / "AGENTS.md").exists():
+        return False
+    return "@AGENTS.md" not in io.open(target, encoding="utf-8").read()
 
 
 def _equal_ignoring_signature(a: str, b: str) -> bool:
@@ -357,6 +368,24 @@ def _self_test() -> None:
         dest = write_file(target_ro, block)
         assert dest.name == FALLBACK_NAME and dest.exists()
         assert "RENAME IT TO CLAUDE.md" in dest.read_text(encoding="utf-8")
+
+    # a project that already keeps its instructions in AGENTS.md: once a CLAUDE.md exists, Claude Code
+    # reads only the CLAUDE.md, so a new one must import AGENTS.md or the person's rules go silent
+    with tempfile.TemporaryDirectory() as td:
+        proj = Path(td)
+        (proj / "AGENTS.md").write_text("# House rules\n", encoding="utf-8")
+        st, txt = apply_block(proj / "CLAUDE.md", block)
+        assert st == "new" and "\n@AGENTS.md\n" in txt, "a new CLAUDE.md must import the existing AGENTS.md"
+        assert txt.startswith(BEGIN), "the floor still comes first"
+        # an existing CLAUDE.md is the person's file: never rewritten, only reported
+        (proj / "CLAUDE.md").write_text("# Mine\n", encoding="utf-8")
+        assert agents_md_shadowed(proj / "CLAUDE.md"), "an existing CLAUDE.md without the import is reported"
+        (proj / "CLAUDE.md").write_text("# Mine\n@AGENTS.md\n", encoding="utf-8")
+        assert not agents_md_shadowed(proj / "CLAUDE.md")
+    with tempfile.TemporaryDirectory() as td:
+        # CONTROL: no AGENTS.md -> no import line and nothing to report
+        st, txt = apply_block(Path(td) / "CLAUDE.md", block)
+        assert "@AGENTS.md" not in txt and not agents_md_shadowed(Path(td) / "CLAUDE.md")
     print("self-test OK")
 
 
@@ -421,6 +450,10 @@ def main(argv) -> int:
               f"complete in {dest} — rename it to {out_path.name} and you are done.", file=sys.stderr)
         return 3
     print(f"claude_md_from_profile: block {status} in {dest} (source: {prof_path.name})")
+    if agents_md_shadowed(dest):
+        print(f"claude_md_from_profile: WARNING — {dest.parent / 'AGENTS.md'} exists and {dest.name} does not "
+              "import it. Claude Code reads only CLAUDE.md when both exist; add the line `@AGENTS.md` to "
+              f"{dest.name} to keep those instructions.", file=sys.stderr)
     return 0
 
 

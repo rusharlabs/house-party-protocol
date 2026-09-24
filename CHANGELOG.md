@@ -9,6 +9,15 @@ keeps its own version in `plugin.json` and in `marketplace.json`.
 
 ## [Unreleased]
 
+## [2.6.2] — 2026-09-24
+
+### Fixed
+
+- **operator-kit 1.6.2 — installing it no longer silences an existing `AGENTS.md`.** When a project
+  has both files, Claude Code reads only `CLAUDE.md`. `claude_md_from_profile.py` now writes
+  `@AGENTS.md` into a `CLAUDE.md` it creates next to an existing `AGENTS.md`, and warns (without
+  touching the file) when an existing `CLAUDE.md` does not import it.
+
 ## [2.6.1] — 2026-09-24
 
 Closes what the 2.6.0 reviews left open. No new instrument.
@@ -1257,3 +1266,4 @@ publishing.
 [2.5.8]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.5.8
 [2.6.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.0
 [2.6.1]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.1
+[2.6.2]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.2

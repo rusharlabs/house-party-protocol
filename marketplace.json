@@ -3,7 +3,7 @@
   "name": "house-party-protocol",
   "description": "House Party Protocol is a modular, cross-host harness for Claude Code and Codex CLI: executable gates, governed loops, cross-model review, provider-neutral routing by tier, continuity, deterministic evaluation and verifiable distribution.",
   "description_pt": "House Party Protocol é um harness modular e cross-host para Claude Code e Codex CLI: gates executáveis, loops governados, revisão cross-model, roteamento provider-neutral por tier, continuidade, avaliação determinística e distribuição verificável.",
-  "version": "2.6.1",
+  "version": "2.6.2",
   "owner": {
     "name": "Max Parisi",
     "url": "https://rusharlabs.com"
@@ -31,10 +31,10 @@
     {
       "name": "operator-kit",
       "displayName": "Operator Kit",
-      "source": "./frameworks/operator-kit-1.6.1",
+      "source": "./frameworks/operator-kit-1.6.2",
       "description": "The harness's operational module: executable gates, governed loops, standalone pass@k/pass^k, audit/enforce policy, preflight, spec-driven planning and two read-only checkers.",
       "description_pt": "Módulo operacional do harness: gates executáveis, loops governados, pass@k/pass^k standalone, política audit/enforce, preflight, planejamento spec-driven e dois checkers read-only.",
-      "version": "1.6.1",
+      "version": "1.6.2",
       "category": "productivity",
       "keywords": [
         "operator",

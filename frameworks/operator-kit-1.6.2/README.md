@@ -90,13 +90,13 @@ plugin cannot embed `statusLine`) — see `SETTINGS-WIRE.md` §3.
 
 ## Install by copy
 
-In the emitted distribution this module lives in `frameworks/operator-kit-1.6.1/`
+In the emitted distribution this module lives in `frameworks/operator-kit-1.6.2/`
 (the directory carries the version — state it once, in `KIT`). The installer is
 `installers/kit-forge-1.4.2/kit_doctor.py`; run it from the distribution root. It plans
 first and writes only on a second, explicit `--apply`:
 
 ```bash
-KIT=frameworks/operator-kit-1.6.1
+KIT=frameworks/operator-kit-1.6.2
 cp -r "$KIT" ../your-repo/operator-kit        # the copy itself (kit_doctor does not copy on claude-code)
 python installers/kit-forge-1.4.2/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo
 python installers/kit-forge-1.4.2/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo --apply

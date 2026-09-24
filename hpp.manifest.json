@@ -1,6 +1,6 @@
 {
   "protocol_version": "2.1",
-  "product_version": "2.6.1",
+  "product_version": "2.6.2",
   "name": "house-party-protocol",
   "hosts": [
     "claude-code",
@@ -92,8 +92,8 @@
   "modules": [
     {
       "id": "operator-kit",
-      "version": "1.6.1",
-      "path": "frameworks/operator-kit-1.6.1",
+      "version": "1.6.2",
+      "path": "frameworks/operator-kit-1.6.2",
       "requires": [],
       "integrates_with": [
         "continuity-kit",

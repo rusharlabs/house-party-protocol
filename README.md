@@ -113,7 +113,7 @@ third-party packages. CI exercises Python 3.10 to 3.13 on Linux, macOS and Windo
 (`.github/workflows/ci.yml`); older interpreters are not promised because nothing measures them.
 
 ```bash
-pip install git+https://github.com/rusharlabs/house-party-protocol@v2.6.1
+pip install git+https://github.com/rusharlabs/house-party-protocol@v2.6.2
 hpp doctor
 hpp init --target ../your-repo
 ```
@@ -206,9 +206,9 @@ plans first and applies only on a second, explicit invocation:
 
 ```bash
 python installers/kit-forge-1.4.2/kit_doctor.py install \
-  --kit frameworks/operator-kit-1.6.1 --host codex --target ../your-repo
+  --kit frameworks/operator-kit-1.6.2 --host codex --target ../your-repo
 python installers/kit-forge-1.4.2/kit_doctor.py install \
-  --kit frameworks/operator-kit-1.6.1 --host codex --target ../your-repo --apply
+  --kit frameworks/operator-kit-1.6.2 --host codex --target ../your-repo --apply
 ```
 
 The installer is part of this repository, at `installers/kit-forge-1.4.2/kit_doctor.py`, next
@@ -260,7 +260,7 @@ returns the same answer as JSON. Neither asks a model to remember anything.
 
 | module | version | one line |
 |---|---|---|
-| `operator-kit` | 1.6.1 | done gate with real exit codes, command policy in `audit` or `enforce`, governed loops with charter and stop conditions, standalone `pass@k` / `pass^k` runner, preflight, two checker agents shipped without `Write` or `Edit` |
+| `operator-kit` | 1.6.2 | done gate with real exit codes, command policy in `audit` or `enforce`, governed loops with charter and stop conditions, standalone `pass@k` / `pass^k` runner, preflight, two checker agents shipped without `Write` or `Edit` |
 | `lane-kit` | 1.4.1 | a lane board for concurrent sessions: claim, territory, liveness, maker ≠ checker, and a router that picks a checker from a different provider |
 | `continuity-kit` | 1.4.1 | handoff written before a stop or compaction, re-derivation commands instead of remembered state, guards against replaying finished steps |
 | `health-kit` | 1.3.3 | config-driven service probes that write a cache a statusline reads without touching the network; service health kept apart from data health |

@@ -2,7 +2,7 @@
 
 # SANITIZATION.pt-BR.md
 
-Kit: operator-kit 1.6.1
+Kit: operator-kit 1.6.2
 
 ## Sanitização aplicada
 - 11 padrão(ões) de exclusão de arquivo (ver manifesto interno da build — não distribuído)

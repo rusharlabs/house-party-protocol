@@ -9,6 +9,15 @@ cada módulo mantém sua própria versão no `plugin.json` e no `marketplace.jso
 
 ## [Unreleased]
 
+## [2.6.2] — 2026-09-24
+
+### Corrigido
+
+- **operator-kit 1.6.2 — instalá-lo não silencia mais um `AGENTS.md` existente.** Quando um projeto
+  tem os dois arquivos, o Claude Code lê só o `CLAUDE.md`. O `claude_md_from_profile.py` agora
+  escreve `@AGENTS.md` num `CLAUDE.md` que ele cria ao lado de um `AGENTS.md` existente, e avisa (sem
+  mexer no arquivo) quando um `CLAUDE.md` existente não o importa.
+
 ## [2.6.1] — 2026-09-24
 
 Fecha o que as revisões da 2.6.0 deixaram aberto. Nenhum instrumento novo.
@@ -1280,3 +1289,4 @@ publicar.
 [2.5.8]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.5.8
 [2.6.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.0
 [2.6.1]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.1
+[2.6.2]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.2

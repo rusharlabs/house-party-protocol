@@ -2,7 +2,7 @@
 
 # SANITIZATION.md
 
-Kit: operator-kit 1.6.1
+Kit: operator-kit 1.6.2
 
 ## Sanitization applied
 - 11 file exclusion pattern(s) (see the build's internal manifest — not distributed)
