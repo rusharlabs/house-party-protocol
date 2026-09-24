@@ -1,7 +1,7 @@
 """Structural validation of hpp.manifest.json and its coherence with pyproject/__init__.
 
 No network, no `~/.claude`, no machine environment variable: everything reads the
-hpp.manifest.json and pyproject.toml of this product-root itself, or builds a
+hpp.manifest.json and pyproject.toml of this project itself, or builds a
 synthetic manifest in tmp_path when the test needs an INVALID case to serve as
 a control.
 """
@@ -140,9 +140,9 @@ def test_the_real_manifest_passes_its_own_validator():
 
 def test_validate_distribution_in_source_mode_does_not_require_a_physical_module_directory():
     """
-    This product-root has neither marketplace.json nor the physical module
-    directories -- they only exist in the emitted copy, assembled by another
-    stage of the publication pipeline. `validate_distribution` recognizes this
+    A source tree has neither marketplace.json nor the physical module
+    directories -- they only exist in the emitted distribution built from it.
+    `validate_distribution` recognizes this
     as the "source-contract": the manifest is the source of truth even without
     the physical module content next to it.
     """
@@ -152,7 +152,7 @@ def test_validate_distribution_in_source_mode_does_not_require_a_physical_module
         # marketplace and the module directories exist, so the contract to verify is the other one --
         # and it has its own test. Skipping here is honest; asserting "source-contract" on the emitted
         # copy would be false.
-        pytest.skip("copia emitida (tem marketplace.json) — o contrato de distribuicao completo e coberto pelo teste seguinte")
+        pytest.skip("emitted copy (it has marketplace.json) — the full distribution contract is covered by the next test")
     result = validate_distribution(manifest, path.parent)
     assert result == {"checked": False, "status": "source-contract"}
 

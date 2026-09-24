@@ -2,7 +2,7 @@
 
 # Reliable coding example
 
-This fixture is a deterministic, offline benchmark for the harness. Its nine
+This fixture is a deterministic, offline benchmark for the harness. Its ten
 controls execute real HPP mechanisms with positive and negative cases; they do
 not replay pre-approved outcomes. A passing result proves only those declared
 controls, not model quality or remote service health.

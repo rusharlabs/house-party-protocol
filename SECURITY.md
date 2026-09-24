@@ -9,8 +9,8 @@ its note in `CHANGELOG.md`. Check yours with `hpp --version`.
 
 | version | supported |
 |---|---|
-| 2.4.x | yes — current line |
-| 2.0 – 2.3 | no — upgrade to 2.4.x |
+| 2.6.x | yes — current line |
+| 2.0 – 2.5 | no — upgrade to 2.6.x |
 | 1.x | no |
 
 Modules carry their own version (`plugin.json`, `marketplace.json`); a module fix ships as a new
@@ -37,6 +37,15 @@ published as a new version of the module, with the note in `CHANGELOG.md`.
 - A module hook or script that **executes** something that is not in its own code (a download,
   `curl | bash`, `eval` over external input).
 - A module that **reads or sends** a credential, `.env`, token or project data off the machine.
+- In `examples/typed-decisions/decide.py`, which by design reads a key from the environment of the
+  person who runs it and sends the text they give it to the endpoint they declared: sending anything
+  else, sending the key to any other host (a redirect included), or running without a person
+  invoking it.
+- In `hpp evidence run`, `hpp retrieval eval` and `hpp decide eval` (new in
+  2.6.0), which by design run the command the person
+  declares — `evidence run` as an argv with no shell, after refusing a command line that looks like
+  it carries a secret: running any other command, running it through a shell, or letting a
+  secret-like command line through to `evidence run`.
 - A gate that **passes** when it should block (the `ip_pii_linter` letting a secret into a module;
   the `done_gate` returning green without exit 0) — that is a vulnerability, not a bug.
 

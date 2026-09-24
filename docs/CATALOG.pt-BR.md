@@ -11,16 +11,16 @@ Documentos válidos para todos os kits: [`ARCHITECTURE.md`](ARCHITECTURE.md) · 
 
 | kit | versão | skills | commands | agents | hooks | rules | templates | scripts |
 |---|---|---:|---:|---:|---:|---:|---:|---:|
-| [kit-forge](#kit-forge) | 1.4.1 | 0 | 0 | 0 | 1 | 0 | 0 | 0 |
-| [operator-kit](#operator-kit) | 1.5.0 | 13 | 2 | 2 | 10 | 13 | 1 | 17 |
-| [continuity-kit](#continuity-kit) | 1.3.0 | 2 | 0 | 0 | 3 | 0 | 12 | 2 |
-| [lane-kit](#lane-kit) | 1.3.0 | 1 | 0 | 0 | 4 | 0 | 4 | 4 |
-| [health-kit](#health-kit) | 1.3.2 | 2 | 0 | 0 | 1 | 0 | 0 | 3 |
-| [claude-dev-kit](#claude-dev-kit) | 1.3.2 | 8 | 0 | 0 | 1 | 0 | 0 | 2 |
-| [supabase-pack](#supabase-pack) | 1.1.1 | 2 | 0 | 0 | 0 | 0 | 0 | 0 |
-| [agent-framework-wizard](#agent-framework-wizard) | 1.2.0 | 1 | 0 | 0 | 0 | 0 | 5 | 0 |
-| [dev-squad-kit](#dev-squad-kit) | 1.0.1 | 3 | 12 | 12 | 0 | 0 | 0 | 0 |
-| [gotcha-memory](#gotcha-memory) | 1.0.1 | 1 | 0 | 0 | 3 | 0 | 0 | 0 |
+| [kit-forge](#kit-forge) | 1.4.2 | 0 | 0 | 0 | 1 | 0 | 0 | 0 |
+| [operator-kit](#operator-kit) | 1.6.0 | 13 | 2 | 2 | 10 | 13 | 1 | 17 |
+| [continuity-kit](#continuity-kit) | 1.4.0 | 2 | 0 | 0 | 3 | 0 | 12 | 2 |
+| [lane-kit](#lane-kit) | 1.4.0 | 1 | 0 | 0 | 4 | 0 | 4 | 4 |
+| [health-kit](#health-kit) | 1.3.3 | 2 | 0 | 0 | 1 | 0 | 0 | 3 |
+| [claude-dev-kit](#claude-dev-kit) | 1.3.3 | 8 | 0 | 0 | 1 | 0 | 0 | 2 |
+| [supabase-pack](#supabase-pack) | 1.1.2 | 2 | 0 | 0 | 0 | 0 | 0 | 0 |
+| [agent-framework-wizard](#agent-framework-wizard) | 1.2.1 | 1 | 0 | 0 | 0 | 0 | 5 | 0 |
+| [dev-squad-kit](#dev-squad-kit) | 1.1.0 | 3 | 12 | 12 | 0 | 0 | 0 | 0 |
+| [gotcha-memory](#gotcha-memory) | 1.0.2 | 1 | 0 | 0 | 3 | 0 | 0 | 0 |
 | **total** | | **33** | **14** | **14** | **23** | **13** | **22** | **28** |
 
 ## kit-forge
@@ -80,11 +80,11 @@ Módulo operacional do harness: gates executáveis, loops governados, pass@k/pas
 
 **Scripts** — `audit_plan.py` · `claude_md_from_profile.py` · `debt_ledger.py` · `delta_inventory.py` · `determinism_harness.py` · `distill_corrections.py` · `done_gate.py` · `drift_check.py` · `gate_sheet_panel.py` · `goal_ledger.py` · `goal_review.py` · `health_probe.py` · `live_count.py` · `passk_eval.py` · `preflight.py` · `status_now.py` · `verify_ladder.py`
 
-**Documentos e registros** — `docs/ANTHROPIC-STANDARDS.md` · `docs/ANTHROPIC-STANDARDS.pt-BR.md` · `docs/MCP-RUNBOOK.md` · `docs/MCP-RUNBOOK.pt-BR.md` · `docs/RULES-EAGER-BUDGET.md` · `docs/RULES-EAGER-BUDGET.pt-BR.md`
+**Documentos e registros** — `docs/HOOK-SKILL-STANDARDS.md` · `docs/HOOK-SKILL-STANDARDS.pt-BR.md` · `docs/MCP-RUNBOOK.md` · `docs/MCP-RUNBOOK.pt-BR.md` · `docs/RULES-EAGER-BUDGET.md` · `docs/RULES-EAGER-BUDGET.pt-BR.md`
 
 ## continuity-kit
 
-Handoff-v1.1: uma sessao sobrevive a parada/clear/crash sem perder o proximo passo. Schema com git-block + re_derive_cmd (LC-1) + verify_first_cmd (LC-4), hooks Stop/PreCompact/SessionStart. Inclui doc-rollup (historico/evolucao com degradacao embutida) + pre-clear (longo-prazo + curto-prazo).
+Handoff-v1.1: uma sessao sobrevive a parada/clear/crash sem perder o proximo passo. Schema com git-block + re_derive_cmd (todo numero carrega o comando que o re-deriva ao vivo) + verify_first_cmd (conferir ao vivo antes de repetir qualquer acao que o handoff descreve), hooks Stop/PreCompact/SessionStart. Inclui doc-rollup (historico/evolucao com degradacao embutida) + pre-clear (longo-prazo + curto-prazo).
 
 **Skills**
 
@@ -107,7 +107,7 @@ Handoff-v1.1: uma sessao sobrevive a parada/clear/crash sem perder o proximo pas
 
 ## lane-kit
 
-N sessoes sem colisao. Lane board, maker!=checker cross-model, lock por diretorio, git-guard e territory-guard. O checker_router detecta Codex, Cursor e Gemini e escolhe um provider diferente do maker.
+N sessoes sem colisao. Lane board, maker!=checker cross-model, lock por diretorio, git-guard e territory-guard. O checker_router detecta Codex, Cursor e Gemini e escolhe um provider diferente do maker. Best-of-N: compete/select registram qual de N tentativas concorrentes venceu.
 
 **Skills**
 
@@ -130,7 +130,7 @@ N sessoes sem colisao. Lane board, maker!=checker cross-model, lock por diretori
 
 ## health-kit
 
-Sonda de saude de servicos (http/cmd) config-driven por profile.yaml + segmento de statusline com detalhe por-servico (api:OK db:DOWN), cache-first (statusline nunca toca rede). Doutrina embarcada: health de SERVICO != health de DADO. +dashboard-builder (Grafana/SigNoz, adaptado do ECC MIT).
+Sonda de saude de servicos (http/cmd) config-driven por profile.yaml + segmento de statusline com detalhe por-servico (api:OK db:DOWN), cache-first (statusline nunca toca rede). Doutrina embarcada: health de SERVICO != health de DADO. +dashboard-builder (Grafana/SigNoz).
 
 **Skills**
 
@@ -149,7 +149,7 @@ Sonda de saude de servicos (http/cmd) config-driven por profile.yaml + segmento 
 
 ## claude-dev-kit
 
-Ferramentas de construir ferramentas: skill-writer, hookify, plugin-dev, teaching, wiring reversivel, secret scan, tres skills adaptadas do ECC MIT e um registro auditavel de skills externas candidatas.
+Ferramentas de construir ferramentas: skill-writer, hookify, plugin-dev, teaching, wiring reversivel, secret scan, architecture-decision-records, search-first e skill-scout.
 
 **Skills**
 
@@ -172,7 +172,7 @@ Ferramentas de construir ferramentas: skill-writer, hookify, plugin-dev, teachin
 
 **Scripts** — `install_git_hook.py` · `wire_settings.py`
 
-**Documentos e registros** — `docs/hook-template.py` · `docs/SKILL-CANDIDATES.json` · `docs/SKILL-CONTRACT.md` · `docs/SKILL-CONTRACT.pt-BR.md` · `docs/skill-template.md` · `docs/skill-template.pt-BR.md`
+**Documentos e registros** — `docs/hook-template.py` · `docs/SKILL-CONTRACT.md` · `docs/SKILL-CONTRACT.pt-BR.md` · `docs/skill-template.md` · `docs/skill-template.pt-BR.md`
 
 ## supabase-pack
 
@@ -193,13 +193,13 @@ Wizard de 6 passos (check_python->check_git->check_deps->configure->validate->ge
 
 | skill | o que faz |
 |---|---|
-| `agent-framework-scaffold` | Runs the 6-step wizard that generates the skeleton of a new project (operator-profile.yaml + the chosen TEMPLATE-SET templates) — generic method (check environment → configure → validate → generate), rewritten from scratch. |
+| `agent-framework-scaffold` | Runs the 6-step wizard that generates the skeleton of a new project (operator-profile.yaml + the chosen templates) — check environment → configure → validate → generate. |
 
 **Templates** — `00-PROCESSES.template.md` · `00-READ-FIRST.template.md` · `00-STATE.template.md` · `00-VISION.template.md` · `agents`
 
 ## dev-squad-kit
 
-Squad com 12 papéis disponíveis como slash commands e subagents reais, tools explícitos e QA read-only, mais 3 skills de leitura/consolidação paralela token-safe. Não inclui árvore proprietária de tasks/templates.
+Squad com 12 papéis disponíveis como slash commands e subagents reais, tools explícitos e QA read-only, mais 3 skills de leitura/consolidação paralela token-safe. Não traz árvore de tasks/templates: os comandos de papel que a esperam (*create, *task, *workflow) precisam da sua.
 
 **Skills**
 

@@ -3,7 +3,8 @@
 # Tactical patterns
 
 Short commands to operate the kits without relying on implicit memory. Adjust
-paths to the emitted directory and read the plan before using `--apply`.
+paths to the emitted directory and read the plan before using `--apply`. Tips marked
+*new in 2.6.0* need version 2.6.0 or later.
 
 ### 1. Inventory before creating
 
@@ -32,7 +33,7 @@ rg -n -i 'decisão|decision|rejeitad|supersed' docs . --glob '*.md'
 ### 5. Run the preflight before the done gate
 
 ```bash
-python scripts/preflight.py --project .
+python frameworks/operator-kit-*/scripts/preflight.py --project .
 ```
 
 ### 6. Make the criterion fail before the fix
@@ -56,13 +57,13 @@ python caminho/do/script.py --self-test
 ### 9. Close multiple criteria with AND
 
 ```bash
-python scripts/done_gate.py "python -m pytest -q" "python -m py_compile app.py"
+python frameworks/operator-kit-*/scripts/done_gate.py "python -m pytest -q" "python -m py_compile app.py"
 ```
 
 ### 10. Declare a partial without painting it green
 
 ```bash
-python scripts/done_gate.py "python -m pytest -q" --declare-partial "falta validar o destino externo"
+python frameworks/operator-kit-*/scripts/done_gate.py "python -m pytest -q" --declare-partial "falta validar o destino externo"
 ```
 
 ### 11. Install a kit in plan mode first
@@ -149,9 +150,39 @@ python installers/kit-forge-*/tools/catalog_md.py . --write
 find . -type d -name skills -exec python installers/kit-forge-*/tools/skill_lint.py --all {} \;
 ```
 
-## Provenance
+### 25. Record an end-to-end run as evidence (new in 2.6.0)
 
-The tactical index format was inspired by the repository
-`shanraisshan/claude-code-best-practice`, MIT licence, commit
-`bde3f03174714fff4145d21cfda41ddd2ffffb28`. The selection, the texts and the commands
-on this page are an original implementation of House Party Protocol.
+```bash
+python -m hpp evidence run --id smoke-page --artifact out/report.html --artifact out/smoke.log -- python examples/evidence/smoke_page.py
+```
+
+### 26. Re-derive a bundle from the files on disk (new in 2.6.0)
+
+```bash
+python -m hpp evidence verify "$(ls -t .hpp/evidence/smoke-page-*.json | head -1)"
+```
+
+### 27. Measure a retriever before trusting it (new in 2.6.0)
+
+```bash
+python -m hpp retrieval eval examples/retrieval/suite.json --retriever-command '["python", "examples/retrieval/keyword_retriever.py"]'
+```
+
+### 28. Check that every citation resolves (new in 2.6.0)
+
+```bash
+python -m hpp cite check --text examples/citations/answer.md --context examples/citations/context.json
+```
+
+### 29. Measure a decider before trusting it (new in 2.6.0)
+
+```bash
+python -m hpp decide eval examples/typed-decisions/gotcha-family-suite.json --decider-command '["python", "examples/typed-decisions/baseline_decider.py"]'
+```
+
+### 30. Best-of-N is pass@N: select one, then still verify it (new in 2.6.0)
+
+```bash
+python multi-session/lane-kit-*/scripts/lane_board.py compete --task T-1 --items T-1a,T-1b --lane lead --model claude-opus
+python multi-session/lane-kit-*/scripts/lane_board.py select --task T-1 --winner T-1a --lane review --model gpt-5 --reason "smaller diff, same tests"
+```

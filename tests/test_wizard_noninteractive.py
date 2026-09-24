@@ -146,7 +146,7 @@ def test_asker_with_eof_on_stdin_falls_back_to_default_without_raising():
 
 
 def test_CONTROLE_interactive_mode_actually_asks(manifest, target):
-    """Control: with `interactive=True` and an injected asker, the three questions are
+    """Control: with `interactive=True` and an injected asker, every question is
     asked -- proves that the tests above do not pass through an interactive mode that never turns on."""
     manifest_data, manifest_path = load_manifest()
     calls: list[str] = []

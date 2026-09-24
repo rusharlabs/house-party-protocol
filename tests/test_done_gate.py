@@ -6,8 +6,6 @@ three ways a gate dies in silence are all closed here: an unknown predicate fail
 COMPILE, an unmeasured fact is `undetermined` (never a pass), and an empty gate is
 `undetermined` (never a pass). A git fact read through a shared index is not evidence,
 so it is `undetermined` too.
-
-Adapted from phodal/routa (MIT) — concept only, no code reused.
 """
 from __future__ import annotations
 

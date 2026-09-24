@@ -94,8 +94,8 @@ def test_every_subcommand_has_a_command_function_and_vice_versa():
     subcommands = _top_level_subcommand_names()
     functions = _command_function_names()
     assert subcommands == functions, (
-        f"subcomandos sem funcao command_*: {subcommands - functions}; "
-        f"funcoes command_* sem subcomando: {functions - subcommands}"
+        f"subcommands with no command_* function: {subcommands - functions}; "
+        f"command_* functions with no subcommand: {functions - subcommands}"
     )
 
 
@@ -137,10 +137,10 @@ def test_manifest_maps_cover_the_graph_and_map_views_exposed_in_the_parser():
         action for action in top_level.choices["map"]._actions if isinstance(action, argparse._SubParsersAction)
     )
     assert set(graph_view_action.choices) <= declared_maps, (
-        "graph --view expoe uma visao que o manifesto nao promete em 'maps'"
+        "graph --view exposes a view the manifest does not promise in 'maps'"
     )
     assert set(map_subparsers.choices) <= declared_maps, (
-        "map expoe uma visao que o manifesto nao promete em 'maps'"
+        "map exposes a view the manifest does not promise in 'maps'"
     )
 
 

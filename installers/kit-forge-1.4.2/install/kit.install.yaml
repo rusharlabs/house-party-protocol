@@ -1,0 +1,27 @@
+kit: kit-forge
+requires:
+  python: ">=3.8"
+  pyyaml: true
+  external_services: []
+verification:
+  - "python kit_doctor.py --self-test"
+  - "python ip_pii_linter.py --self-test"
+  - "python wire_settings.py --self-test"
+hosts:
+  claude-code:
+    # `.claude-plugin/plugin.json` exists and marketplace.json lists kit-forge, so it IS a
+    # plugin.
+    # What installing it as a plugin gives: the tools at a stable path, `${CLAUDE_PLUGIN_ROOT}`
+    # (kit_doctor.py, ip_pii_linter.py, kit_assembler.py, wire_settings.py, tools/skill_lint.py,
+    # tools/browse.py). It ships NO skills, NO commands and NO auto-wired hooks — the manifest
+    # has no skills/commands/hooks keys and there is no hooks/hooks.json;
+    # hooks/guard_origins.py --hook is an optional PreToolUse guard you wire by hand.
+    plugin: true
+    manual_gates: [hooks, PreToolUse]
+  codex:
+    plugin: false
+    agents: AGENTS.md
+    skills_path: .agents/skills
+    runtime_path: .agents/hpp/kit-forge
+    manual_gates: [hooks, PreToolUse]
+docs: README.md

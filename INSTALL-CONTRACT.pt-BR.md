@@ -75,7 +75,7 @@ requires:
   python: ">=3.9"          # opcional, default ">=3.8"
   pyyaml: true              # opcional, default false
   external_services: []     # ex.: supabase-pack declara [{name: Supabase, via: MCP, credenciais: "URL + anon key"}]
-                             # REGRA DURA: nunca declarar ANTHROPIC_API_KEY aqui — regime é assinatura/quota, não pay-per-use
+                             # REGRA DURA: nunca declarar ANTHROPIC_API_KEY aqui — a autenticação do modelo é do host, nunca do kit
 questions:                  # opcional — consumido pelo estágio `configure` E pelo modo --interview de wizards
   - id: <identificador>
     prompt: "<pergunta em pt-BR>"
@@ -135,7 +135,7 @@ Fontes NOVAS (`kit.install.yaml`, `install/wiring-spec.yaml`) usam o token neutr
 continuam assim. No Codex, `codex_skills.py` copia o runtime para
 `.agents/hpp/<kit>` e gera skills namespaced em `.agents/skills/`, substituindo o
 token somente nessas cópias. Hooks permanecem desligados. Um adaptador
-Cursor/Gemini futuro = nova entrada em `HOSTS` + bloco `hosts.<novo>:` nos YAMLs —
+de host novo = nova entrada em `HOSTS` + bloco `hosts.<novo>:` nos YAMLs —
 zero mudança nos 6 estágios. Não inventar
 vocabulário de evento "neutro" fingido: eventos tipo `Stop`/`PreCompact` são conceitos
 Claude Code e ficam declarados sob `hosts.claude-code`, honestamente.

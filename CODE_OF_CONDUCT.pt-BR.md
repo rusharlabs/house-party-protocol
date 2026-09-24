@@ -1,6 +1,6 @@
 [English](CODE_OF_CONDUCT.md) · [Português](CODE_OF_CONDUCT.pt-BR.md)
 
-# Código de Conduta do Pacto de Contribuidores
+# Código de Conduta
 
 ## Nosso compromisso
 

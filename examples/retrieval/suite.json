@@ -1,0 +1,30 @@
+{
+  "schema": "hpp.retrieval-suite/v1",
+  "name": "notes-service-help",
+  "version": "1",
+  "k": 3,
+  "description": "Seven synthetic questions over corpus.json, labelled by hand. Each case also carries the results keyword_retriever.py returned for it, so the suite can be replayed without running anything.",
+  "cases": [
+    {"id": "restore", "query": "how do I restore a backup",
+     "relevant": ["backup-restore"],
+     "results": [{"id": "backup-restore", "score": 2}]},
+    {"id": "retention", "query": "how long are backups kept",
+     "relevant": ["backup-schedule"],
+     "results": [{"id": "backup-schedule", "score": 2}]},
+    {"id": "disk-full", "query": "the disk is full and uploads fail",
+     "relevant": ["disk-full", "log-rotation"],
+     "results": [{"id": "disk-full", "score": 3}]},
+    {"id": "port", "query": "service will not start because the port is in use",
+     "relevant": ["port-conflict"],
+     "results": [{"id": "backup-restore", "score": 2}, {"id": "port-conflict", "score": 2}, {"id": "disk-full", "score": 1}]},
+    {"id": "export", "query": "export all notes to markdown",
+     "relevant": ["export-notes"],
+     "results": [{"id": "export-notes", "score": 2}, {"id": "remove-member", "score": 1}]},
+    {"id": "upgrade", "query": "upgrade to the new release",
+     "relevant": ["upgrade"],
+     "results": [{"id": "upgrade", "score": 3}, {"id": "disk-full", "score": 1}]},
+    {"id": "paraphrase", "query": "why does finding a note take so long",
+     "relevant": ["slow-search"],
+     "results": [{"id": "export-notes", "score": 1}]}
+  ]
+}

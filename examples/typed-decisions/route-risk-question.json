@@ -1,0 +1,12 @@
+{
+  "id": "route.risk",
+  "kind": "choice",
+  "options": ["low", "medium", "high"],
+  "ladder": true,
+  "instructions": "How much damage could this change do if it is wrong? Judge only from the text given.",
+  "criteria": {
+    "low": "local, easily reverted, no shared state touched",
+    "medium": "touches shared code or configuration, reversible with effort",
+    "high": "touches data, credentials, production, history or anything hard to undo"
+  }
+}

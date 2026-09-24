@@ -171,7 +171,7 @@ def test_the_packaged_copy_is_byte_identical_to_the_root_manifest() -> None:
 
 
 # --------------------------------------------------------------------------- examples in the wheel
-# Measured before these tests existed (2026-09-21, clean venv, `pip install <product-root>`, run
+# Measured before these tests existed (2026-09-21, clean venv, `pip install <checkout>`, run
 # from an empty directory): `hpp benchmark -k 3` and `hpp --self-test` exited 3 with
 # `internal error: FileNotFoundError: .../site-packages/examples/reliable-coding/...`, because the
 # wheel carried no examples/ and the CLI resolved the suite one level above the package.

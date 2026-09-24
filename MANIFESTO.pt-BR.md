@@ -28,7 +28,8 @@ O protocol é o conjunto de invariantes que todo módulo e todo host precisam re
 
 Quatro desses estão escritos em `hpp.manifest.json` como invariantes checados por máquina: um
 resultado verificado tem evidência registrada e um gate humano explícito; um checker é read-only em
-relação ao workspace do maker; um loop só avança por meio de um evento registrado; uma aprovação é
+relação ao workspace do maker (sem ferramenta `Write` ou `Edit`; o `Bash` fica, então a árvore de
+trabalho é comparada antes e depois da revisão); um loop só avança por meio de um evento registrado; uma aprovação é
 inválida assim que a spec, o commit ou o snapshot do repositório a que ela está vinculada mudam. Os
 demais são impostos pelos módulos que os implementam e pelos testes que os forçam a falhar.
 
@@ -102,7 +103,9 @@ mudar.
 - **Sem chamada a modelo.** O harness roteia trabalho para um tier e um id de provedor que você
   declarou. Ele não escolhe fornecedor, nome de modelo nem preço, e não guarda credencial. No
   momento em que chamasse um modelo, os vereditos dele dependeriam de algo que ele não consegue
-  reproduzir.
+  reproduzir. Uma decisão obtida em outro lugar pode ser registrada e medida (`hpp decide`); o
+  adaptador de exemplo que consulta um modelo hospedado mora em `examples/`, só roda quando uma
+  pessoa o roda, e a política o classifica como `MANUAL`.
 - **Sem banco de grafo.** Todo mapa é uma projeção de manifestos, eventos e JSON que você fornece.
   A mesma entrada produz os mesmos nós e arestas, na mesma ordem, e você pode fazer hash do
   resultado. Um grafo armazenado seria uma segunda fonte de verdade que deriva da primeira.

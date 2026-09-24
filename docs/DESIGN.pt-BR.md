@@ -23,11 +23,11 @@ divergir, e o `tests/test_design_system.py` reprova se um dia divergirem.
 Duas formas de usar, as duas corretas:
 
 ```html
-<!-- uma pagina dentro deste repositorio -->
+<!-- a page inside this repository -->
 <link rel="stylesheet" href="hpp.css">
 
-<!-- uma pagina que tem de sobreviver sozinha: cole o conteudo do arquivo -->
-<style>/* conteudo de docs/hpp.css */</style>
+<!-- a page that must survive on its own: paste the file's contents -->
+<style>/* contents of docs/hpp.css */</style>
 ```
 
 ⚠️ **Nunca a referencie por URL.** Toda página publicada aqui é autossuficiente por regra — uma
@@ -92,15 +92,13 @@ publicadas, então o que o senhor construir com eles fica parecido com o resto d
 
 ## O que um pull request com interface tem de satisfazer
 
-```
-[ ] usa o docs/hpp.css — linkado dentro do repo, ou embutido. Nunca por URL
-[ ] nao acrescenta uma quinta cor, nem em hex nem em rgb()
-[ ] nao busca nada: sem @import, sem @font-face, sem https:// em url()
-[ ] reusa os componentes acima antes de acrescentar seletor
-[ ] declara lang, e mantem o anel de foco
-[ ] traz o par .pt-BR, se for documento de raiz
-[ ] e' GERADO, se for morar junto das paginas geradas -- veja a secao seguinte
-```
+- [ ] usa o docs/hpp.css — linkado dentro do repo, ou embutido. Nunca por URL
+- [ ] nao acrescenta uma quinta cor, nem em hex nem em rgb()
+- [ ] nao busca nada: sem @import, sem @font-face, sem https:// em url()
+- [ ] reusa os componentes acima antes de acrescentar seletor
+- [ ] declara lang, e mantem o anel de foco
+- [ ] traz o par .pt-BR, se for documento de raiz
+- [ ] e' GERADO, se for morar junto das paginas geradas -- veja a secao seguinte
 
 Depois: `python -m pytest tests/test_design_system.py tests/test_docs_index.py -q`.
 

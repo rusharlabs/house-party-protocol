@@ -115,8 +115,15 @@ it: the command, its exit code or output, the version it ran against, its scope,
 different checkout, or a green status that nobody re-derived. A promise is not evidence; a
 `<promise>` tag does not pass the done gate.
 
-**Verify:** `python -m hpp event append --type evidence_recorded --data '{"work":"ITEM-1","ref":"pytest.txt"}'`
-records a reference; the loop cannot reach `verified` without at least one such event.
+**Verify:** new in 2.6.0 —
+after `python -m hpp event append --type work_started`,
+`python -m hpp evidence run --id smoke-page --artifact out/report.html --record-event -- python examples/evidence/smoke_page.py`
+runs the criterion, writes the bundle under `.hpp/evidence/` and appends `evidence_recorded` only
+when it passed; `python -m hpp evidence verify <record>` re-derives the bundle from disk. The
+lower-level alternative, `python -m hpp event append --type evidence_recorded --data '{"work":"ITEM-1","ref":"pytest.txt"}'`,
+which earlier releases also have, records a reference without running or hashing anything, after
+the same `work_started`. Either way, the loop cannot reach
+`verified` without at least one such event.
 
 ## attestation
 
@@ -132,10 +139,137 @@ then `python -m hpp attest verify .hpp/attestation.json --repo .` returns `valid
 file and it returns `blocked` with `snapshot_digest` in `mismatches`. The benchmark control
 `evidence-attestation` runs exactly this sequence.
 
+## typed decision
+
+**Is:** a record, `hpp.decision/v1`, of a small question answered outside the harness — by a
+rule, a person, a local model or a hosted typed-decision model — that the harness can check and
+measure. Its `authority` is always `advisory`. With `direction: raise-only` on an ordered question
+(`ladder: true`), the value a consumer may act on is the higher of the `declared` value and the
+advised one: advice can raise caution, never lower it. `abstention` and `instrument-failure` are
+outcomes, not errors, and neither changes a declared value; a timeout, an HTML page or a malformed
+answer is an instrument failure, never a verdict.
+
+**Is not:** a model call, an approval or a score. The harness calls no model itself:
+`hpp decide eval` runs the decider you name as a command (which may call one, with your key), or
+replays the records already in the suite. A record never grants or approves anything, and an
+`authority` other than `advisory` is refused. Version 1 measures `choice` questions only; a score
+or a probability of yes has no agreed definition of "correct", so those kinds are refused rather
+than reported as a vacuous 0%. The judged text never enters the record, only its sha256, and
+secret-like text is refused before it is hashed. A model record must name the pinned version that
+answered (an alias such as `-latest` is refused) and, unless it records an instrument failure, the
+hash of the raw response.
+
+**Verify:** new in 2.6.0 —
+`python -m hpp decide validate <record.json>` prints `"status": "valid"` and the `effective`
+value (`action` is `raised`, `kept`, `advised` or `none`) and exits 0; set `authority` to anything
+but `advisory` and it exits 2. `python -m hpp decide eval examples/typed-decisions/gotcha-family-suite.json --decider-command '["python", "examples/typed-decisions/baseline_decider.py"]'`
+reports coverage, selective accuracy, abstentions and instrument failures separately, and exits 0
+when every threshold holds, 1 when the gate fails and 2 for a suite that breaks the contract.
+
+## evidence bundle
+
+**Is:** a record, `hpp.evidence/v1`, of one run of a declared criterion command: the argv, the
+base commit, the exit code measured outside the model, a verdict, the byte count and sha256 of
+stdout and stderr (never the text), and the path, size and sha256 of every file that matches an
+artifact glob you declared. The verdict is `passed` only when the command exited 0 and every
+declared pattern matched a file this run wrote (a file left untouched from before the run is
+listed as `unchanged` and does not count); otherwise it is `failed`, `missing-artifacts`, `timeout` or
+`could-not-start`. `run` exits 0 when the bundle passed, 1 when it did not, and 2 when it was
+refused or `--record-event` could not append the event.
+
+**Is not:** a browser driver, a model call or a signature. hpp drives no browser and calls no
+model: it runs the command you name (an end-to-end spec, a test suite, any script) with
+`shell=False`. The record carries a hash of itself, which makes an edit visible and proves nothing
+about who wrote it — anyone who can write the file can rewrite the hash. So `verify` is
+reconciliation, and a checker that must not trust the maker re-runs `command` instead. `run` writes
+the record and whatever the command writes; a read-only checker points `--out` at its own scratch
+directory inside the workspace, or re-runs in its own lane. A command line that looks like it
+carries a secret, and an artifact or `--out` path outside the workspace, are refused before
+anything runs.
+
+**Verify:** new in 2.6.0 —
+`python -m hpp evidence run --id smoke-page --artifact out/report.html --artifact out/smoke.log -- python examples/evidence/smoke_page.py`
+prints `passed` and exits 0, and `python -m hpp evidence verify <record>`, on the `record_path` it
+printed, prints `valid` and exits 0. The same run with `--break` after the script writes both files and
+still exits 1 with `failed`; its record verifies as `not-evidence` (exit 1). Change
+`out/report.html` after a passed run and `verify` exits 2 with `blocked`.
+
+## retrieval ruler
+
+**Is:** a measurement of a retriever you declare, apart from any generation step. The retriever is
+a command that reads `{"query", "k"}` as JSON on stdin and prints ranked ids; the ruler scores the
+top k of each answer against the ids a labelled suite (`hpp.retrieval-suite/v1`) marks relevant,
+and reports hit@k, recall@k, precision@k, MRR and nDCG@k. The printed order is the ranking; a
+`score` is checked, never used to re-sort.
+
+**Is not:** an index, a search engine or a judge of the final answer. The harness runs no index
+and calls no model; without `--retriever-command` the ruler replays the results recorded in the
+suite. A retriever that answers and finds nothing relevant scores a real 0. A timeout, a non-zero
+exit, output that is not JSON or a duplicate id is an instrument failure: counted apart and
+excluded from the means. With no measured case the metrics are null and the gate says why, never
+0%.
+
+**Verify:** new in 2.6.0 —
+`python -m hpp retrieval eval examples/retrieval/suite.json --retriever-command '["python", "examples/retrieval/keyword_retriever.py"]'`
+measures seven cases with zero instrument failures and exits 1: the keyword baseline's mean
+recall@3 is 0.786, under the default `--min-recall 0.8`, so the shipped suite proves the ruler,
+not a retriever. With `--retriever-command '["python", "-c", "import sys; sys.exit(3)"]'` the same
+suite reports seven instrument failures and null metrics, and exits 1. The exit is 0 when the gate
+passes, 1 when it fails and 2 for a suite or argument that is refused.
+
+## citation check
+
+**Is:** a deterministic check, `hpp.citation-check/v1`, of the citation markers in a text against
+the ids of the context the text was written from. A marker is `[ID:<id>]` unless `--marker` gives a
+regex with one capture group for the id. A marker that names an id missing from the context
+(`UNKNOWN_ID`), a range or list inside one marker (`RANGE`) and an empty marker (`EMPTY_MARKER`)
+block with exit 2; more than `--max-per-sentence` markers in one sentence (`TOO_MANY`, default 4)
+and a sentence that states a number, percentage, amount or date with no marker (`UNCITED_CLAIM`)
+warn with exit 1. A clean text exits 0.
+
+**Is not:** a fact check. It never reads a cited source to see whether it supports the sentence:
+a marker that resolves proves the id exists, not that the source says what the sentence says.
+Sentence splitting and number detection are heuristics, written out in `hpp/citations.py`, and
+their known misses are warnings, never blocks. Context the text never cites is reported as a
+count, not as a finding. Empty text, secret-like text or context, and an unusable marker regex are
+refused with exit 2.
+
+**Verify:** new in 2.6.0 —
+`python -m hpp cite check --text examples/citations/answer.md --context examples/citations/context.json`
+prints verdict `ok` and exits 0. On a copy of `answer.md` with `[ID:glossary]` changed to
+`[ID:glossary-v2]` it exits 2 with `UNKNOWN_ID`; with `[ID:runbook-7]` removed instead it exits 1
+with `UNCITED_CLAIM`.
+
+## best-of-N selection
+
+**Is:** N lanes each build their own attempt at one task, and a reviewer keeps one. In the lane
+module, `lane_board.py compete --task T --items A,B[,C...]` declares the candidates, each built by
+a different lane; `lane_board.py select --task T --winner A` records the winner, once every
+candidate is `CHECKPOINT-READY` with evidence or `VERIFIED`, and only a reviewer whose lane differs
+from every builder lane and whose model family differs from every builder's family may write it.
+The losers become `NOT-SELECTED`, a terminal state that no transition leaves.
+
+**Is not:** a verification, and not a reliability measure. Choosing 1 of N is pass@N: one attempt
+out of N was good enough, which says nothing about whether the winner passes every run. The winner
+keeps its state, still needs its ordinary `VERIFIED` before `MERGED`, and its criterion still needs
+pass^k. A candidate cannot be `MERGED` while its task has no winner, and
+`select --checker-unavailable` records `DEFERRED`, never a winner.
+
+**Verify:** new in 2.6.0 —
+on a competition declared with `compete` whose candidates are `CHECKPOINT-READY`,
+`lane_board.py select` by a reviewer of the same model family as one builder exits 1 with
+"SAME model family"; a reviewer of another lane and another family exits 0, and moving the losing
+item to any state afterwards exits 1. `lane_board.py --self-test` runs every refusal of `compete`
+and `select` next to its control.
+
 ## maker and checker
 
-**Is:** two roles. The maker produces the change. The checker reviews it without the ability to
-edit, and reports achievements and defects with severity, file and line.
+**Is:** two roles. The maker produces the change. The checker reviews it and reports achievements
+and defects with severity, file and line, without file-editing tools: the host enforces the
+absence of `Write` and `Edit`. `Bash` remains available, and a shell can change whatever it
+reaches, so read-only is a promise, verified by comparing the working tree before and after the
+review — `git status --porcelain` captured on both sides must match, and a checker that changed
+the tree invalidates its own findings.
 
 **Is not:** two turns of the same agent, or the same agent under a different name. Attestation
 refuses a maker and checker whose names match ignoring case. The modules' checker agents declare
@@ -332,6 +466,37 @@ The difference between them is the flake rate.
 
 **Verify:** `python -m hpp eval run examples/reliable-coding/benchmark-suite.json -k 3 --gate both`
 prints both metrics and the gate; exit 0 on pass, 1 on fail.
+
+## command policy
+
+**Is:** a classifier that reads one command as text and returns one of three verdicts, `ALLOW`,
+`MANUAL` or `BLOCK`, with the rule that matched and its reason. The rules are fixed in
+`hpp/policy.py`; the first match wins, and every `BLOCK` rule is tried before any `MANUAL` rule.
+
+| verdict | rule | matches |
+|---|---|---|
+| `BLOCK` | `recursive-delete` | `rm` with both a recursive and a force option in any spelling (`-rf`, `-fr`, `-r -f`, `--recursive --force`), or `rmdir /s` |
+| `BLOCK` | `force-push` | `git push` with `--force` or `-f` |
+| `BLOCK` | `main-push` | `git push` naming `main` or `master` |
+| `BLOCK` | `pipe-to-shell` | `curl` or `wget` piped into a shell (`sh`, `bash`, `zsh`, `dash`, `ksh`), with or without `sudo` |
+| `BLOCK` | `destructive-sql` | `DROP` or `TRUNCATE` followed by `TABLE` or `DATABASE` |
+| `MANUAL` | `external-push` | any other `git push` |
+| `MANUAL` | `external-send` | `curl` or `wget` whose next word is an `http://` or `https://` URL |
+| `MANUAL` | `decision-advisor` | a command naming `typed-decisions/decide.py` — new in 2.6.0 |
+
+Anything else is `ALLOW` (rule `allow`), and an empty command is `ALLOW` (rule `empty`).
+
+**Is not:** a sandbox, a shell parser or a statement that a command is safe. It never runs the
+command, and `ALLOW` means that no rule matched: a transfer made by any other tool (`scp`, `rsync`, a
+Python one-liner) matches no rule and is `ALLOW`. The mode changes only the exit code, never the verdict: in
+`audit` every verdict exits 0; in `enforce`, `BLOCK` exits 2 and `MANUAL` exits 1. Whether a
+verdict stops anything depends on what calls it — a hook on Claude Code, a preflight command on
+Codex CLI.
+
+**Verify:** `python -m hpp policy check --mode enforce --command "rm -rf src"` prints `BLOCK` with
+rule `recursive-delete` and exits 2; `--command "git push origin feature"` prints `MANUAL` (rule
+`external-push`) and exits 1; `--command "python -m pytest -q"` prints `ALLOW` and exits 0; the
+same three with `--mode audit` print the same verdicts and exit 0.
 
 ## exit contract
 

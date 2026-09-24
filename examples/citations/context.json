@@ -1,0 +1,7 @@
+[
+  {"id": "runbook-7", "text": "The on-call rotation has 4 engineers and each shift lasts 7 days."},
+  {"id": "sla-2026", "text": "The service level objective is 99.5% monthly availability, measured from 2026-01-01."},
+  {"id": "postmortem-12", "text": "The March outage lasted 42 minutes and was caused by an expired certificate."},
+  {"id": "budget-q3", "text": "The Q3 infrastructure budget is $18,400."},
+  {"id": "glossary", "text": "An incident is any event that breaches the service level objective."}
+]

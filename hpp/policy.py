@@ -37,12 +37,21 @@ _BLOCK_RULES = (
     ("recursive-delete", re.compile(r"\brmdir\s+/s", re.I), _RECURSIVE_DELETE_REASON),
     ("force-push", re.compile(r"\bgit\s+push\b[^\n]*(?:--force|-f\b)", re.I), "force push rewrites shared history"),
     ("main-push", re.compile(r"\bgit\s+push\b[^\n]*\b(?:main|master)\b", re.I), "main branch must be merged through review"),
-    ("pipe-to-shell", re.compile(r"\b(?:curl|wget)\b[^|\n]*\|\s*(?:ba)?sh\b", re.I), "downloaded code must be inspected before execution"),
+    # Why: `| sudo bash`, `| sudo -E sh` and `| zsh` are the same act as `| sh`; requiring the shell
+    # right after the pipe let them through.
+    ("pipe-to-shell", re.compile(r"\b(?:curl|wget)\b[^|\n]*\|\s*(?:sudo(?:\s+-\S+)*\s+)?(?:ba|z|da|k)?sh\b", re.I),
+     "downloaded code must be inspected before execution"),
     ("destructive-sql", re.compile(r"\b(?:drop|truncate)\s+(?:table|database)\b", re.I), "destructive SQL needs an explicit backup gate"),
 )
 _MANUAL_RULES = (
     ("external-push", re.compile(r"\bgit\s+push\b", re.I), "external publication needs a human gate"),
-    ("external-send", re.compile(r"\b(?:curl|wget)\b\s+https?://", re.I), "external transfer needs a human gate"),
+    # Why: flags usually come before the URL (`curl -s https://...`); matching only a URL right
+    # after the command let the ordinary shape through as ALLOW.
+    ("external-send", re.compile(r"\b(?:curl|wget)\b[^|;&\n]*?\bhttps?://", re.I), "external transfer needs a human gate"),
+    # Why: the shipped typed-decision adapter sends the judged text to an endpoint the person
+    # declared; like curl to a URL, running it is an outbound transfer and needs a human gate.
+    ("decision-advisor", re.compile(r"typed-decisions[\\/]decide\.py", re.I),
+     "the example advisor sends text to an external decision endpoint"),
 )
 
 

@@ -21,16 +21,20 @@ python -m hpp benchmark -k 3 --json
 | event log | valid sequence reaches verified | verified without evidence | append is refused without creating the log |
 | WorkGraph | DAG with two waves | cycle A→B→A | compilation fails |
 | Lane Map | dead lane does not block | live overlap | collision appears |
-| Monitor Map | fresh signal | service online/data stale | separate dimensions |
+| Monitor Map | fresh signal | service probe fresh, data probe old | one status per monitor: the service reads healthy, the data reads stale |
 | context | source with hash and budget | secret-like material | compilation refuses |
 | routing | safe work uses economy | high risk without frontier | floor is not lowered |
 | graphs | same input twice | empty projection | identical and non-empty JSON |
+| evidence attestation | approval bound to the file bytes verifies as `valid` | file changed after approval | verify blocks on the snapshot mismatch |
 
 ## Criterion
 
 The benchmark runs each local control `k=3`; it does not use replayed outcomes as ready-made
-truth. Release-critical cases require `pass^k=1.00`. The JSON output includes version, platform,
-suite hash, attempts and individual results. ZIP integrity is a separate release gate.
+truth. Release-critical cases require `pass^k=1.00`. `hpp benchmark` always runs gate `both`
+(`pass@k >= 0.90` and `pass^k = 1.0`); `hpp eval run` defaults to gate `capability`
+(`pass@k >= 0.90` only) unless `--gate regression` or `--gate both` is passed. The JSON output
+includes version, platform, suite hash, attempts and individual results. ZIP integrity is a
+separate release gate.
 
 The benchmark proves only the checkout, the platform and the scenarios that ran. It does not
 measure the general quality of a model and does not turn a host without lifecycle hooks into

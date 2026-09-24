@@ -8,5 +8,5 @@ portions of the Software — that is how attribution travels with the code.
 If you redistribute a kit, keep the kit's own LICENSE file (each kit ships one). If you build
 on this work, a link back to https://rusharlabs.com is appreciated, not required.
 
-Third-party material adapted inside specific kits is declared in each kit's README, with the
-upstream license and origin (notably material from ECC, MIT, in health-kit and claude-dev-kit).
+Some kits include adapted third-party material. Its upstream copyright and license notice ships
+next to it inside the kit — keep those notices when you redistribute the kit.

@@ -21,16 +21,20 @@ python -m hpp benchmark -k 3 --json
 | event log | sequência válida chega a verified | verified sem evidência | append é recusado sem criar log |
 | WorkGraph | DAG com duas waves | ciclo A→B→A | compilação falha |
 | Lane Map | lane morta não bloqueia | sobreposição viva | colisão aparece |
-| Monitor Map | sinal fresco | serviço online/dado stale | dimensões separadas |
+| Monitor Map | sinal fresco | sonda do serviço recente, sonda do dado antiga | um status por monitor: o serviço lê healthy, o dado lê stale |
 | contexto | fonte com hash e orçamento | material semelhante a segredo | compilação recusa |
 | roteamento | trabalho seguro usa economy | alto risco sem frontier | não rebaixa o piso |
 | grafos | mesma entrada duas vezes | projeção vazia | JSON idêntico e não vazio |
+| atestação de evidência | aprovação vinculada aos bytes dos arquivos verifica como `valid` | arquivo alterado depois da aprovação | verify bloqueia pela divergência do snapshot |
 
 ## Critério
 
 O benchmark executa cada controle local `k=3`; não usa outcomes replayados como verdade pronta.
-Casos release-critical exigem `pass^k=1.00`. A saída JSON inclui versão, plataforma, hash da
-suite, tentativas e resultado individual. Integridade dos ZIPs é um gate separado da release.
+Casos release-critical exigem `pass^k=1.00`. `hpp benchmark` sempre roda o gate `both`
+(`pass@k >= 0.90` e `pass^k = 1.0`); `hpp eval run` usa por padrão o gate `capability`
+(só `pass@k >= 0.90`), a menos que se passe `--gate regression` ou `--gate both`. A saída JSON
+inclui versão, plataforma, hash da suite, tentativas e resultado individual. Integridade dos
+ZIPs é um gate separado da release.
 
 O benchmark prova somente o checkout, a plataforma e os cenários executados. Não mede qualidade
 geral de um modelo e não transforma um host sem lifecycle hook em enforcement automático.

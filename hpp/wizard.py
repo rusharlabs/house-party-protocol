@@ -37,14 +37,19 @@ PROFILE_RELPATH = Path(".hpp") / "profile.json"
 # saying the same thing.
 MIN_PYTHON = (3, 10)
 POLICY_MODES = ("audit", "enforce")
+# Why: a typed-decision advisor is something the user declares. hpp still calls no model and
+# stores no key; the profile records which provider was declared, and wire-suggest prints how to
+# integrate it.
+DECISION_ADVISORS = ("off", "typesafe", "openrouter", "compatible")
+# Why: model ids rot with the vendor, so the package names none; the example README shows one.
+_ADVISOR_KEY_ENV = {"typesafe": "TYPESAFE_API_KEY", "openrouter": "OPENROUTER_API_KEY", "compatible": None}
+_LOCAL_ENDPOINT = "http://127.0.0.1:<port>/v1/systemone"
 # Why: the public marketplace is the channel the README documents; a flag overrides it for forks.
 DEFAULT_MARKETPLACE = "rusharlabs/house-party-protocol"
 BENCHMARK_SUITE = Path("examples") / "reliable-coding" / "benchmark-suite.json"
 READINESS_CELLS = 20
 
-# Why (2026-09-23): `CATALOG` and `docs/` measured ZERO occurrences across hpp/*.py while the
-# distribution shipped eight generated documentation pages - the installer ended without ever
-# naming one of them. The control that the ruler worked: `hpp doctor`, 11 hits in the same files.
+# Why: the installer used to finish without naming any documentation page the distribution ships.
 # Each entry lists its variants in preference order; the first one that EXISTS is the one named,
 # because a literal would be wrong in a source checkout, where docs/CATALOG.* is only written at
 # emission time, and wrong again in a wheel, which carries no docs/ at all.
@@ -126,6 +131,8 @@ def questions(manifest: dict[str, Any]) -> list[dict[str, Any]]:
          "options": bundles, "default": "reliable-coding" if "reliable-coding" in bundles else bundles[0]},
         {"id": "policy_mode", "prompt": "How should the command policy run?", "type": "choice",
          "options": list(POLICY_MODES), "default": "audit"},
+        {"id": "decision_advisor", "prompt": "Optional typed-decision advisor to declare, if any (hpp never calls it)?",
+         "type": "choice", "options": list(DECISION_ADVISORS), "default": "off", "optional": True},
     ]
 
 
@@ -138,11 +145,11 @@ def _load_answer_file(path: Path) -> dict[str, Any]:
         raise InitUsageError(f"profile file is not valid JSON: {path}: {exc.msg}") from exc
     if not isinstance(loaded, dict):
         raise InitUsageError(f"profile file root must be a JSON object: {path}")
-    allowed = {"host", "bundle", "policy_mode", "modules"}
+    allowed = {"host", "bundle", "policy_mode", "modules", "decision_advisor"}
     unknown = sorted(set(loaded) - allowed)
     if unknown:
         raise InitUsageError(f"profile file has unknown keys: {', '.join(unknown)} (allowed: {', '.join(sorted(allowed))})")
-    for key in ("host", "bundle", "policy_mode"):
+    for key in ("host", "bundle", "policy_mode", "decision_advisor"):
         if key in loaded and not isinstance(loaded[key], str):
             raise InitUsageError(f"profile key {key} must be a string")
     if "modules" in loaded:
@@ -175,7 +182,7 @@ def prepare_options(args: Any, manifest: dict[str, Any], env: Optional[Mapping[s
         for key, value in _load_answer_file(Path(args.profile).expanduser()).items():
             answers[key] = value
             sources[key] = "file"
-    for key in ("host", "bundle", "policy_mode"):
+    for key in ("host", "bundle", "policy_mode", "decision_advisor"):
         value = getattr(args, key, None)
         if value:
             answers[key] = value
@@ -190,6 +197,8 @@ def prepare_options(args: Any, manifest: dict[str, Any], env: Optional[Mapping[s
         raise InstallError(f"unknown bundle: {answers['bundle']} (expected one of {', '.join(sorted(manifest['bundles']))})")
     if "policy_mode" in answers and answers["policy_mode"] not in POLICY_MODES:
         raise InstallError(f"unknown policy mode: {answers['policy_mode']} (expected audit or enforce)")
+    if "decision_advisor" in answers and answers["decision_advisor"] not in DECISION_ADVISORS:
+        raise InstallError(f"unknown decision advisor: {answers['decision_advisor']} (expected one of {', '.join(DECISION_ADVISORS)})")
     for module_id in answers.get("modules", []):
         if module_id not in known_modules:
             raise InstallError(f"unknown module: {module_id}")
@@ -410,7 +419,10 @@ def stage_profile(ctx: _Context) -> dict[str, Any]:
         else:
             answers[key] = question["default"]
             sources[key] = "default"
-            pending.append(key)
+            # Why: an optional integration left off assumes nothing about the user's systems, so it
+            # is not reported as a default the user still has to confirm.
+            if not question.get("optional"):
+                pending.append(key)
     modules = options.answers.get("modules")
     bundle = answers["bundle"]
     if modules:
@@ -428,6 +440,10 @@ def stage_profile(ctx: _Context) -> dict[str, Any]:
         "modules": selected,
         "policy_mode": answers["policy_mode"],
     }
+    if answers.get("decision_advisor", "off") != "off":
+        # Why: written only when declared, so every profile recorded before this option existed
+        # still compares equal on re-run instead of turning into a conflict.
+        profile["decision_advisor"] = answers["decision_advisor"]
     ctx.answers = {**answers, "modules": selected, "bundle_label": bundle_label}
     ctx.pending = pending
     ctx.profile = profile
@@ -556,7 +572,12 @@ def stage_wire_suggest(ctx: _Context) -> dict[str, Any]:
         lines.append(f"# {installer_rel} is not in this source tree; it ships with the emitted distribution")
     lines.append("")
     lines.append(f"# command policy as configured: python -m hpp policy check --mode {ctx.answers['policy_mode']} --command \"<cmd>\"")
-    # Why (A4, 2026-09-22): the block above says WHICH hooks to paste; the table below says what
+    # Why: the host commands are counted before the advisor block, which is run, not pasted.
+    to_paste = len([line for line in lines if line and not line.startswith("#")])
+    advisor = ctx.answers.get("decision_advisor", "off")
+    if advisor != "off":
+        lines.extend(_advisor_lines(advisor))
+    # Why: the block above says WHICH hooks to paste; the table below says what
     # each one is capable of. Consent to a list of filenames is consent to nothing.
     capabilities = [
         {"id": hook["id"], "module": hook["module"], "events": list(hook["events"]),
@@ -566,10 +587,38 @@ def stage_wire_suggest(ctx: _Context) -> dict[str, Any]:
     detail = {"host": host, "settings_path": seam.get("settings_path"), "manual_gates": list(seam["manual_gates"]),
               "installer": installer_rel, "installer_present": installer_present, "lines": lines, "writes": 0,
               "hook_capabilities": capabilities}
-    summary = f"{len([line for line in lines if line and not line.startswith('#')])} commands to paste · 0 files written"
+    summary = f"{to_paste} commands to paste · 0 files written"
     if capabilities:
         summary += f" · {len(capabilities)} hooks declaring capabilities"
     return _stage("wire-suggest", "ok", summary, detail)
+
+
+def _advisor_lines(advisor: str) -> list[str]:
+    key_env = _ADVISOR_KEY_ENV[advisor]
+    endpoint = f" --endpoint {_LOCAL_ENDPOINT}" if advisor == "compatible" else ""
+    argv = ["python", "examples/typed-decisions/decide.py", "--provider", advisor, "--model", "<pinned-model-id>"]
+    if advisor == "compatible":
+        argv += ["--endpoint", _LOCAL_ENDPOINT]
+    suite = "examples/typed-decisions/gotcha-family-suite.json"
+    baseline = json.dumps(["python", "examples/typed-decisions/baseline_decider.py"])
+    lines = [
+        "",
+        f"# optional typed-decision advisor: {advisor} - declared by you; hpp never calls it and never stores its key",
+        "# every call sends the judged text off this machine: run it by hand, never from a hook",
+        "# 1. put the key in YOUR shell only (hpp reads no key and writes none): "
+        f"export {key_env}=<your key>" if key_env else
+        "# 1. start your local or self-hosted decision server; pass its URL with --endpoint",
+        "# 2. measure before trusting - the lexical baseline first, then your advisor, on the same suite (from the product checkout):",
+        f"python -m hpp decide eval {suite} --decider-command '{baseline}'",
+        f"python -m hpp decide eval {suite} --decider-command '{json.dumps(argv)}'",
+        "# 3. ask one question and check the record it returns (with --declared, advice may only raise that value):",
+        f"python examples/typed-decisions/decide.py --provider {advisor} --model <pinned-model-id>{endpoint} "
+        "--question <question.json> --state-file <text.txt> --declared <value> > decision.json",
+        "python -m hpp decide validate decision.json",
+        "# <pinned-model-id>: the exact version from your provider's model list, never an alias such as -latest",
+        "# abstention and instrument failure change nothing; the policy classifies decide.py as MANUAL",
+    ]
+    return lines
 
 
 def stage_smoke(ctx: _Context) -> dict[str, Any]:
@@ -768,6 +817,8 @@ def _next_steps(status: str, options: InitOptions, ctx: _Context, stages: list[d
             flags += f" --{key.replace('_', '-')} {ctx.answers[key]}"
     if ctx.answers.get("bundle_label") == "custom":
         flags += " --modules " + ",".join(ctx.answers["modules"])
+    if ctx.answers.get("decision_advisor", "off") != "off":
+        flags += f" --decision-advisor {ctx.answers['decision_advisor']}"
     if status == "no-op":
         steps.append("already initialised with these answers — nothing to do")
     elif not options.apply:

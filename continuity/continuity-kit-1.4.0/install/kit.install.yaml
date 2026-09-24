@@ -1,0 +1,90 @@
+# kit.install.yaml — the declarative manifest of continuity-kit, read by
+# installers/kit-forge/kit_doctor.py (subcommand `install`, 6 stages:
+# detect -> prereqs -> profile -> configure -> wire-suggest -> smoke).
+# Do NOT edit wiring.settings.jsonc or plugin.json from here — this file
+# only DECLARES; the mechanics of the 6 stages live in kit_doctor.py.
+
+kit: continuity-kit
+
+requires:
+  python: ">=3.8"     # no file uses 3.9+/3.10+ syntax (all carry
+                      # `from __future__ import annotations`; checked by
+                      # grep — no native list[]/dict[], no match/case, no
+                      # removeprefix/removesuffix); the same floor as
+                      # kit_doctor.py stage_prereqs (sys.version_info>=(3,8))
+  pyyaml: true        # scripts/doc_rollup.py and scripts/state_mirror.py
+                      # really do import `yaml` — without PyYAML, doc_rollup.py
+                      # exits 2 ("PyYAML missing") and state_mirror.py becomes a
+                      # silent no-op (the profile loads {}); the hooks
+                      # (_handoff_io.py, handoff_guard.py, handoff_inject.py,
+                      # session_boot.py, turn_checkpoint.py) are pure stdlib and
+                      # work without PyYAML
+  external_services: []   # zero — the kit only touches the local filesystem +
+                          # the target project's git (no Supabase/API/MCP)
+
+# No `questions:` (YAGNI, deliberate — not an omission out of laziness):
+#   - rollup.yaml is copied from rollup.example.yaml by the `profile` stage
+#     (auto-detected through the glob `*.example.*`), but the real CONTENT
+#     (target file names, templates, max_bytes/max_entries per project)
+#     is manual config editing, not a question with a discrete answer —
+#     there is no sensible choice/bool/string for "which history documents
+#     does this project have".
+#   - `session.lane_id` (default "solo" in the handoff-v2.0 schema and in every
+#     hook — see `_lane_id()` in handoff_guard.py) is resolved at RUNTIME
+#     from the hook/harness payload on every session, not an install-time
+#     decision — asking it in `kit_doctor.py install` would change
+#     nothing in the installed kit.
+#   - the "strict mode" of the optional block in templates/settings-continuidade.
+#     template.json is not this kit's own configuration: applying it stays a
+#     manual human gate (see manual_gates), never an install-time question.
+
+# Actually executed, all exit=0:
+verification:
+  - "python hooks/_handoff_io.py --self-test"
+  - "python hooks/handoff_guard.py --self-test"
+  - "python hooks/handoff_inject.py --self-test"
+  - "python hooks/session_boot.py --self-test"
+  - "python hooks/turn_checkpoint.py --self-test"
+  - "python scripts/doc_rollup.py --self-test"
+  - "python scripts/state_mirror.py --self-test"
+  # optional eval (slower — 3 rounds x 4 cases, ~10s in total): it proves
+  # C1-C4 (round-trip, staleness, degraded-auto <5s, anti-replay LC-4
+  # actually running the verify_first_cmd) through the real hook interface
+  # (stdin JSON -> stdout JSON), not only the internal self-tests:
+  #   bash evals/handoff-roundtrip-C1-C4.sh
+
+hosts:
+  claude-code:
+    plugin: true    # .claude-plugin/plugin.json exists (name, displayName, version,
+                    # description, author, license MIT, keywords) and since 2.4.2 declares
+                    # "hooks": "./hooks/hooks.json" (SessionStart/Stop/PreCompact through
+                    # pyrun.sh) — the plugin arms the hooks; wiring.settings.jsonc remains
+                    # the manual path for whoever installs by copy.
+    wiring_spec: install/wiring.settings.jsonc   # exists — an ADDITIVE block to
+                    # paste into settings.json/settings.local.json (SessionStart
+                    # -> handoff_inject.py; Stop and PreCompact -> handoff_guard.py)
+    manual_gates: [SessionStart, Stop, PreCompact, permissions.deny]
+                    # SessionStart/Stop/PreCompact = the 3 hooks that
+                    # wiring.settings.jsonc asks you to paste — mutating settings.
+                    # json/settings.local.json is ALWAYS a human gate in this
+                    # doctrine (the classifier itself blocks self-editing of
+                    # settings/hooks). `permissions.deny` = the OPTIONAL block
+                    # of templates/settings-continuidade.template.json (strict
+                    # mode: denies Write/Edit in .claude/handoff/**, in this
+                    # kit's own hooks, and in settings.json/
+                    # settings.local.json) — also a suggestion only, never auto-applied.
+  codex:
+    plugin: false
+    agents: AGENTS.md
+    skills_path: .agents/skills
+    runtime_path: .agents/hpp/continuity-kit
+    manual_gates: [hooks, SessionStart, Stop, PreCompact, permissions.deny]
+
+# The human layer of this kit is README.md + README.pt-BR.md (written after the
+# first version of this manifest, which recorded their absence); the two SKILL.md
+# below carry the executable doctrine — I/O contract, exit codes, executed
+# examples, Proof.
+docs:
+  - README.md
+  - skills/pre-clear/SKILL.md
+  - skills/doc-rollup/SKILL.md

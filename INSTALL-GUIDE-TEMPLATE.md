@@ -51,8 +51,8 @@ name, via (MCP/direct API), credential.)
 
 **Hard rule:** the default is **"none — stdlib only"**. If the kit needs something external, name
 it exactly (e.g. Supabase via MCP, URL + anon key). **NEVER** `ANTHROPIC_API_KEY` — this
-ecosystem's regime is subscription/quota, not pay-per-use (see `partial-autonomy-slider` in the
-operator-kit and the subscription-only doctrine).
+kit family runs on the host's subscription/quota, not on pay-per-use API billing (see
+`rules/loop-cost-budget.md` in the operator-kit).
 
 ### 3. Install via plugin (the recommended path when `.claude-plugin/plugin.json` exists)
 ```bash

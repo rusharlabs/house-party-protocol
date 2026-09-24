@@ -1,0 +1,15 @@
+{
+  "description": "Ten synthetic help articles for a fictional self-hosted notes service. Written by hand for this example; not real documentation.",
+  "documents": [
+    {"id": "backup-schedule", "text": "Backups run every night at 02:00 and are kept for fourteen days in the backups folder."},
+    {"id": "backup-restore", "text": "To restore a backup, stop the service, copy the archive into the data folder and start the service again."},
+    {"id": "log-rotation", "text": "Logs rotate daily. Old log files are compressed and deleted after thirty days."},
+    {"id": "disk-full", "text": "When the disk is full the service refuses new uploads. Free space by pruning old archives."},
+    {"id": "upgrade", "text": "Upgrade by downloading the new release, running the migration command and restarting."},
+    {"id": "port-conflict", "text": "If the service cannot bind its port, another process is already listening on it."},
+    {"id": "user-invite", "text": "Invite a teammate from the members page; the invitation link expires after seven days."},
+    {"id": "remove-member", "text": "Removing a member revokes access immediately but keeps the notes they wrote."},
+    {"id": "export-notes", "text": "Export every note as Markdown files from the settings page."},
+    {"id": "slow-search", "text": "Search gets slow when the index is stale; rebuild the index from the admin page."}
+  ]
+}

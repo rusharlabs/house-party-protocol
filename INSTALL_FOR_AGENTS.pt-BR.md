@@ -34,7 +34,7 @@ da pessoa, não contorne a ausência do `git`.
 ## Passo 2 — instale a CLI
 
 ```bash
-pip install git+https://github.com/rusharlabs/house-party-protocol@v2.5.8
+pip install git+https://github.com/rusharlabs/house-party-protocol@v2.6.0
 ```
 
 `pipx install git+…` funciona igual. O pacote traz o próprio manifesto e a própria suíte de
@@ -58,16 +58,23 @@ para o passo 4 esperando que se resolva sozinho.
 ## Passo 4 — leia o plano para a pessoa. NÃO PULE
 
 ```bash
-hpp init --target <caminho-do-repositorio>
+hpp init --target <path-to-the-repository>
 ```
 
 Sem `--apply`, o `hpp init` **não escreve nada**. Ele roda seis estágios fixos e imprime um
 plano do que escreveria.
 
+Leia o plano em voz alta, e não só as linhas a colar. Quando os módulos escolhidos declaram
+hooks, ele imprime uma tabela HOOK CAPABILITIES antes do bloco WIRE: para cada hook, seus eventos,
+sua política de saída (`observe`, `warn` ou `block`) e seus grupos de capacidade. Essa tabela é o
+que os hooks conseguem fazer depois de ligados; as linhas a colar sozinhas são só nomes de
+arquivo. Deixe o `--decision-advisor` em `off`, a menos que a pessoa tenha pedido (novo na
+2.6.0).
+
 **Mostre esse plano à pessoa e espere o sim dela.** Só então:
 
 ```bash
-hpp init --target <caminho-do-repositorio> --apply
+hpp init --target <path-to-the-repository> --apply
 ```
 
 Isso não é cerimônia. O plano é o único instante em que a pessoa consegue ver o que está prestes
@@ -79,12 +86,14 @@ que este harness existe para impedir. Se você pular, instalou o harness violand
 O Claude Code é ligado pelo passo 4. O Codex CLI precisa de um comando a mais por módulo:
 
 ```bash
-installers/kit-forge-1.4.1/kit_doctor.py install --kit <kit> --host codex --target <repo> --apply
+installers/kit-forge-1.4.2/kit_doctor.py install --kit <kit> --host codex --target <repo> --apply
 ```
 
 As skills vão para `.agents/skills`; o runtime completo vai para `.agents/hpp`. Os hooks
-declarados em `hooks.json` pertencem ao Claude Code e **não** são ativados no Codex — diga isso,
-em vez de deixar a pessoa acreditar que um portão está armado quando não está.
+declarados em `hooks.json` pertencem ao Claude Code e **não** são ativados no Codex. O
+`hpp init --host codex` imprime a tabela HOOK CAPABILITIES mesmo assim; leia-a em voz alta como o
+que esses hooks fariam no Claude Code, e diga que nenhum deles roda aqui, em vez de deixar a
+pessoa acreditar que um portão está armado quando não está.
 
 ## Passo 6 — verifique, e reporte o código de saída, não a sua impressão
 
@@ -95,6 +104,10 @@ hpp benchmark
 
 O `hpp benchmark` reporta `pass@k` e `pass^k` separadamente e imprime o próprio veredito de
 gate. Cite as duas saídas à pessoa. Transcrição não é código de saída.
+
+Se o `hpp init` imprimiu uma seção DOCUMENTATION, aponte à pessoa as páginas que ela nomeia; cada
+uma foi encontrada no disco. Uma instalação por pip não carrega páginas de documentação, então
+depois do passo 2 a seção não aparece — não invente caminhos.
 
 ## Códigos de saída
 

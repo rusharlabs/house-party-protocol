@@ -7,18 +7,23 @@ change an operational decision.
 
 ## Types
 
-| View | Nodes | Useful edges |
-|---|---|---|
-| Capability Map | module, capability, host, bundle | provides, requires, supports, contains |
-| Agent Map | role, agent, permission, gate | can-do, checks, approves, hands-off |
-| Lane Map | session, lane, territory, item | owns, claims, overlaps, hands-off |
-| WorkGraph | spec, work unit, wave, acceptance | decomposes-to, depends-on, scheduled-in |
-| Execution Graph | event, action, tool, artifact | follows, produced, changed |
-| Evidence Graph | criterion, evidence, checker, verdict | supports, refutes, verified-by |
-| Context/Knowledge Map | source, hash, priority, compiled context | included, omitted |
-| Code Map | module, declared component | declares |
-| Monitor Map | probe, target, signal, consumer | observes, emits, stale-after, gates |
-| Memory Map | failure, family, gotcha, task | classified-as, recurred, applies-to |
+Each row names the command that produces it. Node kinds and edge relations are the literal
+`kind` and `relation` values in the output (`hpp/graph.py`, `hpp/maps.py`, `hpp/workgraph.py`).
+
+| View | Command | Nodes (`kind`) | Edges (`relation`) |
+|---|---|---|---|
+| Capability | `hpp graph --view capability` | host, module, capability, bundle | `provides` (module → capability) · `supports:<coverage>` (module → host) · `requires`, `integrates-with` (module → module) · `includes` (bundle → module) |
+| Operational | `hpp graph --view operational` | state, gate — from the manifest's `loop.transitions` | `<event>`, e.g. `work_started` (state → gate) · `permits` (gate → state) |
+| Agent roles | `hpp graph --view agent` | three fixed role nodes: `role:maker`, `role:checker`, `role:human-gate` | `submits` (maker → checker) · `reports` (checker → human-gate) · `approves-or-returns` (human-gate → maker) |
+| Evidence | `hpp graph --view evidence` | one fixed node each: criterion, evidence, verdict | `requires` (criterion → evidence) · `supports` (evidence → verdict) |
+| Code Map | `hpp graph --view code` | module, component | `declares` (module → component) |
+| Agent Map | `hpp map agent [--events <file>]` | role (the manifest's `roles`), module, capability, execution (one per recorded event) | `provides` (module → capability) · `then` (execution → next execution) |
+| Lane Map | `hpp map lane <file> [--now <ts>]` | lane, territory | `owns:<liveness>` (lane → territory). Collisions and liveness are separate fields, not edges |
+| Context/Knowledge Map | `hpp map context <file> --budget <n>` | context (the compiled context), source | `included` or `omitted` (source → context). Hash, priority and character count are in the `provenance` field |
+| Monitor Map | `hpp map monitor <file> --now <ts>` | none: a flat `monitors` list, one record per probe with the fields listed under Monitor Map below | none |
+| WorkGraph | `hpp work plan <spec>` | the items of the `work` list | `depends-on` (dependency → dependent). Waves, criteria and tier counts are fields |
+| Execution | none | No dedicated projection, although the manifest's `maps` list names `execution`. The closest is the execution nodes joined by `then` in `hpp map agent --events` | — |
+| Memory | none in `hpp/` | The gotcha-memory module records classified failures in `failures.jsonl` and derives gotchas from recurrence per task key and error family; it exports no graph | — |
 
 ## Event envelope
 
@@ -42,9 +47,25 @@ identity, model, causality or evidence.
 
 ## Lane Map
 
-A live lane combines session identity, role, declared model, branch, heartbeat and territory. A
-collision is only asserted when the patterns overlap and both lanes are alive by the same time
-ruler. A dead lane produces no false block; a red zone stays separate from exclusive territory.
+`hpp map lane` reads five fields per lane: `id`, `territory` (a non-empty list of paths),
+`exclusive` (default `true`), `status` (default `declared`) and `heartbeat_at` (Unix seconds).
+Other keys, such as the `role`, `model` and `branch` that the lane-kit registry records, are
+accepted and ignored: they do not appear in the output.
+
+Liveness is derived from one `--now` for every lane. A `status` of `closed`, `dead` or `inactive`
+is `dead`. Without `--now`, liveness is the declared `status`. With `--now`, a lane without
+`heartbeat_at` is `unknown`, and the heartbeat age gives `alive` (up to `--suspect-after`, default
+300), `suspect` (up to `--dead-after`, default 900) or `dead`. A `heartbeat_at` later than `--now`
+is an error, not a live lane.
+
+A collision is reported when two exclusive lanes hold paths that are equal or where one is a
+directory prefix of the other (`src` and `src/api`, not `src` and `srcx`). It is skipped only
+when either lane is `dead`; `suspect`, `unknown` and `declared` lanes still collide. The map
+reports collisions and blocks nothing.
+
+Red zones are not a concept of `hpp/maps.py`. They belong to the lane-kit hook
+`lane_territory_guard.py`, which warns (never blocks) on edits to `.claude/settings*.json`,
+`**/MEMORY.md` and any `red_zones` listed in `.claude/lanes/lanes.yaml`.
 
 ## WorkGraph
 
@@ -69,7 +90,12 @@ A monitor is an observation contract:
 id · target · type · cadence · freshness · last_signal · status · severity · cost · consumer_gate
 ```
 
-`online` and `fresh` are separate dimensions. The map can show a service online with stale data.
+Each monitor gets one `status`: `healthy` (the signal is at most `freshness` seconds old),
+`stale` (older), `skew` (dated more than `--skew-tolerance` seconds after `--now`, default 5) or
+`unknown` (no `last_signal`). `cadence` is validated but does not enter the status. There is no
+separate online field. A service that answers while its data is old is expressed as two probes
+with two targets, as the benchmark does: a `command` probe on the service reads `healthy` while a
+`timestamp` probe on the data reads `stale`.
 Continuous execution is opt-in for the host; the projection also works with manually fired probes.
 
 ## Knowledge and code, without overclaim
@@ -82,6 +108,6 @@ mandatory dependency of the harness.
 
 ## Export
 
-The views export stable JSON for machines and Mermaid for reading. Node and edge order is
-canonical; a timestamp only appears when it belongs to the source. The same input produces the
-same graph.
+`hpp graph` exports JSON (default) or Mermaid (`--format mermaid`); `hpp map` and `hpp work`
+export JSON only. Node and edge order is canonical; a timestamp only appears when it belongs to
+the source. The same input produces the same graph.

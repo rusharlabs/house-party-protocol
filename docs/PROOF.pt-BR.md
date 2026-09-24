@@ -11,14 +11,15 @@ Uma claim pública só entra aqui com reprodução.
 | grafos determinísticos | `python -m hpp graph --view operational --format json` duas vezes | hashes idênticos |
 | eval standalone | `python -m hpp eval run examples/reliable-coding/benchmark-suite.json -k 3 --gate both` | dez controles executáveis, sem replay pré-aprovado |
 | benchmark estável | `python -m hpp benchmark -k 3 --json` | pass^k 1.00 nos críticos |
-| artefatos íntegros | `python installers/kit-forge-1.4.1/kit_doctor.py marketplace .` | status ok |
+| régua de decisão | `python -m hpp decide eval examples/typed-decisions/gotcha-family-suite.json --decider-command '["python", "examples/typed-decisions/baseline_decider.py"]'` | zero falhas de instrumento; cobertura e acerto seletivo reportados à parte (a suíte que vem junto prova a régua, não um decisor) |
+| pacote de evidência | `python -m hpp evidence run --id smoke-page --artifact out/report.html --artifact out/smoke.log -- python examples/evidence/smoke_page.py`, depois `python -m hpp evidence verify <record>` | exit 0 `passed`, depois exit 0 `valid` |
+| pacote de evidência, controle | a mesma execução com `--break` depois do script; depois um registro que passou cujo `out/report.html` foi alterado em seguida | exit 1 `failed`, e `verify` exit 1 `not-evidence`; o artefato alterado faz o `verify` sair 2 `blocked` |
+| régua de recuperação | `python -m hpp retrieval eval examples/retrieval/suite.json --retriever-command '["python", "examples/retrieval/keyword_retriever.py"]'` | sete casos medidos, zero falhas de instrumento, as mesmas métricas do replay sem `--retriever-command`; exit 1 no gate padrão (a suíte que vem junto prova a régua, não um recuperador) |
+| régua de recuperação, controle | `python -m hpp retrieval eval examples/retrieval/suite.json --retriever-command '["python", "-c", "import sys; sys.exit(3)"]'` | exit 1, sete falhas de instrumento, métricas nulas, nunca 0% |
+| checagem de citação | `python -m hpp cite check --text examples/citations/answer.md --context examples/citations/context.json` | exit 0, veredito `ok` |
+| checagem de citação, controle | a mesma numa cópia de `answer.md` com `[ID:glossary]` trocado por `[ID:glossary-v2]` | exit 2, `UNKNOWN_ID` |
+| seleção best-of-N | `python multi-session/lane-kit-1.4.0/scripts/lane_board.py --self-test` | exit 0; o bloco de competições passa em toda checagem |
+| seleção best-of-N, controle | `lane_board.py select` numa competição declarada, por um revisor da mesma família de modelo de um construtor | exit 1, `SAME model family`; nenhum vencedor registrado |
+| artefatos íntegros | `python installers/kit-forge-1.4.2/kit_doctor.py marketplace .` | status ok |
 
 Resultados datados pertencem ao log da release, não a este documento vivo.
-
-## Proveniência da attestation
-
-O vínculo entre aprovação, hash da spec e snapshot foi pesquisado no repositório
-`chaseai-yt/claudex-loop`, licença MIT, commit
-`8cf5e2c1771c5151d90c12642391d0ba8fa71b0e`. O HPP não incorporou runner, prompts,
-nomes nem estrutura daquele projeto. `hpp.attest` é uma implementação clean-room,
-provider-neutral e integrada ao contrato local do HPP.

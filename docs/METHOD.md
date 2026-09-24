@@ -24,7 +24,7 @@ Then the first event is recorded, and the loop leaves `planned`.
 ```bash
 python -m hpp work plan SPEC.json
 python -m hpp work waves SPEC.json
-python multi-session/lane-kit-1.3.0/scripts/lane_board.py claim --help
+python multi-session/lane-kit-1.4.0/scripts/lane_board.py claim --help
 python -m hpp event append --type work_started --data '{"work":"ITEM-1","actor":"maker-a"}'
 ```
 
@@ -39,12 +39,18 @@ non-zero exit. Without the declaration it reports `NOT-DONE`. Silence is not a s
 undeclared partial is a failure.
 
 Once the criteria pass, the evidence is recorded in the event log with a reference to where the
-output lives. The loop moves to `evidenced`. It cannot move to `verified` without at least one
-such record.
+output lives. The primary way is `hpp evidence run --record-event` (new in
+2.6.0): it runs the criterion itself, measures the exit
+code, hashes the files declared with `--artifact`, writes a record under `.hpp/evidence/`, and
+appends `evidence_recorded` only when that bundle passed. It needs at least one `--artifact`,
+because an exit code alone leaves nothing to re-derive later. On a release without it, the same
+event is appended by hand with `hpp event append`, and it then carries only what the person wrote.
+The loop moves to `evidenced`. It cannot move to `verified` without at least one such record.
 
 ```bash
-python frameworks/operator-kit-1.5.0/scripts/done_gate.py "python -m pytest -q" "python -m py_compile app.py"
-python frameworks/operator-kit-1.5.0/scripts/done_gate.py "python -m pytest -q" --declare-partial "external target not yet validated"
+python frameworks/operator-kit-1.6.0/scripts/done_gate.py "python -m pytest -q" "python -m py_compile app.py"
+python frameworks/operator-kit-1.6.0/scripts/done_gate.py "python -m pytest -q" --declare-partial "external target not yet validated"
+python -m hpp evidence run --id ITEM-1 --artifact artifacts/pytest.xml --record-event -- python -m pytest -q --junitxml=artifacts/pytest.xml
 python -m hpp event append --type evidence_recorded --data '{"work":"ITEM-1","ref":"artifacts/pytest.txt"}'
 ```
 
@@ -60,11 +66,27 @@ instrument is trusted only after a control: pointed at a case known to be good a
 to be bad, it must answer differently. A checker that would say "zero problems" about a broken
 tree cannot be used to say "zero problems" about a good one.
 
+The same control applies to the instruments an agent leans on (all new in 2.6.0). A retriever is
+trusted only after `hpp retrieval eval` has measured it on labelled queries, and a decider only
+after `hpp decide eval` has, each with instrument failures counted apart. A report written from
+sources marks each claim with the id of its source, and `hpp cite check` proves that every marker
+resolves to a source the report was given and flags a number with no marker; it does not prove
+that the source says what the sentence says.
+
 When a checker approves, the approval is bound to bytes. The attestation records the spec hash,
 the base commit and a snapshot of every tracked and untracked file. If the checkout changes
 afterwards, the approval is blocked on verification and must be given again on the new bytes.
+The evidence therefore comes first and the attestation last. In your own project, list `.hpp/` in
+`.gitignore`: the event log and the evidence records are per-checkout state, and the snapshot
+covers every untracked file that is not ignored, so without that line an event or a record
+written after `attest create` blocks `attest verify`.
 
 ```bash
+python -m hpp cite check --text examples/citations/answer.md --context examples/citations/context.json
+python -m hpp retrieval eval examples/retrieval/suite.json \
+  --retriever-command '["python", "examples/retrieval/keyword_retriever.py"]'
+python -m hpp decide eval examples/typed-decisions/gotcha-family-suite.json \
+  --decider-command '["python", "examples/typed-decisions/baseline_decider.py"]'
 python -m hpp attest create --repo . --spec SPEC.md \
   --maker maker-a --checker checker-b --session review:001 \
   --verdict approved --output .hpp/attestation.json
@@ -73,10 +95,13 @@ python -m hpp attest verify .hpp/attestation.json --repo .
 
 ## 4. Review without a pen
 
-The checker is a different actor from the maker, preferably on a different provider, and holds
-no write tools. Without a pen, the checker cannot "fix it and move on"; it has to point, with
-severity, file and line, and the maker has to answer. That friction is the mechanism: it is what
-makes a process defect visible instead of silently patched.
+The checker is a different actor from the maker, preferably on a different provider, and holds no
+file-editing tools: the host enforces the absence of `Write` and `Edit`. `Bash` remains available,
+so read-only is a promise, verified by comparing the working tree before and after the review —
+`git status --porcelain` captured on both sides must match, and a checker that changed the tree
+invalidates its own findings. Without a pen, the checker cannot "fix it and move on"; it has to
+point, with severity, file and line, and the maker has to answer. That friction is the mechanism:
+it is what makes a process defect visible instead of silently patched.
 
 The checker's report keeps the same criteria across rounds, names findings by a stable code
 rather than an adjective, and never asks the maker something it could verify itself by running a
@@ -86,7 +111,7 @@ done, not as done by the maker.
 The checker's pass is an event. The loop moves from `evidenced` to `checked`.
 
 ```bash
-python multi-session/lane-kit-1.3.0/scripts/checker_router.py --maker claude --require
+python multi-session/lane-kit-1.4.0/scripts/checker_router.py --maker claude --require
 python -m hpp event append --type check_passed --data '{"work":"ITEM-1","checker":"checker-b"}'
 ```
 
@@ -105,10 +130,10 @@ extend the budget or close the work. Extending the budget is a human decision, n
 the loop grants itself.
 
 ```bash
-python frameworks/operator-kit-1.5.0/hooks/ralph_gate.py start \
+python frameworks/operator-kit-1.6.0/hooks/ralph_gate.py start \
   --charter "<objective>" --criteria "python -m pytest -q" --max-iterations 10
-python frameworks/operator-kit-1.5.0/hooks/ralph_gate.py status
-python frameworks/operator-kit-1.5.0/hooks/ralph_gate.py cancel
+python frameworks/operator-kit-1.6.0/hooks/ralph_gate.py status
+python frameworks/operator-kit-1.6.0/hooks/ralph_gate.py cancel
 ```
 
 ## 6. Resume after an interruption
@@ -165,8 +190,8 @@ person to paste, and the doctor is run afterwards to confirm the result.
 ```bash
 python -m hpp init --target ../your-repo
 python -m hpp init --target ../your-repo --apply
-python installers/kit-forge-1.4.1/kit_doctor.py install --kit <module-dir> --host codex --target ../your-repo
-python installers/kit-forge-1.4.1/kit_doctor.py install --kit <module-dir> --host codex --target ../your-repo --apply
+python installers/kit-forge-1.4.2/kit_doctor.py install --kit <module-dir> --host codex --target ../your-repo
+python installers/kit-forge-1.4.2/kit_doctor.py install --kit <module-dir> --host codex --target ../your-repo --apply
 python -m hpp doctor
 ```
 

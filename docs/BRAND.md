@@ -73,15 +73,13 @@ makes no external request.
 | `assets/hpp-icon-512.png` · `-256` · `-128` · `-64` · `-32` | the badge alone, square — avatar, favicon and app icon. Derived from the lockup by cropping, never redrawn |
 | `assets/hpp-logo-header.png` | the same lockup at 1440 px, for page headers. It is the approved artwork **resized** — not redrawn, not recoloured, not cropped — so a header and the README show one brand |
 | `assets/hpp-mark.svg` | the symbol as vector, for where raster does not serve (print, large scale). Drawn after the approved badge, so it reads as the same mark; where fidelity decides, use the raster lockup |
+| `assets/social-preview-1280x640.png` · `docs/assets/social-preview-1280x640.png` | social card, 1280×640 — the lockup, the five words, `spec-driven · wave-driven · lane-isolated` and the signature on black. The copy under `assets/` is the file to upload as the repository's social preview (GitHub has no API for it); the site's `og:image` points at the copy under `docs/assets/`. Both carry the same bytes (`sha256sum` on the two files) |
 
-⚰️ LEGADO 2026-09-23 · `assets/hpp-logo-light.svg` · `assets/hpp-logo-dark.svg` ·
-`assets/hpp-banner-light.svg` · `assets/hpp-banner-dark.svg` — substituídos por
-`assets/hpp-logo-header.png` (lockup) e `assets/hpp-mark.svg` (símbolo) · decidido em 2026-09-23,
-ao medir que os quatro carregam um desenho **anterior** ao lockup aprovado (nasceram em 20/09; a
-arte oficial, em 21/09) — flat em creme e laranja, não o cromado sobre preto. Esta tabela os
-descrevia como "o mesmo lockup em vetor", e não eram: as quatro páginas HTML abriam com uma marca
-que este documento veta na linha de cima. Os arquivos ficam no repositório como registro; usá-los
-publica a marca errada.
+**Deprecated:** `assets/hpp-logo-light.svg`, `assets/hpp-logo-dark.svg`,
+`assets/hpp-banner-light.svg` and `assets/hpp-banner-dark.svg` carry an earlier drawing of the
+mark (flat cream and orange), not the approved chrome-on-black lockup. Use
+`assets/hpp-logo-header.png` for the lockup and `assets/hpp-mark.svg` for the symbol. The four
+files stay in the repository for reference only; publishing them shows the wrong mark.
 
 The symbol does **not** encode the number of modules: the harness can grow without redrawing the
 brand.

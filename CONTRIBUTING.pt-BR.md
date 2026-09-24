@@ -22,18 +22,22 @@ o módulo, e os checksums são regenerados na emissão.
 4. **Hooks são WARN-only** salvo decisão explícita documentada no `hooks.json` do módulo.
 5. **Conserto de bug vem com o teste que falhava antes.** Um teste escrito depois do conserto
    prova que o código de agora funciona; não prova que consertou alguma coisa.
+6. **Mudança no harness, `hpp/<nome>.py`, vem com os testes sob `tests/`** — no arquivo que já
+   cobre esse módulo, ou num `tests/test_<nome>.py` novo (como têm `decision.py` e `policy.py`) —
+   e esse arquivo carrega ao menos um teste chamado `CONTROLE` que prova que ele consegue falhar.
+   Um arquivo de teste que não consegue falhar não se distingue de um ausente.
 
 ## Fluxo
 
 ```bash
 # 1. verify the module you are about to touch -- expect "status": "ok", exit 0
-python installers/kit-forge-1.4.1/kit_doctor.py verify frameworks/operator-kit-1.5.0
+python installers/kit-forge-1.4.2/kit_doctor.py verify frameworks/operator-kit-1.6.0
 
 # 2. edit the files INSIDE the emitted module (open an issue first if the change is large)
 
 # 3. prove it with what ships in this tree
-python installers/kit-forge-1.4.1/kit_doctor.py verify frameworks/operator-kit-1.5.0
-python installers/kit-forge-1.4.1/tools/skill_lint.py --all frameworks/operator-kit-1.5.0/skills --run-proofs --json skill-lint.json
+python installers/kit-forge-1.4.2/kit_doctor.py verify frameworks/operator-kit-1.6.0
+python installers/kit-forge-1.4.2/tools/skill_lint.py --all frameworks/operator-kit-1.6.0/skills --run-proofs --json skill-lint.json
 python -m hpp doctor
 python -m hpp benchmark -k 3
 python -m pytest tests -q
@@ -46,7 +50,7 @@ Em ordem: verifique o módulo que vai tocar (espere `"status": "ok"`, exit 0); e
 **dentro** do módulo emitido (abra uma issue antes se a mudança for grande); prove com o que viaja
 nesta árvore; abra o pull request contra `main` sem tocar `CHECKSUMS.txt`, o `.zip` do módulo nem
 a versão dele — os três são regenerados pela forja quando a mudança é emitida. Troque
-`frameworks/operator-kit-1.5.0` pelo módulo que você mudou; o layout é
+`frameworks/operator-kit-1.6.0` pelo módulo que você mudou; o layout é
 `<area>/<módulo>-<versão>/`, e o `marketplace.json` lista todos.
 
 O que cada comando do passo 3 diz:
@@ -82,7 +86,7 @@ O que cada comando do passo 3 diz:
   revisor ver que o teste discrimina em vez de falhar por motivo alheio.
 - **A evidência, colada como rodou:** o exit code e uma linha de saída de cada comando do
   passo 3 — inclusive o `"status": "corrupt"` do `verify` com os seus arquivos em `mismatches`.
-  Para mudança em `SKILL.md`, os marcadores `<!-- executado: AAAA-MM-DD · exit=N -->` renovados
+  Para mudança em `SKILL.md`, os marcadores `<!-- executed: YYYY-MM-DD · exit=N -->` renovados
   com a saída que você de fato viu.
 - **Uma entrada sob `## [Unreleased]` no `CHANGELOG.md` e no `CHANGELOG.pt-BR.md`**, com o mesmo
   significado nos dois.
@@ -127,7 +131,7 @@ Na prática, para quem contribui:
   você só escreve uma das duas línguas, diga no pull request e mande esse lado completo; os
   mantenedores escrevem o outro antes da emissão. O lado em inglês é o que vale.
 
-Um gate no repositório-fonte (`test_documentacao_bilingue.py`) reprova quem fura a regra: par
+Um gate na emissão reprova quem fura a regra: par
 ausente, link de topo que não aponta para o irmão, divergência estrutural (os dois lados carregam
 os mesmos títulos, na mesma ordem — tradução muda palavras, não estrutura), blocos de código
 diferentes (comando é comando em qualquer língua) e qualquer `.pt-BR.md` dentro da camada de

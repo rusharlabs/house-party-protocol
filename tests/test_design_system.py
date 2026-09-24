@@ -20,12 +20,13 @@ PRODUCT_ROOT = Path(__file__).resolve().parent.parent
 DOCS = PRODUCT_ROOT / "docs"
 CSS = DOCS / "hpp.css"
 BRAND = DOCS / "BRAND.md"
-# Why: as paginas GERADAS embutem a folha do gerador; o MANUAL e' escrito A MAO na fonte
-# (`scripts/kits/product-root/docs/`) e carrega o proprio CSS. Sao invariantes diferentes, e
-# juntar as duas num teste so' produziu uma falha que parecia defeito do produto e era da
-# assercao. Quem mover o MANUAL para o gerador muda esta lista -- e o teste cobra.
-GERADAS = ("CATALOG.html", "CATALOG.pt-BR.html", "index.html")
-A_MAO = ("MANUAL.html", "MANUAL.pt-BR.html")
+# Why: the GENERATED pages inline the generator's stylesheet; the MANUAL is written BY HAND in the
+# source (`docs/`) and carries its own CSS. They are different invariants,
+# and folding both into one test produced a failure that looked like a product defect and was a
+# defect of the assertion. Whoever moves the MANUAL into the generator changes this list -- and the
+# test holds them to it.
+GENERATED = ("CATALOG.html", "CATALOG.pt-BR.html", "index.html")
+HANDWRITTEN = ("MANUAL.html", "MANUAL.pt-BR.html")
 
 HEX = re.compile(r"#[0-9a-fA-F]{6}\b")
 # Why: BRAND.md allows a token at reduced alpha explicitly -- "a lighter step is the same token
@@ -36,75 +37,76 @@ HEX = re.compile(r"#[0-9a-fA-F]{6}\b")
 RGBA = re.compile(r"rgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})")
 # Why: BRAND.md — "No published asset carries a webfont: the stack is system-only, and the
 # self-contained material makes no external request."
-EXTERNO = re.compile(r"@import|url\(\s*['\"]?https?://|@font-face")
+EXTERNAL = re.compile(r"@import|url\(\s*['\"]?https?://|@font-face")
 
 
-def _paleta(texto: str) -> set[str]:
-    return {h.upper() for h in HEX.findall(texto)}
+def _palette(text: str) -> set[str]:
+    return {h.upper() for h in HEX.findall(text)}
 
 
-def test_a_folha_de_estilo_e_um_arquivo() -> None:
-    assert CSS.is_file(), "docs/hpp.css nao existe — o CSS voltou a viver so' dentro do gerador"
-    assert CSS.stat().st_size > 1000, "hpp.css existe mas esta vazio ou truncado"
+def test_the_stylesheet_is_a_file() -> None:
+    assert CSS.is_file(), "docs/hpp.css does not exist — the CSS is back to living only inside the generator"
+    assert CSS.stat().st_size > 1000, "hpp.css exists but is empty or truncated"
 
 
-def test_a_paleta_do_CSS_e_exatamente_a_do_BRAND() -> None:
-    do_css = _paleta(CSS.read_text(encoding="utf-8"))
-    do_brand = _paleta(BRAND.read_text(encoding="utf-8"))
-    assert do_brand, "BRAND.md deixou de declarar hex — sem isso nao ha com o que comparar"
-    assert do_css == do_brand, (
-        f"a paleta divergiu · so no CSS: {sorted(do_css - do_brand)} · "
-        f"so no BRAND: {sorted(do_brand - do_css)}"
+def test_the_CSS_palette_is_exactly_the_BRAND_palette() -> None:
+    from_css = _palette(CSS.read_text(encoding="utf-8"))
+    from_brand = _palette(BRAND.read_text(encoding="utf-8"))
+    assert from_brand, "BRAND.md stopped declaring hex values — without them there is nothing to compare against"
+    assert from_css == from_brand, (
+        f"the palette diverged · only in the CSS: {sorted(from_css - from_brand)} · "
+        f"only in BRAND: {sorted(from_brand - from_css)}"
     )
 
 
-def _triplas_do_brand() -> set[tuple[str, str, str]]:
-    """Os hex do BRAND.md como triplas decimais — o universo permitido para um rgb()."""
+def _brand_triples() -> set[tuple[str, str, str]]:
+    """The BRAND.md hex values as decimal triples — the allowed universe for an rgb()."""
     out = set()
-    for h in _paleta(BRAND.read_text(encoding="utf-8")):
+    for h in _palette(BRAND.read_text(encoding="utf-8")):
         out.add(tuple(str(int(h[i:i + 2], 16)) for i in (1, 3, 5)))
     return out
 
 
-def test_nenhuma_quinta_cor_entra_por_rgba() -> None:
-    permitidas = _triplas_do_brand()
-    assert permitidas, "sem hex no BRAND.md nao ha universo permitido — nao reportavel"
-    fora = [t for t in RGBA.findall(CSS.read_text(encoding="utf-8")) if t not in permitidas]
-    assert not fora, f"rgb() que nao e token do BRAND: {fora}"
+def test_no_fifth_colour_arrives_through_rgba() -> None:
+    allowed = _brand_triples()
+    assert allowed, "no hex in BRAND.md means no allowed universe — not reportable"
+    outside = [t for t in RGBA.findall(CSS.read_text(encoding="utf-8")) if t not in allowed]
+    assert not outside, f"rgb() that is not a BRAND token: {outside}"
 
 
-def test_o_CSS_nao_faz_pedido_externo() -> None:
-    achados = EXTERNO.findall(CSS.read_text(encoding="utf-8"))
-    assert not achados, f"pedido externo na folha de estilo: {achados}"
+def test_the_CSS_makes_no_external_request() -> None:
+    found = EXTERNAL.findall(CSS.read_text(encoding="utf-8"))
+    assert not found, f"external request in the stylesheet: {found}"
 
 
-def test_toda_pagina_embute_a_MESMA_folha() -> None:
-    # Why: as paginas continuam autossuficientes (inline), e o arquivo existe para quem
-    # contribui. Sao dois consumidores da mesma constante; este teste e' o que prova que
-    # continuam sendo a mesma coisa depois de qualquer edicao.
-    folha = CSS.read_text(encoding="utf-8").strip()
-    for nome in GERADAS:
-        p = DOCS / nome
-        assert p.is_file(), f"{nome} nao existe"
-        assert folha in p.read_text(encoding="utf-8"), f"{nome} embute um CSS diferente do arquivo"
+def test_every_page_inlines_the_SAME_stylesheet() -> None:
+    # Why: the pages stay self-contained (inline), and the file exists for contributors. They are
+    # two consumers of the same constant; this test is what proves they are still the same thing
+    # after any edit.
+    stylesheet = CSS.read_text(encoding="utf-8").strip()
+    for name in GENERATED:
+        p = DOCS / name
+        assert p.is_file(), f"{name} does not exist"
+        assert stylesheet in p.read_text(encoding="utf-8"), f"{name} inlines a CSS different from the file"
 
 
-def test_a_pagina_escrita_a_mao_usa_a_MESMA_paleta() -> None:
-    # Why: o MANUAL nao vem do gerador, entao nao se pode exigir a folha inteira. O que se pode
-    # exigir -- e e' o que importa -- e' que ele nao invente cor: a paleta dele tem de caber na
-    # do BRAND. Sem este teste, uma quinta cor entraria pela unica porta que o resto nao cobre.
-    do_brand = _paleta(BRAND.read_text(encoding="utf-8"))
-    for nome in A_MAO:
-        p = DOCS / nome
-        assert p.is_file(), f"{nome} nao existe"
-        fora = _paleta(p.read_text(encoding="utf-8")) - do_brand
-        assert not fora, f"{nome} usa cor fora do BRAND: {sorted(fora)}"
+def test_the_handwritten_page_uses_the_SAME_palette() -> None:
+    # Why: the MANUAL does not come from the generator, so the whole stylesheet cannot be required
+    # of it. What can be required -- and it is what matters -- is that it invents no colour: its
+    # palette has to fit inside BRAND's. Without this test, a fifth colour would come in through
+    # the only door the rest does not cover.
+    from_brand = _palette(BRAND.read_text(encoding="utf-8"))
+    for name in HANDWRITTEN:
+        p = DOCS / name
+        assert p.is_file(), f"{name} does not exist"
+        outside = _palette(p.read_text(encoding="utf-8")) - from_brand
+        assert not outside, f"{name} uses a colour outside BRAND: {sorted(outside)}"
 
 
-def test_CONTROLE_os_detectores_acusam_quando_ha() -> None:
-    # Why (LC-1n): sem isto, os quatro testes acima passariam com os regex quebrados — padrao
-    # que nao casa nada devolve conjunto vazio, e vazio parece aprovacao.
-    assert _paleta("cor: #AABBCC;") == {"#AABBCC"}, "o detector de hex nao ve um hex"
-    assert RGBA.findall("rgba(1,2,3,.5)") == [("1", "2", "3")], "o detector de rgb nao ve um rgb"
-    assert EXTERNO.findall("@import url('https://x/y.css')"), "o detector de externo nao ve @import"
-    assert not EXTERNO.findall("background:url(../assets/x.png)"), "o detector acusa asset local"
+def test_CONTROLE_the_detectors_fire_when_there_is_a_match() -> None:
+    # Why: without this control, the four tests above would pass with broken regexes — a pattern
+    # that matches nothing returns an empty set, and empty looks like a pass.
+    assert _palette("cor: #AABBCC;") == {"#AABBCC"}, "the hex detector does not see a hex value"
+    assert RGBA.findall("rgba(1,2,3,.5)") == [("1", "2", "3")], "the rgb detector does not see an rgb()"
+    assert EXTERNAL.findall("@import url('https://x/y.css')"), "the external detector does not see @import"
+    assert not EXTERNAL.findall("background:url(../assets/x.png)"), "the detector flags a local asset"

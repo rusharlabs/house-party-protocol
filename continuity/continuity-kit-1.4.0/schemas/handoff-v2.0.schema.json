@@ -1,0 +1,158 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "handoff-v2.0.schema.json",
+  "title": "Handoff v2.0",
+  "description": "Contract of the handoff artifact between sessions (continuity-kit). v2.0 over v1.1: every property name is English. There is no dual read for v1.1: a v1.1 handoff does not validate against this schema (schema_version is const 2.0). What v1.1 brought and v2.0 keeps: mandatory git block, stale_when.head_moved, degraded-auto with git status --porcelain, FORMAL schema (max_bytes:65536).",
+  "type": "object",
+  "required": ["schema_version", "handoff_id", "created_at", "trigger", "quality", "session", "state", "git", "valid_until"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": "2.0" },
+    "handoff_id": { "type": "string", "pattern": "^HO-\\d{8}-\\d{4}-[a-z0-9-]+$" },
+    "created_at": { "type": "string", "format": "date-time" },
+    "trigger": { "type": "string", "enum": ["pre-clear", "precompact", "stop", "manual", "degraded-auto"] },
+    "quality": { "type": "string", "enum": ["full", "degraded-auto"] },
+
+    "session": {
+      "type": "object",
+      "required": ["session_id", "lane_id"],
+      "additionalProperties": false,
+      "properties": {
+        "session_id": { "type": "string" },
+        "lane_id": { "type": "string", "default": "solo" },
+        "role": { "type": "string", "enum": ["executor", "planner", "reviewer", "solo"] },
+        "model": { "type": "string" },
+        "branch": { "type": "string" },
+        "cwd": { "type": "string" }
+      }
+    },
+
+    "git": {
+      "type": "object",
+      "description": "MANDATORY (v1.1 correction) — without it, staleness by HEAD (stale_when.head_moved) cannot be computed.",
+      "required": ["head", "branch", "dirty", "untracked"],
+      "additionalProperties": false,
+      "properties": {
+        "head": { "type": "string", "description": "short sha of HEAD at write time" },
+        "branch": { "type": "string" },
+        "dirty": { "type": "boolean" },
+        "untracked": { "type": "integer", "minimum": 0 },
+        "porcelain": { "type": "string", "description": "raw output of git status --porcelain (mandatory when quality=degraded-auto)" },
+        "checkpoint_ref": { "type": "string", "description": "OPTIONAL — ref of the turn checkpoint written by turn_checkpoint.py (refs/hpp/checkpoints/<session>/turn/<n>): evidence that does NOT go through the index." },
+        "checkpoint_commit": { "type": "string", "description": "OPTIONAL — the commit object the ref above points at, so the evidence survives pruning by retention." }
+      }
+    },
+
+    "stale_when": {
+      "type": "object",
+      "description": "v1.1 correction — staleness by commit delta, not only by clock: the tree moved = next_step is not actionable even inside valid_until.",
+      "additionalProperties": false,
+      "properties": {
+        "head_moved": { "type": "boolean", "description": "true if the current HEAD != git.head at injection time (computed at runtime by handoff_inject.py, not stored at write time)" },
+        "days": { "type": "integer", "minimum": 1, "default": 7 }
+      }
+    },
+
+    "state": {
+      "type": "object",
+      "required": ["summary"],
+      "additionalProperties": false,
+      "properties": {
+        "summary": { "type": "string", "minLength": 1 },
+        "phase": { "type": "string" },
+        "numbers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["metric", "value", "measured_at", "re_derive_cmd"],
+            "properties": {
+              "metric": { "type": "string" },
+              "value": { "type": "string" },
+              "measured_at": { "type": "string", "format": "date-time" },
+              "re_derive_cmd": { "type": "string", "minLength": 1 }
+            }
+          }
+        }
+      }
+    },
+
+    "decisions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "decision"],
+        "properties": {
+          "id": { "type": "string" },
+          "decision": { "type": "string" },
+          "reason": { "type": "string" },
+          "evidence": { "type": "string" }
+        }
+      }
+    },
+
+    "open_gates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "owner", "description"],
+        "properties": {
+          "id": { "type": "string" },
+          "owner": { "type": "string" },
+          "description": { "type": "string" },
+          "blocks": { "type": "string" },
+          "unblock_cmd": { "type": "string" }
+        }
+      }
+    },
+
+    "prohibitions": { "type": "array", "items": { "type": "string" } },
+
+    "already_done": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["action", "evidence"],
+        "properties": {
+          "action": { "type": "string" },
+          "evidence": { "type": "string", "description": "what proves it was done; may be the path of an hpp evidence record (.hpp/evidence/<id>-<utc>.json, written by python -m hpp evidence run — requires the HPP core)" },
+          "never_repeat": { "type": "boolean", "default": true }
+        }
+      }
+    },
+
+    "next_step": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["order", "description", "verify_first_cmd"],
+        "properties": {
+          "order": { "type": "integer", "minimum": 1 },
+          "description": { "type": "string" },
+          "done_predicate": { "type": "string" },
+          "verify_first_cmd": { "type": "string", "minLength": 1, "description": "command that proves whether it was ALREADY done (LC-4) — mandatory; may be python -m hpp evidence verify <record> (requires the HPP core), which exits 0 only for an intact record of a passed run, so a failed run is never read as done" },
+          "idempotent": { "type": "boolean", "default": false }
+        }
+      }
+    },
+
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["type", "ref"],
+        "properties": {
+          "type": { "type": "string", "enum": ["commit", "file", "http", "cmd", "hpp-evidence"], "description": "hpp-evidence: ref = the record path (.hpp/evidence/<id>-<utc>.json), value = its record_sha256" },
+          "ref": { "type": "string" },
+          "value": { "type": "string" }
+        }
+      }
+    },
+
+    "todos_snapshot": { "type": "array", "items": { "type": "string" } },
+
+    "valid_until": { "type": "string", "format": "date-time" },
+    "boot_docs": { "type": "array", "items": { "type": "string" } }
+  },
+
+  "max_bytes": 65536
+}

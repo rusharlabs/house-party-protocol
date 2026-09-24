@@ -261,11 +261,11 @@ _ANY_MARKER = re.compile(r"\[spec:\s*([^\]]*?)\s*\]")
 def find_spec_markers(text: str) -> set[str]:
     """The criterion ids a source cites, written `[spec: capability/scenario]`.
 
-    🔴 CORRIGIDO 2026-09-22 (adversarial review, BAIXA): a malformed citation — `[spec: cap]` with no
-    scenario, or `[spec: cap/first thing]` with a space — used to VANISH: neither `covered` nor
-    `unknown`, so a typo in the citation read as "this test cites nothing" and the orphan check never
-    saw the criterion it meant. A malformed marker is now returned as `malformed:<text>`, which
-    `spec_coverage` routes to `unknown` — a broken citation is a finding, not silence.
+    A malformed citation — `[spec: cap]` with no scenario, or `[spec: cap/first thing]` with a
+    space — is returned as `malformed:<text>` instead of being dropped, and `spec_coverage` routes
+    it to `unknown`. Otherwise a typo in the citation would read as "this test cites nothing" and
+    the orphan check would never see the criterion it meant: a broken citation is a finding, not
+    silence.
     """
     if not isinstance(text, str):
         raise WorkGraphError("spec markers can only be read from text")

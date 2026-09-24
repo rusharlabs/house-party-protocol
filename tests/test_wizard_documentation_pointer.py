@@ -74,11 +74,11 @@ def test_the_human_report_prints_the_section_and_every_path_it_names(report):
 
 def test_the_pointer_comes_before_the_closing_line_and_never_replaces_it(report):
     output, console = _render(report)
-    # Why: a assinatura vem de `hpp.brand.SIGNATURE`, nunca de uma copia literal. Uma copia
-    # aqui teria de ser declarada como excecao no ruleset de identidade, para dizer o que o
-    # import ja diz melhor -- o teste afirma contra a FONTE, entao nao pode divergir dela.
-    # (esta redacao foi reescrita depois que a PRIMEIRA versao do comentario citava o termo
-    #  e, por cita-lo, disparava o proprio achado que ela explicava.)
+    # Why: the signature comes from `hpp.brand.SIGNATURE`, never from a literal copy. A copy
+    # here would have to be declared as an exception in the identity ruleset, to say what the
+    # import already says better -- the test asserts against the SOURCE, so it cannot drift from it.
+    # (this wording was rewritten after the FIRST version of the comment quoted the term and,
+    #  by quoting it, triggered the very finding it was explaining.)
     assert output.index(HEADER) < output.index(SIGNATURE)
     assert output.rstrip().endswith("Welcome to the party." + console.glyph("cursor"))
 

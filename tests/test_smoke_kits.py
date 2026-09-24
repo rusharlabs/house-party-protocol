@@ -21,8 +21,8 @@ from pathlib import Path
 
 import pytest
 
-_RAIZ_DERIVADA = Path(__file__).resolve().parents[1]
-EMITTED_COPY = Path(os.environ.get("HPP_EMITTED_COPY") or _RAIZ_DERIVADA)
+_DERIVED_ROOT = Path(__file__).resolve().parents[1]
+EMITTED_COPY = Path(os.environ.get("HPP_EMITTED_COPY") or _DERIVED_ROOT)
 MARKETPLACE = EMITTED_COPY / "marketplace.json"
 
 

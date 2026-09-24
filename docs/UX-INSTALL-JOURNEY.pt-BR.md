@@ -4,13 +4,16 @@
 
 > **Versão:** 2.0.0 — camada de apresentação sobre dois contratos congelados.
 > **Caminho 1** é o `hpp init`, o instalador do harness (`hpp/wizard.py`, seis estágios, plano e
-> depois `--apply`). **Caminho 2** é o instalador de módulos, `installers/kit-forge-1.4.1/kit_doctor.py`,
+> depois `--apply`). **Caminho 2** é o instalador de módulos, `installers/kit-forge-1.4.2/kit_doctor.py`,
 > cuja mecânica vive em `INSTALL-CONTRACT.md` e cujo README por módulo segue o
 > `INSTALL-GUIDE-TEMPLATE.md`; os dois viajam na raiz deste repositório. Este documento descreve
 > a EXPERIÊNCIA: como um AGENTE (Claude Code ou Codex CLI) guia um HUMANO pela instalação, numa
 > conversa. Nada aqui muda a mecânica — se este documento contradisser o código ou o
-> `INSTALL-CONTRACT.md`, eles vencem. Toda saída citada abaixo foi medida em 2026-09-21 contra a
-> versão 2.4.1, a partir de um clone deste repositório, salvo onde o texto diz "instalação por pip".
+> `INSTALL-CONTRACT.md`, eles vencem. Toda saída do `hpp init` citada no Caminho 1 foi medida em
+> 2026-09-23 contra a versão 2.5.8, a partir de um clone deste repositório na tag `v2.5.8`, salvo
+> onde o texto diz "instalação por pip"; as saídas do `kit_doctor.py` no Caminho 2 foram
+> capturadas em 2026-09-21 contra a versão 2.4.1, e o exemplo de ponta a ponta diz o que mudou
+> desde então. O que está marcado como *novo na 2.6.0* chegou depois da versão medida aqui.
 
 ## Princípio
 
@@ -43,9 +46,9 @@ terminou.
 |---|---|---|---|
 | `detect` | `detecting host...` | `greenfield`, `in-progress` ou `re-run`, a partir de `.claude/settings*.json`, `AGENTS.md`, `.agents/`, `.hpp/events.jsonl`, um `.hpp/profile.json` anterior e a contagem de commits do git; lista o que existe e é mantido | um log de eventos ou profile corrompido é um aviso com o arquivo a inspecionar |
 | `prereqs` | `checking prerequisites...` | Python igual ou acima de 3.10; o contrato do manifesto; a distribuição quando o `marketplace.json` está ao lado do manifesto; `git` no `PATH` | Python abaixo do piso ou divergência manifesto/marketplace interrompe (exit 2) |
-| `profile` | `mounting profile...` | as três respostas — host, bundle, modo de política — vindas de flags, de `--profile`, do prompt (só em TTY) ou do default, com a origem de cada uma registrada | um profile gravado com respostas diferentes é um `conflict`; nada é sobrescrito |
+| `profile` | `mounting profile...` | quatro respostas — host, bundle, modo de política e um conselheiro de decisão opcional (novo na 2.6.0; padrão `off`, nunca contado como default pendente) — vindas de flags, de `--profile`, do prompt (só em TTY) ou do default, com a origem de cada uma registrada | um profile gravado com respostas diferentes é um `conflict`; nada é sobrescrito |
 | `configure` | `loading modules...` | o plano de módulos para o host, `native` ou `explicit-command` por módulo, e o `CHECKSUMS.txt` de cada diretório de módulo presente | um módulo sem suporte no host, ou um checksum divergente, interrompe (exit 2) |
-| `wire-suggest` | `wiring suggestions...` | o bloco a colar: linhas de plugin para Claude Code, linhas do instalador de módulos para Codex CLI e para módulos explicit-command, o comando de política como configurado | nada; ele nunca escreve |
+| `wire-suggest` | `wiring suggestions...` | o bloco a colar: linhas de plugin para Claude Code, linhas do instalador de módulos para Codex CLI e para módulos explicit-command, o comando de política como configurado; antes do bloco, uma tabela HOOK CAPABILITIES — cada hook que os módulos escolhidos declaram, com seus eventos, sua política de saída (`observe`, `warn`, `block`) e seus grupos de capacidade — contada na linha de abertura (`17 hooks declaring capabilities` para `reliable-coding`) | nada; ele nunca escreve |
 | `smoke` | `verifying evidence...` | quatro controles: classificador de política, grafo de capacidades, log de eventos, benchmark em `k=1` | um controle reprovado põe exit 1 e se nomeia |
 
 ### Plano, depois `--apply`
@@ -55,8 +58,10 @@ terminou.
    (a partir de uma instalação por pip). Modo plano é o default: nada é escrito, o alvo tem os
    mesmos arquivos depois, exit 0.
 2. **Tradução.** O agente cola na conversa o bloco de confirmação (molde abaixo): o que o
-   `detect` viu, as três respostas e de onde cada uma veio, a linha de prontidão com o que foi e
-   o que não foi verificado, e o bloco de wiring.
+   `detect` viu, as quatro respostas (a quarta, o conselheiro de decisão, é opcional) e de onde
+   cada uma veio, a linha de prontidão com o que foi e o que não foi verificado, a tabela HOOK
+   CAPABILITIES lida em voz alta, o bloco de wiring e as páginas que a seção DOCUMENTATION
+   nomeou.
 3. **Confirmação humana.** O humano responde em linguagem natural — "pode aplicar", "aplica",
    "sim". Qualquer coisa que não seja confirmação clara = não aplica. Se o humano quiser outra
    resposta (outro host, `enforce` em vez de `audit`, uma lista explícita de módulos), o agente
@@ -66,7 +71,7 @@ terminou.
    ganha um item verificado:
 
 ```text
-> mounting profile...         ✓ written · host=claude-code · bundle=reliable-coding · policy=audit
+> mounting profile...         ✓ written · host=claude-code · bundle=reliable-coding · policy=audit · 3 default(s)
 
   ██████████████████░░  10/11 verified · 1 not verified · 0 failed
     ✓ profile recorded        .hpp/profile.json written
@@ -86,7 +91,7 @@ e o `profile` reporta `unchanged`. Respostas diferentes contra um profile gravad
 `conflict`: as chaves divergentes são nomeadas, nada é sobrescrito, exit 1.
 
 ```text
-> mounting profile...         ! conflict · host=claude-code · bundle=reliable-coding · policy=enforce
+> mounting profile...         ! conflict · host=claude-code · bundle=reliable-coding · policy=enforce · 2 default(s)
 
   PROBLEMS  what was measured, what was expected, what to do
     ✗ profile  [profile]
@@ -107,7 +112,7 @@ manifesto — um plano contra um alvo vazio mostra:
 > checking prerequisites...   ✓ python 3.14.3 · protocol 2.1
 > mounting profile...         ✓ would-write · host=claude-code · bundle=reliable-coding · policy=audit · 3 default(s)
 > loading modules...          ✓ 6 modules · reliable-coding · claude-code · 6/6 checksums verified
-> wiring suggestions...       ✓ 7 commands to paste · 0 files written
+> wiring suggestions...       ✓ 7 commands to paste · 0 files written · 17 hooks declaring capabilities
 > verifying evidence...       ✓ policy · graph · events · benchmark
 > protocol online.
 
@@ -122,14 +127,21 @@ a integridade da distribuição e os checksums dos módulos são reportados como
 porque não há contra o que medi-los, nunca como aprovados. O agente cita a linha que obteve, não
 a linha que esperava.
 
+Depois do NEXT, o relatório imprime uma seção DOCUMENTATION que só nomeia páginas encontradas no
+disco. A partir de um clone ela lista `INSTALL_FOR_AGENTS.md`, `docs/CATALOG.md` e
+`docs/MANUAL.html`; uma instalação por pip não carrega páginas de documentação, e a seção então
+não aparece, em vez de apontar para arquivos que não estão lá. O agente repassa os caminhos que
+recebeu e não inventa nenhum.
+
 ### Flags
 
 | Flag | Efeito |
 |---|---|
 | `--target <dir>` | o projeto a inicializar (default: diretório atual) |
 | `--apply` | escreve `.hpp/profile.json`; sem ela, só plano |
-| `--host`, `--bundle`, `--policy-mode audit\|enforce` | respondem às três perguntas; `--modules a,b` substitui o bundle por uma lista explícita |
-| `--profile answers.json` | as mesmas respostas a partir de um arquivo (chaves `host`, `bundle`, `policy_mode`, `modules`; chave desconhecida é erro de uso) |
+| `--host`, `--bundle`, `--policy-mode audit\|enforce` | respondem às três perguntas obrigatórias; `--modules a,b` substitui o bundle por uma lista explícita |
+| `--decision-advisor off\|typesafe\|openrouter\|compatible` | novo na 2.6.0. A quarta pergunta, opcional (padrão `off`): registra um conselheiro de decisão tipada que você declara e imprime como integrá-lo; o hpp nunca o chama e não guarda chave |
+| `--profile answers.json` | as mesmas respostas a partir de um arquivo (chaves `host`, `bundle`, `policy_mode`, `modules` e, nova na 2.6.0, `decision_advisor`; chave desconhecida é erro de uso) |
 | `--yes`, `--non-interactive`, `--json`, ou `CI` no ambiente | nenhum prompt é alcançado; perguntas sem resposta tomam o default e o relatório diz isso |
 | `--no-animation` | saída simples; `NO_COLOR` é respeitado; sem TTY a saída é completa e sem cor |
 | `--no-benchmark` | pula o controle de benchmark no smoke; ele é reportado como não verificado, não descartado em silêncio |
@@ -143,26 +155,29 @@ a linha que esperava.
 | `0` | plano ou apply concluído; todo controle que rodou passou | os planos citados acima |
 | `1` | um aviso: um controle do smoke reprovou, ou o profile gravado conflita com as respostas dadas | `--policy-mode enforce` sobre um profile gravado com `audit` |
 | `2` | uma recusa bloqueante: Python abaixo de 3.10, divergência manifesto/marketplace, módulo sem suporte no host, checksum divergente, id de módulo desconhecido | `--host codex --modules claude-dev-kit` → `loading modules... ✗ bundle custom requires claude-dev-kit, unsupported on codex` |
-| `3` | um erro de uso na própria invocação | um arquivo `--profile` com chave desconhecida → `hpp init: profile file has unknown keys: colour (allowed: bundle, host, modules, policy_mode)` |
+| `3` | um erro de uso na própria invocação | um arquivo `--profile` com chave desconhecida → `hpp init: profile file has unknown keys: colour (allowed: bundle, host, modules, policy_mode)` (a 2.6.0 também lista `decision_advisor`) |
 
 Com `--json`, o código que o processo vai devolver também está dentro do relatório (`exit_code`),
 e um estágio que interrompeu a execução deixa os seguintes como `not run`.
 
 ### O que o agente diz (molde)
 
-O texto que o agente cola na conversa ao apresentar um plano do `hpp init`. Placeholders em `{}`.
-O molde está escrito em inglês; o agente fala na língua do humano e adapta as palavras, não a
-estrutura.
+O texto que o agente cola na conversa ao apresentar um plano do `hpp init`. Placeholders em `{}`;
+uma parte em `[]` só entra quando se aplica — o conselheiro de decisão só quando não é `off`
+(novo na 2.6.0). O molde está escrito em inglês; o agente fala na língua do humano e adapta as
+palavras, não a estrutura.
 
 ```
 I ran `hpp init` in plan mode against {target} -- nothing has been written. Summary:
 
 **Project diagnosis:** {greenfield | in-progress, preserving: {list} | re-run, profile already recorded}.
-**Answers:** host={host} ({flag|profile|default}) · bundle={bundle} ({source}) · policy={policy_mode} ({source}).
+**Answers:** host={host} ({flag|profile|default}) · bundle={bundle} ({source}) · policy={policy_mode} ({source})[ · decision-advisor={value} ({source})].
 **Readiness:** {n}/11 verified · {m} not verified · {f} failed -- not verified: {items}.
   ({channel}: {clone of the repository | pip install}; the two extra items a pip install cannot measure are distribution integrity and module checksums.)
 **What --apply would do:** write exactly one file, {target}/.hpp/profile.json.
+**Hook capabilities:** {n} hooks declaring capabilities -- for each: {id}, {events}, {exit policy}, {capability groups}, as the HOOK CAPABILITIES table prints them[; on Codex CLI none of them is activated].
 **Wiring (settings/hooks/plugins):** never automatic. After the apply I bring you the wire block as printed and YOU paste it.
+**Documentation:** {the pages the DOCUMENTATION section named | none -- this copy ships no documentation pages}.
 
 If this is fine, say "apply it" and I run the same command with --apply.
 ```
@@ -176,7 +191,7 @@ explícita.
 
 ### A jornada em 5 passos (igual nos 4 cenários)
 
-1. **Plano.** O agente roda `python installers/kit-forge-1.4.1/kit_doctor.py install --kit <dir-do-módulo> --host <host> --target <projeto> --human`
+1. **Plano.** O agente roda `python installers/kit-forge-1.4.2/kit_doctor.py install --kit <dir-do-módulo> --host <host> --target <projeto> --human`
    (`--human` escolhe o relatório legível). Modo plano é o default: nenhuma escrita acontece,
    exit 0.
 2. **Tradução.** O agente cola na conversa o bloco de confirmação (molde na seção "Bloco de

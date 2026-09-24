@@ -72,15 +72,13 @@ faz requisição externa.
 | `assets/hpp-icon-512.png` · `-256` · `-128` · `-64` · `-32` | o distintivo sozinho, quadrado — avatar, favicon e ícone de app. Derivado do lockup por recorte, nunca redesenhado |
 | `assets/hpp-logo-header.png` | o mesmo lockup em 1440 px, para topo de página. É a arte aprovada **redimensionada** — não redesenhada, não recolorida, não recortada — para que um topo de página e o README mostrem uma marca só |
 | `assets/hpp-mark.svg` | o símbolo em vetor, para onde o raster não serve (impressão, escala grande). Desenhado a partir do distintivo aprovado, então lê como a mesma marca; onde a fidelidade decidir, use o lockup raster |
+| `assets/social-preview-1280x640.png` · `docs/assets/social-preview-1280x640.png` | card social, 1280×640 — o lockup, as cinco palavras, `spec-driven · wave-driven · lane-isolated` e a assinatura sobre preto. A cópia em `assets/` é o arquivo a enviar como social preview do repositório (o GitHub não tem API para isso); o `og:image` do site aponta para a cópia em `docs/assets/`. As duas carregam os mesmos bytes (`sha256sum` nos dois arquivos) |
 
-⚰️ LEGADO 2026-09-23 · `assets/hpp-logo-light.svg` · `assets/hpp-logo-dark.svg` ·
-`assets/hpp-banner-light.svg` · `assets/hpp-banner-dark.svg` — substituídos por
-`assets/hpp-logo-header.png` (lockup) e `assets/hpp-mark.svg` (símbolo) · decidido em 2026-09-23,
-ao medir que os quatro carregam um desenho **anterior** ao lockup aprovado (nasceram em 20/09; a
-arte oficial, em 21/09) — flat em creme e laranja, não o cromado sobre preto. Esta tabela os
-descrevia como "o mesmo lockup em vetor", e não eram: as quatro páginas HTML abriam com uma marca
-que este documento veta na linha de cima. Os arquivos ficam no repositório como registro; usá-los
-publica a marca errada.
+Obsoletos: `assets/hpp-logo-light.svg` · `assets/hpp-logo-dark.svg` · `assets/hpp-banner-light.svg` ·
+`assets/hpp-banner-dark.svg` carregam um desenho anterior ao lockup aprovado — flat em creme e
+laranja, não o cromado sobre preto. Foram substituídos por `assets/hpp-logo-header.png` (lockup) e
+`assets/hpp-mark.svg` (símbolo). Os arquivos ficam no repositório como registro; usá-los publica a
+marca errada.
 
 O símbolo **não** codifica a quantidade de módulos: o harness pode crescer sem redesenhar a marca.
 

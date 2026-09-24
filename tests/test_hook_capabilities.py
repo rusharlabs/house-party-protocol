@@ -1,4 +1,4 @@
-"""A4 — every hook the product installs declares what it is CAPABLE of.
+"""Every hook the product installs declares what it is CAPABLE of.
 
 `hpp init` told you which hooks to paste. It did not tell you what each one can do: write
 files in your project, control the process, send transcript-derived text to a model, touch
@@ -9,12 +9,10 @@ The contract this file pins:
   · a closed vocabulary of six capability groups, declared once in the manifest;
   · one declaration per hook, with `module`, `script`, `events`, `capabilities`, `exit_policy`;
   · `hpp doctor` FAILS on a hook without a declaration and on a module that declares the
-    `hooks` component with nothing declared for it — absent is never read as empty, which is
-    the `penless` lesson (a missing `tools:` meant *all* tools, and a gate that looked for the
-    word `Write` passed all seven violators);
+    `hooks` component with nothing declared for it — absent is never read as empty: an agent
+    definition with no `tools:` line gets *all* tools, so a gate that only looks for the word
+    `Write` passes every agent that declares nothing;
   · `hpp init` prints the capability table BEFORE the commands to paste.
-
-Vocabulary adapted from ECC (MIT). No code copied.
 """
 from __future__ import annotations
 
@@ -101,7 +99,7 @@ def test_CONTROLE_a_hook_without_capabilities_is_refused(manifest):
 
 
 def test_CONTROLE_an_empty_capabilities_list_is_refused_not_read_as_none(manifest):
-    """The `penless` lesson: absent must never be read as empty."""
+    """Absent must never be read as empty."""
     broken = json.loads(json.dumps(manifest))
     broken["hooks"][0]["capabilities"] = []
     with pytest.raises(ManifestError, match="capabilities"):
@@ -170,11 +168,11 @@ def _emitted_root() -> Path | None:
 
 
 def test_doctor_fails_on_a_hook_that_is_wired_but_not_declared(tmp_path: Path, manifest):
-    """🔴 CORRIGIDO 2026-09-22 (cross-model review, MÉDIA): the table was only checked against
-    itself. A module that wired three scripts in `hooks/hooks.json` and declared one passed doctor,
-    because doctor never opened the file the host reads. The coverage lived in a source-tree test
-    that does not ship. Now `validate_distribution` reads every module's `hooks.json` and refuses a
-    wired script with no declaration — in the emitted tree, which is where a user runs doctor.
+    """Doctor must read the file the host reads. A table checked only against itself let a
+    module that wired three scripts in `hooks/hooks.json` and declared one pass doctor, because
+    doctor never opened that file. `validate_distribution` now reads every module's `hooks.json`
+    and refuses a wired script with no declaration — in the emitted tree, which is where a user
+    runs doctor.
     """
     root = _emitted_root()
     if root is None:

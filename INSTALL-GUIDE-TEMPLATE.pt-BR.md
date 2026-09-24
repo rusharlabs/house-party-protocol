@@ -40,8 +40,8 @@ Serviços externos: <NENHUM — stdlib only> OU <lista: nome, via (MCP/API diret
 ```
 **Regra dura:** default é **"nenhum — stdlib only"**. Se o kit precisar de algo externo,
 nomear exatamente (ex.: Supabase via MCP, URL + anon key). **NUNCA** `ANTHROPIC_API_KEY` —
-o regime deste ecossistema é assinatura/quota, não pay-per-use (ver `partial-autonomy-slider`
-do operator-kit e a doutrina subscription-only).
+esta família de kits roda na assinatura/quota do host, não em cobrança por uso da API (ver
+`rules/loop-cost-budget.md` do operator-kit).
 
 ### 3. Instalar via plugin (caminho recomendado quando existe `.claude-plugin/plugin.json`)
 ```bash

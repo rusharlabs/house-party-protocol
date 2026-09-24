@@ -20,78 +20,79 @@ INDEX = DOCS / "index.html"
 # Why: a site that fetches a stylesheet or a script from someone else's domain stops being
 # self-contained the day that domain does. The four pages carry their CSS inline; the landing
 # page has to hold the same line.
-EXTERNO = re.compile(r'(?:src|href)="https?://[^"]+\.(?:js|css)"')
+EXTERNAL = re.compile(r'(?:src|href)="https?://[^"]+\.(?:js|css)"')
 HREF = re.compile(r'href="([^"]+)"')
 
 
-def _texto() -> str:
+def _text() -> str:
     return INDEX.read_text(encoding="utf-8")
 
 
-def test_a_pagina_de_entrada_existe() -> None:
-    assert INDEX.is_file(), "docs/index.html nao existe — a raiz do Pages responderia 404"
+def test_the_landing_page_exists() -> None:
+    assert INDEX.is_file(), "docs/index.html does not exist — the Pages root would answer 404"
 
 
-def test_ela_aponta_para_as_quatro_paginas_e_todas_existem() -> None:
-    alvos = {"CATALOG.html", "CATALOG.pt-BR.html", "MANUAL.html", "MANUAL.pt-BR.html"}
-    hrefs = set(HREF.findall(_texto()))
-    faltando = alvos - hrefs
-    assert not faltando, f"a pagina de entrada nao linka: {sorted(faltando)}"
-    for alvo in alvos:
-        assert (DOCS / alvo).is_file(), f"a pagina de entrada linka {alvo}, que nao existe"
+def test_it_links_the_four_pages_and_all_of_them_exist() -> None:
+    targets = {"CATALOG.html", "CATALOG.pt-BR.html", "MANUAL.html", "MANUAL.pt-BR.html"}
+    hrefs = set(HREF.findall(_text()))
+    missing = targets - hrefs
+    assert not missing, f"the landing page does not link: {sorted(missing)}"
+    for target in targets:
+        assert (DOCS / target).is_file(), f"the landing page links {target}, which does not exist"
 
 
-def test_nao_busca_css_nem_js_de_terceiro() -> None:
-    achados = EXTERNO.findall(_texto())
-    assert not achados, f"dependencia externa na pagina de entrada: {achados}"
+def test_does_not_fetch_third_party_css_or_js() -> None:
+    found = EXTERNAL.findall(_text())
+    assert not found, f"external dependency on the landing page: {found}"
 
 
-def test_declara_idioma_nas_duas_secoes() -> None:
-    # Why: as duas linguas convivem na mesma pagina; sem `lang` o leitor de tela le portugues
-    # com fonemas ingleses, e um crawler indexa as duas como uma.
-    texto = _texto()
-    assert 'lang="en"' in texto and 'lang="pt-BR"' in texto
+def test_declares_the_language_in_both_sections() -> None:
+    # Why: both languages live on the same page; without `lang` a screen reader reads Portuguese
+    # with English phonemes, and a crawler indexes the two as one.
+    text = _text()
+    assert 'lang="en"' in text and 'lang="pt-BR"' in text
 
 
-def test_CONTROLE_o_detector_de_externo_acusa_quando_ha() -> None:
-    # Why (LC-1n): sem isto, `test_nao_busca_css_nem_js_de_terceiro` passaria com o regex
-    # quebrado — um padrao que nao casa nada devolve lista vazia, e vazio parece aprovacao.
-    assert EXTERNO.findall('<link href="https://cdn.example/x.css">'), "o detector nao ve um CSS externo"
-    assert not EXTERNO.findall('<link href="style.css">'), "o detector acusa um CSS local"
+def test_CONTROLE_the_external_detector_fires_when_there_is_a_match() -> None:
+    # Why: without this control, `test_does_not_fetch_third_party_css_or_js` would pass with a
+    # broken regex — a pattern that matches nothing returns an empty list, and empty looks like a
+    # pass.
+    assert EXTERNAL.findall('<link href="https://cdn.example/x.css">'), "the detector does not see an external CSS"
+    assert not EXTERNAL.findall('<link href="style.css">'), "the detector flags a local CSS"
 
 
-# Why (2026-09-23): a pagina de entrada linkava as quatro paginas e o site do publicador, e
-# NAO linkava o codigo. Quem chegasse ao site por um link compartilhado nao tinha caminho para
-# o repositorio -- o material vendia o harness e escondia onde baixa-lo. Medido no dia em que
-# o Pages entrou no ar: `href=` na pagina devolvia cinco alvos, nenhum deles o repositorio.
+# Why (2026-09-23): the landing page linked the four pages and the publisher's site, and did NOT
+# link the code. Anyone reaching the site through a shared link had no path to the repository --
+# the material sold the harness and hid where to download it. Measured the day Pages went live:
+# `href=` on the page returned five targets, none of them the repository.
 REPO = re.compile(r'href="(https://github\.com/[^"]+)"')
 
 
-def _secoes() -> dict[str, str]:
-    """{idioma: html da secao} — a pagina carrega uma secao por lingua."""
-    return {p.split('"', 1)[0]: p for p in _texto().split('<section lang="')[1:]}
+def _sections() -> dict[str, str]:
+    """{language: section html} — the page carries one section per language."""
+    return {p.split('"', 1)[0]: p for p in _text().split('<section lang="')[1:]}
 
 
-def test_a_pagina_de_entrada_linka_o_repositorio() -> None:
-    assert REPO.findall(_texto()), "a pagina de entrada nao linka o repositorio do projeto"
+def test_the_landing_page_links_the_repository() -> None:
+    assert REPO.findall(_text()), "the landing page does not link the project repository"
 
 
-def test_o_repositorio_aparece_nas_DUAS_secoes_de_idioma() -> None:
-    # Why: um leitor le a secao do idioma dele e para. O link que existe so' na outra secao
-    # nao existe para ele.
-    secoes = _secoes()
-    assert set(secoes) == {"en", "pt-BR"}, f"secoes inesperadas: {sorted(secoes)}"
-    for lang, html_ in secoes.items():
-        assert REPO.findall(html_), f"a secao {lang} nao linka o repositorio"
+def test_the_repository_appears_in_BOTH_language_sections() -> None:
+    # Why: a reader reads the section in their own language and stops. A link that exists only in
+    # the other section does not exist for them.
+    sections = _sections()
+    assert set(sections) == {"en", "pt-BR"}, f"unexpected sections: {sorted(sections)}"
+    for lang, html_ in sections.items():
+        assert REPO.findall(html_), f"the {lang} section does not link the repository"
 
 
-def test_o_endereco_do_repositorio_e_UM_so() -> None:
-    # Why: dois enderecos diferentes na mesma pagina significam que um deles esta errado, e
-    # nada na pagina diz qual.
-    assert len(set(REPO.findall(_texto()))) == 1, f"enderecos divergentes: {sorted(set(REPO.findall(_texto())))}"
+def test_the_repository_address_is_just_ONE() -> None:
+    # Why: two different addresses on the same page mean one of them is wrong, and nothing on the
+    # page says which.
+    assert len(set(REPO.findall(_text()))) == 1, f"diverging addresses: {sorted(set(REPO.findall(_text())))}"
 
 
-def test_CONTROLE_o_detector_de_repositorio_discrimina() -> None:
-    # Why (LC-1n): sem isto os tres testes acima passariam com o regex quebrado.
-    assert REPO.findall('<a href="https://github.com/org/repo">code</a>'), "o detector nao ve o repo"
-    assert not REPO.findall('<a href="https://example.com">publisher</a>'), "o detector acusa outro dominio"
+def test_CONTROLE_the_repository_detector_discriminates() -> None:
+    # Why: without this control, the three tests above would pass with a broken regex.
+    assert REPO.findall('<a href="https://github.com/org/repo">code</a>'), "the detector does not see the repo"
+    assert not REPO.findall('<a href="https://example.com">publisher</a>'), "the detector flags another domain"

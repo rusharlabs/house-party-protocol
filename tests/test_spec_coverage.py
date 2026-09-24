@@ -10,8 +10,6 @@ moment a criterion here has no test naming it with a spec marker of the form
 A citation is read from a DOCSTRING, never from arbitrary source text: a fixture that
 carries a marker as test data is describing the form, not claiming coverage, and a
 regex over the raw file counts the two the same way.
-
-Adapted from saltbo/agent-kanban (FSL-1.1-ALv2) — concept only, no code reused.
 """
 from __future__ import annotations
 
@@ -137,9 +135,9 @@ def test_CONTROLE_the_marker_reader_discriminates():
     """The reader must find a real marker and must not invent one out of prose."""
     assert find_spec_markers("prose [spec: a/b] more [spec:c/d]") == {"a/b", "c/d"}
     assert find_spec_markers("the word spec: appears but no bracket; [spec] alone; [spec: ]") == set()
-    # 🔴 CORRIGIDO 2026-09-22 (adversarial review): a half id used to VANISH — neither covered nor
-    # unknown — so a typo in a citation read as "cites nothing" and the orphan check never saw the
-    # criterion it meant. It is now surfaced as `malformed:<text>` and routed to `unknown`.
+    # A half id must not vanish (neither covered nor unknown): a typo in a citation would read
+    # as "cites nothing" and the orphan check would never see the criterion it meant. It is
+    # surfaced as `malformed:<text>` and routed to `unknown`.
     assert find_spec_markers("half an id [spec: nocapability]") == {"malformed:nocapability"}
     assert find_spec_markers("a space [spec: cap/first thing]") == {"malformed:cap/first thing"}
     # ...while the PLACEHOLDER that documents the form is not a citation of anything

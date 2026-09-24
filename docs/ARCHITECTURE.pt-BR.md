@@ -12,6 +12,7 @@ existe.
 │ HARNESS       python -m hpp                                              │
 │               doctor · init · event · status · resume · attest · policy  │
 │               work · route · context · map · graph · eval · benchmark    │
+│               decide · evidence · retrieval · cite (new in 2.6.0)        │
 ├──────────────────────────────────────────────────────────────────────────┤
 │ PROTOCOL      hpp.manifest.json                                          │
 │               roles · loop transitions and gates · exit codes            │
@@ -26,7 +27,8 @@ existe.
 ```
 
 O harness é stdlib-only e não executa modelo algum. Ele lê arquivos, roda os comandos que você
-nomeia e escreve num pequeno número de caminhos declarados.
+nomeia e escreve num pequeno número de caminhos declarados. `decide`, `evidence`, `retrieval` e
+`cite` são novos na 2.6.0.
 
 ## O pacote `hpp/`
 
@@ -43,11 +45,24 @@ nomeia e escreve num pequeno número de caminhos declarados.
 | `maps.py` | Lane Map, Agent Map, Context Map e Monitor Map como projeções ordenadas, só de dados | `map lane`, `map agent`, `map context`, `map monitor` |
 | `graph.py` | visões de capability, operacional, agente, evidência e código a partir do manifesto; JSON ou Mermaid | `graph` |
 | `evals.py` | runner de `pass@k` / `pass^k` sobre uma suíte de casos com três tipos de runner | `eval run`, `benchmark` |
+| `decision.py` | valida um registro `hpp.decision/v1` feito fora do harness (consultivo, raise-only, abstenção e falha de instrumento como desfechos); mede um decisor declarado com métricas seletivas. Não chama modelo | `decide validate`, `decide eval` (novo na 2.6.0) |
+| `evidence.py` | roda um comando de critério declarado (argv, sem shell, no próprio grupo de processos), mede o código de saída, faz hash dos artefatos declarados e escreve um registro com hash de si mesmo; re-deriva um registro depois. Recusa uma linha de comando que se pareça com segredo. O hash próprio torna uma edição visível; não é uma assinatura. Não dirige navegador | `evidence run`, `evidence verify` (novo na 2.6.0) |
+| `retrieval.py` | pontua um retriever que você declara como comando contra os ids que uma suíte rotula como relevantes: hit@k, recall@k, precision@k, MRR, nDCG@k, com falhas de instrumento contadas à parte. Não roda índice | `retrieval eval` (novo na 2.6.0) |
+| `citations.py` | confere que todo marcador de citação num texto resolve para um id do contexto a partir do qual ele foi escrito, e sinaliza uma frase quantitativa sem marcador. Não julga se a fonte sustenta a frase | `cite check` (novo na 2.6.0) |
 | `controls.py` | os dez controles executáveis que o benchmark roda, cada um com um caso positivo e um negativo | `benchmark`, `--self-test` |
 | `install.py` | recibo de instalação só de plano para um bundle num host; recusa cobertura não suportada | `install` |
 | `wizard.py` | `hpp init`: seis estágios, readiness, plano versus aplicação, bloco de wiring | `init` |
 | `term.py` | detecção de tier de cor, saída ANSI, fallback de glifo ASCII, comportamento sem TTY | usado por `init` |
 | `brand.py` | paleta, wordmark em blocos e linhas de fechamento para o terminal | usado por `init` |
+
+`policy.py` tem oito regras fixas; a primeira que casa vence e toda regra `BLOCK` é testada antes
+de qualquer regra `MANUAL`. `BLOCK`: `recursive-delete`, `force-push`, `main-push`,
+`pipe-to-shell`, `destructive-sql`. `MANUAL`: `external-push`, `external-send`, `decision-advisor`
+(nova na 2.6.0). Qualquer outra
+coisa é `ALLOW`. O modo muda só o código de saída: `audit` sai com 0 para todo veredito, `enforce`
+sai com 2 em `BLOCK` e 1 em `MANUAL`. O que cada regra casa está em
+[CONCEPTS.pt-BR.md](CONCEPTS.pt-BR.md#política-de-comandos); confira uma com
+`python -m hpp policy check --mode enforce --command "rm -rf src"` (saída 2).
 
 Os tamanhos são pequenos por desenho; o pacote inteiro é legível de uma sentada. Nada importa
 fora da biblioteca padrão.
@@ -86,8 +101,9 @@ escreve no máximo um arquivo declarado.
 | caminho | escrito por | conteúdo | tempo de vida |
 |---|---|---|---|
 | `.hpp/events.jsonl` | `hpp event append` | um objeto JSON por linha: `seq`, `id`, `type`, `data`; append-only | o histórico do loop do workspace |
-| `.hpp/profile.json` | `hpp init --apply` | host, bundle, módulos, modo de política, versão do protocol e do produto | até o operador removê-lo |
+| `.hpp/profile.json` | `hpp init --apply` | host, bundle, módulos, modo de política, versão do protocol e do produto; `decision_advisor` só quando um foi declarado | até o operador removê-lo |
 | `.hpp/attestation.json` | `hpp attest create --output` | o veredito vinculado; o caminho é escolha sua | até os bytes que ele descreve mudarem |
+| `.hpp/evidence/<id>-<UTC>.json` | `hpp evidence run` (novo na 2.6.0) | um registro por execução, criado em modo exclusivo: o comando, o commit base, o código de saída, o veredito, a contagem de bytes e o sha256 de stdout e stderr (nunca o texto), o sha256 de cada artefato declarado e o hash do próprio registro; `--out` escolhe outro diretório dentro do workspace | até o operador removê-lo; o `evidence verify` o bloqueia assim que um artefato que ele nomeia muda |
 | `hpp.manifest.json` | o projeto | o protocol; encontrado subindo a partir do diretório atual, depois ao lado do pacote-fonte, depois na cópia embarcada no pacote instalado | versionado com o produto |
 | `CHECKSUMS.txt` do módulo | a forja | sha256 por arquivo distribuído | versionado com cada módulo emitido |
 
@@ -184,8 +200,8 @@ distribuição e os checksums dos módulos são reportados como não verificados
 | código | significado | onde |
 |---|---|---|
 | `0` | ok; no modo `audit`, sempre | todo comando |
-| `1` | warn ou gate manual; um gate de eval que falhou | `policy check` (`MANUAL` em `enforce`), `eval run`, `benchmark`, `init` com avisos |
-| `2` | block; uma entrada recusada (manifesto ruim, spec ruim, log corrompido, attestation inválida) | `policy check` (`BLOCK`), `attest`, todo erro de validação |
+| `1` | warn ou gate manual; um gate de eval que falhou | `policy check` (`MANUAL` em `enforce`), `eval run`, `benchmark`, `init` com avisos, `decide eval` quando o gate dele falha (novo na 2.6.0), `evidence run` quando o bundle não passou, `evidence verify` sobre um registro íntegro de uma execução que não passou, `retrieval eval` quando o gate dele falha, `cite check` com um aviso (`TOO_MANY`, `UNCITED_CLAIM`) (novo na 2.6.0) |
+| `2` | block; uma entrada recusada (manifesto ruim, spec ruim, log corrompido, attestation inválida) | `policy check` (`BLOCK`), `attest`, `decide validate` e `decide eval` sobre um registro ou suíte que quebra o contrato (novo na 2.6.0), `evidence run` sobre um pedido recusado ou um evento que ele não conseguiu acrescentar, `evidence verify` sobre um registro editado ou que se contradiz, ou cujo artefato mudou ou sumiu, `retrieval eval` sobre uma suíte ou um argumento recusados, `cite check` sobre `UNKNOWN_ID`, `RANGE` ou `EMPTY_MARKER` ou uma entrada recusada (novo na 2.6.0), todo erro de validação |
 | `3` | erro de uso ou interno | erros de uso do `init`, exceções inesperadas |
 
 `hpp init` reporta o código que vai devolver dentro do próprio relatório JSON (`exit_code`) e
@@ -216,7 +232,7 @@ python -m hpp benchmark -k 3
 | banco de grafo | todo mapa é re-derivável de arquivos; um grafo armazenado derivaria das fontes e exigiria o próprio doctor |
 | execução de modelo | o roteamento devolve um tier e um id de provedor; chamar um modelo faria os vereditos dependerem de algo que o harness não consegue reproduzir nem se permitir guardar credenciais para |
 | armazenamento de credenciais | não há nenhuma para vazar; entrada que se pareça com segredo no compilador de contexto é recusada, e a memória de falhas redige por forma |
-| telemetria | nada sai da máquina; qualquer transferência de saída que um agente tente é classificada como `MANUAL` |
+| telemetria | nada sai da máquina; `git push`, `curl`/`wget` para uma URL e o adaptador de decisão de exemplo são classificados como `MANUAL` (uma transferência por outra ferramenta, como `scp`, não casa regra nenhuma) |
 | wiring automático de settings ou hooks | ligar um hook muda o que roda em toda chamada de ferramenta futura; isso é ação humana, impressa para colar |
 | contagem de tokens | o orçamento é em caracteres, que todo host mede do mesmo jeito; uma contagem de tokens amarraria o harness a um tokenizador |
 

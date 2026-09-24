@@ -1,0 +1,75 @@
+# kit.install.yaml — declarative manifest read by kit_doctor.py install (6 stages).
+# Source of truth for EACH field: README.md, .claude-plugin/plugin.json, SETTINGS-WIRE.md,
+# hooks/hooks.json and the scripts themselves (see the notes below).
+
+kit: operator-kit
+
+requires:
+  # No .py in the kit uses post-3.9 runtime syntax (no real walrus, no match statement, no
+  # dict|dict, no removeprefix/zoneinfo/tomllib/Path.walk). ALL 27 .py files carry
+  # `from __future__ import annotations` -> the `list[str]`/`str | None` annotations are
+  # deferred (safe even on old Python). No <3.9 interpreter was available to test this
+  # empirically (only 3.14.3 was tested) -- >=3.9 is the marketplace's own
+  # conservative floor, contradicted by no evidence found.
+  python: ">=3.9"
+  # _lib/profile_loader.py + scripts/drift_check.py + scripts/live_count.py do
+  # `import yaml` (guarded by try/except ImportError -- degrades to {} without PyYAML,
+  # but the central config mechanism only really works with PyYAML present).
+  pyyaml: true
+  # No external service with a credential is required. urllib.request in
+  # scripts/health_probe.py and scripts/drift_check.py points at targets that the user's
+  # OWN operator-profile.yaml declares (health.probes, default []) -- generic, not a
+  # service fixed by the kit, so the kit itself needs no API key or other credential.
+  external_services: []
+
+# NO 'questions:' -- a deliberate decision, not an omission out of laziness (YAGNI).
+# The kit's only real config read is operator-profile.yaml, and it does NOT fit into
+# discrete installer questions: it is a file with ~15 blocks (paths.* pointing at files that
+# must EXIST in the target project, verificacao.done_criterios with stack-specific test
+# commands, guardrails.protected_paths/branches, loop.*, statusline.*, health.probes...).
+# A universal default for any of those fields would be either useless (e.g. done_criterios.py
+# pointing at a command that does not exist in the target project) or actively misleading
+# (pretending the profile is "configured" when only 1 of 15 blocks was answered).
+# kit_doctor.py ALREADY has the right mechanism for this, separate from 'questions': the
+# `stage_profile` stage (copies profile.example.yaml -> operator-profile.yaml IF it does not
+# exist, never overwrites) -- and the README confirms that this is how the kit is
+# installed ("cp profile.example.yaml operator-profile.yaml and adjust"). Forcing 1-2 fields
+# (e.g. "which initial autonomy?") into 'questions:' would ignore the other 14 blocks that
+# still require real human editing -- which is why the whole key stays out.
+
+verification:
+  # The 3 commands below were run from the kit root (Python 3.14.3) and exit 0.
+  # The kit's other 24 .py were also swept with
+  # --self-test (same criterion as the [smoke] stage of kit_doctor.py) and all OK.
+  - "python scripts/done_gate.py --self-test"
+  - "python hooks/rule_capture.py --self-test"
+  - "python hooks/ralph_gate.py --self-test"
+
+hosts:
+  claude-code:
+    # .claude-plugin/plugin.json exists (verified on the filesystem) and already declares
+    # "hooks": "./hooks/hooks.json" + "commands": "./commands" -- a functional plugin.
+    plugin: true
+    # install/wiring.settings.jsonc does NOT exist in this kit (verified: only SETTINGS-WIRE.md
+    # exists at the root). Unlike continuity-kit/lane-kit, which DO have that file. That is why
+    # the 'wiring_spec' key is OMITTED here (schema: "omit the key if it does not exist").
+    # kit_doctor.py `stage_wire_suggest` still works
+    # without it: it detects plugin.json (suggests /plugin install) and detects
+    # SETTINGS-WIRE.md at the root (suggests "follow SETTINGS-WIRE.md") on its own.
+    #
+    # manual_gates: everything SETTINGS-WIRE.md marks as a HUMAN GATE (editing
+    # .claude/settings.local.json). statusLine is ALWAYS manual (Claude Code does not accept
+    # statusLine inside a plugin -- SETTINGS-WIRE.md section 3). The 3 hook events below
+    # (confirmed in hooks/hooks.json: PreToolUse x2 matchers/7 hooks, UserPromptSubmit x1,
+    # Stop x2) are a human gate on the alternative MANUAL path (SETTINGS-WIRE.md section 1)
+    # -- the plugin path arms them automatically via ${CLAUDE_PLUGIN_ROOT}, but kit_doctor.py
+    # never applies either of the two by itself.
+    manual_gates: [statusLine, PreToolUse, UserPromptSubmit, Stop]
+  codex:
+    plugin: false
+    agents: AGENTS.md
+    skills_path: .agents/skills
+    runtime_path: .agents/hpp/operator-kit
+    manual_gates: [statusLine, hooks, PreToolUse, UserPromptSubmit, Stop]
+
+docs: README.md

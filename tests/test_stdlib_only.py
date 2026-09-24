@@ -92,7 +92,7 @@ def test_collector_reports_a_planted_third_party_import(tmp_path: Path):
     }, offenders
 
 
-def test_collector_is_silent_on_stdlib_and_relative_imports(tmp_path: Path):
+def test_CONTROLE_collector_is_silent_on_stdlib_and_relative_imports(tmp_path: Path):
     pkg = tmp_path / "pkg"
     pkg.mkdir()
     (pkg / "__init__.py").write_text("", encoding="utf-8")

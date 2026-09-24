@@ -85,7 +85,7 @@ requires:
   python: ">=3.9"          # opcional, default ">=3.8"
   pyyaml: true              # opcional, default false
   external_services: []     # ex.: supabase-pack declara [{name: Supabase, via: MCP, credenciais: "URL + anon key"}]
-                             # REGRA DURA: nunca declarar ANTHROPIC_API_KEY aqui — regime é assinatura/quota, não pay-per-use
+                             # REGRA DURA: nunca declarar ANTHROPIC_API_KEY aqui — a autenticação do modelo é do host, nunca do kit
 questions:                  # opcional — consumido pelo estágio `configure` E pelo modo --interview de wizards
   - id: <identificador>
     prompt: "<pergunta em pt-BR>"
@@ -111,7 +111,7 @@ docs: README.md
 Reading the block: `requires.python` is optional (default `">=3.8"`); `requires.pyyaml` is
 optional (default `false`); `requires.external_services` names each external service (e.g. the
 supabase-pack declares `[{name: Supabase, via: MCP, credenciais: "URL + anon key"}]`) — HARD RULE:
-never declare `ANTHROPIC_API_KEY` here, the regime is subscription/quota, not pay-per-use;
+never declare `ANTHROPIC_API_KEY` here, model authentication belongs to the host, never to the kit;
 `questions` is optional and is consumed by the `configure` stage AND by the `--interview` mode of
 wizards, `options` applying when `type: choice`; `verification` lists post-install acceptance
 commands, each of which must be executable and exit 0; under `hosts`, `claude-code` is the native
@@ -156,7 +156,7 @@ NEW sources (`kit.install.yaml`, `install/wiring-spec.yaml`) use the neutral tok
 rewritten — they are native Claude Code artefacts and remain so. On Codex, `codex_skills.py`
 copies the runtime to `.agents/hpp/<kit>` and generates namespaced skills under
 `.agents/skills/`, substituting the token only in those copies. Hooks stay off. A future
-Cursor/Gemini adapter = a new entry in `HOSTS` + a `hosts.<new>:` block in the YAMLs — zero
+host adapter = a new entry in `HOSTS` + a `hosts.<new>:` block in the YAMLs — zero
 change to the 6 stages. Do not invent a fake "neutral" event vocabulary: events such as
 `Stop`/`PreCompact` are Claude Code concepts and are declared under `hosts.claude-code`,
 honestly.

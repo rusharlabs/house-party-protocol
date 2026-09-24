@@ -34,7 +34,7 @@ person's interpreter, do not work around a missing `git`.
 ## Step 2 — install the CLI
 
 ```bash
-pip install git+https://github.com/rusharlabs/house-party-protocol@v2.5.8
+pip install git+https://github.com/rusharlabs/house-party-protocol@v2.6.0
 ```
 
 `pipx install git+…` works the same way. The package ships its own manifest and benchmark
@@ -64,6 +64,12 @@ hpp init --target <path-to-the-repository>
 Without `--apply`, `hpp init` **writes nothing**. It runs six fixed stages and prints a plan of
 what it would write.
 
+Read the plan aloud, and not only the lines to paste. When the chosen modules declare hooks, it
+prints a HOOK CAPABILITIES table before the WIRE block: for each hook, its events, its exit policy
+(`observe`, `warn` or `block`) and its capability groups. That table is what the hooks can do once
+wired; the paste lines alone are only file names. Leave `--decision-advisor` at `off` unless the
+person asked for it (new in 2.6.0).
+
 **Show that plan to the person and wait for them to say yes.** Only then:
 
 ```bash
@@ -79,12 +85,14 @@ harness exists to prevent. If you skip it, you have installed the harness by vio
 Claude Code is wired by step 4. Codex CLI needs one more command per module:
 
 ```bash
-installers/kit-forge-1.4.1/kit_doctor.py install --kit <kit> --host codex --target <repo> --apply
+installers/kit-forge-1.4.2/kit_doctor.py install --kit <kit> --host codex --target <repo> --apply
 ```
 
 Skills land in `.agents/skills`; the full runtime lands in `.agents/hpp`. Hooks declared in
-`hooks.json` belong to Claude Code and are **not** activated on Codex — say so rather than
-letting the person believe a gate is armed when it is not.
+`hooks.json` belong to Claude Code and are **not** activated on Codex. `hpp init --host codex`
+still prints the HOOK CAPABILITIES table; read it aloud as what those hooks would do on Claude
+Code, and say that none of them runs here rather than letting the person believe a gate is armed
+when it is not.
 
 ## Step 6 — verify, and report the exit code, not your impression
 
@@ -95,6 +103,10 @@ hpp benchmark
 
 `hpp benchmark` reports `pass@k` and `pass^k` separately and prints its own gate verdict. Quote
 both outputs to the person. A transcript is not an exit code.
+
+If `hpp init` printed a DOCUMENTATION section, point the person to the pages it names; each one
+was found on disk. A pip install carries no documentation pages, so after step 2 the section is
+absent — do not invent paths.
 
 ## Exit codes
 

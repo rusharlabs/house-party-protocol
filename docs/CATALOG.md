@@ -11,16 +11,16 @@ Documents that apply to every kit: [`ARCHITECTURE.md`](ARCHITECTURE.md) · [`ARC
 
 | kit | version | skills | commands | agents | hooks | rules | templates | scripts |
 |---|---|---:|---:|---:|---:|---:|---:|---:|
-| [kit-forge](#kit-forge) | 1.4.1 | 0 | 0 | 0 | 1 | 0 | 0 | 0 |
-| [operator-kit](#operator-kit) | 1.5.0 | 13 | 2 | 2 | 10 | 13 | 1 | 17 |
-| [continuity-kit](#continuity-kit) | 1.3.0 | 2 | 0 | 0 | 3 | 0 | 12 | 2 |
-| [lane-kit](#lane-kit) | 1.3.0 | 1 | 0 | 0 | 4 | 0 | 4 | 4 |
-| [health-kit](#health-kit) | 1.3.2 | 2 | 0 | 0 | 1 | 0 | 0 | 3 |
-| [claude-dev-kit](#claude-dev-kit) | 1.3.2 | 8 | 0 | 0 | 1 | 0 | 0 | 2 |
-| [supabase-pack](#supabase-pack) | 1.1.1 | 2 | 0 | 0 | 0 | 0 | 0 | 0 |
-| [agent-framework-wizard](#agent-framework-wizard) | 1.2.0 | 1 | 0 | 0 | 0 | 0 | 5 | 0 |
-| [dev-squad-kit](#dev-squad-kit) | 1.0.1 | 3 | 12 | 12 | 0 | 0 | 0 | 0 |
-| [gotcha-memory](#gotcha-memory) | 1.0.1 | 1 | 0 | 0 | 3 | 0 | 0 | 0 |
+| [kit-forge](#kit-forge) | 1.4.2 | 0 | 0 | 0 | 1 | 0 | 0 | 0 |
+| [operator-kit](#operator-kit) | 1.6.0 | 13 | 2 | 2 | 10 | 13 | 1 | 17 |
+| [continuity-kit](#continuity-kit) | 1.4.0 | 2 | 0 | 0 | 3 | 0 | 12 | 2 |
+| [lane-kit](#lane-kit) | 1.4.0 | 1 | 0 | 0 | 4 | 0 | 4 | 4 |
+| [health-kit](#health-kit) | 1.3.3 | 2 | 0 | 0 | 1 | 0 | 0 | 3 |
+| [claude-dev-kit](#claude-dev-kit) | 1.3.3 | 8 | 0 | 0 | 1 | 0 | 0 | 2 |
+| [supabase-pack](#supabase-pack) | 1.1.2 | 2 | 0 | 0 | 0 | 0 | 0 | 0 |
+| [agent-framework-wizard](#agent-framework-wizard) | 1.2.1 | 1 | 0 | 0 | 0 | 0 | 5 | 0 |
+| [dev-squad-kit](#dev-squad-kit) | 1.1.0 | 3 | 12 | 12 | 0 | 0 | 0 | 0 |
+| [gotcha-memory](#gotcha-memory) | 1.0.2 | 1 | 0 | 0 | 3 | 0 | 0 | 0 |
 | **total** | | **33** | **14** | **14** | **23** | **13** | **22** | **28** |
 
 ## kit-forge
@@ -80,11 +80,11 @@ The harness's operational module: executable gates, governed loops, standalone p
 
 **Scripts** — `audit_plan.py` · `claude_md_from_profile.py` · `debt_ledger.py` · `delta_inventory.py` · `determinism_harness.py` · `distill_corrections.py` · `done_gate.py` · `drift_check.py` · `gate_sheet_panel.py` · `goal_ledger.py` · `goal_review.py` · `health_probe.py` · `live_count.py` · `passk_eval.py` · `preflight.py` · `status_now.py` · `verify_ladder.py`
 
-**Documents and records** — `docs/ANTHROPIC-STANDARDS.md` · `docs/ANTHROPIC-STANDARDS.pt-BR.md` · `docs/MCP-RUNBOOK.md` · `docs/MCP-RUNBOOK.pt-BR.md` · `docs/RULES-EAGER-BUDGET.md` · `docs/RULES-EAGER-BUDGET.pt-BR.md`
+**Documents and records** — `docs/HOOK-SKILL-STANDARDS.md` · `docs/HOOK-SKILL-STANDARDS.pt-BR.md` · `docs/MCP-RUNBOOK.md` · `docs/MCP-RUNBOOK.pt-BR.md` · `docs/RULES-EAGER-BUDGET.md` · `docs/RULES-EAGER-BUDGET.pt-BR.md`
 
 ## continuity-kit
 
-Handoff-v1.1: a session survives a stop/clear/crash without losing its next step. Schema with git-block + re_derive_cmd (LC-1) + verify_first_cmd (LC-4), Stop/PreCompact/SessionStart hooks. Includes doc-rollup (history/evolution with built-in degradation) + pre-clear (long-term + short-term).
+Handoff-v1.1: a session survives a stop/clear/crash without losing its next step. Schema with git-block + re_derive_cmd (every number carries the command that re-derives it live) + verify_first_cmd (check live before replaying any action the handoff describes), Stop/PreCompact/SessionStart hooks. Includes doc-rollup (history/evolution with built-in degradation) + pre-clear (long-term + short-term).
 
 **Skills**
 
@@ -107,7 +107,7 @@ Handoff-v1.1: a session survives a stop/clear/crash without losing its next step
 
 ## lane-kit
 
-N sessions without collisions. Lane board, cross-model maker!=checker, per-directory lock, git-guard and territory-guard. The checker_router detects Codex, Cursor and Gemini and picks a provider different from the maker's.
+N sessions without collisions. Lane board, cross-model maker!=checker, per-directory lock, git-guard and territory-guard. The checker_router detects Codex, Cursor and Gemini and picks a provider different from the maker's. Best-of-N: compete/select record which of N competing attempts won.
 
 **Skills**
 
@@ -130,7 +130,7 @@ N sessions without collisions. Lane board, cross-model maker!=checker, per-direc
 
 ## health-kit
 
-Service health probe (http/cmd) driven by profile.yaml + a statusline segment with per-service detail (api:OK db:DOWN), cache-first (the statusline never touches the network). Embedded doctrine: SERVICE health != DATA health. +dashboard-builder (Grafana/SigNoz, adapted from ECC, MIT).
+Service health probe (http/cmd) driven by profile.yaml + a statusline segment with per-service detail (api:OK db:DOWN), cache-first (the statusline never touches the network). Embedded doctrine: SERVICE health != DATA health. +dashboard-builder (Grafana/SigNoz).
 
 **Skills**
 
@@ -149,7 +149,7 @@ Service health probe (http/cmd) driven by profile.yaml + a statusline segment wi
 
 ## claude-dev-kit
 
-Tools for building tools: skill-writer, hookify, plugin-dev, teaching, reversible wiring, secret scan, three skills adapted from ECC (MIT) and an auditable registry of candidate external skills.
+Tools for building tools: skill-writer, hookify, plugin-dev, teaching, reversible wiring, secret scan, architecture-decision-records, search-first and skill-scout.
 
 **Skills**
 
@@ -172,7 +172,7 @@ Tools for building tools: skill-writer, hookify, plugin-dev, teaching, reversibl
 
 **Scripts** — `install_git_hook.py` · `wire_settings.py`
 
-**Documents and records** — `docs/hook-template.py` · `docs/SKILL-CANDIDATES.json` · `docs/SKILL-CONTRACT.md` · `docs/SKILL-CONTRACT.pt-BR.md` · `docs/skill-template.md` · `docs/skill-template.pt-BR.md`
+**Documents and records** — `docs/hook-template.py` · `docs/SKILL-CONTRACT.md` · `docs/SKILL-CONTRACT.pt-BR.md` · `docs/skill-template.md` · `docs/skill-template.pt-BR.md`
 
 ## supabase-pack
 
@@ -193,13 +193,13 @@ rls-audit (real RLS via pg_policies + get_advisors) + supabase-edge-scaffold (Ty
 
 | skill | what it does |
 |---|---|
-| `agent-framework-scaffold` | Runs the 6-step wizard that generates the skeleton of a new project (operator-profile.yaml + the chosen TEMPLATE-SET templates) — generic method (check environment → configure → validate → generate), rewritten from scratch. |
+| `agent-framework-scaffold` | Runs the 6-step wizard that generates the skeleton of a new project (operator-profile.yaml + the chosen templates) — check environment → configure → validate → generate. |
 
 **Templates** — `00-PROCESSES.template.md` · `00-READ-FIRST.template.md` · `00-STATE.template.md` · `00-VISION.template.md` · `agents`
 
 ## dev-squad-kit
 
-A squad of 12 roles available as slash commands and real subagents, with explicit tools and read-only QA, plus 3 token-safe parallel reading/consolidation skills. Does not include the proprietary tasks/templates tree.
+A squad of 12 roles available as slash commands and real subagents, with explicit tools and read-only QA, plus 3 token-safe parallel reading/consolidation skills. Ships no tasks/templates tree: the role commands that expect one (*create, *task, *workflow) need your own.
 
 **Skills**
 

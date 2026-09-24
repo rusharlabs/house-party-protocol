@@ -12,6 +12,7 @@ does not exist.
 │ HARNESS       python -m hpp                                              │
 │               doctor · init · event · status · resume · attest · policy  │
 │               work · route · context · map · graph · eval · benchmark    │
+│               decide · evidence · retrieval · cite (new in 2.6.0)        │
 ├──────────────────────────────────────────────────────────────────────────┤
 │ PROTOCOL      hpp.manifest.json                                          │
 │               roles · loop transitions and gates · exit codes            │
@@ -26,7 +27,8 @@ does not exist.
 ```
 
 The harness is stdlib-only and executes no model. It reads files, runs the commands you name,
-and writes to a small number of declared paths.
+and writes to a small number of declared paths. `decide`, `evidence`, `retrieval` and `cite` are
+new in 2.6.0.
 
 ## The `hpp/` package
 
@@ -43,11 +45,23 @@ and writes to a small number of declared paths.
 | `maps.py` | Lane Map, Agent Map, Context Map and Monitor Map as sorted, data-only projections | `map lane`, `map agent`, `map context`, `map monitor` |
 | `graph.py` | capability, operational, agent, evidence and code views from the manifest; JSON or Mermaid | `graph` |
 | `evals.py` | `pass@k` / `pass^k` runner over a suite of cases with three runner kinds | `eval run`, `benchmark` |
+| `decision.py` | validate an `hpp.decision/v1` record made outside the harness (advisory, raise-only, abstention and instrument failure as outcomes); measure a declared decider with selective metrics. Calls no model | `decide validate`, `decide eval` (new in 2.6.0) |
+| `evidence.py` | run a declared criterion command (argv, no shell, its own process group), measure its exit code, hash the artifacts it declared and write a self-hashed record; re-derive a record later. Refuses a secret-like command line. The self-hash makes an edit visible; it is not a signature. Drives no browser | `evidence run`, `evidence verify` (new in 2.6.0) |
+| `retrieval.py` | score a retriever you declare as a command against the ids a suite labels relevant: hit@k, recall@k, precision@k, MRR, nDCG@k, with instrument failures counted apart. Runs no index | `retrieval eval` (new in 2.6.0) |
+| `citations.py` | check that every citation marker in a text resolves to one id of the context it was written from, and flag a quantitative sentence with no marker. Does not judge whether the source supports the sentence | `cite check` (new in 2.6.0) |
 | `controls.py` | the ten executable controls the benchmark runs, each with a positive and a negative case | `benchmark`, `--self-test` |
 | `install.py` | plan-only installation receipt for a bundle on a host; refuses unsupported coverage | `install` |
 | `wizard.py` | `hpp init`: six stages, readiness, plan versus apply, wire block | `init` |
 | `term.py` | colour tier detection, ANSI output, ASCII glyph fallback, no-TTY behaviour | used by `init` |
 | `brand.py` | palette, block wordmark and closing lines for the terminal | used by `init` |
+
+`policy.py` holds eight fixed rules; the first match wins and every `BLOCK` rule is tried before
+any `MANUAL` rule. `BLOCK`: `recursive-delete`, `force-push`, `main-push`, `pipe-to-shell`,
+`destructive-sql`. `MANUAL`: `external-push`, `external-send`, `decision-advisor` (new in
+2.6.0). Anything else is `ALLOW`. The mode
+changes only the exit code: `audit` exits 0 for every verdict, `enforce` exits 2 on `BLOCK` and 1
+on `MANUAL`. What each rule matches is in [CONCEPTS.md](CONCEPTS.md#command-policy); check one with
+`python -m hpp policy check --mode enforce --command "rm -rf src"` (exit 2).
 
 Sizes are small by design; the whole package is readable in one sitting. Nothing imports outside
 the standard library.
@@ -86,8 +100,9 @@ files and writes at most one declared file.
 | path | written by | content | lifetime |
 |---|---|---|---|
 | `.hpp/events.jsonl` | `hpp event append` | one JSON object per line: `seq`, `id`, `type`, `data`; append-only | the workspace's loop history |
-| `.hpp/profile.json` | `hpp init --apply` | host, bundle, modules, policy mode, protocol and product version | until the operator removes it |
+| `.hpp/profile.json` | `hpp init --apply` | host, bundle, modules, policy mode, protocol and product version; `decision_advisor` only when one was declared | until the operator removes it |
 | `.hpp/attestation.json` | `hpp attest create --output` | the bound verdict; the path is yours to choose | until the bytes it describes change |
+| `.hpp/evidence/<id>-<UTC>.json` | `hpp evidence run` (new in 2.6.0) | one record per run, created exclusively: the command, base commit, exit code, verdict, byte count and sha256 of stdout and stderr (never the text), the sha256 of every declared artifact, and the record's own hash; `--out` picks another directory inside the workspace | until the operator removes it; `evidence verify` blocks it once an artifact it names changes |
 | `hpp.manifest.json` | the project | the protocol; found by walking up from the current directory, then next to the source package, then the copy shipped inside the installed package | versioned with the product |
 | module `CHECKSUMS.txt` | the forge | sha256 per distributed file | versioned with each emitted module |
 
@@ -181,8 +196,8 @@ not verified rather than assumed.
 | code | meaning | where |
 |---|---|---|
 | `0` | ok; in `audit` mode, always | every command |
-| `1` | warn or manual gate; an eval gate that failed | `policy check` (`MANUAL` in `enforce`), `eval run`, `benchmark`, `init` with warnings |
-| `2` | block; a refused input (bad manifest, bad spec, corrupt log, invalid attestation) | `policy check` (`BLOCK`), `attest`, every validation error |
+| `1` | warn or manual gate; an eval gate that failed | `policy check` (`MANUAL` in `enforce`), `eval run`, `benchmark`, `init` with warnings, `decide eval` when its gate fails (new in 2.6.0), `evidence run` when the bundle did not pass, `evidence verify` on an intact record of a run that did not pass, `retrieval eval` when its gate fails, `cite check` with a warning (`TOO_MANY`, `UNCITED_CLAIM`) (new in 2.6.0) |
+| `2` | block; a refused input (bad manifest, bad spec, corrupt log, invalid attestation) | `policy check` (`BLOCK`), `attest`, `decide validate` and `decide eval` on a record or suite that breaks the contract (new in 2.6.0), `evidence run` on a refused request or an event it could not append, `evidence verify` on a record that was edited or contradicts itself or whose artifact changed or went missing, `retrieval eval` on a refused suite or argument, `cite check` on `UNKNOWN_ID`, `RANGE` or `EMPTY_MARKER` or a refused input (new in 2.6.0), every validation error |
 | `3` | usage or internal error | `init` usage errors, unexpected exceptions |
 
 `hpp init` reports the code it will return inside its JSON report (`exit_code`) and halts the
@@ -213,7 +228,7 @@ python -m hpp benchmark -k 3
 | graph database | every map is re-derivable from files; a stored graph would drift from its sources and require its own doctor |
 | model execution | routing returns a tier and a provider id; calling a model would make verdicts depend on something the harness cannot reproduce or afford to hold credentials for |
 | credential storage | there is none to leak; secret-like input to the context compiler is refused, and the failure memory redacts by shape |
-| telemetry | nothing leaves the machine; any outbound transfer an agent attempts is classified `MANUAL` |
+| telemetry | nothing leaves the machine; `git push`, `curl`/`wget` to a URL and the example decision adapter are classified `MANUAL` (a transfer by another tool, such as `scp`, matches no rule) |
 | automatic settings or hook wiring | enabling a hook changes what runs on every future tool call; that is a human action, printed for pasting |
 | token counting | the budget is in characters, which every host measures the same way; a token count would tie the harness to a tokenizer |
 

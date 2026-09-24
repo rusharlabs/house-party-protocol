@@ -85,9 +85,9 @@ def test_what_was_not_measured_is_not_verified_never_zero_nor_a_hundred(target, 
     # from inside the emitted copy they EXIST and become `verified`. Fixing `not-verified` would
     # tie the test to one of the two trees and would fail the other for being complete.
     source = not (Path(wizard.__file__).resolve().parents[1] / "marketplace.json").is_file()
-    esperado = "not-verified" if source else "verified"
-    assert _item(report, "distribution")["status"] == esperado
-    assert _item(report, "checksums")["status"] == esperado
+    expected = "not-verified" if source else "verified"
+    assert _item(report, "distribution")["status"] == expected
+    assert _item(report, "checksums")["status"] == expected
     assert 0 < report["readiness"]["verified"] < report["readiness"]["total"]
 
 

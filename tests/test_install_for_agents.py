@@ -18,8 +18,8 @@ from pathlib import Path
 from hpp import __version__
 
 PRODUCT_ROOT = Path(__file__).resolve().parent.parent
-GUIA_EN = PRODUCT_ROOT / "INSTALL_FOR_AGENTS.md"
-GUIA_PT = PRODUCT_ROOT / "INSTALL_FOR_AGENTS.pt-BR.md"
+GUIDE_EN = PRODUCT_ROOT / "INSTALL_FOR_AGENTS.md"
+GUIDE_PT = PRODUCT_ROOT / "INSTALL_FOR_AGENTS.pt-BR.md"
 README_EN = PRODUCT_ROOT / "README.md"
 README_PT = PRODUCT_ROOT / "README.pt-BR.md"
 AGENTS = PRODUCT_ROOT / "AGENTS.md"
@@ -33,72 +33,72 @@ INSTALL_LINE = re.compile(
 EXIT_CODES = "`0` ok · `1` warn/manual · `2` block · `3` error."
 
 
-def _ler(p: Path) -> str:
+def _read(p: Path) -> str:
     return p.read_text(encoding="utf-8")
 
 
-def _comandos_de_instalacao(texto: str) -> list[str]:
-    return INSTALL_LINE.findall(texto)
+def _install_commands(text: str) -> list[str]:
+    return INSTALL_LINE.findall(text)
 
 
-def test_os_quatro_arquivos_existem() -> None:
-    for p in (GUIA_EN, GUIA_PT, README_EN, README_PT):
-        assert p.is_file(), f"{p.name} nao existe"
+def test_the_four_files_exist() -> None:
+    for p in (GUIDE_EN, GUIDE_PT, README_EN, README_PT):
+        assert p.is_file(), f"{p.name} does not exist"
 
 
-def test_a_versao_pinada_no_guia_e_a_que_embarca() -> None:
-    for guia in (GUIA_EN, GUIA_PT):
-        achados = _comandos_de_instalacao(_ler(guia))
-        assert achados, f"{guia.name}: nenhum comando de instalacao no formato esperado"
-        assert set(achados) == {__version__}, (
-            f"{guia.name} pina {sorted(set(achados))}, o pacote e {__version__}"
+def test_the_version_pinned_in_the_guide_is_the_one_that_ships() -> None:
+    for guide in (GUIDE_EN, GUIDE_PT):
+        found = _install_commands(_read(guide))
+        assert found, f"{guide.name}: no install command in the expected format"
+        assert set(found) == {__version__}, (
+            f"{guide.name} pins {sorted(set(found))}, the package is {__version__}"
         )
 
 
-def test_o_guia_e_o_readme_pinam_a_MESMA_versao() -> None:
-    do_readme = set(_comandos_de_instalacao(_ler(README_EN))) | set(
-        _comandos_de_instalacao(_ler(README_PT))
+def test_the_guide_and_the_readme_pin_the_SAME_version() -> None:
+    from_readme = set(_install_commands(_read(README_EN))) | set(
+        _install_commands(_read(README_PT))
     )
-    do_guia = set(_comandos_de_instalacao(_ler(GUIA_EN))) | set(
-        _comandos_de_instalacao(_ler(GUIA_PT))
+    from_guide = set(_install_commands(_read(GUIDE_EN))) | set(
+        _install_commands(_read(GUIDE_PT))
     )
-    assert do_readme, "o README deixou de carregar o comando de instalacao"
-    assert do_readme == do_guia, f"README pina {sorted(do_readme)}, guia pina {sorted(do_guia)}"
+    assert from_readme, "the README no longer carries the install command"
+    assert from_readme == from_guide, f"README pins {sorted(from_readme)}, guide pins {sorted(from_guide)}"
 
 
-def test_os_codigos_de_saida_batem_com_AGENTS_md() -> None:
-    # Why: um agente decide se para ou segue pelo exit code. Duas tabelas divergentes na mesma
-    # arvore fazem ele parar no caso errado, e nenhuma das duas parece errada isolada.
-    assert EXIT_CODES in _ler(AGENTS), "AGENTS.md mudou a tabela de exit codes"
-    for guia in (GUIA_EN, GUIA_PT):
-        assert EXIT_CODES in _ler(guia), f"{guia.name} divergiu da tabela de AGENTS.md"
+def test_the_exit_codes_match_AGENTS_md() -> None:
+    # Why: an agent decides whether to stop or carry on by the exit code. Two diverging tables in
+    # the same tree make it stop in the wrong case, and neither of them looks wrong on its own.
+    assert EXIT_CODES in _read(AGENTS), "AGENTS.md changed the exit code table"
+    for guide in (GUIDE_EN, GUIDE_PT):
+        assert EXIT_CODES in _read(guide), f"{guide.name} diverged from the AGENTS.md table"
 
 
-def test_o_guia_exige_o_plano_antes_do_apply() -> None:
-    # Why: este e' o unico passo do guia que protege a pessoa. Se ele sair numa reescrita, o
-    # guia passa a ensinar um instalador que escreve antes de alguem ler -- a falha que o
-    # proprio produto existe para impedir.
-    assert "DO NOT SKIP" in _ler(GUIA_EN)
-    assert "NÃO PULE" in _ler(GUIA_PT)
-    for guia in (GUIA_EN, GUIA_PT):
-        texto = _ler(guia)
-        sem_apply = texto.index("hpp init --target")
-        com_apply = texto.index("--apply", sem_apply)
-        assert sem_apply < com_apply, f"{guia.name}: o --apply aparece antes do plano"
+def test_the_guide_requires_the_plan_before_apply() -> None:
+    # Why: this is the only step of the guide that protects the person. If it drops out in a
+    # rewrite, the guide starts teaching an installer that writes before anyone reads -- the
+    # failure the product itself exists to prevent.
+    assert "DO NOT SKIP" in _read(GUIDE_EN)
+    assert "NÃO PULE" in _read(GUIDE_PT)
+    for guide in (GUIDE_EN, GUIDE_PT):
+        text = _read(guide)
+        without_apply = text.index("hpp init --target")
+        with_apply = text.index("--apply", without_apply)
+        assert without_apply < with_apply, f"{guide.name}: --apply appears before the plan"
 
 
-def test_o_README_aponta_para_o_guia() -> None:
-    # Why: nenhum agente le este arquivo por convencao -- o nome nao e' padrao em lugar nenhum.
-    # Ele so' e' encontrado se o README o anunciar, entao o ponteiro E' a feature.
+def test_the_README_points_to_the_guide() -> None:
+    # Why: no agent reads this file by convention -- the name is not a standard anywhere. It is
+    # only found if the README announces it, so the pointer IS the feature.
     for readme in (README_EN, README_PT):
-        assert "INSTALL_FOR_AGENTS" in _ler(readme), f"{readme.name} nao aponta para o guia"
+        assert "INSTALL_FOR_AGENTS" in _read(readme), f"{readme.name} does not point to the guide"
 
 
-def test_CONTROLE_o_detector_reprova_uma_versao_divergente() -> None:
-    # Why (LC-1n): sem este controle, os testes acima passariam com o regex quebrado -- um
-    # padrao que nao casa nada devolve lista vazia, e "vazio == vazio" e' verdadeiro.
-    falso = "pip install git+https://github.com/rusharlabs/house-party-protocol@v0.0.1"
-    assert _comandos_de_instalacao(falso) == ["0.0.1"], "o detector nao le a versao"
-    assert _comandos_de_instalacao("pip install house-party-protocol") == [], (
-        "o detector casa uma linha que nao e' a forma pinada"
+def test_CONTROLE_the_detector_rejects_a_divergent_version() -> None:
+    # Why: without this control, the tests above would pass with a broken regex -- a pattern that
+    # matches nothing returns an empty list, and "empty == empty" is true.
+    fake = "pip install git+https://github.com/rusharlabs/house-party-protocol@v0.0.1"
+    assert _install_commands(fake) == ["0.0.1"], "the detector does not read the version"
+    assert _install_commands("pip install house-party-protocol") == [], (
+        "the detector matches a line that is not the pinned form"
     )

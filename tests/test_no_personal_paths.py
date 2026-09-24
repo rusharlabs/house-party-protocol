@@ -96,7 +96,7 @@ def test_scanner_reports_each_personal_path_form(tmp_path: Path):
     assert all(":2: " in hit for hit in hits), hits
 
 
-def test_scanner_is_silent_on_a_clean_tree(tmp_path: Path):
+def test_CONTROLE_scanner_is_silent_on_a_clean_tree(tmp_path: Path):
     # Control: prose that mentions users, homes and drive letters without a personal path.
     _planted(tmp_path, "clean.md", "Users of the CLI run `hpp init --target ../your-repo` from C:\\ or /opt.")
     _planted(tmp_path, "clean.py", 'HOME = "/home"  # the directory, not an account')

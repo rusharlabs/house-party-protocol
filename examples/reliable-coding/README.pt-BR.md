@@ -2,7 +2,7 @@
 
 # Exemplo de codificação confiável
 
-Esta fixture é um benchmark determinístico e offline para o harness. Os nove
+Esta fixture é um benchmark determinístico e offline para o harness. Os dez
 controles dela executam mecanismos reais do HPP com casos positivos e negativos;
 eles não reproduzem resultados pré-aprovados. Um resultado que passa prova apenas
 esses controles declarados, não a qualidade de um modelo nem a saúde de um serviço

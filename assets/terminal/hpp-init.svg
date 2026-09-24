@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="972" height="816" viewBox="0 0 972 816" role="img" aria-label="python -m hpp init --target your-repo --non-interactive --no-animation — measured output, 2026-09-22" font-family="ui-monospace, Menlo, Consolas, 'Liberation Mono', monospace" font-size="13">
-  <title>python -m hpp init --target your-repo --non-interactive --no-animation — measured output, 2026-09-22</title>
+<svg xmlns="http://www.w3.org/2000/svg" width="972" height="816" viewBox="0 0 972 816" role="img" aria-label="python -m hpp init --target your-repo --non-interactive --no-animation — measured output, 2026-09-23" font-family="ui-monospace, Menlo, Consolas, 'Liberation Mono', monospace" font-size="13">
+  <title>python -m hpp init --target your-repo --non-interactive --no-animation — measured output, 2026-09-23</title>
   <desc>Rendered from the command's real stdout by scripts/render_terminal_svg.py; no image was edited by hand.</desc>
   <rect width="972" height="816" rx="10" fill="#0F1113"/>
   <path d="M0 10a10 10 0 0 1 10-10h952a10 10 0 0 1 10 10v30H0z" fill="#16191C"/>
   <circle cx="22" cy="20" r="5" fill="#FF6A00"/><circle cx="40" cy="20" r="5" fill="#8E8A83"/><circle cx="58" cy="20" r="5" fill="#8E8A83"/>
   <text x="486" y="25" text-anchor="middle" fill="#8E8A83" font-size="12">python -m hpp init --target your-repo --non-interactive --no-animation</text>
   <text x="24" y="64" xml:space="preserve"><tspan fill="#FF6A00" font-weight="bold">$ </tspan><tspan fill="#F4F1EB" font-weight="bold">python -m hpp init --target your-repo --non-interactive --no-animation</tspan></text>
-  <text x="24" y="84" xml:space="preserve"><tspan fill="#F4F1EB">house-party init · v2.5.0 · plan · target your-repo</tspan></text>
+  <text x="24" y="84" xml:space="preserve"><tspan fill="#F4F1EB">house-party init · v2.5.8 · plan · target your-repo</tspan></text>
   <text x="24" y="124" xml:space="preserve"><tspan fill="#FF6A00">&gt;</tspan><tspan fill="#F4F1EB"> detecting host...           </tspan><tspan fill="#FF6A00">✓</tspan><tspan fill="#F4F1EB"> greenfield · 0 existing item(s) preserved</tspan></text>
   <text x="24" y="144" xml:space="preserve"><tspan fill="#FF6A00">&gt;</tspan><tspan fill="#F4F1EB"> checking prerequisites...   </tspan><tspan fill="#FF6A00">✓</tspan><tspan fill="#F4F1EB"> python 3.14.3 · protocol 2.1</tspan></text>
   <text x="24" y="164" xml:space="preserve"><tspan fill="#FF6A00">&gt;</tspan><tspan fill="#F4F1EB"> mounting profile...         </tspan><tspan fill="#FF6A00">✓</tspan><tspan fill="#F4F1EB"> would-write · host=claude-code · bundle=reliable-coding · policy=audit · 3 default(s)</tspan></text>

@@ -9,17 +9,21 @@ from typing import Any
 
 from hpp import __version__
 from hpp.attest import AttestationError, create_attestation, verify_attestation
+from hpp.citations import check_files as check_citations, exit_for as citations_exit_for
 from hpp.context import compile_context
+from hpp.decision import effective as decision_effective, exit_for as decision_exit_for, run_decision_suite, validate as validate_decision
 from hpp.evals import EvalError, exit_for as eval_exit_for, packaged_suite, run_suite
+from hpp.evidence import exit_for_run as evidence_run_exit, exit_for_verify as evidence_verify_exit, run_evidence, verify_evidence
 from hpp.graph import build_graph, to_mermaid
 from hpp.install import InstallError, installation_plan
 from hpp.manifest import ManifestError, hook_capability_census, load_manifest, validate_distribution
 from hpp.maps import build_agent_map, build_context_map, build_lane_map, build_monitor_map
 from hpp.policy import assess, exit_for as policy_exit_for
+from hpp.retrieval import exit_for as retrieval_exit_for, run_retrieval_suite
 from hpp.routing import route
 from hpp.state import StateError, append_event, event_path, project, read_events
 from hpp.term import Console
-from hpp.wizard import InitUsageError, prepare_options, run_init_command
+from hpp.wizard import DECISION_ADVISORS, InitUsageError, prepare_options, run_init_command
 from hpp.workgraph import compile_workgraph
 
 
@@ -57,7 +61,7 @@ def _read_json(path: str, expected: type) -> Any:
 def command_doctor(args: argparse.Namespace) -> int:
     manifest, path = _manifest(args)
     distribution = validate_distribution(manifest, path.parent)
-    # Why (A4, 2026-09-22): load_manifest already refuses a hook without a declaration, so
+    # Why (hook capability census, 2026-09-22): load_manifest already refuses a hook without a declaration, so
     # reaching this line IS the pass. The census is printed so the answer to "what can the
     # hooks I am about to paste do?" is a number, not a reading of nine Python files.
     hooks = hook_capability_census(manifest)
@@ -198,6 +202,60 @@ def command_route(args: argparse.Namespace) -> int:
     return 0
 
 
+def command_decide(args: argparse.Namespace) -> int:
+    if args.decide_command == "validate":
+        record = validate_decision(_read_json(args.record, dict))
+        _json({"status": "valid", "effective": decision_effective(record), "record": record})
+        return 0
+    command = None
+    if args.decider_command:
+        command = json.loads(args.decider_command)
+        if not isinstance(command, list) or not command or not all(isinstance(item, str) and item for item in command):
+            raise ValueError("--decider-command must be a JSON array of strings (argv, no shell)")
+    report = run_decision_suite(Path(args.suite), decider_command=command, timeout=args.timeout,
+                                min_selective_accuracy=args.min_selective_accuracy,
+                                max_confident_errors=args.max_confident_errors, max_failures=args.max_failures)
+    _json(report)
+    return decision_exit_for(report)
+
+
+def command_retrieval(args: argparse.Namespace) -> int:
+    command = None
+    if args.retriever_command is not None:
+        command = json.loads(args.retriever_command)
+        if not isinstance(command, list) or not command or not all(isinstance(item, str) and item for item in command):
+            raise ValueError("--retriever-command must be a JSON array of strings (argv, no shell)")
+    report = run_retrieval_suite(Path(args.suite), retriever_command=command, k=args.k, timeout=args.timeout,
+                                 min_recall=args.min_recall, max_failures=args.max_failures)
+    _json(report)
+    return retrieval_exit_for(report)
+
+
+def command_cite(args: argparse.Namespace) -> int:
+    options = {"max_per_sentence": args.max_per_sentence}
+    if args.marker is not None:
+        options["marker"] = args.marker
+    report = check_citations(args.text, args.context, **options)
+    _json(report)
+    return citations_exit_for(report)
+
+
+def command_evidence(args: argparse.Namespace) -> int:
+    root = Path.cwd()
+    if args.evidence_command == "verify":
+        report = verify_evidence(Path(args.record), root=root)
+        _json(report)
+        return evidence_verify_exit(report)
+    command = list(args.criterion)
+    if command and command[0] == "--":
+        command = command[1:]
+    manifest = _manifest(args)[0] if args.record_event else None
+    record = run_evidence(args.id, command, args.artifact or [], root=root, timeout=args.timeout,
+                          out_dir=Path(args.out) if args.out else None, manifest=manifest)
+    _json(record)
+    return evidence_run_exit(record)
+
+
 def command_context(args: argparse.Namespace) -> int:
     _json(compile_context(_read_json(args.inputs, list), args.budget))
     return 0
@@ -272,7 +330,10 @@ def build_parser() -> argparse.ArgumentParser:
     init.add_argument("--modules", help="comma-separated module ids instead of a bundle")
     init.add_argument("--policy-mode", dest="policy_mode", choices=["audit", "enforce"],
                       help="how the command policy should run in the suggested wiring")
-    init.add_argument("--profile", help="JSON file with answers: host, bundle, policy_mode, modules")
+    init.add_argument("--decision-advisor", dest="decision_advisor",
+                      choices=list(DECISION_ADVISORS),
+                      help="optional typed-decision advisor you will integrate yourself; hpp never calls it (default: off)")
+    init.add_argument("--profile", help="JSON file with answers: host, bundle, policy_mode, modules, decision_advisor")
     init.add_argument("--yes", action="store_true", help="accept every default without prompting")
     init.add_argument("--non-interactive", dest="non_interactive", action="store_true",
                       help="never prompt; unanswered questions take their defaults")
@@ -350,6 +411,75 @@ def build_parser() -> argparse.ArgumentParser:
     route_parser.add_argument("--providers", required=True)
     route_parser.add_argument("--policy", choices=["economy", "balanced", "frontier"], default="balanced")
     route_parser.set_defaults(func=command_route)
+
+    decide = sub.add_parser(
+        "decide",
+        description="Typed-decision records made OUTSIDE the harness: validate one, or measure a decider. "
+                    "hpp never calls a model; a decider is a command you declare.",
+    )
+    decide_sub = decide.add_subparsers(dest="decide_command", required=True)
+    decide_validate = decide_sub.add_parser("validate", help="check one hpp.decision/v1 record and print its effective value")
+    decide_validate.add_argument("record")
+    decide_validate.set_defaults(func=command_decide)
+    decide_eval = decide_sub.add_parser("eval", help="measure a decider on a labelled suite; abstention is an outcome")
+    decide_eval.add_argument("suite")
+    decide_eval.add_argument("--decider-command", dest="decider_command",
+                             help='JSON argv of the decider, e.g. ["python", "decide.py"]; omit to replay the records in the suite')
+    decide_eval.add_argument("--timeout", type=float, default=10.0, help="seconds per case before it counts as an instrument failure")
+    decide_eval.add_argument("--min-selective-accuracy", dest="min_selective_accuracy", type=float, default=0.9)
+    decide_eval.add_argument("--max-confident-errors", dest="max_confident_errors", type=int, default=0)
+    decide_eval.add_argument("--max-failures", dest="max_failures", type=int, default=0)
+    decide_eval.set_defaults(func=command_decide)
+
+    retrieval = sub.add_parser(
+        "retrieval",
+        description="Measure a retriever on a labelled suite: hit@k, recall@k, precision@k, MRR and nDCG@k, "
+                    "with instrument failures counted apart. hpp calls no model; a retriever is a command you declare.",
+    )
+    retrieval_sub = retrieval.add_subparsers(dest="retrieval_command", required=True)
+    retrieval_eval = retrieval_sub.add_parser("eval", help="score a retriever against the relevant ids of each case")
+    retrieval_eval.add_argument("suite")
+    retrieval_eval.add_argument("--retriever-command", dest="retriever_command",
+                                help='JSON argv of the retriever, e.g. ["python", "search.py"]; omit to replay the results in the suite')
+    retrieval_eval.add_argument("-k", type=int, default=None, help="cut-off; defaults to the suite's k")
+    retrieval_eval.add_argument("--timeout", type=float, default=10.0, help="seconds per case before it counts as an instrument failure")
+    retrieval_eval.add_argument("--min-recall", dest="min_recall", type=float, default=0.8)
+    retrieval_eval.add_argument("--max-failures", dest="max_failures", type=int, default=0)
+    retrieval_eval.set_defaults(func=command_retrieval)
+
+    cite = sub.add_parser(
+        "cite",
+        description="Check the citation markers in a text against the ids of the context it was written from: "
+                    "unknown ids and ranges block, uncited numbers and overloaded sentences warn.",
+    )
+    cite_sub = cite.add_subparsers(dest="cite_command", required=True)
+    cite_check = cite_sub.add_parser("check", help="read the two files given and report every finding")
+    cite_check.add_argument("--text", required=True, help="the answer or report to check (UTF-8)")
+    cite_check.add_argument("--context", required=True, help="JSON list of the context items and their ids")
+    cite_check.add_argument("--max-per-sentence", dest="max_per_sentence", type=int, default=4)
+    cite_check.add_argument("--marker", help=r"regex with one group for the id (default: \[ID:(...)\])")
+    cite_check.set_defaults(func=command_cite)
+
+    evidence = sub.add_parser(
+        "evidence",
+        description="Run a declared criterion command and hash the artifacts it produced (a trace, screenshots, "
+                    "logs); verify re-hashes them later. hpp drives no browser and calls no model.",
+    )
+    evidence_sub = evidence.add_subparsers(dest="evidence_command", required=True)
+    evidence_run = evidence_sub.add_parser("run", help="run the criterion and write .hpp/evidence/<id>-<utc>.json")
+    evidence_run.add_argument("--id", required=True, help="a plain name for this evidence, e.g. e2e-login")
+    evidence_run.add_argument("--artifact", action="append",
+                              help="glob of a file the command must produce, relative to the workspace; repeatable")
+    evidence_run.add_argument("--timeout", type=float, default=600.0, help="seconds before the run counts as a timeout")
+    evidence_run.add_argument("--out", help="directory for the record, relative to the workspace (default .hpp/evidence)")
+    evidence_run.add_argument("--record-event", dest="record_event", action="store_true",
+                              help="append evidence_recorded to the event log when, and only when, the bundle passed")
+    evidence_run.add_argument("--manifest")
+    evidence_run.add_argument("criterion", nargs=argparse.REMAINDER, help="-- then the command to run")
+    evidence_run.set_defaults(func=command_evidence)
+    evidence_verify = evidence_sub.add_parser("verify", help="re-hash a record and its artifacts")
+    evidence_verify.add_argument("record")
+    evidence_verify.set_defaults(func=command_evidence)
 
     context = sub.add_parser("context")
     context_sub = context.add_subparsers(dest="context_command", required=True)

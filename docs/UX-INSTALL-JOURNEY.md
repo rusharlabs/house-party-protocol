@@ -4,13 +4,16 @@
 
 > **Version:** 2.0.0 — a presentation layer over two frozen contracts.
 > **Path 1** is `hpp init`, the harness installer (`hpp/wizard.py`, six stages, plan then
-> `--apply`). **Path 2** is the module installer, `installers/kit-forge-1.4.1/kit_doctor.py`,
+> `--apply`). **Path 2** is the module installer, `installers/kit-forge-1.4.2/kit_doctor.py`,
 > whose mechanics live in `INSTALL-CONTRACT.md` and whose per-module README follows
 > `INSTALL-GUIDE-TEMPLATE.md`; both ship at the root of this repository. This document describes
 > the EXPERIENCE: how an AGENT (Claude Code or Codex CLI) guides a HUMAN through the installation,
 > in a conversation. Nothing here changes the mechanics — if this document contradicts the code or
-> `INSTALL-CONTRACT.md`, they win. Every output quoted below was measured on 2026-09-21 against
-> version 2.4.1, from a clone of this repository unless the text says "pip install".
+> `INSTALL-CONTRACT.md`, they win. Every `hpp init` output quoted in Path 1 was measured on
+> 2026-09-23 against version 2.5.8, from a clone of this repository at the `v2.5.8` tag unless the
+> text says "pip install"; the `kit_doctor.py` outputs in Path 2 were captured on 2026-09-21 against
+> version 2.4.1, and the end-to-end example says what has changed since. What is marked
+> *new in 2.6.0* arrived after the version measured here.
 
 ## Principle
 
@@ -43,9 +46,9 @@ finished.
 |---|---|---|---|
 | `detect` | `detecting host...` | `greenfield`, `in-progress` or `re-run`, from `.claude/settings*.json`, `AGENTS.md`, `.agents/`, `.hpp/events.jsonl`, a previous `.hpp/profile.json` and the git commit count; lists what exists and is kept | a corrupt event log or profile is a warning with the file to inspect |
 | `prereqs` | `checking prerequisites...` | Python at or above 3.10; the manifest contract; the distribution when `marketplace.json` sits beside the manifest; `git` on `PATH` | Python below the floor or a manifest/marketplace divergence halts (exit 2) |
-| `profile` | `mounting profile...` | the three answers — host, bundle, policy mode — from flags, `--profile`, the prompt (TTY only) or the default, with the source of each recorded | a recorded profile with different answers is a `conflict`; nothing is overwritten |
+| `profile` | `mounting profile...` | four answers — host, bundle, policy mode and an optional decision advisor (new in 2.6.0; default `off`, never counted as a pending default) — from flags, `--profile`, the prompt (TTY only) or the default, with the source of each recorded | a recorded profile with different answers is a `conflict`; nothing is overwritten |
 | `configure` | `loading modules...` | the module plan for the host, `native` or `explicit-command` per module, and `CHECKSUMS.txt` for every module directory present | a module unsupported on the host, or a checksum mismatch, halts (exit 2) |
-| `wire-suggest` | `wiring suggestions...` | the block to paste: plugin lines for Claude Code, module-installer lines for Codex CLI and for explicit-command modules, the policy command as configured | nothing; it never writes |
+| `wire-suggest` | `wiring suggestions...` | the block to paste: plugin lines for Claude Code, module-installer lines for Codex CLI and for explicit-command modules, the policy command as configured; before the block, a HOOK CAPABILITIES table — each hook the chosen modules declare, with its events, its exit policy (`observe`, `warn`, `block`) and its capability groups — counted on the boot line (`17 hooks declaring capabilities` for `reliable-coding`) | nothing; it never writes |
 | `smoke` | `verifying evidence...` | four controls: policy classifier, capability graph, event log, benchmark at `k=1` | a failed control sets exit 1 and names itself |
 
 ### Plan, then `--apply`
@@ -55,8 +58,10 @@ finished.
    (from a pip install). Plan mode is the default: nothing is written, the target holds the same
    files afterwards, exit 0.
 2. **Translation.** The agent pastes the confirmation block (template below) into the
-   conversation: what `detect` saw, the three answers and where each came from, the readiness
-   line with what was and was not verified, and the wire block.
+   conversation: what `detect` saw, the four answers (the fourth, the decision advisor, is
+   optional) and where each came from, the readiness line with what was and was not verified, the
+   HOOK CAPABILITIES table read aloud, the wire block, and the pages the DOCUMENTATION section
+   named.
 3. **Human confirmation.** The human answers in natural language — "apply it", "go ahead",
    "yes". Anything that is not a clear confirmation = do not apply. If the human wants a
    different answer (another host, `enforce` instead of `audit`, an explicit module list), the
@@ -66,7 +71,7 @@ finished.
    gains one verified item:
 
 ```text
-> mounting profile...         ✓ written · host=claude-code · bundle=reliable-coding · policy=audit
+> mounting profile...         ✓ written · host=claude-code · bundle=reliable-coding · policy=audit · 3 default(s)
 
   ██████████████████░░  10/11 verified · 1 not verified · 0 failed
     ✓ profile recorded        .hpp/profile.json written
@@ -86,7 +91,7 @@ and `profile` reports `unchanged`. Different answers against a recorded profile 
 the differing keys are named, nothing is overwritten, exit 1.
 
 ```text
-> mounting profile...         ! conflict · host=claude-code · bundle=reliable-coding · policy=enforce
+> mounting profile...         ! conflict · host=claude-code · bundle=reliable-coding · policy=enforce · 2 default(s)
 
   PROBLEMS  what was measured, what was expected, what to do
     ✗ profile  [profile]
@@ -107,7 +112,7 @@ plan against an empty target reads:
 > checking prerequisites...   ✓ python 3.14.3 · protocol 2.1
 > mounting profile...         ✓ would-write · host=claude-code · bundle=reliable-coding · policy=audit · 3 default(s)
 > loading modules...          ✓ 6 modules · reliable-coding · claude-code · 6/6 checksums verified
-> wiring suggestions...       ✓ 7 commands to paste · 0 files written
+> wiring suggestions...       ✓ 7 commands to paste · 0 files written · 17 hooks declaring capabilities
 > verifying evidence...       ✓ policy · graph · events · benchmark
 > protocol online.
 
@@ -122,14 +127,20 @@ distribution integrity and module checksums are reported as not verified because
 nothing to measure them against, never as passed. The agent quotes the line it got, not the
 line it expected.
 
+After NEXT, the report prints a DOCUMENTATION section that names only pages found on disk. From a clone it
+lists `INSTALL_FOR_AGENTS.md`, `docs/CATALOG.md` and `docs/MANUAL.html`; a pip install carries no
+documentation pages, and the section is then absent rather than pointing at files that are not
+there. The agent passes on the paths it was given and invents none.
+
 ### Flags
 
 | Flag | Effect |
 |---|---|
 | `--target <dir>` | the project to initialise (default: current directory) |
 | `--apply` | write `.hpp/profile.json`; without it, plan only |
-| `--host`, `--bundle`, `--policy-mode audit\|enforce` | answer the three questions; `--modules a,b` replaces the bundle with an explicit list |
-| `--profile answers.json` | the same answers from a file (keys `host`, `bundle`, `policy_mode`, `modules`; an unknown key is a usage error) |
+| `--host`, `--bundle`, `--policy-mode audit\|enforce` | answer the three required questions; `--modules a,b` replaces the bundle with an explicit list |
+| `--decision-advisor off\|typesafe\|openrouter\|compatible` | new in 2.6.0. The optional fourth question (default `off`): records a typed-decision advisor you declare and prints how to integrate it; hpp never calls it and stores no key |
+| `--profile answers.json` | the same answers from a file (keys `host`, `bundle`, `policy_mode`, `modules` and, new in 2.6.0, `decision_advisor`; an unknown key is a usage error) |
 | `--yes`, `--non-interactive`, `--json`, or `CI` in the environment | no prompt is reached; unanswered questions take their defaults and the report says so |
 | `--no-animation` | plain output; `NO_COLOR` is honoured; without a TTY the output is complete and uncoloured |
 | `--no-benchmark` | skip the benchmark control in smoke; it is reported as not verified, not silently dropped |
@@ -143,7 +154,7 @@ line it expected.
 | `0` | plan or apply completed; every control that ran passed | the plans quoted above |
 | `1` | a warning: a smoke control failed, or the recorded profile conflicts with the answers given | `--policy-mode enforce` over a profile recorded with `audit` |
 | `2` | a blocking refusal: Python below 3.10, manifest/marketplace divergence, a module unsupported on the host, a checksum mismatch, an unknown module id | `--host codex --modules claude-dev-kit` → `loading modules... ✗ bundle custom requires claude-dev-kit, unsupported on codex` |
-| `3` | a usage error in the invocation itself | a `--profile` file with an unknown key → `hpp init: profile file has unknown keys: colour (allowed: bundle, host, modules, policy_mode)` |
+| `3` | a usage error in the invocation itself | a `--profile` file with an unknown key → `hpp init: profile file has unknown keys: colour (allowed: bundle, host, modules, policy_mode)` (2.6.0 also lists `decision_advisor`) |
 
 With `--json`, the code the process will return is also inside the report (`exit_code`), and a
 stage that halted the run leaves the later ones as `not run`.
@@ -151,18 +162,21 @@ stage that halted the run leaves the later ones as `not run`.
 ### What the agent says (template)
 
 The text the agent pastes into the conversation when presenting an `hpp init` plan. Placeholders
-in `{}`. The template is written in English; the agent speaks in the human's language and adapts
-the wording, not the structure.
+in `{}`; a part in `[]` enters only when it applies — the decision advisor only when it is not
+`off` (new in 2.6.0). The template is written in English; the agent speaks in the human's language
+and adapts the wording, not the structure.
 
 ```
 I ran `hpp init` in plan mode against {target} -- nothing has been written. Summary:
 
 **Project diagnosis:** {greenfield | in-progress, preserving: {list} | re-run, profile already recorded}.
-**Answers:** host={host} ({flag|profile|default}) · bundle={bundle} ({source}) · policy={policy_mode} ({source}).
+**Answers:** host={host} ({flag|profile|default}) · bundle={bundle} ({source}) · policy={policy_mode} ({source})[ · decision-advisor={value} ({source})].
 **Readiness:** {n}/11 verified · {m} not verified · {f} failed -- not verified: {items}.
   ({channel}: {clone of the repository | pip install}; the two extra items a pip install cannot measure are distribution integrity and module checksums.)
 **What --apply would do:** write exactly one file, {target}/.hpp/profile.json.
+**Hook capabilities:** {n} hooks declaring capabilities -- for each: {id}, {events}, {exit policy}, {capability groups}, as the HOOK CAPABILITIES table prints them[; on Codex CLI none of them is activated].
 **Wiring (settings/hooks/plugins):** never automatic. After the apply I bring you the wire block as printed and YOU paste it.
+**Documentation:** {the pages the DOCUMENTATION section named | none -- this copy ships no documentation pages}.
 
 If this is fine, say "apply it" and I run the same command with --apply.
 ```
@@ -175,7 +189,7 @@ module's declared smokes; it plans first and applies only on a second, explicit 
 
 ### The journey in 5 steps (the same in the 4 scenarios)
 
-1. **Plan.** The agent runs `python installers/kit-forge-1.4.1/kit_doctor.py install --kit <module-dir> --host <host> --target <project> --human`
+1. **Plan.** The agent runs `python installers/kit-forge-1.4.2/kit_doctor.py install --kit <module-dir> --host <host> --target <project> --human`
    (`--human` selects the human-readable report). Plan mode is the default: nothing is written,
    exit 0.
 2. **Translation.** The agent pastes the confirmation block into the conversation (template in

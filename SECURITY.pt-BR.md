@@ -9,8 +9,8 @@ patch com a nota no `CHANGELOG.md`. Confira a sua com `hpp --version`.
 
 | versão | suportada |
 |---|---|
-| 2.4.x | sim — linha atual |
-| 2.0 – 2.3 | não — atualize para 2.4.x |
+| 2.6.x | sim — linha atual |
+| 2.0 – 2.5 | não — atualize para 2.6.x |
 | 1.x | não |
 
 Os módulos têm versão própria (`plugin.json`, `marketplace.json`); a correção de um módulo sai
@@ -37,6 +37,14 @@ nova versão do módulo, com a nota no `CHANGELOG.md`.
 - Um hook ou script de módulo que **execute** algo que não está no seu próprio código (download,
   `curl | bash`, `eval` sobre entrada externa).
 - Um módulo que **leia ou envie** credencial, `.env`, token ou dado do projeto para fora da máquina.
+- No `examples/typed-decisions/decide.py`, que por desenho lê uma chave do ambiente de quem o roda e
+  envia o texto que essa pessoa entrega ao endpoint que ela declarou: enviar qualquer outra coisa,
+  enviar a chave a outro host (redirecionamento incluído), ou rodar sem uma pessoa invocá-lo.
+- No `hpp evidence run`, no `hpp retrieval eval` e no `hpp decide eval` (novos na
+  2.6.0), que por desenho rodam o comando que
+  a pessoa declara — o `evidence run` como argv sem shell, depois de recusar uma linha de comando
+  que se pareça com segredo: rodar qualquer outro comando, rodá-lo por um shell, ou deixar uma
+  linha de comando com cara de segredo chegar ao `evidence run`.
 - Um gate que **passe** quando deveria bloquear (o `ip_pii_linter` deixando segredo entrar num
   módulo; o `done_gate` devolvendo verde sem exit 0) — isso é vulnerabilidade, não bug.
 

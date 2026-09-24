@@ -14,6 +14,7 @@ o marketplace é apenas um canal de distribuição.
 - Nunca reduza um gate para obter verde. Corrija o artefato que o gate reprovou.
 - Preserve MIT, NOTICE e atribuições de código adaptado.
 - Não registre credenciais, caminhos pessoais, clientes ou infraestrutura privada.
+- `examples/typed-decisions/decide.py` envia texto, e uma chave lida do ambiente, a um endpoint externo; o `hpp policy check` classifica rodá-lo como `MANUAL` (regra `decision-advisor`, nova na 2.6.0). Nunca o invoque sem supervisão nem a partir de um hook.
 - `healthy` prova frescor do sinal declarado; não prova correção do trabalho.
 - Waves vêm de dependências do WorkGraph; uma lane não recebe território conflitante.
 
@@ -23,7 +24,7 @@ o marketplace é apenas um canal de distribuição.
 
 ## Codex CLI
 
-Use `installers/kit-forge-1.4.1/kit_doctor.py install --kit <kit> --host codex --target <repo> --apply`.
+Use `installers/kit-forge-1.4.2/kit_doctor.py install --kit <kit> --host codex --target <repo> --apply`.
 As skills vão para `.agents/skills`; o runtime completo vai para `.agents/hpp`. Hooks declarados
 em `hooks.json` pertencem ao Claude Code e não são ativados automaticamente no Codex.
 

@@ -9,6 +9,170 @@ cada módulo mantém sua própria versão no `plugin.json` e no `marketplace.jso
 
 ## [Unreleased]
 
+## [2.6.0] — 2026-09-24
+
+Quatro instrumentos que transformam uma afirmação em algo que um checker consegue re-derivar —
+pacotes de evidência, uma régua de recuperação, uma checagem de citação e decisões tipadas — e os
+módulos que os usam.
+
+### Adicionado
+
+- **Decisões tipadas, como evidência — o harness continua sem chamar modelo.** `hpp decide validate`
+  confere um registro `hpp.decision/v1` feito fora do harness (por regra, pessoa, modelo local ou
+  modelo de decisão tipada hospedado) e imprime o valor sobre o qual se pode agir; `hpp decide eval`
+  mede qualquer decisor que você nomeie como comando, contra casos rotulados. Três regras sustentam
+  isso: o registro é sempre `advisory`; com `raise-only` ele pode elevar um valor declarado nas
+  opções ordenadas da pergunta e nunca baixá-lo; `abstention` e `instrument-failure` são desfechos
+  que não mudam nada. Registro de modelo precisa nomear a versão fixa que respondeu (aliases como
+  `-latest` são recusados) e o hash da resposta crua; o texto julgado nunca entra no registro, e
+  texto com cara de segredo é recusado antes de virar hash. O relatório separa cobertura, acerto
+  seletivo, erros confiantes, abstenções corretas e perdidas e falhas de instrumento, publica uma
+  curva de cobertura por limiar quando há confiança, e só calcula Brier com probabilidades — um
+  decisor que nunca decide aparece como sem amostra, nunca como 0%, e o motivo diz quantos casos se
+  abstiveram e quantos falharam. A versão 1 mede só perguntas `choice`; respostas numéricas são
+  recusadas em vez de comparadas com um rótulo que nunca podem igualar.
+- **`hpp init --decision-advisor off|typesafe|openrouter|compatible`.** O instalador pode registrar
+  um conselheiro opcional que você declarou e imprimir como integrá-lo: onde fica a SUA chave (no
+  seu shell — o hpp não lê nem grava nenhuma), como medi-lo antes contra um baseline léxico, e como
+  conferir uma decisão. `off` é o padrão e não altera perfis gravados antes desta opção.
+- **`examples/typed-decisions/`** — um baseline léxico, uma suíte sintética pequena (um caso claro
+  por família de falha, casos ambíguos que devem abster-se, uma tentativa de injeção, texto de shell
+  com `curl`, mensagens em português) e um adaptador HTTP em stdlib para um endpoint de decisão
+  tipada que faz uma tentativa, guarda a resposta crua em disco e mapeia timeout, erro HTTP e
+  resposta não-JSON para `instrument-failure`. Recusa redirecionamento (a chave chega a um host só),
+  só envia chave por https ou para loopback, limita a resposta a 1 MiB e, com `--declared`, grava
+  um registro `raise-only`. É exemplo, não módulo: só manda texto para fora da máquina quando uma
+  pessoa o roda, e `hpp policy check` agora classifica rodá-lo como `MANUAL` (regra
+  `decision-advisor`).
+- **Pacotes de evidência — uma checagem end-to-end cujo veredito pode ser re-derivado depois; o
+  harness continua sem dirigir navegador e sem chamar modelo.** `hpp evidence run --id <name> --artifact <glob> -- <command>`
+  roda o critério que você declara (uma spec end-to-end, uma suíte de testes, qualquer script) com
+  `shell=False` no próprio grupo de processos, mede o exit code fora do modelo, faz hash de cada
+  arquivo que cada glob declarado casa e grava um registro `hpp.evidence/v1` em `.hpp/evidence/`
+  por criação exclusiva, então nenhum registro é sobrescrito. Três regras sustentam isso: o pacote
+  só passa quando o comando saiu com 0 **e** cada padrão declarado casou com um arquivo que esta
+  execução escreveu — screenshot que nunca foi gravada, ou que sobrou de uma execução anterior
+  (listada como `unchanged`), não é evidência; o registro guarda a contagem de bytes e o sha256 de stdout e stderr,
+  nunca o texto, e nenhum caminho absoluto; linha de comando com cara de segredo, caminho fora do
+  workspace, id inválido, timeout não positivo e `--record-event` sem `--artifact` são recusados
+  antes de qualquer execução. `run` sai com 0 aprovado, 1 não aprovado (`failed`,
+  `missing-artifacts`, `timeout`, `could-not-start`) e 2 recusado ou evento não anexado; timeout
+  derruba a árvore inteira de processos, não só o filho direto, e `--record-event` anexa
+  `evidence_recorded` ao event log só quando o pacote passou. `hpp evidence verify <record>`
+  re-deriva o registro a partir do disco: 0 `valid` para registro íntegro de uma execução aprovada,
+  1 `not-evidence` para registro íntegro de uma execução que não passou, 2 `blocked` quando o
+  registro foi editado, se contradiz, ou um artefato mudou ou sumiu. Os limites fazem parte do
+  contrato: o auto-hash torna a edição visível e não é assinatura — quem consegue escrever o
+  arquivo consegue reescrevê-lo —, então um checker que não pode confiar no maker roda o comando de
+  novo em vez de confiar no `verify`; `run` escreve arquivos, então um checker que precisa
+  continuar read-only roda de novo na própria lane ou com `--out` num caminho de rascunho próprio;
+  e um runner que limpa o diretório de saída a cada início deixa o registro anterior `blocked`,
+  então artefato que precisa continuar verificável mora num diretório por execução.
+  `examples/evidence/` roda o ciclo sem navegador; `--break` mostra um critério que falha com os
+  artefatos gravados e o veredito ainda `failed`.
+- **Régua de recuperação — `hpp retrieval eval` mede um retriever separado da resposta construída
+  sobre ele.** O retriever é um comando que você declara (`--retriever-command '<JSON argv>'`): ele
+  lê `{"query", "k"}` como JSON no stdin e imprime ids ranqueados, o melhor primeiro. A régua pontua
+  o top k de cada resposta contra os ids que uma suíte `hpp.retrieval-suite/v1` marca como
+  relevantes e grava um relatório `hpp.retrieval-eval/v1` com hit@k, recall@k, precision@k, MRR e
+  nDCG@k. Três regras sustentam isso: um retriever que responde e não acha nada relevante é um 0
+  medido, enquanto timeout, crash, exit diferente de zero, saída que não é JSON ou id duplicado é
+  `instrument-failure`, contado à parte e nunca pontuado; as médias correm só sobre casos medidos,
+  e sem nenhum medido elas ficam nulas e o gate diz por quê, nunca 0%; a ordem impressa é o
+  ranking, e um `score` é conferido mas nunca usado para reordenar, porque distância e similaridade
+  ordenam em sentidos opostos. O gate passa quando ao menos um caso foi medido, as falhas de
+  instrumento são no máximo `--max-failures` (padrão 0) e o recall@k médio é pelo menos
+  `--min-recall` (padrão 0,8): exit 0 aprovado, 1 reprovado, 2 entrada recusada. Sem
+  `--retriever-command` ela reproduz os resultados que cada caso gravou; com ele, cada caso roda com
+  `shell=False` e um timeout (`--timeout`, padrão 10 s). Limites: a relevância é binária por id, e
+  nada aqui julga a resposta gerada a partir do que foi recuperado. `examples/retrieval/` — sete
+  perguntas sintéticas sobre dez artigos e um baseline por palavra-chave escrito junto com elas —
+  prova que a régua funciona, não a qualidade de retriever algum: o baseline chega a um recall@3
+  médio de 0,786 e o gate padrão reprova com exit 1.
+- **Checagem de citações — `hpp cite check` transforma uma afirmação maior que a prova num exit
+  code.** Lê uma resposta (`--text`) e o contexto a partir do qual ela foi escrita (`--context`: uma
+  lista JSON de itens `{"id", "text"}`, ou de ids soltos) e confere cada marcador de citação contra
+  os ids do contexto, de forma determinística e sem modelo. O marcador é `[ID:<id>]`, a não ser que
+  `--marker` dê uma regex com exatamente um grupo de captura. Bloqueia, exit 2: `UNKNOWN_ID` (uma
+  fonte que a resposta nunca recebeu), `RANGE` (um marcador que nomeia um intervalo ou uma lista,
+  como `1-3` ou `1,2`), `EMPTY_MARKER`. Avisa, exit 1: `TOO_MANY` (mais de `--max-per-sentence`
+  marcadores numa frase, padrão 4) e `UNCITED_CLAIM` (uma frase com número, porcentagem, valor em
+  moeda ou data e nenhum marcador). Exit 0 é limpo. Contexto que a resposta nunca cita é publicado
+  como contagem, não como achado; texto vazio, texto que é só código, texto ou contexto com cara de
+  segredo e regex de marcador inutilizável são recusados com exit 2 antes de existir relatório. O
+  relatório `hpp.citation-check/v1` carrega o sha256 do texto e do contexto. Limites: ela nunca lê
+  a fonte citada — um marcador que resolve prova que o id existe, não que a fonte sustenta a frase;
+  o divisor de frases e o detector de números são heurísticas cujos falsos positivos e negativos
+  conhecidos estão escritos em `hpp/citations.py`, e todos eles são avisos, nunca bloqueios.
+  `examples/citations/` traz uma resposta que passa limpa: 7 frases, 5 marcadores, 4 dos 5 ids do
+  contexto citados.
+- **lane-kit 1.4.0: best-of-N entre lanes, com `lane_board.py compete` e `select`.**
+  `compete --task <T> --items A,B[,C...]` declara itens com claim, cada um de uma lane construtora
+  diferente, como candidatos a uma tarefa; `select --task <T> --winner <item> [--reason "..."]`
+  registra o vencedor, e só quando todo candidato está `CHECKPOINT-READY` com evidência (ou
+  `VERIFIED`) e o revisor difere de todo construtor em lane e em família de modelo. Os perdedores
+  recebem um `NOT-SELECTED` terminal que `set` nunca consegue escrever e que nunca chega a
+  `MERGED`; nenhum candidato vira `MERGED` antes de a tarefa ter vencedor, e o vencedor ainda
+  precisa do `VERIFIED` comum antes disso. `select --checker-unavailable` registra `DEFERRED` para a
+  tarefa, nunca um vencedor. Escolher 1 de N é `pass@N`, não confiabilidade: o vencedor ainda
+  precisa conquistar `pass^k`.
+  `set <item> CHECKPOINT-READY --evidence-record .hpp/evidence/<id>-<UTC>.json` anexa uma execução
+  registrada por `hpp evidence run` em vez de texto colado, aceita só quando o núcleo HPP a verifica
+  como `valid`; sem o núcleo importável a flag sai com 2 e não escreve nada.
+
+### Alterado
+
+- **Todo comando que o hpp roda por você tem um timeout que de fato o limita.** `hpp evidence run`,
+  `hpp retrieval eval` e `hpp decide eval` rodam o comando declarado por um único executor
+  (`hpp/_process.py`), que no timeout encerra a árvore de processos inteira, não só o filho direto.
+  Um runner de testes que abriu um navegador, ou um retriever que abriu um processo auxiliar, não
+  consegue mais segurar a espera além do timeout mantendo os pipes abertos.
+- **operator-kit 1.6.0.** `goal_ledger.py --readiness <goal> R2` aceita um registro de
+  `hpp evidence` como evidência só quando o núcleo HPP o verifica como `valid`; sem o núcleo, ou com
+  o registro nomeado por caminho absoluto ou aninhado, o R2 é recusado em vez de ser lido como texto.
+  O ralph gate ganha `--criterion-timeout` (padrão 20 s por critério). `RALPH-GATE.md`,
+  `done_gate.py`, `loop-passk.md` e `dual-report-builder` mostram critérios end-to-end por
+  `hpp evidence run` e um gate de citação por `hpp cite check`.
+- **continuity-kit 1.4.0.** O `already_done[].evidence` de um handoff pode nomear um registro de
+  `hpp evidence`, e o contexto de boot imprime o comando `hpp evidence verify` que o reconfere; o
+  schema do handoff aceita `hpp-evidence` como tipo de verificação; o template de wave-review
+  registra cada critério do DoD como registro de evidência em vez de saída colada.
+- **dev-squad-kit 1.1.0.** Fallbacks do kit para quando a árvore de tasks não existe:
+  `*evidence-check` e `*console-check` (`*qa`), `*verify-subtask` (`*dev`) e `*pre-push`
+  (`*devops`) passam por `hpp evidence run` e `verify`, e `pp-consolidate` termina com
+  `hpp cite check`; sem o núcleo HPP eles dizem isso em vez de pular. `NOTICE-UPSTREAM.md` carrega o
+  aviso MIT completo das definições de papel adaptadas.
+- **gotcha-memory 1.0.2.** `gotchas_memory.py --export-unknown <arquivo>` grava as mensagens de
+  falha classificadas como `unknown` num arquivo `hpp.decision-suite/v1` para rotular offline e
+  medir com `hpp decide eval`; ele se recusa a sobrescrever um arquivo existente (exit 2).
+- **agent-framework-wizard 1.2.1.** O template de processos gerado aceita cumprir o R2 com um
+  registro de `hpp evidence` verificado, e declara o exit code real (1) de um veredito
+  maker≠checker recusado.
+- **kit-forge 1.4.2.** O gerador do catálogo (`tools/catalog_md.py`) também emite a página de
+  entrada do site e a folha de estilo como arquivo, e seus comentários estão em inglês.
+- **claude-dev-kit 1.3.3.** O registro de skills candidatas (`docs/SKILL-CANDIDATES.json`) foi
+  removido; `search-first` carrega o aviso de permissão MIT completo.
+- **health-kit 1.3.3 e supabase-pack 1.1.2.** Só texto: comentários e docs não nomeiam mais
+  projetos internos nem datas, e `dashboard-builder` (health-kit) carrega o aviso de permissão MIT
+  completo. Nenhuma mudança de comportamento.
+- **O texto público não atribui mais ideias a projetos de terceiros; os avisos de licença ficam.**
+  Nomes internos privados saíram dos comentários e docs do produto e de todos os módulos.
+
+### Corrigido
+
+- **`pipe-to-shell` agora bloqueia `| sudo bash`, `| sudo -E sh` e `| zsh`.** A regra queria `sh`
+  ou `bash` logo depois do pipe, então um prefixo sudo ou outro shell não era `BLOCK`. Dois
+  controles evitam falso alarme: `cat notes.txt | shasum` e uma URL num comando separado por `&&`
+  continuam `ALLOW`.
+- **A regra de política `external-send` agora enxerga opções antes da URL.** Ela só casava uma URL
+  que viesse logo depois de `curl` ou `wget`, então a forma comum — `curl -s https://…`,
+  `wget -q -O arquivo https://…` — era `ALLOW`. Três comandos assim viraram casos de teste, ao lado
+  de dois controles que precisam continuar `ALLOW` (`curl --version`, `echo https://…`).
+- **Os scripts de exemplo de decisão rodam a partir de um checkout.** `python examples/typed-decisions/<script>.py`
+  não importava o `hpp` sem instalação, então todo comando documentado falhava como falha de
+  instrumento; os scripts agora acrescentam a raiz do checkout só quando `hpp.decision` não é
+  importável, então um `hpp` antigo instalado sem ele não vence o checkout.
+
 ## [2.5.8] — 2026-09-23
 
 O repositório ficou público, e esta versão responde à pergunta que um repositório público precisa
@@ -213,10 +377,7 @@ a coisa* os distinguem.
   `1.5.0` publicada, o texto da saída era o português de antes do English-first, e o alvo do
   profile era `profile.yaml` em vez de `operator-profile.yaml`. O bloco foi **re-capturado de uma
   execução ao vivo**, não editado à mão.
-- **O `operator-kit/evolve/NOTICE-ECC.md` estava em português** — um aviso de atribuição, no
-  produto publicado, e o único dos seis `NOTICE-ECC.md` nesse estado. Traduzido com cada afirmação
-  preservada, inclusive a cláusula sobre o que muda se texto literal do ECC for algum dia
-  incorporado.
+- **Um documento publicado do `operator-kit` ainda estava em português.** Traduzido com cada afirmação preservada.
 
 ### Added
 
@@ -229,7 +390,7 @@ a coisa* os distinguem.
   citação verbatim (um princípio no idioma em que foi escrito, uma saída capturada, um token
   legado) e o produto faz isso de propósito, com glosa inglesa abaixo; português *fora* de fence e
   fora de crase é prosa que ninguém traduziu. Medido quando o gate nasceu: o `INSTALL-CONTRACT.md`
-  tinha 16 linhas acentuadas, 16 de 16 dentro de fence; o `NOTICE-ECC.md` tinha 17, 0 de 17 dentro.
+  tinha 16 linhas acentuadas, 16 de 16 dentro de fence; o documento do `operator-kit` traduzido nesta release tinha 17, 0 de 17 dentro.
   A posição separou os dois.
 
 ### Known
@@ -403,8 +564,8 @@ anterior era cega.
 - **O runtime dos módulos fala inglês.** 275 strings em português em 70 arquivos `.py`/`.sh` dos dez
   módulos (mensagens, help do argparse, linhas de log, saída de self-test) agora estão em inglês; toda
   saída citada nos blocos `<!-- executed -->` das skills e nos READMEs foi re-executada e re-colada. Nove
-  literais ficam em português **por contrato**, cada um com o motivo no gate (`test_runtime_english.py`,
-  `BY_CONTRACT`): o corpo do `SANITIZATION.pt-BR.md` emitido, o cabeçalho pt-BR do catálogo bilíngue, os
+  literais ficam em português **por contrato**, cada um com o motivo no gate do lado da fonte: o
+  corpo do `SANITIZATION.pt-BR.md` emitido, o cabeçalho pt-BR do catálogo bilíngue, os
   tokens legados que o `skill_lint` precisa continuar aceitando, um código de achado casado por string.
   O censo lê só tokens de string — comentários e docstrings podem citar o português antigo.
 - **Os arquivos de configuração que o usuário copia também estão em inglês** (`profile.example.yaml`,
@@ -457,7 +618,7 @@ anterior era cega.
   turno sem mudança não cria ref, ficam os últimos 50 turnos por sessão, e toda falha é silenciosa
   porque o turno tem de terminar de qualquer jeito. O handoff registra em `git.checkpoint_ref` /
   `git.checkpoint_commit` (schema `handoff-v1.1`, os dois opcionais). Medido: 9 invocações de `git`
-  por checkpoint que grava (10 no primeiro da sessão, 7 quando nada mudou). Adapted from cline/kanban (Apache-2.0) — só o conceito, nenhum código reaproveitado.
+  por checkpoint que grava (10 no primeiro da sessão, 7 quando nada mudou).
 - **Uma lane que morre não leva mais junto o trabalho não commitado** (`lane-kit/scripts/lane_rescue.py`).
   Despejar uma lane morta é o instante em que o worktree dela fica sem dono, e o próximo
   `worktree remove --force` ou a limpeza de ociosos apaga sem rastro o que nunca foi commitado. O
@@ -465,8 +626,7 @@ anterior era cega.
   captura um `git diff --binary` de cada uma — arquivos untracked incluídos, por um índice próprio —
   ao lado de um `.meta.json` com o commit-base, e avisa no `SessionStart` seguinte. Reaplicar recusa
   **inteiro** quando a base andou ou quando o patch não aplica limpo, porque um resgate pela metade
-  parece que o trabalho voltou. Adapted from cline/kanban (Apache-2.0) — só o conceito, nenhum código
-  reaproveitado.
+  parece que o trabalho voltou.
 - **O veredito e o aviso do veredito são dois fatos** (`lane-kit/scripts/lane_effects.py`). O quadro
   registrava que a revisora disse VERIFIED ou NEEDS-FIX e nada registrava se a lane que precisa agir
   foi avisada — um campo para dois fatos dá um restart que nunca avisa e um retry que avisa duas
@@ -475,8 +635,7 @@ anterior era cega.
   um retry reconciliar contra a mesma reserva enquanto uma rodada realmente nova ganha a sua. O
   `lane_board.py` reserva e aceita em todo VERIFIED/NEEDS-FIX/DEFERRED e imprime o que segue
   **UNDELIVERED** no `render`; `lane_effects.py pending` é a lista durável que um restart percorre,
-  no lugar de uma marca d'água em memória. Adapted from saltbo/agent-kanban (FSL-1.1-ALv2) — só o
-  conceito, nenhum código reaproveitado.
+  no lugar de uma marca d'água em memória.
 - **Todo critério de aceitação passa a ter um nome que um teste consegue citar.** O
   `compile_workgraph` dá a cada critério um id estável `capability/scenario` — derivado do texto,
   ou declarado quando a redação vai mudar e a citação não pode — e os publica em `criteria` ao lado
@@ -486,8 +645,7 @@ anterior era cega.
   critério declarado — citação quebrada que de outro modo passaria por cobertura). Dois critérios
   cujo texto vira o mesmo id reprovam a compilação em vez de se fundirem em silêncio. A própria
   suíte do harness é a primeira consumidora: `tests/test_spec_coverage.py` declara a spec desta
-  mudança e fica vermelha num órfão. Adapted from saltbo/agent-kanban (FSL-1.1-ALv2) — só o
-  conceito, nenhum código reaproveitado.
+  mudança e fica vermelha num órfão.
 - **"Pronto" virou uma pergunta com resposta do git, feita por UM avaliador compartilhado.** Uma
   spec pode declarar `done_gate` no topo e `gate` por unidade; o compilador resolve isso em cada
   unidade e o `evaluate_done_gate(predicates, facts)` responde, então a automação que fecha uma
@@ -497,7 +655,7 @@ anterior era cega.
   não medido é `undetermined`, e gate vazio é `undetermined`; só um gate todo `pass` é `pass`. Fato
   de git lido fora de um índice próprio também é `undetermined`, porque `--porcelain` sobre índice
   compartilhado reporta a área de outra sessão. O módulo não roda git: quem chama mede e entrega
-  os fatos. Adapted from phodal/routa (MIT) — só o conceito, nenhum código reaproveitado.
+  os fatos.
 - **Quatro julgamentos que a camada de regras não tinha palavra para nomear.** O `loop-operator`
   PARTE B.1 separa **stall** (nenhum evento, o stream pode estar falando), **turn timeout**
   (silêncio no stream) e **read timeout** (o handshake nunca chegou) — três relógios, três razões
@@ -507,12 +665,11 @@ anterior era cega.
   consegue cumprir); a REGRA 3 do `loop-maker-checker` diz que um FAIL de rework reseta a partir da
   base de integração em vez de remendar a tentativa reprovada; o `stale-replay-guard` ganha a
   LC-4b, uma continuação carrega orientação e número de tentativa e retoma do estado atual do
-  workspace, nunca o reenvio do prompt original. Adapted from openai/symphony (Apache-2.0) — só o
-  conceito, nenhum código reaproveitado.
+  workspace, nunca o reenvio do prompt original.
 - **`operator-kit/docs/RULES-EAGER-BUDGET.md`** (en/pt-BR): a tabela por regra com a razão de cada
   uma ser eager ou escopada, as contagens de bytes e tokens antes/depois, e como alargar um glob
   para um repositório de layout diferente.
-- **`tests/python/test_kits/test_rules_eager_budget.py`**: a catraca. Um gate estrutural (o
+- **Uma catraca do lado da fonte para a camada de regras**: um gate estrutural (o
   conjunto de regras sem `paths:` tem de ser igual ao conjunto eager declarado — pega uma regra
   nova que nasce eager por omissão), um orçamento de bytes cuja folga é menor que a menor regra
   escopada, uma checagem contra `paths:` vazio (vácuo) e um gate que prende o doc publicado ao
@@ -521,12 +678,12 @@ anterior era cega.
 - **Camada de julgamento em `rules/loop-patterns-catalog.md`**: a pergunta que vem antes da forma
   — as 4 condições para construir um loop, os 5 pontos de um goal decidível (a fronteira
   anti-Goodhart ao lado do `done`, porque `all tests pass` sozinho é licença para apagar o teste),
-  a revisão por 5 modos de falha e 3 linhas vermelhas. Adaptado do ECC (MIT).
+  a revisão por 5 modos de falha e 3 linhas vermelhas.
 - **`RULE 2b` em `rules/loop-maker-checker.md`**: o checker externo é read-only *por construção* —
   cwd temporário vazio, pacote por stdin, toda ferramenta desligada, versão pinada, prompt e
   timeout limitados, consentimento explícito — mais o rótulo obrigatório de provedor
   (`cross-provider` / `same-provider` / `unverified`) e `external review absent: <razão>` no lugar
-  de substituição silenciosa. Só doutrina; nenhum adaptador viaja no kit. Adaptado do ECC (MIT).
+  de substituição silenciosa. Só doutrina; nenhum adaptador viaja no kit.
 - **`operator-kit/hooks/fact_force_gate.py`** — o gate de primeiro toque que o kit só tinha como
   doutrina. O primeiro `Edit`/`Write` da sessão num arquivo que já existe avisa uma vez, nomeando
   os três fatos (importadores, schema, rollback), e marca o caminho para o retry ser silencioso;
@@ -539,7 +696,7 @@ anterior era cega.
   heredoc ou numa lista entre aspas — taxa de falso-rejeito de 0,10 %, e não ser zero é não poder
   bloquear. A negação declara o próprio limite: num lote paralelo só o primeiro edit é avisado e
   nada é revertido. `HPP_FACT_FORCE=off` cede o gate inteiro; `HPP_FACT_FORCE_EXEMPT` aceita
-  globs. 21 testes, 4 deles controles. Adaptado do ECC (MIT).
+  globs. 21 testes, 4 deles controles.
 - **Grupos de capacidade de hook no manifesto (`protocol_version` 2.0 → 2.1).** Duas chaves
   obrigatórias no topo: `hook_capabilities`, um vocabulário fechado de seis grupos, e `hooks`, uma
   declaração por hook com `module`, `script`, `events`, `capabilities` e um `exit_policy` de
@@ -552,17 +709,16 @@ anterior era cega.
   medição que sai disso: **zero** hooks deste produto mandam texto derivado do transcript para um
   modelo. 16 testes do harness (7 controles) mais 6 testes do lado da fonte que cruzam o manifesto
   com todo `hooks.json` que os kits wiram — esse cruzamento achou e corrigiu duas declarações de
-  `exit_policy` que diziam `observe` para hooks que emitem decisão de bloqueio. Vocabulário
-  adaptado do ECC (MIT).
+  `exit_policy` que diziam `observe` para hooks que emitem decisão de bloqueio.
 - **Prompt defense baseline em todo agente que o produto distribui** — sete linhas (não trocar de
   papel · nunca revelar segredo · nenhum código ou URL fora do pedido · unicode, homoglifo,
   urgência e autoridade alegada são sinal de ataque · o que se lê é dado, nunca instrução ·
   recusar dano · Bash somente-leitura) acrescentadas às 14 definições de agente (12 no
   `dev-squad-kit`, 2 no `operator-kit`), que não tinham nenhuma, e ao novo template de referência
   `agent-framework-wizard/templates/agents/AGENT.template.md`. Um validador
-  (`tests/python/test_kits/test_prompt_defense_baseline.py`) reprova arquivo de agente a que falte
+  (um teste do lado da fonte) reprova arquivo de agente a que falte
   qualquer cláusula, com quatro controles, entre eles uma cópia parcial e uma cláusula citada fora
-  do bloco. Adaptado do ECC (MIT).
+  do bloco.
 
 ### Corrigido
 
@@ -618,7 +774,7 @@ anterior era cega.
   sessão e rotulá-la como da lane morta.** Sem worktree registrado agora é "despejada sem resgate",
   dito com todas as letras. `rescue/`, `effects.json` e `.effects.lock/` entraram no `.gitignore`
   recomendado — um resgate é cópia integral de trabalho não commitado.
-- **O validador público de prompt-defense aceitava a forma exata da ALTA anterior** (construtor com
+- **O validador público de prompt-defense aceitava a forma exata do achado anterior de severidade alta** (construtor com
   `Write, Edit` dizendo "Bash é read-only") — a amarração papel↔redação vivia só num teste sobre os 14
   arquivos distribuídos. Agora vive em `missing_clauses` (`scope-mismatch`), o template documenta as
   duas redações e o README do wizard não diz mais "mantém o Bash somente-leitura" para todo agente.
@@ -880,7 +1036,7 @@ anterior era cega.
   recíprocos no topo. Os arquivos que um agente lê para executar — skills, comandos e regras —
   ficam em uma língua só, de propósito: traduzi-los dobra a manutenção e convida à divergência
   silenciosa.
-- **Um gate que mantém o par honesto.** `test_documentacao_bilingue` reprova par ausente, link de
+- **Um gate que mantém o par honesto.** Um teste de documentação bilíngue reprova par ausente, link de
   topo quebrado, divergência estrutural (os dois lados carregam os mesmos títulos, na mesma ordem
   — tradução muda palavra, não estrutura), blocos de código diferentes (comando é comando em
   qualquer idioma) e qualquer tentativa de traduzir arquivo da camada de agente. Nove controles
@@ -1080,3 +1236,4 @@ publicar.
 [2.2.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.2.0
 [2.3.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.3.0
 [2.4.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.4.0
+[2.6.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.0

@@ -1,0 +1,123 @@
+# operator-profile.yaml — single source of truth of the Operator Kit (TEMPLATE)
+# Copy to `operator-profile.yaml` and adjust per project. Every mechanism reads from here.
+# Stdlib + PyYAML. Paths are relative to the root of the project where the profile lives.
+
+project: "your-project-name"
+language: pt-BR                    # labels, messages, output-style (pt-BR | en | es)
+register: neutro                  # neutro | formal (opt-in)
+
+paths:
+  state_ssot: ".planning/STATE.md"          # SSoT with "- [ ]" pending items
+  boot_doc:   ".planning/BOOT.md"            # canonical resume doc
+  resume_pointer: ".claude/RESUME-NEXT.md"   # generated at Stop; ADD it to .gitignore
+  memory_dir: ".claude/memory/"              # store of rules/feedback
+  logs_dir:   ".claude/sessions/"
+  gotchas_store: ".claude/gotchas/failures.jsonl"
+  gate_sheet: "docs/GATES-HUMANO.md"
+  draft_dir:  "drafts/"                      # drafts of outbound external messages
+  tracker_doc: ""                            # doc with <!-- CHECKLIST --> for the statusline (empty = uses state_ssot)
+  health_cache: ".claude/health-cache.json"  # service health cache for the statusline (no network)
+
+autonomy:                           # level 0-5 per action type (see rules/partial-autonomy-slider.md)
+  default: 2
+  by_action:
+    rm_live_code: 0                 # never automatic
+    git_push_protected_branch: 0
+    deploy: 0
+    edit_code: 3
+    docs_logs: 4
+    auto_edit_harness: 1            # gated-improvement: proposes, does not apply
+  sensitive_paths_auto_gate:        # forced auto-gate, never auto-merge
+    - "settings*.json"
+    - ".claude/hooks/**"
+    - "**/.env"
+    - ".claude/rules/**"
+
+intensity:                           # dimension ORTHOGONAL to autonomy — HOW MUCH is verified per action
+                                      # (not WHO approves). See rules/partial-autonomy-slider.md
+                                      # "Dimension 2 — Intensity".
+  default: full                      # lite | full | ultra | off ("off" is NEVER a real default)
+
+concurrency:
+  max_agents: 3                     # max simultaneous agents (lesson: 3 win where 10-16 blow up)
+  wave_size: 3
+  rate_limit_signals: ["429", "rate limit", "quota", "overloaded"]
+  fallback: sequential-local        # sequential-local | retry-backoff | abort
+  backoff_seconds: 30
+
+guardrails:                         # config-driven operation-guard
+  operation_guard: on
+  operation_guard_mode: audit       # audit warns; enforce returns exit 2 for a reliable BLOCK
+  protected_paths: ["src/**", "app/**", "engine/**", ".git/**"]
+  protected_branches: ["main", "master", "release/*"]
+  block_families: ["rm-rf-live-code", "git-push-force", "drop-truncate", "curl-pipe-bash"]
+  warn_families:  ["git-push-feature", "npm-floating-specifier"]
+  ban_floating_npm: true            # blocks @latest, ^, ~, *
+  secret_scan_on_write: warn
+  external_send_tools: []           # MCP names that send externally; empty = only external curl/wget POST
+  # Words that count as human approval — matched against what the operator types, in the
+  # operator's own language. Replace with yours.
+  approval_keywords: ["ok", "aprovo", "pode enviar"]
+
+verification:
+  done_criteria:                    # consumed by done_gate.py --profile <type>
+    py:   ["python -m pytest -q", "ruff check ."]
+    web:  ["npm run lint", "npm run build"]
+    deploy: ["curl -fsS https://staging/_health/exclusive-route"]
+    # The two below need the HPP core (`python -m hpp`). Double quotes inside: criteria run
+    # through the OS shell, and cmd.exe keeps single quotes as literal characters.
+    # e2e:  ['python -m hpp evidence run --id e2e-login --artifact "pw-out/**/trace.zip" -- npx playwright test tests/login.spec.ts']
+    # rag:  ['python -m hpp retrieval eval evals/retrieval.json --retriever-command "[\"python\",\"scripts/search.py\"]"']
+  ladder:                           # verify-ladder (Tier 2): command per level ("" = SKIPPED, never a false green)
+    lint:     "ruff check ."
+    test:     "python -m pytest -q"
+    build:    ""
+    visual:   ""                    # e.g. 'python -m hpp evidence run --id visual --artifact "shots/**/*.png" -- npx playwright test --grep @visual'
+    staging:  ""
+    security: ""
+  ladder_required: ["lint", "test"]
+  ladder_min_score: 2
+  determinism_runs: 5
+  stale_source_ttl_days: 7          # older data = re-verify (LC-1)
+
+loop:
+  charter: ".planning/CHARTER.md"
+  work_list: ".planning/STATE.md"
+  stop_conditions: ["work_list_vazia", "teto_tempo_4h", "tier_risco_irreversivel"]
+  forbidden_boundaries: ["../outro-repo/**", "production/**"]
+  # Phrases that authorize BROAD execution — matched against the operator's prompts, in the
+  # operator's own language (copied verbatim into the generated CLAUDE.md). Replace with yours.
+  authorization_triggers: ["/goal", "auto", "100%", "faça tudo", "máxima capacidade"]
+
+planning:
+  thresholds: { small: "<=2 files", medium: "<=8 files", large: ">8 files" }
+  eval_cmd: ""                      # empty = eval off
+  prd_path: "docs/plans/"
+
+distill:
+  session_window: 50                # N
+  recurrence_threshold: 3           # K (>=K distinct sessions)
+  rejected_ledger: ".claude/memory/_distill-rejeitadas.md"
+  target_rule: ".claude/rules/learned-corrections.md"
+
+memory:
+  # Emphasis markers that flag a correction worth capturing — matched against the operator's
+  # prompts, in the operator's own language (same default list as hooks/rule_capture.py). Replace with yours.
+  emphasis_markers: ["SEMPRE", "NUNCA", "já falei", "toda vez", "pare de"]
+  rule_capture: on
+
+statusline:                         # footer bar segments (statusline.py); order = display order
+  segments: ["progress", "commits", "branch"]   # +"health","tokens","autonomy","donegate","gates" as the project needs
+  token_cmd: ""                     # quick command that prints cost/context (e.g. "◔41% $63/100"); empty = omitted
+  autonomy_level: null              # 0-5 (autonomy slider level); omitted if null
+  donegate_cache: ""                # path to the done-gate cache (json {done:bool} or {passed,total}); omitted if absent
+
+health:                             # probes for health_probe.py (writes the health_cache that the 'health' segment reads)
+  probes: []                        # e.g. [{name: api, type: http, target: "http://127.0.0.1:3000/health"}, {name: db, type: cmd, target: "pg_isready"}]
+
+report:
+  internal_style: dark              # raw, failures exposed
+  external_style: light             # premium, no internal failures exposed; goes through a gate
+  # Phrases banned from reports — matched against the report text, in the operator's own
+  # language. Replace with yours.
+  banned_phrases: ["consider it done", "com certeza!", "ótima pergunta"]

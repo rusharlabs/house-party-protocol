@@ -116,8 +116,15 @@ e quando rodou.
 checkout, ou um status verde que ninguém re-derivou. Uma promessa não é evidência; uma tag
 `<promise>` não passa pelo done gate.
 
-**Verifique:** `python -m hpp event append --type evidence_recorded --data '{"work":"ITEM-1","ref":"pytest.txt"}'`
-registra uma referência; o loop não consegue chegar a `verified` sem ao menos um evento desses.
+**Verifique:** novo na 2.6.0 —
+depois de `python -m hpp event append --type work_started`,
+`python -m hpp evidence run --id smoke-page --artifact out/report.html --record-event -- python examples/evidence/smoke_page.py`
+roda o critério, grava o pacote em `.hpp/evidence/` e acrescenta `evidence_recorded` só quando ele
+passou; `python -m hpp evidence verify <record>` re-deriva o pacote a partir do disco. A alternativa
+de nível mais baixo, `python -m hpp event append --type evidence_recorded --data '{"work":"ITEM-1","ref":"pytest.txt"}'`,
+que as versões anteriores também têm, registra uma referência sem rodar nem hashear nada, depois do mesmo
+`work_started`. Nos dois casos, o loop não consegue chegar a
+`verified` sem ao menos um evento desses.
 
 ## attestation
 
@@ -134,10 +141,139 @@ e em seguida `python -m hpp attest verify .hpp/attestation.json --repo .` devolv
 qualquer arquivo e ele devolve `blocked` com `snapshot_digest` em `mismatches`. O controle
 `evidence-attestation` do benchmark roda exatamente esta sequência.
 
+## decisão tipada
+
+**É:** um registro, `hpp.decision/v1`, de uma pergunta pequena respondida fora do harness — por uma
+regra, uma pessoa, um modelo local ou um modelo hospedado de decisão tipada — que o harness
+consegue checar e medir. A `authority` dele é sempre `advisory`. Com `direction: raise-only` numa
+pergunta ordenada (`ladder: true`), o valor sobre o qual um consumidor pode agir é o maior entre o
+valor `declared` e o aconselhado: o conselho pode aumentar a cautela, nunca diminuí-la.
+`abstention` e `instrument-failure` são desfechos, não erros, e nenhum dos dois muda um valor
+declarado; um timeout, uma página HTML ou uma resposta malformada é falha de instrumento, nunca
+veredito.
+
+**Não é:** uma chamada de modelo, uma aprovação ou uma nota. O harness não chama modelo por conta
+própria: `hpp decide eval` roda o decisor que você nomeia como comando (que pode chamar um, com a
+sua chave), ou reexecuta os registros que já estão na suíte. Um registro nunca concede nem aprova
+nada, e uma `authority` diferente de `advisory` é recusada. A versão 1 mede só perguntas `choice`;
+uma nota ou uma probabilidade de sim não tem definição combinada de "correto", então esses tipos
+são recusados em vez de reportados como um 0% vazio. O texto julgado nunca entra no registro, só o
+sha256 dele, e texto que se pareça com segredo é recusado antes de virar hash. Um registro de
+modelo precisa nomear a versão fixada que respondeu (um alias como `-latest` é recusado) e, salvo
+quando registra uma falha de instrumento, o hash da resposta bruta.
+
+**Verifique:** novo na 2.6.0 —
+`python -m hpp decide validate <record.json>` imprime `"status": "valid"` e o valor
+`effective` (`action` é `raised`, `kept`, `advised` ou `none`) e sai com 0; troque `authority` por
+qualquer coisa diferente de `advisory` e ele sai com 2. `python -m hpp decide eval examples/typed-decisions/gotcha-family-suite.json --decider-command '["python", "examples/typed-decisions/baseline_decider.py"]'`
+reporta cobertura, acurácia seletiva, abstenções e falhas de instrumento em separado, e sai com 0
+quando todo limiar se sustenta, 1 quando o gate falha e 2 para uma suíte que quebra o contrato.
+
+## pacote de evidência
+
+**É:** um registro, `hpp.evidence/v1`, de uma execução de um comando de critério declarado: o
+argv, o commit base, o código de saída medido fora do modelo, um veredito, a contagem de bytes e o
+sha256 de stdout e stderr (nunca o texto), e o caminho, o tamanho e o sha256 de todo arquivo que
+casa com um glob de artefato que você declarou. O veredito é `passed` só quando o comando saiu com 0
+e cada padrão declarado casou com um arquivo que esta execução escreveu (um arquivo intocado desde
+antes da execução sai como `unchanged` e não conta); senão é `failed`, `missing-artifacts`, `timeout` ou
+`could-not-start`. O `run` sai com 0 quando o pacote passou, 1 quando não passou, e 2 quando foi
+recusado ou o `--record-event` não conseguiu acrescentar o evento.
+
+**Não é:** um controlador de navegador, uma chamada de modelo nem uma assinatura. O hpp não dirige
+navegador e não chama modelo: ele roda o comando que você nomeia (uma spec ponta a ponta, uma suíte
+de testes, qualquer script) com `shell=False`. O registro carrega um hash de si mesmo, o que torna
+uma edição visível e não prova nada sobre quem o escreveu — quem consegue escrever o arquivo
+consegue reescrever o hash. Por isso o `verify` é reconciliação, e um checker que não pode confiar
+no maker reexecuta o `command` em vez disso. O `run` escreve o registro e o que o comando escrever;
+um checker somente leitura aponta o `--out` para um diretório de rascunho próprio dentro do
+workspace, ou reexecuta na própria lane. Uma linha de comando que pareça carregar um segredo, e um
+caminho de artefato ou de `--out` fora do workspace, são recusados antes de qualquer coisa rodar.
+
+**Verifique:** novo na 2.6.0 —
+`python -m hpp evidence run --id smoke-page --artifact out/report.html --artifact out/smoke.log -- python examples/evidence/smoke_page.py`
+imprime `passed` e sai com 0, e `python -m hpp evidence verify <record>`, sobre o `record_path` que
+ele imprimiu, imprime `valid` e sai com 0. A mesma execução com `--break` depois do script escreve os dois
+arquivos e ainda assim sai com 1 e `failed`; o registro dela verifica como `not-evidence` (saída
+1). Altere `out/report.html` depois de uma execução que passou e o `verify` sai com 2 e `blocked`.
+
+## régua de recuperação
+
+**É:** uma medição de um recuperador que você declara, separada de qualquer etapa de geração. O
+recuperador é um comando que lê `{"query", "k"}` como JSON no stdin e imprime ids ranqueados; a
+régua pontua o top k de cada resposta contra os ids que uma suíte rotulada
+(`hpp.retrieval-suite/v1`) marca como relevantes, e reporta hit@k, recall@k, precision@k, MRR e
+nDCG@k. A ordem impressa é o ranking; um `score` é conferido, nunca usado para reordenar.
+
+**Não é:** um índice, um mecanismo de busca nem um juiz da resposta final. O harness não roda
+índice e não chama modelo; sem `--retriever-command` a régua reexecuta os resultados gravados na
+suíte. Um recuperador que responde e não acha nada relevante marca um 0 de verdade. Um timeout, uma
+saída diferente de zero, uma saída que não é JSON ou um id duplicado é falha de instrumento:
+contada à parte e excluída das médias. Sem nenhum caso medido as métricas são nulas e o gate diz
+por quê, nunca 0%.
+
+**Verifique:** novo na 2.6.0 —
+`python -m hpp retrieval eval examples/retrieval/suite.json --retriever-command '["python", "examples/retrieval/keyword_retriever.py"]'`
+mede sete casos com zero falhas de instrumento e sai com 1: o recall@3 médio do baseline por
+palavra-chave é 0.786, abaixo do `--min-recall 0.8` padrão, então a suíte que vem junto prova a
+régua, não um recuperador. Com `--retriever-command '["python", "-c", "import sys; sys.exit(3)"]'`
+a mesma suíte reporta sete falhas de instrumento e métricas nulas, e sai com 1. A saída é 0 quando
+o gate passa, 1 quando falha e 2 para uma suíte ou um argumento recusado.
+
+## checagem de citação
+
+**É:** uma checagem determinística, `hpp.citation-check/v1`, dos marcadores de citação de um texto
+contra os ids do contexto a partir do qual o texto foi escrito. Um marcador é `[ID:<id>]`, salvo
+quando `--marker` dá uma regex com um grupo de captura para o id. Um marcador que nomeia um id
+ausente do contexto (`UNKNOWN_ID`), um intervalo ou lista dentro de um marcador (`RANGE`) e um
+marcador vazio (`EMPTY_MARKER`) bloqueiam com saída 2; mais de `--max-per-sentence` marcadores numa
+frase (`TOO_MANY`, padrão 4) e uma frase que afirma um número, percentual, valor ou data sem
+marcador (`UNCITED_CLAIM`) avisam com saída 1. Um texto limpo sai com 0.
+
+**Não é:** uma checagem de fatos. Ela nunca lê uma fonte citada para ver se ela sustenta a frase:
+um marcador que resolve prova que o id existe, não que a fonte diga o que a frase diz. A divisão em
+frases e a detecção de números são heurísticas, descritas por inteiro em `hpp/citations.py`, e os
+erros conhecidos delas são avisos, nunca bloqueios. Contexto que o texto nunca cita é reportado
+como contagem, não como achado. Texto vazio, texto ou contexto com cara de segredo e uma regex de
+marcador inutilizável são recusados com saída 2.
+
+**Verifique:** novo na 2.6.0 —
+`python -m hpp cite check --text examples/citations/answer.md --context examples/citations/context.json`
+imprime o veredito `ok` e sai com 0. Numa cópia de `answer.md` com `[ID:glossary]` trocado por
+`[ID:glossary-v2]` ela sai com 2 e `UNKNOWN_ID`; com `[ID:runbook-7]` removido no lugar disso, sai
+com 1 e `UNCITED_CLAIM`.
+
+## seleção best-of-N
+
+**É:** N lanes constroem cada uma a própria tentativa de uma tarefa, e um revisor fica com uma. No
+módulo de lane, `lane_board.py compete --task T --items A,B[,C...]` declara os candidatos, cada um
+construído por uma lane diferente; `lane_board.py select --task T --winner A` registra o vencedor,
+depois que todo candidato está `CHECKPOINT-READY` com evidência ou `VERIFIED`, e só um revisor cuja
+lane difere de toda lane construtora e cuja família de modelo difere da família de todo construtor
+pode escrevê-lo. Os perdedores viram `NOT-SELECTED`, um estado terminal do qual nenhuma transição
+sai.
+
+**Não é:** uma verificação, e não é uma medida de confiabilidade. Escolher 1 entre N é pass@N: uma
+tentativa entre N foi boa o bastante, o que não diz nada sobre o vencedor passar em toda execução.
+O vencedor mantém o próprio estado, ainda precisa do `VERIFIED` de sempre antes de `MERGED`, e o
+critério dele ainda precisa de pass^k. Um candidato não pode ir a `MERGED` enquanto a tarefa não
+tem vencedor, e `select --checker-unavailable` registra `DEFERRED`, nunca um vencedor.
+
+**Verifique:** novo na 2.6.0 —
+numa competição declarada com `compete` cujos candidatos estão `CHECKPOINT-READY`,
+`lane_board.py select` por um revisor da mesma família de modelo de um construtor sai com 1 e
+"SAME model family"; um revisor de outra lane e de outra família sai com 0, e mover o item perdedor
+para qualquer estado depois disso sai com 1. `lane_board.py --self-test` roda toda recusa de
+`compete` e de `select` ao lado do seu controle.
+
 ## maker e checker
 
-**É:** dois papéis. O maker produz a mudança. O checker a revisa sem a capacidade de editar, e
-reporta acertos e defeitos com severidade, arquivo e linha.
+**É:** dois papéis. O maker produz a mudança. O checker a revisa e reporta acertos e defeitos com
+severidade, arquivo e linha, sem ferramentas de edição de arquivo: o host impõe a ausência de
+`Write` e `Edit`. O `Bash` continua disponível, e um shell altera o que alcançar, então somente
+leitura é uma promessa, verificada comparando a árvore de trabalho antes e depois da revisão — o
+`git status --porcelain` capturado dos dois lados precisa bater, e um checker que alterou a árvore
+invalida os próprios achados.
 
 **Não é:** dois turnos do mesmo agente, nem o mesmo agente com outro nome. A attestation recusa um
 maker e um checker cujos nomes coincidam ignorando caixa. Os agentes checker dos módulos declaram
@@ -336,6 +472,38 @@ confiabilidade. A diferença entre os dois é a taxa de flake.
 
 **Verifique:** `python -m hpp eval run examples/reliable-coding/benchmark-suite.json -k 3 --gate both`
 imprime as duas métricas e o gate; saída 0 quando passa, 1 quando falha.
+
+## política de comandos
+
+**É:** um classificador que lê um comando como texto e devolve um de três vereditos, `ALLOW`,
+`MANUAL` ou `BLOCK`, com a regra que casou e o motivo dela. As regras são fixas em
+`hpp/policy.py`; a primeira que casa vence, e toda regra `BLOCK` é testada antes de qualquer regra
+`MANUAL`.
+
+| veredito | regra | casa com |
+|---|---|---|
+| `BLOCK` | `recursive-delete` | `rm` com uma opção recursiva e uma de força em qualquer grafia (`-rf`, `-fr`, `-r -f`, `--recursive --force`), ou `rmdir /s` |
+| `BLOCK` | `force-push` | `git push` com `--force` ou `-f` |
+| `BLOCK` | `main-push` | `git push` que nomeia `main` ou `master` |
+| `BLOCK` | `pipe-to-shell` | `curl` ou `wget` canalizado para um shell (`sh`, `bash`, `zsh`, `dash`, `ksh`), com ou sem `sudo` |
+| `BLOCK` | `destructive-sql` | `DROP` ou `TRUNCATE` seguido de `TABLE` ou `DATABASE` |
+| `MANUAL` | `external-push` | qualquer outro `git push` |
+| `MANUAL` | `external-send` | `curl` ou `wget` cuja palavra seguinte é uma URL `http://` ou `https://` |
+| `MANUAL` | `decision-advisor` | um comando que nomeia `typed-decisions/decide.py` — novo na 2.6.0 |
+
+Qualquer outra coisa é `ALLOW` (regra `allow`), e um comando vazio é `ALLOW` (regra `empty`).
+
+**Não é:** uma sandbox, um parser de shell nem uma afirmação de que um comando é seguro. Ele nunca
+roda o comando, e `ALLOW` quer dizer que nenhuma regra casou: uma transferência feita por qualquer outra
+ferramenta (`scp`, `rsync`, uma linha de Python) não casa regra nenhuma e é `ALLOW`. O modo muda só o código de saída, nunca o veredito: em
+`audit` todo veredito sai com 0; em `enforce`, `BLOCK` sai com 2 e `MANUAL` sai com 1. Se um
+veredito para alguma coisa depende de quem o chama — um hook no Claude Code, um comando de
+preflight no Codex CLI.
+
+**Verifique:** `python -m hpp policy check --mode enforce --command "rm -rf src"` imprime `BLOCK`
+com a regra `recursive-delete` e sai com 2; `--command "git push origin feature"` imprime `MANUAL`
+(regra `external-push`) e sai com 1; `--command "python -m pytest -q"` imprime `ALLOW` e sai com 0;
+os mesmos três com `--mode audit` imprimem os mesmos vereditos e saem com 0.
 
 ## contrato de saída
 

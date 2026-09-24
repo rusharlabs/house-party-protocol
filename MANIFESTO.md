@@ -28,7 +28,8 @@ The protocol is the set of invariants every module and every host must respect:
 
 Four of these are written into `hpp.manifest.json` as machine-checked invariants: a verified
 outcome has recorded evidence and an explicit human gate; a checker is read-only relative to the
-maker's workspace; a loop advances only through a recorded event; an approval is invalid once its
+maker's workspace (no `Write` or `Edit` tool; `Bash` stays, so the working tree is compared
+before and after the review); a loop advances only through a recorded event; an approval is invalid once its
 bound spec, commit or repository snapshot changes. The rest are enforced by the modules that
 implement them and by the tests that force them to fail.
 
@@ -100,7 +101,9 @@ does.
   event log does not see.
 - **No model calls.** The harness routes work to a tier and a provider id you declared. It does
   not pick a vendor, a model name or a price, and it holds no credential. The moment it called a
-  model, its verdicts would depend on something it cannot reproduce.
+  model, its verdicts would depend on something it cannot reproduce. A decision you obtain
+  elsewhere can be recorded and measured (`hpp decide`); the example adapter that asks a hosted
+  model lives in `examples/`, runs only when a person runs it, and the policy classifies it `MANUAL`.
 - **No graph database.** Every map is a projection of manifests, events and JSON you supply. The
   same input yields the same nodes and edges, in the same order, and you can hash the result. A
   stored graph would be a second source of truth that drifts from the first.

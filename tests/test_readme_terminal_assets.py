@@ -46,7 +46,7 @@ def _image_sources(name: str) -> list[str]:
     return _IMG_SRC.findall(text)
 
 
-def test_every_image_the_readmes_show_exists_on_disk() -> None:
+def test_CONTROLE_every_image_the_readmes_show_exists_on_disk() -> None:
     """CONTROL — true for the captures already shipped; catches a renamed or mistyped asset."""
     missing = [
         f"{name}: {src}"
@@ -57,7 +57,7 @@ def test_every_image_the_readmes_show_exists_on_disk() -> None:
     assert not missing, "README images with no file behind them:\n  " + "\n  ".join(missing)
 
 
-def test_both_languages_show_the_same_terminal_captures() -> None:
+def test_CONTROLE_both_languages_show_the_same_terminal_captures() -> None:
     """CONTROL — the pt-BR reader must be shown the same proof as the English reader."""
     per_language = {
         name: sorted(src for src in _image_sources(name) if src.startswith("assets/terminal/"))

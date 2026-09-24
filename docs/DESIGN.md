@@ -89,15 +89,13 @@ published pages, so anything you build with them looks like the rest of the proj
 
 ## What a pull request that adds an interface has to satisfy
 
-```
-[ ] uses docs/hpp.css — linked inside the repo, or inlined. Never a URL
-[ ] adds no fifth colour, in hex or in rgb()
-[ ] fetches nothing: no @import, no @font-face, no https:// in url()
-[ ] reuses the components above before adding a selector
-[ ] declares lang, and keeps the focus ring
-[ ] ships the .pt-BR pair if it is a root document
-[ ] is generated, if it belongs next to generated pages -- see the next section
-```
+- [ ] uses docs/hpp.css — linked inside the repo, or inlined. Never a URL
+- [ ] adds no fifth colour, in hex or in rgb()
+- [ ] fetches nothing: no @import, no @font-face, no https:// in url()
+- [ ] reuses the components above before adding a selector
+- [ ] declares lang, and keeps the focus ring
+- [ ] ships the .pt-BR pair if it is a root document
+- [ ] is generated, if it belongs next to generated pages -- see the next section
 
 Then: `python -m pytest tests/test_design_system.py tests/test_docs_index.py -q`.
 
