@@ -9,6 +9,14 @@ keeps its own version in `plugin.json` and in `marketplace.json`.
 
 ## [Unreleased]
 
+## [2.6.7] — 2026-09-25
+
+### Changed
+
+- **Every install in the workflows is hash-pinned.** The test runner (CI) and the build backend
+  (release) install from committed requirements files with `--require-hashes`, so a job runs the
+  exact packages that were reviewed, not whatever the index serves that day.
+
 ## [2.6.6] — 2026-09-25
 
 ### Added
@@ -1317,3 +1325,4 @@ publishing.
 [2.6.4]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.4
 [2.6.5]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.5
 [2.6.6]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.6
+[2.6.7]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.7

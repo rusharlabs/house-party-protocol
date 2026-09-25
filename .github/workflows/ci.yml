@@ -44,7 +44,9 @@ jobs:
       # is not part of the package and GitHub runners do not ship it. This is the only install
       # step, and it installs the runner alone — `tests/test_stdlib_only.py` keeps it that way.
       - name: Install the test runner (the package itself needs nothing)
-        run: python -m pip install --disable-pip-version-check pytest
+        # Why (2026-09-25): hash-pinned, so the runner and its dependencies are exactly the
+        # committed ones -- regenerate with `uv pip compile --universal --generate-hashes`.
+        run: python -m pip install --disable-pip-version-check --require-hashes -r .github/requirements/ci.txt
 
       # Why (2026-09-24): no step treated a warning as a failure, so a SyntaxWarning (an invalid
       # escape in a regex, say) or a DeprecationWarning at import time would scroll past a green

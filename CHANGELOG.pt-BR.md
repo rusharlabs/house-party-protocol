@@ -9,6 +9,14 @@ cada módulo mantém sua própria versão no `plugin.json` e no `marketplace.jso
 
 ## [Unreleased]
 
+## [2.6.7] — 2026-09-25
+
+### Alterado
+
+- **Toda instalação nos workflows é fixada por hash.** O executor de testes (CI) e o backend de
+  build (release) instalam a partir de arquivos de requisitos versionados com `--require-hashes`,
+  então um job roda exatamente os pacotes revisados, não o que o índice servir naquele dia.
+
 ## [2.6.6] — 2026-09-25
 
 ### Adicionado
@@ -1340,3 +1348,4 @@ publicar.
 [2.6.4]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.4
 [2.6.5]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.5
 [2.6.6]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.6
+[2.6.7]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.7

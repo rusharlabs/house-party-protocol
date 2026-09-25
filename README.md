@@ -117,7 +117,7 @@ third-party packages. CI exercises Python 3.10 to 3.13 on Linux, macOS and Windo
 (`.github/workflows/ci.yml`); older interpreters are not promised because nothing measures them.
 
 ```bash
-pip install git+https://github.com/rusharlabs/house-party-protocol@v2.6.6
+pip install git+https://github.com/rusharlabs/house-party-protocol@v2.6.7
 hpp doctor
 hpp init --target ../your-repo
 ```

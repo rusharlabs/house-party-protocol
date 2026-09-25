@@ -118,7 +118,7 @@ nenhum pacote de terceiro. A CI exercita Python 3.10 a 3.13 em Linux, macOS e Wi
 (`.github/workflows/ci.yml`); interpretadores mais antigos não são prometidos porque nada os mede.
 
 ```bash
-pip install git+https://github.com/rusharlabs/house-party-protocol@v2.6.6
+pip install git+https://github.com/rusharlabs/house-party-protocol@v2.6.7
 hpp doctor
 hpp init --target ../your-repo
 ```
