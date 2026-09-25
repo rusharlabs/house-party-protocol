@@ -1,0 +1,326 @@
+{
+  "dissent": [
+    {
+      "grounded": true,
+      "position": "low",
+      "seat": "c"
+    }
+  ],
+  "human_decision": null,
+  "judge": {
+    "authority": "advisory",
+    "direction": "informational",
+    "method": "external-model",
+    "outcome": {
+      "confidence": null,
+      "status": "recommendation",
+      "value": "high"
+    },
+    "provider": {
+      "id": "delta-provider",
+      "model_served": "delta-model-2026-09-01"
+    },
+    "question": {
+      "criteria": null,
+      "id": "route.risk",
+      "instructions": "How much damage could this change do if it is wrong?",
+      "kind": "choice",
+      "ladder": true,
+      "options": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "sha256": "e867026ea22fee5d69c5e487744aa3bb4606c2db619a11d91fe6165be115d21d"
+    },
+    "raw_response_sha256": "10e86c6514d40f2a3e861b31847340ee8c8ed181029a17b042f137121d28863e",
+    "schema": "hpp.decision/v1",
+    "state_sha256": "3ac6eeb367c3ba9409cff6a524acfea64eb43e3a5b4ed72981092575f628b46a"
+  },
+  "judge_independence": "full",
+  "metrics": {
+    "blind_agreement": 0.6666666666666666,
+    "families": 3,
+    "final_agreement": 0.6666666666666666,
+    "flips_without_new_evidence": 0,
+    "ungrounded_share": 0.0
+  },
+  "panel": {
+    "budget": {
+      "max_chars": 20000,
+      "max_rounds": 3
+    },
+    "families": [
+      "alpha",
+      "beta",
+      "gamma"
+    ],
+    "id": "risk-review-001",
+    "judge": "j",
+    "judge_independence": "full",
+    "question": {
+      "criteria": null,
+      "id": "route.risk",
+      "instructions": "How much damage could this change do if it is wrong?",
+      "kind": "choice",
+      "ladder": true,
+      "options": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "sha256": "e867026ea22fee5d69c5e487744aa3bb4606c2db619a11d91fe6165be115d21d"
+    },
+    "schema": "hpp.panel/v1",
+    "seats": [
+      {
+        "family": "alpha",
+        "id": "a",
+        "lane": "lane-a",
+        "model_served": "alpha-model-2026-09-01",
+        "provider": "alpha-provider",
+        "role": "examiner"
+      },
+      {
+        "family": "beta",
+        "id": "b",
+        "lane": "lane-b",
+        "model_served": "beta-model-2026-09-01",
+        "provider": "beta-provider",
+        "role": "examiner"
+      },
+      {
+        "family": "gamma",
+        "id": "c",
+        "lane": "lane-c",
+        "model_served": "gamma-model-2026-09-01",
+        "provider": "gamma-provider",
+        "role": "dissent"
+      },
+      {
+        "family": "delta",
+        "id": "j",
+        "lane": "lane-j",
+        "model_served": "delta-model-2026-09-01",
+        "provider": "delta-provider",
+        "role": "judge"
+      }
+    ],
+    "session_type": "review",
+    "sha256": "5ae8a55e2548a41d183a1e58e7c33e772b7844ea86e99b94a41a164e0311b4ea",
+    "state_sha256": "3ac6eeb367c3ba9409cff6a524acfea64eb43e3a5b4ed72981092575f628b46a"
+  },
+  "record_sha256": "45fd4440f0b79d3fb6a6471d01e8aa591219d227078ba09ad55f62f7da18a05b",
+  "schema": "hpp.deliberation/v1",
+  "stop": {
+    "decision": "stop",
+    "escalate": true,
+    "reason": "no-new-evidence",
+    "round": 2
+  },
+  "tally": [
+    {
+      "abstained": [],
+      "chars": 1200,
+      "dissent": [
+        "c"
+      ],
+      "flips_without_new_evidence": [],
+      "grounded_convergence": false,
+      "leading": "high",
+      "moved": [],
+      "new_refs": [
+        "ctx-1"
+      ],
+      "not_judged": [],
+      "round": 1,
+      "votes": {
+        "high": {
+          "grounded": 2,
+          "ungrounded": 0
+        },
+        "low": {
+          "grounded": 1,
+          "ungrounded": 0
+        },
+        "medium": {
+          "grounded": 0,
+          "ungrounded": 0
+        }
+      }
+    },
+    {
+      "abstained": [],
+      "chars": 1200,
+      "dissent": [
+        "c"
+      ],
+      "flips_without_new_evidence": [],
+      "grounded_convergence": false,
+      "leading": "high",
+      "moved": [],
+      "new_refs": [],
+      "not_judged": [],
+      "round": 2,
+      "votes": {
+        "high": {
+          "grounded": 2,
+          "ungrounded": 0
+        },
+        "low": {
+          "grounded": 1,
+          "ungrounded": 0
+        },
+        "medium": {
+          "grounded": 0,
+          "ungrounded": 0
+        }
+      }
+    }
+  ],
+  "turns": [
+    {
+      "chars": 400,
+      "claims": [
+        {
+          "kind": "fact",
+          "refs": [
+            "ctx-1"
+          ]
+        }
+      ],
+      "confidence": null,
+      "panel_sha256": "5ae8a55e2548a41d183a1e58e7c33e772b7844ea86e99b94a41a164e0311b4ea",
+      "position": "high",
+      "round": 1,
+      "schema": "hpp.turn/v1",
+      "seat": "a",
+      "seen_turns": [],
+      "sha256": "35ac9d8fe30640d4629c40e33f4d96d4fa8a500bc85dd608e0436d82e654215d",
+      "text_sha256": "0aa57b0db23cae3f0164a1ad1ed5fae3e3fac9efd21c36807dc026756bdbd158"
+    },
+    {
+      "chars": 400,
+      "claims": [
+        {
+          "kind": "fact",
+          "refs": [
+            "ctx-1"
+          ]
+        }
+      ],
+      "confidence": null,
+      "panel_sha256": "5ae8a55e2548a41d183a1e58e7c33e772b7844ea86e99b94a41a164e0311b4ea",
+      "position": "high",
+      "round": 1,
+      "schema": "hpp.turn/v1",
+      "seat": "b",
+      "seen_turns": [],
+      "sha256": "cba96a0b788fb935fb908d375fc2a30b3a8d86efdd9326e4b1ba622f1b6ba51b",
+      "text_sha256": "91444a4b181825cdc17a46b4a37ebb41a9f2e8b9dd6cadcc32e4ee651f30c455"
+    },
+    {
+      "chars": 400,
+      "claims": [
+        {
+          "kind": "fact",
+          "refs": [
+            "ctx-1"
+          ]
+        }
+      ],
+      "confidence": null,
+      "panel_sha256": "5ae8a55e2548a41d183a1e58e7c33e772b7844ea86e99b94a41a164e0311b4ea",
+      "position": "low",
+      "round": 1,
+      "schema": "hpp.turn/v1",
+      "seat": "c",
+      "seen_turns": [],
+      "sha256": "108e27e0cbf62cc7efba6e2556b7e753eba2ce914d88b0e3b491d400a97e20d5",
+      "text_sha256": "c1b96e0789499de28f4670eb6db5f8f7040770a247eee4b36b243e6384bcedcd"
+    },
+    {
+      "chars": 400,
+      "claims": [
+        {
+          "kind": "fact",
+          "refs": [
+            "ctx-1"
+          ]
+        }
+      ],
+      "confidence": null,
+      "panel_sha256": "5ae8a55e2548a41d183a1e58e7c33e772b7844ea86e99b94a41a164e0311b4ea",
+      "position": "high",
+      "round": 2,
+      "schema": "hpp.turn/v1",
+      "seat": "a",
+      "seen_turns": [
+        "35ac9d8fe30640d4629c40e33f4d96d4fa8a500bc85dd608e0436d82e654215d",
+        "cba96a0b788fb935fb908d375fc2a30b3a8d86efdd9326e4b1ba622f1b6ba51b",
+        "108e27e0cbf62cc7efba6e2556b7e753eba2ce914d88b0e3b491d400a97e20d5"
+      ],
+      "sha256": "e925b4d71fd36e5dd84e6e7fef4f447dce522c6db979853aede78564bf9c7b15",
+      "text_sha256": "e69cd036976a3336b3bc59b599fca1c74432af72fda0b41274028f6436b1d771"
+    },
+    {
+      "chars": 400,
+      "claims": [
+        {
+          "kind": "fact",
+          "refs": [
+            "ctx-1"
+          ]
+        }
+      ],
+      "confidence": null,
+      "panel_sha256": "5ae8a55e2548a41d183a1e58e7c33e772b7844ea86e99b94a41a164e0311b4ea",
+      "position": "high",
+      "round": 2,
+      "schema": "hpp.turn/v1",
+      "seat": "b",
+      "seen_turns": [
+        "35ac9d8fe30640d4629c40e33f4d96d4fa8a500bc85dd608e0436d82e654215d",
+        "cba96a0b788fb935fb908d375fc2a30b3a8d86efdd9326e4b1ba622f1b6ba51b",
+        "108e27e0cbf62cc7efba6e2556b7e753eba2ce914d88b0e3b491d400a97e20d5"
+      ],
+      "sha256": "c87d542fbffac61dad71c882d7002520613c420d0e995b9e22ce838833c019c7",
+      "text_sha256": "2f00fa0f61d04bb87ff0ac376d66e6e8ee4e97ef94733bbd574b069b25f917fe"
+    },
+    {
+      "chars": 400,
+      "claims": [
+        {
+          "kind": "fact",
+          "refs": [
+            "ctx-1"
+          ]
+        }
+      ],
+      "confidence": null,
+      "panel_sha256": "5ae8a55e2548a41d183a1e58e7c33e772b7844ea86e99b94a41a164e0311b4ea",
+      "position": "low",
+      "round": 2,
+      "schema": "hpp.turn/v1",
+      "seat": "c",
+      "seen_turns": [
+        "35ac9d8fe30640d4629c40e33f4d96d4fa8a500bc85dd608e0436d82e654215d",
+        "cba96a0b788fb935fb908d375fc2a30b3a8d86efdd9326e4b1ba622f1b6ba51b",
+        "108e27e0cbf62cc7efba6e2556b7e753eba2ce914d88b0e3b491d400a97e20d5"
+      ],
+      "sha256": "b837a30c232ec0bf3f635c7de96a4d0efcfff978c9085402425328ce15d5e965",
+      "text_sha256": "2f4484254d5eb3cfae3fa87e1a1538f8eb69e17b40013eef3a3dfa6e215e6805"
+    }
+  ],
+  "usage": {
+    "chars": 2400,
+    "max_chars": 20000,
+    "max_rounds": 3,
+    "rounds": 2
+  },
+  "verdict": {
+    "reason": "judge",
+    "status": "recommendation",
+    "value": "high"
+  }
+}

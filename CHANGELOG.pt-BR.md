@@ -9,6 +9,59 @@ cada módulo mantém sua própria versão no `plugin.json` e no `marketplace.jso
 
 ## [Unreleased]
 
+## [2.8.0] — 2026-09-25
+
+### Adicionado
+
+- **`hpp work coverage`: o critério que um teste cita não é o critério que um teste rodou.** Cada
+  critério de aceite de uma spec é ligado aos testes cuja docstring o cita (`hpp.spec-coverage/v1`).
+  Com `--junit`, o relatório JUnit XML da execução entra na conta (`hpp.spec-execution/v1`): um
+  critério só fica `executed` quando um teste que o cita rodou e passou e nenhum falhou; um teste
+  pulado, um que o runner nunca coletou e uma docstring de módulo ou de classe o deixam
+  `cited_not_run`, e um teste que o cita e falha o deixa `failed`. `junit_testcases` e
+  `matched_testcases` publicam os denominadores. Um relatório que declara DOCTYPE ou entidade, ou
+  que não é UTF-8, é recusado. Exemplo: `examples/cited-and-run`.
+- **Lentes de revisão e `hpp findings check` (operator-kit 1.7.0).** O módulo operator traz quatro lentes de revisão
+  sem ferramenta de edição (somente-leitura provado quando sentadas pelo `house_session.py`) (`lens-verification-gap`, `lens-partial-set`, `lens-deletion`,
+  `lens-stale-evidence`), cada uma olhando uma mudança atrás de um tipo de defeito. Toda lente
+  responde com um documento `hpp.findings/v1` — código estável, severidade, arquivo e linha,
+  afirmação, evidência e o que inspecionou — e o `hpp findings check` recusa chave que o contrato
+  não define, `inspected` vazio ou achado repetido, e deriva o veredito. Exemplo:
+  `examples/review-lenses`.
+- **House Session: o gate de evidência e o rationale do juiz.** Um painel pode declarar
+  `evidence.ids` (`hpp deliberate plan --context` lê o contexto que o `cite check` lê;
+  `--evidence` acrescenta cada registro `hpp.evidence/v1` que verifica). Aí um `fact` só
+  fundamenta uma posição por uma referência que resolve; qualquer outra referência é
+  `unsupported`, listada por rodada, e nunca é evidência nova, então um id inventado não segura uma
+  sessão nem justifica uma mudança de posição. Um veredito que deixa de pé uma dissidência
+  fundamentada exige `--rationale` (`hpp.rationale/v1`) do assento do juiz: um steelman por posição
+  dissidente e ao menos um `would_change_if`. Um painel sem evidência declarada mantém o seu hash e
+  a regra de fundamentação da 2.7.0, informada como `evidence_gate: not-declared`.
+
+- **Sentar uma House Session no host: `/deliberate` (lane-kit 1.5.0).** O `house_session.py
+  families` responde se o host consegue sentar duas famílias de modelo — a do maker mais as outras
+  CLIs que ele detecta — e adia com uma só; o `house_session.py seat` roda o comando de um assento
+  no seu próprio worktree com a sessão no stdin, tira a impressão digital do worktree antes e
+  depois, e recusa o turno de um assento que escreveu nele. O `/deliberate` no Claude Code e a
+  skill `house-session` no Claude Code e no Codex percorrem a sessão de ponta a ponta.
+- **Endurecido antes da release por uma revisão adversarial.** O `work coverage` não credita
+  execução a um teste que cita e que uma definição posterior de mesmo nome substitui (`shadowed`) ou
+  cujo caminho casa casos de mais de um módulo (`ambiguous`), casa diretórios com ponto no nome, recusa
+  relatório em qualquer encoding que não UTF-8, e marca a resposta como velha quando uma fonte que cita
+  é mais nova que o relatório. O `evidence_gate` diz `declared-unsourced` para ids digitados à mão; o
+  `deliberate plan` confere o hash do próprio painel antes de acrescentar evidência e grava o painel
+  conferido com `--out`; o `verify` nomeia o schema que aceitou, e um registro v1 não pode carregar
+  evidência. O `findings check --subject` amarra uma revisão à mudança que ela leu. O runner de
+  assentos tira impressão digital do HEAD, de todo ref, da lista de worktrees, da config e dos hooks,
+  resolve caminhos a partir do topo do repositório, confere o assento antes de rodá-lo e para a árvore
+  inteira de processos do assento no timeout.
+
+### Alterado
+
+- **O registro da deliberação é `hpp.deliberation/v2`** (acrescenta `evidence_gate` e
+  `rationale`). O `verify` continua aceitando um registro `hpp.deliberation/v1` selado pela 2.7.0,
+  pelas regras v1.
+
 ## [2.7.0] — 2026-09-25
 
 ### Adicionado
@@ -1374,4 +1427,5 @@ publicar.
 [2.6.5]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.5
 [2.6.6]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.6
 [2.6.7]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.7
+[2.8.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.8.0
 [2.7.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.7.0

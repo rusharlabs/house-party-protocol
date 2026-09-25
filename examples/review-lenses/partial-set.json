@@ -1,0 +1,22 @@
+{
+  "schema": "hpp.findings/v1",
+  "lens": "partial-set",
+  "subject_sha256": "cac92704c03ab82157e1168c60235c892eb61fed27aa3313227f48866cb49e22",
+  "inspected": [
+    "change.diff",
+    "git grep -n 'price(' -- '*.py' -> 3 callers"
+  ],
+  "findings": [
+    {
+      "code": "CALLER_NOT_UPDATED",
+      "severity": "medium",
+      "file": "checkout.py",
+      "line": 18,
+      "claim": "price() gained a coupon parameter and checkout.py still calls it without one",
+      "evidence": [
+        "git grep -n 'price(' -- '*.py' -> checkout.py:18 price(cart.total, user.member)"
+      ],
+      "fix": "pass the cart coupon at checkout.py:18, or say why this caller has none"
+    }
+  ]
+}

@@ -44,8 +44,14 @@ from hpp.decision import (
 
 PANEL_SCHEMA = "hpp.panel/v1"
 TURN_SCHEMA = "hpp.turn/v1"
-SCHEMA = "hpp.deliberation/v1"
+SCHEMA = "hpp.deliberation/v2"
+SCHEMA_V1 = "hpp.deliberation/v1"
+# Why (2.8.0): v2 adds the evidence gate and the judge's rationale. A v1 record sealed by 2.7.0
+# re-derives under the v1 rules; the two versions are told apart by `schema`, never guessed.
+SCHEMAS = (SCHEMA_V1, SCHEMA)
+RATIONALE_SCHEMA = "hpp.rationale/v1"
 TALLY_SCHEMA = "hpp.deliberation-tally/v1"
+EVIDENCE_SOURCE_KINDS = ("context", "evidence-record")
 ROLES = ("proponent", "dissent", "examiner", "judge")
 CLAIM_KINDS = ("fact", "inference", "opinion")
 MAX_ROUNDS = 10
@@ -103,6 +109,33 @@ def _seat(raw: Any) -> dict[str, Any]:
     return {"id": seat_id, "role": role, "provider": _text(raw.get("provider"), f"seat {seat_id}: provider"),
             "model_served": model, "family": _text(raw.get("family"), f"seat {seat_id}: family"),
             "lane": _text(raw.get("lane"), f"seat {seat_id}: lane")}
+
+
+def _evidence(raw: Any) -> dict[str, Any]:
+    """The ids a fact may cite, and optionally where they came from."""
+    if not isinstance(raw, dict) or not set(raw) <= {"ids", "sources"}:
+        raise DeliberationError("evidence must be an object with ids and, optionally, sources")
+    ids = raw.get("ids")
+    if not isinstance(ids, list) or not ids or not all(
+            isinstance(item, str) and item and item == item.strip() for item in ids) or len(set(ids)) != len(ids):
+        raise DeliberationError("evidence.ids must be a non-empty list of unique, non-empty ids")
+    evidence: dict[str, Any] = {"ids": sorted(ids)}
+    if "sources" in raw:
+        sources = raw["sources"]
+        if not isinstance(sources, list):
+            raise DeliberationError("evidence.sources must be a list")
+        normalised = []
+        for source in sources:
+            if not isinstance(source, dict) or source.get("kind") not in EVIDENCE_SOURCE_KINDS \
+                    or not set(source) <= {"kind", "sha256", "id"}:
+                raise DeliberationError(f"evidence.sources: each source is {{kind: {' or '.join(EVIDENCE_SOURCE_KINDS)}, "
+                                        f"sha256, id?}}")
+            item = {"kind": source["kind"], "sha256": _hex(source.get("sha256"), "evidence.sources sha256")}
+            if "id" in source:
+                item["id"] = _text(source["id"], "evidence.sources id")
+            normalised.append(item)
+        evidence["sources"] = normalised
+    return evidence
 
 
 def normalise_panel(panel: Any) -> dict[str, Any]:
@@ -172,6 +205,10 @@ def normalise_panel(panel: Any) -> dict[str, Any]:
         raise DeliberationError("budget.max_chars must be a positive whole number of characters")
     body = {"schema": PANEL_SCHEMA, "id": panel_id, "session_type": session_type, "question": question,
             "state_sha256": state, "seats": seats, "budget": {"max_rounds": max_rounds, "max_chars": max_chars}}
+    # Why (2.8.0): only a panel that declares evidence carries the key, so a 2.7.0 panel keeps the
+    # hash its recorded turns name.
+    if "evidence" in panel:
+        body["evidence"] = _evidence(panel["evidence"])
     computed = _hash(body)
     if "sha256" in panel and panel["sha256"] != computed:
         raise DeliberationError("panel sha256 does not match its content; the panel was edited after hashing")
@@ -236,13 +273,32 @@ def normalise_turn(turn: Any, panel: dict[str, Any]) -> dict[str, Any]:
     return {**body, "sha256": computed}
 
 
-def _grounded(turn: dict[str, Any]) -> bool:
-    # F1: a position is grounded when the turn states at least one fact with a reference.
-    return any(claim["kind"] == "fact" and claim["refs"] for claim in turn["claims"])
+def _known(panel: dict[str, Any]) -> Optional[set[str]]:
+    """The ids a reference must name to resolve, or None when the panel declared no evidence."""
+    evidence = panel.get("evidence")
+    return set(evidence["ids"]) if evidence else None
 
 
-def _refs(turn: dict[str, Any]) -> set[str]:
-    return {ref for claim in turn["claims"] for ref in claim["refs"]}
+def _resolves(ref: str, known: Optional[set[str]]) -> bool:
+    return known is None or ref in known
+
+
+def _grounded(turn: dict[str, Any], known: Optional[set[str]]) -> bool:
+    # A position is grounded when the turn states at least one fact through a reference that
+    # resolves. With no evidence declared, any reference counts (the 2.7.0 rule, reported as
+    # `evidence_gate: not-declared`).
+    return any(claim["kind"] == "fact" and any(_resolves(ref, known) for ref in claim["refs"])
+               for claim in turn["claims"])
+
+
+def _refs(turn: dict[str, Any], known: Optional[set[str]]) -> set[str]:
+    # Why: an id nobody declared is not evidence, so it can neither keep a session going nor
+    # excuse a change of position.
+    return {ref for claim in turn["claims"] for ref in claim["refs"] if _resolves(ref, known)}
+
+
+def _unsupported(turn: dict[str, Any], known: set[str]) -> list[str]:
+    return sorted({ref for claim in turn["claims"] for ref in claim["refs"] if ref not in known})
 
 
 def _session(panel: Any, turns: Any) -> tuple[dict[str, Any], list[dict[str, Any]]]:
@@ -275,6 +331,7 @@ def _session(panel: Any, turns: Any) -> tuple[dict[str, Any], list[dict[str, Any
 def _tally(panel: dict[str, Any], turns: list[dict[str, Any]]) -> list[dict[str, Any]]:
     participants = _participants(panel)
     options = panel["question"]["options"]
+    known = _known(panel)
     last = max((turn["round"] for turn in turns), default=0)
     tallies = []
     earlier_refs: set[str] = set()
@@ -291,29 +348,33 @@ def _tally(panel: dict[str, Any], turns: list[dict[str, Any]]) -> list[dict[str,
             elif turn["position"] == ABSTAIN:
                 abstained.append(seat)
             else:
-                votes[turn["position"]]["grounded" if _grounded(turn) else "ungrounded"] += 1
+                votes[turn["position"]]["grounded" if _grounded(turn, known) else "ungrounded"] += 1
         best = max((votes[option]["grounded"] for option in options), default=0)
         top = [option for option in options if votes[option]["grounded"] == best]
         leading = top[0] if best > 0 and len(top) == 1 else None
         answered = [current[seat] for seat in participants if seat in current]
         convergence = (not not_judged and not abstained and leading is not None
-                       and all(turn["position"] == leading and _grounded(turn) for turn in answered))
-        dissent = [turn["seat"] for turn in answered if leading is not None and _grounded(turn)
+                       and all(turn["position"] == leading and _grounded(turn, known) for turn in answered))
+        dissent = [turn["seat"] for turn in answered if leading is not None and _grounded(turn, known)
                    and turn["position"] not in (leading, ABSTAIN)]
         moved = [seat for seat, turn in current.items() if seat in previous and previous[seat] != turn["position"]]
-        flips = [seat for seat in moved if not (_refs(current[seat]) - by_seat_refs[seat])]
-        round_refs = set().union(*(_refs(turn) for turn in answered)) if answered else set()
-        tallies.append({
+        flips = [seat for seat in moved if not (_refs(current[seat], known) - by_seat_refs[seat])]
+        round_refs = set().union(*(_refs(turn, known) for turn in answered)) if answered else set()
+        entry = {
             "round": round_, "votes": votes, "abstained": abstained, "not_judged": not_judged,
             "leading": leading, "grounded_convergence": convergence, "dissent": dissent,
             "moved": sorted(moved, key=participants.index),
             "flips_without_new_evidence": sorted(flips, key=participants.index),
             "new_refs": sorted(round_refs - earlier_refs),
             "chars": sum(turn["chars"] for turn in answered),
-        })
+        }
+        if known is not None:
+            entry["unsupported"] = [{"seat": turn["seat"], "refs": _unsupported(turn, known)}
+                                    for turn in answered if _unsupported(turn, known)]
+        tallies.append(entry)
         earlier_refs |= round_refs
         for seat, turn in current.items():
-            by_seat_refs[seat] |= _refs(turn)
+            by_seat_refs[seat] |= _refs(turn, known)
             previous[seat] = turn["position"]
     return tallies
 
@@ -406,8 +467,60 @@ def _judge(panel: dict[str, Any], judge: Any) -> dict[str, Any]:
     return record
 
 
-def _body(panel_raw: Any, turns_raw: Any, judge_raw: Any) -> dict[str, Any]:
+def _hashed_texts(raw: Any, label: str) -> list[dict[str, Any]]:
+    if not isinstance(raw, list):
+        raise DeliberationError(f"rationale {label} must be a list")
+    items = []
+    for item in raw:
+        if not isinstance(item, dict) or not set(item) <= {"position", "text_sha256", "chars"}:
+            raise DeliberationError(f"rationale {label}: each entry holds the hash and length of its verbatim text")
+        chars = item.get("chars")
+        if isinstance(chars, bool) or not isinstance(chars, int) or chars < 1:
+            raise DeliberationError(f"rationale {label}: chars must be the length of a non-empty verbatim text")
+        entry = {"text_sha256": _hex(item.get("text_sha256"), f"rationale {label} text_sha256"), "chars": chars}
+        if "position" in item:
+            entry = {"position": item["position"], **entry}
+        items.append(entry)
+    return items
+
+
+def _rationale(panel: dict[str, Any], raw: Any, dissent: list[dict[str, Any]]) -> Optional[dict[str, Any]]:
+    """The judge seat's answer to the dissent it overruled: one steelman per dissenting position,
+    and what would change the verdict. Text stays with the host; the record keeps hashes."""
+    positions = sorted({item["position"] for item in dissent})
+    if raw is None:
+        if positions:
+            raise DeliberationError(f"a verdict over grounded dissent needs the judge seat's rationale: a steelman "
+                                    f"of each dissenting position ({', '.join(positions)}) and would_change_if")
+        return None
+    if not isinstance(raw, dict) or raw.get("schema") != RATIONALE_SCHEMA \
+            or not set(raw) <= {"schema", "panel_sha256", "author", "steelman", "would_change_if"}:
+        raise DeliberationError(f"a rationale is an {RATIONALE_SCHEMA} object: panel_sha256, author, steelman, "
+                                f"would_change_if")
+    if raw.get("panel_sha256") != panel["sha256"]:
+        raise DeliberationError("the rationale belongs to another panel (panel_sha256 does not match)")
+    if raw.get("author") != panel["judge"]:
+        raise DeliberationError(f"the rationale is written by the judge seat ({panel['judge']}), "
+                                f"not by {raw.get('author')!r}")
+    steelman = _hashed_texts(raw.get("steelman"), "steelman")
+    written = [item.get("position") for item in steelman]
+    if not all(isinstance(item, str) for item in written) or len(set(written)) != len(written) \
+            or sorted(written) != positions:
+        raise DeliberationError(f"the steelman must argue exactly the dissenting positions "
+                                f"({', '.join(positions) or 'none'}), once each; got {written}")
+    would_change_if = _hashed_texts(raw.get("would_change_if"), "would_change_if")
+    if any("position" in item for item in would_change_if):
+        raise DeliberationError("rationale would_change_if: an entry names a condition, not a position")
+    if positions and not would_change_if:
+        raise DeliberationError("a verdict over grounded dissent must say what would change it (would_change_if)")
+    return {"schema": RATIONALE_SCHEMA, "panel_sha256": panel["sha256"], "author": panel["judge"],
+            "steelman": sorted(steelman, key=lambda item: item["position"]), "would_change_if": would_change_if}
+
+
+def _body(panel_raw: Any, turns_raw: Any, judge_raw: Any, rationale_raw: Any = None,
+          schema: str = SCHEMA) -> dict[str, Any]:
     panel, turns, tallies = _checked(panel_raw, turns_raw)
+    known = _known(panel)
     stop = _stop(panel, tallies)
     if stop["decision"] != "stop":
         raise DeliberationError(f"the session has not stopped (next round {stop['next_round']}); run it or stop it first")
@@ -428,7 +541,7 @@ def _body(panel_raw: Any, turns_raw: Any, judge_raw: Any) -> dict[str, Any]:
     dissent = []
     if verdict["value"] is not None:
         dissent = [{"seat": turn["seat"], "position": turn["position"], "grounded": True}
-                   for turn in last_turns if _grounded(turn) and turn["position"] not in (verdict["value"], ABSTAIN)]
+                   for turn in last_turns if _grounded(turn, known) and turn["position"] not in (verdict["value"], ABSTAIN)]
     all_votes = [count for item in tallies for votes in item["votes"].values() for count in votes.items()]
     total_votes = sum(value for _, value in all_votes)
     ungrounded = sum(value for key, value in all_votes if key == "ungrounded")
@@ -441,14 +554,27 @@ def _body(panel_raw: Any, turns_raw: Any, judge_raw: Any) -> dict[str, Any]:
     }
     usage = {"rounds": final["round"], "chars": sum(item["chars"] for item in tallies),
              "max_rounds": panel["budget"]["max_rounds"], "max_chars": panel["budget"]["max_chars"]}
-    return {"schema": SCHEMA, "panel": panel, "turns": turns, "tally": tallies, "stop": stop, "usage": usage,
+    body = {"schema": schema, "panel": panel, "turns": turns, "tally": tallies, "stop": stop, "usage": usage,
             "judge": judge, "verdict": verdict, "dissent": dissent, "metrics": metrics,
             "judge_independence": panel["judge_independence"]}
+    if schema == SCHEMA_V1:
+        if rationale_raw is not None:
+            raise DeliberationError(f"a {SCHEMA_V1} record carries no rationale")
+        # Why (review 2026-09-25): 2.7.0 never sealed a panel with evidence, so a v1 record that
+        # carries one is a v2 session relabelled to skip the rationale rule.
+        if "evidence" in panel:
+            raise DeliberationError(f"a {SCHEMA_V1} record predates the evidence gate; a panel with evidence is v2")
+        return body
+    evidence = panel.get("evidence")
+    # Why (review 2026-09-25): ids typed by hand resolve whatever the author wanted; only ids
+    # with a declared source (a context hash, a verified evidence record) are called resolved.
+    gate = "not-declared" if not evidence else "resolved" if evidence.get("sources") else "declared-unsourced"
+    return {**body, "evidence_gate": gate, "rationale": _rationale(panel, rationale_raw, dissent)}
 
 
-def build_record(panel: Any, turns: Any, judge: Any = None) -> dict[str, Any]:
-    """Assemble and seal an `hpp.deliberation/v1` record. The human decision is added later, outside the seal."""
-    body = _body(panel, turns, judge)
+def build_record(panel: Any, turns: Any, judge: Any = None, rationale: Any = None) -> dict[str, Any]:
+    """Assemble and seal an `hpp.deliberation/v2` record. The human decision is added later, outside the seal."""
+    body = _body(panel, turns, judge, rationale)
     return {**body, "record_sha256": _hash(body), "human_decision": None}
 
 
@@ -469,8 +595,8 @@ def _check_human(record: dict[str, Any]) -> None:
 
 def verify_record(record: Any) -> dict[str, Any]:
     """`intact` when the seal holds AND the record re-derives from its own turns and judge; else `broken`."""
-    if not isinstance(record, dict) or record.get("schema") != SCHEMA:
-        return {"status": "broken", "reason": f"schema must be {SCHEMA}"}
+    if not isinstance(record, dict) or record.get("schema") not in SCHEMAS:
+        return {"status": "broken", "reason": f"schema must be one of {', '.join(SCHEMAS)}"}
     try:
         _check_human(record)
     except DeliberationError as exc:
@@ -479,7 +605,8 @@ def verify_record(record: Any) -> dict[str, Any]:
     if record.get("record_sha256") != _hash(body):
         return {"status": "broken", "reason": "record_sha256 does not match: the record was edited after it was sealed"}
     try:
-        rebuilt = _body(record.get("panel"), record.get("turns"), record.get("judge"))
+        rebuilt = _body(record.get("panel"), record.get("turns"), record.get("judge"),
+                        record.get("rationale"), record["schema"])
     except DeliberationError as exc:
         return {"status": "broken", "reason": f"the record does not re-derive: {exc}"}
     for key in rebuilt:
@@ -489,7 +616,8 @@ def verify_record(record: Any) -> dict[str, Any]:
     extra = sorted(set(body) - set(rebuilt))
     if extra:
         return {"status": "broken", "reason": f"the record carries fields the contract does not define: {extra}"}
-    return {"status": "intact", "record_sha256": record["record_sha256"], "verdict": record["verdict"],
+    return {"status": "intact", "schema": record["schema"], "record_sha256": record["record_sha256"],
+            "verdict": record["verdict"],
             "stop": record["stop"]}
 
 

@@ -16,6 +16,8 @@ eles disseram.
 | o painel `hpp.panel/v1` | `review/panel.json` | não |
 | os turnos `hpp.turn/v1` | `review/turns.json` | não |
 | a resposta do juiz `hpp.decision/v1` | `review/judge.json` | não |
+| o rationale do juiz `hpp.rationale/v1` (novo na 2.8.0) | `review/rationale.json`, textos em `review/steelman-low.txt` e `review/would-change-if.txt` | não |
+| o contexto que os assentos receberam (novo na 2.8.0) | `review/context.json` | não |
 | o contrato, a contagem, a regra de parada, o selo | `hpp/deliberation.py` · `hpp deliberate` | não |
 | um replay de sessões gravadas como um decisor só | `panel_decider.py` sobre `sessions.json` | sem modelo, sem rede, só biblioteca padrão |
 
@@ -61,9 +63,23 @@ assento tinha lido antes de responder.
 - Um turno posterior só pode ter visto turnos de uma rodada **anterior**.
 - Um assento fala uma vez por rodada; o juiz não tem turno.
 
-Uma posição é **fundamentada** quando o turno afirma ao menos um `fact` com referência. Conferir que
-a referência existe no contexto chega numa versão posterior; hoje a contagem separa votos
-fundamentados de não fundamentados e nunca os mistura.
+Uma posição é **fundamentada** quando o turno afirma ao menos um `fact` com uma referência que
+resolve. Novo na 2.8.0: um painel pode declarar `evidence.ids`, os ids que os seus assentos podem
+citar — o contexto que receberam e os registros de evidência que verificaram. `plan --context` lê o
+mesmo arquivo de contexto que o `hpp cite check` lê e imprime o painel com esses ids; `--evidence`
+acrescenta cada registro `hpp.evidence/v1` que verifica agora, e recusa o que não verifica.
+
+```bash
+python -m hpp deliberate plan examples/house-session/review/panel.json --context examples/house-session/review/context.json --out out/panel.json
+```
+
+Com os ids declarados, uma referência a qualquer outra coisa é `unsupported`: o `tally` a lista por
+rodada, ela não fundamenta nada e nunca é evidência nova — um id inventado não segura uma sessão
+nem justifica uma mudança de posição. Um painel que não declara evidência mantém a regra da 2.7.0
+(qualquer referência fundamenta) e o registro diz `evidence_gate: not-declared`; ids digitados à mão
+sem `sources` dizem `declared-unsourced`, e só ids com fonte declarada (um hash de contexto, um registro
+de evidência verificado) dizem `resolved`. Declarar evidência muda o hash do painel, então salve o
+painel conferido com `plan ... --out FILE` e grave todo turno contra esse arquivo.
 
 ## A contagem e a regra de parada
 
@@ -97,7 +113,7 @@ com a dissidência mantida no registro.
 ## O registro
 
 ```bash
-python -m hpp deliberate record --panel examples/house-session/review/panel.json --turns examples/house-session/review/turns.json --judge examples/house-session/review/judge.json --out out/record.json
+python -m hpp deliberate record --panel examples/house-session/review/panel.json --turns examples/house-session/review/turns.json --judge examples/house-session/review/judge.json --rationale examples/house-session/review/rationale.json --out out/record.json
 python -m hpp deliberate verify out/record.json
 ```
 
@@ -108,7 +124,7 @@ assento pina um modelo). `record` recusa uma sessão que não parou e um
 veredito sem juiz — exceto quando um assento não foi julgado: aí o veredito é `blocked` e nenhum
 juiz é consultado.
 
-O registro `hpp.deliberation/v1` guarda o painel, cada turno por hash, a contagem de cada rodada, a
+O registro `hpp.deliberation/v2` guarda o painel, cada turno por hash, a contagem de cada rodada, a
 parada, o orçamento usado, o registro do juiz, o veredito, **a dissidência que perdeu** e quatro
 medições — concordância na rodada cega, concordância no fim, mudanças sem evidência nova e a
 proporção de votos não fundamentados. `record_sha256` sela tudo isso menos `human_decision`, que uma
@@ -118,6 +134,18 @@ coisa derivada reprova mesmo quando alguém recalculou o hash. O selo não é as
 reescrita coerente de um turno ou do registro do juiz, selada de novo, verifica. Essas entradas
 são ancoradas fora do registro, pelos hashes que ele carrega do texto verbatim e da resposta bruta
 do juiz — guarde esses arquivos ao lado do registro.
+
+**A dissidência é respondida, não só guardada.** Quando o veredito do juiz deixa de pé uma
+dissidência fundamentada, o `record` exige `--rationale`: um `hpp.rationale/v1` escrito pelo
+assento do juiz com um **steelman** por posição dissidente — a versão mais forte do lado que
+perdeu — e ao menos um **`would_change_if`**, o que derrubaria o veredito. Como os turnos, ele
+carrega o hash e o tamanho de cada texto verbatim; aqui os textos são `review/steelman-low.txt` e
+`review/would-change-if.txt`. Um rationale que defende uma posição da qual ninguém dissentiu, que
+pula uma, ou que vem de outro assento é recusado. Sem dissidência ele é opcional. O registro diz se
+houve steelman para cada posição; se ele é bom, só um leitor sabe.
+
+Um registro `hpp.deliberation/v1` selado pela 2.7.0 continua verificando, pelas regras com que foi
+selado.
 
 Nesta revisão a dissidência se manteve: `stop` → `max-rounds`, `escalate: true`; o veredito é o
 `high` do juiz; `dissent` mantém o assento `c` em `low`; o assento `b` passou de `medium` para
@@ -145,11 +173,14 @@ do painel. Um painel com assento morto é falha de instrumento nesta régua, nun
 |---|---|---|---|
 | `deliberate plan` · `deliberate validate` | válido | — | recusado, nomeando a primeira regra quebrada |
 | `deliberate tally` · `deliberate stop` | relatado | — | painel ou turnos recusados |
-| `deliberate record` | selado, o juiz respondeu | selado, o veredito está bloqueado ou o juiz falhou | recusado: não parou, sem juiz, juiz de outra pergunta, estado ou modelo |
+| `deliberate record` | selado, o juiz respondeu | selado, o veredito está bloqueado ou o juiz falhou | recusado: não parou, sem juiz, juiz de outra pergunta, estado ou modelo, dissidência sem steelman |
 | `deliberate verify` | íntegro | — | quebrado: editado, ou não re-deriva |
 
 ## O que isto ainda não faz
 
-As referências que um `fact` cita não são resolvidas contra o contexto, um steelman do lado
-perdedor não é exigido, e nada aqui executa os assentos: isso chega em versões posteriores. Se um
-painel vence um agente forte sozinho é uma medição, não uma afirmação — e ela não é feita aqui.
+Uma referência que resolve prova que o id existe, não que a fonte diz o que a afirmação diz — o
+mesmo limite do `hpp cite check`. Nada no núcleo executa os assentos; quem executa é o
+`house_session.py` do módulo de lanes (novo na 2.8.0): ele só senta um painel num host com duas
+famílias de modelo, roda o comando de cada assento no seu próprio worktree e recusa o turno de um
+assento que escreveu nele.
+Se um painel vence um agente forte sozinho é uma medição, não uma afirmação — e ela não é feita aqui.

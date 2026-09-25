@@ -1,0 +1,9 @@
+{
+  "schema": "hpp.findings/v1",
+  "lens": "deletion",
+  "subject_sha256": "cac92704c03ab82157e1168c60235c892eb61fed27aa3313227f48866cb49e22",
+  "inspected": [
+    "change.diff: no line removed without a replacement"
+  ],
+  "findings": []
+}

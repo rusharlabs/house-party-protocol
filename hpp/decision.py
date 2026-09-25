@@ -186,7 +186,7 @@ def validate(record: Any) -> dict[str, Any]:
         if status != "instrument-failure" or raw is not None:
             raw = _hex(raw, "raw_response_sha256")
     elif method == "panel":
-        raw = _hex(raw, "raw_response_sha256 (the sealed hpp.deliberation/v1 record)")
+        raw = _hex(raw, "raw_response_sha256 (the sealed hpp.deliberation record)")
     elif raw is not None:
         raw = _hex(raw, "raw_response_sha256")
     declared = record.get("declared")

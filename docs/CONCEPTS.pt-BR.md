@@ -299,22 +299,26 @@ lane que nenhum participante usa, e os papéis que o `session_type` exige (`plan
 afirmações com os ids em que se apoiam, o hash do texto verbatim e `seen_turns`: um turno da
 rodada 1 que viu qualquer coisa é recusado, então a rodada cega é verificável. A sessão para por
 regra (`not-judged`, `grounded-convergence`, `paused-budget`, `no-new-evidence`, `max-rounds`), e
-`hpp.deliberation/v1` sela o painel, os turnos, a contagem, a parada, o `hpp.decision/v1` do
-juiz, o veredito e a dissidência que perdeu; `human_decision` fica fora do selo.
+`hpp.deliberation/v2` sela o painel, os turnos, a contagem, a parada, o `hpp.decision/v1` do
+juiz, o veredito, a dissidência que perdeu e o rationale do assento do juiz — um steelman de cada
+posição dissidente e o que mudaria o veredito, exigido quando uma dissidência fundamentada fica de
+pé; `human_decision` fica fora do selo. Um painel pode declarar `evidence.ids`: aí um `fact` só
+fundamenta por uma referência que resolve, e a que não resolve é `unsupported`.
 
 **Não é:** uma chamada de modelo, um voto que substitui uma pessoa, nem prova de que um painel
 vence um agente sozinho. Os assentos e o juiz respondem fora do harness. Um assento que não
 respondeu **não é julgado** — nunca é voto contra — e bloqueia o veredito. Uma posição é
-fundamentada quando o turno afirma um `fact` com referência; se a referência existe no contexto
-ainda não é conferido. O painel não publica confiança que não mediu. O selo não é assinatura: `verify` prova que tudo o
+fundamentada quando o turno afirma um `fact` cuja referência resolve contra a evidência declarada
+(ou, sem nenhuma declarada, qualquer referência — o registro diz `not-declared`); um id resolvido
+prova que a fonte existe, não que ela sustenta a afirmação. O painel não publica confiança que não mediu. O selo não é assinatura: `verify` prova que tudo o
 que é derivado bate com os turnos e o registro do juiz que o arquivo guarda, e esses só são
 ancorados pelos hashes do texto verbatim e da resposta bruta guardados ao lado. A sessão termina na
 primeira rodada em que uma regra vale; turnos de rodadas posteriores são recusados. Se um painel vale o custo é
 medido com `hpp decide eval`, que lê o painel como um decisor só (`method: panel`), não afirmado
 aqui.
 
-**Verifique:** novo na 2.7.0 —
-`python -m hpp deliberate record --panel examples/house-session/review/panel.json --turns examples/house-session/review/turns.json --judge examples/house-session/review/judge.json --out out/record.json`
+**Verifique:** novo na 2.7.0, rationale novo na 2.8.0 —
+`python -m hpp deliberate record --panel examples/house-session/review/panel.json --turns examples/house-session/review/turns.json --judge examples/house-session/review/judge.json --rationale examples/house-session/review/rationale.json --out out/record.json`
 sela a revisão com `stop` `max-rounds`, `escalate: true`, o veredito `high` e o assento `c`
 mantido como dissidência, exit 0; `python -m hpp deliberate verify out/record.json` sai com 0, e
 numa cópia com o veredito editado sai com 2. Um painel com assento servido por `-latest`, ou com
@@ -389,6 +393,47 @@ uma dependência combinada no chat mas não escrita em `depends_on` não existe 
 compilada; remova uma lista `acceptance` e o mesmo comando sai com 2 e "needs non-empty
 acceptance criteria"; nomeie uma dependência que não é unidade e ele sai com 2 e "unknown
 dependency".
+
+## citado e executado
+
+**É:** a diferença entre um teste que nomeia um critério de aceite e um teste que o rodou. Um
+teste cita um critério com `[spec: capability/scenario]` na sua docstring; o `hpp work coverage`
+liga cada critério de uma spec aos testes que o citam (`hpp.spec-coverage/v1`). Dado o relatório
+JUnit XML da execução, ele junta cada teste que cita aos casos que o runner executou e separa os
+critérios em `executed`, `failed`, `cited_not_run`, `orphans` e `unknown`
+(`hpp.spec-execution/v1`); `complete` só vale quando todo critério foi executado.
+
+**Não é:** um runner de testes, e não é prova de que um teste que passa confere o que o seu
+critério diz — isso é o que o `hpp evidence mutate` mede. Um teste pulado, um teste desmarcado e
+uma docstring de módulo ou de classe citam um critério sem rodá-lo, e nenhum deles conta. Um caso
+do relatório é ligado pela convenção do pytest (módulo pontuado mais cadeia de classes em
+`classname`, função mais `[parâmetros]` em `name`); o `matched_testcases` publica quantos casos
+foram ligados, para que um relatório que descreve outra execução apareça como zero, e não como se
+nada tivesse rodado.
+
+**Verifique:** novo na 2.8.0 — `python -m hpp work coverage examples/cited-and-run/workgraph.json --tests examples/cited-and-run/check_prices.py`
+informa todo critério coberto e sai com 0; depois de
+`python -m pytest examples/cited-and-run/check_prices.py -q -p no:cacheprovider --junitxml out/cited-and-run.xml`,
+o mesmo comando com `--junit out/cited-and-run.xml` informa `bulk-discount` como `cited_not_run`
+(o seu teste foi pulado) e sai com 1.
+
+## lente de revisão
+
+**É:** um revisor somente-leitura que olha uma mudança atrás de um tipo de defeito — lacuna de
+verificação, conjunto parcial, deleção com leitores sobrando, evidência velha — e responde com um
+documento `hpp.findings/v1`: cada achado tem um `code` estável, uma `severity`, um `file` e uma
+`line`, a `claim` e a `evidence` em que se apoia, e o documento declara o que `inspected`. O
+`hpp findings check` segura a forma e deriva o veredito (`fail`, `warn` ou `pass`).
+
+**Não é:** prova de que a revisão está certa. A checagem lê a resposta, nunca a mudança. Ela
+recusa o que torna uma revisão ilegível: uma chave que o contrato não define (o documento
+inteiro), um `inspected` vazio (não achar nada e não olhar nada se leem igual), um achado sem
+evidência, o mesmo achado duas vezes. As quatro lentes vêm como sub-agentes do módulo operator;
+elas viram os assentos de um painel de revisão.
+
+**Verifique:** novo na 2.8.0 — `python -m hpp findings check examples/review-lenses/deletion-clean.json examples/review-lenses/partial-set.json`
+informa `pass` para o primeiro documento e `warn` para o segundo, com um `CALLER_NOT_UPDATED`, e
+sai com 1; `python -m hpp findings check examples/review-lenses/deletion-clean.json` sozinho sai com 0.
 
 ## execução por waves
 

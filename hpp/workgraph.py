@@ -7,8 +7,11 @@ an agent, a process or a git command.
 """
 from __future__ import annotations
 
+import ast
 import re
-from typing import Any
+import xml.etree.ElementTree as ElementTree
+from pathlib import PurePosixPath
+from typing import Any, Optional
 
 
 TIERS = ("economy", "balanced", "frontier")
@@ -288,17 +291,37 @@ def spec_coverage(compiled: dict[str, Any], sources: dict[str, str]) -> dict[str
     `unknown` (a marker naming no declared criterion — a broken citation, which would
     otherwise read as coverage of something).
     """
-    if not isinstance(compiled, dict) or not isinstance(compiled.get("criteria"), list):
-        raise WorkGraphError("spec coverage needs a compiled workgraph")
     if not isinstance(sources, dict) or not all(
         isinstance(name, str) and isinstance(text, str) for name, text in sources.items()
     ):
         raise WorkGraphError("sources must be a mapping of name to text")
-    declared = {criterion["id"] for criterion in compiled["criteria"]}
     cited: dict[str, list[str]] = {}
     for name in sorted(sources):
         for marker in sorted(find_spec_markers(sources[name])):
             cited.setdefault(marker, []).append(name)
+    return _link(compiled, cited)
+
+
+def citation_coverage(compiled: dict[str, Any], citations: list[dict[str, Any]]) -> dict[str, Any]:
+    """`spec_coverage` over what `cited_tests` read, with each source named by its file."""
+    if not isinstance(citations, list) or not all(
+        isinstance(entry, dict) and isinstance(entry.get("test"), str) and isinstance(entry.get("cites"), list)
+        for entry in citations
+    ):
+        raise WorkGraphError("citations must come from cited_tests")
+    cited: dict[str, list[str]] = {}
+    for entry in sorted(citations, key=lambda item: item["test"]):
+        path = entry["test"].split("::", 1)[0]
+        for marker in entry["cites"]:
+            if path not in cited.setdefault(marker, []):
+                cited[marker].append(path)
+    return _link(compiled, cited)
+
+
+def _link(compiled: dict[str, Any], cited: dict[str, list[str]]) -> dict[str, Any]:
+    if not isinstance(compiled, dict) or not isinstance(compiled.get("criteria"), list):
+        raise WorkGraphError("spec coverage needs a compiled workgraph")
+    declared = {criterion["id"] for criterion in compiled["criteria"]}
     orphans = sorted(declared - set(cited))
     unknown = sorted(set(cited) - declared)
     return {
@@ -308,6 +331,222 @@ def spec_coverage(compiled: dict[str, Any], sources: dict[str, str]) -> dict[str
         "orphans": orphans,
         "unknown": [{"id": key, "sources": cited[key]} for key in unknown],
         "complete": not orphans and not unknown,
+    }
+
+
+_CITING = (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)
+
+
+def cited_tests(source: str, path: str) -> list[dict[str, Any]]:
+    """The criteria each test of a Python source cites, read from docstrings only.
+
+    One entry per module, class or function whose docstring carries a marker, keyed
+    `path`, `path::Class` or `path::Class::function`. A marker inside any other string is
+    test data describing the form, not a citation, so it is never read. `kind` tells a test
+    (`function`) from a citation no runner will ever execute (`module`, `class`, and `shadowed`:
+    a definition that a later binding of the same name in the same scope replaces, so the runner
+    never sees it).
+    """
+    if not isinstance(source, str) or not isinstance(path, str) or not path:
+        raise WorkGraphError("cited tests need a source text and its path")
+    try:
+        tree = ast.parse(source)
+    except (SyntaxError, ValueError) as exc:
+        raise WorkGraphError(f"{path} is not valid Python: {exc}") from exc
+    found: list[dict[str, Any]] = []
+
+    def cite(node: ast.Module | ast.ClassDef | ast.FunctionDef | ast.AsyncFunctionDef, key: str, kind: str) -> None:
+        doc = ast.get_docstring(node, clean=False)
+        markers = find_spec_markers(doc) if doc else set()
+        if markers:
+            found.append({"test": key, "kind": kind, "cites": sorted(markers)})
+
+    def walk(node: ast.AST, prefix: str) -> None:
+        children = list(ast.iter_child_nodes(node))
+        # Why (review 2026-09-25): Python keeps the LAST binding of a name, so a citing test
+        # redefined further down never runs, and the case the later definition produced must not
+        # be credited to it.
+        last = {name: index for index, child in enumerate(children) for name in _bound(child)}
+        for index, child in enumerate(children):
+            if isinstance(child, _CITING):
+                key = f"{prefix}::{child.name}"
+                kind = "class" if isinstance(child, ast.ClassDef) else "function"
+                cite(child, key, "shadowed" if last.get(child.name, index) > index else kind)
+                walk(child, key)
+
+    cite(tree, path, "module")
+    walk(tree, path)
+    return found
+
+
+def _bound(node: ast.AST) -> list[str]:
+    """The names a statement binds in its scope (definitions, assignments, imports)."""
+    if isinstance(node, _CITING):
+        return [node.name]
+    if isinstance(node, (ast.Assign, ast.AnnAssign, ast.AugAssign)):
+        targets = node.targets if isinstance(node, ast.Assign) else [node.target]
+        return [name.id for target in targets for name in ast.walk(target) if isinstance(name, ast.Name)]
+    if isinstance(node, (ast.Import, ast.ImportFrom)):
+        return [(alias.asname or alias.name).split(".")[0] for alias in node.names]
+    return []
+
+
+# Why: a DOCTYPE is where entity declarations live, and an entity is how a few bytes of XML
+# expand to gigabytes on read. A runner's report never needs one, so it is refused, not parsed.
+_XML_DECLARATIONS = re.compile(r"<!\s*(?:DOCTYPE|ENTITY)", re.I)
+_OUTCOMES = (("failure", "failed"), ("error", "error"), ("skipped", "skipped"))
+_DECLARED_ENCODING = re.compile(r"""<\?xml[^>]*\bencoding\s*=\s*["']([^"']+)["']""", re.I)
+
+
+def read_junit(text: str | bytes) -> list[dict[str, str]]:
+    """Every `testcase` of a JUnit XML report, with its outcome.
+
+    Outcome: `failed` (a `failure` child), `error`, `skipped`, or `passed` when it has none.
+    Standard library only; a report that declares a DOCTYPE or an entity is refused, and so is one
+    that is not UTF-8 (bytes that do not decode, or another declared encoding).
+    """
+    if isinstance(text, bytes):
+        # Why: the declaration probe reads UTF-8; a UTF-16/32 report would hide a DOCTYPE
+        # from it while the parser still honours it through the byte-order mark.
+        try:
+            probe = text.decode("utf-8")
+        except UnicodeDecodeError as exc:
+            raise WorkGraphError("a JUnit report must be UTF-8") from exc
+        if "\x00" in probe:
+            raise WorkGraphError("a JUnit report must be UTF-8")
+    elif isinstance(text, str):
+        probe = text
+    else:
+        raise WorkGraphError("a JUnit report must be text")
+    if _XML_DECLARATIONS.search(probe):
+        raise WorkGraphError("a JUnit report with a DOCTYPE or ENTITY declaration is refused")
+    declared = _DECLARED_ENCODING.search(probe[:400])
+    if declared and declared.group(1).strip().lower().replace("_", "-") not in ("utf-8", "utf8"):
+        raise WorkGraphError(f"a JUnit report must be UTF-8, this one declares {declared.group(1)!r}")
+    try:
+        root = ElementTree.fromstring(text)
+    except (ElementTree.ParseError, LookupError, ValueError) as exc:
+        raise WorkGraphError(f"the JUnit report is not valid XML: {exc}") from exc
+    if root.tag not in ("testsuites", "testsuite"):
+        raise WorkGraphError(f"not a JUnit report: the root element is <{root.tag}>")
+    cases: list[dict[str, str]] = []
+    for case in root.iter("testcase"):
+        name = case.get("name", "")
+        if not name:
+            raise WorkGraphError("a JUnit testcase has no name")
+        tags = {child.tag for child in case}
+        outcome = next((result for tag, result in _OUTCOMES if tag in tags), "passed")
+        cases.append({"classname": case.get("classname", ""), "name": name, "outcome": outcome})
+    return cases
+
+
+def _module_parts(path: str) -> list[str]:
+    """`tests/test_x.py` -> `["tests", "test_x"]`, whichever separator the path was written with."""
+    parts = PurePosixPath(path.replace("\\", "/")).with_suffix("").parts
+    return [part for part in parts if part not in ("", ".", "..", "/")]
+
+
+def _case_module(test: str, case: dict[str, str]) -> Optional[str]:
+    """The module a report case names, when it runs `test`; None when it does not.
+
+    The runner writes `classname` as the dotted module path from ITS root directory plus the
+    class chain, and `name` as the function plus `[params]`. The module is compared as a dotted
+    suffix at a `.` boundary, in either direction, because the path given to hpp and the
+    runner's root need not be the same directory — and never by splitting on dots, which would
+    cut a directory such as `kit-1.5.0` in three.
+    """
+    path, *qualified = test.split("::")
+    if not qualified or case["name"].split("[", 1)[0] != qualified[-1]:
+        return None
+    module_of_case = case["classname"]
+    classes = ".".join(qualified[:-1])
+    if classes:
+        if not module_of_case.endswith("." + classes):
+            return None
+        module_of_case = module_of_case[:-len(classes) - 1]
+    module = ".".join(_module_parts(path))
+    if not module_of_case or not module:
+        return None
+    if module_of_case == module or module_of_case.endswith("." + module) or module.endswith("." + module_of_case):
+        return module_of_case
+    return None
+
+
+def _run_status(entry: dict[str, Any], cases: list[dict[str, str]], matched: set[int]) -> str:
+    if entry["kind"] == "shadowed":
+        return "shadowed"
+    if entry["kind"] != "function":
+        return "not-a-test"
+    outcomes = set()
+    modules = set()
+    for index, case in enumerate(cases):
+        module = _case_module(entry["test"], case)
+        if module is not None:
+            matched.add(index)
+            outcomes.add(case["outcome"])
+            modules.add(module)
+    # Why (review 2026-09-25): a short path matches every module with the same basename; when
+    # the matches name more than one module, which of them is this test cannot be told.
+    if len(modules) > 1:
+        return "ambiguous"
+    if outcomes & {"failed", "error"}:
+        return "failed"
+    if "passed" in outcomes:
+        return "passed"
+    return "skipped" if outcomes else "not-in-junit"
+
+
+def spec_execution(compiled: dict[str, Any], citations: list[dict[str, Any]],
+                   cases: list[dict[str, str]]) -> dict[str, Any]:
+    """Join who CITES each criterion with what the runner EXECUTED.
+
+    A criterion is `executed` when a citing test ran and passed and none failed; `failed` when
+    any citing test failed or errored (a pass elsewhere does not cancel it); `cited_not_run`
+    when every citing test was skipped, is absent from the report, or is not a test at all.
+    `orphans` and `unknown` mean what they mean in `spec_coverage`. `complete` holds only when
+    every declared criterion was executed. The denominators are published with it:
+    `junit_testcases` (read) and `matched_testcases` (joined to a citing test) - a report whose
+    cases match nothing is a wrong root or a wrong file, and says so by its count.
+    """
+    if not isinstance(compiled, dict) or not isinstance(compiled.get("criteria"), list):
+        raise WorkGraphError("spec execution needs a compiled workgraph")
+    if not isinstance(citations, list) or not all(
+        isinstance(entry, dict) and isinstance(entry.get("test"), str) and isinstance(entry.get("cites"), list)
+        and entry.get("kind") in ("module", "class", "function", "shadowed") for entry in citations
+    ):
+        raise WorkGraphError("citations must come from cited_tests")
+    if not isinstance(cases, list) or not all(
+        isinstance(case, dict) and all(isinstance(case.get(key), str) for key in ("classname", "name", "outcome"))
+        for case in cases
+    ):
+        raise WorkGraphError("test cases must come from read_junit")
+    declared = {criterion["id"] for criterion in compiled["criteria"]}
+    matched: set[int] = set()
+    by_criterion: dict[str, list[dict[str, str]]] = {}
+    for entry in sorted(citations, key=lambda item: item["test"]):
+        status = _run_status(entry, cases, matched)
+        for marker in entry["cites"]:
+            by_criterion.setdefault(marker, []).append({"test": entry["test"], "outcome": status})
+    buckets: dict[str, list[dict[str, Any]]] = {"executed": [], "failed": [], "cited_not_run": []}
+    for criterion_id in sorted(declared & set(by_criterion)):
+        tests = by_criterion[criterion_id]
+        outcomes = {test["outcome"] for test in tests}
+        bucket = "failed" if "failed" in outcomes else "executed" if "passed" in outcomes else "cited_not_run"
+        buckets[bucket].append({"id": criterion_id, "tests": tests})
+    orphans = sorted(declared - set(by_criterion))
+    unknown = [
+        {"id": key, "sources": [test["test"] for test in by_criterion[key]]}
+        for key in sorted(set(by_criterion) - declared)
+    ]
+    return {
+        "schema": "hpp.spec-execution/v1",
+        "criteria": len(declared),
+        "junit_testcases": len(cases),
+        "matched_testcases": len(matched),
+        **buckets,
+        "orphans": orphans,
+        "unknown": unknown,
+        "complete": len(buckets["executed"]) == len(declared) and not unknown,
     }
 
 

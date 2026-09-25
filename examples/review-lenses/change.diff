@@ -1,0 +1,8 @@
+--- a/pricing.py
++++ b/pricing.py
+@@ -1,4 +1,4 @@
+-def price(total, member):
++def price(total, member, coupon=None):
+     if member:
+         total *= 0.90
+     return round(total, 2)

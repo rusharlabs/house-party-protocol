@@ -12,16 +12,16 @@ Documentos válidos para todos os kits: [`ARCHITECTURE.md`](ARCHITECTURE.md) · 
 | kit | versão | skills | commands | agents | hooks | rules | templates | scripts |
 |---|---|---:|---:|---:|---:|---:|---:|---:|
 | [kit-forge](#kit-forge) | 1.4.2 | 0 | 0 | 0 | 1 | 0 | 0 | 0 |
-| [operator-kit](#operator-kit) | 1.6.2 | 13 | 2 | 2 | 10 | 13 | 1 | 17 |
+| [operator-kit](#operator-kit) | 1.7.0 | 13 | 2 | 6 | 10 | 13 | 1 | 17 |
 | [continuity-kit](#continuity-kit) | 1.4.1 | 2 | 0 | 0 | 3 | 0 | 12 | 2 |
-| [lane-kit](#lane-kit) | 1.4.1 | 1 | 0 | 0 | 4 | 0 | 4 | 4 |
+| [lane-kit](#lane-kit) | 1.5.0 | 2 | 1 | 0 | 4 | 0 | 4 | 5 |
 | [health-kit](#health-kit) | 1.3.3 | 2 | 0 | 0 | 1 | 0 | 0 | 3 |
 | [claude-dev-kit](#claude-dev-kit) | 1.3.3 | 8 | 0 | 0 | 1 | 0 | 0 | 2 |
 | [supabase-pack](#supabase-pack) | 1.1.2 | 2 | 0 | 0 | 0 | 0 | 0 | 0 |
 | [agent-framework-wizard](#agent-framework-wizard) | 1.2.1 | 1 | 0 | 0 | 0 | 0 | 5 | 0 |
 | [dev-squad-kit](#dev-squad-kit) | 1.1.1 | 3 | 12 | 12 | 0 | 0 | 0 | 0 |
 | [gotcha-memory](#gotcha-memory) | 1.0.3 | 1 | 0 | 0 | 3 | 0 | 0 | 0 |
-| **total** | | **33** | **14** | **14** | **23** | **13** | **22** | **28** |
+| **total** | | **34** | **15** | **18** | **23** | **13** | **22** | **29** |
 
 ## kit-forge
 
@@ -35,7 +35,7 @@ O gate de IP/PII + o montador de kits. ip_pii_linter + kit_assembler (com guard_
 
 ## operator-kit
 
-Módulo operacional do harness: gates executáveis, loops governados, pass@k/pass^k standalone, política audit/enforce, preflight, planejamento spec-driven e dois checkers read-only.
+Módulo operacional do harness: gates executáveis, loops governados, pass@k/pass^k standalone, política audit/enforce, preflight, planejamento spec-driven, dois checkers read-only e quatro lentes de revisão que respondem em hpp.findings/v1.
 
 **Skills**
 
@@ -57,7 +57,7 @@ Módulo operacional do harness: gates executáveis, loops governados, pass@k/pas
 
 **Commands** — `/cancel-ralph-gate` · `/ralph-gate`
 
-**Agents** — `refutador` · `silent-failure-hunter`
+**Agents** — `lens-deletion` · `lens-partial-set` · `lens-stale-evidence` · `lens-verification-gap` · `refutador` · `silent-failure-hunter`
 
 **Hooks**
 
@@ -107,13 +107,16 @@ Handoff-v1.1: uma sessao sobrevive a parada/clear/crash sem perder o proximo pas
 
 ## lane-kit
 
-N sessoes sem colisao. Lane board, maker!=checker cross-model, lock por diretorio, git-guard e territory-guard. O checker_router detecta Codex, Cursor e Gemini e escolhe um provider diferente do maker. Best-of-N: compete/select registram qual de N tentativas concorrentes venceu.
+N sessoes sem colisao. Lane board, maker!=checker cross-model, lock por diretorio, git-guard e territory-guard. O checker_router detecta Codex, Cursor e Gemini e escolhe um provider diferente do maker. Best-of-N: compete/select registram qual de N tentativas concorrentes venceu. House Session: /deliberate e house_session.py sentam um painel de duas familias de modelo e recusam o turno de um assento que escreveu.
 
 **Skills**
 
 | skill | o que faz |
 |---|---|
+| `house-session` | Runs a House Session on this host — a panel of pinned deciders from at least two model families, each seat a read-only command in its own lane, blind first round, counted, stopped and sealed by the HPP core. |
 | `lane-coordinator` | Coordinates N concurrent sessions (lanes) over the same repo through a whiteboard with a state machine (lane_board.py) — from CLAIMED to MERGED, with cross-model maker≠checker enforced in code, not by textual discipline. |
+
+**Commands** — `/deliberate`
 
 **Hooks**
 
@@ -126,7 +129,7 @@ N sessoes sem colisao. Lane board, maker!=checker cross-model, lock por diretori
 
 **Templates** — `lane-registry.example.json` · `lanes.example.yaml` · `REORIENT-MAILBOX.template.md` · `status-stakeholder.template.html`
 
-**Scripts** — `checker_router.py` · `lane_board.py` · `lane_effects.py` · `lane_rescue.py`
+**Scripts** — `checker_router.py` · `house_session.py` · `lane_board.py` · `lane_effects.py` · `lane_rescue.py`
 
 ## health-kit
 

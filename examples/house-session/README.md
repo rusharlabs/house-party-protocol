@@ -15,6 +15,8 @@ in their own lanes or CLIs, and this command validates, counts, stops and seals 
 | the panel `hpp.panel/v1` | `review/panel.json` | no |
 | the turns `hpp.turn/v1` | `review/turns.json` | no |
 | the judge's answer `hpp.decision/v1` | `review/judge.json` | no |
+| the judge's rationale `hpp.rationale/v1` (new in 2.8.0) | `review/rationale.json`, texts in `review/steelman-low.txt` and `review/would-change-if.txt` | no |
+| the context the seats were given (new in 2.8.0) | `review/context.json` | no |
 | the contract, the count, the stop rule, the seal | `hpp/deliberation.py` · `hpp deliberate` | no |
 | a replay of recorded sessions as one decider | `panel_decider.py` over `sessions.json` | no model, no network, standard library only |
 
@@ -60,9 +62,23 @@ seat had read before answering.
 - A later turn may only have seen turns of an **earlier** round.
 - A seat speaks once per round; the judge takes no turns.
 
-A position is **grounded** when its turn states at least one `fact` with a reference. Checking that
-the reference exists in the context comes in a later release; today the count separates grounded
-from ungrounded votes and never mixes them.
+A position is **grounded** when its turn states at least one `fact` with a reference that
+resolves. New in 2.8.0: a panel may declare `evidence.ids`, the ids its seats can cite — the
+context they were given and the evidence records that verified. `plan --context` reads the same
+context file `hpp cite check` reads and prints the panel with those ids; `--evidence` adds each
+`hpp.evidence/v1` record that verifies now, and refuses one that does not.
+
+```bash
+python -m hpp deliberate plan examples/house-session/review/panel.json --context examples/house-session/review/context.json --out out/panel.json
+```
+
+With the ids declared, a reference to anything else is `unsupported`: `tally` lists it per round,
+it grounds nothing, and it is never new evidence — an invented id cannot keep a session going or
+excuse a change of position. A panel that declares no evidence keeps the 2.7.0 rule (any reference
+grounds) and its record says `evidence_gate: not-declared`; ids typed by hand with no `sources` say
+`declared-unsourced`, and only ids with a declared source (a context hash, a verified evidence record)
+say `resolved`. Declaring evidence changes the panel's hash, so save the checked panel with
+`plan ... --out FILE` and record every turn against that file.
 
 ## The count and the stop rule
 
@@ -95,7 +111,7 @@ options, with the dissent kept in the record.
 ## The record
 
 ```bash
-python -m hpp deliberate record --panel examples/house-session/review/panel.json --turns examples/house-session/review/turns.json --judge examples/house-session/review/judge.json --out out/record.json
+python -m hpp deliberate record --panel examples/house-session/review/panel.json --turns examples/house-session/review/turns.json --judge examples/house-session/review/judge.json --rationale examples/house-session/review/rationale.json --out out/record.json
 python -m hpp deliberate verify out/record.json
 ```
 
@@ -106,7 +122,7 @@ is refused: the seat pins a model). `record` refuses a session that has not
 stopped and a verdict without a judge — except when a seat was not judged: then the verdict is
 `blocked` and no judge is consulted.
 
-The `hpp.deliberation/v1` record keeps the panel, every turn by hash, the tally of every round,
+The `hpp.deliberation/v2` record keeps the panel, every turn by hash, the tally of every round,
 the stop, the budget used, the judge's record, the verdict, the **dissent that lost**, and four
 measurements — agreement in the blind round, agreement at the end, moves without new evidence,
 and the share of ungrounded votes. `record_sha256` seals all of it except `human_decision`, which
@@ -116,6 +132,17 @@ anything derived fails even when someone recomputed the hash. The seal is not a 
 consistent rewrite of a turn or of the judge's record, resealed, verifies. Those inputs are
 anchored outside the record, by the hashes it carries of the verbatim text and of the judge's raw
 response — keep those files beside the record.
+
+**Dissent is answered, not just kept.** When the judge's verdict leaves grounded dissent standing,
+`record` needs `--rationale`: an `hpp.rationale/v1` written by the judge seat with one **steelman**
+per dissenting position — the strongest case for the side that lost — and at least one
+**`would_change_if`**, what would overturn the verdict. Like turns, it carries the hash and length
+of each verbatim text; here the texts are `review/steelman-low.txt` and
+`review/would-change-if.txt`. A rationale that argues a position nobody dissented from, skips one,
+or comes from another seat is refused. Without dissent it is optional. The record says whether a
+steelman was written for each position; whether it is a good one, only a reader can tell.
+
+A `hpp.deliberation/v1` record sealed by 2.7.0 still verifies, under the rules it was sealed with.
 
 In this review the dissent held its ground: `stop` → `max-rounds`, `escalate: true`; the verdict is
 the judge's `high`; `dissent` keeps seat `c` at `low`; seat `b` moved from `medium` to `high` and
@@ -142,11 +169,13 @@ panel's decision. A panel with a dead seat is an instrument failure in this rule
 |---|---|---|---|
 | `deliberate plan` · `deliberate validate` | valid | — | refused, naming the first broken rule |
 | `deliberate tally` · `deliberate stop` | reported | — | refused panel or turns |
-| `deliberate record` | sealed, the judge answered | sealed, the verdict is blocked or the judge failed | refused: not stopped, no judge, a judge for another question, state or model |
+| `deliberate record` | sealed, the judge answered | sealed, the verdict is blocked or the judge failed | refused: not stopped, no judge, a judge for another question, state or model, dissent without a steelman |
 | `deliberate verify` | intact | — | broken: edited, or does not re-derive |
 
 ## What this does not do yet
 
-The references a `fact` cites are not resolved against the context, a steelman of the losing side
-is not required, and nothing here runs the seats: those arrive in later releases. Whether a panel
-beats one strong agent is a measurement, not a claim — it is not made here.
+A reference that resolves proves the id exists, not that the source says what the claim says — the
+same limit as `hpp cite check`. Nothing in the core runs the seats; the lane module's
+`house_session.py` does (new in 2.8.0): it seats a panel only on a host with two model families,
+runs each seat's command in its own worktree, and refuses the turn of a seat that wrote to it.
+Whether a panel beats one strong agent is a measurement, not a claim — it is not made here.

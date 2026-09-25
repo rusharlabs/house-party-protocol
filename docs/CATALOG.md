@@ -12,16 +12,16 @@ Documents that apply to every kit: [`ARCHITECTURE.md`](ARCHITECTURE.md) · [`ARC
 | kit | version | skills | commands | agents | hooks | rules | templates | scripts |
 |---|---|---:|---:|---:|---:|---:|---:|---:|
 | [kit-forge](#kit-forge) | 1.4.2 | 0 | 0 | 0 | 1 | 0 | 0 | 0 |
-| [operator-kit](#operator-kit) | 1.6.2 | 13 | 2 | 2 | 10 | 13 | 1 | 17 |
+| [operator-kit](#operator-kit) | 1.7.0 | 13 | 2 | 6 | 10 | 13 | 1 | 17 |
 | [continuity-kit](#continuity-kit) | 1.4.1 | 2 | 0 | 0 | 3 | 0 | 12 | 2 |
-| [lane-kit](#lane-kit) | 1.4.1 | 1 | 0 | 0 | 4 | 0 | 4 | 4 |
+| [lane-kit](#lane-kit) | 1.5.0 | 2 | 1 | 0 | 4 | 0 | 4 | 5 |
 | [health-kit](#health-kit) | 1.3.3 | 2 | 0 | 0 | 1 | 0 | 0 | 3 |
 | [claude-dev-kit](#claude-dev-kit) | 1.3.3 | 8 | 0 | 0 | 1 | 0 | 0 | 2 |
 | [supabase-pack](#supabase-pack) | 1.1.2 | 2 | 0 | 0 | 0 | 0 | 0 | 0 |
 | [agent-framework-wizard](#agent-framework-wizard) | 1.2.1 | 1 | 0 | 0 | 0 | 0 | 5 | 0 |
 | [dev-squad-kit](#dev-squad-kit) | 1.1.1 | 3 | 12 | 12 | 0 | 0 | 0 | 0 |
 | [gotcha-memory](#gotcha-memory) | 1.0.3 | 1 | 0 | 0 | 3 | 0 | 0 | 0 |
-| **total** | | **33** | **14** | **14** | **23** | **13** | **22** | **28** |
+| **total** | | **34** | **15** | **18** | **23** | **13** | **22** | **29** |
 
 ## kit-forge
 
@@ -35,7 +35,7 @@ The IP/PII gate plus the kit assembler. ip_pii_linter + kit_assembler (with guar
 
 ## operator-kit
 
-The harness's operational module: executable gates, governed loops, standalone pass@k/pass^k, audit/enforce policy, preflight, spec-driven planning and two read-only checkers.
+The harness's operational module: executable gates, governed loops, standalone pass@k/pass^k, audit/enforce policy, preflight, spec-driven planning, two read-only checkers and four review lenses answering in hpp.findings/v1.
 
 **Skills**
 
@@ -57,7 +57,7 @@ The harness's operational module: executable gates, governed loops, standalone p
 
 **Commands** — `/cancel-ralph-gate` · `/ralph-gate`
 
-**Agents** — `refutador` · `silent-failure-hunter`
+**Agents** — `lens-deletion` · `lens-partial-set` · `lens-stale-evidence` · `lens-verification-gap` · `refutador` · `silent-failure-hunter`
 
 **Hooks**
 
@@ -107,13 +107,16 @@ Handoff-v1.1: a session survives a stop/clear/crash without losing its next step
 
 ## lane-kit
 
-N sessions without collisions. Lane board, cross-model maker!=checker, per-directory lock, git-guard and territory-guard. The checker_router detects Codex, Cursor and Gemini and picks a provider different from the maker's. Best-of-N: compete/select record which of N competing attempts won.
+N sessions without collisions. Lane board, cross-model maker!=checker, per-directory lock, git-guard and territory-guard. The checker_router detects Codex, Cursor and Gemini and picks a provider different from the maker's. Best-of-N: compete/select record which of N competing attempts won. House Session: /deliberate and house_session.py seat a panel of two model families, refusing the turn of a seat that wrote.
 
 **Skills**
 
 | skill | what it does |
 |---|---|
+| `house-session` | Runs a House Session on this host — a panel of pinned deciders from at least two model families, each seat a read-only command in its own lane, blind first round, counted, stopped and sealed by the HPP core. |
 | `lane-coordinator` | Coordinates N concurrent sessions (lanes) over the same repo through a whiteboard with a state machine (lane_board.py) — from CLAIMED to MERGED, with cross-model maker≠checker enforced in code, not by textual discipline. |
+
+**Commands** — `/deliberate`
 
 **Hooks**
 
@@ -126,7 +129,7 @@ N sessions without collisions. Lane board, cross-model maker!=checker, per-direc
 
 **Templates** — `lane-registry.example.json` · `lanes.example.yaml` · `REORIENT-MAILBOX.template.md` · `status-stakeholder.template.html`
 
-**Scripts** — `checker_router.py` · `lane_board.py` · `lane_effects.py` · `lane_rescue.py`
+**Scripts** — `checker_router.py` · `house_session.py` · `lane_board.py` · `lane_effects.py` · `lane_rescue.py`
 
 ## health-kit
 

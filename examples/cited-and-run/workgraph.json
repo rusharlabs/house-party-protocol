@@ -1,0 +1,9 @@
+{
+  "work": [
+    {"id": "pricing", "tier": "economy", "acceptance": [
+      {"id": "member-discount", "text": "a member pays 10% less"},
+      {"id": "bulk-discount", "text": "an order of 100.00 or more pays 5% less"},
+      {"id": "rounding", "text": "every price is rounded to cents"}
+    ]}
+  ]
+}

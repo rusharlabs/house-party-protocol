@@ -1,0 +1,18 @@
+{
+  "schema": "hpp.rationale/v1",
+  "panel_sha256": "c166c35cc0db4b938fe395b191ed93af3a61a61843dfaab7055a60536e4c5b8d",
+  "author": "j",
+  "steelman": [
+    {
+      "position": "low",
+      "text_sha256": "32d4efef5f3c4e14b6a02ceb7e4f62cf874ec152438092d68402abd6508890ec",
+      "chars": 198
+    }
+  ],
+  "would_change_if": [
+    {
+      "text_sha256": "21a0559d9b8b7e8c6bb22d353fff0798e6097830e0aa854a648a3ca6d2ffd4c5",
+      "chars": 169
+    }
+  ]
+}

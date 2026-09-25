@@ -1,0 +1,1 @@
+The verdict falls to low if the old column is kept for one more release (rename now, drop in a later deploy), so a rollback of the code still finds the column it reads.

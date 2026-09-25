@@ -67,6 +67,8 @@ Cada falha acima tem um mecanismo no código, e cada mecanismo tem um comando qu
 | serviço no ar, dado velho | o Monitor Map separa `healthy`, `stale`, `skew` e `unknown`, com frescor declarado e tolerância de relógio | `hpp map monitor --now` |
 | comando perigoso | o classificador de política devolve `ALLOW`, `MANUAL` ou `BLOCK`; `enforce` mapeia para exit 0, 1, 2 | `hpp policy check --mode enforce` |
 | paralelismo no chute | o WorkGraph transforma dependências declaradas em waves topológicas; ciclo é erro, não wave vazia | `hpp work waves` |
+| um critério citado por um teste que nunca rodou | cada critério de aceite é ligado aos testes cuja docstring o cita; com um relatório JUnit XML da execução, um critério cujos testes foram pulados, nunca coletados ou nem são testes fica `cited_not_run`, e um com teste falhando fica `failed` — citação sozinha nunca conta como execução | `hpp work coverage --junit` (novo na 2.8.0) |
+| uma revisão que acha o que por acaso procurou | quatro lentes de revisão sem ferramenta de edição (somente-leitura provado quando sentadas pelo `house_session.py`), cada uma atrás de um tipo de defeito (lacuna de verificação, conjunto parcial, deleção, evidência velha); toda lente responde em `hpp.findings/v1` — código estável, severidade, arquivo e linha, evidência e o universo que inspecionou — e o núcleo deriva o veredito e recusa um documento com chave que o contrato não define | `hpp findings check` (novo na 2.8.0) |
 | contexto truncado em silêncio | o compilador encaixa blocos inteiros sob um orçamento em caracteres, registra um hash por bloco e recusa material com cara de segredo | `hpp context compile` |
 | uma rodada com sorte | `pass@k` e `pass^k` medidos separadamente em `k` execuções | `hpp eval run` · `hpp benchmark` |
 | um conselheiro que ninguém mediu | uma decisão tomada fora do harness é registrada como consultiva e raise-only, com abstenção e falha de instrumento como desfechos; um decisor declarado é medido em casos rotulados antes de ser confiável — o hpp não chama modelo | `hpp decide validate` · `hpp decide eval` (novo na 2.6.0) |
@@ -75,7 +77,7 @@ Cada falha acima tem um mecanismo no código, e cada mecanismo tem um comando qu
 | citações que ninguém resolveu | cada marcador `[ID:x]` precisa nomear um id do contexto a partir do qual a resposta foi escrita: id desconhecido, intervalo ou marcador vazio bloqueia, número sem marcador avisa — um marcador que resolve prova que a fonte existe, não que ela sustenta a frase | `hpp cite check` (novo na 2.6.0) |
 | um vencedor escolhido por quem construiu | N lanes constroem, cada uma, a sua tentativa da mesma tarefa; um revisor de outra lane e de outra família de modelo escolhe o vencedor, os perdedores viram um `NOT-SELECTED` terminal, e nenhum candidato chega a `MERGED` antes da escolha — escolher 1 de N é `pass@N`, então o vencedor ainda precisa do próprio `VERIFIED` e de `pass^k` | `lane_board.py compete` · `lane_board.py select` (lane-kit 1.4.0, novo na 2.6.0) |
 | uma checagem verde que ninguém tentou quebrar | o critério roda numa cópia do workspace, limpa (tem de passar) e uma vez por mutante (tem de falhar); um mutante que ele deixa passar é um ponto cego nomeado, e um critério que falha na cópia limpa não tem controle e não ganha score | `hpp evidence mutate` (novo na 2.7.0) |
-| um painel de agentes concordando consigo mesmo | uma House Session nomeia o modelo pinado e a família de cada assento; exige duas famílias, um juiz fora das lanes dos participantes e um assento dissidente onde a pergunta pede; a primeira rodada é cega e isso é verificável, um assento que não respondeu não é julgado e bloqueia o veredito, a sessão para por regra, e o registro se sela e guarda a dissidência que perdeu — o painel é medido como um decisor só pela mesma régua; o hpp não chama modelo | `hpp deliberate record` · `hpp deliberate verify` (novo na 2.7.0) |
+| um painel de agentes concordando consigo mesmo | uma House Session nomeia o modelo pinado e a família de cada assento; exige duas famílias, um juiz fora das lanes dos participantes e um assento dissidente onde a pergunta pede; a primeira rodada é cega e isso é verificável, um assento que não respondeu não é julgado e bloqueia o veredito, a sessão para por regra, e o registro se sela e guarda a dissidência que perdeu; com evidência declarada um `fact` só fundamenta por uma referência que resolve, e um veredito sobre dissidência fundamentada exige o steelman dela pelo juiz (2.8.0) — o painel é medido como um decisor só pela mesma régua; o hpp não chama modelo | `hpp deliberate record` · `hpp deliberate verify` (novo na 2.7.0) |
 | instalador que escreve antes de você ler | `hpp init` imprime um plano; `--apply` escreve um arquivo; o wiring do host continua sendo um colar | `hpp init` |
 
 ## Cross-model by construction
@@ -104,7 +106,7 @@ o item e só com evidência colada, veredito só de outra lane **e** de outra fa
 <p align="center">
   <img alt="python lane_board.py render: quatro itens de exemplo num board — EXAMPLE-1 MERGED, EXAMPLE-2 VERIFIED esperando o gate humano, EXAMPLE-3 DEFERRED por falta de checker, EXAMPLE-4 de volta a BUILDING depois de NEEDS-FIX — e então os vereditos cuja lane ainda não foi avisada" src="assets/terminal/lane-board.svg" width="940">
 </p>
-<p align="center"><sub>O board que aquelas linhas produzem, como o <code>multi-session/lane-kit-1.4.1/scripts/lane_board.py</code> o imprime: quatro itens de exemplo conduzidos pela máquina, cada evento nomeando a lane que o escreveu, a evidência colada no checkpoint e — no caso de veredito — a lane e o modelo que o deram. Duas tentativas foram recusadas no caminho, as duas com <code>exit 1</code>: um veredito vindo da própria lane que construiu (<em>maker≠checker violated: reviewer (exec-b) is the SAME lane as the builder</em>) e o merge de um item 🔴 sem <code>--human-approved</code>. O último bloco é o que ninguém pensa em pedir — vereditos já decididos cuja lane ainda não foi avisada. Texto renderizado da saída real do comando pelo <code>scripts/render_terminal_svg.py</code>, como as duas capturas acima.</sub></p>
+<p align="center"><sub>O board que aquelas linhas produzem, como o <code>multi-session/lane-kit-1.5.0/scripts/lane_board.py</code> o imprime: quatro itens de exemplo conduzidos pela máquina, cada evento nomeando a lane que o escreveu, a evidência colada no checkpoint e — no caso de veredito — a lane e o modelo que o deram. Duas tentativas foram recusadas no caminho, as duas com <code>exit 1</code>: um veredito vindo da própria lane que construiu (<em>maker≠checker violated: reviewer (exec-b) is the SAME lane as the builder</em>) e o merge de um item 🔴 sem <code>--human-approved</code>. O último bloco é o que ninguém pensa em pedir — vereditos já decididos cuja lane ainda não foi avisada. Texto renderizado da saída real do comando pelo <code>scripts/render_terminal_svg.py</code>, como as duas capturas acima.</sub></p>
 
 ## Quickstart
 
@@ -120,7 +122,7 @@ nenhum pacote de terceiro. A CI exercita Python 3.10 a 3.13 em Linux, macOS e Wi
 (`.github/workflows/ci.yml`); interpretadores mais antigos não são prometidos porque nada os mede.
 
 ```bash
-pip install git+https://github.com/rusharlabs/house-party-protocol@v2.7.0
+pip install git+https://github.com/rusharlabs/house-party-protocol@v2.8.0
 hpp doctor
 hpp init --target ../your-repo
 ```
@@ -216,9 +218,9 @@ primeiro e aplica só numa segunda invocação explícita:
 
 ```bash
 python installers/kit-forge-1.4.2/kit_doctor.py install \
-  --kit frameworks/operator-kit-1.6.2 --host codex --target ../your-repo
+  --kit frameworks/operator-kit-1.7.0 --host codex --target ../your-repo
 python installers/kit-forge-1.4.2/kit_doctor.py install \
-  --kit frameworks/operator-kit-1.6.2 --host codex --target ../your-repo --apply
+  --kit frameworks/operator-kit-1.7.0 --host codex --target ../your-repo --apply
 ```
 
 O instalador faz parte deste repositório, em `installers/kit-forge-1.4.2/kit_doctor.py`, ao

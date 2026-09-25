@@ -2,25 +2,28 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import sys
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 from hpp import __version__
 from hpp.attest import AttestationError, create_attestation, verify_attestation
-from hpp.citations import check_files as check_citations, exit_for as citations_exit_for
+from hpp.citations import check_files as check_citations, context_ids, exit_for as citations_exit_for
 from hpp.context import compile_context
 from hpp.decision import effective as decision_effective, exit_for as decision_exit_for, run_decision_suite, validate as validate_decision
 from hpp.deliberation import (
-    PANEL_SCHEMA, SCHEMA as DELIBERATION_SCHEMA, TALLY_SCHEMA, TURN_SCHEMA, as_decision, build_record, decide_stop,
-    exit_for_record, normalise_panel, normalise_turn, tally as deliberation_tally, verify_record,
+    PANEL_SCHEMA, SCHEMA as DELIBERATION_SCHEMA, SCHEMAS as DELIBERATION_SCHEMAS, TALLY_SCHEMA, TURN_SCHEMA,
+    as_decision, build_record, decide_stop, exit_for_record, normalise_panel, normalise_turn,
+    tally as deliberation_tally, verify_record,
 )
 from hpp.evals import EvalError, exit_for as eval_exit_for, packaged_suite, run_suite
 from hpp.evidence import (
     MUTANTS_SCHEMA, exit_for_mutation, exit_for_run as evidence_run_exit, exit_for_verify as evidence_verify_exit,
     generate_mutants, run_evidence, run_mutation, verify_evidence,
 )
+from hpp.findings import check as check_findings, exit_for as findings_exit_for
 from hpp.graph import build_graph, to_mermaid
 from hpp.install import InstallError, installation_plan
 from hpp.manifest import ManifestError, hook_capability_census, load_manifest, validate_distribution
@@ -31,7 +34,7 @@ from hpp.routing import route
 from hpp.state import StateError, append_event, event_path, project, read_events
 from hpp.term import Console
 from hpp.wizard import DECISION_ADVISORS, InitUsageError, prepare_options, run_init_command
-from hpp.workgraph import compile_workgraph
+from hpp.workgraph import cited_tests, citation_coverage, compile_workgraph, read_junit, spec_execution
 
 
 def _json(value: Any) -> None:
@@ -189,8 +192,57 @@ def command_attest(args: argparse.Namespace) -> int:
     return 0 if report["status"] == "valid" else 2
 
 
+def _python_sources(paths: list[str]) -> dict[str, str]:
+    """Every Python file named, or under a directory named; the universe of the coverage answer."""
+    sources: dict[str, str] = {}
+    for raw in paths:
+        path = Path(raw)
+        if path.is_dir():
+            files = sorted(item for item in path.rglob("*.py") if "__pycache__" not in item.parts)
+        elif path.is_file():
+            if path.suffix != ".py":
+                raise ValueError(f"only Python test sources are read: {path}")
+            files = [path]
+        else:
+            raise ValueError(f"test source not found: {path}")
+        for item in files:
+            sources[item.as_posix()] = item.read_text(encoding="utf-8")
+    if not sources:
+        raise ValueError("no Python test source found: an empty universe covers nothing")
+    return sources
+
+
+def _work_coverage(args: argparse.Namespace, compiled: dict[str, Any]) -> int:
+    sources = _python_sources(args.tests)
+    citations = [entry for path, text in sources.items() for entry in cited_tests(text, path)]
+    if not args.junit:
+        report = citation_coverage(compiled, citations)
+    else:
+        cases, reports = [], []
+        for name in args.junit:
+            junit = Path(name)
+            if not junit.is_file():
+                raise ValueError(f"JUnit report not found: {junit}")
+            data = junit.read_bytes()
+            cases.extend(read_junit(data))
+            reports.append({"file": name, "sha256": hashlib.sha256(data).hexdigest(), "mtime": junit.stat().st_mtime})
+        # Why (review 2026-09-25): nothing tied a report to the tests it measured, so a report
+        # older than an edit (a test later marked skip, or rewritten) kept its criterion
+        # `executed`. A citing source modified after the oldest report makes the answer stale.
+        oldest = min(item["mtime"] for item in reports)
+        citing = sorted({entry["test"].split("::", 1)[0] for entry in citations})
+        stale = [path for path in citing if Path(path).stat().st_mtime > oldest]
+        report = spec_execution(compiled, citations, cases)
+        report = {**report, "junit": list(args.junit), "reports": reports, "stale_sources": stale,
+                  "complete": report["complete"] and not stale}
+    _json({**report, "sources": len(sources)})
+    return 0 if report["complete"] else 1
+
+
 def command_work(args: argparse.Namespace) -> int:
     compiled = compile_workgraph(_read_json(args.spec, dict))
+    if args.work_command == "coverage":
+        return _work_coverage(args, compiled)
     if args.work_command == "waves":
         _json({
             "schema": "hpp.workgraph-waves/v1",
@@ -232,6 +284,31 @@ def _verified(record: dict[str, Any]) -> int:
     return 0 if report["status"] == "intact" else 2
 
 
+def _with_evidence(panel: dict[str, Any], context_path: Optional[str], records: list[str]) -> dict[str, Any]:
+    """The panel with the ids its seats can cite: the context they were given, and every evidence
+    record that verifies now. A record that does not verify resolves nothing and is refused."""
+    # Why (review 2026-09-25): the panel is validated BEFORE evidence is added — its own hash
+    # and any evidence it already declares — so an edited or malformed panel is refused, not repaired.
+    declared = normalise_panel(panel).get("evidence") or {}
+    ids = list(declared.get("ids", []))
+    sources = list(declared.get("sources", []))
+    if context_path:
+        context = _read_json(context_path, list)
+        ids += context_ids(context)
+        canonical = json.dumps(context, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+        sources.append({"kind": "context", "sha256": hashlib.sha256(canonical.encode("utf-8")).hexdigest()})
+    for name in records:
+        report = verify_evidence(Path(name), root=Path.cwd())
+        if report["status"] != "valid":
+            raise ValueError(f"evidence record {name} does not verify ({report['status']}): it resolves nothing")
+        record = json.loads(Path(name).read_text(encoding="utf-8"))
+        ids.append(record["id"])
+        sources.append({"kind": "evidence-record", "id": record["id"], "sha256": record["record_sha256"]})
+    updated = {key: value for key, value in panel.items() if key != "sha256"}
+    updated["evidence"] = {"ids": sorted(set(ids)), "sources": sources}
+    return updated
+
+
 def command_deliberate(args: argparse.Namespace) -> int:
     action = args.deliberate_command
     if action == "verify":
@@ -239,7 +316,7 @@ def command_deliberate(args: argparse.Namespace) -> int:
     if action in ("plan", "validate"):
         document = _read_json(args.file, dict)
         schema = document.get("schema")
-        if action == "validate" and schema == DELIBERATION_SCHEMA:
+        if action == "validate" and schema in DELIBERATION_SCHEMAS:
             return _verified(document)
         if action == "validate" and schema == TURN_SCHEMA:
             if not args.panel:
@@ -249,7 +326,13 @@ def command_deliberate(args: argparse.Namespace) -> int:
             return 0
         if schema != PANEL_SCHEMA:
             raise ValueError(f"expected a {PANEL_SCHEMA}, {TURN_SCHEMA} or {DELIBERATION_SCHEMA} document, got {schema!r}")
+        if action == "plan" and (args.context or args.evidence):
+            document = _with_evidence(document, args.context, args.evidence)
         panel = normalise_panel(document)
+        if action == "plan" and args.out:
+            output = Path(args.out)
+            output.parent.mkdir(parents=True, exist_ok=True)
+            output.write_text(json.dumps(panel, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         _json({"status": "valid", "panel": panel})
         return 0
     panel = _read_json(args.panel, dict)
@@ -261,7 +344,8 @@ def command_deliberate(args: argparse.Namespace) -> int:
         _json(decide_stop(panel, turns))
         return 0
     judge = _read_json(args.judge, dict) if args.judge else None
-    record = build_record(panel, turns, judge)
+    rationale = _read_json(args.rationale, dict) if args.rationale else None
+    record = build_record(panel, turns, judge, rationale)
     output = Path(args.out)
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(record, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
@@ -269,6 +353,18 @@ def command_deliberate(args: argparse.Namespace) -> int:
            "stop": record["stop"], "verdict": record["verdict"], "dissent": record["dissent"],
            "decision": as_decision(record)})
     return exit_for_record(record)
+
+
+def command_findings(args: argparse.Namespace) -> int:
+    subject = None
+    if args.subject:
+        source = Path(args.subject)
+        if not source.is_file():
+            raise ValueError(f"subject not found: {source}")
+        subject = source.read_bytes()
+    reports = [{"file": name, **check_findings(_read_json(name, dict), subject)} for name in args.files]
+    _json({"reports": reports})
+    return findings_exit_for(reports)
 
 
 def command_retrieval(args: argparse.Namespace) -> int:
@@ -472,6 +568,14 @@ def build_parser() -> argparse.ArgumentParser:
     waves = work_sub.add_parser("waves")
     waves.add_argument("spec")
     waves.set_defaults(func=command_work)
+    coverage = work_sub.add_parser(
+        "coverage", help="which acceptance criteria a test cites and, with --junit, which a test actually ran")
+    coverage.add_argument("spec")
+    coverage.add_argument("--tests", nargs="+", required=True,
+                          help="Python test files or directories; citations are read from docstrings")
+    coverage.add_argument("--junit", nargs="+", default=[],
+                          help="JUnit XML reports of the run; without them only citation is measured")
+    coverage.set_defaults(func=command_work)
 
     route_parser = sub.add_parser("route")
     route_parser.add_argument("--request", required=True)
@@ -498,6 +602,18 @@ def build_parser() -> argparse.ArgumentParser:
     decide_eval.add_argument("--max-failures", dest="max_failures", type=int, default=0)
     decide_eval.set_defaults(func=command_decide)
 
+    findings = sub.add_parser(
+        "findings",
+        description="Review lenses answer in one shape, hpp.findings/v1. hpp checks the shape and derives "
+                    "the verdict; it never reads the change and never calls a model.",
+    )
+    findings_sub = findings.add_subparsers(dest="findings_command", required=True)
+    findings_check = findings_sub.add_parser(
+        "check", help="check hpp.findings/v1 documents; exit 0 all pass, 1 something found, 2 refused")
+    findings_check.add_argument("files", nargs="+")
+    findings_check.add_argument("--subject", help="the change reviewed; every document must name it by its sha256")
+    findings_check.set_defaults(func=command_findings)
+
     deliberate = sub.add_parser(
         "deliberate",
         description="House Session: validate a panel of pinned deciders, count its turns, decide when it stops, "
@@ -507,6 +623,11 @@ def build_parser() -> argparse.ArgumentParser:
     deliberate_sub = deliberate.add_subparsers(dest="deliberate_command", required=True)
     deliberate_plan = deliberate_sub.add_parser("plan", help="check an hpp.panel/v1 and print it with its hash")
     deliberate_plan.add_argument("file")
+    deliberate_plan.add_argument("--context", help="the context the seats were given (the file `cite check` reads); "
+                                                   "its ids become the evidence a fact may cite")
+    deliberate_plan.add_argument("--evidence", nargs="+", default=[],
+                                 help="hpp.evidence/v1 records; each one that verifies adds its id to the evidence")
+    deliberate_plan.add_argument("--out", help="write the checked panel (with its evidence) where the session will read it")
     deliberate_plan.set_defaults(func=command_deliberate)
     deliberate_validate = deliberate_sub.add_parser(
         "validate", help="check a panel, a turn (with --panel) or a deliberation record (verified)")
@@ -522,6 +643,8 @@ def build_parser() -> argparse.ArgumentParser:
         if name == "record":
             action.add_argument("--judge", help="the judge's hpp.decision/v1 record (not needed when a seat is not judged)")
             action.add_argument("--out", required=True, help="where to write the sealed record")
+            action.add_argument("--rationale", help="the judge seat's hpp.rationale/v1: a steelman of each grounded "
+                                                    "dissenting position and what would change the verdict")
         action.set_defaults(func=command_deliberate)
     deliberate_verify = deliberate_sub.add_parser("verify", help="check the seal and re-derive the record from its turns")
     deliberate_verify.add_argument("record")

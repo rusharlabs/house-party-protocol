@@ -20,19 +20,23 @@ import json
 import sys
 from pathlib import Path
 
+_CHECKOUT = Path(__file__).resolve().parents[2]
 try:
     _HAS_DELIBERATION = importlib.util.find_spec("hpp.deliberation") is not None
 except ModuleNotFoundError:
     _HAS_DELIBERATION = False
-if not _HAS_DELIBERATION:
+if not _HAS_DELIBERATION or (_CHECKOUT / "hpp" / "deliberation.py").is_file():
     # Why: run as `python examples/house-session/<script>.py` from a checkout, the script's own
-    # directory is on sys.path and the checkout root is not; and an older installed hpp without
-    # `hpp.deliberation` must not win over the checkout beside the script.
+    # directory is on sys.path and the checkout root is not; and an older installed hpp (one
+    # without `hpp.deliberation`, or a 2.7.0 without the rationale) must not win over the checkout
+    # beside the script.
     sys.modules.pop("hpp", None)
-    sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+    sys.path.insert(0, str(_CHECKOUT))
 
 from hpp.decision import SCHEMA as DECISION_SCHEMA, digest, normalise_question
-from hpp.deliberation import TURN_SCHEMA, as_decision, build_record, normalise_panel, normalise_turn, verify_record
+from hpp.deliberation import (
+    RATIONALE_SCHEMA, TURN_SCHEMA, as_decision, build_record, normalise_panel, normalise_turn, verify_record,
+)
 
 HERE = Path(__file__).resolve().parent
 
@@ -73,7 +77,16 @@ def replay(request: dict, sessions: dict) -> dict:
                          "confidence": None},
              "authority": "advisory", "direction": "informational",
              "raw_response_sha256": _sha(verdict["text"])}
-    record = build_record(panel, turns, judge)
+    rationale = None
+    if "rationale" in session:
+        # The judge seat's answer to grounded dissent it overruled; texts stay here, the record keeps hashes.
+        written = session["rationale"]
+        rationale = {"schema": RATIONALE_SCHEMA, "panel_sha256": panel_sha, "author": judge_seat["id"],
+                     "steelman": [{"position": item["position"], "text_sha256": _sha(item["text"]),
+                                   "chars": len(item["text"])} for item in written.get("steelman", [])],
+                     "would_change_if": [{"text_sha256": _sha(text), "chars": len(text)}
+                                         for text in written.get("would_change_if", [])]}
+    record = build_record(panel, turns, judge, rationale)
     report = verify_record(record)
     if report["status"] != "intact":
         raise SystemExit(f"panel_decider: the rebuilt record does not verify: {report['reason']}")

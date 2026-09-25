@@ -1,0 +1,14 @@
+[
+  {
+    "id": "change:1",
+    "text": "rename the column invoices.total to invoices.amount_total"
+  },
+  {
+    "id": "change:2",
+    "text": "update the two queries in reports/monthly.sql that read it"
+  },
+  {
+    "id": "change:3",
+    "text": "ship it with a migration that drops the old column in the same deploy"
+  }
+]

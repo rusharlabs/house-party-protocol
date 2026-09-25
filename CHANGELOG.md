@@ -9,6 +9,56 @@ keeps its own version in `plugin.json` and in `marketplace.json`.
 
 ## [Unreleased]
 
+## [2.8.0] — 2026-09-25
+
+### Added
+
+- **`hpp work coverage`: a criterion a test cites is not a criterion a test ran.** Every acceptance
+  criterion of a spec is linked to the tests whose docstring cites it (`hpp.spec-coverage/v1`).
+  With `--junit`, the JUnit XML report of the run is joined in (`hpp.spec-execution/v1`): a
+  criterion is `executed` only when a citing test ran and passed and none failed; a skipped test,
+  one the runner never collected and a module or class docstring leave it `cited_not_run`, and a
+  failing citing test makes it `failed`. `junit_testcases` and `matched_testcases` publish the
+  denominators. A report that declares a DOCTYPE or an entity, or is not UTF-8, is refused.
+  Example: `examples/cited-and-run`.
+- **Review lenses and `hpp findings check` (operator-kit 1.7.0).** The operator module ships four review lenses
+  with no file-editing tool (read-only proved when seated through `house_session.py`) (`lens-verification-gap`, `lens-partial-set`, `lens-deletion`, `lens-stale-evidence`),
+  each looking at a change for one kind of defect. Every lens answers with an `hpp.findings/v1`
+  document — stable code, severity, file and line, claim, evidence, and what it inspected — and
+  `hpp findings check` refuses a key the contract does not define, an empty `inspected` or a
+  repeated finding, and derives the verdict. Example: `examples/review-lenses`.
+- **House Session: the evidence gate and the judge's rationale.** A panel may declare
+  `evidence.ids` (`hpp deliberate plan --context` reads the context `cite check` reads;
+  `--evidence` adds each `hpp.evidence/v1` record that verifies). Then a `fact` grounds a position
+  only through a reference that resolves; any other reference is `unsupported`, listed per round,
+  and never new evidence, so an invented id neither keeps a session going nor excuses a change of
+  position. A verdict that leaves grounded dissent standing needs `--rationale`
+  (`hpp.rationale/v1`) from the judge seat: one steelman per dissenting position and at least one
+  `would_change_if`. A panel with no evidence declared keeps its hash and the 2.7.0 grounding rule,
+  reported as `evidence_gate: not-declared`.
+
+- **Seating a House Session on the host: `/deliberate` (lane-kit 1.5.0).** `house_session.py families`
+  answers whether the host can seat two model families — the maker's plus the other CLIs it
+  detects — and defers with one; `house_session.py seat` runs one seat's command in its own
+  worktree with the session on stdin, fingerprints the worktree before and after, and refuses the
+  turn of a seat that wrote to it. `/deliberate` in Claude Code and the `house-session` skill in
+  Claude Code and Codex walk the session end to end.
+- **Hardened before release by an adversarial review.** `work coverage` credits no run to a citing
+  test that a later definition of the same name replaces (`shadowed`) or whose path matches cases of
+  more than one module (`ambiguous`), matches directories with dots in their names, refuses a report
+  in any encoding but UTF-8, and marks the answer stale when a citing source is newer than the report.
+  `evidence_gate` says `declared-unsourced` for ids typed by hand; `deliberate plan` checks the panel's
+  own hash before adding evidence and writes the checked panel with `--out`; `verify` names the schema
+  it accepted, and a v1 record cannot carry evidence. `findings check --subject` binds a review to the
+  change it read. The seat runner fingerprints HEAD, every ref, the worktree list, the config and the
+  hooks, resolves paths from the repository top, checks the seat before running it, and stops the
+  seat's whole process tree on timeout.
+
+### Changed
+
+- **The deliberation record is `hpp.deliberation/v2`** (adds `evidence_gate` and `rationale`).
+  `verify` still accepts a `hpp.deliberation/v1` record sealed by 2.7.0, under the v1 rules.
+
 ## [2.7.0] — 2026-09-25
 
 ### Added
@@ -1350,4 +1400,5 @@ publishing.
 [2.6.5]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.5
 [2.6.6]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.6
 [2.6.7]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.7
+[2.8.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.8.0
 [2.7.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.7.0

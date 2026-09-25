@@ -20,9 +20,13 @@ Uma claim pública só entra aqui com reprodução.
 | checagem de citação, controle | a mesma numa cópia de `answer.md` com `[ID:glossary]` trocado por `[ID:glossary-v2]` | exit 2, `UNKNOWN_ID` |
 | sensibilidade do critério | `python -m hpp evidence mutate --id weak --generate examples/criterion-sensitivity/discount.py -- python examples/criterion-sensitivity/check_weak.py` | exit 1, `blind-spots`, três sobreviventes nomeados por arquivo e linha |
 | sensibilidade do critério, controle | o mesmo com `check_strong.py` | exit 0, `sensitive`, score 1.0 |
+| citado e executado | `python -m pytest examples/cited-and-run/check_prices.py -q -p no:cacheprovider --junitxml out/cited-and-run.xml`, depois `python -m hpp work coverage examples/cited-and-run/workgraph.json --tests examples/cited-and-run/check_prices.py --junit out/cited-and-run.xml` | exit 1, `bulk-discount` em `cited_not_run` (pulado), dois critérios `executed`, `matched_testcases` 3 |
+| citado e executado, controle | o mesmo `hpp work coverage` sem `--junit` | exit 0, os três critérios `covered`: a citação sozinha não enxerga o pulo |
+| lentes de revisão | `python -m hpp findings check examples/review-lenses/deletion-clean.json examples/review-lenses/partial-set.json` | exit 1, `pass` e depois `warn`, um `CALLER_NOT_UPDATED` em `checkout.py:18` |
+| lentes de revisão, controle | o mesmo numa cópia de `partial-set.json` com uma chave `confidence` acrescentada ao achado | exit 2, o documento inteiro recusado |
 | House Session | `python -m hpp decide eval examples/typed-decisions/gotcha-family-suite.json --decider-command '["python", "examples/house-session/panel_decider.py"]'` | 15 sessões gravadas, seladas e verificadas, 12 decididas, 3 abstenções, 0 falhas de instrumento, exit 0 (sessões sintéticas: provam o contrato, não que um painel é melhor) |
 | House Session, controle | `python -m hpp deliberate verify` numa cópia de um registro selado com o veredito editado | exit 2, `record_sha256 does not match` |
-| seleção best-of-N | `python multi-session/lane-kit-1.4.1/scripts/lane_board.py --self-test` | exit 0; o bloco de competições passa em toda checagem |
+| seleção best-of-N | `python multi-session/lane-kit-1.5.0/scripts/lane_board.py --self-test` | exit 0; o bloco de competições passa em toda checagem |
 | seleção best-of-N, controle | `lane_board.py select` numa competição declarada, por um revisor da mesma família de modelo de um construtor | exit 1, `SAME model family`; nenhum vencedor registrado |
 | artefatos íntegros | `python installers/kit-forge-1.4.2/kit_doctor.py marketplace .` | status ok |
 

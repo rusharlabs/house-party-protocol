@@ -46,6 +46,19 @@ WAVE_SPEC = {
                 {"id": "empty-gate-decides-nothing", "text": "a gate with no predicate is undetermined, never a pass"},
             ],
         },
+        {
+            "id": "spec-execution",
+            "tier": "balanced",
+            "depends_on": ["spec-coverage"],
+            "acceptance": [
+                {"id": "skipped-is-cited-not-run", "text": "a criterion whose citing test was skipped is cited but not run"},
+                {"id": "absent-from-junit-is-cited-not-run", "text": "a criterion whose citing test is absent from the report is cited but not run"},
+                {"id": "failed-is-not-executed", "text": "a criterion with a failing citing test is failed, even if another citing test passed"},
+                {"id": "citation-outside-a-test-never-runs", "text": "a module or class docstring citation is never executed"},
+                {"id": "junit-matches-by-module-and-name", "text": "a report case matches a test by module suffix, class and function name"},
+                {"id": "junit-with-declarations-refused", "text": "a report carrying a DOCTYPE or ENTITY declaration is refused"},
+            ],
+        },
     ],
 }
 
@@ -77,7 +90,7 @@ def test_every_criterion_is_compiled_with_a_stable_id():
     compiled = compile_workgraph(WAVE_SPEC)
     ids = [criterion["id"] for criterion in compiled["criteria"]]
     assert "spec-coverage/criterion-has-stable-id" in ids
-    assert len(ids) == len(set(ids)) == 7
+    assert len(ids) == len(set(ids)) == 13
     # An id derived from the text is stable across compilations and readable.
     derived = compile_workgraph({"work": [{"id": "build", "tier": "economy", "acceptance": ["The artifact exists"]}]})
     assert derived["criteria"] == [{"id": "build/the-artifact-exists", "work": "build", "text": "The artifact exists"}]
@@ -116,7 +129,7 @@ def test_the_suite_covers_its_own_spec():
     assert report["orphans"] == [], f"criteria with no named test: {report['orphans']}"
     assert report["unknown"] == [], f"markers naming no declared criterion: {report['unknown']}"
     assert report["complete"] is True
-    assert report["criteria"] == 7
+    assert report["criteria"] == 13
 
 
 # ------------------------------------------------------------------------- CONTROLS

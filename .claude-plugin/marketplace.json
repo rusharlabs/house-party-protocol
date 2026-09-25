@@ -3,7 +3,7 @@
   "name": "house-party-protocol",
   "description": "House Party Protocol is a modular, cross-host harness for Claude Code and Codex CLI: executable gates, governed loops, cross-model review, provider-neutral routing by tier, continuity, deterministic evaluation and verifiable distribution.",
   "description_pt": "House Party Protocol é um harness modular e cross-host para Claude Code e Codex CLI: gates executáveis, loops governados, revisão cross-model, roteamento provider-neutral por tier, continuidade, avaliação determinística e distribuição verificável.",
-  "version": "2.7.0",
+  "version": "2.8.0",
   "owner": {
     "name": "Max Parisi",
     "url": "https://rusharlabs.com"
@@ -31,10 +31,10 @@
     {
       "name": "operator-kit",
       "displayName": "Operator Kit",
-      "source": "./frameworks/operator-kit-1.6.2",
-      "description": "The harness's operational module: executable gates, governed loops, standalone pass@k/pass^k, audit/enforce policy, preflight, spec-driven planning and two read-only checkers.",
-      "description_pt": "Módulo operacional do harness: gates executáveis, loops governados, pass@k/pass^k standalone, política audit/enforce, preflight, planejamento spec-driven e dois checkers read-only.",
-      "version": "1.6.2",
+      "source": "./frameworks/operator-kit-1.7.0",
+      "description": "The harness's operational module: executable gates, governed loops, standalone pass@k/pass^k, audit/enforce policy, preflight, spec-driven planning, two read-only checkers and four review lenses answering in hpp.findings/v1.",
+      "description_pt": "Módulo operacional do harness: gates executáveis, loops governados, pass@k/pass^k standalone, política audit/enforce, preflight, planejamento spec-driven, dois checkers read-only e quatro lentes de revisão que respondem em hpp.findings/v1.",
+      "version": "1.7.0",
       "category": "productivity",
       "keywords": [
         "operator",
@@ -67,10 +67,10 @@
     {
       "name": "lane-kit",
       "displayName": "Lane Kit",
-      "source": "./multi-session/lane-kit-1.4.1",
-      "description": "N sessions without collisions. Lane board, cross-model maker!=checker, per-directory lock, git-guard and territory-guard. The checker_router detects Codex, Cursor and Gemini and picks a provider different from the maker's. Best-of-N: compete/select record which of N competing attempts won.",
-      "description_pt": "N sessoes sem colisao. Lane board, maker!=checker cross-model, lock por diretorio, git-guard e territory-guard. O checker_router detecta Codex, Cursor e Gemini e escolhe um provider diferente do maker. Best-of-N: compete/select registram qual de N tentativas concorrentes venceu.",
-      "version": "1.4.1",
+      "source": "./multi-session/lane-kit-1.5.0",
+      "description": "N sessions without collisions. Lane board, cross-model maker!=checker, per-directory lock, git-guard and territory-guard. The checker_router detects Codex, Cursor and Gemini and picks a provider different from the maker's. Best-of-N: compete/select record which of N competing attempts won. House Session: /deliberate and house_session.py seat a panel of two model families, refusing the turn of a seat that wrote.",
+      "description_pt": "N sessoes sem colisao. Lane board, maker!=checker cross-model, lock por diretorio, git-guard e territory-guard. O checker_router detecta Codex, Cursor e Gemini e escolhe um provider diferente do maker. Best-of-N: compete/select registram qual de N tentativas concorrentes venceu. House Session: /deliberate e house_session.py sentam um painel de duas familias de modelo e recusam o turno de um assento que escreveu.",
+      "version": "1.5.0",
       "category": "productivity",
       "keywords": [
         "multi-session",

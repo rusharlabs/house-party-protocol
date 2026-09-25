@@ -20,9 +20,13 @@ A public claim only enters here with a reproduction.
 | citation check, control | the same on a copy of `answer.md` with `[ID:glossary]` changed to `[ID:glossary-v2]` | exit 2, `UNKNOWN_ID` |
 | criterion sensitivity | `python -m hpp evidence mutate --id weak --generate examples/criterion-sensitivity/discount.py -- python examples/criterion-sensitivity/check_weak.py` | exit 1, `blind-spots`, three survivors named by file and line |
 | criterion sensitivity, control | the same with `check_strong.py` | exit 0, `sensitive`, score 1.0 |
+| cited and executed | `python -m pytest examples/cited-and-run/check_prices.py -q -p no:cacheprovider --junitxml out/cited-and-run.xml`, then `python -m hpp work coverage examples/cited-and-run/workgraph.json --tests examples/cited-and-run/check_prices.py --junit out/cited-and-run.xml` | exit 1, `bulk-discount` in `cited_not_run` (skipped), two criteria `executed`, `matched_testcases` 3 |
+| cited and executed, control | the same `hpp work coverage` without `--junit` | exit 0, all three criteria `covered`: citation alone cannot see the skip |
+| review lenses | `python -m hpp findings check examples/review-lenses/deletion-clean.json examples/review-lenses/partial-set.json` | exit 1, `pass` then `warn`, one `CALLER_NOT_UPDATED` at `checkout.py:18` |
+| review lenses, control | the same on a copy of `partial-set.json` with a `confidence` key added to its finding | exit 2, the whole document refused |
 | House Session | `python -m hpp decide eval examples/typed-decisions/gotcha-family-suite.json --decider-command '["python", "examples/house-session/panel_decider.py"]'` | 15 recorded sessions sealed and verified, 12 decided, 3 abstained, 0 instrument failures, exit 0 (synthetic sessions: they prove the contract, not that a panel is better) |
 | House Session, control | `python -m hpp deliberate verify` on a copy of a sealed record with the verdict edited | exit 2, `record_sha256 does not match` |
-| best-of-N selection | `python multi-session/lane-kit-1.4.1/scripts/lane_board.py --self-test` | exit 0; the competitions block passes every check |
+| best-of-N selection | `python multi-session/lane-kit-1.5.0/scripts/lane_board.py --self-test` | exit 0; the competitions block passes every check |
 | best-of-N selection, control | `lane_board.py select` on a declared competition, by a reviewer of the same model family as one builder | exit 1, `SAME model family`; no winner recorded |
 | intact artifacts | `python installers/kit-forge-1.4.2/kit_doctor.py marketplace .` | status ok |
 

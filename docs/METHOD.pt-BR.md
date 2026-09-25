@@ -25,7 +25,7 @@ Então o primeiro evento é registrado, e o loop sai de `planned`.
 ```bash
 python -m hpp work plan SPEC.json
 python -m hpp work waves SPEC.json
-python multi-session/lane-kit-1.4.1/scripts/lane_board.py claim --help
+python multi-session/lane-kit-1.5.0/scripts/lane_board.py claim --help
 python -m hpp event append --type work_started --data '{"work":"ITEM-1","actor":"maker-a"}'
 ```
 
@@ -50,8 +50,8 @@ só o que a pessoa escreveu. O loop passa a `evidenced`. Ele não consegue passa
 ao menos um registro desses.
 
 ```bash
-python frameworks/operator-kit-1.6.2/scripts/done_gate.py "python -m pytest -q" "python -m py_compile app.py"
-python frameworks/operator-kit-1.6.2/scripts/done_gate.py "python -m pytest -q" --declare-partial "external target not yet validated"
+python frameworks/operator-kit-1.7.0/scripts/done_gate.py "python -m pytest -q" "python -m py_compile app.py"
+python frameworks/operator-kit-1.7.0/scripts/done_gate.py "python -m pytest -q" --declare-partial "external target not yet validated"
 python -m hpp evidence run --id ITEM-1 --artifact artifacts/pytest.xml --record-event -- python -m pytest -q --junitxml=artifacts/pytest.xml
 python -m hpp event append --type evidence_recorded --data '{"work":"ITEM-1","ref":"artifacts/pytest.txt"}'
 ```
@@ -114,7 +114,7 @@ não feita, não como feita pelo maker.
 A aprovação do checker é um evento. O loop passa de `evidenced` a `checked`.
 
 ```bash
-python multi-session/lane-kit-1.4.1/scripts/checker_router.py --maker claude --require
+python multi-session/lane-kit-1.5.0/scripts/checker_router.py --maker claude --require
 python -m hpp event append --type check_passed --data '{"work":"ITEM-1","checker":"checker-b"}'
 ```
 
@@ -131,10 +131,10 @@ driver para, reporta onde parou e o que falta, e espera que uma pessoa estenda o
 o trabalho. Estender o orçamento é uma decisão humana, nunca algo que o loop concede a si mesmo.
 
 ```bash
-python frameworks/operator-kit-1.6.2/hooks/ralph_gate.py start \
+python frameworks/operator-kit-1.7.0/hooks/ralph_gate.py start \
   --charter "<objective>" --criteria "python -m pytest -q" --max-iterations 10
-python frameworks/operator-kit-1.6.2/hooks/ralph_gate.py status
-python frameworks/operator-kit-1.6.2/hooks/ralph_gate.py cancel
+python frameworks/operator-kit-1.7.0/hooks/ralph_gate.py status
+python frameworks/operator-kit-1.7.0/hooks/ralph_gate.py cancel
 ```
 
 ## 6. Retome depois de uma interrupção

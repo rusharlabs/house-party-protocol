@@ -101,6 +101,14 @@ def _judge(panel, value="high", status="recommendation", model="delta-model-2026
             "raw_response_sha256": hashlib.sha256(b"judge").hexdigest()}
 
 
+def _rationale(panel, positions):
+    """The judge seat's answer to grounded dissent (F2): a steelman per position and a condition."""
+    text = lambda value: hashlib.sha256(value.encode()).hexdigest()
+    return {"schema": "hpp.rationale/v1", "panel_sha256": normalise_panel(panel)["sha256"], "author": "j",
+            "steelman": [{"position": position, "text_sha256": text(position), "chars": 90} for position in positions],
+            "would_change_if": [{"text_sha256": text("a restore test that passes"), "chars": 60}]}
+
+
 def _round_one(panel, positions=("high", "high", "high")):
     return [_turn(panel, seat, 1, pos) for seat, pos in zip("abc", positions)]
 
@@ -419,7 +427,7 @@ def test_dissent_that_lost_is_preserved_in_the_record():
     first = _round_one(panel, ("high", "high", "low"))
     seen = [_sha(panel, t) for t in first]
     second = [_turn(panel, s, 2, p, seen=seen) for s, p in zip("abc", ("high", "high", "low"))]
-    record = build_record(panel, first + second, _judge(panel))
+    record = build_record(panel, first + second, _judge(panel), _rationale(panel, ["low"]))
     assert record["dissent"] == [{"seat": "c", "position": "low", "grounded": True}]
     assert record["stop"]["escalate"] is True
 
@@ -496,6 +504,10 @@ def test_a_wrong_panel_fails_the_same_ruler(tmp_path):
     for session in sessions["sessions"][:3]:
         if session["judge"]["status"] == "recommendation":
             session["judge"]["value"] = "fatal" if session["judge"]["value"] != "fatal" else "lock"
+            # the judge overrules grounded seats, so since F2 it must steelman them to be recorded
+            session["rationale"] = {"steelman": [{"position": session["turns"][0]["position"],
+                                                  "text": "the cited line does support that family"}],
+                                    "would_change_if": ["a second line naming the other family"]}
     report = run_decision_suite(SUITE, decider_command=_panel_decider(tmp_path, sessions), timeout=30)
     assert not report["gate"]["passed"]
     assert report["metrics"]["selective_accuracy"] < 0.9
@@ -632,6 +644,8 @@ def test_DOC_OVERCLAIM_SEAL_the_seal_proves_derivation_not_the_authenticity_of_i
     forged["judge"]["outcome"]["value"] = "low"
     forged["verdict"]["value"] = "low"
     forged["dissent"] = [{"seat": seat, "position": "high", "grounded": True} for seat in "abc"]
+    # Since F2 a verdict over grounded dissent carries the judge's steelman; the forger writes one too.
+    forged["rationale"] = _rationale(panel, ["high"])
     body = {key: value for key, value in forged.items() if key not in ("record_sha256", "human_decision")}
     forged["record_sha256"] = hashlib.sha256(json.dumps(body, sort_keys=True, separators=(",", ":"),
                                                         ensure_ascii=False).encode()).hexdigest()
@@ -660,3 +674,358 @@ def test_FAMILY_DIVERSITY_SELF_DECLARED_one_pinned_model_cannot_be_two_families(
     seats[1]["model_served"] = seats[0]["model_served"]
     with pytest.raises(DeliberationError, match="same model"):
         normalise_panel(_panel(seats=seats))
+
+
+# =========================================================================== F2 · evidence gate and rationale
+# House Session, F2: a fact counts only when its reference resolves, and dissent is answered.
+#
+# Three rules on top of the F1 contract (`test_deliberation.py`):
+#
+# - **The evidence gate.** A panel may declare `evidence.ids`, the ids its seats can cite (the
+#   context they were given, evidence records that verified). Then a `fact` grounds a position only
+#   through a reference that resolves; a reference that does not is `unsupported`, listed per round,
+#   and it is never new evidence: an invented id cannot keep a session going or excuse a flip.
+# - **Dissent needs a steelman.** A recommendation that leaves grounded dissent standing is
+#   recorded only with a rationale from the judge seat carrying one steelman per dissenting
+#   position and at least one `would_change_if`: what would overturn the verdict.
+# - **Old records stay verifiable.** The record is `hpp.deliberation/v2`; a v1 record sealed by
+#   2.7.0 still verifies under the rules it was sealed with. A panel with no `evidence` keeps the
+#   hash it had, so turns recorded against it stay valid.
+
+FIXTURES = Path(__file__).resolve().parent / "fixtures"
+REVIEW = EXAMPLE / "review"
+
+
+def _gated(ids=("ctx-1", "ctx-2", "ctx-3")):
+    return _panel(evidence={"ids": list(ids)})
+
+
+def _text_sha(text: str) -> str:
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def _f2_rationale(panel, steelman=("low",), would_change_if=1, author="j"):
+    return {
+        "schema": "hpp.rationale/v1",
+        "panel_sha256": normalise_panel(panel)["sha256"],
+        "author": author,
+        "steelman": [{"position": position, "text_sha256": _text_sha(f"steelman {position}"), "chars": 120}
+                     for position in steelman],
+        "would_change_if": [{"text_sha256": _text_sha(f"condition {index}"), "chars": 80}
+                            for index in range(would_change_if)],
+    }
+
+
+def _dissent_session(panel):
+    first = _round_one(panel, ("high", "high", "low"))
+    seen = [_sha(panel, turn) for turn in first]
+    second = [_turn(panel, seat, 2, position, seen=seen) for seat, position in zip("abc", ("high", "high", "low"))]
+    return first + second
+
+
+# =========================================================================== the panel declares its evidence
+
+
+def test_a_panel_declares_the_ids_its_seats_can_cite():
+    panel = normalise_panel(_gated())
+    assert panel["evidence"] == {"ids": ["ctx-1", "ctx-2", "ctx-3"]}
+    assert panel["sha256"] != normalise_panel(_panel())["sha256"], "the evidence is part of what the panel hash seals"
+
+
+@pytest.mark.parametrize("evidence, fragment", [
+    ({"ids": []}, "evidence.ids"),
+    ({"ids": ["ctx-1", "ctx-1"]}, "evidence.ids"),
+    ({"ids": ["ctx-1", ""]}, "evidence.ids"),
+    ({"ids": "ctx-1"}, "evidence.ids"),
+    ({"ids": ["ctx-1"], "sources": [{"kind": "rumour", "sha256": "0" * 64}]}, "evidence.sources"),
+    ({"ids": ["ctx-1"], "extra": 1}, "evidence"),
+])
+def test_a_malformed_evidence_declaration_is_refused(evidence, fragment):
+    with pytest.raises(DeliberationError, match=fragment):
+        normalise_panel(_panel(evidence=evidence))
+
+
+def test_CONTROLE_a_panel_without_evidence_keeps_the_hash_it_had_in_2_7_0():
+    """The shipped review turns name their panel by hash; that hash must not move."""
+    panel = json.loads((REVIEW / "panel.json").read_text(encoding="utf-8"))
+    turns = json.loads((REVIEW / "turns.json").read_text(encoding="utf-8"))
+    assert "evidence" not in normalise_panel(panel)
+    assert {turn["panel_sha256"] for turn in turns} == {normalise_panel(panel)["sha256"]}
+
+
+# =========================================================================== the gate
+
+
+def test_an_unknown_reference_does_not_move_the_verdict():
+    """Three seats agree on a fact whose reference names nothing the panel declared."""
+    panel = _gated()
+    turns = [_turn(panel, seat, 1, "high", refs=("ghost",)) for seat in "abc"]
+    first = tally(panel, turns)[0]
+    assert first["votes"]["high"] == {"grounded": 0, "ungrounded": 3}
+    assert first["grounded_convergence"] is False and first["leading"] is None
+    assert first["unsupported"] == [{"seat": seat, "refs": ["ghost"]} for seat in "abc"]
+    assert decide_stop(panel, turns)["decision"] == "continue"
+
+
+def test_CONTROLE_the_same_fact_with_a_resolved_reference_moves_it():
+    panel = _gated()
+    turns = [_turn(panel, seat, 1, "high", refs=("ctx-1",)) for seat in "abc"]
+    first = tally(panel, turns)[0]
+    assert first["votes"]["high"] == {"grounded": 3, "ungrounded": 0}
+    assert first["unsupported"] == []
+    assert decide_stop(panel, turns)["reason"] == "grounded-convergence"
+
+
+def test_one_resolved_reference_grounds_the_claim_and_the_other_is_still_listed():
+    panel = _gated()
+    turns = [_turn(panel, seat, 1, "high", refs=("ctx-1", "ghost")) for seat in "abc"]
+    first = tally(panel, turns)[0]
+    assert first["grounded_convergence"] is True
+    assert first["unsupported"] == [{"seat": seat, "refs": ["ghost"]} for seat in "abc"]
+
+
+def test_an_invented_reference_is_not_new_evidence():
+    """A second round citing only an undeclared id brought nothing: the session stops."""
+    panel = _gated()
+    first = _round_one(panel, ("high", "high", "low"))
+    seen = [_sha(panel, turn) for turn in first]
+    second = [_turn(panel, seat, 2, position, refs=("ctx-1", "invented"), seen=seen)
+              for seat, position in zip("abc", ("high", "high", "low"))]
+    last = tally(panel, first + second)[-1]
+    assert last["new_refs"] == []
+    assert decide_stop(panel, first + second)["reason"] == "no-new-evidence"
+
+
+def test_a_flip_excused_by_an_invented_reference_is_still_a_flip_without_evidence():
+    panel = _gated()
+    first = _round_one(panel, ("high", "high", "low"))
+    seen = [_sha(panel, turn) for turn in first]
+    second = [_turn(panel, "a", 2, "high", seen=seen), _turn(panel, "b", 2, "high", seen=seen),
+              _turn(panel, "c", 2, "high", refs=("ctx-1", "invented"), seen=seen)]
+    assert tally(panel, first + second)[-1]["flips_without_new_evidence"] == ["c"]
+
+
+def test_CONTROLE_a_flip_brought_by_a_declared_reference_is_not_marked():
+    panel = _gated()
+    first = _round_one(panel, ("high", "high", "low"))
+    seen = [_sha(panel, turn) for turn in first]
+    second = [_turn(panel, "a", 2, "high", seen=seen), _turn(panel, "b", 2, "high", seen=seen),
+              _turn(panel, "c", 2, "high", refs=("ctx-1", "ctx-2"), seen=seen)]
+    assert tally(panel, first + second)[-1]["flips_without_new_evidence"] == []
+
+
+def test_without_a_declaration_the_gate_is_reported_as_not_declared():
+    """No evidence list: a fact with any reference grounds (the 2.7.0 rule), and the record says so."""
+    panel = _panel()
+    turns = [_turn(panel, seat, 1, "high", refs=("ghost",)) for seat in "abc"]
+    assert tally(panel, turns)[0]["grounded_convergence"] is True
+    assert "unsupported" not in tally(panel, turns)[0]
+    record = build_record(panel, turns, _judge(panel))
+    assert record["evidence_gate"] == "not-declared"
+    gated = build_record(_gated(), [_turn(_gated(), seat, 1, "high") for seat in "abc"], _judge(_gated()))
+    assert gated["evidence_gate"] == "declared-unsourced"  # ids typed by hand: see the review test below
+
+
+# =========================================================================== dissent needs a steelman
+
+
+def test_a_verdict_over_grounded_dissent_without_a_steelman_is_refused():
+    panel = _panel()
+    with pytest.raises(DeliberationError, match="steelman"):
+        build_record(panel, _dissent_session(panel), _judge(panel))
+
+
+def test_CONTROLE_the_same_verdict_with_a_steelman_is_recorded_and_verifies():
+    panel = _panel()
+    record = build_record(panel, _dissent_session(panel), _judge(panel), _f2_rationale(panel))
+    assert record["schema"] == "hpp.deliberation/v2"
+    assert record["dissent"] == [{"seat": "c", "position": "low", "grounded": True}]
+    assert [item["position"] for item in record["rationale"]["steelman"]] == ["low"]
+    assert len(record["rationale"]["would_change_if"]) == 1
+    assert verify_record(record)["status"] == "intact"
+
+
+@pytest.mark.parametrize("change, fragment", [
+    ({"steelman": ()}, "steelman"),
+    ({"steelman": ("high",)}, "steelman"),
+    ({"steelman": ("low", "medium")}, "steelman"),
+    ({"would_change_if": 0}, "would_change_if"),
+    ({"author": "a"}, "judge seat"),
+])
+def test_the_rationale_must_answer_exactly_the_dissent(change, fragment):
+    panel = _panel()
+    with pytest.raises(DeliberationError, match=fragment):
+        build_record(panel, _dissent_session(panel), _judge(panel), _f2_rationale(panel, **change))
+
+
+def test_a_rationale_for_another_panel_is_refused():
+    panel = _panel()
+    rationale = _f2_rationale(panel)
+    rationale["panel_sha256"] = "0" * 64
+    with pytest.raises(DeliberationError, match="another panel"):
+        build_record(panel, _dissent_session(panel), _judge(panel), rationale)
+
+
+def test_without_dissent_the_rationale_is_optional_and_carries_no_steelman():
+    panel = _panel()
+    plain = build_record(panel, _round_one(panel), _judge(panel))
+    assert plain["rationale"] is None
+    with_condition = build_record(panel, _round_one(panel), _judge(panel), _f2_rationale(panel, steelman=()))
+    assert len(with_condition["rationale"]["would_change_if"]) == 1
+    with pytest.raises(DeliberationError, match="steelman"):
+        build_record(panel, _round_one(panel), _judge(panel), _f2_rationale(panel, steelman=("low",)))
+
+
+def test_an_edited_rationale_fails_verify():
+    panel = _panel()
+    record = build_record(panel, _dissent_session(panel), _judge(panel), _f2_rationale(panel))
+    edited = copy.deepcopy(record)
+    edited["rationale"]["would_change_if"] = []
+    assert verify_record(edited)["status"] == "broken"
+
+
+# =========================================================================== compatibility
+
+
+def test_a_v1_record_sealed_by_2_7_0_still_verifies():
+    """Sealed by the 2.7.0 code with grounded dissent and no steelman: valid under the v1 rules."""
+    record = json.loads((FIXTURES / "house-session-v1-dissent-record.json").read_text(encoding="utf-8"))
+    assert record["schema"] == "hpp.deliberation/v1" and record["dissent"]
+    assert verify_record(record)["status"] == "intact"
+
+
+def test_CONTROLE_the_v1_fixture_edited_is_still_broken():
+    record = json.loads((FIXTURES / "house-session-v1-dissent-record.json").read_text(encoding="utf-8"))
+    record["verdict"]["value"] = "low"
+    assert verify_record(record)["status"] == "broken"
+
+
+def test_a_v1_record_cannot_smuggle_the_v2_fields():
+    record = json.loads((FIXTURES / "house-session-v1-dissent-record.json").read_text(encoding="utf-8"))
+    record["rationale"] = None
+    assert verify_record(record)["status"] == "broken"
+
+
+# =========================================================================== the command line
+
+
+
+def test_plan_fills_the_evidence_from_the_context_the_seats_were_given(tmp_path, capsys):
+    context = [{"id": "ctx-1", "text": "the migration drops a table"}, {"id": "ctx-2", "text": "no backup"}]
+    panel_path = _write(tmp_path, "panel.json", _panel())
+    assert cli.main(["deliberate", "plan", panel_path, "--context", _write(tmp_path, "context.json", context)]) == 0
+    panel = json.loads(capsys.readouterr().out)["panel"]
+    assert panel["evidence"]["ids"] == ["ctx-1", "ctx-2"]
+    assert panel["evidence"]["sources"][0]["kind"] == "context"
+    assert normalise_panel(panel)["sha256"] == panel["sha256"], "the printed panel is itself a valid panel"
+
+
+def test_plan_adds_an_evidence_record_only_when_it_verifies(tmp_path, capsys, monkeypatch):
+    from hpp.evidence import run_evidence
+    import sys
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "make.py").write_text("from pathlib import Path\nPath('out').mkdir(exist_ok=True)\n"
+                                      "Path('out/report.txt').write_text('ok')\n", encoding="utf-8")
+    record = run_evidence("smoke", [sys.executable, "make.py"], ["out/report.txt"], root=tmp_path, timeout=60)
+    panel_path = _write(tmp_path, "panel.json", _panel())
+    assert cli.main(["deliberate", "plan", panel_path, "--evidence", record["record_path"]]) == 0
+    panel = json.loads(capsys.readouterr().out)["panel"]
+    assert panel["evidence"]["ids"] == ["smoke"]
+    (tmp_path / "out" / "report.txt").write_text("changed", encoding="utf-8")
+    assert cli.main(["deliberate", "plan", panel_path, "--evidence", record["record_path"]]) == 2, \
+        "an evidence record whose artifact changed does not resolve anything"
+
+
+def test_record_takes_the_rationale_and_validate_reads_both_versions(tmp_path, capsys):
+    panel = _panel()
+    panel_path = _write(tmp_path, "panel.json", panel)
+    turns_path = _write(tmp_path, "turns.json", _dissent_session(panel))
+    judge_path = _write(tmp_path, "judge.json", _judge(panel))
+    out = tmp_path / "record.json"
+    assert cli.main(["deliberate", "record", "--panel", panel_path, "--turns", turns_path,
+                     "--judge", judge_path, "--out", str(out)]) == 2, "dissent without a steelman is refused"
+    rationale_path = _write(tmp_path, "rationale.json", _f2_rationale(panel))
+    assert cli.main(["deliberate", "record", "--panel", panel_path, "--turns", turns_path,
+                     "--judge", judge_path, "--rationale", rationale_path, "--out", str(out)]) == 0
+    capsys.readouterr()
+    assert cli.main(["deliberate", "validate", str(out)]) == 0
+    assert cli.main(["deliberate", "validate", str(FIXTURES / "house-session-v1-dissent-record.json")]) == 0
+
+
+# =========================================================================== the shipped example
+
+
+def test_the_documented_review_needs_its_rationale_and_the_texts_match_it(tmp_path):
+    """The review ends with seat c's grounded dissent: recorded only with the judge's steelman."""
+    panel = json.loads((REVIEW / "panel.json").read_text(encoding="utf-8"))
+    turns = json.loads((REVIEW / "turns.json").read_text(encoding="utf-8"))
+    judge = json.loads((REVIEW / "judge.json").read_text(encoding="utf-8"))
+    rationale = json.loads((REVIEW / "rationale.json").read_text(encoding="utf-8"))
+    with pytest.raises(DeliberationError, match="steelman"):
+        build_record(panel, turns, judge)
+    record = build_record(panel, turns, judge, rationale)
+    assert (record["verdict"]["value"], record["dissent"][0]["position"]) == ("high", "low")
+    assert verify_record(record)["status"] == "intact"
+    texts = {"steelman-low.txt": rationale["steelman"][0], "would-change-if.txt": rationale["would_change_if"][0]}
+    for name, entry in texts.items():
+        text = (REVIEW / name).read_bytes().decode("utf-8")
+        assert (_text_sha(text), len(text)) == (entry["text_sha256"], entry["chars"]), f"{name} is the text the hash anchors"
+
+
+# =========================================================================== adversarial review of F2, round 1
+# Each test reproduces a defect the reviewer found in the first version of the evidence gate.
+
+
+def test_V1_DOWNGRADE_SKIPS_RATIONALE_a_v1_record_cannot_carry_a_panel_with_evidence():
+    panel = _gated()
+    record = build_record(panel, _dissent_session(panel), _judge(panel), _f2_rationale(panel))
+    downgraded = {key: value for key, value in record.items() if key not in ("evidence_gate", "rationale")}
+    downgraded["schema"] = "hpp.deliberation/v1"
+    body = {key: value for key, value in downgraded.items() if key not in ("record_sha256", "human_decision")}
+    downgraded["record_sha256"] = hashlib.sha256(json.dumps(body, sort_keys=True, separators=(",", ":"),
+                                                            ensure_ascii=False).encode()).hexdigest()
+    assert verify_record(downgraded)["status"] == "broken"
+
+
+def test_verify_reports_the_schema_it_accepted():
+    record = json.loads((FIXTURES / "house-session-v1-dissent-record.json").read_text(encoding="utf-8"))
+    assert verify_record(record)["schema"] == "hpp.deliberation/v1"
+    panel = _panel()
+    assert verify_record(build_record(panel, _round_one(panel), _judge(panel)))["schema"] == "hpp.deliberation/v2"
+
+
+def test_EVIDENCE_GATE_WITHOUT_PROVENANCE_ids_typed_by_hand_are_declared_unsourced():
+    panel = _gated()
+    unsourced = build_record(panel, [_turn(panel, seat, 1, "high") for seat in "abc"], _judge(panel))
+    assert unsourced["evidence_gate"] == "declared-unsourced"
+    sourced = _panel(evidence={"ids": ["ctx-1"], "sources": [{"kind": "context", "sha256": "1" * 64}]})
+    record = build_record(sourced, [_turn(sourced, seat, 1, "high") for seat in "abc"], _judge(sourced))
+    assert record["evidence_gate"] == "resolved"
+
+
+def test_PLAN_CONTEXT_DROPS_HASH_CHECK_an_edited_hashed_panel_is_refused_with_context_too(tmp_path):
+    hashed = normalise_panel(_panel())
+    edited = {**_panel(), "sha256": hashed["sha256"]}
+    edited["seats"][0]["model_served"] = "alpha-model-2026-10-01"
+    panel_path = _write(tmp_path, "panel.json", edited)
+    context = _write(tmp_path, "context.json", [{"id": "ctx-1", "text": "t"}])
+    assert cli.main(["deliberate", "plan", panel_path]) == 2
+    assert cli.main(["deliberate", "plan", panel_path, "--context", context]) == 2
+
+
+def test_PLAN_EVIDENCE_IDS_COERCED_malformed_declared_evidence_is_refused_not_repaired(tmp_path):
+    panel_path = _write(tmp_path, "panel.json", _panel(evidence={"ids": "abc"}))
+    context = _write(tmp_path, "context.json", [{"id": "ctx-1", "text": "t"}])
+    assert cli.main(["deliberate", "plan", panel_path, "--context", context]) == 2
+
+
+def test_EVIDENCE_PANEL_NOT_PERSISTED_plan_writes_the_panel_the_session_then_uses(tmp_path, capsys):
+    panel_path = _write(tmp_path, "panel.json", _panel())
+    context = _write(tmp_path, "context.json", [{"id": "ctx-1", "text": "t"}])
+    out = tmp_path / "panel.evidence.json"
+    assert cli.main(["deliberate", "plan", panel_path, "--context", context, "--out", str(out)]) == 0
+    written = json.loads(out.read_text(encoding="utf-8"))
+    assert written["evidence"]["ids"] == ["ctx-1"]
+    turns = [_turn(written, seat, 1, "high") for seat in "abc"]
+    record = build_record(written, turns, _judge(written))
+    assert record["evidence_gate"] == "resolved"

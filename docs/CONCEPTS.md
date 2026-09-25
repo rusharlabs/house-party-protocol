@@ -294,21 +294,25 @@ lane no participant uses, and the roles its `session_type` needs (`plan`, `revie
 with the ids they rest on, the hash of the verbatim text and `seen_turns`: a round-1 turn that
 saw anything is refused, so the blind round is checkable. The session stops by rule
 (`not-judged`, `grounded-convergence`, `paused-budget`, `no-new-evidence`, `max-rounds`), and
-`hpp.deliberation/v1` seals the panel, the turns, the tally, the stop, the judge's
-`hpp.decision/v1`, the verdict and the dissent that lost; `human_decision` stays outside the seal.
+`hpp.deliberation/v2` seals the panel, the turns, the tally, the stop, the judge's
+`hpp.decision/v1`, the verdict, the dissent that lost and the judge seat's rationale — a steelman
+of each dissenting position and what would change the verdict, required when grounded dissent
+stands; `human_decision` stays outside the seal. A panel may declare `evidence.ids`: then a `fact`
+grounds only through a reference that resolves, and one that does not is `unsupported`.
 
 **Is not:** a model call, a vote that replaces a person, or proof that a panel beats one agent.
 The seats and the judge answer outside the harness. A seat that did not answer is **not judged**
 — never a vote against — and it blocks the verdict. A position is grounded when its turn states a
-`fact` with a reference; whether the reference exists in the context is not checked yet. The
-panel publishes no confidence it did not measure. The seal is not a signature: `verify` proves
+`fact` whose reference resolves against the declared evidence (or, with none declared, any
+reference — the record says `not-declared`); a resolved id proves the source exists, not that it
+supports the claim. The panel publishes no confidence it did not measure. The seal is not a signature: `verify` proves
 that everything derived matches the turns and the judge's record the file holds, and those are
 anchored only by the hashes of the verbatim text and the raw response kept beside it. A session
 ends at the first round where a rule holds; turns of later rounds are refused. Whether a panel is worth its cost is measured
 with `hpp decide eval`, which reads the panel as one decider (`method: panel`), not asserted here.
 
-**Verify:** new in 2.7.0 —
-`python -m hpp deliberate record --panel examples/house-session/review/panel.json --turns examples/house-session/review/turns.json --judge examples/house-session/review/judge.json --out out/record.json`
+**Verify:** new in 2.7.0, rationale new in 2.8.0 —
+`python -m hpp deliberate record --panel examples/house-session/review/panel.json --turns examples/house-session/review/turns.json --judge examples/house-session/review/judge.json --rationale examples/house-session/review/rationale.json --out out/record.json`
 seals the review with `stop` `max-rounds`, `escalate: true`, the verdict `high` and seat `c`
 kept as dissent, exit 0; `python -m hpp deliberate verify out/record.json` exits 0, and on a copy
 with the verdict edited exits 2. A panel whose seat is served by `-latest`, or whose participants
@@ -383,6 +387,46 @@ exist for the harness.
 **Verify:** `python -m hpp work plan examples/reliable-coding/workgraph.json` prints the compiled
 form; remove an `acceptance` list and the same command exits 2 with "needs non-empty acceptance
 criteria"; name a dependency that is not a unit and it exits 2 with "unknown dependency".
+
+## cited and executed
+
+**Is:** the difference between a test that names an acceptance criterion and a test that ran it.
+A test cites a criterion with `[spec: capability/scenario]` in its docstring; `hpp work coverage`
+links every criterion of a spec to the tests that cite it (`hpp.spec-coverage/v1`). Given the
+JUnit XML report of the run, it joins each citing test to the cases the runner executed and sorts
+the criteria into `executed`, `failed`, `cited_not_run`, `orphans` and `unknown`
+(`hpp.spec-execution/v1`); `complete` holds only when every criterion was executed.
+
+**Is not:** a test runner, and not proof that a passing test checks what its criterion says —
+that is what `hpp evidence mutate` measures. A skipped test, a deselected one and a docstring on a
+module or a class all cite a criterion without running it, and none of them counts. A report case
+is joined by pytest's convention (dotted module plus class chain in `classname`, function plus
+`[parameters]` in `name`); `matched_testcases` publishes how many cases were joined, so a report
+that describes another run shows up as zero, not as nothing having run.
+
+**Verify:** new in 2.8.0 — `python -m hpp work coverage examples/cited-and-run/workgraph.json --tests examples/cited-and-run/check_prices.py`
+reports every criterion covered and exits 0; after
+`python -m pytest examples/cited-and-run/check_prices.py -q -p no:cacheprovider --junitxml out/cited-and-run.xml`,
+the same command with `--junit out/cited-and-run.xml` reports `bulk-discount` as `cited_not_run`
+(its test was skipped) and exits 1.
+
+## review lens
+
+**Is:** a read-only reviewer that looks at a change for one kind of defect — a verification gap,
+a partial set, a deletion with readers left, stale evidence — and answers with an
+`hpp.findings/v1` document: each finding has a stable `code`, a `severity`, a `file` and `line`,
+the `claim` and the `evidence` it rests on, and the document states what it `inspected`.
+`hpp findings check` holds the shape and derives the verdict (`fail`, `warn` or `pass`).
+
+**Is not:** proof that the review is right. The check reads the answer, never the change. It
+refuses what makes a review unreadable: a key the contract does not define (the whole document),
+an empty `inspected` (nothing found and nothing looked at read the same), a finding without
+evidence, the same finding twice. The four lenses ship as sub-agents of the operator module;
+they become the seats of a review panel.
+
+**Verify:** new in 2.8.0 — `python -m hpp findings check examples/review-lenses/deletion-clean.json examples/review-lenses/partial-set.json`
+reports `pass` for the first document and `warn` for the second, with one `CALLER_NOT_UPDATED`,
+and exits 1; `python -m hpp findings check examples/review-lenses/deletion-clean.json` alone exits 0.
 
 ## wave-driven execution
 
