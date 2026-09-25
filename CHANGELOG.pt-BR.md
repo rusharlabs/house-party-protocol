@@ -9,6 +9,31 @@ cada módulo mantém sua própria versão no `plugin.json` e no `marketplace.jso
 
 ## [Unreleased]
 
+## [2.7.0] — 2026-09-25
+
+### Adicionado
+
+- **House Session: `hpp deliberate` e `hpp.deliberation/v1`.** Uma deliberação entre decisores
+  pinados, registrada para poder ser verificada e medida; o harness continua sem chamar modelo. Um
+  painel (`hpp.panel/v1`) exige duas famílias de modelo entre os participantes, um juiz numa lane
+  que nenhum participante usa, e os papéis que o tipo de sessão pede (`plan`, `review`,
+  `release-gate`, `incident`, `design`). Os turnos (`hpp.turn/v1`) listam o que o assento tinha
+  lido, então a primeira rodada cega é verificável. `tally` conta votos fundamentados e não
+  fundamentados à parte e marca um assento que não respondeu como não julgado, nunca como voto
+  contra; `stop` aplica uma regra fixa (`not-judged`, `grounded-convergence`, `paused-budget`,
+  `no-new-evidence`, `max-rounds`); `record` sela a sessão com a decisão do juiz e guarda a
+  dissidência que perdeu; `verify` re-deriva o registro dos próprios turnos. Exemplo:
+  `examples/house-session`.
+- **`hpp evidence mutate`: o critério percebe código quebrado?** O critério roda numa cópia do
+  workspace, limpa (tem de passar, senão o veredito é `no-control` e nada mais roda) e uma vez por
+  mutante (tem de falhar). Os mutantes são declarados (`hpp.mutants/v1`) ou gerados dos tokens
+  Python com uma tabela fixa de operadores, nunca dentro de strings ou comentários. Um mutante
+  sobrevivente é um ponto cego nomeado; o score não tem valor quando nada foi medido. O registro é
+  `hpp.mutation/v1`. Exemplo: `examples/criterion-sensitivity`.
+- **`hpp.decision/v1` aceita `method: panel`.** Um painel é projetado como um registro de decisão,
+  sem confiança e com a deliberação selada como resposta bruta, para que `hpp decide eval` meça um
+  painel pela mesma régua de um decisor só.
+
 ## [2.6.7] — 2026-09-25
 
 ### Alterado
@@ -1349,3 +1374,4 @@ publicar.
 [2.6.5]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.5
 [2.6.6]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.6
 [2.6.7]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.7
+[2.7.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.7.0

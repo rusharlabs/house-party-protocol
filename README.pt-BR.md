@@ -74,6 +74,8 @@ Cada falha acima tem um mecanismo no código, e cada mecanismo tem um comando qu
 | um retriever que ninguém mediu | um retriever que você declara como comando é pontuado em consultas rotuladas — hit@k, recall@k, precision@k, MRR, nDCG@k — e timeout, crash ou resposta malformada é falha de instrumento contada à parte, nunca zero; a resposta gerada a partir do que ele achou não é julgada | `hpp retrieval eval` (novo na 2.6.0) |
 | citações que ninguém resolveu | cada marcador `[ID:x]` precisa nomear um id do contexto a partir do qual a resposta foi escrita: id desconhecido, intervalo ou marcador vazio bloqueia, número sem marcador avisa — um marcador que resolve prova que a fonte existe, não que ela sustenta a frase | `hpp cite check` (novo na 2.6.0) |
 | um vencedor escolhido por quem construiu | N lanes constroem, cada uma, a sua tentativa da mesma tarefa; um revisor de outra lane e de outra família de modelo escolhe o vencedor, os perdedores viram um `NOT-SELECTED` terminal, e nenhum candidato chega a `MERGED` antes da escolha — escolher 1 de N é `pass@N`, então o vencedor ainda precisa do próprio `VERIFIED` e de `pass^k` | `lane_board.py compete` · `lane_board.py select` (lane-kit 1.4.0, novo na 2.6.0) |
+| uma checagem verde que ninguém tentou quebrar | o critério roda numa cópia do workspace, limpa (tem de passar) e uma vez por mutante (tem de falhar); um mutante que ele deixa passar é um ponto cego nomeado, e um critério que falha na cópia limpa não tem controle e não ganha score | `hpp evidence mutate` (novo na 2.7.0) |
+| um painel de agentes concordando consigo mesmo | uma House Session nomeia o modelo pinado e a família de cada assento; exige duas famílias, um juiz fora das lanes dos participantes e um assento dissidente onde a pergunta pede; a primeira rodada é cega e isso é verificável, um assento que não respondeu não é julgado e bloqueia o veredito, a sessão para por regra, e o registro se sela e guarda a dissidência que perdeu — o painel é medido como um decisor só pela mesma régua; o hpp não chama modelo | `hpp deliberate record` · `hpp deliberate verify` (novo na 2.7.0) |
 | instalador que escreve antes de você ler | `hpp init` imprime um plano; `--apply` escreve um arquivo; o wiring do host continua sendo um colar | `hpp init` |
 
 ## Cross-model by construction
@@ -118,7 +120,7 @@ nenhum pacote de terceiro. A CI exercita Python 3.10 a 3.13 em Linux, macOS e Wi
 (`.github/workflows/ci.yml`); interpretadores mais antigos não são prometidos porque nada os mede.
 
 ```bash
-pip install git+https://github.com/rusharlabs/house-party-protocol@v2.6.7
+pip install git+https://github.com/rusharlabs/house-party-protocol@v2.7.0
 hpp doctor
 hpp init --target ../your-repo
 ```
@@ -234,7 +236,7 @@ O produto é em camadas, e as camadas não se trocam entre si.
 harness        python -m hpp          the operating surface: doctor, init, event log,
                                       attestation, maps, WorkGraph, policy, routing, eval,
                                       decision records, evidence bundles, retrieval eval,
-                                      citation check
+                                      citation check, House Session
    │
 protocol       hpp.manifest.json      the invariants: roles, loop transitions and gates,
                                       exit codes, host coverage, monitors, bundles

@@ -13,6 +13,7 @@ existe.
 │               doctor · init · event · status · resume · attest · policy  │
 │               work · route · context · map · graph · eval · benchmark    │
 │               decide · evidence · retrieval · cite (new in 2.6.0)        │
+│               deliberate (new in 2.7.0)                                  │
 ├──────────────────────────────────────────────────────────────────────────┤
 │ PROTOCOL      hpp.manifest.json                                          │
 │               roles · loop transitions and gates · exit codes            │
@@ -28,7 +29,7 @@ existe.
 
 O harness é stdlib-only e não executa modelo algum. Ele lê arquivos, roda os comandos que você
 nomeia e escreve num pequeno número de caminhos declarados. `decide`, `evidence`, `retrieval` e
-`cite` são novos na 2.6.0.
+`cite` são novos na 2.6.0; `deliberate` é novo na 2.7.0.
 
 ## O pacote `hpp/`
 
@@ -46,9 +47,10 @@ nomeia e escreve num pequeno número de caminhos declarados. `decide`, `evidence
 | `graph.py` | visões de capability, operacional, agente, evidência e código a partir do manifesto; JSON ou Mermaid | `graph` |
 | `evals.py` | runner de `pass@k` / `pass^k` sobre uma suíte de casos com três tipos de runner | `eval run`, `benchmark` |
 | `decision.py` | valida um registro `hpp.decision/v1` feito fora do harness (consultivo, raise-only, abstenção e falha de instrumento como desfechos); mede um decisor declarado com métricas seletivas. Não chama modelo | `decide validate`, `decide eval` (novo na 2.6.0) |
-| `evidence.py` | roda um comando de critério declarado (argv, sem shell, no próprio grupo de processos), mede o código de saída, faz hash dos artefatos declarados e escreve um registro com hash de si mesmo; re-deriva um registro depois. Recusa uma linha de comando que se pareça com segredo. O hash próprio torna uma edição visível; não é uma assinatura. Não dirige navegador | `evidence run`, `evidence verify` (novo na 2.6.0) |
+| `evidence.py` | roda um comando de critério declarado (argv, sem shell, no próprio grupo de processos), mede o código de saída, faz hash dos artefatos declarados e escreve um registro com hash de si mesmo; re-deriva um registro depois. Recusa uma linha de comando que se pareça com segredo. O hash próprio torna uma edição visível; não é uma assinatura. Não dirige navegador | `evidence run`, `evidence verify` (novo na 2.6.0); `evidence mutate` roda o critério numa cópia do workspace, limpa e uma vez por mutante, e nomeia os mutantes que ele deixou passar (novo na 2.7.0) |
 | `retrieval.py` | pontua um retriever que você declara como comando contra os ids que uma suíte rotula como relevantes: hit@k, recall@k, precision@k, MRR, nDCG@k, com falhas de instrumento contadas à parte. Não roda índice | `retrieval eval` (novo na 2.6.0) |
 | `citations.py` | confere que todo marcador de citação num texto resolve para um id do contexto a partir do qual ele foi escrito, e sinaliza uma frase quantitativa sem marcador. Não julga se a fonte sustenta a frase | `cite check` (novo na 2.6.0) |
+| `deliberation.py` | House Session: valida um painel de decisores pinados (duas famílias de modelo, um juiz fora das lanes dos participantes, os papéis que o tipo de sessão exige, um orçamento declarado), conta os turnos (votos fundamentados e não fundamentados, abstenções, assentos não julgados, mudanças sem evidência nova), para a sessão por regra e a sela com a decisão do juiz num registro com hash de si mesmo que se re-deriva dos próprios turnos; projeta o painel como um `hpp.decision/v1`. Não chama modelo | `deliberate plan`, `validate`, `tally`, `stop`, `record`, `verify` (novo na 2.7.0) |
 | `controls.py` | os dez controles executáveis que o benchmark roda, cada um com um caso positivo e um negativo | `benchmark`, `--self-test` |
 | `install.py` | recibo de instalação só de plano para um bundle num host; recusa cobertura não suportada | `install` |
 | `wizard.py` | `hpp init`: seis estágios, readiness, plano versus aplicação, bloco de wiring | `init` |
@@ -200,8 +202,8 @@ distribuição e os checksums dos módulos são reportados como não verificados
 | código | significado | onde |
 |---|---|---|
 | `0` | ok; no modo `audit`, sempre | todo comando |
-| `1` | warn ou gate manual; um gate de eval que falhou | `policy check` (`MANUAL` em `enforce`), `eval run`, `benchmark`, `init` com avisos, `decide eval` quando o gate dele falha (novo na 2.6.0), `evidence run` quando o bundle não passou, `evidence verify` sobre um registro íntegro de uma execução que não passou, `retrieval eval` quando o gate dele falha, `cite check` com um aviso (`TOO_MANY`, `UNCITED_CLAIM`) (novo na 2.6.0) |
-| `2` | block; uma entrada recusada (manifesto ruim, spec ruim, log corrompido, attestation inválida) | `policy check` (`BLOCK`), `attest`, `decide validate` e `decide eval` sobre um registro ou suíte que quebra o contrato (novo na 2.6.0), `evidence run` sobre um pedido recusado ou um evento que ele não conseguiu acrescentar, `evidence verify` sobre um registro editado ou que se contradiz, ou cujo artefato mudou ou sumiu, `retrieval eval` sobre uma suíte ou um argumento recusados, `cite check` sobre `UNKNOWN_ID`, `RANGE` ou `EMPTY_MARKER` ou uma entrada recusada (novo na 2.6.0), todo erro de validação |
+| `1` | warn ou gate manual; um gate de eval que falhou | `policy check` (`MANUAL` em `enforce`), `eval run`, `benchmark`, `init` com avisos, `decide eval` quando o gate dele falha (novo na 2.6.0), `evidence run` quando o bundle não passou, `evidence verify` sobre um registro íntegro de uma execução que não passou, `retrieval eval` quando o gate dele falha, `cite check` com um aviso (`TOO_MANY`, `UNCITED_CLAIM`) (novo na 2.6.0), `deliberate record` quando o veredito está bloqueado ou o juiz falhou, `evidence mutate` com ponto cego, execução incompleta ou nenhum mutante aplicado (novo na 2.7.0) |
+| `2` | block; uma entrada recusada (manifesto ruim, spec ruim, log corrompido, attestation inválida) | `policy check` (`BLOCK`), `attest`, `decide validate` e `decide eval` sobre um registro ou suíte que quebra o contrato (novo na 2.6.0), `evidence run` sobre um pedido recusado ou um evento que ele não conseguiu acrescentar, `evidence verify` sobre um registro editado ou que se contradiz, ou cujo artefato mudou ou sumiu, `retrieval eval` sobre uma suíte ou um argumento recusados, `cite check` sobre `UNKNOWN_ID`, `RANGE` ou `EMPTY_MARKER` ou uma entrada recusada (novo na 2.6.0), `deliberate` sobre painel, turno ou juiz recusado, sessão que não parou ou registro que não verifica, `evidence mutate` quando o critério não passa na cópia limpa (`no-control`) ou um mutante é recusado (novo na 2.7.0), todo erro de validação |
 | `3` | erro de uso ou interno | erros de uso do `init`, exceções inesperadas |
 
 `hpp init` reporta o código que vai devolver dentro do próprio relatório JSON (`exit_code`) e

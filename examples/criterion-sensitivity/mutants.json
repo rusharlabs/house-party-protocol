@@ -1,0 +1,4 @@
+{"schema": "hpp.mutants/v1", "mutants": [
+  {"id": "member-threshold", "file": "examples/criterion-sensitivity/discount.py",
+   "find": "total >= 50", "replace": "total >= 51"}
+]}

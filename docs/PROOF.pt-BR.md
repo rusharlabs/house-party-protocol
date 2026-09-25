@@ -18,6 +18,10 @@ Uma claim pública só entra aqui com reprodução.
 | régua de recuperação, controle | `python -m hpp retrieval eval examples/retrieval/suite.json --retriever-command '["python", "-c", "import sys; sys.exit(3)"]'` | exit 1, sete falhas de instrumento, métricas nulas, nunca 0% |
 | checagem de citação | `python -m hpp cite check --text examples/citations/answer.md --context examples/citations/context.json` | exit 0, veredito `ok` |
 | checagem de citação, controle | a mesma numa cópia de `answer.md` com `[ID:glossary]` trocado por `[ID:glossary-v2]` | exit 2, `UNKNOWN_ID` |
+| sensibilidade do critério | `python -m hpp evidence mutate --id weak --generate examples/criterion-sensitivity/discount.py -- python examples/criterion-sensitivity/check_weak.py` | exit 1, `blind-spots`, três sobreviventes nomeados por arquivo e linha |
+| sensibilidade do critério, controle | o mesmo com `check_strong.py` | exit 0, `sensitive`, score 1.0 |
+| House Session | `python -m hpp decide eval examples/typed-decisions/gotcha-family-suite.json --decider-command '["python", "examples/house-session/panel_decider.py"]'` | 15 sessões gravadas, seladas e verificadas, 12 decididas, 3 abstenções, 0 falhas de instrumento, exit 0 (sessões sintéticas: provam o contrato, não que um painel é melhor) |
+| House Session, controle | `python -m hpp deliberate verify` numa cópia de um registro selado com o veredito editado | exit 2, `record_sha256 does not match` |
 | seleção best-of-N | `python multi-session/lane-kit-1.4.1/scripts/lane_board.py --self-test` | exit 0; o bloco de competições passa em toda checagem |
 | seleção best-of-N, controle | `lane_board.py select` numa competição declarada, por um revisor da mesma família de modelo de um construtor | exit 1, `SAME model family`; nenhum vencedor registrado |
 | artefatos íntegros | `python installers/kit-forge-1.4.2/kit_doctor.py marketplace .` | status ok |

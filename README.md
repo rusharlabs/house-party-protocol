@@ -74,6 +74,8 @@ Each failure above has a mechanism in the code, and each mechanism has a command
 | a retriever nobody measured | a retriever you declare as a command is scored on labelled queries — hit@k, recall@k, precision@k, MRR, nDCG@k — and a timeout, a crash or a malformed answer is an instrument failure counted apart, never a zero; the answer generated from what it found is not judged | `hpp retrieval eval` (new in 2.6.0) |
 | citations nobody resolved | every `[ID:x]` marker must name an id of the context the answer was written from: an unknown id, a range or an empty marker blocks, a number with no marker warns — a marker that resolves proves the source exists, not that it supports the sentence | `hpp cite check` (new in 2.6.0) |
 | a winner picked by whoever built it | N lanes each build their own attempt at one task; a reviewer of another lane and another model family selects the winner, the losers become a terminal `NOT-SELECTED`, and no candidate reaches `MERGED` before the choice — picking 1 of N is `pass@N`, so the winner still needs its own `VERIFIED` and `pass^k` | `lane_board.py compete` · `lane_board.py select` (lane-kit 1.4.0, new in 2.6.0) |
+| a green check nobody tried to break | the criterion runs on a copy of the workspace, clean (it must pass) and once per mutant (it must fail); a mutant it lets through is a named blind spot, and a criterion that fails on the clean copy has no control and gets no score | `hpp evidence mutate` (new in 2.7.0) |
+| a panel of agents agreeing with itself | a House Session names every seat's pinned model and family; it needs two families, a judge outside the participants' lanes and a dissenting seat where the question calls for one; the first round is blind and that is checkable, a seat that did not answer is not judged and blocks the verdict, the session stops by rule, and the record seals itself and keeps the dissent that lost — the panel is measured as one decider by the same ruler; hpp calls no model | `hpp deliberate record` · `hpp deliberate verify` (new in 2.7.0) |
 | installer that writes before you read | `hpp init` prints a plan; `--apply` writes one file; host wiring stays a paste | `hpp init` |
 
 ## Cross-model by construction
@@ -117,7 +119,7 @@ third-party packages. CI exercises Python 3.10 to 3.13 on Linux, macOS and Windo
 (`.github/workflows/ci.yml`); older interpreters are not promised because nothing measures them.
 
 ```bash
-pip install git+https://github.com/rusharlabs/house-party-protocol@v2.6.7
+pip install git+https://github.com/rusharlabs/house-party-protocol@v2.7.0
 hpp doctor
 hpp init --target ../your-repo
 ```
@@ -232,7 +234,7 @@ The product is layered, and the layers are not interchangeable.
 harness        python -m hpp          the operating surface: doctor, init, event log,
                                       attestation, maps, WorkGraph, policy, routing, eval,
                                       decision records, evidence bundles, retrieval eval,
-                                      citation check
+                                      citation check, House Session
    │
 protocol       hpp.manifest.json      the invariants: roles, loop transitions and gates,
                                       exit codes, host coverage, monitors, bundles

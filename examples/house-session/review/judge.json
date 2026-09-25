@@ -1,0 +1,33 @@
+{
+  "schema": "hpp.decision/v1",
+  "question": {
+    "id": "route.risk",
+    "kind": "choice",
+    "options": [
+      "low",
+      "medium",
+      "high"
+    ],
+    "ladder": true,
+    "instructions": "How much damage could this change do if it is wrong? Judge only from the text given.",
+    "criteria": {
+      "low": "local, easily reverted, no shared state touched",
+      "medium": "touches shared code or configuration, reversible with effort",
+      "high": "touches data, credentials, production, history or anything hard to undo"
+    }
+  },
+  "state_sha256": "0e2f47eb15bddfe8100c5c17b5faa0c4e7d9f04aaaa647440177428eed7d4b19",
+  "method": "external-model",
+  "provider": {
+    "id": "provider-d",
+    "model_served": "model-d-2026-09-10"
+  },
+  "outcome": {
+    "status": "recommendation",
+    "value": "high",
+    "confidence": null
+  },
+  "authority": "advisory",
+  "direction": "informational",
+  "raw_response_sha256": "879a7bcb2436ac9e14068bc40aac49a3fe34a5547e30ec6ef0cd28cb1310e9c5"
+}

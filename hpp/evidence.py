@@ -17,10 +17,14 @@ a command line that looks like it carries a secret is refused before it runs.
 from __future__ import annotations
 
 import hashlib
+import io
 import json
 import re
+import shutil
 import subprocess
+import tempfile
 import time
+import tokenize
 from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath
 from typing import Any, Optional
@@ -335,3 +339,275 @@ def exit_for_run(record: dict[str, Any]) -> int:
 
 def exit_for_verify(report: dict[str, Any]) -> int:
     return {"valid": 0, "not-evidence": 1}.get(report["status"], 2)
+
+
+# --------------------------------------------------------------------------- criterion sensitivity
+
+MUTATION_SCHEMA = "hpp.mutation/v1"
+MUTANTS_SCHEMA = "hpp.mutants/v1"
+# Why: a fixed, small operator table. Each swap changes behaviour at a boundary or a branch, which
+# is exactly what a criterion that "passes" may never exercise. Applied to tokens only, never to
+# text inside strings or comments, where a swap changes nothing and would read as a blind spot.
+OPERATORS = {"==": "!=", "!=": "==", "<": "<=", "<=": "<", ">": ">=", ">=": ">",
+             "and": "or", "or": "and", "True": "False", "False": "True"}
+_COPY_IGNORE = (".git", ".hpp", "__pycache__", "node_modules", ".venv", "venv", ".tox")
+
+
+def _workspace_file(root: Path, relative: Any) -> str:
+    if not isinstance(relative, str) or not _inside(relative):
+        raise EvidenceError(f"mutant file {relative!r} must stay inside the workspace (relative, no '..')")
+    normalised = PurePosixPath(relative.replace("\\", "/")).as_posix()
+    parts = PurePosixPath(normalised).parts
+    ignored = [part for part in parts if part in _COPY_IGNORE]
+    if ignored:
+        raise EvidenceError(f"mutant file {normalised!r} is under {ignored[0]!r}, which is left out of the copy "
+                            f"the criterion runs in")
+    # Why (review 2026-09-25): a symlinked directory or file is recreated as a symlink in the copy,
+    # so a mutation written "in the copy" landed in the user's tree. No component may be a symlink.
+    current = root
+    for part in parts:
+        current = current / part
+        if current.is_symlink():
+            raise EvidenceError(f"mutant file {normalised!r} is reached through a symlink "
+                                f"({current.relative_to(root).as_posix()}); a mutation there would land outside the copy")
+    path = root / normalised
+    if not path.is_file():
+        raise EvidenceError(f"mutant file {normalised!r} is not a file inside the workspace")
+    try:
+        path.read_bytes().decode("utf-8")
+    except UnicodeDecodeError as exc:
+        raise EvidenceError(f"mutant file {normalised!r} is not UTF-8 text; mutants are applied to UTF-8 only") from exc
+    return normalised
+
+
+def generate_mutants(root: Path, files: list[str]) -> list[dict[str, Any]]:
+    """One mutant per operator token in each Python file, from the fixed OPERATORS table."""
+    root = Path(root)
+    mutants: list[dict[str, Any]] = []
+    for relative in files:
+        normalised = _workspace_file(root, relative)
+        if not normalised.endswith(".py"):
+            raise EvidenceError(f"generated mutants read Python tokens; declare mutants for {normalised!r} instead")
+        text = (root / normalised).read_bytes().decode("utf-8")
+        if text.startswith("﻿"):
+            # Why (review 2026-09-25): Python runs a source saved with a BOM, but the tokenizer on
+            # decoded text rejects it, which read as "not Python". Say what it is instead.
+            raise EvidenceError(f"{normalised} starts with a UTF-8 byte-order mark; save it without the BOM "
+                                f"to generate mutants, or declare them with --mutants")
+        try:
+            # Why (review 2026-09-25): the positions must use the same line breaks as `_offset`:
+            # \r\n, \r and \n, which is how Python itself reads a source file.
+            tokens = list(tokenize.generate_tokens(io.StringIO(text, newline=None).readline))
+        except (tokenize.TokenError, SyntaxError) as exc:
+            raise EvidenceError(f"{normalised} does not tokenize as Python: {exc}") from exc
+        for token in tokens:
+            if token.type in (tokenize.OP, tokenize.NAME) and token.string in OPERATORS:
+                line, column = token.start
+                replace = OPERATORS[token.string]
+                mutants.append({"id": f"{normalised}:{line}:{column}:{token.string}->{replace}", "file": normalised,
+                                "find": token.string, "replace": replace, "line": line, "column": column})
+    return mutants
+
+
+def _check_mutants(root: Path, mutants: Any) -> list[dict[str, Any]]:
+    if not isinstance(mutants, list) or not mutants:
+        raise EvidenceError("mutation needs at least one mutant (declared with --mutants or generated with --generate)")
+    checked, ids = [], set()
+    for raw in mutants:
+        if not isinstance(raw, dict) or not isinstance(raw.get("id"), str) or not raw["id"]:
+            raise EvidenceError("every mutant needs an id")
+        if raw["id"] in ids:
+            raise EvidenceError(f"mutant ids must be unique: {raw['id']!r} repeats")
+        ids.add(raw["id"])
+        find, replace = raw.get("find"), raw.get("replace")
+        if not isinstance(find, str) or not find or not isinstance(replace, str):
+            raise EvidenceError(f"mutant {raw['id']}: find must be non-empty text and replace must be text")
+        if find == replace:
+            raise EvidenceError(f"mutant {raw['id']}: replace equals find, so it changes nothing")
+        item = {"id": raw["id"], "file": _workspace_file(root, raw.get("file")), "find": find, "replace": replace}
+        if "line" in raw or "column" in raw:
+            line, column = raw.get("line"), raw.get("column")
+            if any(isinstance(value, bool) or not isinstance(value, int) for value in (line, column)) \
+                    or line < 1 or column < 0:
+                raise EvidenceError(f"mutant {raw['id']}: line (from 1) and column (from 0) must be whole numbers")
+            item.update({"line": line, "column": column})
+        else:
+            occurrence = raw.get("occurrence", 1)
+            if isinstance(occurrence, bool) or not isinstance(occurrence, int) or occurrence < 1:
+                raise EvidenceError(f"mutant {raw['id']}: occurrence must be a whole number from 1")
+            item["occurrence"] = occurrence
+        checked.append(item)
+    return checked
+
+
+def _lines(text: str) -> list[str]:
+    """Lines with their ends, broken on \r\n, \r and \n only - never on \u2028, \x85 or \f."""
+    lines, start, index = [], 0, 0
+    while index < len(text):
+        if text[index] in "\r\n":
+            end = index + 2 if text.startswith("\r\n", index) else index + 1
+            lines.append(text[start:end])
+            start = index = end
+            continue
+        index += 1
+    if start < len(text):
+        lines.append(text[start:])
+    return lines
+
+
+def _position(text: str, offset: int) -> tuple[int, int]:
+    """(line from 1, column from 0) of `offset`, with the line breaks of `_lines`."""
+    done = [line for line in _lines(text[:offset]) if line.endswith(("\n", "\r"))]
+    return len(done) + 1, offset - sum(len(line) for line in done)
+
+
+def _offset(text: str, mutant: dict[str, Any]) -> Optional[int]:
+    """Where the mutant's `find` starts in `text`, or None when it is not there."""
+    if "line" in mutant:
+        # Why (review 2026-09-25): `splitlines` also breaks on \u2028, \x85 and friends, and
+        # `readlines` on \n only; the tokenizer that produced `line` read universal newlines.
+        lines = _lines(text)
+        if mutant["line"] > len(lines):
+            return None
+        offset = sum(len(item) for item in lines[:mutant["line"] - 1]) + mutant["column"]
+        return offset if text.startswith(mutant["find"], offset) else None
+    offset = -1
+    for _ in range(mutant["occurrence"]):
+        offset = text.find(mutant["find"], offset + 1)
+        if offset < 0:
+            return None
+    return offset
+
+
+def _criterion(command: list[str], cwd: Path, timeout: float) -> dict[str, Any]:
+    clock = time.monotonic()
+    verdict, exit_code, _, _ = _run(command, cwd, timeout)
+    return {"verdict": verdict, "exit_code": exit_code, "duration_s": round(time.monotonic() - clock, 3)}
+
+
+def _fresh_copy(root: Path, scratch: Path, index: int) -> Path:
+    # Why (review 2026-09-25): one copy shared by every run let a criterion that is not idempotent
+    # (it creates a directory, a table, a lock) fail on its second run for its own reasons, and
+    # every mutant read as killed. A fresh copy per run also means no bytecode cache from the clean
+    # run exists when a mutant runs: an equal-size swap (`==` -> `!=`) can no longer reuse a `.pyc`.
+    copy = scratch / f"run-{index}"
+    try:
+        shutil.copytree(root, copy, symlinks=True, ignore=shutil.ignore_patterns(*_COPY_IGNORE))
+    except (shutil.Error, OSError) as exc:
+        raise EvidenceError(f"the workspace could not be copied for the criterion to run in: {str(exc)[:300]}") from exc
+    return copy
+
+
+def _mutate(root: Path, scratch: Path, index: int, command: list[str], mutant: dict[str, Any],
+            timeout: float) -> dict[str, Any]:
+    text = (root / mutant["file"]).read_bytes().decode("utf-8")
+    offset = _offset(text, mutant)
+    entry = {key: mutant[key] for key in ("id", "file", "find", "replace")}
+    if offset is None:
+        # Why (review 2026-09-25): located in the source before any copy, so a mutant that does
+        # not apply costs nothing.
+        entry.update({"line": mutant.get("line"), "column": mutant.get("column"),
+                      "outcome": "not-applied", "exit_code": None})
+        return entry
+    line, column = _position(text, offset)
+    mutated = text[:offset] + mutant["replace"] + text[offset + len(mutant["find"]):]
+    copy = _fresh_copy(root, scratch, index)
+    try:
+        target = copy / mutant["file"]
+        if target.is_symlink() or copy.resolve() not in target.resolve().parents:
+            raise EvidenceError(f"mutant file {mutant['file']!r} does not resolve inside the copy")
+        target.write_bytes(mutated.encode("utf-8"))
+        run = _criterion(command, copy, timeout)
+    finally:
+        shutil.rmtree(copy, ignore_errors=True)
+    # Why: the criterion has to FAIL on a mutant. A run that times out did not pass, so it killed
+    # the mutant; a run that could not start measured nothing and is counted apart.
+    outcome = {"passed": "survived", "failed": "killed", "timeout": "killed"}.get(run["verdict"], "error")
+    entry.update({"line": line, "column": column, "outcome": outcome, "exit_code": run["exit_code"]})
+    if run["verdict"] == "timeout":
+        entry["note"] = "the criterion timed out on this mutant"
+    return entry
+
+
+def run_mutation(record_id: str, command: list[str], mutants: Any, *, root: Path,
+                 timeout: float = 600.0, out_dir: Optional[Path] = None) -> dict[str, Any]:
+    """Run the criterion on a copy of the workspace: clean (must pass), then per mutant (must fail).
+
+    The user's tree is never written to, except for the record under `out_dir`. A clean run that
+    does not pass is `no-control`: no mutant runs and there is no score.
+    """
+    if not isinstance(record_id, str) or not _ID.match(record_id):
+        raise EvidenceError("id must be a plain name: letters, digits, '.', '_' or '-', up to 80 characters")
+    if not command or not all(isinstance(item, str) and item for item in command):
+        raise EvidenceError("the criterion command must be a non-empty argv list")
+    if _carries_secret(list(command)):
+        raise EvidenceError("the command line looks like it carries a secret; pass it through the environment instead")
+    root = Path(root)
+    checked = _check_mutants(root, mutants)
+    timeout = _check_timeout(timeout)
+    out = _check_out_dir(out_dir)
+    started = datetime.now(timezone.utc)
+    results: list[dict[str, Any]] = []
+    temporary = Path(tempfile.gettempdir()).resolve()
+    if temporary == root.resolve() or root.resolve() in temporary.parents:
+        # Why (review 2026-09-25): a temporary directory inside the workspace makes every copy
+        # copy itself.
+        raise EvidenceError(f"the temporary directory {temporary} is inside the workspace; point TMPDIR elsewhere")
+    # Why (review 2026-09-25): a descendant of the criterion can still hold a handle on Windows
+    # when the directory is removed; that must not turn a finished measurement into exit 3.
+    with tempfile.TemporaryDirectory(prefix="hpp-mutate-", ignore_cleanup_errors=True) as scratch:
+        # Why: the criterion runs against copies, so a crash in the middle of a mutant can never
+        # leave the user's file mutated. Paths in the command must be relative for this to hold.
+        base = Path(scratch)
+        copy = _fresh_copy(root, base, 0)
+        clean = _criterion(list(command), copy, timeout)
+        shutil.rmtree(copy, ignore_errors=True)
+        if clean["verdict"] == "passed":
+            results = [_mutate(root, base, index, list(command), mutant, timeout)
+                       for index, mutant in enumerate(checked, start=1)]
+    counts = {name: sum(1 for item in results if item["outcome"] == name)
+              for name in ("killed", "survived", "not-applied", "error")}
+    measured = counts["killed"] + counts["survived"]
+    metrics = {"total": len(results), "killed": counts["killed"], "survived": counts["survived"],
+               "not_applied": counts["not-applied"], "errors": counts["error"],
+               "score": (counts["killed"] / measured) if measured else None}
+    if clean["verdict"] != "passed":
+        verdict = "no-control"
+    elif not measured:
+        verdict = "no-mutants"
+    elif counts["survived"]:
+        verdict = "blind-spots"
+    elif counts["error"]:
+        verdict = "incomplete"
+    else:
+        verdict = "sensitive"
+    record: dict[str, Any] = {
+        "schema": MUTATION_SCHEMA, "id": record_id, "command": list(command), "base_commit": _head(root),
+        "started_at": started.isoformat(timespec="seconds").replace("+00:00", "Z"), "timeout_s": timeout,
+        "clean": clean, "mutants": results, "metrics": metrics, "verdict": verdict,
+        "survivors": [f"{item['file']}:{item['line']} {item['find']} -> {item['replace']}"
+                      for item in results if item["outcome"] == "survived"],
+    }
+    target_dir = root / out
+    target_dir.mkdir(parents=True, exist_ok=True)
+    stamp = started.strftime("%Y%m%dT%H%M%SZ")
+    counter = 1
+    while True:
+        suffix = "" if counter == 1 else f"-{counter}"
+        target = target_dir / f"{record_id}-mutate-{stamp}{suffix}.json"
+        record["record_path"] = target.relative_to(root).as_posix()
+        body = {key: value for key, value in record.items() if key != "record_sha256"}
+        record["record_sha256"] = _sha256(json.dumps(body, sort_keys=True, separators=(",", ":"),
+                                                     ensure_ascii=False).encode("utf-8"))
+        try:
+            with target.open("x", encoding="utf-8", newline="\n") as handle:
+                handle.write(json.dumps(record, indent=2, sort_keys=True, ensure_ascii=False) + "\n")
+            break
+        except FileExistsError:
+            counter += 1
+    return record
+
+
+def exit_for_mutation(record: dict[str, Any]) -> int:
+    """0 sensitive · 1 blind spots, incomplete or nothing measured · 2 no control (the ruler cannot run)."""
+    return {"sensitive": 0, "no-control": 2}.get(record["verdict"], 1)

@@ -194,6 +194,27 @@ printed, prints `valid` and exits 0. The same run with `--break` after the scrip
 still exits 1 with `failed`; its record verifies as `not-evidence` (exit 1). Change
 `out/report.html` after a passed run and `verify` exits 2 with `blocked`.
 
+## criterion sensitivity
+
+**Is:** a measurement of whether a criterion would notice broken code. `hpp evidence mutate` runs
+the criterion command on a copy of the workspace, first clean — it must pass, or the verdict is
+`no-control` and nothing else runs — then once per mutant, a copy with one small change that makes
+the code wrong, where it must fail. Mutants are declared (`hpp.mutants/v1`: file, find, replace) or
+generated from Python tokens with a fixed operator table. A mutant the criterion lets through is a
+blind spot, named by file and line in `survivors`.
+
+**Is not:** coverage, and not proof that a surviving mutant is a bug. The score is killed ÷
+(killed + survived), null when nothing was measured; a mutant whose text is absent is
+`not-applied`, never killed. A surviving mutant can be equivalent — a change that does not change
+behaviour — which only a reader can tell. hpp never writes to the user's tree: every run gets a fresh copy, and a mutant
+file reached through a symlink is refused. The command runs inside the copy, so its paths must be
+relative; an editable install or a `PYTHONPATH` pointing at the checkout makes every mutant survive.
+
+**Verify:** new in 2.7.0 —
+`python -m hpp evidence mutate --id weak --generate examples/criterion-sensitivity/discount.py -- python examples/criterion-sensitivity/check_weak.py`
+reports `blind-spots` with three survivors and exits 1; the same with `check_strong.py` reports
+`sensitive` and exits 0.
+
 ## retrieval ruler
 
 **Is:** a measurement of a retriever you declare, apart from any generation step. The retriever is
@@ -261,6 +282,37 @@ on a competition declared with `compete` whose candidates are `CHECKPOINT-READY`
 "SAME model family"; a reviewer of another lane and another family exits 0, and moving the losing
 item to any state afterwards exits 1. `lane_board.py --self-test` runs every refusal of `compete`
 and `select` next to its control.
+
+## House Session
+
+**Is:** a deliberation between pinned deciders, recorded so it can be verified and measured.
+`hpp.panel/v1` names the question, the hash of the state judged, every seat
+(`{id, role, provider, model_served, family, lane}`) and the budget (`max_rounds`, `max_chars`).
+A panel does not start without two model families among the participants, exactly one judge in a
+lane no participant uses, and the roles its `session_type` needs (`plan`, `review`,
+`release-gate`, `incident`, `design`). Each `hpp.turn/v1` carries a seat's position, its claims
+with the ids they rest on, the hash of the verbatim text and `seen_turns`: a round-1 turn that
+saw anything is refused, so the blind round is checkable. The session stops by rule
+(`not-judged`, `grounded-convergence`, `paused-budget`, `no-new-evidence`, `max-rounds`), and
+`hpp.deliberation/v1` seals the panel, the turns, the tally, the stop, the judge's
+`hpp.decision/v1`, the verdict and the dissent that lost; `human_decision` stays outside the seal.
+
+**Is not:** a model call, a vote that replaces a person, or proof that a panel beats one agent.
+The seats and the judge answer outside the harness. A seat that did not answer is **not judged**
+— never a vote against — and it blocks the verdict. A position is grounded when its turn states a
+`fact` with a reference; whether the reference exists in the context is not checked yet. The
+panel publishes no confidence it did not measure. The seal is not a signature: `verify` proves
+that everything derived matches the turns and the judge's record the file holds, and those are
+anchored only by the hashes of the verbatim text and the raw response kept beside it. A session
+ends at the first round where a rule holds; turns of later rounds are refused. Whether a panel is worth its cost is measured
+with `hpp decide eval`, which reads the panel as one decider (`method: panel`), not asserted here.
+
+**Verify:** new in 2.7.0 —
+`python -m hpp deliberate record --panel examples/house-session/review/panel.json --turns examples/house-session/review/turns.json --judge examples/house-session/review/judge.json --out out/record.json`
+seals the review with `stop` `max-rounds`, `escalate: true`, the verdict `high` and seat `c`
+kept as dissent, exit 0; `python -m hpp deliberate verify out/record.json` exits 0, and on a copy
+with the verdict edited exits 2. A panel whose seat is served by `-latest`, or whose participants
+share one family, exits 2 on `deliberate plan`.
 
 ## maker and checker
 

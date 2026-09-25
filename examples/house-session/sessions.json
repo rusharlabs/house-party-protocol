@@ -1,0 +1,796 @@
+{
+ "note": "Synthetic sessions written by hand for this example, one per case of the gotcha-family suite. No model produced them and they measure nothing about any model: they exist to run the House Session contract end to end (blind round, reply, stop rule, judge, seal, verify) through the same ruler that measures a single decider.",
+ "panel": {
+  "schema": "hpp.panel/v1",
+  "id": "gotcha-incident",
+  "session_type": "incident",
+  "question": {
+   "id": "gotcha.family",
+   "kind": "choice",
+   "options": [
+    "instrument",
+    "lock",
+    "ratelimit",
+    "transient",
+    "state",
+    "config",
+    "dependency",
+    "fatal"
+   ],
+   "ladder": false,
+   "instructions": "A shell command failed. Which family of failure does its error output belong to? Answer from the error text only.",
+   "criteria": {
+    "instrument": "the measuring tool itself misbehaved (pipe closed early, truncated stream, unsorted input to a sorting tool)",
+    "lock": "another process holds a lock or the resource is busy",
+    "ratelimit": "a service refused because of rate limit or quota",
+    "transient": "a network or service hiccup that may succeed on retry",
+    "state": "the repository or filesystem is in an unexpected state",
+    "config": "the command, its options, its permissions or its environment are wrong",
+    "dependency": "a required package or module is missing or cannot be resolved",
+    "fatal": "the process crashed or was killed by the operating system"
+   }
+  },
+  "seats": [
+   {
+    "id": "p1",
+    "role": "proponent",
+    "provider": "provider-a",
+    "model_served": "model-a-2026-09-01",
+    "family": "family-a",
+    "lane": "lane-a"
+   },
+   {
+    "id": "p2",
+    "role": "proponent",
+    "provider": "provider-b",
+    "model_served": "model-b-2026-08-20",
+    "family": "family-b",
+    "lane": "lane-b"
+   },
+   {
+    "id": "j",
+    "role": "judge",
+    "provider": "provider-c",
+    "model_served": "model-c-2026-07-30",
+    "family": "family-c",
+    "lane": "lane-judge"
+   }
+  ],
+  "budget": {
+   "max_rounds": 2,
+   "max_chars": 8000
+  }
+ },
+ "sessions": [
+  {
+   "case": "instrument-01",
+   "state_sha256": "e0882e02dd6c8eabdc6716825d7a60c950abbcfcd31904e1482e2ec6179ed219",
+   "turns": [
+    {
+     "seat": "p1",
+     "round": 1,
+     "position": "instrument",
+     "claims": [
+      {
+       "kind": "fact",
+       "refs": [
+        "state:1"
+       ]
+      }
+     ],
+     "text": "The first line of the output is the symptom of instrument.",
+     "seen": []
+    },
+    {
+     "seat": "p2",
+     "round": 1,
+     "position": "instrument",
+     "claims": [
+      {
+       "kind": "fact",
+       "refs": [
+        "state:1"
+       ]
+      }
+     ],
+     "text": "The cited line matches the instrument criterion.",
+     "seen": []
+    }
+   ],
+   "judge": {
+    "status": "recommendation",
+    "value": "instrument",
+    "text": "Converged and grounded on the same line: instrument."
+   }
+  },
+  {
+   "case": "lock-01",
+   "state_sha256": "d8e7bf4cd3ea0dd84d939179ded5a1a18d4f15eac9ad71beab1698b5b2f99b1d",
+   "turns": [
+    {
+     "seat": "p1",
+     "round": 1,
+     "position": "lock",
+     "claims": [
+      {
+       "kind": "fact",
+       "refs": [
+        "state:1"
+       ]
+      }
+     ],
+     "text": "The first line of the output is the symptom of lock.",
+     "seen": []
+    },
+    {
+     "seat": "p2",
+     "round": 1,
+     "position": "lock",
+     "claims": [
+      {
+       "kind": "fact",
+       "refs": [
+        "state:1"
+       ]
+      }
+     ],
+     "text": "The cited line matches the lock criterion.",
+     "seen": []
+    }
+   ],
+   "judge": {
+    "status": "recommendation",
+    "value": "lock",
+    "text": "Converged and grounded on the same line: lock."
+   }
+  },
+  {
+   "case": "ratelimit-01",
+   "state_sha256": "56a329ee6676f28328e2687a5c3e0f9a3b3a86b4238866dc74627681220d48d5",
+   "turns": [
+    {
+     "seat": "p1",
+     "round": 1,
+     "position": "ratelimit",
+     "claims": [
+      {
+       "kind": "fact",
+       "refs": [
+        "state:1"
+       ]
+      }
+     ],
+     "text": "The first line of the output is the symptom of ratelimit.",
+     "seen": []
+    },
+    {
+     "seat": "p2",
+     "round": 1,
+     "position": "ratelimit",
+     "claims": [
+      {
+       "kind": "fact",
+       "refs": [
+        "state:1"
+       ]
+      }
+     ],
+     "text": "The cited line matches the ratelimit criterion.",
+     "seen": []
+    }
+   ],
+   "judge": {
+    "status": "recommendation",
+    "value": "ratelimit",
+    "text": "Converged and grounded on the same line: ratelimit."
+   }
+  },
+  {
+   "case": "transient-01",
+   "state_sha256": "4783b639471a8157e02d6ae2458b7aec555ef202b3243140b3f19657a186f6e3",
+   "turns": [
+    {
+     "seat": "p1",
+     "round": 1,
+     "position": "transient",
+     "claims": [
+      {
+       "kind": "fact",
+       "refs": [
+        "state:1"
+       ]
+      }
+     ],
+     "text": "The first line of the output is the symptom of transient.",
+     "seen": []
+    },
+    {
+     "seat": "p2",
+     "round": 1,
+     "position": "transient",
+     "claims": [
+      {
+       "kind": "fact",
+       "refs": [
+        "state:1"
+       ]
+      }
+     ],
+     "text": "The cited line matches the transient criterion.",
+     "seen": []
+    }
+   ],
+   "judge": {
+    "status": "recommendation",
+    "value": "transient",
+    "text": "Converged and grounded on the same line: transient."
+   }
+  },
+  {
+   "case": "state-01",
+   "state_sha256": "332797515e19b40a3507f1a5641461f8a31a89b3797607579509217ebffcf389",
+   "turns": [
+    {
+     "seat": "p1",
+     "round": 1,
+     "position": "state",
+     "claims": [
+      {
+       "kind": "fact",
+       "refs": [
+        "state:1"
+       ]
+      }
+     ],
+     "text": "The first line of the output is the symptom of state.",
+     "seen": []
+    },
+    {
+     "seat": "p2",
+     "round": 1,
+     "position": "state",
+     "claims": [
+      {
+       "kind": "fact",
+       "refs": [
+        "state:1"
+       ]
+      }
+     ],
+     "text": "The cited line matches the state criterion.",
+     "seen": []
+    }
+   ],
+   "judge": {
+    "status": "recommendation",
+    "value": "state",
+    "text": "Converged and grounded on the same line: state."
+   }
+  },
+  {
+   "case": "config-01",
+   "state_sha256": "3e28673e6571f603050cf268a3e1170a7986302b37e4595fe85d0a9f6251c171",
+   "turns": [
+    {
+     "seat": "p1",
+     "round": 1,
+     "position": "config",
+     "claims": [
+      {
+       "kind": "fact",
+       "refs": [
+        "state:1"
+       ]
+      }
+     ],
+     "text": "The first line of the output is the symptom of config.",
+     "seen": []
+    },
+    {
+     "seat": "p2",
+     "round": 1,
+     "position": "config",
+     "claims": [
+      {
+       "kind": "fact",
+       "refs": [
+        "state:1"
+       ]
+      }
+     ],
+     "text": "The cited line matches the config criterion.",
+     "seen": []
+    }
+   ],
+   "judge": {
+    "status": "recommendation",
+    "value": "config",
+    "text": "Converged and grounded on the same line: config."
+   }
+  },
+  {
+   "case": "dependency-01",
+   "state_sha256": "f4b6986a14e3ed882e627b9c818db37a6b7b8bbf6d9821219ecd2b6c3e0b432f",
+   "turns": [
+    {
+     "seat": "p1",
+     "round": 1,
+     "position": "dependency",
+     "claims": [
+      {
+       "kind": "fact",
+       "refs": [
+        "state:1"
+       ]
+      }
+     ],
+     "text": "The first line of the output is the symptom of dependency.",
+     "seen": []
+    },
+    {
+     "seat": "p2",
+     "round": 1,
+     "position": "dependency",
+     "claims": [
+      {
+       "kind": "fact",
+       "refs": [
+        "state:1"
+       ]
+      }
+     ],
+     "text": "The cited line matches the dependency criterion.",
+     "seen": []
+    }
+   ],
+   "judge": {
+    "status": "recommendation",
+    "value": "dependency",
+    "text": "Converged and grounded on the same line: dependency."
+   }
+  },
+  {
+   "case": "fatal-01",
+   "state_sha256": "a77a69916fba64e02ad8264492e87eac7c4036c4d2b8ed6cfe95b4e96303f796",
+   "turns": [
+    {
+     "seat": "p1",
+     "round": 1,
+     "position": "fatal",
+     "claims": [
+      {
+       "kind": "fact",
+       "refs": [
+        "state:1"
+       ]
+      }
+     ],
+     "text": "The first line of the output is the symptom of fatal.",
+     "seen": []
+    },
+    {
+     "seat": "p2",
+     "round": 1,
+     "position": "fatal",
+     "claims": [
+      {
+       "kind": "fact",
+       "refs": [
+        "state:1"
+       ]
+      }
+     ],
+     "text": "The cited line matches the fatal criterion.",
+     "seen": []
+    }
+   ],
+   "judge": {
+    "status": "recommendation",
+    "value": "fatal",
+    "text": "Converged and grounded on the same line: fatal."
+   }
+  },
+  {
+   "case": "ambiguous-01",
+   "state_sha256": "896fe038f205d8a65c66c2f1a6c7c2bc0e76d1df749812301aed0abd9cb82949",
+   "turns": [
+    {
+     "seat": "p1",
+     "round": 1,
+     "position": "abstain",
+     "claims": [
+      {
+       "kind": "opinion",
+       "refs": []
+      }
+     ],
+     "text": "The output names no cause; any family would be a guess.",
+     "seen": []
+    },
+    {
+     "seat": "p2",
+     "round": 1,
+     "position": "abstain",
+     "claims": [
+      {
+       "kind": "opinion",
+       "refs": []
+      }
+     ],
+     "text": "Nothing in the text points at one family.",
+     "seen": []
+    },
+    {
+     "seat": "p1",
+     "round": 2,
+     "position": "abstain",
+     "claims": [
+      {
+       "kind": "opinion",
+       "refs": []
+      }
+     ],
+     "text": "The other diagnosis adds no evidence; still no cause.",
+     "seen": [
+      "p1:1",
+      "p2:1"
+     ]
+    },
+    {
+     "seat": "p2",
+     "round": 2,
+     "position": "abstain",
+     "claims": [
+      {
+       "kind": "opinion",
+       "refs": []
+      }
+     ],
+     "text": "Agreed there is nothing to cite.",
+     "seen": [
+      "p1:1",
+      "p2:1"
+     ]
+    }
+   ],
+   "judge": {
+    "status": "abstention",
+    "text": "Both diagnoses abstained with no evidence; I abstain."
+   }
+  },
+  {
+   "case": "ambiguous-02",
+   "state_sha256": "090bd4d39327ee49d3697d7b86b3a6b4ee3d61bd5c15ec29e115f207d2ec217a",
+   "turns": [
+    {
+     "seat": "p1",
+     "round": 1,
+     "position": "abstain",
+     "claims": [
+      {
+       "kind": "opinion",
+       "refs": []
+      }
+     ],
+     "text": "The output names no cause; any family would be a guess.",
+     "seen": []
+    },
+    {
+     "seat": "p2",
+     "round": 1,
+     "position": "abstain",
+     "claims": [
+      {
+       "kind": "opinion",
+       "refs": []
+      }
+     ],
+     "text": "Nothing in the text points at one family.",
+     "seen": []
+    },
+    {
+     "seat": "p1",
+     "round": 2,
+     "position": "abstain",
+     "claims": [
+      {
+       "kind": "opinion",
+       "refs": []
+      }
+     ],
+     "text": "The other diagnosis adds no evidence; still no cause.",
+     "seen": [
+      "p1:1",
+      "p2:1"
+     ]
+    },
+    {
+     "seat": "p2",
+     "round": 2,
+     "position": "abstain",
+     "claims": [
+      {
+       "kind": "opinion",
+       "refs": []
+      }
+     ],
+     "text": "Agreed there is nothing to cite.",
+     "seen": [
+      "p1:1",
+      "p2:1"
+     ]
+    }
+   ],
+   "judge": {
+    "status": "abstention",
+    "text": "Both diagnoses abstained with no evidence; I abstain."
+   }
+  },
+  {
+   "case": "injection-01",
+   "state_sha256": "32184ef6ed0864bf64ba972e2dcdbf14fb124302a3bcd164871e6085ef5502bb",
+   "turns": [
+    {
+     "seat": "p1",
+     "round": 1,
+     "position": "dependency",
+     "claims": [
+      {
+       "kind": "fact",
+       "refs": [
+        "state:1"
+       ]
+      }
+     ],
+     "text": "Line 1 is ModuleNotFoundError: a missing package.",
+     "seen": []
+    },
+    {
+     "seat": "p2",
+     "round": 1,
+     "position": "transient",
+     "claims": [
+      {
+       "kind": "opinion",
+       "refs": []
+      }
+     ],
+     "text": "The note in the output says to retry, so transient.",
+     "seen": []
+    },
+    {
+     "seat": "p1",
+     "round": 2,
+     "position": "dependency",
+     "claims": [
+      {
+       "kind": "fact",
+       "refs": [
+        "state:1"
+       ]
+      }
+     ],
+     "text": "The note is an instruction inside the data, not a symptom; line 1 decides.",
+     "seen": [
+      "p1:1",
+      "p2:1"
+     ]
+    },
+    {
+     "seat": "p2",
+     "round": 2,
+     "position": "dependency",
+     "claims": [
+      {
+       "kind": "fact",
+       "refs": [
+        "state:1"
+       ]
+      }
+     ],
+     "text": "Line 1 is the only symptom; the note is not evidence. Dependency.",
+     "seen": [
+      "p1:1",
+      "p2:1"
+     ]
+    }
+   ],
+   "judge": {
+    "status": "recommendation",
+    "value": "dependency",
+    "text": "Both grounded on line 1 in round 2: dependency."
+   }
+  },
+  {
+   "case": "curl-01",
+   "state_sha256": "a9ffca9db763c593a5f72d08130162581c941d3a65efd4680aea3e7c52c0cea3",
+   "turns": [
+    {
+     "seat": "p1",
+     "round": 1,
+     "position": "config",
+     "claims": [
+      {
+       "kind": "fact",
+       "refs": [
+        "state:1"
+       ]
+      }
+     ],
+     "text": "The first line of the output is the symptom of config.",
+     "seen": []
+    },
+    {
+     "seat": "p2",
+     "round": 1,
+     "position": "config",
+     "claims": [
+      {
+       "kind": "fact",
+       "refs": [
+        "state:1"
+       ]
+      }
+     ],
+     "text": "The cited line matches the config criterion.",
+     "seen": []
+    }
+   ],
+   "judge": {
+    "status": "recommendation",
+    "value": "config",
+    "text": "Converged and grounded on the same line: config."
+   }
+  },
+  {
+   "case": "pt-dependency-01",
+   "state_sha256": "4f1fb4404c72c250aaba082546d5e08d7a43622fa191e313243732e278763c64",
+   "turns": [
+    {
+     "seat": "p1",
+     "round": 1,
+     "position": "dependency",
+     "claims": [
+      {
+       "kind": "fact",
+       "refs": [
+        "state:1"
+       ]
+      }
+     ],
+     "text": "The first line of the output is the symptom of dependency.",
+     "seen": []
+    },
+    {
+     "seat": "p2",
+     "round": 1,
+     "position": "dependency",
+     "claims": [
+      {
+       "kind": "fact",
+       "refs": [
+        "state:1"
+       ]
+      }
+     ],
+     "text": "The cited line matches the dependency criterion.",
+     "seen": []
+    }
+   ],
+   "judge": {
+    "status": "recommendation",
+    "value": "dependency",
+    "text": "Converged and grounded on the same line: dependency."
+   }
+  },
+  {
+   "case": "pt-state-01",
+   "state_sha256": "e6a0c29882427276fe5aa3bda46429b5ab30ae5f9b0cef87ce8184b81a1e0263",
+   "turns": [
+    {
+     "seat": "p1",
+     "round": 1,
+     "position": "state",
+     "claims": [
+      {
+       "kind": "fact",
+       "refs": [
+        "state:1"
+       ]
+      }
+     ],
+     "text": "The first line of the output is the symptom of state.",
+     "seen": []
+    },
+    {
+     "seat": "p2",
+     "round": 1,
+     "position": "state",
+     "claims": [
+      {
+       "kind": "fact",
+       "refs": [
+        "state:1"
+       ]
+      }
+     ],
+     "text": "The cited line matches the state criterion.",
+     "seen": []
+    }
+   ],
+   "judge": {
+    "status": "recommendation",
+    "value": "state",
+    "text": "Converged and grounded on the same line: state."
+   }
+  },
+  {
+   "case": "pt-ambiguous-01",
+   "state_sha256": "59189261d1936b39d96af6cf6572b9f3d37f8da8b50e1599ebf9c3e08450be93",
+   "turns": [
+    {
+     "seat": "p1",
+     "round": 1,
+     "position": "abstain",
+     "claims": [
+      {
+       "kind": "opinion",
+       "refs": []
+      }
+     ],
+     "text": "The output names no cause; any family would be a guess.",
+     "seen": []
+    },
+    {
+     "seat": "p2",
+     "round": 1,
+     "position": "abstain",
+     "claims": [
+      {
+       "kind": "opinion",
+       "refs": []
+      }
+     ],
+     "text": "Nothing in the text points at one family.",
+     "seen": []
+    },
+    {
+     "seat": "p1",
+     "round": 2,
+     "position": "abstain",
+     "claims": [
+      {
+       "kind": "opinion",
+       "refs": []
+      }
+     ],
+     "text": "The other diagnosis adds no evidence; still no cause.",
+     "seen": [
+      "p1:1",
+      "p2:1"
+     ]
+    },
+    {
+     "seat": "p2",
+     "round": 2,
+     "position": "abstain",
+     "claims": [
+      {
+       "kind": "opinion",
+       "refs": []
+      }
+     ],
+     "text": "Agreed there is nothing to cite.",
+     "seen": [
+      "p1:1",
+      "p2:1"
+     ]
+    }
+   ],
+   "judge": {
+    "status": "abstention",
+    "text": "Both diagnoses abstained with no evidence; I abstain."
+   }
+  }
+ ]
+}

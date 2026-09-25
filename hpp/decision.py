@@ -36,9 +36,12 @@ SCHEMA = "hpp.decision/v1"
 SUITE_SCHEMA = "hpp.decision-suite/v1"
 REPORT_SCHEMA = "hpp.decision-eval/v1"
 KINDS = ("choice",)
-METHODS = ("regex", "lexical", "human", "replay", "local-model", "external-model")
+METHODS = ("regex", "lexical", "human", "replay", "local-model", "external-model", "panel")
 MODEL_METHODS = ("local-model", "external-model")
 RULE_METHODS = ("regex", "lexical", "human")
+# Why (House Session, 2.7.0): a panel's verdict is the judge's answer after a counted deliberation;
+# it has no measured confidence, and its "raw response" is the sealed deliberation record.
+NO_CONFIDENCE_METHODS = RULE_METHODS + ("panel",)
 STATUSES = ("recommendation", "abstention", "instrument-failure")
 DIRECTIONS = ("raise-only", "informational")
 ABSTAIN = "abstain"
@@ -119,7 +122,9 @@ def _unit(value: Any, label: str) -> Optional[float]:
 
 
 def _hex(value: Any, label: str) -> str:
-    if not isinstance(value, str) or not _HEX64.match(value):
+    # Why (review 2026-09-25): `$` also matches before a trailing newline, so `match` accepted a
+    # 65-character value and sealed it verbatim. `fullmatch` takes the whole string or nothing.
+    if not isinstance(value, str) or not _HEX64.fullmatch(value):
         raise DecisionError(f"{label} must be a 64-character lowercase sha256")
     return value
 
@@ -156,7 +161,7 @@ def validate(record: Any) -> dict[str, Any]:
     if status == "instrument-failure" and (not isinstance(error, str) or not error.strip()):
         raise DecisionError("an instrument failure must say what failed (outcome.error)")
     confidence = _unit(outcome.get("confidence"), "confidence")
-    if confidence is not None and method in RULE_METHODS:
+    if confidence is not None and method in NO_CONFIDENCE_METHODS:
         raise DecisionError(f"a {method} decision has no confidence; publish null instead of inventing one")
     probabilities = outcome.get("probabilities")
     if probabilities is not None:
@@ -180,6 +185,8 @@ def validate(record: Any) -> dict[str, Any]:
             raise DecisionError("provider.model_served is missing: a model decision names the pinned version that answered")
         if status != "instrument-failure" or raw is not None:
             raw = _hex(raw, "raw_response_sha256")
+    elif method == "panel":
+        raw = _hex(raw, "raw_response_sha256 (the sealed hpp.deliberation/v1 record)")
     elif raw is not None:
         raw = _hex(raw, "raw_response_sha256")
     declared = record.get("declared")

@@ -12,8 +12,15 @@ from hpp.attest import AttestationError, create_attestation, verify_attestation
 from hpp.citations import check_files as check_citations, exit_for as citations_exit_for
 from hpp.context import compile_context
 from hpp.decision import effective as decision_effective, exit_for as decision_exit_for, run_decision_suite, validate as validate_decision
+from hpp.deliberation import (
+    PANEL_SCHEMA, SCHEMA as DELIBERATION_SCHEMA, TALLY_SCHEMA, TURN_SCHEMA, as_decision, build_record, decide_stop,
+    exit_for_record, normalise_panel, normalise_turn, tally as deliberation_tally, verify_record,
+)
 from hpp.evals import EvalError, exit_for as eval_exit_for, packaged_suite, run_suite
-from hpp.evidence import exit_for_run as evidence_run_exit, exit_for_verify as evidence_verify_exit, run_evidence, verify_evidence
+from hpp.evidence import (
+    MUTANTS_SCHEMA, exit_for_mutation, exit_for_run as evidence_run_exit, exit_for_verify as evidence_verify_exit,
+    generate_mutants, run_evidence, run_mutation, verify_evidence,
+)
 from hpp.graph import build_graph, to_mermaid
 from hpp.install import InstallError, installation_plan
 from hpp.manifest import ManifestError, hook_capability_census, load_manifest, validate_distribution
@@ -219,6 +226,51 @@ def command_decide(args: argparse.Namespace) -> int:
     return decision_exit_for(report)
 
 
+def _verified(record: dict[str, Any]) -> int:
+    report = verify_record(record)
+    _json(report)
+    return 0 if report["status"] == "intact" else 2
+
+
+def command_deliberate(args: argparse.Namespace) -> int:
+    action = args.deliberate_command
+    if action == "verify":
+        return _verified(_read_json(args.record, dict))
+    if action in ("plan", "validate"):
+        document = _read_json(args.file, dict)
+        schema = document.get("schema")
+        if action == "validate" and schema == DELIBERATION_SCHEMA:
+            return _verified(document)
+        if action == "validate" and schema == TURN_SCHEMA:
+            if not args.panel:
+                raise ValueError("validating a turn needs --panel, the panel it belongs to")
+            turn = normalise_turn(document, normalise_panel(_read_json(args.panel, dict)))
+            _json({"status": "valid", "turn": turn})
+            return 0
+        if schema != PANEL_SCHEMA:
+            raise ValueError(f"expected a {PANEL_SCHEMA}, {TURN_SCHEMA} or {DELIBERATION_SCHEMA} document, got {schema!r}")
+        panel = normalise_panel(document)
+        _json({"status": "valid", "panel": panel})
+        return 0
+    panel = _read_json(args.panel, dict)
+    turns = _read_json(args.turns, list)
+    if action == "tally":
+        _json({"schema": TALLY_SCHEMA, "rounds": deliberation_tally(panel, turns)})
+        return 0
+    if action == "stop":
+        _json(decide_stop(panel, turns))
+        return 0
+    judge = _read_json(args.judge, dict) if args.judge else None
+    record = build_record(panel, turns, judge)
+    output = Path(args.out)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(json.dumps(record, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    _json({"status": "recorded", "record": str(output), "record_sha256": record["record_sha256"],
+           "stop": record["stop"], "verdict": record["verdict"], "dissent": record["dissent"],
+           "decision": as_decision(record)})
+    return exit_for_record(record)
+
+
 def command_retrieval(args: argparse.Namespace) -> int:
     command = None
     if args.retriever_command is not None:
@@ -249,6 +301,21 @@ def command_evidence(args: argparse.Namespace) -> int:
     command = list(args.criterion)
     if command and command[0] == "--":
         command = command[1:]
+    if args.evidence_command == "mutate":
+        mutants: list[Any] = []
+        if args.mutants:
+            declared = _read_json(args.mutants, dict)
+            if declared.get("schema") != MUTANTS_SCHEMA or not isinstance(declared.get("mutants"), list):
+                raise ValueError(f"{args.mutants} must be an {MUTANTS_SCHEMA} object with a mutants list")
+            mutants.extend(declared["mutants"])
+        if args.generate:
+            mutants.extend(generate_mutants(root, args.generate))
+        if not args.mutants and not args.generate:
+            raise ValueError("evidence mutate needs --mutants FILE or --generate FILE (or both)")
+        record = run_mutation(args.id, command, mutants, root=root, timeout=args.timeout,
+                              out_dir=Path(args.out) if args.out else None)
+        _json(record)
+        return exit_for_mutation(record)
     manifest = _manifest(args)[0] if args.record_event else None
     record = run_evidence(args.id, command, args.artifact or [], root=root, timeout=args.timeout,
                           out_dir=Path(args.out) if args.out else None, manifest=manifest)
@@ -431,6 +498,35 @@ def build_parser() -> argparse.ArgumentParser:
     decide_eval.add_argument("--max-failures", dest="max_failures", type=int, default=0)
     decide_eval.set_defaults(func=command_decide)
 
+    deliberate = sub.add_parser(
+        "deliberate",
+        description="House Session: validate a panel of pinned deciders, count its turns, decide when it stops, "
+                    "and seal the session as an hpp.deliberation/v1 record. hpp never calls a model; seats and "
+                    "the judge answer outside it.",
+    )
+    deliberate_sub = deliberate.add_subparsers(dest="deliberate_command", required=True)
+    deliberate_plan = deliberate_sub.add_parser("plan", help="check an hpp.panel/v1 and print it with its hash")
+    deliberate_plan.add_argument("file")
+    deliberate_plan.set_defaults(func=command_deliberate)
+    deliberate_validate = deliberate_sub.add_parser(
+        "validate", help="check a panel, a turn (with --panel) or a deliberation record (verified)")
+    deliberate_validate.add_argument("file")
+    deliberate_validate.add_argument("--panel", help="the panel a turn belongs to")
+    deliberate_validate.set_defaults(func=command_deliberate)
+    for name, text in (("tally", "count every round: grounded and ungrounded votes, abstentions, seats not judged"),
+                       ("stop", "continue with the next round, or stop with the rule that stopped the session"),
+                       ("record", "seal a stopped session with the judge's decision into an hpp.deliberation/v1")):
+        action = deliberate_sub.add_parser(name, help=text)
+        action.add_argument("--panel", required=True, help="the hpp.panel/v1 file")
+        action.add_argument("--turns", required=True, help="JSON list of hpp.turn/v1 turns")
+        if name == "record":
+            action.add_argument("--judge", help="the judge's hpp.decision/v1 record (not needed when a seat is not judged)")
+            action.add_argument("--out", required=True, help="where to write the sealed record")
+        action.set_defaults(func=command_deliberate)
+    deliberate_verify = deliberate_sub.add_parser("verify", help="check the seal and re-derive the record from its turns")
+    deliberate_verify.add_argument("record")
+    deliberate_verify.set_defaults(func=command_deliberate)
+
     retrieval = sub.add_parser(
         "retrieval",
         description="Measure a retriever on a labelled suite: hit@k, recall@k, precision@k, MRR and nDCG@k, "
@@ -477,6 +573,17 @@ def build_parser() -> argparse.ArgumentParser:
     evidence_run.add_argument("--manifest")
     evidence_run.add_argument("criterion", nargs=argparse.REMAINDER, help="-- then the command to run")
     evidence_run.set_defaults(func=command_evidence)
+    evidence_mutate = evidence_sub.add_parser(
+        "mutate", help="run the criterion on a copy of the workspace: it must pass clean and fail on every mutant")
+    evidence_mutate.add_argument("--id", required=True, help="a plain name for this measurement")
+    evidence_mutate.add_argument("--mutants", help="an hpp.mutants/v1 file: {id, file, find, replace[, occurrence]}")
+    evidence_mutate.add_argument("--generate", action="append",
+                                 help="a Python file to mutate operator by operator "
+                                      "(== != < <= > >= and or True False); repeatable")
+    evidence_mutate.add_argument("--timeout", type=float, default=600.0, help="seconds per run of the criterion")
+    evidence_mutate.add_argument("--out", help="directory for the record, relative to the workspace (default .hpp/evidence)")
+    evidence_mutate.add_argument("criterion", nargs=argparse.REMAINDER, help="-- then the command to run, with relative paths")
+    evidence_mutate.set_defaults(func=command_evidence)
     evidence_verify = evidence_sub.add_parser("verify", help="re-hash a record and its artifacts")
     evidence_verify.add_argument("record")
     evidence_verify.set_defaults(func=command_evidence)

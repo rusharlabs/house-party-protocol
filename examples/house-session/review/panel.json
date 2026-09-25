@@ -1,0 +1,60 @@
+{
+  "schema": "hpp.panel/v1",
+  "id": "invoice-column-rename",
+  "session_type": "review",
+  "question": {
+    "id": "route.risk",
+    "kind": "choice",
+    "options": [
+      "low",
+      "medium",
+      "high"
+    ],
+    "ladder": true,
+    "instructions": "How much damage could this change do if it is wrong? Judge only from the text given.",
+    "criteria": {
+      "low": "local, easily reverted, no shared state touched",
+      "medium": "touches shared code or configuration, reversible with effort",
+      "high": "touches data, credentials, production, history or anything hard to undo"
+    }
+  },
+  "state_sha256": "0e2f47eb15bddfe8100c5c17b5faa0c4e7d9f04aaaa647440177428eed7d4b19",
+  "seats": [
+    {
+      "id": "a",
+      "role": "examiner",
+      "provider": "provider-a",
+      "model_served": "model-a-2026-09-01",
+      "family": "family-a",
+      "lane": "lane-a"
+    },
+    {
+      "id": "b",
+      "role": "examiner",
+      "provider": "provider-b",
+      "model_served": "model-b-2026-08-20",
+      "family": "family-b",
+      "lane": "lane-b"
+    },
+    {
+      "id": "c",
+      "role": "dissent",
+      "provider": "provider-c",
+      "model_served": "model-c-2026-07-30",
+      "family": "family-c",
+      "lane": "lane-c"
+    },
+    {
+      "id": "j",
+      "role": "judge",
+      "provider": "provider-d",
+      "model_served": "model-d-2026-09-10",
+      "family": "family-d",
+      "lane": "lane-judge"
+    }
+  ],
+  "budget": {
+    "max_rounds": 2,
+    "max_chars": 6000
+  }
+}

@@ -1,0 +1,3 @@
+1 rename the column invoices.total to invoices.amount_total
+2 update the two queries in reports/monthly.sql that read it
+3 ship it with a migration that drops the old column in the same deploy

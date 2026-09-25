@@ -13,6 +13,7 @@ does not exist.
 │               doctor · init · event · status · resume · attest · policy  │
 │               work · route · context · map · graph · eval · benchmark    │
 │               decide · evidence · retrieval · cite (new in 2.6.0)        │
+│               deliberate (new in 2.7.0)                                  │
 ├──────────────────────────────────────────────────────────────────────────┤
 │ PROTOCOL      hpp.manifest.json                                          │
 │               roles · loop transitions and gates · exit codes            │
@@ -28,7 +29,7 @@ does not exist.
 
 The harness is stdlib-only and executes no model. It reads files, runs the commands you name,
 and writes to a small number of declared paths. `decide`, `evidence`, `retrieval` and `cite` are
-new in 2.6.0.
+new in 2.6.0; `deliberate` is new in 2.7.0.
 
 ## The `hpp/` package
 
@@ -46,9 +47,10 @@ new in 2.6.0.
 | `graph.py` | capability, operational, agent, evidence and code views from the manifest; JSON or Mermaid | `graph` |
 | `evals.py` | `pass@k` / `pass^k` runner over a suite of cases with three runner kinds | `eval run`, `benchmark` |
 | `decision.py` | validate an `hpp.decision/v1` record made outside the harness (advisory, raise-only, abstention and instrument failure as outcomes); measure a declared decider with selective metrics. Calls no model | `decide validate`, `decide eval` (new in 2.6.0) |
-| `evidence.py` | run a declared criterion command (argv, no shell, its own process group), measure its exit code, hash the artifacts it declared and write a self-hashed record; re-derive a record later. Refuses a secret-like command line. The self-hash makes an edit visible; it is not a signature. Drives no browser | `evidence run`, `evidence verify` (new in 2.6.0) |
+| `evidence.py` | run a declared criterion command (argv, no shell, its own process group), measure its exit code, hash the artifacts it declared and write a self-hashed record; re-derive a record later. Refuses a secret-like command line. The self-hash makes an edit visible; it is not a signature. Drives no browser | `evidence run`, `evidence verify` (new in 2.6.0); `evidence mutate` runs the criterion on a copy of the workspace, clean and once per mutant, and names the mutants it let through (new in 2.7.0) |
 | `retrieval.py` | score a retriever you declare as a command against the ids a suite labels relevant: hit@k, recall@k, precision@k, MRR, nDCG@k, with instrument failures counted apart. Runs no index | `retrieval eval` (new in 2.6.0) |
 | `citations.py` | check that every citation marker in a text resolves to one id of the context it was written from, and flag a quantitative sentence with no marker. Does not judge whether the source supports the sentence | `cite check` (new in 2.6.0) |
+| `deliberation.py` | House Session: validate a panel of pinned deciders (two model families, a judge outside the participants' lanes, the roles its session type needs, a declared budget), count its turns (grounded and ungrounded votes, abstentions, seats not judged, moves without new evidence), stop it by rule, and seal it with the judge's decision as a self-hashed record that re-derives from its own turns; project the panel as one `hpp.decision/v1`. Calls no model | `deliberate plan`, `validate`, `tally`, `stop`, `record`, `verify` (new in 2.7.0) |
 | `controls.py` | the ten executable controls the benchmark runs, each with a positive and a negative case | `benchmark`, `--self-test` |
 | `install.py` | plan-only installation receipt for a bundle on a host; refuses unsupported coverage | `install` |
 | `wizard.py` | `hpp init`: six stages, readiness, plan versus apply, wire block | `init` |
@@ -196,8 +198,8 @@ not verified rather than assumed.
 | code | meaning | where |
 |---|---|---|
 | `0` | ok; in `audit` mode, always | every command |
-| `1` | warn or manual gate; an eval gate that failed | `policy check` (`MANUAL` in `enforce`), `eval run`, `benchmark`, `init` with warnings, `decide eval` when its gate fails (new in 2.6.0), `evidence run` when the bundle did not pass, `evidence verify` on an intact record of a run that did not pass, `retrieval eval` when its gate fails, `cite check` with a warning (`TOO_MANY`, `UNCITED_CLAIM`) (new in 2.6.0) |
-| `2` | block; a refused input (bad manifest, bad spec, corrupt log, invalid attestation) | `policy check` (`BLOCK`), `attest`, `decide validate` and `decide eval` on a record or suite that breaks the contract (new in 2.6.0), `evidence run` on a refused request or an event it could not append, `evidence verify` on a record that was edited or contradicts itself or whose artifact changed or went missing, `retrieval eval` on a refused suite or argument, `cite check` on `UNKNOWN_ID`, `RANGE` or `EMPTY_MARKER` or a refused input (new in 2.6.0), every validation error |
+| `1` | warn or manual gate; an eval gate that failed | `policy check` (`MANUAL` in `enforce`), `eval run`, `benchmark`, `init` with warnings, `decide eval` when its gate fails (new in 2.6.0), `evidence run` when the bundle did not pass, `evidence verify` on an intact record of a run that did not pass, `retrieval eval` when its gate fails, `cite check` with a warning (`TOO_MANY`, `UNCITED_CLAIM`) (new in 2.6.0), `deliberate record` when the verdict is blocked or the judge failed, `evidence mutate` with a blind spot, an incomplete run or no mutant applied (new in 2.7.0) |
+| `2` | block; a refused input (bad manifest, bad spec, corrupt log, invalid attestation) | `policy check` (`BLOCK`), `attest`, `decide validate` and `decide eval` on a record or suite that breaks the contract (new in 2.6.0), `evidence run` on a refused request or an event it could not append, `evidence verify` on a record that was edited or contradicts itself or whose artifact changed or went missing, `retrieval eval` on a refused suite or argument, `cite check` on `UNKNOWN_ID`, `RANGE` or `EMPTY_MARKER` or a refused input (new in 2.6.0), `deliberate` on a refused panel, turn or judge, a session that has not stopped, or a record that does not verify, `evidence mutate` when the criterion does not pass on the clean copy (`no-control`) or a mutant is refused (new in 2.7.0), every validation error |
 | `3` | usage or internal error | `init` usage errors, unexpected exceptions |
 
 `hpp init` reports the code it will return inside its JSON report (`exit_code`) and halts the

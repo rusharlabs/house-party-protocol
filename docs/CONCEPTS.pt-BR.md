@@ -197,6 +197,28 @@ ele imprimiu, imprime `valid` e sai com 0. A mesma execução com `--break` depo
 arquivos e ainda assim sai com 1 e `failed`; o registro dela verifica como `not-evidence` (saída
 1). Altere `out/report.html` depois de uma execução que passou e o `verify` sai com 2 e `blocked`.
 
+## sensibilidade do critério
+
+**É:** uma medição de se um critério perceberia código quebrado. `hpp evidence mutate` roda o
+comando do critério numa cópia do workspace, primeiro limpa — tem de passar, senão o veredito é
+`no-control` e nada mais roda — depois uma vez por mutante, uma cópia com uma pequena mudança que
+deixa o código errado, onde ele tem de falhar. Os mutantes são declarados (`hpp.mutants/v1`:
+arquivo, find, replace) ou gerados a partir dos tokens Python com uma tabela fixa de operadores. Um
+mutante que o critério deixa passar é um ponto cego, nomeado por arquivo e linha em `survivors`.
+
+**Não é:** cobertura, nem prova de que um mutante sobrevivente é bug. O score é mortos ÷ (mortos +
+sobreviventes), null quando nada foi medido; um mutante cujo texto não está no arquivo é
+`not-applied`, nunca morto. Um mutante sobrevivente pode ser equivalente — uma mudança que não muda
+o comportamento — e só um leitor sabe dizer. O hpp nunca escreve na árvore do usuário: cada execução
+ganha uma cópia nova, e um arquivo de mutante alcançado por symlink é recusado. O comando roda
+dentro da cópia, então os caminhos dele precisam ser relativos; um install editável ou um
+`PYTHONPATH` apontando para o checkout faz todo mutante sobreviver.
+
+**Verifique:** novo na 2.7.0 —
+`python -m hpp evidence mutate --id weak --generate examples/criterion-sensitivity/discount.py -- python examples/criterion-sensitivity/check_weak.py`
+relata `blind-spots` com três sobreviventes e sai com 1; o mesmo com `check_strong.py` relata
+`sensitive` e sai com 0.
+
 ## régua de recuperação
 
 **É:** uma medição de um recuperador que você declara, separada de qualquer etapa de geração. O
@@ -265,6 +287,38 @@ numa competição declarada com `compete` cujos candidatos estão `CHECKPOINT-RE
 "SAME model family"; um revisor de outra lane e de outra família sai com 0, e mover o item perdedor
 para qualquer estado depois disso sai com 1. `lane_board.py --self-test` roda toda recusa de
 `compete` e de `select` ao lado do seu controle.
+
+## House Session
+
+**É:** uma deliberação entre decisores pinados, registrada para poder ser verificada e medida.
+`hpp.panel/v1` nomeia a pergunta, o hash do estado julgado, cada assento
+(`{id, role, provider, model_served, family, lane}`) e o orçamento (`max_rounds`, `max_chars`).
+Um painel não começa sem duas famílias de modelo entre os participantes, exatamente um juiz numa
+lane que nenhum participante usa, e os papéis que o `session_type` exige (`plan`, `review`,
+`release-gate`, `incident`, `design`). Cada `hpp.turn/v1` carrega a posição de um assento, as
+afirmações com os ids em que se apoiam, o hash do texto verbatim e `seen_turns`: um turno da
+rodada 1 que viu qualquer coisa é recusado, então a rodada cega é verificável. A sessão para por
+regra (`not-judged`, `grounded-convergence`, `paused-budget`, `no-new-evidence`, `max-rounds`), e
+`hpp.deliberation/v1` sela o painel, os turnos, a contagem, a parada, o `hpp.decision/v1` do
+juiz, o veredito e a dissidência que perdeu; `human_decision` fica fora do selo.
+
+**Não é:** uma chamada de modelo, um voto que substitui uma pessoa, nem prova de que um painel
+vence um agente sozinho. Os assentos e o juiz respondem fora do harness. Um assento que não
+respondeu **não é julgado** — nunca é voto contra — e bloqueia o veredito. Uma posição é
+fundamentada quando o turno afirma um `fact` com referência; se a referência existe no contexto
+ainda não é conferido. O painel não publica confiança que não mediu. O selo não é assinatura: `verify` prova que tudo o
+que é derivado bate com os turnos e o registro do juiz que o arquivo guarda, e esses só são
+ancorados pelos hashes do texto verbatim e da resposta bruta guardados ao lado. A sessão termina na
+primeira rodada em que uma regra vale; turnos de rodadas posteriores são recusados. Se um painel vale o custo é
+medido com `hpp decide eval`, que lê o painel como um decisor só (`method: panel`), não afirmado
+aqui.
+
+**Verifique:** novo na 2.7.0 —
+`python -m hpp deliberate record --panel examples/house-session/review/panel.json --turns examples/house-session/review/turns.json --judge examples/house-session/review/judge.json --out out/record.json`
+sela a revisão com `stop` `max-rounds`, `escalate: true`, o veredito `high` e o assento `c`
+mantido como dissidência, exit 0; `python -m hpp deliberate verify out/record.json` sai com 0, e
+numa cópia com o veredito editado sai com 2. Um painel com assento servido por `-latest`, ou com
+participantes de uma família só, sai com 2 em `deliberate plan`.
 
 ## maker e checker
 
