@@ -9,6 +9,14 @@ cada módulo mantém sua própria versão no `plugin.json` e no `marketplace.jso
 
 ## [Unreleased]
 
+## [2.6.6] — 2026-09-25
+
+### Adicionado
+
+- **Selo OpenSSF Best Practices (passing).** O projeto se autocertificou nos 67 critérios do nível
+  passing, cada um com a sua prova: https://www.bestpractices.dev/projects/14830. O README mostra o
+  selo ao lado do CI, da release e do Scorecard.
+
 ## [2.6.5] — 2026-09-24
 
 ### Adicionado
@@ -1331,3 +1339,4 @@ publicar.
 [2.6.3]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.3
 [2.6.4]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.4
 [2.6.5]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.5
+[2.6.6]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.6

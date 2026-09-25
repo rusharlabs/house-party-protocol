@@ -9,6 +9,7 @@
   <a href="https://github.com/rusharlabs/house-party-protocol/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/rusharlabs/house-party-protocol/actions/workflows/ci.yml/badge.svg?branch=main"></a>
   <a href="https://github.com/rusharlabs/house-party-protocol/releases/latest"><img alt="Release" src="https://img.shields.io/github/v/release/rusharlabs/house-party-protocol?color=FF6A00"></a>
   <a href="https://scorecard.dev/viewer/?uri=github.com/rusharlabs/house-party-protocol"><img alt="OpenSSF Scorecard" src="https://api.scorecard.dev/projects/github.com/rusharlabs/house-party-protocol/badge"></a>
+  <a href="https://www.bestpractices.dev/projects/14830"><img alt="OpenSSF Best Practices" src="https://www.bestpractices.dev/projects/14830/badge"></a>
   <a href="LICENSE"><img alt="MIT" src="https://img.shields.io/badge/license-MIT-0F1113"></a>
   <a href="#quickstart"><img alt="Python 3.10+" src="https://img.shields.io/badge/Python-3.10%2B-FF6A00"></a>
   <img alt="Claude Code and Codex CLI" src="https://img.shields.io/badge/hosts-Claude%20Code%20%7C%20Codex%20CLI-F4F1EB">
@@ -117,7 +118,7 @@ nenhum pacote de terceiro. A CI exercita Python 3.10 a 3.13 em Linux, macOS e Wi
 (`.github/workflows/ci.yml`); interpretadores mais antigos não são prometidos porque nada os mede.
 
 ```bash
-pip install git+https://github.com/rusharlabs/house-party-protocol@v2.6.5
+pip install git+https://github.com/rusharlabs/house-party-protocol@v2.6.6
 hpp doctor
 hpp init --target ../your-repo
 ```

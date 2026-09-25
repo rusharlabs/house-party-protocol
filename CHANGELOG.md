@@ -9,6 +9,14 @@ keeps its own version in `plugin.json` and in `marketplace.json`.
 
 ## [Unreleased]
 
+## [2.6.6] — 2026-09-25
+
+### Added
+
+- **OpenSSF Best Practices badge (passing).** The project self-certified all 67 criteria of the
+  passing level, each with its evidence: https://www.bestpractices.dev/projects/14830. The README
+  shows the badge next to CI, release and Scorecard.
+
 ## [2.6.5] — 2026-09-24
 
 ### Added
@@ -1308,3 +1316,4 @@ publishing.
 [2.6.3]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.3
 [2.6.4]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.4
 [2.6.5]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.5
+[2.6.6]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.6
