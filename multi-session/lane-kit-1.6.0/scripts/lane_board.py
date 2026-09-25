@@ -554,8 +554,40 @@ def _validate_select(task_id: str, events: list, winner: str, lane_id: str, mode
     return None
 
 
+def deliberated_choice(task_id: str, record_path: str) -> tuple:
+    """(ok, (winner, judge_lane, judge_model, record_sha256) or error) from a sealed design session.
+
+    The session must verify (HPP core), be a `design` session whose options are exactly the task's
+    remaining candidates, and have chosen one. Its judge becomes the reviewer of record, so the
+    board's own lane and family rules then apply to the judge unchanged.
+    """
+    try:
+        from hpp.deliberation import verify_record
+    except ImportError as exc:
+        raise EvidenceCoreMissing(str(exc)) from exc
+    try:
+        record = json.loads(Path(record_path).read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        return False, f"cannot read the deliberation record: {exc}"
+    report = verify_record(record)
+    if report["status"] != "intact":
+        return False, f"the deliberation record does not verify: {report['reason']}"
+    panel = record["panel"]
+    if panel["session_type"] != "design":
+        return False, f"a competition is decided by a design session, this is a {panel['session_type']} session"
+    candidates = _active_candidates(_competitions().get(task_id, []))
+    if sorted(panel["question"]["options"]) != sorted(candidates):
+        return False, (f"the session's options {sorted(panel['question']['options'])} are not the task's "
+                       f"remaining candidates {sorted(candidates)}")
+    verdict = record["verdict"]
+    if verdict["status"] != "recommendation":
+        return False, f"the session did not choose (verdict: {verdict['status']}) — record DEFERRED instead"
+    judge = next(seat for seat in panel["seats"] if seat["id"] == panel["judge"])
+    return True, (verdict["value"], judge["lane"], judge["model_served"], record["record_sha256"])
+
+
 def select(task_id: str, winner: str, lane_id: str, model: str, reason: str = "",
-           checker_unavailable: bool = False) -> tuple:
+           checker_unavailable: bool = False, deliberation: str = "") -> tuple:
     """Records the winner of a competition (or DEFERRED). Returns (ok, event_or_error).
 
     The competition event names the winner, the losers, the reviewer and the evidence that was
@@ -592,6 +624,8 @@ def select(task_id: str, winner: str, lane_id: str, model: str, reason: str = ""
             if _withdrawn(events):
                 event["withdrawn"] = _withdrawn(events)
             event["verdict_by"] = {"lane": lane_id, "model": model}
+            if deliberation:
+                event["deliberation"] = deliberation
             event["compared"] = {
                 item: {"state": (_latest_state(item) or {}).get("state", ""), "evidence": _checkpoint_evidence(item)}
                 for item in candidates
@@ -1497,8 +1531,11 @@ def build_parser() -> argparse.ArgumentParser:
     se = sub.add_parser("select", help="record the winner of a competition (reviewer: another lane AND family)")
     se.add_argument("--task", required=True)
     se.add_argument("--winner", default="")
-    se.add_argument("--lane", required=True, help="the reviewer's lane")
-    se.add_argument("--model", required=True, help="the reviewer's model")
+    se.add_argument("--lane", default="", help="the reviewer's lane (not with --deliberation: the judge is)")
+    se.add_argument("--model", default="", help="the reviewer's model (not with --deliberation: the judge is)")
+    se.add_argument("--deliberation", default="",
+                    help="a sealed design session (hpp.deliberation/v2) whose options are the candidates; "
+                         "its judge is the reviewer of record")
     se.add_argument("--reason", default="")
     se.add_argument("--checker-unavailable", action="store_true",
                     help="no reviewer available: record DEFERRED, never a winner")
@@ -1555,8 +1592,26 @@ def main(argv) -> int:
         items = [item.strip() for item in args.items.split(",") if item.strip()]
         ok, result = compete(args.task, items, args.lane, args.model)
     elif args.cmd == "select":
-        ok, result = select(args.task, args.winner, args.lane, args.model, reason=args.reason,
-                            checker_unavailable=args.checker_unavailable)
+        if args.deliberation:
+            if args.winner or args.lane or args.model or args.checker_unavailable:
+                print("lane_board: --deliberation names the winner and the reviewer; do not pass --winner, "
+                      "--lane, --model or --checker-unavailable with it", file=sys.stderr)
+                return 2
+            try:
+                chosen, detail = deliberated_choice(args.task, args.deliberation)
+            except EvidenceCoreMissing as exc:
+                print(f"lane_board: --deliberation needs the HPP core (`python -m hpp`), which is not importable "
+                      f"here ({exc}) — nothing was written", file=sys.stderr)
+                return 2
+            if not chosen:
+                print(f"lane_board: refused — {detail}", file=sys.stderr)
+                return 1
+            winner, lane, model, sha = detail
+            ok, result = select(args.task, winner, lane, model, reason=args.reason or f"deliberation {sha[:12]}",
+                                deliberation=sha)
+        else:
+            ok, result = select(args.task, args.winner, args.lane, args.model, reason=args.reason,
+                                checker_unavailable=args.checker_unavailable)
     elif args.cmd == "withdraw":
         ok, result = withdraw(args.task, args.item, args.lane, args.model, args.reason)
     elif args.cmd == "status":

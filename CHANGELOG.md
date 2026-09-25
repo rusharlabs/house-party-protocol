@@ -9,6 +9,26 @@ keeps its own version in `plugin.json` and in `marketplace.json`.
 
 ## [Unreleased]
 
+## [2.9.0] — 2026-09-25
+
+### Added
+
+- **Acting on a House Session verdict.** `hpp route --deliberation --maker-family` lets a sealed
+  `plan` session raise a request's risk, never lower it. `hpp attest create --deliberation
+  --maker-family` is the release gate: a `release-gate` session whose facts rest only on
+  `hpp.evidence/v1` records, where the attestation records the stricter of the declared verdict and
+  the panel's (a panel that did not decide sends it back for revision) and keeps the record hash.
+  `lane_board.py select --deliberation` (lane-kit 1.6.0) decides a competition with a `design`
+  session over the remaining candidates, with the judge as the reviewer of record. Everywhere, a
+  judge of the maker's model family is refused.
+
+### Fixed
+
+- **Every command hpp ran left its two output pipes open** (a `ResourceWarning` per run: evidence,
+  mutate, retrieval and decision runners). The pipes are now closed by the thread that reads them,
+  and the example decision adapter closes a refused HTTP response. The test suite runs with
+  warnings as errors in CI, so the next leak fails the build.
+
 ## [2.8.0] — 2026-09-25
 
 ### Added
@@ -1400,5 +1420,6 @@ publishing.
 [2.6.5]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.5
 [2.6.6]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.6
 [2.6.7]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.7
+[2.9.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.9.0
 [2.8.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.8.0
 [2.7.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.7.0

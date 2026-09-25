@@ -2,7 +2,7 @@
 
 # SANITIZATION.md
 
-Kit: lane-kit 1.5.0
+Kit: lane-kit 1.6.0
 
 ## Sanitization applied
 - 9 file exclusion pattern(s) (see the build's internal manifest — not distributed)

@@ -25,7 +25,7 @@ Então o primeiro evento é registrado, e o loop sai de `planned`.
 ```bash
 python -m hpp work plan SPEC.json
 python -m hpp work waves SPEC.json
-python multi-session/lane-kit-1.5.0/scripts/lane_board.py claim --help
+python multi-session/lane-kit-1.6.0/scripts/lane_board.py claim --help
 python -m hpp event append --type work_started --data '{"work":"ITEM-1","actor":"maker-a"}'
 ```
 
@@ -114,7 +114,7 @@ não feita, não como feita pelo maker.
 A aprovação do checker é um evento. O loop passa de `evidenced` a `checked`.
 
 ```bash
-python multi-session/lane-kit-1.5.0/scripts/checker_router.py --maker claude --require
+python multi-session/lane-kit-1.6.0/scripts/checker_router.py --maker claude --require
 python -m hpp event append --type check_passed --data '{"work":"ITEM-1","checker":"checker-b"}'
 ```
 

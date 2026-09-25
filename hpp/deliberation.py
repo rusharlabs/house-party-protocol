@@ -621,6 +621,43 @@ def verify_record(record: Any) -> dict[str, Any]:
             "stop": record["stop"]}
 
 
+def panel_verdict(record: Any, *, session_type: str, options: set[str], forbid_family: str,
+                  evidence_records_only: bool = False) -> dict[str, Any]:
+    """The verdict of a sealed session, for a command that acts on it (route, attest, select).
+
+    Refused unless the record verifies, is of `session_type`, asks a question whose options the
+    consumer understands (a subset of `options`), and was judged by a family other than the
+    maker's (`forbid_family`). With `evidence_records_only` (a release gate), the panel must have
+    grounded its facts on declared `hpp.evidence/v1` records only. The consumer decides what to do
+    with a verdict that is not a recommendation; a panel can only make an outcome stricter.
+    """
+    report = verify_record(record)
+    if report["status"] != "intact":
+        raise DeliberationError(f"the deliberation record does not verify: {report['reason']}")
+    panel = record["panel"]
+    if panel["session_type"] != session_type:
+        raise DeliberationError(f"a {session_type} session is needed here, this record is a {panel['session_type']} session")
+    asked = set(panel["question"]["options"])
+    if not asked <= set(options):
+        raise DeliberationError(f"the panel's options {sorted(asked)} are not all among {sorted(options)}")
+    judge = next(seat for seat in panel["seats"] if seat["id"] == panel["judge"])
+    if not isinstance(forbid_family, str) or not forbid_family.strip():
+        raise DeliberationError("name the maker's model family: a judge of that family is refused")
+    if judge["family"].casefold() == forbid_family.strip().casefold():
+        raise DeliberationError(f"the judge is of the same family as the maker ({judge['family']}); "
+                                f"a panel cannot be judged by the family it is checking")
+    if evidence_records_only:
+        evidence = panel.get("evidence") or {}
+        sources = evidence.get("sources") or []
+        if record.get("evidence_gate") != "resolved" or not sources \
+                or any(source["kind"] != "evidence-record" for source in sources):
+            raise DeliberationError("a release gate counts only evidence bundles: the panel must declare its "
+                                    "evidence from hpp.evidence/v1 records (deliberate plan --evidence)")
+    return {"status": record["verdict"]["status"], "value": record["verdict"]["value"],
+            "record_sha256": record["record_sha256"], "judge_family": judge["family"],
+            "session_type": session_type}
+
+
 def as_decision(record: dict[str, Any]) -> dict[str, Any]:
     """The whole panel as ONE `hpp.decision/v1` record, so `hpp decide eval` measures it like any decider."""
     panel = record["panel"]

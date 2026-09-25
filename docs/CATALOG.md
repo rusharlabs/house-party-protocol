@@ -14,7 +14,7 @@ Documents that apply to every kit: [`ARCHITECTURE.md`](ARCHITECTURE.md) · [`ARC
 | [kit-forge](#kit-forge) | 1.4.2 | 0 | 0 | 0 | 1 | 0 | 0 | 0 |
 | [operator-kit](#operator-kit) | 1.7.0 | 13 | 2 | 6 | 10 | 13 | 1 | 17 |
 | [continuity-kit](#continuity-kit) | 1.4.1 | 2 | 0 | 0 | 3 | 0 | 12 | 2 |
-| [lane-kit](#lane-kit) | 1.5.0 | 2 | 1 | 0 | 4 | 0 | 4 | 5 |
+| [lane-kit](#lane-kit) | 1.6.0 | 2 | 1 | 0 | 4 | 0 | 4 | 5 |
 | [health-kit](#health-kit) | 1.3.3 | 2 | 0 | 0 | 1 | 0 | 0 | 3 |
 | [claude-dev-kit](#claude-dev-kit) | 1.3.3 | 8 | 0 | 0 | 1 | 0 | 0 | 2 |
 | [supabase-pack](#supabase-pack) | 1.1.2 | 2 | 0 | 0 | 0 | 0 | 0 | 0 |
@@ -107,7 +107,7 @@ Handoff-v1.1: a session survives a stop/clear/crash without losing its next step
 
 ## lane-kit
 
-N sessions without collisions. Lane board, cross-model maker!=checker, per-directory lock, git-guard and territory-guard. The checker_router detects Codex, Cursor and Gemini and picks a provider different from the maker's. Best-of-N: compete/select record which of N competing attempts won. House Session: /deliberate and house_session.py seat a panel of two model families, refusing the turn of a seat that wrote.
+N sessions without collisions. Lane board, cross-model maker!=checker, per-directory lock, git-guard and territory-guard. The checker_router detects Codex, Cursor and Gemini and picks a provider different from the maker's. Best-of-N: compete/select record which of N competing attempts won. House Session: /deliberate and house_session.py seat a panel of two model families, refusing the turn of a seat that wrote; select --deliberation decides a competition with a sealed session.
 
 **Skills**
 

@@ -152,6 +152,26 @@ Nesta revisão a dissidência se manteve: `stop` → `max-rounds`, `escalate: tr
 `high` e não é marcado, porque o segundo turno dele cita uma referência que ele ainda não tinha
 citado.
 
+## Agindo sobre um veredito (novo na 2.9.0)
+
+Uma sessão selada alimenta os comandos que agem sobre um veredito. Cada um verifica o registro, confere
+o tipo de sessão e as opções perguntadas, e recusa um juiz da família de modelo do maker
+(`--maker-family`). Um painel só pode tornar o resultado mais estrito:
+
+```bash
+python -m hpp route --request request.json --providers providers.json --deliberation plan-record.json --maker-family anthropic
+python -m hpp attest create --spec spec.md --output att.json --maker exec-a --checker rev-b --session s1 --verdict approved --deliberation gate-record.json --maker-family anthropic
+python multi-session/lane-kit-1.6.0/scripts/lane_board.py select --task TASK-1 --deliberation design-record.json
+```
+
+- **`route`** lê uma sessão `plan` sobre `low`/`medium`/`high`: o veredito dela pode subir o risco do
+  pedido (e o tier), nunca baixar.
+- **`attest create`** lê uma sessão `release-gate` sobre `approved`/`revise`/`blocked` cujos fatos se
+  apoiam só em registros `hpp.evidence/v1`: a attestation grava o mais estrito entre o veredito
+  declarado e o do painel, e um painel que não decidiu manda para revisão. O hash do registro fica guardado.
+- **`lane_board.py select`** lê uma sessão `design` cujas opções são exatamente os candidatos restantes:
+  o juiz vira o revisor de registro, então as regras de lane e de família do board valem para ele.
+
 ## O painel inteiro, medido como um decisor só
 
 `record` também imprime o painel como um único registro `hpp.decision/v1` (`method: panel`, sem

@@ -14,7 +14,7 @@ Documentos válidos para todos os kits: [`ARCHITECTURE.md`](ARCHITECTURE.md) · 
 | [kit-forge](#kit-forge) | 1.4.2 | 0 | 0 | 0 | 1 | 0 | 0 | 0 |
 | [operator-kit](#operator-kit) | 1.7.0 | 13 | 2 | 6 | 10 | 13 | 1 | 17 |
 | [continuity-kit](#continuity-kit) | 1.4.1 | 2 | 0 | 0 | 3 | 0 | 12 | 2 |
-| [lane-kit](#lane-kit) | 1.5.0 | 2 | 1 | 0 | 4 | 0 | 4 | 5 |
+| [lane-kit](#lane-kit) | 1.6.0 | 2 | 1 | 0 | 4 | 0 | 4 | 5 |
 | [health-kit](#health-kit) | 1.3.3 | 2 | 0 | 0 | 1 | 0 | 0 | 3 |
 | [claude-dev-kit](#claude-dev-kit) | 1.3.3 | 8 | 0 | 0 | 1 | 0 | 0 | 2 |
 | [supabase-pack](#supabase-pack) | 1.1.2 | 2 | 0 | 0 | 0 | 0 | 0 | 0 |
@@ -107,7 +107,7 @@ Handoff-v1.1: uma sessao sobrevive a parada/clear/crash sem perder o proximo pas
 
 ## lane-kit
 
-N sessoes sem colisao. Lane board, maker!=checker cross-model, lock por diretorio, git-guard e territory-guard. O checker_router detecta Codex, Cursor e Gemini e escolhe um provider diferente do maker. Best-of-N: compete/select registram qual de N tentativas concorrentes venceu. House Session: /deliberate e house_session.py sentam um painel de duas familias de modelo e recusam o turno de um assento que escreveu.
+N sessoes sem colisao. Lane board, maker!=checker cross-model, lock por diretorio, git-guard e territory-guard. O checker_router detecta Codex, Cursor e Gemini e escolhe um provider diferente do maker. Best-of-N: compete/select registram qual de N tentativas concorrentes venceu. House Session: /deliberate e house_session.py sentam um painel de duas familias de modelo e recusam o turno de um assento que escreveu; select --deliberation decide uma competicao com uma sessao selada.
 
 **Skills**
 

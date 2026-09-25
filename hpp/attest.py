@@ -7,9 +7,11 @@ import os
 import re
 import subprocess
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 
+# Ordered from the least to the most strict: a gate may only move a verdict to the right.
+VERDICTS = ("approved", "revise", "blocked")
 SCHEMA = "hpp.evidence-attestation/v1"
 _SESSION_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$")
 
@@ -93,7 +95,15 @@ def create_attestation(
     checker: str,
     session: str,
     verdict: str,
+    panel: Optional[dict[str, Any]] = None,
 ) -> dict[str, Any]:
+    """Record a verdict bound to the repository, the spec and a full snapshot.
+
+    With `panel` (the verdict of a sealed release-gate session, from `panel_verdict`), the recorded
+    verdict is the STRICTER of the declared one and the panel's: a panel can block or send back a
+    declared approval, never approve a declared block, and a panel that did not decide sends it back
+    for revision. The panel's record hash is kept, so the attestation names the session behind it.
+    """
     root = _repo_root(repo)
     maker_id = maker.strip()
     checker_id = checker.strip()
@@ -102,8 +112,14 @@ def create_attestation(
     if not _SESSION_RE.fullmatch(session):
         raise AttestationError("session must be 1-128 portable identifier characters")
     normalized_verdict = verdict.strip().lower()
-    if normalized_verdict not in {"approved", "revise", "blocked"}:
+    if normalized_verdict not in VERDICTS:
         raise AttestationError("verdict must be approved, revise, or blocked")
+    deliberation = None
+    if panel is not None:
+        panel_value = panel["value"] if panel["status"] == "recommendation" and panel["value"] in VERDICTS else "revise"
+        normalized_verdict = max(normalized_verdict, panel_value, key=VERDICTS.index)
+        deliberation = {"record_sha256": panel["record_sha256"], "status": panel["status"],
+                        "value": panel["value"], "judge_family": panel["judge_family"]}
     spec_path = spec.resolve()
     if not spec_path.is_file():
         raise AttestationError(f"spec not found: {spec_path}")
@@ -123,6 +139,8 @@ def create_attestation(
         "verdict": normalized_verdict,
         "snapshot": _snapshot(root, excluded),
     }
+    if deliberation is not None:
+        record["deliberation"] = deliberation
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(
         json.dumps(record, ensure_ascii=False, indent=2, sort_keys=True) + "\n",

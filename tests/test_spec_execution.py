@@ -393,10 +393,10 @@ def test_CONTROLE_the_full_path_disambiguates_the_same_report():
 
 def test_DOTTED_DIR_NEVER_MATCHES_a_directory_with_a_dot_in_its_name_still_matches():
     source = 'def test_member():\n    """[spec: pricing/member]"""\n'
-    report = _report(source, "lane-kit-1.5.0/tests/test_prices.py",
-                     _junit(_case("lane-kit-1.5.0.tests.test_prices", "test_member")))
+    report = _report(source, "lane-kit-1.6.0/tests/test_prices.py",
+                     _junit(_case("lane-kit-1.6.0.tests.test_prices", "test_member")))
     assert _ids(report["executed"]) == ["pricing/member"]
-    other = _report(source, "lane-kit-1.5.0/tests/test_prices.py",
+    other = _report(source, "lane-kit-1.6.0/tests/test_prices.py",
                     _junit(_case("kit-1.5.0.tests.test_prices", "test_member")))
     assert other["executed"] == [], "a dotted suffix matches at a boundary, never inside a name"
 

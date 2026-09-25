@@ -44,13 +44,13 @@ and the like while another lane is alive); `lane_territory_guard.py` on `PreTool
 
 ## Install by copy
 
-In the emitted distribution this module lives in `multi-session/lane-kit-1.5.0/` (the
+In the emitted distribution this module lives in `multi-session/lane-kit-1.6.0/` (the
 directory carries the version — state it once, in `KIT`). The installer is
 `installers/kit-forge-1.4.2/kit_doctor.py`; run it from the distribution root. It plans
 first and writes only on a second, explicit `--apply`:
 
 ```bash
-KIT=multi-session/lane-kit-1.5.0
+KIT=multi-session/lane-kit-1.6.0
 cp -r "$KIT" ../your-repo/lane-kit            # the copy itself (kit_doctor does not copy on claude-code)
 python installers/kit-forge-1.4.2/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo
 python installers/kit-forge-1.4.2/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo --apply
@@ -153,6 +153,10 @@ becomes `WITHDRAWN` (terminal, written only by `withdraw`), stops counting for r
 selection, and its lane is owed the news the same way; with exactly 1 candidate left, `select` of
 that one is allowed. `render` prints a **COMPETITIONS** section with each task's outcome and its
 withdrawals, and `status <task>` lists the competition's events.
+
+`select --task TASK-1 --deliberation RECORD` decides a competition with a sealed House Session
+(`design`, its options exactly the remaining candidates, a recommendation). The panel's judge becomes the
+reviewer of record, so the lane and family rules above apply to the judge; it needs the HPP core.
 
 ## House Session — seat a panel on this host, read-only by proof
 

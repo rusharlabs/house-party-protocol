@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "house-party-protocol"
-version = "2.8.0"
+version = "2.9.0"
 description = "A local-first reliability harness for coding agents."
 readme = "README.md"
 license = "MIT"

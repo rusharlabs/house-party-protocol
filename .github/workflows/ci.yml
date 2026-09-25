@@ -59,7 +59,9 @@ jobs:
       # resolve without an install step; tests/conftest.py adds a defensive
       # fallback for any invocation that skips that.
       - name: Run test suite (pytest, stdlib-only)
-        run: python -m pytest tests -q -p no:cacheprovider
+        # Why (2.9.0): 77 ResourceWarnings hid a real leak (every command left two pipes open).
+        # With warnings as errors, the next leak fails the build instead of scrolling past.
+        run: python -X dev -W error -m pytest tests -q -p no:cacheprovider -W error
 
       - name: hpp doctor
         run: python -m hpp doctor

@@ -1029,3 +1029,166 @@ def test_EVIDENCE_PANEL_NOT_PERSISTED_plan_writes_the_panel_the_session_then_use
     turns = [_turn(written, seat, 1, "high") for seat in "abc"]
     record = build_record(written, turns, _judge(written))
     assert record["evidence_gate"] == "resolved"
+
+
+# =========================================================================== F4 · integrations
+# A sealed session feeds the commands that act on a verdict: `route` (a plan panel raises the risk),
+# `attest` (a release-gate panel is the release gate). Two rules hold everywhere: a judge of the
+# maker's family is refused, and a panel can only make the outcome stricter, never looser.
+
+from hpp.deliberation import panel_verdict  # noqa: E402
+
+RISK_Q = {"id": "plan.risk", "kind": "choice", "options": ["low", "medium", "high"], "ladder": True,
+          "instructions": "How risky is this plan?"}
+GATE_Q = {"id": "release.gate", "kind": "choice", "options": ["approved", "revise", "blocked"],
+          "instructions": "Can this release ship?"}
+EVIDENCE = {"ids": ["ctx-1"], "sources": [{"kind": "evidence-record", "id": "ctx-1", "sha256": "2" * 64}]}
+
+
+def _typed_panel(session_type, question, judge_family="delta", evidence=None):
+    seats = {"plan": [_seat("a", "proponent", "alpha"), _seat("b", "proponent", "beta"),
+                      _seat("c", "dissent", "gamma"), _seat("e", "examiner", "alpha", lane="lane-e")],
+             "release-gate": [_seat("a", "examiner", "alpha"), _seat("c", "dissent", "beta")]}[session_type]
+    judge = _seat("j", "judge", judge_family, model=f"{judge_family}-model-2026-09-01")
+    panel = _panel(session_type=session_type, question=dict(question), seats=seats + [judge])
+    if evidence:
+        panel["evidence"] = evidence
+    return panel
+
+
+def _typed_record(session_type, question, value, judge_family="delta", evidence=None, status="recommendation"):
+    panel = _typed_panel(session_type, question, judge_family, evidence)
+    participants = [seat["id"] for seat in panel["seats"] if seat["role"] != "judge"]
+    turns = [_turn(panel, seat, 1, value) for seat in participants]
+    judge = _judge(panel, value=value, status=status, model=f"{judge_family}-model-2026-09-01")
+    judge["question"] = dict(question)
+    judge["provider"]["id"] = f"{judge_family}-provider"
+    return build_record(panel, turns, judge)
+
+
+def test_F4_a_verified_plan_panel_gives_its_verdict():
+    record = _typed_record("plan", RISK_Q, "high")
+    verdict = panel_verdict(record, session_type="plan", options={"low", "medium", "high"}, forbid_family="alpha")
+    assert (verdict["status"], verdict["value"], verdict["judge_family"]) == ("recommendation", "high", "delta")
+
+
+def test_F4_JUDGE_SAME_FAMILY_a_judge_of_the_makers_family_is_refused():
+    record = _typed_record("plan", RISK_Q, "high", judge_family="omega")
+    with pytest.raises(DeliberationError, match="same family"):
+        panel_verdict(record, session_type="plan", options={"low", "medium", "high"}, forbid_family="omega")
+
+
+def test_F4_CONTROLE_a_judge_of_another_family_is_accepted():
+    record = _typed_record("plan", RISK_Q, "high", judge_family="omega")
+    assert panel_verdict(record, session_type="plan", options={"low", "medium", "high"}, forbid_family="alpha")
+
+
+@pytest.mark.parametrize("change, fragment", [
+    ({"session_type": "release-gate"}, "session"),
+    ({"options": {"yes", "no"}}, "options"),
+])
+def test_F4_a_record_of_the_wrong_kind_is_refused(change, fragment):
+    record = _typed_record("plan", RISK_Q, "high")
+    kwargs = {"session_type": "plan", "options": {"low", "medium", "high"}, "forbid_family": "zeta", **change}
+    with pytest.raises(DeliberationError, match=fragment):
+        panel_verdict(record, **kwargs)
+
+
+def test_F4_an_edited_record_is_refused():
+    record = _typed_record("plan", RISK_Q, "high")
+    record["verdict"]["value"] = "low"
+    with pytest.raises(DeliberationError, match="does not verify"):
+        panel_verdict(record, session_type="plan", options={"low", "medium", "high"}, forbid_family="zeta")
+
+
+def test_F4_a_release_gate_counts_only_evidence_bundles():
+    unsourced = _typed_record("release-gate", GATE_Q, "approved", evidence={"ids": ["ctx-1"]})
+    with pytest.raises(DeliberationError, match="evidence"):
+        panel_verdict(unsourced, session_type="release-gate", options={"approved", "revise", "blocked"},
+                      forbid_family="zeta", evidence_records_only=True)
+    bundles = _typed_record("release-gate", GATE_Q, "approved", evidence=EVIDENCE)
+    assert panel_verdict(bundles, session_type="release-gate", options={"approved", "revise", "blocked"},
+                         forbid_family="zeta", evidence_records_only=True)["value"] == "approved"
+
+
+def _route_files(tmp_path, risk):
+    request = _write(tmp_path, f"request-{risk}.json", {"stage": "build", "risk": risk, "complexity": "low", "context": 100})
+    providers = _write(tmp_path, "providers.json", [{"id": "p", "tiers": ["economy", "balanced", "frontier"],
+                                                     "stages": ["build"], "max_context": 100000}])
+    return request, providers
+
+
+def test_F4_GATE_NEVER_LOWERS_a_plan_panel_raises_the_route_risk_and_never_lowers_it(tmp_path, capsys):
+    request, providers = _route_files(tmp_path, "low")
+    high = _write(tmp_path, "high.json", _typed_record("plan", RISK_Q, "high"))
+    assert cli.main(["route", "--request", request, "--providers", providers, "--deliberation", high,
+                     "--maker-family", "zeta"]) == 0
+    raised = json.loads(capsys.readouterr().out)
+    assert raised["requested_tier"] == "frontier" and raised["deliberation"]["raised_from"] == "low"
+    request_high, _ = _route_files(tmp_path, "high")
+    low = _write(tmp_path, "low.json", _typed_record("plan", RISK_Q, "low"))
+    assert cli.main(["route", "--request", request_high, "--providers", providers, "--deliberation", low,
+                     "--maker-family", "zeta"]) == 0
+    kept = json.loads(capsys.readouterr().out)
+    assert kept["requested_tier"] == "frontier" and kept["deliberation"]["applied"] is False
+
+
+def test_F4_route_with_a_deliberation_needs_the_makers_family(tmp_path):
+    request, providers = _route_files(tmp_path, "low")
+    record = _write(tmp_path, "r.json", _typed_record("plan", RISK_Q, "high"))
+    assert cli.main(["route", "--request", request, "--providers", providers, "--deliberation", record]) == 2
+
+
+def _attest_repo(tmp_path):
+    root = tmp_path / "repo"
+    root.mkdir()
+    for args in (["init", "-q"], ["config", "user.email", "t@example.invalid"], ["config", "user.name", "t"]):
+        subprocess.run(["git", *args], cwd=root, check=True, capture_output=True)
+    (root / "spec.md").write_text("ship it\n", encoding="utf-8")
+    subprocess.run(["git", "add", "-A"], cwd=root, check=True, capture_output=True)
+    subprocess.run(["git", "commit", "-qm", "base"], cwd=root, check=True, capture_output=True)
+    return root
+
+
+def _attest(root, tmp_path, verdict, record, family="zeta"):
+    path = _write(tmp_path, f"gate-{verdict}-{record['verdict']['status']}-{record['verdict']['value']}.json", record)
+    return cli.main(["attest", "create", "--repo", str(root), "--spec", str(root / "spec.md"),
+                     "--output", str(tmp_path / "attestation.json"), "--maker", "exec-a", "--checker", "rev-b",
+                     "--session", "s1", "--verdict", verdict, "--deliberation", path, "--maker-family", family])
+
+
+def test_F4_GATE_NEVER_LOWERS_a_release_gate_panel_can_block_a_declared_approval(tmp_path):
+    root = _attest_repo(tmp_path)
+    blocked = _typed_record("release-gate", GATE_Q, "blocked", evidence=EVIDENCE)
+    assert _attest(root, tmp_path, "approved", blocked) == 2
+    stored = json.loads((tmp_path / "attestation.json").read_text(encoding="utf-8"))
+    assert stored["verdict"] == "blocked"
+    assert stored["deliberation"]["record_sha256"] == blocked["record_sha256"]
+
+
+def test_F4_GATE_NEVER_LOWERS_an_approving_panel_cannot_approve_a_declared_block(tmp_path):
+    root = _attest_repo(tmp_path)
+    approved = _typed_record("release-gate", GATE_Q, "approved", evidence=EVIDENCE)
+    assert _attest(root, tmp_path, "blocked", approved) == 2
+    assert json.loads((tmp_path / "attestation.json").read_text(encoding="utf-8"))["verdict"] == "blocked"
+
+
+def test_F4_CONTROLE_an_approving_gate_over_an_approval_approves(tmp_path):
+    root = _attest_repo(tmp_path)
+    approved = _typed_record("release-gate", GATE_Q, "approved", evidence=EVIDENCE)
+    assert _attest(root, tmp_path, "approved", approved) == 0
+    assert json.loads((tmp_path / "attestation.json").read_text(encoding="utf-8"))["verdict"] == "approved"
+
+
+def test_F4_a_gate_that_did_not_decide_cannot_approve(tmp_path):
+    root = _attest_repo(tmp_path)
+    abstained = _typed_record("release-gate", GATE_Q, "approved", evidence=EVIDENCE, status="abstention")
+    assert _attest(root, tmp_path, "approved", abstained) == 2
+    assert json.loads((tmp_path / "attestation.json").read_text(encoding="utf-8"))["verdict"] == "revise"
+
+
+def test_F4_JUDGE_SAME_FAMILY_a_release_gate_judged_by_the_makers_family_is_refused(tmp_path):
+    root = _attest_repo(tmp_path)
+    approved = _typed_record("release-gate", GATE_Q, "approved", evidence=EVIDENCE, judge_family="omega")
+    assert _attest(root, tmp_path, "approved", approved, family="omega") == 2
+    assert not (tmp_path / "attestation.json").exists()

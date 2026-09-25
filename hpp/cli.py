@@ -15,7 +15,7 @@ from hpp.context import compile_context
 from hpp.decision import effective as decision_effective, exit_for as decision_exit_for, run_decision_suite, validate as validate_decision
 from hpp.deliberation import (
     PANEL_SCHEMA, SCHEMA as DELIBERATION_SCHEMA, SCHEMAS as DELIBERATION_SCHEMAS, TALLY_SCHEMA, TURN_SCHEMA,
-    as_decision, build_record, decide_stop, exit_for_record, normalise_panel, normalise_turn,
+    as_decision, build_record, decide_stop, exit_for_record, normalise_panel, normalise_turn, panel_verdict,
     tally as deliberation_tally, verify_record,
 )
 from hpp.evals import EvalError, exit_for as eval_exit_for, packaged_suite, run_suite
@@ -176,6 +176,13 @@ def command_benchmark(args: argparse.Namespace) -> int:
 
 def command_attest(args: argparse.Namespace) -> int:
     if args.attest_command == "create":
+        panel = None
+        if args.deliberation:
+            if not args.maker_family:
+                raise ValueError("--deliberation needs --maker-family: a judge of the maker's family is refused")
+            panel = panel_verdict(_read_json(args.deliberation, dict), session_type="release-gate",
+                                  options={"approved", "revise", "blocked"}, forbid_family=args.maker_family,
+                                  evidence_records_only=True)
         record = create_attestation(
             repo=Path(args.repo),
             spec=Path(args.spec),
@@ -184,6 +191,7 @@ def command_attest(args: argparse.Namespace) -> int:
             checker=args.checker,
             session=args.session,
             verdict=args.verdict,
+            panel=panel,
         )
         _json({"status": "recorded", **record})
         return 0 if record["verdict"] == "approved" else 2
@@ -257,7 +265,26 @@ def command_work(args: argparse.Namespace) -> int:
 def command_route(args: argparse.Namespace) -> int:
     request = _read_json(args.request, dict)
     providers = _read_json(args.providers, list)
-    _json(route(request, args.policy, providers))
+    applied = None
+    if args.deliberation:
+        if not args.maker_family:
+            raise ValueError("--deliberation needs --maker-family: a judge of the maker's family is refused")
+        levels = ("low", "medium", "high")
+        verdict = panel_verdict(_read_json(args.deliberation, dict), session_type="plan", options=set(levels),
+                                forbid_family=args.maker_family)
+        declared = request.get("risk")
+        # A plan panel can only RAISE the risk: a gate that lowers it would let a panel talk a risky
+        # change into a cheaper tier.
+        raise_to = verdict["value"] if verdict["status"] == "recommendation" else None
+        higher = raise_to in levels and declared in levels and levels.index(raise_to) > levels.index(declared)
+        if higher:
+            request = {**request, "risk": raise_to}
+        applied = {"record_sha256": verdict["record_sha256"], "verdict": verdict["value"],
+                   "status": verdict["status"], "applied": higher, "raised_from": declared if higher else None}
+    result = route(request, args.policy, providers)
+    if applied is not None:
+        result["deliberation"] = applied
+    _json(result)
     return 0
 
 
@@ -554,6 +581,10 @@ def build_parser() -> argparse.ArgumentParser:
     attest_create.add_argument("--checker", required=True)
     attest_create.add_argument("--session", required=True)
     attest_create.add_argument("--verdict", choices=["approved", "revise", "blocked"], required=True)
+    attest_create.add_argument("--deliberation", help="a sealed release-gate session (hpp.deliberation/v2); "
+                                                       "the stricter of the two verdicts is recorded")
+    attest_create.add_argument("--maker-family", dest="maker_family",
+                               help="the maker's model family; a judge of that family is refused")
     attest_create.set_defaults(func=command_attest)
     attest_verify = attest_sub.add_parser("verify")
     attest_verify.add_argument("attestation")
@@ -581,6 +612,9 @@ def build_parser() -> argparse.ArgumentParser:
     route_parser.add_argument("--request", required=True)
     route_parser.add_argument("--providers", required=True)
     route_parser.add_argument("--policy", choices=["economy", "balanced", "frontier"], default="balanced")
+    route_parser.add_argument("--deliberation", help="a sealed plan session whose verdict can only raise the risk")
+    route_parser.add_argument("--maker-family", dest="maker_family",
+                              help="the maker's model family; a judge of that family is refused")
     route_parser.set_defaults(func=command_route)
 
     decide = sub.add_parser(

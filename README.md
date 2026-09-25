@@ -105,7 +105,7 @@ only with evidence pasted in, a verdict only from another lane **and** another m
 <p align="center">
   <img alt="python lane_board.py render: four example items on one board — EXAMPLE-1 MERGED, EXAMPLE-2 VERIFIED and waiting on the human gate, EXAMPLE-3 DEFERRED for want of a checker, EXAMPLE-4 back to BUILDING after NEEDS-FIX — then the verdicts whose lane has not been told" src="assets/terminal/lane-board.svg" width="940">
 </p>
-<p align="center"><sub>The board those rows produce, as <code>multi-session/lane-kit-1.5.0/scripts/lane_board.py</code> prints it: four example items driven through the machine, every event naming the lane that wrote it, the evidence pasted at checkpoint, and — for a verdict — the lane and the model that gave it. Two attempts were refused on the way there, both <code>exit 1</code>: a verdict from the builder's own lane (<em>maker≠checker violated: reviewer (exec-b) is the SAME lane as the builder</em>) and merging a 🔴 item without <code>--human-approved</code>. The last block is the one nobody thinks to ask for — verdicts already decided whose lane has not been told. Text rendered from the command's real stdout by <code>scripts/render_terminal_svg.py</code>, like the two captures above.</sub></p>
+<p align="center"><sub>The board those rows produce, as <code>multi-session/lane-kit-1.6.0/scripts/lane_board.py</code> prints it: four example items driven through the machine, every event naming the lane that wrote it, the evidence pasted at checkpoint, and — for a verdict — the lane and the model that gave it. Two attempts were refused on the way there, both <code>exit 1</code>: a verdict from the builder's own lane (<em>maker≠checker violated: reviewer (exec-b) is the SAME lane as the builder</em>) and merging a 🔴 item without <code>--human-approved</code>. The last block is the one nobody thinks to ask for — verdicts already decided whose lane has not been told. Text rendered from the command's real stdout by <code>scripts/render_terminal_svg.py</code>, like the two captures above.</sub></p>
 
 ## Quickstart
 
@@ -121,7 +121,7 @@ third-party packages. CI exercises Python 3.10 to 3.13 on Linux, macOS and Windo
 (`.github/workflows/ci.yml`); older interpreters are not promised because nothing measures them.
 
 ```bash
-pip install git+https://github.com/rusharlabs/house-party-protocol@v2.8.0
+pip install git+https://github.com/rusharlabs/house-party-protocol@v2.9.0
 hpp doctor
 hpp init --target ../your-repo
 ```

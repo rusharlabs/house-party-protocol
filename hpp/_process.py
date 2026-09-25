@@ -71,6 +71,13 @@ def _pump(stream: Any, sink: list[bytes]) -> None:
             sink.append(block)
     except (OSError, ValueError):
         pass
+    finally:
+        # Why: the reader is the one thread that may close the pipe without racing another reader;
+        # when a descendant kept it open past the return, it is closed here once EOF arrives.
+        try:
+            stream.close()
+        except (OSError, ValueError):
+            pass
 
 
 def _feed(stream: Any, data: bytes) -> None:
@@ -118,4 +125,14 @@ def run_bounded(command: list[str], *, timeout: float, cwd: Optional[str] = None
     deadline = time.monotonic() + _DRAIN_GRACE
     for worker in workers:
         worker.join(timeout=max(0.0, deadline - time.monotonic()))
+    # Why (2026-09-25, 77 ResourceWarnings under -W error): the pipes were never closed, so every
+    # command leaked two descriptors. A stream is closed once the thread that uses it has finished;
+    # one still blocked (a descendant holding the pipe) is left alone, because closing a file another
+    # thread is reading can block on its buffer lock.
+    for stream, worker in zip((process.stdout, process.stderr, process.stdin), workers + [None]):
+        if stream is not None and (worker is None or not worker.is_alive()):
+            try:
+                stream.close()
+            except OSError:
+                pass
     return state, exit_code, b"".join(out), b"".join(err)

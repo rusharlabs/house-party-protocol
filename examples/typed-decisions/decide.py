@@ -153,6 +153,7 @@ def ask(question: dict[str, Any], state: str, *, provider: str, model: str, endp
             content_type = response.headers.get("Content-Type", "")
     except urllib.error.HTTPError as exc:
         kind = exc.headers.get("Content-Type", "?") if exc.headers else "?"
+        exc.close()  # Why: an HTTPError holds the response body open until it is closed.
         return failure(f"HTTP {exc.code} ({kind}): {exc.reason}")
     except (urllib.error.URLError, socket.timeout, TimeoutError, OSError) as exc:
         return failure(f"transport: {exc}")

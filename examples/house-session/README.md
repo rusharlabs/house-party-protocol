@@ -148,6 +148,26 @@ In this review the dissent held its ground: `stop` → `max-rounds`, `escalate: 
 the judge's `high`; `dissent` keeps seat `c` at `low`; seat `b` moved from `medium` to `high` and
 is not marked, because its second turn cites a reference it had not cited before.
 
+## Acting on a verdict (new in 2.9.0)
+
+A sealed session feeds the commands that act on a verdict. Each one verifies the record, checks the
+kind of session and the options it asked about, and refuses a judge of the maker's model family
+(`--maker-family`). A panel can only make an outcome stricter:
+
+```bash
+python -m hpp route --request request.json --providers providers.json --deliberation plan-record.json --maker-family anthropic
+python -m hpp attest create --spec spec.md --output att.json --maker exec-a --checker rev-b --session s1 --verdict approved --deliberation gate-record.json --maker-family anthropic
+python multi-session/lane-kit-1.6.0/scripts/lane_board.py select --task TASK-1 --deliberation design-record.json
+```
+
+- **`route`** reads a `plan` session over `low`/`medium`/`high`: its verdict can raise the request's
+  risk (and so the tier), never lower it.
+- **`attest create`** reads a `release-gate` session over `approved`/`revise`/`blocked` whose facts
+  rest only on `hpp.evidence/v1` records: the attestation records the stricter of the declared verdict
+  and the panel's, and a panel that did not decide sends it back for revision. The record hash is kept.
+- **`lane_board.py select`** reads a `design` session whose options are exactly the remaining
+  candidates: the judge becomes the reviewer of record, so the board's lane and family rules apply to it.
+
 ## The whole panel, measured as one decider
 
 `record` also prints the panel as one `hpp.decision/v1` record (`method: panel`, no confidence,

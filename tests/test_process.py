@@ -59,3 +59,15 @@ def test_invalid_timeouts_are_rejected(value):
 
 def test_CONTROLE_ordinary_timeouts_are_accepted():
     assert valid_timeout(0.5) and valid_timeout(600) and valid_timeout(MAX_TIMEOUT)
+
+
+def test_PIPES_LEAK_a_finished_command_leaves_no_open_pipe():
+    """Every command hpp runs used to leak its stdout/stderr pipes (a ResourceWarning per run)."""
+    import gc
+    import warnings
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always", ResourceWarning)
+        run_bounded([sys.executable, "-c", "print('x')"], timeout=30, stdin=b"input")
+        gc.collect()
+    leaks = [str(item.message) for item in caught if issubclass(item.category, ResourceWarning)]
+    assert leaks == [], leaks

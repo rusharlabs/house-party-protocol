@@ -45,13 +45,13 @@ para `Edit|Write` (zonas vermelhas + colisões de território). Skills são auto
 
 ## Instalar por cópia
 
-Na distribuição emitida este módulo vive em `multi-session/lane-kit-1.5.0/` (o diretório
+Na distribuição emitida este módulo vive em `multi-session/lane-kit-1.6.0/` (o diretório
 carrega a versão — declare-a uma vez, em `KIT`). O instalador é
 `installers/kit-forge-1.4.2/kit_doctor.py`; rode-o da raiz da distribuição. Ele planeja
 primeiro e só escreve numa segunda invocação explícita com `--apply`:
 
 ```bash
-KIT=multi-session/lane-kit-1.5.0
+KIT=multi-session/lane-kit-1.6.0
 cp -r "$KIT" ../your-repo/lane-kit            # the copy itself (kit_doctor does not copy on claude-code)
 python installers/kit-forge-1.4.2/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo
 python installers/kit-forge-1.4.2/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo --apply
@@ -154,6 +154,10 @@ retirado vira `WITHDRAWN` (terminal, escrito só pelo `withdraw`), deixa de cont
 para a seleção, e a lane dele fica devendo o aviso do mesmo jeito; com exatamente 1 candidato
 restante, o `select` dele é permitido. O `render` imprime uma seção **COMPETITIONS** com o desfecho
 de cada tarefa e as retiradas, e o `status <task>` lista os eventos da competição.
+
+`select --task TASK-1 --deliberation RECORD` decide uma competição com uma House Session selada
+(`design`, com as opções iguais aos candidatos restantes, e uma recomendação). O juiz do painel vira o
+revisor de registro, então as regras de lane e de família acima valem para ele; exige o núcleo do HPP.
 
 ## House Session — assentos de um painel neste host, somente-leitura com prova
 
