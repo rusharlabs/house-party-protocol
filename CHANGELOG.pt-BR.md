@@ -9,6 +9,38 @@ cada módulo mantém sua própria versão no `plugin.json` e no `marketplace.jso
 
 ## [Unreleased]
 
+### Adicionado
+
+- **Lane Dashboard** (lane-kit). `scripts/lane_dashboard.py` serve o quadro de lanes como uma página
+  local ao vivo — navegador do Orca, Simple Browser do VS Code ou qualquer navegador — construída
+  sobre o `docs/hpp.css`: o backlog de specs (`docs/plans/execution/BACKLOG.json`, uma spec do `hpp
+  work plan`), as colunas, as lanes, as competições e os efeitos ainda devidos. Por ela, atrás de um
+  diálogo de confirmação, o operador adiciona uma spec, inicia uma wave (a planejadora escreve o
+  manifesto antes), encaminha uma correção, abre uma revisão com um agente de outra família, aprova
+  um merge red, pede um briefing de decisão e lê um relatório de integração. Ela só escreve no
+  quadro pelo `lane_board.py`, e inicia cada sessão sozinha, onde detectar que o operador está: um
+  terminal do Orca, uma janela da sessão tmux em que ela roda, uma janela nova do terminal do sistema
+  (o Terminal no macOS, o terminal do desktop no Linux, um console PowerShell no Windows), ou em modo
+  headless. Ela nunca entrega um comando para colar: uma sessão que não inicia mantém a lane e o
+  prompt, e inicia de novo pelo diálogo. Um painel serve vários projetos e as worktrees de cada um —
+  cada `--project-dir`, as outras worktrees do repositório dele e as worktrees do Orca que usam
+  lane-kit, encontradas sozinhas —, agrupadas por repositório, cada worktree com o próprio quadro; um
+  painel Escopo mostra todos os projetos, um projeto ou uma worktree, e uma ação nomeia a worktree por
+  um id da lista do servidor, nunca por um caminho. Portada de um painel que rodava num projeto privado,
+  reescrita para as chaves em inglês do quadro e só com a biblioteca padrão.
+- **`lane_board.py release-fix` e `start-review`** (lane-kit): o operador entrega um `NEEDS-FIX` a uma
+  executora viva nomeada (`FIX-QUEUED`, assumido só por essa lane, re-roteado só quando ela para de
+  bater) e um checkpoint a uma revisora viva nomeada, cada um com um kickoff `## Para:` no mailbox.
+
+### Corrigido
+
+- **Um item red ia para MERGED sem o gate humano quando o `--tag` era omitido** (lane-kit). A
+  checagem do MERGED lia o `--tag` da linha de comando, cujo padrão é green, e o evento gravava o
+  item como green. A tag agora pertence ao item: uma vez red, sempre red.
+- **Uma revisora da família de quem construiu a correção podia verificá-la** (lane-kit). A checagem
+  de família comparava o veredito só com o modelo do claim; agora compara com toda lane que construiu
+  o item, como a checagem de lane já fazia.
+
 ## [2.9.0] — 2026-09-25
 
 ### Adicionado

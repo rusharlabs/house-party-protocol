@@ -179,6 +179,90 @@ python lane-kit/scripts/house_session.py --self-test
 Limits: a write into a path the repository ignores is outside git's view and is not seen; give
 every seat its own worktree, or two seats are blamed for each other's writes.
 
+## Lane Dashboard — the board in a browser, from any IDE
+
+```bash
+python lane-kit/scripts/lane_dashboard.py --open          # http://127.0.0.1:8787
+python lane-kit/scripts/lane_dashboard.py --project-dir /path/to/shop --project-dir /path/to/blog
+python lane-kit/scripts/lane_dashboard.py --project-dir /path/to/repo --no-orca --port 8788
+```
+
+It serves the board of the project it is started in (`$CLAUDE_PROJECT_DIR`, else the cwd) as a live
+page: the backlog, the columns, the lanes, the competitions and the effects still owed. `--open`
+opens it in Orca's browser when started inside Orca, in the default browser elsewhere; in VS Code,
+run **Simple Browser: Show** and paste the URL. An empty project is an empty board.
+
+**Many projects, and the worktrees of each, on one panel.** A project is a repository; each of its
+worktrees keeps its own board in its own `.claude/lanes/`, and worktrees are grouped under their
+project by the git directory they share, so a second worktree is never shown as a second project.
+Served: every `--project-dir` (it repeats), the other worktrees of its repository that use lane-kit
+(a `.claude/lanes/` or a backlog), and, when `orca` is on PATH, every Orca worktree that uses lane-kit.
+Orca and git are asked again every 30 s, so a worktree opened later shows up without a restart
+(`--no-orca` leaves Orca out).
+
+The **Scope** panel at the top picks what the page shows: **All** projects, one project, or one
+worktree. A project with several worktrees is marked `⎇ 2`; opening it lays its worktrees out as
+cards — branch, path, a *primary* badge on the main worktree, live lanes, work in progress, what
+waits for you, specs ready — next to an **All worktrees** card. On a wider scope every card, spec,
+lane and wave is tagged with its project and worktree (`shop › ⎇ feature-x`); the header reads as a
+breadcrumb, and the page remembers the choice. The Orca worktrees without lane-kit are named in the
+panel, so you know why they are not there. Every action names its worktree (`"worktree"`) by an id
+from the server's own list, never by a path; with more than one worktree, an action that names none
+is refused. A session started in Orca opens in that worktree.
+
+From the page, each action behind a confirmation dialog: **New spec** (writes
+`docs/plans/execution/BACKLOG.json`, with a stub plan if asked), **Start a wave** (a write-once request
+in `.claude/lanes/waves/`, then a planner session that writes the manifest before anything is built;
+solo, overnight or parallel with at most 3), **Route the fix** and **Start review** (through
+`release-fix` / `start-review`, to a live lane or to a new session), **Approve merge** of a red item
+(`set MERGED --human-approved`), **Ask for a brief**, and an **Integration** report that measures, with
+git, what a merge would bring — it never merges.
+
+The page starts every session itself; it never hands you a command to paste. It selects the
+launcher detected from where the dashboard runs, first match wins, and the dialog lets you pick another:
+
+| Launcher | Selected when | What starts | Where to follow it |
+|---|---|---|---|
+| `orca` | the dashboard runs inside Orca | a terminal in the project's Orca worktree | Orca |
+| `tmux` | the dashboard runs inside tmux | a window in that same tmux session | your tmux |
+| `terminal` | there is a screen: macOS, Windows, a Linux desktop | a new window of the system terminal: Terminal on macOS, `$TERMINAL` or the desktop's terminal on Linux, a PowerShell console on Windows | the window |
+| `tmux` | no screen (SSH), tmux installed | a window in the detached session `hpp-lanes` | `tmux attach -t hpp-lanes` |
+| `headless` | nothing else can start a session | the agent's non-interactive mode, in the background | `.claude/lanes/sessions/<lane>.log` |
+
+A terminal window runs `.claude/lanes/sessions/<lane>.command`: it enters the project, sets the lane
+identity the hooks read (`CLAUDE_LANE_ID/ROLE/MODEL`), runs the agent found on the dashboard's PATH and
+hands it the prompt from `<lane>.prompt.md`, as one argument no shell parses. On macOS and Linux,
+`"terminal": ["open", "-a", "iTerm", "{script}"]` in `.claude/lanes/dashboard.json` picks another
+terminal. A session that does not start keeps its lane and its prompt: the dialog says why and offers
+**Start the session again**, on the same launcher or another (`POST /api/sessions/relaunch`).
+
+The backlog is an `hpp work plan` spec, so the same file compiles into waves with
+`python -m hpp work plan docs/plans/execution/BACKLOG.json`; `title`, `plan`, `status`
+(`ready`/`blocked`/`archived`), `suggested_mode` and `priority` are what the page plans with:
+
+```json
+{"work": [
+  {"id": "SPEC-1", "title": "Refresh expired tokens", "plan": "specs/SPEC-1.md", "status": "ready",
+   "suggested_mode": "solo", "priority": 1, "depends_on": [], "tier": "balanced",
+   "acceptance": ["an expired token is refreshed without a logout"]}
+]}
+```
+
+The agents' commands and the model id recorded on the board default to the CLI's own default
+model (`claude`, `codex`, `gemini`, `cursor`); set them per role in `.claude/lanes/dashboard.json`:
+
+```json
+{"agents": {"claude": {"model": "claude-opus-4-8",
+  "interactive": ["{cmd}", "--model", "opus", "{prompt}"],
+  "roles": {"executor": {"model": "claude-sonnet-5", "interactive": ["{cmd}", "--model", "sonnet", "{prompt}"]}}}}}
+```
+
+The page answers only `127.0.0.1`: a request whose `Host` is another name is refused (DNS rebinding),
+and every action carries a token the page receives when it is served, so a page on another site
+cannot act through your browser. `LANE_BOARD_SUITE_COMMAND` (unset by default) lets the integration
+report run your suite on the merge junction, in a throwaway detached worktree. Keep
+`.claude/lanes/` out of git, like the rest of the runtime.
+
 ## Manual wiring (human gate — never automatic)
 
 > Editing `.claude/settings.local.json` is a human gate in this doctrine. On the copy path
@@ -228,6 +312,14 @@ python hooks/_lane_io.py --self-test
 self-test OK — register creates/evicts dead lanes/keeps started_at, heartbeat throttle+advance, liveness alive/suspect/dead, who_owns exclusive+glob**+ignores dead, alive_others excludes self, lock contention fails fast without hanging, corrupt registry degrades cleanly
 ```
 <!-- executado: 2026-09-21 · exit=0 -->
+
+```bash
+python scripts/lane_dashboard.py --self-test
+```
+```
+self-test OK — 76 of 76 checks: the empty board, the backlog rules (cycle, unknown dependency, plan outside the tree, no acceptance, bad tier, duplicate), add_spec with and without a stub plan, the launcher detected from where it runs, a wave, review and fix launches through the real writer (family refused, no ghost lane), a terminal window's script, a session that did not start and its retry, the red merge approval, briefs parsed and ordered by family, the integration report's not-covered rule, the HTTP guards (Host, token, content type) with a CONTROL for each, and many projects on one panel, each action going only to the worktree it names by id
+```
+<!-- executado: 2026-09-27 · exit=0 -->
 
 ## Undo
 

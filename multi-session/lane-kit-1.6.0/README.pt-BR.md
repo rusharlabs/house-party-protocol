@@ -181,6 +181,90 @@ python lane-kit/scripts/house_session.py --self-test
 Limites: uma escrita num caminho que o repositório ignora fica fora da visão do git e não é vista;
 dê a cada assento o seu worktree, senão dois assentos levam a culpa pela escrita um do outro.
 
+## Lane Dashboard — o quadro no navegador, de qualquer IDE
+
+```bash
+python lane-kit/scripts/lane_dashboard.py --open          # http://127.0.0.1:8787
+python lane-kit/scripts/lane_dashboard.py --project-dir /caminho/da/loja --project-dir /caminho/do/blog
+python lane-kit/scripts/lane_dashboard.py --project-dir /caminho/do/repo --no-orca --port 8788
+```
+
+Serve o quadro do projeto em que é iniciado (`$CLAUDE_PROJECT_DIR`, senão o cwd) como uma página ao
+vivo: o backlog, as colunas, as lanes, as competições e os efeitos ainda devidos. `--open` abre no
+navegador do Orca quando iniciado dentro do Orca, e no navegador padrão fora dele; no VS Code, rode
+**Simple Browser: Show** e cole a URL. Projeto vazio é quadro vazio.
+
+**Vários projetos, e as worktrees de cada um, num painel.** Um projeto é um repositório; cada uma das
+worktrees dele mantém o próprio quadro no próprio `.claude/lanes/`, e as worktrees são agrupadas sob o
+projeto pelo diretório git que compartilham, então uma segunda worktree nunca aparece como um segundo
+projeto. Servidos: cada `--project-dir` (ele se repete), as outras worktrees do repositório dele que
+usam lane-kit (um `.claude/lanes/` ou um backlog) e, com o `orca` no PATH, toda worktree do Orca que usa
+lane-kit. O Orca e o git são consultados de novo a cada 30 s, então uma worktree aberta depois aparece
+sem reiniciar (`--no-orca` deixa o Orca de fora).
+
+O painel **Escopo**, no topo, escolhe o que a página mostra: **Todos** os projetos, um projeto ou uma
+worktree. Um projeto com várias worktrees leva a marca `⎇ 2`; ao abri-lo, as worktrees aparecem como
+cards — branch, caminho, o selo *principal* na worktree principal, lanes vivas, trabalho em execução, o
+que espera por você, specs prontas — ao lado de um card **Todas as worktrees**. Num escopo mais largo,
+cada card, spec, lane e wave leva a etiqueta do projeto e da worktree (`loja › ⎇ feature-x`); o
+cabeçalho vira um breadcrumb, e a página lembra a escolha. As worktrees do Orca sem lane-kit aparecem
+nomeadas no painel, para você saber por que não estão ali. Toda ação nomeia a worktree (`"worktree"`)
+por um id da lista do próprio servidor, nunca por um caminho; com mais de uma worktree, uma ação que
+não nomeia nenhuma é recusada. Uma sessão iniciada no Orca abre nessa worktree.
+
+Pela página, cada ação atrás de um diálogo de confirmação: **Nova spec** (grava
+`docs/plans/execution/BACKLOG.json`, com um plano-esqueleto se pedido), **Iniciar wave** (um pedido
+write-once em `.claude/lanes/waves/`, depois uma sessão de planejadora que escreve o manifesto antes de
+qualquer construção; solo, looping noturno ou paralelo com no máximo 3), **Encaminhar correção** e
+**Iniciar revisão** (via `release-fix` / `start-review`, para uma lane viva ou uma sessão nova),
+**Aprovar merge** de um item red (`set MERGED --human-approved`), **Pedir briefing**, e um relatório de
+**Integração** que mede com o git o que um merge traria — ele nunca faz merge.
+
+A página inicia cada sessão sozinha; ela nunca entrega um comando para você colar. Ela seleciona o
+lançador detectado a partir de onde o painel roda, o primeiro que servir, e o diálogo deixa escolher outro:
+
+| Lançador | Selecionado quando | O que inicia | Onde acompanhar |
+|---|---|---|---|
+| `orca` | o painel roda dentro do Orca | um terminal no worktree do projeto no Orca | Orca |
+| `tmux` | o painel roda dentro do tmux | uma janela nessa mesma sessão tmux | o seu tmux |
+| `terminal` | há tela: macOS, Windows, um desktop Linux | uma janela nova do terminal do sistema: o Terminal no macOS, `$TERMINAL` ou o terminal do desktop no Linux, um console PowerShell no Windows | a janela |
+| `tmux` | sem tela (SSH), com tmux instalado | uma janela na sessão destacada `hpp-lanes` | `tmux attach -t hpp-lanes` |
+| `headless` | nada mais consegue iniciar uma sessão | o modo não interativo do agente, em segundo plano | `.claude/lanes/sessions/<lane>.log` |
+
+Uma janela de terminal roda `.claude/lanes/sessions/<lane>.command`: entra no projeto, define a
+identidade da lane que os hooks leem (`CLAUDE_LANE_ID/ROLE/MODEL`), roda o agente encontrado no PATH do
+painel e entrega a ele o prompt de `<lane>.prompt.md`, como um argumento que nenhum shell interpreta. No
+macOS e no Linux, `"terminal": ["open", "-a", "iTerm", "{script}"]` em `.claude/lanes/dashboard.json`
+escolhe outro terminal. Uma sessão que não inicia mantém a lane e o prompt: o diálogo diz o motivo e
+oferece **Iniciar a sessão de novo**, no mesmo lançador ou em outro (`POST /api/sessions/relaunch`).
+
+O backlog é uma spec do `hpp work plan`, então o mesmo arquivo vira waves com
+`python -m hpp work plan docs/plans/execution/BACKLOG.json`; `title`, `plan`, `status`
+(`ready`/`blocked`/`archived`), `suggested_mode` e `priority` são o que a página usa para planejar:
+
+```json
+{"work": [
+  {"id": "SPEC-1", "title": "Renovar tokens expirados", "plan": "specs/SPEC-1.md", "status": "ready",
+   "suggested_mode": "solo", "priority": 1, "depends_on": [], "tier": "balanced",
+   "acceptance": ["um token expirado é renovado sem logout"]}
+]}
+```
+
+Os comandos dos agentes e o id de modelo gravado no quadro usam, por padrão, o modelo padrão de cada
+CLI (`claude`, `codex`, `gemini`, `cursor`); defina-os por papel em `.claude/lanes/dashboard.json`:
+
+```json
+{"agents": {"claude": {"model": "claude-opus-4-8",
+  "interactive": ["{cmd}", "--model", "opus", "{prompt}"],
+  "roles": {"executor": {"model": "claude-sonnet-5", "interactive": ["{cmd}", "--model", "sonnet", "{prompt}"]}}}}}
+```
+
+A página só responde em `127.0.0.1`: uma requisição cujo `Host` é outro nome é recusada (DNS
+rebinding), e toda ação leva um token que a página recebe quando é servida, então uma página de outro
+site não age pelo seu navegador. `LANE_BOARD_SUITE_COMMAND` (sem valor por padrão) deixa o relatório de
+integração rodar a sua suíte sobre a junção do merge, numa worktree destacada e descartável. Mantenha
+`.claude/lanes/` fora do git, como o resto do runtime.
+
 ## Wiring manual (gate humano — nunca automático)
 
 > Editar `.claude/settings.local.json` é gate humano nesta doutrina. No caminho por cópia
@@ -230,6 +314,14 @@ python hooks/_lane_io.py --self-test
 self-test OK — register creates/evicts dead lanes/keeps started_at, heartbeat throttle+advance, liveness alive/suspect/dead, who_owns exclusive+glob**+ignores dead, alive_others excludes self, lock contention fails fast without hanging, corrupt registry degrades cleanly
 ```
 <!-- executado: 2026-09-21 · exit=0 -->
+
+```bash
+python scripts/lane_dashboard.py --self-test
+```
+```
+self-test OK — 76 of 76 checks: the empty board, the backlog rules (cycle, unknown dependency, plan outside the tree, no acceptance, bad tier, duplicate), add_spec with and without a stub plan, the launcher detected from where it runs, a wave, review and fix launches through the real writer (family refused, no ghost lane), a terminal window's script, a session that did not start and its retry, the red merge approval, briefs parsed and ordered by family, the integration report's not-covered rule, the HTTP guards (Host, token, content type) with a CONTROL for each, and many projects on one panel, each action going only to the worktree it names by id
+```
+<!-- executado: 2026-09-27 · exit=0 -->
 
 ## Desfazer
 

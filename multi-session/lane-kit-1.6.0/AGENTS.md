@@ -12,6 +12,7 @@ This kit coordinates concurrent sessions with claim, territory and separate make
 
 ```bash
 python scripts/lane_board.py --self-test
+python scripts/lane_dashboard.py --self-test
 python hooks/lane_git_guard.py --self-test
 python hooks/lane_territory_guard.py --self-test
 ```

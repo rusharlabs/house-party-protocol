@@ -2,7 +2,8 @@
 
 # lane-kit — N sessions, 1 repo, zero collisions
 
-> See `scripts/lane_board.py` (whiteboard), `skills/lane-coordinator/SKILL.md` (usage),
+> See `scripts/lane_board.py` (whiteboard), `scripts/lane_dashboard.py` (the board as a local web page),
+> `skills/lane-coordinator/SKILL.md` (usage),
 > `evals/collision-2lanes.sh` (concurrency test), `templates/` (mailbox + status HTML).
 
 ## LANE-ENGINE — registry of live lanes + concurrency guards
@@ -76,10 +77,10 @@ history WITHOUT violating maker≠checker:
 2. `CHECKPOINT-READY` is only accepted from the lane that did the LAST `CLAIMED`/`BUILDING` (current
    enforcement rule) — that is, convergence is **sequential on the board** even if the real
    work is parallel: the lane that "closes" the checkpoint is whoever writes last.
-3. The reviewer, at `VERIFIED` time, still has to be from a DIFFERENT lane+family than the
-   **builder recorded in the original `CLAIMED` event** (not the last `BUILDING`) — the
-   enforcement looks up the item's first `CLAIMED` event as "the builder", on purpose,
-   so that convergence of 2 builder lanes does not become a self-approval loophole.
+3. The reviewer, at `VERIFIED` time, has to be from a lane AND a model family different from
+   **every lane that built the item** (any `CLAIMED`/`BUILDING`/`CHECKPOINT-READY` event) — on
+   purpose, so that neither the convergence of 2 builder lanes nor a fix routed to another
+   executor (`release-fix`) becomes a self-approval loophole.
 4. Use the `REORIENT-MAILBOX.template.md` for the lane entering the item to notify the one
    already on it (and vice versa) — the board records STATE, not the coordination conversation.
 
@@ -87,6 +88,55 @@ This mode is **optional and has no extra enforcement in the code** beyond what a
 it works because the state machine is already permissive enough for 2 builders on the same logical
 lane; there is no need for a separate switchable "mode", it is the natural behaviour of the
 board when 2 lanes cooperate on the same item_id.
+
+## Operator hand-offs — routing a fix, opening a review
+
+Two writes let the operator hand work to a named lane. Both check the registry (the target must be
+registered, alive, and of the right role), both write a `## Para:` kickoff to the mailbox that
+`lane_register.py` routes, and neither starts an agent — that is the dashboard's launcher, below.
+
+1. **`release-fix <item> --target-lane <executor>`** turns a `NEEDS-FIX` into `FIX-QUEUED`
+   (`NEEDS-FIX → FIX-QUEUED → BUILDING`). The kickoff carries the reviewer's direction and the
+   previous checkpoint. Only the lane named may write the next `BUILDING`; `set` can never write
+   `FIX-QUEUED`. **Reroute valve**: a fix queued for a lane that stopped beating can be released
+   again to ANOTHER lane, and the event records `reroute` with the abandoned lane and the measured
+   reason; a live lane's fix is never taken from it. The builder may still resume a `NEEDS-FIX`
+   directly with `BUILDING` — routing is an option, not a new obligation.
+2. **`start-review <item> --target-lane <reviewer>`** turns a `CHECKPOINT-READY` (or `DEFERRED`)
+   into `UNDER-REVIEW` for a reviewer lane that did not build the item. The model family is checked
+   where the verdict is recorded, as for every review: opening a review is cheap and reversible, and
+   refusing it by family would make `DEFERRED` unreachable when no other family is at hand.
+
+The tag of an item belongs to the item: once any event said `red`, `MERGED` needs
+`--human-approved` whatever a later `--tag` says (a caller omitting the flag used to merge a red
+item and record it as green).
+
+## Lane Dashboard — the board in a browser, from any IDE
+
+`scripts/lane_dashboard.py` serves the board as a local page (`127.0.0.1` only) that updates as
+`board.jsonl` changes: the backlog of specs and the waves started from it, the columns, the lanes
+and their heartbeat, the competitions, and the effects still owed to a lane. It is a READ-ONLY
+observer in the sense of the convention above — it never edits `board.jsonl` or the registry
+itself: every board write goes through `lane_board.py` and every lane through `_lane_io.py`, so it
+is refused exactly what a lane would be. Its own artifacts are the wave requests
+(`waves/<wave>.request.json`), the session prompts and logs (`sessions/`), the decision briefs
+(`decision-briefs/`) and, when the operator adds a spec from the page, `BACKLOG.json`.
+
+What it adds is the launcher. After a confirmation dialog it starts an agent session — Claude Code,
+Codex, Gemini CLI or Cursor Agent, as found on PATH — in the operator's environment, detected from
+where the dashboard runs: a terminal of the project's **Orca** worktree, a window of the **tmux** session
+it runs in (or of the detached session `hpp-lanes` when there is no screen), a new window of the
+system **terminal** (Terminal on macOS, the desktop's terminal on Linux, a PowerShell console on
+Windows), or the agent's **headless** mode with a log. It never hands over a command to paste: a
+session that does not start keeps its lane and its prompt, and starts again from the dialog. One
+dashboard serves several projects and the worktrees of each — every `--project-dir`, the other
+worktrees of its repository, and the Orca worktrees that use lane-kit — grouped by the git directory
+they share, each worktree with its own board; the page shows every project, one project or one
+worktree, and an action names its worktree by an id from the server's list, never by a path. The session gets `CLAUDE_LANE_ID/ROLE/MODEL`, so the lane hooks register it
+under the right identity. A review can only be launched with an agent of another family than the
+builders. A decision brief (options and a recommendation for a `NEEDS-FIX`, a `DEFERRED` or a red
+`VERIFIED`) is asked of a headless agent of another family when the operator presses the button —
+`--auto-brief` asks as soon as the item arrives — and it never acts on the board.
 
 ## Competitions — N lanes attempt the same task, one winner
 

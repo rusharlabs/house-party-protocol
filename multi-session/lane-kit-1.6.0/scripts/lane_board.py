@@ -5,13 +5,18 @@ lane_board -- whiteboard with a state machine for N sessions (lanes) without col
 Sole writer of board.jsonl (append-only, per-directory lock). Enforcement IN CODE
 (not textual discipline): CHECKPOINT-READY only by whoever claimed it + evidence; VERIFIED/NEEDS-FIX
 only by a reviewer from ANOTHER lane AND ANOTHER model family than the builder (maker!=checker); an
-unavailable checker -> only DEFERRED; MERGED requires a prior VERIFIED (+ human gate for red items, via
---tag red requiring --human-approved).
+unavailable checker -> only DEFERRED; MERGED requires a prior VERIFIED (+ human gate for red items:
+--human-approved; the tag belongs to the item, so red stays red whatever a later --tag says).
 
 States: CLAIMED -> BUILDING -> CHECKPOINT-READY -> UNDER-REVIEW -> VERIFIED|NEEDS-FIX -> MERGED
                                                                   -> DEFERRED (checker unavailable)
+        NEEDS-FIX -> FIX-QUEUED -> BUILDING (only by the lane named; written only by `release-fix`)
         CHECKPOINT-READY|VERIFIED -> NOT-SELECTED (terminal; written only by `select`)
         any state of an undecided candidate -> WITHDRAWN (terminal; written only by `withdraw`)
+
+Operator hand-offs (what the Lane Dashboard calls; no agent is started by this file): `release-fix`
+routes a NEEDS-FIX to a registered, live executor and `start-review` opens a review for a registered,
+live reviewer that is not a builder of the item. Both write a `## Para:` kickoff to the mailbox.
 
 Competitions (best-of-N): N lanes attempt the same task independently, each on its own item. `compete`
 declares which items are candidates for one task; `select` records the one winner, chosen by a reviewer
@@ -38,13 +43,15 @@ Usage:
     python lane_board.py select --task <task_id> --checker-unavailable --lane <reviewer> --model <m>
     python lane_board.py withdraw --task <task_id> --item <item_id> --lane <coordinator> --model <m>
                           --reason "..."
+    python lane_board.py release-fix <item_id> --target-lane <executor> [--operator <name>]
+    python lane_board.py start-review <item_id> --target-lane <reviewer> [--operator <name>]
     python lane_board.py status [<item_id>]
     python lane_board.py render
     python lane_board.py --self-test
 
 Exit: 0 ok - 1 invalid transition/enforcement refused - 2 invalid usage/lock not acquired.
 stdlib only. v1.0.0 -- 2026-07-10 (lane-kit) · compete/select -- 2026-09-24 (lane-kit 1.4.0)
-· withdraw -- 2026-09-24 (lane-kit 1.4.1)
+· withdraw -- 2026-09-24 (lane-kit 1.4.1) · release-fix/start-review -- 2026-09-27 (Lane Dashboard)
 """
 from __future__ import annotations
 
@@ -54,6 +61,7 @@ import os
 import re
 import sys
 import time
+from datetime import datetime, timezone
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -84,7 +92,10 @@ _TRANSITIONS = {
     "BUILDING": {"CHECKPOINT-READY", "BUILDING"},
     "CHECKPOINT-READY": {"UNDER-REVIEW"},
     "UNDER-REVIEW": {"VERIFIED", "NEEDS-FIX", "DEFERRED"},
-    "NEEDS-FIX": {"BUILDING"},
+    # A NEEDS-FIX is resumed by a builder directly, or routed by the operator to a named executor.
+    # FIX-QUEUED is written only by `release-fix`, and only the lane it names may leave it.
+    "NEEDS-FIX": {"BUILDING", "FIX-QUEUED"},
+    "FIX-QUEUED": {"BUILDING"},
     "VERIFIED": {"MERGED"},
     "DEFERRED": {"UNDER-REVIEW"},
     "MERGED": set(),
@@ -238,6 +249,13 @@ def _builders(item_id: str) -> list:
             for e in _read_events(item_id) if e.get("state") in _BUILDER_STATES]
 
 
+def _item_tag(item_id: str) -> str:
+    """red once any event of the item said red. The tag belongs to the item, not to a command line:
+    reading it from `--tag` let a caller who omitted the flag (default green) merge a red item
+    without the human gate, and record it as green on the way."""
+    return "red" if any(e.get("tag") == "red" for e in _read_events(item_id)) else "green"
+
+
 def _checkpoint_evidence(item_id: str) -> str:
     """Evidence of the item's most recent CHECKPOINT-READY (a VERIFIED item keeps the one it had)."""
     last = next((e for e in reversed(_read_events(item_id)) if e.get("state") == "CHECKPOINT-READY"), None)
@@ -314,6 +332,12 @@ def _validate_transition(item_id: str, new_state: str, lane_id: str, role: str, 
         if cur_state in ("MERGED",):
             return "item already MERGED — cannot be reopened with CLAIMED"
 
+    if new_state == "FIX-QUEUED":
+        return "FIX-QUEUED is written only by `release-fix`: the operator routes a fix to a named executor"
+
+    if new_state == "BUILDING" and cur_state == "FIX-QUEUED" and current.get("target_lane") != lane_id:
+        return f"fix released to {current.get('target_lane')}, not to {lane_id}"
+
     if new_state in ("BUILDING", "CHECKPOINT-READY"):
         competition = _competition_of(item_id)
         if competition:
@@ -356,7 +380,10 @@ def _validate_transition(item_id: str, new_state: str, lane_id: str, role: str, 
         if verdict_by_lane in {lane for lane, _model in _builders(item_id)}:
             return (f"maker≠checker violated: reviewer ({verdict_by_lane}) is the SAME lane as a builder of "
                     f"{item_id}")
-        if _model_family(verdict_by_model) == _model_family(builder_model):
+        # Why: `release-fix` can hand the rework to an executor of another family; comparing only with
+        # the claiming model would let that executor's family check the fix it built.
+        builder_families = {_model_family(builder_model)} | {_model_family(m) for _lane, m in _builders(item_id) if m}
+        if _model_family(verdict_by_model) in builder_families:
             return f"maker≠checker violated: reviewer and builder are from the SAME model family ({_model_family(verdict_by_model)})"
 
     if new_state == "DEFERRED" and not checker_unavailable:
@@ -410,6 +437,8 @@ def set_state(item_id: str, new_state: str, lane_id: str, role: str, model: str,
     """Returns (ok, message_or_error). Writes under lock."""
     try:
         with _Lock(_LANES_DIR):
+            if _item_tag(item_id) == "red":
+                kwargs["tag"] = "red"
             err = _validate_transition(item_id, new_state, lane_id, role, model, **kwargs)
             if err:
                 return False, err
@@ -436,6 +465,160 @@ def set_state(item_id: str, new_state: str, lane_id: str, role: str, model: str,
             return True, event
     except LockError as e:
         return False, str(e)
+
+
+def _lane_liveness(entry: dict) -> str:
+    """alive / suspect / dead, by the same rule and config the lane registry uses."""
+    hooks = Path(__file__).resolve().parents[1] / "hooks"
+    if str(hooks) not in sys.path:
+        sys.path.insert(0, str(hooks))
+    try:
+        import _lane_io  # noqa: E402 — the registry's own module, one directory over
+        return _lane_io.liveness(entry)
+    except ImportError:  # pragma: no cover — a partial copy install: the registry defaults
+        try:
+            beat = datetime.fromisoformat(str(entry.get("heartbeat_at", "")))
+        except ValueError:
+            return "dead"
+        beat = beat if beat.tzinfo else beat.replace(tzinfo=timezone.utc)
+        minutes = (datetime.now(timezone.utc) - beat).total_seconds() / 60
+        return "alive" if minutes < 10 else "suspect" if minutes < 30 else "dead"
+
+
+def _live_lane(lane_id: str, role: str) -> tuple:
+    """(registry entry, None) when `lane_id` is a registered, live lane with `role`; else (None, why)."""
+    try:
+        registry = json.loads((_LANES_DIR / "registry.json").read_text(encoding="utf-8"))
+        entry = registry.get("lanes", {}).get(lane_id)
+    except (OSError, json.JSONDecodeError, AttributeError):
+        return None, "lane registry unavailable (.claude/lanes/registry.json)"
+    if not isinstance(entry, dict) or entry.get("role") != role:
+        return None, f"target lane is not a registered {role}: {lane_id}"
+    state = _lane_liveness(entry)
+    if state != "alive":
+        return None, f"target lane is not alive ({state}): {lane_id}"
+    return entry, None
+
+
+def _write_kickoff(kind: str, item_id: str, target_lane: str, operator: str, body: str) -> Path:
+    """A write-once mailbox message. `## Para:` is the line lane_register.py routes by."""
+    safe_item = re.sub(r"[^A-Za-z0-9._-]+", "-", item_id).strip(".-") or "item"
+    path = _LANES_DIR / "mailbox" / f"{kind}-{int(time.time() * 1000)}-{safe_item}.md"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    text = (f"# {kind.capitalize()} kickoff — {item_id}\n\n"
+            f"## Para: {target_lane}\n## From: {operator} (operator)\n"
+            f"## When: {time.strftime('%Y-%m-%dT%H:%M:%S')}\n## Affected item(s): {item_id}\n\n"
+            f"{body}\n---\n*Write-once message from the lane board. Archive it in `mailbox/_read/` once read.*\n")
+    temporary = path.with_suffix(".tmp")
+    temporary.write_text(text, encoding="utf-8")
+    os.replace(temporary, path)
+    return path
+
+
+def release_fix(item_id: str, target_lane: str, operator: str = "operator") -> tuple:
+    """Route a NEEDS-FIX to a named, live executor: FIX-QUEUED + a kickoff. No agent is started here.
+
+    Reroute valve: a fix already queued can be released again, to ANOTHER lane, only when the lane
+    it was queued for is no longer alive. Without it a fix released to a lane that died has no legal
+    move left — FIX-QUEUED leaves only through BUILDING by the named lane. A live lane's fix is not
+    taken from it. The event carries `reroute` with the abandoned lane and the measured reason.
+    """
+    try:
+        with _Lock(_LANES_DIR):
+            current = _latest_state(item_id)
+            current_state = current.get("state") if current else "absent"
+            reroute_from, reroute_reason = "", ""
+            if current_state == "FIX-QUEUED":
+                reroute_from = current.get("target_lane", "")
+                if reroute_from == target_lane:
+                    return False, f"fix already released to {target_lane} — a reroute needs another lane"
+                _entry, reroute_reason = _live_lane(reroute_from, "executor")
+                if not reroute_reason:
+                    return False, f"fix in progress with {reroute_from}, which is alive — only an abandoned release reroutes"
+            elif current_state != "NEEDS-FIX":
+                return False, f"release-fix needs an item in NEEDS-FIX (current: {current_state})"
+            review = next((e for e in reversed(_read_events(item_id)) if e.get("state") == "NEEDS-FIX"), {})
+            target, target_error = _live_lane(target_lane, "executor")
+            if target_error:
+                return False, target_error
+            checkpoint = _checkpoint_evidence(item_id)
+            body = (f"### What changed\nA reviewer recorded `NEEDS-FIX`. You run the next attempt.\n\n"
+                    f"### Direction of the fix\n{review.get('evidence') or 'The reviewer left no evidence on the board.'}\n\n"
+                    f"### Previous checkpoint\n{checkpoint or 'No checkpoint evidence on the board.'}\n\n"
+                    f"### What the target lane must do\n"
+                    f"- [ ] Take the fix: `lane_board.py set {item_id} BUILDING --lane {target_lane} --role executor ...`\n"
+                    f"- [ ] Fix the blocker and run the applicable gates.\n"
+                    f"- [ ] Record `CHECKPOINT-READY` only with objective evidence.\n"
+                    f"- [ ] Never review this attempt yourself.\n")
+            try:
+                kickoff = _write_kickoff("fix", item_id, target_lane, operator, body)
+            except OSError as error:
+                return False, f"kickoff not delivered: {error}"
+            event = {
+                "ts": time.strftime("%Y-%m-%dT%H:%M:%S"),
+                "item_id": item_id,
+                "state": "FIX-QUEUED",
+                "lane_id": operator,
+                "role": "operator",
+                "model": "human",
+                "target_lane": target_lane,
+                "target_model": target.get("model", "unknown"),
+                "kickoff": kickoff.relative_to(_PROJECT_ROOT).as_posix(),
+                "tag": _item_tag(item_id),
+            }
+            if reroute_from:
+                event["reroute"] = {"from": reroute_from, "reason": reroute_reason}
+            _append_event(event)
+            return True, event
+    except LockError as error:
+        return False, str(error)
+
+
+def start_review(item_id: str, target_lane: str, operator: str = "operator") -> tuple:
+    """Open a review for a named, live reviewer: UNDER-REVIEW + a kickoff.
+
+    The lane is checked here (a builder lane cannot be sent its own work); the model FAMILY is checked
+    where the verdict is recorded, as for every review — opening a review is cheap and reversible,
+    and refusing it by family would make DEFERRED unreachable when no other family is at hand.
+    """
+    try:
+        with _Lock(_LANES_DIR):
+            checkpoint = _latest_state(item_id)
+            current_state = checkpoint.get("state") if checkpoint else "absent"
+            if current_state not in ("CHECKPOINT-READY", "DEFERRED"):
+                return False, f"start-review needs an item in CHECKPOINT-READY or DEFERRED (current: {current_state})"
+            builder_lanes = {lane for lane, _model in _builders(item_id)}
+            if target_lane in builder_lanes:
+                return False, f"maker≠checker violated: {target_lane} built {item_id} and cannot review it"
+            target, target_error = _live_lane(target_lane, "reviewer")
+            if target_error:
+                return False, target_error
+            body = (f"### Checkpoint evidence\n{_checkpoint_evidence(item_id) or 'No checkpoint evidence on the board.'}\n\n"
+                    f"### What the target lane must do\n"
+                    f"- [ ] Review the attempt independently and run the applicable gates.\n"
+                    f"- [ ] Record `VERIFIED` or `NEEDS-FIX` with evidence and `--verdict-by-lane {target_lane}`.\n"
+                    f"- [ ] If you cannot check it, record `DEFERRED --checker-unavailable` — never a verdict.\n"
+                    f"- [ ] Do not merge.\n")
+            try:
+                kickoff = _write_kickoff("review", item_id, target_lane, operator, body)
+            except OSError as error:
+                return False, f"kickoff not delivered: {error}"
+            event = {
+                "ts": time.strftime("%Y-%m-%dT%H:%M:%S"),
+                "item_id": item_id,
+                "state": "UNDER-REVIEW",
+                "lane_id": operator,
+                "role": "operator",
+                "model": "human",
+                "target_lane": target_lane,
+                "target_model": target.get("model", "unknown"),
+                "kickoff": kickoff.relative_to(_PROJECT_ROOT).as_posix(),
+                "tag": _item_tag(item_id),
+            }
+            _append_event(event)
+            return True, event
+    except LockError as error:
+        return False, str(error)
 
 
 def _shared_builder_lane(items: list) -> str | None:
@@ -810,8 +993,13 @@ def render() -> str:
             task = (f" · task: {e['task_id']}" + (f" · winner: {e['winner']}" if e.get("winner") else "")
                     if e.get("task_id") else "")
             reason = f" · reason: {e['reason']}" if e.get("reason") else ""
+            # Why: a fix or a review handed to a lane that then died was invisible here; the target
+            # lane and any reroute are what the operator needs to see to unstick it.
+            target = f" · target: {e['target_lane']}" if e.get("target_lane") else ""
+            reroute = e.get("reroute") if isinstance(e.get("reroute"), dict) else {}
+            rerouted = f" · rerouted from {reroute.get('from')} ({reroute.get('reason')})" if reroute else ""
             lines.append(f"- {e['ts']} · {e['state']} · lane={e['lane_id']} role={e['role']}{evid}{record}{verdict}"
-                         f"{task}{reason}")
+                         f"{task}{reason}{target}{rerouted}")
         lines.append("")
     if competitions:
         lines.extend(_render_competitions(competitions))
@@ -1325,6 +1513,139 @@ def _self_test_withdraw() -> int:
     return 0
 
 
+def _self_test_release() -> int:
+    """`release-fix`, `start-review` and the item-owned red tag through the CLI: every refusal, the
+    reroute valve, and the CONTROL that each hand-off lands with its kickoff. Counted, N of M."""
+    import shutil
+    import tempfile
+
+    tmp = Path(tempfile.mkdtemp(prefix="lane_board_release_"))
+    global _PROJECT_ROOT, _LANES_DIR, BOARD_PATH, RENDER_PATH
+    orig = (_PROJECT_ROOT, _LANES_DIR, BOARD_PATH, RENDER_PATH)
+    orig_fx = None
+    if lane_effects is not None:
+        orig_fx = (lane_effects._PROJECT_ROOT, lane_effects._LANES_DIR, lane_effects.EFFECTS_PATH)
+    results: list = []
+
+    def check(name: str, condition: bool, detail: str = "") -> None:
+        results.append((name, bool(condition), detail))
+
+    def run(argv: list) -> tuple:
+        code, out, err = _run_cli(argv)
+        try:
+            parsed = json.loads(out) if code == 0 else {}
+        except ValueError:
+            parsed = {}
+        return code, parsed, err
+
+    def refused(name: str, argv: list, needle: str) -> None:
+        code, _out, err = run(argv)
+        check(name, code == 1 and needle in err,
+              f"expected exit 1 containing {needle!r}; got exit {code}: {err.strip()[:240]}")
+
+    def accepted(name: str, argv: list) -> dict:
+        code, parsed, err = run(argv)
+        check(name, code == 0, f"expected exit 0; got exit {code}: {err.strip()[:240]}")
+        return parsed
+
+    def register(lanes: dict) -> None:
+        now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S")
+        registry = {"lanes": {lane: {"role": role, "model": model, "heartbeat_at": beat or now}
+                              for lane, (role, model, beat) in lanes.items()}}
+        _LANES_DIR.mkdir(parents=True, exist_ok=True)
+        (_LANES_DIR / "registry.json").write_text(json.dumps(registry), encoding="utf-8")
+
+    def to_needs_fix(item: str, tag: str = "green") -> None:
+        for state in ("CLAIMED", "BUILDING", "CHECKPOINT-READY"):
+            ok, why = set_state(item, state, "exec-a", "executor", "claude-opus-4-8", tag=tag,
+                                evidence="pytest -q: 3 passed" if state == "CHECKPOINT-READY" else "")
+            check(f"setup {item} -> {state}", ok, str(why))
+        ok, why = set_state(item, "UNDER-REVIEW", "rev-x", "reviewer", "gpt-5.6")
+        check(f"setup {item} -> UNDER-REVIEW", ok, str(why))
+        ok, why = set_state(item, "NEEDS-FIX", "rev-x", "reviewer", "gpt-5.6", verdict_by_lane="rev-x",
+                            verdict_by_model="gpt-5.6", evidence="the token is never refreshed")
+        check(f"setup {item} -> NEEDS-FIX", ok, str(why))
+
+    try:
+        _PROJECT_ROOT = tmp
+        _LANES_DIR = tmp / ".claude" / "lanes"
+        BOARD_PATH = _LANES_DIR / "board.jsonl"
+        RENDER_PATH = tmp / "LANE-BOARD.md"
+        if lane_effects is not None:
+            lane_effects._PROJECT_ROOT = tmp
+            lane_effects._LANES_DIR = _LANES_DIR
+            lane_effects.EFFECTS_PATH = _LANES_DIR / "effects.json"
+        register({"exec-b": ("executor", "gpt-5.6", ""), "exec-c": ("executor", "gemini-2.5", ""),
+                  "rev-y": ("reviewer", "gemini-2.5", ""), "exec-a": ("reviewer", "gpt-5.6", "")})
+
+        to_needs_fix("F1")
+        refused("set cannot write FIX-QUEUED",
+                ["set", "F1", "FIX-QUEUED", "--lane", "exec-b", "--role", "executor", "--model", "gpt-5.6"],
+                "release-fix")
+        refused("release-fix to a reviewer", ["release-fix", "F1", "--target-lane", "rev-y"], "executor")
+        refused("release-fix to an unregistered lane", ["release-fix", "F1", "--target-lane", "nobody"], "nobody")
+        queued = accepted("CONTROL release-fix lands", ["release-fix", "F1", "--target-lane", "exec-b"])
+        kickoff = tmp / queued.get("kickoff", "missing")
+        check("the fix kickoff routes by `## Para:` and carries the direction",
+              kickoff.is_file() and "## Para: exec-b" in kickoff.read_text(encoding="utf-8")
+              and "never refreshed" in kickoff.read_text(encoding="utf-8"), str(kickoff))
+        refused("another lane cannot take a queued fix",
+                ["set", "F1", "BUILDING", "--lane", "exec-c", "--role", "executor", "--model", "gemini-2.5"], "exec-b")
+        refused("a live release is not rerouted", ["release-fix", "F1", "--target-lane", "exec-c"], "alive")
+        register({"exec-b": ("executor", "gpt-5.6", "2000-01-01T00:00:00"),
+                  "exec-c": ("executor", "gemini-2.5", ""), "rev-y": ("reviewer", "gemini-2.5", ""),
+                  "exec-a": ("reviewer", "gpt-5.6", "")})
+        rerouted = accepted("an abandoned release reroutes", ["release-fix", "F1", "--target-lane", "exec-c"])
+        check("the reroute names the abandoned lane", rerouted.get("reroute", {}).get("from") == "exec-b", str(rerouted))
+        accepted("the named lane takes the fix",
+                 ["set", "F1", "BUILDING", "--lane", "exec-c", "--role", "executor", "--model", "gemini-2.5"])
+        code, rendered, _err = _run_cli(["render"])
+        check("render names the target lane and the reroute",
+              code == 0 and "target: exec-c" in rendered and "rerouted from exec-b" in rendered, rendered[-300:])
+
+        for state in ("CLAIMED", "BUILDING", "CHECKPOINT-READY"):
+            set_state("V1", state, "exec-a", "executor", "claude-opus-4-8",
+                      evidence="pytest -q: 5 passed" if state == "CHECKPOINT-READY" else "")
+        refused("start-review for a builder lane", ["start-review", "V1", "--target-lane", "exec-a"], "maker")
+        refused("start-review for an executor", ["start-review", "V1", "--target-lane", "exec-c"], "reviewer")
+        opened = accepted("CONTROL start-review lands", ["start-review", "V1", "--target-lane", "rev-y"])
+        review = tmp / opened.get("kickoff", "missing")
+        check("the review kickoff carries the checkpoint evidence",
+              review.is_file() and "pytest -q: 5 passed" in review.read_text(encoding="utf-8"), str(review))
+        refused("start-review needs a checkpoint", ["start-review", "V1", "--target-lane", "rev-y"], "CHECKPOINT-READY")
+
+        for state, extra in (("CLAIMED", {}), ("BUILDING", {}), ("CHECKPOINT-READY", {"evidence": "ok"})):
+            set_state("R1", state, "exec-a", "executor", "claude-opus-4-8", tag="red", **extra)
+        set_state("R1", "UNDER-REVIEW", "rev-y", "reviewer", "gemini-2.5")
+        set_state("R1", "VERIFIED", "rev-y", "reviewer", "gemini-2.5", verdict_by_lane="rev-y",
+                  verdict_by_model="gemini-2.5")
+        refused("a red item omitting --tag still needs the human gate",
+                ["set", "R1", "MERGED", "--lane", "exec-a", "--role", "executor", "--model", "claude-opus-4-8"],
+                "human-approved")
+        merged = accepted("CONTROL the human-approved merge lands",
+                          ["set", "R1", "MERGED", "--lane", "operator", "--role", "operator", "--model", "human",
+                           "--human-approved"])
+        check("the merged red item stays red", merged.get("tag") == "red", str(merged))
+    finally:
+        _PROJECT_ROOT, _LANES_DIR, BOARD_PATH, RENDER_PATH = orig
+        if orig_fx is not None:
+            lane_effects._PROJECT_ROOT, lane_effects._LANES_DIR, lane_effects.EFFECTS_PATH = orig_fx
+        shutil.rmtree(tmp, ignore_errors=True)
+
+    failed = [(name, detail) for name, ok, detail in results if not ok]
+    if failed:
+        print(f"self-test FAILED (release) — {len(results) - len(failed)} of {len(results)} checks passed",
+              file=sys.stderr)
+        for name, detail in failed:
+            print(f"  FAIL {name}: {detail}", file=sys.stderr)
+        return 1
+    print(f"self-test OK (release) — {len(results)} of {len(results)} checks: release-fix refuses set, a reviewer, "
+          "an unregistered lane and a live reroute; only the named lane takes a queued fix; an abandoned release "
+          "reroutes and render shows it; start-review refuses a builder lane, an executor and a missing checkpoint; "
+          "a red item keeps its human gate when --tag is omitted; each CONTROL lands with its kickoff")
+    return 0
+
+
 def _self_test_evidence_record() -> int:
     """`set <item> CHECKPOINT-READY --evidence-record` through the CLI. The fail-closed branch (the
     HPP core absent) always runs, by hiding the core from the import system; the branch that verifies
@@ -1547,6 +1868,16 @@ def build_parser() -> argparse.ArgumentParser:
     wd.add_argument("--model", required=True)
     wd.add_argument("--reason", required=True, help="why the candidate leaves the competition")
 
+    rf = sub.add_parser("release-fix", help="route a NEEDS-FIX to a named live executor (FIX-QUEUED + kickoff)")
+    rf.add_argument("item_id")
+    rf.add_argument("--target-lane", required=True, help="a registered, live lane with role executor")
+    rf.add_argument("--operator", default="operator", help="who released it, recorded on the event")
+
+    sr = sub.add_parser("start-review", help="open a review for a named live reviewer (UNDER-REVIEW + kickoff)")
+    sr.add_argument("item_id")
+    sr.add_argument("--target-lane", required=True, help="a registered, live lane with role reviewer")
+    sr.add_argument("--operator", default="operator", help="who opened it, recorded on the event")
+
     st = sub.add_parser("status")
     st.add_argument("item_id", nargs="?")
 
@@ -1559,7 +1890,8 @@ def main(argv) -> int:
     args = build_parser().parse_args(argv)
 
     if args.self_test:
-        return _self_test() or _self_test_compete() or _self_test_withdraw() or _self_test_evidence_record()
+        return (_self_test() or _self_test_compete() or _self_test_withdraw() or _self_test_release()
+                or _self_test_evidence_record())
 
     if args.cmd == "claim":
         ok, result = set_state(args.item_id, "CLAIMED", args.lane, args.role, args.model, tag=args.tag)
@@ -1614,6 +1946,10 @@ def main(argv) -> int:
                                 checker_unavailable=args.checker_unavailable)
     elif args.cmd == "withdraw":
         ok, result = withdraw(args.task, args.item, args.lane, args.model, args.reason)
+    elif args.cmd == "release-fix":
+        ok, result = release_fix(args.item_id, args.target_lane, args.operator)
+    elif args.cmd == "start-review":
+        ok, result = start_review(args.item_id, args.target_lane, args.operator)
     elif args.cmd == "status":
         events = _read_events(args.item_id)
         if args.item_id and not events:
@@ -1628,7 +1964,8 @@ def main(argv) -> int:
         print(text)
         return 0
     else:
-        print("usage: claim|set|compete|select|withdraw|status|render [...] or --self-test", file=sys.stderr)
+        print("usage: claim|set|compete|select|withdraw|release-fix|start-review|status|render [...] or --self-test",
+              file=sys.stderr)
         return 2
 
     if ok:

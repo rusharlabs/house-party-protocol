@@ -2,7 +2,8 @@
 
 # lane-kit — N sessões, 1 repo, zero colisão
 
-> Ver `scripts/lane_board.py` (quadro-branco), `skills/lane-coordinator/SKILL.md` (uso),
+> Ver `scripts/lane_board.py` (quadro-branco), `scripts/lane_dashboard.py` (o quadro como página web local),
+> `skills/lane-coordinator/SKILL.md` (uso),
 > `evals/collision-2lanes.sh` (teste de concorrência), `templates/` (mailbox + status HTML).
 
 ## LANE-ENGINE — registry de lanes vivas + guards de concorrência
@@ -77,10 +78,10 @@ do item SEM violar maker≠checker:
 2. `CHECKPOINT-READY` só é aceito da lane que fez o ÚLTIMO `CLAIMED`/`BUILDING` (regra atual
    do enforcement) — ou seja, a convergência é **sequencial no board** mesmo que o trabalho
    real seja paralelo: a lane que "fecha" o checkpoint é quem grava por último.
-3. A revisora, na hora do `VERIFIED`, ainda precisa ser de lane+família DIFERENTE do
-   **builder registrado no evento `CLAIMED` original** (não do último `BUILDING`) — o
-   enforcement busca o primeiro evento `CLAIMED` do item como "o builder", propositalmente,
-   para que convergência de 2 lanes-construtoras não vire brecha de auto-aprovação.
+3. A revisora, na hora do `VERIFIED`, precisa ser de lane E família de modelo diferentes de
+   **toda lane que construiu o item** (qualquer evento `CLAIMED`/`BUILDING`/`CHECKPOINT-READY`) —
+   propositalmente, para que nem a convergência de 2 lanes-construtoras nem uma correção
+   encaminhada a outra executora (`release-fix`) vire brecha de auto-aprovação.
 4. Use o `REORIENT-MAILBOX.template.md` para a lane que está entrando no item avisar a que
    já estava (e vice-versa) — o board registra ESTADO, não a conversa de coordenação.
 
@@ -88,6 +89,57 @@ Este modo é **opcional e não tem enforcement extra no código** além do que j
 funciona porque o state machine já é permissivo o bastante para 2 builders na mesma lane
 lógica; não há necessidade de um "modo" separado ativável, é o comportamento natural do
 board quando 2 lanes cooperam no mesmo item_id.
+
+## Hand-offs do operador — encaminhar uma correção, abrir uma revisão
+
+Duas escritas deixam o operador entregar trabalho a uma lane nomeada. As duas conferem o registry (o
+alvo precisa estar registrado, vivo e no papel certo), as duas escrevem no mailbox um kickoff com
+`## Para:` que o `lane_register.py` roteia, e nenhuma inicia um agente — isso é o lançador do painel,
+abaixo.
+
+1. **`release-fix <item> --target-lane <executora>`** transforma um `NEEDS-FIX` em `FIX-QUEUED`
+   (`NEEDS-FIX → FIX-QUEUED → BUILDING`). O kickoff leva a direção da revisora e o checkpoint
+   anterior. Só a lane nomeada pode escrever o próximo `BUILDING`; o `set` nunca escreve
+   `FIX-QUEUED`. **Válvula de re-roteamento**: uma correção enfileirada para uma lane que parou de
+   bater pode ser liberada de novo para OUTRA lane, e o evento registra `reroute` com a lane
+   abandonada e o motivo medido; a correção de uma lane viva nunca é tirada dela. Quem construiu
+   ainda pode retomar um `NEEDS-FIX` direto com `BUILDING` — encaminhar é opção, não obrigação nova.
+2. **`start-review <item> --target-lane <revisora>`** transforma um `CHECKPOINT-READY` (ou
+   `DEFERRED`) em `UNDER-REVIEW` para uma lane revisora que não construiu o item. A família de modelo
+   é conferida onde o veredito é registrado, como em toda revisão: abrir revisão é barato e
+   reversível, e recusá-la por família tornaria o `DEFERRED` inalcançável quando não há outra
+   família à mão.
+
+A tag de um item pertence ao item: depois que qualquer evento disse `red`, o `MERGED` exige
+`--human-approved`, diga o que disser um `--tag` posterior (quem omitia a flag fazia merge de um item
+red e o registrava como green).
+
+## Lane Dashboard — o quadro no navegador, de qualquer IDE
+
+`scripts/lane_dashboard.py` serve o quadro como uma página local (só `127.0.0.1`) que se atualiza
+quando o `board.jsonl` muda: o backlog de specs e as waves iniciadas a partir dele, as colunas, as
+lanes e o heartbeat de cada uma, as competições e os efeitos ainda devidos a uma lane. É um
+observador READ-ONLY no sentido da convenção acima — nunca edita o `board.jsonl` nem o registry por
+conta própria: toda escrita no quadro passa pelo `lane_board.py` e toda lane pelo `_lane_io.py`, então
+ele é recusado exatamente no que uma lane seria. Os artefatos próprios dele são os pedidos de wave
+(`waves/<wave>.request.json`), os prompts e logs de sessão (`sessions/`), os briefings de decisão
+(`decision-briefs/`) e, quando o operador adiciona uma spec pela página, o `BACKLOG.json`.
+
+O que ele acrescenta é o lançador. Depois de um diálogo de confirmação, ele inicia uma sessão de
+agente — Claude Code, Codex, Gemini CLI ou Cursor Agent, conforme o PATH — no ambiente do operador,
+detectado a partir de onde o painel roda: um terminal do worktree do projeto no **Orca**, uma janela da
+sessão **tmux** em que ele roda (ou da sessão destacada `hpp-lanes` quando não há tela), uma janela
+nova do **terminal** do sistema (o Terminal no macOS, o terminal do desktop no Linux, um console
+PowerShell no Windows), ou o modo **headless** do agente com log. Ele nunca entrega um comando para
+colar: uma sessão que não inicia mantém a lane e o prompt, e inicia de novo pelo diálogo. Um painel
+serve vários projetos e as worktrees de cada um — cada `--project-dir`, as outras worktrees do
+repositório dele e as worktrees do Orca que usam lane-kit —, agrupadas pelo diretório git que
+compartilham, cada worktree com o próprio quadro; a página mostra todos os projetos, um projeto ou uma
+worktree, e uma ação nomeia a worktree por um id da lista do servidor, nunca por um caminho. A sessão recebe `CLAUDE_LANE_ID/ROLE/MODEL`, então os hooks de lane a
+registram com a identidade certa. Uma revisão só pode ser lançada com um agente de família diferente
+da de quem construiu. Um briefing de decisão (opções e uma recomendação para um `NEEDS-FIX`, um
+`DEFERRED` ou um `VERIFIED` red) é pedido a um agente headless de outra família quando o operador
+aperta o botão — `--auto-brief` pede assim que o item chega — e nunca age sobre o quadro.
 
 ## Competições — N lanes tentam a mesma tarefa, um vencedor
 

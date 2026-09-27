@@ -9,6 +9,37 @@ keeps its own version in `plugin.json` and in `marketplace.json`.
 
 ## [Unreleased]
 
+### Added
+
+- **Lane Dashboard** (lane-kit). `scripts/lane_dashboard.py` serves the lane board as a live local
+  page — Orca's browser, VS Code's Simple Browser or any browser — built on `docs/hpp.css`: the
+  backlog of specs (`docs/plans/execution/BACKLOG.json`, an `hpp work plan` spec), the columns, the
+  lanes, the competitions and the effects still owed. From it, behind a confirmation dialog, the
+  operator adds a spec, starts a wave (a planner writes the manifest first), routes a fix, opens a
+  review with an agent of another family, approves a red merge, asks for a decision brief and reads
+  an integration report. It writes the board only through `lane_board.py`, and starts every session
+  itself, where it detects the operator is: an Orca terminal, a window of the tmux session it runs
+  in, a new window of the system terminal (Terminal on macOS, the desktop's terminal on Linux, a
+  PowerShell console on Windows), or headless. It never hands over a command to paste: a session that
+  does not start keeps its lane and prompt, and starts again from the dialog. One dashboard serves
+  several projects and the worktrees of each — every `--project-dir`, the other worktrees of its
+  repository, and the Orca worktrees that use lane-kit, found by itself — grouped by repository, each
+  worktree with its own board; a Scope panel shows every project, one project or one worktree, and
+  an action names its worktree by an id from the server's list, never by a path. Ported from a
+  dashboard that ran in a private project, rewritten to the board's English keys and stdlib only.
+- **`lane_board.py release-fix` and `start-review`** (lane-kit): the operator hands a `NEEDS-FIX` to a
+  named live executor (`FIX-QUEUED`, taken only by that lane, rerouted only when it stops beating)
+  and a checkpoint to a named live reviewer, each with a `## Para:` kickoff in the mailbox.
+
+### Fixed
+
+- **A red item merged without the human gate when `--tag` was omitted** (lane-kit). The MERGED check
+  read the command line's `--tag`, whose default is green, and the event recorded the item as green.
+  The tag now belongs to the item: once red, always red.
+- **A reviewer of the fix builder's family could verify the fix** (lane-kit). The family check
+  compared the verdict with the claiming model only; it now compares with every lane that built the
+  item, as the lane check already did.
+
 ## [2.9.0] — 2026-09-25
 
 ### Added

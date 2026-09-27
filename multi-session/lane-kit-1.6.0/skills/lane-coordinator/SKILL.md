@@ -4,7 +4,7 @@ description: Coordinates N concurrent sessions (lanes) over the same repo throug
 ---
 
 > **Auto-Trigger:** When 2+ sessions (planner/executor/reviewer) work on the same repo at the same time, or before an executor claims a work item, or before a reviewer approves/rejects an item.
-> **Keywords:** "lane", "lanes", "whiteboard", "board", "coordinate sessions", "maker checker", "claimed", "checkpoint-ready", "verified", "session collision", "multiple sessions", "best-of-n", "compete", "competing attempts", "pick the best attempt"
+> **Keywords:** "lane", "lanes", "whiteboard", "board", "coordinate sessions", "maker checker", "claimed", "checkpoint-ready", "verified", "session collision", "multiple sessions", "best-of-n", "compete", "competing attempts", "pick the best attempt", "lane dashboard", "board in the browser", "release fix", "start review"
 > **Priority:** HIGH
 > **Tools:** Bash, Read
 
@@ -34,20 +34,23 @@ description: Coordinates N concurrent sessions (lanes) over the same repo throug
 | `.claude/lanes/board.jsonl` | Reads+Writes (append, under lock) | the item's event history |
 | `.claude/lanes/.lock` (dir) | Creates+removes | serializes concurrent writes |
 | `docs/plans/execution/LANE-BOARD.md` | Writes (via `render`) | readable snapshot, committed only at session-harvest |
+| `.claude/lanes/registry.json` | Reads (`release-fix`, `start-review`) | the target lane must be registered, alive, and of the right role |
+| `.claude/lanes/mailbox/` | Writes (`release-fix`, `start-review`) | a write-once kickoff, routed by its `## Para:` line |
 
 ## State machine
 
 ```
 CLAIMED → BUILDING → CHECKPOINT-READY → UNDER-REVIEW → VERIFIED | NEEDS-FIX → MERGED
                                                        ↘ DEFERRED (checker indisponível) ↗
+NEEDS-FIX → FIX-QUEUED → BUILDING   (only by the lane named — written only by `release-fix`)
 CHECKPOINT-READY | VERIFIED → NOT-SELECTED   (terminal — written only by `select`, for a losing candidate)
 any state of an undecided candidate → WITHDRAWN   (terminal — written only by `withdraw`)
 ```
 
 - **CHECKPOINT-READY**: only `role=executor`, only the lane that did `CLAIMED`, and requires a non-empty `--evidence` (pasted hash/exit code — never "I ran it") or an `--evidence-record` the HPP core verifies as `valid`.
-- **VERIFIED/NEEDS-FIX**: only `role=reviewer`, with `--verdict-by-lane` DIFFERENT from the lane that built AND `--verdict-by-model` from a DIFFERENT family (cross-model maker≠checker, in code — cannot be bypassed).
+- **VERIFIED/NEEDS-FIX**: only `role=reviewer`, with `--verdict-by-lane` DIFFERENT from every lane that built the item AND `--verdict-by-model` from a family DIFFERENT from every builder's (cross-model maker≠checker, in code — cannot be bypassed; a fix built by another executor counts as building).
 - **Checker unavailable** (`--checker-unavailable`): only `DEFERRED` is accepted — never `VERIFIED`.
-- **MERGED**: requires a `VERIFIED` in the item's history; if `--tag red`, also requires `--human-approved` (literal human gate); if the item is a candidate of a competition, that competition must already have a winner.
+- **MERGED**: requires a `VERIFIED` in the item's history; if the item was ever tagged red, also requires `--human-approved` (literal human gate) — the tag belongs to the item, so omitting `--tag` does not make it green; if the item is a candidate of a competition, that competition must already have a winner.
 
 ## Best-of-N — several lanes, one task, one winner
 
@@ -64,6 +67,20 @@ python ${CLAUDE_PLUGIN_ROOT}/scripts/lane_board.py withdraw --task TASK-1 --item
 - **No reviewer available**: `select --task TASK-1 --checker-unavailable --lane rev-x --model gpt-5.6` records DEFERRED for the competition — never a winner.
 - **A candidate's lane died**: `withdraw` takes it out of the undecided competition with a `--reason`; the item becomes `WITHDRAWN` (terminal), stops counting for readiness and selection, and its lane is owed the news (`lane_effects.py pending`). Refused: a decided task, a non-candidate or already withdrawn item, an empty reason, the last remaining candidate, and a coordinator lane that built a rival candidate. With exactly 1 candidate left, `select` of that one is allowed. `render` and `status TASK-1` show the withdrawal.
 - The winner still goes through its ordinary review before MERGED: a selection compares attempts, it does not verify one.
+
+## Operator hand-offs and the Lane Dashboard
+
+The operator routes work between lanes with two writes, and nothing else starts an agent:
+
+```bash
+python ${CLAUDE_PLUGIN_ROOT}/scripts/lane_board.py release-fix ITEM-1 --target-lane exec-b
+python ${CLAUDE_PLUGIN_ROOT}/scripts/lane_board.py start-review ITEM-1 --target-lane rev-a
+```
+
+- **release-fix**: a `NEEDS-FIX` becomes `FIX-QUEUED` for a registered, live `executor` lane, with a kickoff that carries the reviewer's direction; only that lane may then write `BUILDING`. A fix queued for a lane that stopped beating can be released again to another lane (the event records `reroute`); a live lane's fix is never taken from it.
+- **start-review**: a `CHECKPOINT-READY` (or `DEFERRED`) becomes `UNDER-REVIEW` for a registered, live `reviewer` lane that did not build the item, with a kickoff that carries the checkpoint evidence. The family is checked at the verdict, as for every review.
+
+`python ${CLAUDE_PLUGIN_ROOT}/scripts/lane_dashboard.py --open` serves the same board as a live local page (Orca's browser, VS Code's Simple Browser, any browser): the backlog, the columns, the lanes, the competitions and the effects still owed. From it the operator starts a wave (a planner writes the manifest first), releases fixes, opens reviews, approves red merges and asks for a decision brief — each through a confirmation dialog, each board write through `lane_board.py`. It starts every session itself, where it detects the operator is (an Orca terminal, the tmux session it runs in, a new terminal window, or headless), and never hands over a command to paste. One dashboard serves several projects and the worktrees of each (`--project-dir` repeated, the other worktrees of its repository, the Orca worktrees that use lane-kit), grouped by repository: every project, one project or one worktree; each action names its worktree.
 
 ## Process
 
@@ -116,6 +133,19 @@ lane_board: refused — maker≠checker violated: reviewer (exec-a) is the SAME 
 (after the full CLAIMED→BUILDING→CHECKPOINT-READY→UNDER-REVIEW cycle, the SAME lane trying to be the reviewer of its own work is refused IN CODE — it does not depend on discipline.)
 
 ```console
+$ python scripts/lane_board.py release-fix ITEM-2 --target-lane exec-b
+lane_board: refused — release-fix needs an item in NEEDS-FIX (current: CHECKPOINT-READY)
+```
+<!-- executed: 2026-09-27 · exit=1 -->
+(a fix is routed only after a reviewer asked for one; a checkpoint goes to review instead:)
+
+```console
+$ python scripts/lane_board.py start-review ITEM-2 --target-lane rev-a
+{"ts": "…", "item_id": "ITEM-2", "state": "UNDER-REVIEW", "lane_id": "operator", "role": "operator", "model": "human", "target_lane": "rev-a", "target_model": "gpt-5.6", "kickoff": ".claude/lanes/mailbox/review-…-ITEM-2.md", "tag": "green"}
+```
+<!-- executed: 2026-09-27 · exit=0 -->
+
+```console
 $ bash evals/collision-2lanes.sh 10
 [OK] zero corruption: 10/10 valid lines, 10 distinct items, 0 processes with exit!=0
 ```
@@ -126,4 +156,5 @@ $ bash evals/collision-2lanes.sh 10
 
 ```bash
 python ${CLAUDE_PLUGIN_ROOT}/scripts/lane_board.py --self-test
+python ${CLAUDE_PLUGIN_ROOT}/scripts/lane_dashboard.py --self-test
 ```

@@ -9,6 +9,7 @@ verification:
   - "python hooks/lane_git_guard.py --self-test"
   - "python hooks/lane_territory_guard.py --self-test"
   - "python scripts/lane_board.py --self-test"
+  - "python scripts/lane_dashboard.py --self-test"
   - "python scripts/lane_rescue.py --self-test"
   - "python scripts/lane_effects.py --self-test"
   - "python scripts/house_session.py --self-test"
