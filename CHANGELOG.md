@@ -9,6 +9,10 @@ keeps its own version in `plugin.json` and in `marketplace.json`.
 
 ## [Unreleased]
 
+### Added
+
+- **Support pages.** Add English and Brazilian Portuguese guidance for questions, problem reports, private vulnerability reports, and the project manual and catalogue.
+
 ## [2.9.0] — 2026-09-25
 
 ### Added
