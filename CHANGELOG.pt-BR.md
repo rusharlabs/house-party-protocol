@@ -9,6 +9,10 @@ cada módulo mantém sua própria versão no `plugin.json` e no `marketplace.jso
 
 ## [Unreleased]
 
+### Added
+
+- **Páginas de suporte.** Adicionadas orientações em inglês e português brasileiro para dúvidas, relatos de problemas, relatos privados de vulnerabilidades e acesso ao manual e ao catálogo.
+
 ## [2.9.0] — 2026-09-25
 
 ### Adicionado
