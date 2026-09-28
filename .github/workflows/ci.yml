@@ -1,150 +1,24 @@
 name: CI
 
+# Diagnostic branch only (diag/macos-dashboard): never merged. It times the Lane Dashboard
+# self-test on macOS and dumps every thread's stack every 15 s while it runs, to show where it
+# waits: it exceeds the kit doctor's 30 s smoke budget on macOS and not on Linux or Windows.
 on:
-  push:
-    branches: [main]
   pull_request:
 
-# Why: the suite is stdlib-only and needs nothing beyond checkout + a source
-# read, so the workflow never needs more than read access to the repository.
 permissions:
   contents: read
 
-# Why: a new push on the same branch/PR supersedes the run already in flight,
-# instead of letting runs pile up on top of each other.
-concurrency:
-  group: ci-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
-  test:
-    name: pytest + hpp doctor/benchmark (${{ matrix.os }}, py${{ matrix.python-version }})
+  diag:
+    name: diag dashboard self-test (${{ matrix.os }}, py${{ matrix.python-version }})
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: ["3.10", "3.11", "3.12", "3.13"]
-    steps:
-      # Why: actions are pinned to a full commit SHA (the tag beside it is the human label) so
-      # a moved tag cannot change what runs here; `persist-credentials: false` keeps the
-      # checkout token out of the working tree, since no later step pushes anything.
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
-        with:
-          python-version: ${{ matrix.python-version }}
-
-      # Why (CI runs of 2026-09-21/22, 12 of 12 jobs red with `No module named pytest`): the
-      # package has zero third-party dependencies (`dependencies = []`), but the test runner
-      # is not part of the package and GitHub runners do not ship it. This is the only install
-      # step, and it installs the runner alone — `tests/test_stdlib_only.py` keeps it that way.
-      - name: Install the test runner (the package itself needs nothing)
-        # Why (2026-09-25): hash-pinned, so the runner and its dependencies are exactly the
-        # committed ones -- regenerate with `uv pip compile --universal --generate-hashes`.
-        run: python -m pip install --disable-pip-version-check --require-hashes -r .github/requirements/ci.txt
-
-      # Why (2026-09-24): no step treated a warning as a failure, so a SyntaxWarning (an invalid
-      # escape in a regex, say) or a DeprecationWarning at import time would scroll past a green
-      # build. `-X dev -W error` turns both into errors while every file is compiled.
-      - name: Compile with warnings as errors
-        run: python -X dev -W error -m compileall -q -f hpp tests scripts
-
-      # Why: `python -m pytest` (as opposed to a bare `pytest`) puts the current
-      # working directory on sys.path[0], which is what lets `import hpp`
-      # resolve without an install step; tests/conftest.py adds a defensive
-      # fallback for any invocation that skips that.
-      - name: Run test suite (pytest, stdlib-only)
-        # Why (2.9.0): 77 ResourceWarnings hid a real leak (every command left two pipes open).
-        # With warnings as errors, the next leak fails the build instead of scrolling past.
-        run: python -X dev -W error -m pytest tests -q -p no:cacheprovider -W error
-
-      - name: hpp doctor
-        run: python -m hpp doctor
-
-      # Why: runs the harness's own executable controls (manifest contract,
-      # policy enforcement, workgraph waves, lane collisions, monitor
-      # freshness, context provenance, routing floor, event/evidence gate,
-      # graph determinism, evidence attestation) with k=3 repeats. This is the
-      # product's self-check, not a substitute for tests/: it exercises the
-      # packaged example suite end-to-end through the real CLI entrypoint.
-      - name: hpp benchmark (self-check controls, k=3)
-        run: python -m hpp benchmark -k 3
-
-      # Why: verifies every CHECKSUMS.txt found in the checkout against the
-      # bytes on disk. `shell: python` runs this identically on all three
-      # platforms (Actions invokes `python <tmp-script>`), so no OS branching
-      # is needed. The published repository is the emitted distribution: every
-      # module directory (frameworks/, installers/, continuity/,
-      # multi-session/, wizards/) carries a CHECKSUMS.txt written by the forge,
-      # so here this step is a real gate over every shipped module file. The
-      # same workflow also runs in the harness source tree, which has no module
-      # directories; there the step says that nothing was found and exits 0,
-      # rather than failing on a check with nothing to verify or silently
-      # doing nothing.
-      - name: Verify CHECKSUMS.txt for any distributed module present in the checkout
-        shell: python
-        run: |
-          import hashlib
-          import pathlib
-          import sys
-
-          root = pathlib.Path(".").resolve()
-          checksum_files = sorted(root.rglob("CHECKSUMS.txt"))
-
-          if not checksum_files:
-              print(
-                  "::notice::No CHECKSUMS.txt found in this checkout: this is the "
-                  "harness source tree, not the emitted distribution. Module "
-                  "directories (each with its own CHECKSUMS.txt) exist only in "
-                  "the published repository, so there is nothing to verify here."
-              )
-              sys.exit(0)
-
-          failures = []
-          for checksums_file in checksum_files:
-              module_dir = checksums_file.parent
-              for line in checksums_file.read_text(encoding="utf-8").splitlines():
-                  if not line.strip():
-                      continue
-                  expected_hash, separator, relative_path = line.partition("  ")
-                  if not separator:
-                      failures.append(f"{checksums_file}: malformed line: {line!r}")
-                      continue
-                  target = module_dir / relative_path
-                  if not target.is_file():
-                      failures.append(f"{checksums_file}: listed and missing: {relative_path}")
-                      continue
-                  actual_hash = hashlib.sha256(target.read_bytes()).hexdigest()
-                  if actual_hash != expected_hash:
-                      failures.append(f"{checksums_file}: hash mismatch: {relative_path}")
-
-          if failures:
-              print("::error::CHECKSUMS.txt verification failed")
-              for failure in failures:
-                  print(f"::error::{failure}")
-              sys.exit(1)
-
-          print(f"CHECKSUMS.txt verified for {len(checksum_files)} module(s).")
-
-  # Why (2026-09-27): the modules' own self-tests and evals ran only on the machines that wrote
-  # them, and all seven evals failed on a stock Mac (a bare `python`; a Mac has only `python3`).
-  # This job runs them on the three systems the way a user would get them: macOS with the stock
-  # /bin/bash (3.2) and BSD tools, macOS and Linux with no `python` on PATH, Windows with Git
-  # Bash. The oldest and newest supported Pythons are enough here; the suite above covers all four.
-  # In the source tree there are no modules and the script says so and exits 0.
-  modules:
-    name: module self-tests + evals (${{ matrix.os }}, py${{ matrix.python-version }})
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: ["3.10", "3.13"]
+        os: [macos-latest, ubuntu-latest]
+        python-version: ["3.12"]
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -156,21 +30,17 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      # Why: operator-kit, kit-forge and agent-framework-wizard declare PyYAML as required in their
-      # READMEs, and their self-tests stop without it. The package itself still needs nothing; this is
-      # what the modules need, hash-pinned like the test runner (uv pip compile --universal
-      # --generate-hashes). Installed into the interpreter the shim calls `python3`.
       - name: Install what the modules declare they need (PyYAML)
         run: python -m pip install --disable-pip-version-check --require-hashes -r .github/requirements/modules.txt
 
-      - name: Modules on macOS (stock /bin/bash 3.2, BSD tools, no python on PATH)
-        if: runner.os == 'macOS'
-        run: python scripts/module_checks.py --bash /bin/bash --without-python
+      - name: Dashboard self-test, timed, with a stack dump every 15 s
+        continue-on-error: true
+        run: |
+          cd multi-session/lane-kit-1.7.0
+          start=$(date +%s)
+          python -B -X utf8 -c "import faulthandler, runpy, sys; faulthandler.dump_traceback_later(15, repeat=True); sys.argv = ['lane_dashboard.py', '--self-test']; runpy.run_path('scripts/lane_dashboard.py', run_name='__main__')" || echo "exit=$?"
+          echo "ELAPSED $(( $(date +%s) - start )) s"
 
-      - name: Modules on Linux (no python on PATH)
-        if: runner.os == 'Linux'
-        run: python scripts/module_checks.py --without-python
-
-      - name: Modules on Windows (Git Bash)
-        if: runner.os == 'Windows'
-        run: python scripts/module_checks.py --bash "C:\Program Files\Git\bin\bash.exe"
+      - name: Processes left behind
+        if: always()
+        run: ps -axo pid,ppid,pgid,etime,command | grep -i python | grep -v grep || true
