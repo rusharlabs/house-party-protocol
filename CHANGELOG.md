@@ -7,11 +7,348 @@ All relevant changes to the harness are recorded here. The format follows
 [SemVer](https://semver.org/). The product version describes the harness contract; each module
 keeps its own version in `plugin.json` and in `marketplace.json`.
 
-## [Unreleased]
+## [2.10.0] — 2026-09-28
 
 ### Added
 
-- **Support pages.** Add English and Brazilian Portuguese guidance for questions, problem reports, private vulnerability reports, and the project manual and catalogue.
+- **The README's terminal captures are checked against a live run.**
+  `tests/test_static_captures_match_a_live_run.py` runs `hpp doctor` and `hpp init` again in the
+  emitted copy (so in CI) and compares their output, line by line, with `hpp-doctor.svg` and
+  `hpp-init.svg`. Only the Python version is normalized, so a release that bumps the package
+  version has to render the captures again; the `init` capture had been showing 2.5.8. The
+  renderer now writes the interpreter as `python` instead of the name of the machine that
+  rendered it.
+- **A Codex CLI plugin channel.** The repository is now also a marketplace Codex CLI reads
+  natively: `.agents/plugins/marketplace.json` at the root lists the modules that carry skills and
+  are supported on Codex, and each of them carries a `.codex-plugin/plugin.json` beside its Claude
+  one. It registers skills only: each Codex manifest carries the empty inline hooks object
+  `{"hooks": {}}`, because with no `hooks` key Codex loads the module's `hooks/hooks.json` (the
+  hooks are Claude Code's; measured with Codex CLI 0.153.4, 16 hooks registered without it and 0
+  with it), and it names the skills it registers and what of the module it does not. Both are
+  rendered from data by the forge (`tools/codex_marketplace.py`: the Claude plugin manifest, the
+  marketplace entry and the product manifest), the emission regenerates them, and `hpp doctor`
+  cross-checks the two channels against the manifest (`distribution.codex_marketplace`).
+  `codex plugin marketplace add rusharlabs/house-party-protocol`, then
+  `codex plugin add operator-kit@house-party-protocol`; the README, `INSTALL_FOR_AGENTS`, the
+  manual's hosts chapter and the wire block of `hpp init --host codex` say so. Measured with Codex
+  CLI 0.153.4 in an isolated `CODEX_HOME`: the native marketplace is the one it lists, and
+  `codex plugin add` installs from it.
+- **The host x module x channel matrix, rendered from the manifest.** `hpp doctor --matrix` renders
+  one row per module (integration and channels per host, from `hosts` and `components`);
+  `docs/ARCHITECTURE.md` carries the render in both languages under *Hosts and channels*, and
+  `tests/test_host_matrix.py` fails when a document and the manifest diverge.
+- **Signed attestations and evidence records, verified offline.** `attest create --sign-key KEY
+  [--signer NAME]` and `evidence run --sign-key KEY --signer NAME` sign the canonical bytes of the
+  record with `ssh-keygen -Y sign` (namespace `hpp`); `attest verify --allowed-signers FILE` and
+  `evidence verify --allowed-signers FILE` refuse a record that is unsigned, signed by a key the file
+  does not list for that signer, or changed after signing — however consistently a self-hash was
+  recomputed. No new dependency: the harness runs the OpenSSH binary already on the machine and
+  never reads the key; without the binary nothing is signed and nothing is reported `verified`.
+  Signing stays optional: an unsigned record verifies exactly as before, and every verify report now
+  carries a `signature` block that says `not-signed`, `not-verified`, `verified` or `refused`.
+- **A hash-chained event log.** Every appended event carries `prev_sha256`, the sha256 of the line
+  before it (the first links to the hash of nothing). `hpp event verify` reports `intact`, `legacy`,
+  `broken` or `empty` and names the first divergent step; `hpp status` refuses a broken chain naming
+  that step, and `status --json` carries the chain summary with `head_sha256`. The tail is anchored
+  by the next append, or by a copy of that head kept elsewhere; an attestation does not record it.
+  A log written before the chain still reads and is declared `legacy`; an upgrade never fails an
+  old repository.
+- **A project policy that only hardens.** `.hpp/policy.json` (`hpp.policy/v1`, read by `policy
+  check` from the current directory, or `--policy FILE`) adds `BLOCK`/`MANUAL` rules of the
+  project's own and raises built-in `MANUAL` rules to `BLOCK`. A rule with action `ALLOW`, a raise
+  that keeps or lowers a class, or a rule that reuses a built-in id is refused as a whole, and a
+  refused file refuses the check (exit 2, no verdict printed) instead of falling back to the
+  built-ins. Every verdict now says its `source` (`built-in` or `policy`).
+- **`hpp doctor --report`.** Prints the link to the feedback form (`.github/ISSUE_TEMPLATE/feedback.yml`)
+  with the title filled in, and the report to paste below it: versions, Python, platform and the
+  doctor's counts, with no machine path. No network call is made; nothing is sent until the person
+  opens the link. With `--json`, one object with `feedback_url` and `report`.
+- **Every architecture, concept and contract document is a page of the site.** The site published
+  only the landing page, the catalogue pair and the manual pair; the documents under `docs/`
+  (architecture, benchmark, brand, concepts, design, graph model, loops, method, proof, tips and
+  the installation journey) and the four contract documents at the root (`MANIFESTO`,
+  `INSTALL-CONTRACT`, `SKILL-CONTRACT`, `INSTALL_FOR_AGENTS`) existed only as Markdown. Each one
+  now has an English and a Portuguese page in `docs/` — 30 pages — rendered from its Markdown on
+  the manual's design (its stylesheet, lockup, language bar, chapter nav and footer), with relative
+  links pointing at the rendered pages. `docs/site-pages.json` lists them in five groups (Concepts ·
+  Architecture · Method · Contracts · Brand & design), and kit-forge's `tools/catalog_md.py` turns
+  that list into the navigation of `docs/index.html`, in both language sections, linking only
+  pages that exist. `tests/test_docs_html_pages.py` requires the pair for every document, the
+  links between the two languages, the links from the landing page and, on every page, the
+  headings of its Markdown.
+- **Two chapters in the manual.** *Lanes* (05) explains how parallel sessions coordinate through
+  four shared files — registry, board, mailbox and effects — with the mailbox protocol, the
+  difference between a verdict decided and a verdict delivered, the two guards, and the measured
+  collision evals. *Decisions* (09) walks through a typed-decision advisor end to end with Jev, the
+  advisor the wizard knows by name: declare it, pin its version, record, validate and measure it
+  against a baseline, and what the adapter refuses and why. The chapters after them are renumbered.
+- **An animated demo at the top of the README.** `scripts/render_terminal_svg.py --animate` renders a
+  real `hpp` session — `doctor`, `init`, `eval run -k 3 --gate both`, `benchmark -k 3` — as a looping
+  SVG: commands typed, output line by line, the final screen held on `gate=PASS`. CSS only, no
+  script and no external reference; under `prefers-reduced-motion` it is a still of the final
+  screen. The selection keeps whole lines and says how many it leaves out, and the commands are
+  recorded in the file. `tests/test_terminal_animation.py` runs the four commands again and fails
+  if their output changed shape.
+- **A second animated story: a stale approval is refused.** `scripts/render_terminal_svg.py --animate
+  --session attest` writes `assets/terminal/hpp-attest-demo.svg` from a real run in a throwaway git
+  repository: `hpp attest create --maker a --checker a` is refused with exit 2, an approval by checker
+  `b` is recorded, `hpp attest verify` returns `valid`, one byte is appended to a committed file, and
+  the same `verify` returns `blocked` with `mismatches: snapshot_digest`, exit 2. Each step declares
+  the exit status it must return and the run stops on any other; the repository's one commit has a
+  fixed author and date, so the capture regenerates byte for byte. It is shown in the README and in
+  the manual's attestation section. `scripts/render_demo_media.py` turns either capture into a GIF
+  and an MP4 for places that do not play SVG — a maintainer tool, outside the wheel.
+- **The first screen of the README installs in one line.** Under the demo: `pip install
+  house-party-protocol`, the Claude Code channel, and four claims each with the place that proves
+  it — standard library only, captures rendered from real output, verifiable releases, limits
+  written down.
+- **A verdict reaches the lane it concerns (lane-kit).** When the board records `VERIFIED`,
+  `NEEDS-FIX`, `DEFERRED`, `NOT-SELECTED` or `WITHDRAWN`, `lane_board.py` writes the message into
+  the mailbox of the lane that built the item — `## To:` that lane, with the item, the verdict, the
+  reason, the evidence and the round — and marks the reservation in `effects.json` delivered, with
+  the message's path as evidence. A retry writes no second message; a new round writes its own. It
+  is on by default: `mailbox.notify_on_verdict: false` in `lanes.yaml` goes back to delivery by
+  hand, with nothing written and the reservation pending. The message is written after the board
+  lock is released, and a mailbox that cannot be written leaves the verdict pending under
+  **UNDELIVERED**.
+- **A doorbell for Codex lanes (lane-kit).** After writing a verdict for a lane that runs on Codex
+  CLI, the board runs `codex queue --thread <the lane's session> --message …`
+  (`mailbox.native_doorbell`, on by default): at most 5 s, no retry, and a failure never undoes the
+  delivery; the outcome is recorded beside the delivery evidence. Claude Code has no command that
+  reaches a running session, and the lane-kit README says so.
+- **An end-to-end eval of the mailbox (lane-kit).** `evals/mailbox-e2e.sh` drives the registry hook
+  and the board through their real interfaces, with two lanes in a temporary repository: routing,
+  the heartbeat announcement, delivery by default and, as the control, delivery switched off. 54/54
+  checks green over 3 rounds.
+- **The Lane Dashboard (lane-kit), contributed by @kleinelizeu.** `scripts/lane_dashboard.py` serves
+  the lane board as a page on `127.0.0.1` — columns, live lanes, competitions, each lane's mailbox
+  (unread, announced, read), deliveries with their doorbell outcome, the sessions it started, the
+  backlog with its waves and, asked of git, whether each reviewed item is integrated — for one
+  project or several, with the worktrees of each repository grouped under it. Every action it offers
+  is a terminal command that does exactly the same thing, and the page only calls that command:
+  `lane_board.py release-fix | start-review | approve`, and `lane_dashboard.py spec add`, `wave
+  start`, `fix launch`, `review launch`, `merged`, `brief request`, `integration report` and `session
+  relaunch | cancel`. Sessions start where the operator works — Orca's terminal, tmux, Terminal.app,
+  iTerm2, a desktop terminal on Linux, a PowerShell console on Windows, any terminal declared in
+  `.claude/lanes/dashboard.json`, or headless under a supervisor with a timeout, a stop and a capped
+  log — and only when the operator confirms an action. The page binds loopback, answers only a
+  loopback `Host`, requires a per-run token on every action, refuses to be framed, and a GET only
+  reads. Maker ≠ checker compares the family of the model a session actually runs: the model is
+  declared in `dashboard.json`, passed with the CLI's model flag and recorded on the board, and a CLI
+  that serves several vendors is refused until it is declared. `merged` writes MERGED only when `git
+  cherry` shows the builder's branch in the target. The review of the contribution found fourteen
+  defects; each was fixed with a test that fails on the contributed code for its own reason.
+- **Operator hand-offs on the lane board (lane-kit), contributed by @kleinelizeu.** `lane_board.py
+  release-fix <item> --target-lane <executor>` routes a NEEDS-FIX to a named live executor
+  (FIX-QUEUED, which only that lane may take), `start-review <item> --target-lane <reviewer>` opens a
+  review for a named live reviewer, and `approve <item>` records the human gate of a red item as
+  APPROVED — not MERGED; the merge is recorded after it happens. The two hand-offs write a kickoff to
+  the target's mailbox (`## To:`) and ring the Codex doorbell like a verdict, and the verdict on a
+  routed fix is delivered to the executor that built the fix, not to the lane that first claimed the
+  item. `claim` and `set` take `--branch` on the build states, so the board records the builder's
+  branch.
+- **Support pages.** Add English and Brazilian Portuguese guidance for questions, problem reports,
+  private vulnerability reports, and the project manual and catalogue (contributed by @PandaHUN777
+  in #19).
+- **The support pages also route feedback and ideas.** Both gain a section for the feedback form —
+  something confusing, slower than it should be, or a reason to stop using a piece — that asks for
+  the report `hpp doctor --report` prints, and one for the idea form. `hpp doctor --report` now
+  also prints the address of `SUPPORT.md` (`support_url` with `--json`), still without a network
+  call. Each README links the support page of its language beside the project site link, and the
+  pair is rendered as site pages (`docs/SUPPORT.html`, `docs/SUPPORT.pt-BR.html`) under a new
+  *Help* group of `docs/site-pages.json`. `tests/test_support_docs.py` now also requires every
+  issue form the repository ships to be linked from both pages, and runs the command they give.
+- **The modules' self-tests and evals run in CI on the three systems.** A new `modules` job runs
+  `scripts/module_checks.py`: every self-test of every shipped module (through the kit doctor's
+  smoke stage, in plan mode, so nothing is installed) and every module eval, on Ubuntu, macOS and
+  Windows with the oldest and the newest supported Python. macOS uses the stock `/bin/bash` (3.2)
+  and its BSD tools, and macOS and Linux run with no `python` on `PATH`, the way a Mac comes out of
+  the box. On the current modules that is 76 self-tests and 7 evals. A module that
+  `marketplace.json` declares and the copy lacks is an error that names it, never a pass on
+  nothing; with no `marketplace.json` (the source tree) the job says so and skips.
+- **A shell portability lint.** `scripts/shell_portability.py` rejects what breaks on a stock Mac:
+  bash 4 features, GNU-only flags (`sed -i` without a suffix, `grep -P`, `date -d`, `stat -c`,
+  `readlink -f` without a fallback, `timeout`, and more), and a bare `python` in a script that does
+  not resolve the interpreter first. `tests/test_shell_portability.py` holds every shipped `.sh` at
+  zero findings, and every rule has a case it must reject and a portable twin it must pass.
+- **Discussion category forms, and the routes into them.** Q&A, Ideas and Show and tell open with
+  a form that asks for the command and its output, the host and the version; Ideas carries the
+  `idea` label, so an idea promoted to an issue keeps it. The issue chooser sends a question to
+  Q&A and an early idea to Ideas through the links that open those forms, `SUPPORT.md` names the
+  two categories, and the README links Discussions beside Support. Announcements takes no form
+  (maintainers post there) and Polls cannot take one. `tests/test_discussion_forms.py` reads the
+  shape GitHub renders and fails on an issue-form key, a duplicated `id`, a field without a label,
+  or a link to a category that has no form.
+- **Every release opens its discussion.** `release.yml` creates the GitHub Release with
+  `--discussion-category "Announcements"`, so the release notes become a thread in that category;
+  the job asks for `contents: write` and `discussions: write`, and nothing else.
+
+### Changed
+
+- **The operator-kit loop gate carries a neutral name.** The Stop hook is `hooks/loop_gate.py`, the
+  commands are `/loop-gate` and `/cancel-loop-gate`, the guide is `LOOP-GATE.md` (with its pt-BR pair),
+  the eval is `evals/loop-gate-T1-T4.sh`, the manifest declares `operator-kit/loop-gate`, the state file
+  is `.claude/loop-gate.local.json`, and the skill that arms the loop is `loop-driver`. The former public
+  name was the nickname of a third party's loop technique, and the product cites no third party. Every
+  live reference moved with it: the hook wiring, `SETTINGS-WIRE`, the module README pair, the rules
+  `loop-operator`, `loop-cost-budget` and `loop-patterns-catalog`, the `gate-sheet-collector` skill,
+  `instinct_promote.py`, the continuity-kit templates, `SKILL-CONTRACT`, and the `LOOPS` and `METHOD`
+  pages of the site. The gate itself did not change: the eval passes 12/12 over three rounds under the
+  new name, and the self-test gained T6 (a state file under the former name is read when the new one is
+  absent and migrated on the first write). Earlier entries of this changelog stay as written.
+- **Positioning: agent teams as the frame, evidence as the difference.** The README opens with
+  "Agent teams under evidence: only what they prove counts as done" and a subtitle that keeps
+  "evidence, not trust" for Claude Code and Codex CLI; a new section, *Agent teams, under
+  evidence*, defines a team (two or more sessions or subagents on one repository), says first
+  that HPP is not the orchestrator (the orchestrator decides who works on what, HPP decides what
+  counts as done; the `hpp` package starts, schedules and pays for none of the agents, and the
+  lane-kit starts a session only on an action the operator takes, a Lane Dashboard action or the
+  seats of a `/deliberate`), and binds each thing a team does — split the work, review independently, accept only what is proven — to the contract it is held to
+  and the command that shows it holding. *Honest limits* gains the same limit in one bullet: a
+  verdict stops something only when a hook, a CI job or a person calls it. The manifesto gains
+  *More agents, more claims*, CONCEPTS gains *agent team* (with what it is not: something the
+  harness runs, or a promise of parallel safety) and *orchestration* (what decides who works, and the non-zero
+  exit codes an orchestrator can gate on), the PyPI description reads "Local-first
+  harness for coding-agent teams: cross-model review and evidence before done" with the keyword
+  `agent-teams`, and the GitHub description says the same in 344 characters; its topics trade
+  `provider-neutral` for `multi-agent`. A new test reads
+  every `hpp <verb> [<subverb>] [--flag]` in the section's command column, in both languages,
+  and checks it against the real argument parser, so the table cannot drift from the CLI.
+- **The lane board's checkpoint rule, stated as it is.** The README said `CHECKPOINT-READY` is
+  accepted only from the lane that claimed the item; the board accepts it from the lane of the
+  item's last build event (`CLAIMED`, `BUILDING` or `CHECKPOINT-READY`), the same owner a routed
+  fix's verdict is now delivered to.
+- Report shapes grew, nothing moved: `policy check` adds `policy` (the file applied, or `null`) and
+  `source`; `status --json` adds `chain`, and the one-liner ends with `chain=<status>`;
+  `doctor --json` adds `codex_marketplace` under `distribution`; `attest verify` and
+  `evidence verify` add `signature`. The wire block of `hpp init --host codex` opens with the plugin
+  channel lines for the modules that carry skills; the installer lines follow unchanged.
+- The README names Jev where it describes `--decision-advisor`, says hpp never calls it, and links
+  the manual chapter. The package keywords add `agent-harness`, `maker-checker`, `cross-model`,
+  `provider-neutral`, `typed-decisions`, `multi-agent` and `jev`.
+
+- **Current model ids in examples and fixtures.** The lane-kit README, skill, registry template,
+  evals and self-tests name `claude-opus-5-5`, `claude-haiku-4-5-20251001` and `gpt-5.6-sol`
+  instead of older ids; `docs/TIPS.md` and the manual's best-of-N example follow. The manual's
+  measured paragraph for that example was measured again with the new ids: the same verdicts and
+  the same exit codes.
+- The manual links the rendered concept, architecture, proof and benchmark pages instead of their
+  Markdown, and `docs/DESIGN.md` says which pages `catalog_md.py` writes and which are rendered from
+  Markdown.
+- **The mailbox routing line is `## To: <lane>` (lane-kit).** The Portuguese `## Para:` of earlier
+  versions still routes, so a mailbox written before keeps its messages.
+- **The manifesto names a bounded exception for modules.** "No daemon, no server, no scheduler" and
+  "No model calls" still hold for the `hpp` package. A module may serve a local page the operator
+  starts and stops — loopback only, a per-run token on every action, no framing, a GET that only
+  reads, every write through the module's own command-line tools, every action also a terminal
+  command — and may start an agent session only as an action the operator confirms, never on a
+  timer, with a background session under a supervisor. The Lane Dashboard is the one that does.
+- **The problem form asks for `hpp doctor --report`.** Its optional field asked for
+  `doctor --json`, whose `manifest` value is the absolute path of the manifest on the reporter's
+  machine, and said nothing about it. The report was written for pasting and carries no path;
+  `--json` keeps the path, because callers locate the manifest through it, and the field now says
+  which key to leave out of older output.
+- **`SECURITY.md` supports the 2.10 line.** Both pages said 2.6.x while 2.9.0 was current; a test
+  now fails when the supported line falls behind the version the package carries.
+- **The README module table names the versions the marketplace distributes.** It had fallen
+  behind `marketplace.json` for `operator-kit` and `lane-kit`. The readiness row that compares the
+  two also runs in the test suite now, against the marketplace it finds, instead of skipping in
+  the source tree.
+
+### Deprecated
+
+- **The former names of the loop gate, until 3.0.** `hooks/ralph_gate.py` stays as a thin entry point
+  that runs `hooks/loop_gate.py` in the same process with the same stdin, stdout and exit code (a test
+  proves the two answer byte for byte, with a control that catches a diverging alias); `/ralph-gate` and
+  `/cancel-ralph-gate` stay as short aliases that arm and cancel the same hook; a state file under the
+  former name is still read and migrated. Each alias names its successor and its removal version in its
+  own text, and a gate fails when any live file of the product outside the alias shims and this history
+  names the retired nickname. Point your wiring at `hooks/loop_gate.py` and `/loop-gate` before 3.0.
+
+### Fixed
+
+- **lane-kit: maker ≠ checker reads one family per vendor.** A Cursor tier id (`sonnet-4-thinking`,
+  `opus-4.1`) or a hosted id with a vendor prefix (`anthropic/claude-…`, `us.anthropic.claude-…`) is
+  the `claude` family; `openai/…`, `codex-*` and `o3` are `gpt`; `google/…` is `gemini`. A Sonnet
+  reviewer or brief no longer passes on Claude work, and a model that names no family (`auto`,
+  `default`) is refused by the dashboard and by the board's verdicts and selections.
+- **lane-kit: one supervisor per lane.** The supervisor holds an exclusive OS lock on
+  `<lane>.supervisor.lock` for its whole run, and a relaunch is prepared under a per-lane lock that
+  writes the run record before it is released; two concurrent starts no longer both run an agent for
+  the same lane.
+- **lane-kit: stopping a supervised session kills the whole tree.** After the grace period, whatever
+  remains of the process group (POSIX) or of the process tree (Windows, from a snapshot of parent ids)
+  is killed even when the agent's main process has already exited; a descendant that ignored SIGTERM,
+  or an orphan on Windows, no longer survives a timeout or a cancel. On Windows every kill ends one
+  process whose identity was verified (its creation time read through a handle held until the kill)
+  and nothing else: no kill walks the tree with `taskkill /T`, which would also end an unrelated
+  process whose parent id names an earlier process that had the same pid. A child started during
+  the kill is found by walking the tree again until a walk finds nothing new (at most four passes).
+- **lane-kit: a record being read is rewritten on Windows.** Windows refuses to replace a file that
+  another process has open, so the lane registry, the mailbox announcements and the effect ledger
+  failed to save (`PermissionError`) whenever a reader held them at that moment, and a supervised
+  session whose record was being read could lose its supervisor with the agent still running. Each
+  writer now retries the rename for up to 3 s while the reader lets go; past that the error is
+  raised as before.
+- **lane-kit: integration is proved by ancestry first.** `git merge-base --is-ancestor` decides;
+  patch-id equivalence (`git cherry`) is the fallback for non-merge commits, and a merge commit of the
+  branch that the target does not contain keeps the item pending. `git cherry` skips merge commits, so
+  a merge whose resolution added content read as integrated and `MERGED` could be recorded. The
+  `MERGED` evidence now names the measurement.
+- **lane-kit: the PowerShell console reads the prompt file as UTF-8.** Windows PowerShell 5.1 read it
+  in the ANSI code page and handed the agent corrupted instructions and paths.
+- **lane-kit: decision briefs run under the supervisor.** Like every headless session they get a
+  timeout, `session cancel` and a capped log, and a brief names the session that wrote it; before,
+  they ran with no stop and an uncapped capture, outside the manifesto's bounded exception.
+- **lane-kit: the heartbeat announces each message once.** The mailbox announcement queries and marks
+  the announced set under a per-lane lock and writes it through a private temporary file; concurrent
+  beats of one lane no longer announce a message twice or lose the set.
+- **lane-kit: review and fix kickoffs carry the checkpoint's evidence record.** `start-review` and
+  `release-fix` said "No checkpoint evidence on the board" when the evidence was a record; they now
+  name its id, path and sha256 prefix.
+- **lane-kit: the mailbox eval uses its own configuration and a real render check.** It points
+  `LANE_KIT_CONFIG` at each round's temporary configuration instead of inheriting the operator's, and
+  its render check demands exit 0 and the expected item before the absence of `UNDELIVERED`; the
+  heartbeat tests drive a controlled clock and require a strictly newer timestamp.
+- **A message for `exec-bb` reached `exec-b`** (lane-kit): the routing line was matched as a
+  substring. It is now matched as a whole line, with the lane id bounded.
+- **A lane that was already running never heard of new mail** (lane-kit): only registration read the
+  mailbox. The `PostToolUse` heartbeat now announces a message that arrived while the lane runs,
+  once per message (what was announced is kept in `mailbox/.announced/<lane>.json`), within the
+  heartbeat's throttle; a failure while scanning never stops the heartbeat.
+- **A red item could reach MERGED without the human gate** (lane-kit, found by @kleinelizeu): the
+  check read `--tag` from the command line, so a caller who omitted it merged a red item and recorded
+  it as green. The tag now belongs to the item: once any event of it says red, every later event is
+  red.
+- **Maker ≠ checker compared the checker's family only with the claimer's** (lane-kit, found by
+  @kleinelizeu): a fix rebuilt by an executor of another family could be verified by that same
+  family. The family of a verdict is now compared with every lane that built the item, and the
+  OpenAI aliases (`codex-*`, `openai-*`, `chatgpt-*`, `o<digit>`) count as the `gpt` family.
+- **The module evals ran only where `python` exists.** All seven called a bare `python`, and a
+  stock Mac has only `python3`, so they failed there with "command not found" before checking
+  anything. Each eval now resolves the interpreter in the order of `hooks/pyrun.sh`
+  (`HPP_PYTHON` overrides).
+- **Five slash commands ran only where `python` exists.** `/loop-gate`, `/cancel-loop-gate`, their
+  two former names and lane-kit's `/deliberate` run their script in a ```! block, and that block
+  called a bare `python`: on a stock Mac the loop could not even be armed. Each now runs its script
+  through the module's `hooks/pyrun.sh`, as the hooks do, and its `allowed-tools` names the shim
+  and the script. The shim runs them with `--strict`: with no interpreter the command stops with an
+  error instead of reading as done (a hook keeps exit 0, so it never takes the tool down).
+- **The continuity kit's C3 check timed the machine, not the hook.** Its "under 5 s" bound
+  included two Python start-ups, so on a loaded host it failed with the right behaviour (5 s and
+  7 s measured). C3 now times the two guard calls themselves with a monotonic clock and bounds
+  them at 8 s with nothing subtracted (subtracting a separately timed start-up let a slow sample
+  hide a slow hook); a guard that sleeps 4 s per call fails it, and a call that hangs is stopped
+  at 30 s.
+- **The catalogue could link a file name as a URL scheme.** On POSIX a page named
+  `javascript:alert(1)` passed the site-pages check and became an executable `href` on the
+  landing page; a shared document with that name did the same in the catalogue. Every file name
+  the generator links is now percent-encoded, so a colon can never open a scheme; ordinary names
+  render byte for byte as before.
+- **`hpp deliberate --help` named the wrong record schema.** The command description and the
+  `record` subcommand said `hpp.deliberation/v1`; the record sealed since 2.8.0 is
+  `hpp.deliberation/v2`, and a v1 record only re-derives under v1 rules. The help now takes the
+  name from the module that seals the record.
 
 ## [2.9.0] — 2026-09-25
 
@@ -1424,6 +1761,7 @@ publishing.
 [2.6.5]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.5
 [2.6.6]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.6
 [2.6.7]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.7
+[2.10.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.10.0
 [2.9.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.9.0
 [2.8.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.8.0
 [2.7.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.7.0

@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>House Party Protocol — Graph Model</title>
+  <meta name="description" content="Os grafos que o harness projeta: locais e determinísticos, cada nó e aresta apontando para uma fonte e mudando uma decisão.">
+  <link rel="alternate" hreflang="en" href="GRAPH-MODEL.html">
+  <link rel="alternate" hreflang="pt-BR" href="GRAPH-MODEL.pt-BR.html">
+  <style>
+    :root{--hpp-black: #000000;--hpp-ink: #0F1113;--hpp-paper: #F4F1EB;--hpp-signal: #FF6A00;--line:rgba(15,17,19,.18);--surface:rgba(15,17,19,.04);--muted:rgba(15,17,19,.72);--max:1120px}
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;background:var(--hpp-paper);color:var(--hpp-ink);font:16px/1.65 Inter,"Segoe UI",Arial,sans-serif}
+    a{color:var(--hpp-ink);text-decoration:underline;text-decoration-color:var(--hpp-signal);text-decoration-thickness:2px;text-underline-offset:3px}
+    a:hover{color:var(--hpp-signal)}
+    a:focus-visible{outline:4px solid var(--hpp-signal);outline-offset:3px}
+    .wrap{width:min(var(--max),calc(100% - 40px));margin:auto}
+    .lang{background:var(--hpp-black);color:var(--hpp-paper);font-size:.9rem;padding:10px 0}
+    .lang a{color:var(--hpp-paper)}
+    .lang a[aria-current]{text-decoration:none;font-weight:700}
+    .hero{background:var(--hpp-ink);color:var(--hpp-paper);padding:44px 0 50px}
+    .hero img{width:min(720px,100%);display:block}
+    .hero h1{font:800 clamp(2.2rem,6vw,5rem)/.95 Sora,Inter,"Segoe UI",sans-serif;letter-spacing:-.02em;margin:.35em 0}
+    .hero p{max-width:760px;font-size:1.15rem;color:rgba(244,241,235,.82)}
+    .hero .eyebrow{color:var(--hpp-paper);border-color:var(--hpp-signal)}
+    .signal{color:var(--hpp-signal)}
+    .eyebrow,.mono,code,pre,.gate,.label{font-family:"JetBrains Mono","Cascadia Code",Consolas,monospace}
+    .eyebrow{display:inline-block;letter-spacing:.13em;text-transform:uppercase;font-size:.78rem;border-left:4px solid var(--hpp-signal);padding-left:.6em;margin:0 0 .6em}
+    nav{position:sticky;top:0;z-index:2;background:rgba(244,241,235,.96);border-bottom:1px solid var(--line);backdrop-filter:blur(8px)}
+    nav .wrap{display:flex;gap:20px;overflow:auto;padding:12px 0}
+    nav a{white-space:nowrap;text-decoration:none;font-weight:700}
+    nav a:hover{text-decoration:underline;text-decoration-color:var(--hpp-signal)}
+    section{padding:64px 0;border-bottom:1px solid var(--line)}
+    h2{font:800 clamp(1.7rem,3vw,2.6rem)/1.1 Sora,Inter,"Segoe UI",sans-serif;letter-spacing:-.01em;margin:0 0 .6em}
+    h3{margin:0 0 .4em;font-size:1.1rem}
+    .lead{max-width:780px;color:var(--muted)}
+    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:20px}
+    .card{grid-column:span 4;border:1px solid var(--line);border-radius:16px;padding:22px;background:var(--surface)}
+    .card.wide{grid-column:span 6}
+    .card.full{grid-column:1/-1}
+    pre{background:var(--hpp-ink);color:var(--hpp-paper);padding:20px;border-radius:12px;overflow:auto;border-left:6px solid var(--hpp-signal);font-size:.92rem;line-height:1.5}
+    code{font-size:.94em}
+    p code,li code,td code{background:var(--surface);padding:.08em .35em;border-radius:5px}
+    pre code{background:none;padding:0}
+    table{width:100%;border-collapse:collapse;background:var(--surface);margin:1em 0}
+    th,td{text-align:left;padding:12px;border-bottom:1px solid var(--line);vertical-align:top}
+    th{background:rgba(15,17,19,.08);font-weight:700}
+    .gate{display:inline-block;border-radius:999px;padding:.15rem .7rem;font-weight:700;font-size:.8rem;margin-bottom:.6em}
+    .gate.allow{background:var(--hpp-signal);color:var(--hpp-ink)}
+    .gate.manual{border:2px solid var(--hpp-ink);color:var(--hpp-ink)}
+    .gate.block{background:var(--hpp-ink);color:var(--hpp-paper)}
+    .label{font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+    .measured{border-left:4px solid var(--hpp-signal);padding-left:1em;color:var(--muted);font-size:.95rem}
+    ul,ol{padding-left:1.3em}
+    li{margin:.25em 0}
+    footer{padding:48px 0;background:var(--hpp-black);color:var(--hpp-paper)}
+    footer a{color:var(--hpp-paper)}
+    footer .five{letter-spacing:.2em;font-size:.8rem;color:rgba(244,241,235,.72)}
+    @media(max-width:760px){.card,.card.wide{grid-column:1/-1}.wrap{width:min(100% - 32px,var(--max))}th,td{font-size:.88rem;padding:8px}.hero{padding-top:28px}section{padding:44px 0}}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+    h3[id],h4[id],h5[id]{scroll-margin-top:64px}
+    ul.tasks{list-style:none;padding-left:.2em}
+    blockquote{margin:1em 0}
+  </style>
+</head>
+<body>
+  <div class="lang"><div class="wrap"><a href="GRAPH-MODEL.html" hreflang="en" lang="en">English</a> · <a href="GRAPH-MODEL.pt-BR.html" aria-current="page" hreflang="pt-BR">Português</a></div></div>
+  <header class="hero">
+    <div class="wrap">
+      <img src="assets/hpp-logo-header.png" alt="House Party Protocol">
+      <p class="eyebrow">Conceitos · GRAPH-MODEL.pt-BR.md</p>
+      <h1>Graph Model</h1>
+    </div>
+  </header>
+  <nav aria-label="Capítulos"><div class="wrap"><a href="#tipos">Tipos</a><a href="#envelope-de-evento">Envelope de evento</a><a href="#lane-map">Lane Map</a><a href="#workgraph">WorkGraph</a><a href="#monitor-map">Monitor Map</a><a href="#conhecimento-e-código-sem-overclaim">Conhecimento e código, sem overclaim</a><a href="#export">Export</a></div></nav>
+  <main>
+
+    <section><div class="wrap">
+<p>Os grafos do HPP são projeções locais e determinísticas. Cada nó e aresta precisa apontar para uma
+fonte e mudar uma decisão operacional.</p>
+    </div></section>
+
+    <section id="tipos"><div class="wrap">
+      <p class="eyebrow">01</p>
+      <h2>Tipos</h2>
+<p>Cada linha nomeia o comando que a produz. Os tipos de nó e as relações de aresta são os valores
+literais de <code>kind</code> e <code>relation</code> na saída (<code>hpp/graph.py</code>, <code>hpp/maps.py</code>, <code>hpp/workgraph.py</code>).</p>
+<table>
+<thead><tr><th>Visão</th><th>Comando</th><th>Nós (<code>kind</code>)</th><th>Arestas (<code>relation</code>)</th></tr></thead>
+<tbody>
+<tr><td>Capability</td><td><code>hpp graph --view capability</code></td><td>host, module, capability, bundle</td><td><code>provides</code> (module → capability) · <code>supports:&lt;coverage&gt;</code> (module → host) · <code>requires</code>, <code>integrates-with</code> (module → module) · <code>includes</code> (bundle → module)</td></tr>
+<tr><td>Operational</td><td><code>hpp graph --view operational</code></td><td>state, gate — a partir de <code>loop.transitions</code> do manifesto</td><td><code>&lt;event&gt;</code>, p. ex. <code>work_started</code> (state → gate) · <code>permits</code> (gate → state)</td></tr>
+<tr><td>Agent roles</td><td><code>hpp graph --view agent</code></td><td>três nós de papel fixos: <code>role:maker</code>, <code>role:checker</code>, <code>role:human-gate</code></td><td><code>submits</code> (maker → checker) · <code>reports</code> (checker → human-gate) · <code>approves-or-returns</code> (human-gate → maker)</td></tr>
+<tr><td>Evidence</td><td><code>hpp graph --view evidence</code></td><td>um nó fixo de cada: criterion, evidence, verdict</td><td><code>requires</code> (criterion → evidence) · <code>supports</code> (evidence → verdict)</td></tr>
+<tr><td>Code Map</td><td><code>hpp graph --view code</code></td><td>module, component</td><td><code>declares</code> (module → component)</td></tr>
+<tr><td>Agent Map</td><td><code>hpp map agent [--events &lt;arquivo&gt;]</code></td><td>role (os <code>roles</code> do manifesto), module, capability, execution (um por evento registrado)</td><td><code>provides</code> (module → capability) · <code>then</code> (execution → execution seguinte)</td></tr>
+<tr><td>Lane Map</td><td><code>hpp map lane &lt;arquivo&gt; [--now &lt;ts&gt;]</code></td><td>lane, territory</td><td><code>owns:&lt;liveness&gt;</code> (lane → territory). Colisões e liveness são campos separados, não arestas</td></tr>
+<tr><td>Context/Knowledge Map</td><td><code>hpp map context &lt;arquivo&gt; --budget &lt;n&gt;</code></td><td>context (o contexto compilado), source</td><td><code>included</code> ou <code>omitted</code> (source → context). Hash, prioridade e contagem de caracteres ficam no campo <code>provenance</code></td></tr>
+<tr><td>Monitor Map</td><td><code>hpp map monitor &lt;arquivo&gt; --now &lt;ts&gt;</code></td><td>nenhum: uma lista plana <code>monitors</code>, um registro por probe com os campos listados em Monitor Map abaixo</td><td>nenhuma</td></tr>
+<tr><td>WorkGraph</td><td><code>hpp work plan &lt;spec&gt;</code></td><td>os itens da lista <code>work</code></td><td><code>depends-on</code> (dependência → dependente). Waves, critérios e contagem por tier são campos</td></tr>
+<tr><td>Execution</td><td>nenhum</td><td>Nenhuma projeção dedicada, embora a lista <code>maps</code> do manifesto nomeie <code>execution</code>. O mais próximo são os nós execution ligados por <code>then</code> em <code>hpp map agent --events</code></td><td>—</td></tr>
+<tr><td>Memory</td><td>nenhum em <code>hpp/</code></td><td>O módulo gotcha-memory registra falhas classificadas em <code>failures.jsonl</code> e deriva gotchas da recorrência por chave de tarefa e família de erro; ele não exporta grafo</td><td>—</td></tr>
+</tbody>
+</table>
+    </div></section>
+
+    <section id="envelope-de-evento"><div class="wrap">
+      <p class="eyebrow">02</p>
+      <h2>Envelope de evento</h2>
+<pre><code class="language-json">{
+  "seq": 2,
+  "id": "event:2",
+  "type": "evidence_recorded",
+  "data": {
+    "work": "ITEM-1",
+    "actor": "checker-a",
+    "lane": "lane-a",
+    "evidence_refs": ["artifacts/test.txt"],
+    "caused_by": ["event:1"]
+  }
+}</code></pre>
+<p><code>seq</code> e <code>id</code> são acrescentados pelo event log. O payload continua explícito: o runtime não
+inventa identidade, modelo, causalidade ou evidência.</p>
+    </div></section>
+
+    <section id="lane-map"><div class="wrap">
+      <p class="eyebrow">03</p>
+      <h2>Lane Map</h2>
+<p><code>hpp map lane</code> lê cinco campos por lane: <code>id</code>, <code>territory</code> (lista não vazia de caminhos),
+<code>exclusive</code> (padrão <code>true</code>), <code>status</code> (padrão <code>declared</code>) e <code>heartbeat_at</code> (segundos Unix).
+Outras chaves, como <code>role</code>, <code>model</code> e <code>branch</code> que o registro do lane-kit grava, são aceitas e
+ignoradas: não aparecem na saída.</p>
+<p>A liveness vem de um único <code>--now</code> para todas as lanes. <code>status</code> igual a <code>closed</code>, <code>dead</code> ou
+<code>inactive</code> vale <code>dead</code>. Sem <code>--now</code>, a liveness é o <code>status</code> declarado. Com <code>--now</code>, lane sem
+<code>heartbeat_at</code> fica <code>unknown</code>, e a idade do heartbeat dá <code>alive</code> (até <code>--suspect-after</code>, padrão
+300), <code>suspect</code> (até <code>--dead-after</code>, padrão 900) ou <code>dead</code>. <code>heartbeat_at</code> posterior a <code>--now</code> é
+erro, não lane viva.</p>
+<p>Colisão é reportada quando duas lanes exclusivas têm caminhos iguais ou um é prefixo de diretório
+do outro (<code>src</code> e <code>src/api</code>, não <code>src</code> e <code>srcx</code>). Ela só é descartada quando uma das lanes está
+<code>dead</code>; lanes <code>suspect</code>, <code>unknown</code> e <code>declared</code> continuam colidindo. O mapa reporta colisões e
+não bloqueia nada.</p>
+<p>Red zone não é conceito de <code>hpp/maps.py</code>. Ela pertence ao hook do lane-kit
+<code>lane_territory_guard.py</code>, que avisa (nunca bloqueia) em edições de <code>.claude/settings*.json</code>,
+<code>**/MEMORY.md</code> e de qualquer <code>red_zones</code> listada em <code>.claude/lanes/lanes.yaml</code>.</p>
+    </div></section>
+
+    <section id="workgraph"><div class="wrap">
+      <p class="eyebrow">04</p>
+      <h2>WorkGraph</h2>
+<pre><code class="language-json">{
+  "work": [
+    {"id": "A", "depends_on": [], "acceptance": ["test A"], "tier": "economy"},
+    {"id": "B", "depends_on": [], "acceptance": ["test B"], "tier": "economy"},
+    {"id": "C", "depends_on": ["A", "B"], "acceptance": ["test C"], "tier": "frontier"}
+  ]
+}</code></pre>
+<p>O plano válido gera <code>wave 1 = [A, B]</code> e <code>wave 2 = [C]</code>. Um ciclo é erro, não uma wave vazia.</p>
+    </div></section>
+
+    <section id="monitor-map"><div class="wrap">
+      <p class="eyebrow">05</p>
+      <h2>Monitor Map</h2>
+<p>Monitor é um contrato de observação:</p>
+<pre><code class="language-text">id · target · type · cadence · freshness · last_signal · status · severity · cost · consumer_gate</code></pre>
+<p>Cada monitor recebe um único <code>status</code>: <code>healthy</code> (sinal com no máximo <code>freshness</code> segundos),
+<code>stale</code> (mais antigo), <code>skew</code> (datado mais de <code>--skew-tolerance</code> segundos depois de <code>--now</code>, padrão</p>
+<ol start="5">
+<li>ou <code>unknown</code> (sem <code>last_signal</code>). <code>cadence</code> é validada, mas não entra no status. Não existe
+campo separado de online. Um serviço que responde com dado antigo é expresso como duas probes com
+dois targets, como faz o benchmark: uma probe <code>command</code> no serviço fica <code>healthy</code> enquanto uma
+probe <code>timestamp</code> no dado fica <code>stale</code>.
+Execução contínua é opt-in do host; a projeção funciona também com probes disparadas manualmente.</li>
+</ol>
+    </div></section>
+
+    <section id="conhecimento-e-código-sem-overclaim"><div class="wrap">
+      <p class="eyebrow">06</p>
+      <h2>Conhecimento e código, sem overclaim</h2>
+<p>O Context/Knowledge Map é um grafo simplificado de proveniência do contexto compilado: mostra quais
+fontes entraram, quais ficaram fora pelo orçamento e seus hashes. Não é RAG nem knowledge graph
+persistente. O Code Map raiz é inventário de módulos/componentes declarados, não um grafo AST de
+símbolos ou chamadas. Analisadores externos podem alimentar novas projeções sem virar dependência
+obrigatória do harness.</p>
+    </div></section>
+
+    <section id="export"><div class="wrap">
+      <p class="eyebrow">07</p>
+      <h2>Export</h2>
+<p><code>hpp graph</code> exporta JSON (padrão) ou Mermaid (<code>--format mermaid</code>); <code>hpp map</code> e <code>hpp work</code>
+exportam só JSON. Ordem de nós e arestas é canônica; timestamp só aparece quando pertence à
+fonte. O mesmo input produz o mesmo grafo.</p>
+    </div></section>
+
+  </main>
+  <footer><div class="wrap">
+    <p class="five">AGENTS · EVIDENCE · MEMORY · PROTOCOL · CONTINUITY</p>
+    <strong>House Party Protocol</strong>
+    <p>Opere agentes de código sob evidência, não confiança.</p>
+    <p><a href="index.html">Documentação</a> · <a href="MANUAL.pt-BR.html">Manual do harness</a> · <a href="CATALOG.pt-BR.html">Catálogo de módulos</a> · <a href="https://github.com/rusharlabs/house-party-protocol/blob/main/docs/GRAPH-MODEL.pt-BR.md">Fonte em Markdown</a> · <a href="GRAPH-MODEL.html" hreflang="en" lang="en">English</a></p>
+  </div></footer>
+</body>
+</html>

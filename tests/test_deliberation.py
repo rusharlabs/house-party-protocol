@@ -28,6 +28,8 @@ import pytest
 from hpp import cli
 from hpp.decision import digest, run_decision_suite, validate as validate_decision
 from hpp.deliberation import (
+    SCHEMA,
+    SCHEMA_V1,
     DeliberationError,
     as_decision,
     build_record,
@@ -1192,3 +1194,32 @@ def test_F4_JUDGE_SAME_FAMILY_a_release_gate_judged_by_the_makers_family_is_refu
     approved = _typed_record("release-gate", GATE_Q, "approved", evidence=EVIDENCE, judge_family="omega")
     assert _attest(root, tmp_path, "approved", approved, family="omega") == 2
     assert not (tmp_path / "attestation.json").exists()
+
+
+# =========================================================================== the help names the record it seals
+
+def _deliberate_help(*subcommand: str) -> str:
+    result = subprocess.run([sys.executable, "-m", "hpp", "deliberate", *subcommand, "--help"],
+                            cwd=Path(__file__).resolve().parent.parent, capture_output=True, text=True, timeout=30)
+    assert result.returncode == 0, result.stderr
+    return result.stdout
+
+
+def test_the_help_names_the_schema_a_sealed_record_really_has():
+    # Why (2026-09-27): `hpp deliberate --help` said the session is sealed as an hpp.deliberation/v1
+    # record, and the `record` subcommand said the same, while `build_record` has sealed v2 since
+    # 2.8.0 -- a v1 record only re-derives under v1 rules. The record decides; the help follows it.
+    panel = _panel()
+    record = build_record(panel, _round_one(panel), _judge(panel))
+    assert record["schema"] == SCHEMA
+    out = _deliberate_help()
+    assert out.count(record["schema"]) >= 2, out  # the command description and the `record` subcommand
+    assert SCHEMA_V1 not in out, out
+
+
+def test_CONTROLE_the_help_still_names_the_input_schemas():
+    # Why: the test above is about the record's schema, not a ban on `/v1`; the panel and the turns
+    # the session reads are still v1 documents, and the help has to keep saying so.
+    assert "hpp.panel/v1" in _deliberate_help()
+    assert "hpp.turn/v1" in _deliberate_help("record")
+    assert SCHEMA != SCHEMA_V1

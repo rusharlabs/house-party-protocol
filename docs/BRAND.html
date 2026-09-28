@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>House Party Protocol — House Party Protocol identity</title>
+  <meta name="description" content="What the brand is: four colours, one accent, the five words, and what not to use.">
+  <link rel="alternate" hreflang="en" href="BRAND.html">
+  <link rel="alternate" hreflang="pt-BR" href="BRAND.pt-BR.html">
+  <style>
+    :root{--hpp-black: #000000;--hpp-ink: #0F1113;--hpp-paper: #F4F1EB;--hpp-signal: #FF6A00;--line:rgba(15,17,19,.18);--surface:rgba(15,17,19,.04);--muted:rgba(15,17,19,.72);--max:1120px}
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;background:var(--hpp-paper);color:var(--hpp-ink);font:16px/1.65 Inter,"Segoe UI",Arial,sans-serif}
+    a{color:var(--hpp-ink);text-decoration:underline;text-decoration-color:var(--hpp-signal);text-decoration-thickness:2px;text-underline-offset:3px}
+    a:hover{color:var(--hpp-signal)}
+    a:focus-visible{outline:4px solid var(--hpp-signal);outline-offset:3px}
+    .wrap{width:min(var(--max),calc(100% - 40px));margin:auto}
+    .lang{background:var(--hpp-black);color:var(--hpp-paper);font-size:.9rem;padding:10px 0}
+    .lang a{color:var(--hpp-paper)}
+    .lang a[aria-current]{text-decoration:none;font-weight:700}
+    .hero{background:var(--hpp-ink);color:var(--hpp-paper);padding:44px 0 50px}
+    .hero img{width:min(720px,100%);display:block}
+    .hero h1{font:800 clamp(2.2rem,6vw,5rem)/.95 Sora,Inter,"Segoe UI",sans-serif;letter-spacing:-.02em;margin:.35em 0}
+    .hero p{max-width:760px;font-size:1.15rem;color:rgba(244,241,235,.82)}
+    .hero .eyebrow{color:var(--hpp-paper);border-color:var(--hpp-signal)}
+    .signal{color:var(--hpp-signal)}
+    .eyebrow,.mono,code,pre,.gate,.label{font-family:"JetBrains Mono","Cascadia Code",Consolas,monospace}
+    .eyebrow{display:inline-block;letter-spacing:.13em;text-transform:uppercase;font-size:.78rem;border-left:4px solid var(--hpp-signal);padding-left:.6em;margin:0 0 .6em}
+    nav{position:sticky;top:0;z-index:2;background:rgba(244,241,235,.96);border-bottom:1px solid var(--line);backdrop-filter:blur(8px)}
+    nav .wrap{display:flex;gap:20px;overflow:auto;padding:12px 0}
+    nav a{white-space:nowrap;text-decoration:none;font-weight:700}
+    nav a:hover{text-decoration:underline;text-decoration-color:var(--hpp-signal)}
+    section{padding:64px 0;border-bottom:1px solid var(--line)}
+    h2{font:800 clamp(1.7rem,3vw,2.6rem)/1.1 Sora,Inter,"Segoe UI",sans-serif;letter-spacing:-.01em;margin:0 0 .6em}
+    h3{margin:0 0 .4em;font-size:1.1rem}
+    .lead{max-width:780px;color:var(--muted)}
+    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:20px}
+    .card{grid-column:span 4;border:1px solid var(--line);border-radius:16px;padding:22px;background:var(--surface)}
+    .card.wide{grid-column:span 6}
+    .card.full{grid-column:1/-1}
+    pre{background:var(--hpp-ink);color:var(--hpp-paper);padding:20px;border-radius:12px;overflow:auto;border-left:6px solid var(--hpp-signal);font-size:.92rem;line-height:1.5}
+    code{font-size:.94em}
+    p code,li code,td code{background:var(--surface);padding:.08em .35em;border-radius:5px}
+    pre code{background:none;padding:0}
+    table{width:100%;border-collapse:collapse;background:var(--surface);margin:1em 0}
+    th,td{text-align:left;padding:12px;border-bottom:1px solid var(--line);vertical-align:top}
+    th{background:rgba(15,17,19,.08);font-weight:700}
+    .gate{display:inline-block;border-radius:999px;padding:.15rem .7rem;font-weight:700;font-size:.8rem;margin-bottom:.6em}
+    .gate.allow{background:var(--hpp-signal);color:var(--hpp-ink)}
+    .gate.manual{border:2px solid var(--hpp-ink);color:var(--hpp-ink)}
+    .gate.block{background:var(--hpp-ink);color:var(--hpp-paper)}
+    .label{font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+    .measured{border-left:4px solid var(--hpp-signal);padding-left:1em;color:var(--muted);font-size:.95rem}
+    ul,ol{padding-left:1.3em}
+    li{margin:.25em 0}
+    footer{padding:48px 0;background:var(--hpp-black);color:var(--hpp-paper)}
+    footer a{color:var(--hpp-paper)}
+    footer .five{letter-spacing:.2em;font-size:.8rem;color:rgba(244,241,235,.72)}
+    @media(max-width:760px){.card,.card.wide{grid-column:1/-1}.wrap{width:min(100% - 32px,var(--max))}th,td{font-size:.88rem;padding:8px}.hero{padding-top:28px}section{padding:44px 0}}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+    h3[id],h4[id],h5[id]{scroll-margin-top:64px}
+    ul.tasks{list-style:none;padding-left:.2em}
+    blockquote{margin:1em 0}
+  </style>
+</head>
+<body>
+  <div class="lang"><div class="wrap"><a href="BRAND.html" aria-current="page" hreflang="en">English</a> · <a href="BRAND.pt-BR.html" hreflang="pt-BR" lang="pt-BR">Português</a></div></div>
+  <header class="hero">
+    <div class="wrap">
+      <img src="assets/hpp-logo-header.png" alt="House Party Protocol">
+      <p class="eyebrow">Brand &amp; design · BRAND.md</p>
+      <h1>House Party Protocol identity</h1>
+    </div>
+  </header>
+  <nav aria-label="Chapters"><div class="wrap"><a href="#central-idea">Central idea</a><a href="#signature">Signature</a><a href="#the-five-words">The five words</a><a href="#palette">Palette</a><a href="#typography">Typography</a><a href="#assets">Assets</a><a href="#message-architecture">Message architecture</a><a href="#accessibility">Accessibility</a><a href="#do-not-use">Do not use</a></div></nav>
+  <main>
+
+    <section id="central-idea"><div class="wrap">
+      <p class="eyebrow">01</p>
+      <h2>Central idea</h2>
+<p>A harness is what sits <strong>around</strong> the work: what bounds, observes, records and decides when
+something may advance. The brand represents that — a core of light held by a structure that does
+not move. Nodes stand for agents, lanes and evidence; portals stand for criteria the work has to
+cross.</p>
+<p>Tone: precise, operational, curious and direct. The product speaks through demonstrable
+mechanisms, never through adjectives. There are no characters and no reference to third-party
+franchises.</p>
+    </div></section>
+
+    <section id="signature"><div class="wrap">
+      <p class="eyebrow">02</p>
+      <h2>Signature</h2>
+<p><strong>Operate coding agents under evidence, not trust.</strong></p>
+<p>Portuguese version for running text: <strong lang="pt-BR">Opere agentes de código sob evidência, não confiança.</strong></p>
+<p>Support lines, for opening, footer and release:</p>
+<ul>
+<li><em>Open-source agentic tooling for people who build.</em></li>
+<li><em>Open. Modular. Auditable. Composable.</em></li>
+<li><em>Built in public. For a more capable tomorrow.</em></li>
+<li><em>Welcome to the party.</em> — the closing line of the installation, and only there.</li>
+</ul>
+    </div></section>
+
+    <section id="the-five-words"><div class="wrap">
+      <p class="eyebrow">03</p>
+      <h2>The five words</h2>
+<p><code>AGENTS · EVIDENCE · MEMORY · PROTOCOL · CONTINUITY</code></p>
+<p>They appear in upper case, spaced, as a label — never as a sentence. They are the five things the
+harness carries, and the order is fixed.</p>
+    </div></section>
+
+    <section id="palette"><div class="wrap">
+      <p class="eyebrow">04</p>
+      <h2>Palette</h2>
+<table>
+<thead><tr><th>Token</th><th>Value</th><th>Use</th></tr></thead>
+<tbody>
+<tr><td>black</td><td><code>#000000</code></td><td>background of the lockup and of brand material</td></tr>
+<tr><td>charcoal</td><td><code>#0F1113</code></td><td>interface background, elevated surface</td></tr>
+<tr><td>warm-white</td><td><code>#F4F1EB</code></td><td>primary text on dark, and the chrome of the wordmark</td></tr>
+<tr><td>signal-orange</td><td><code>#FF6A00</code></td><td>single accent: focus, approved gate, the core of the symbol</td></tr>
+</tbody>
+</table>
+<p>Four colours, one accent. The orange is <strong>not</strong> decoration: it marks the point of attention on the
+screen, and a screen with two points of attention has none. Colour never carries meaning alone —
+a label or an icon always goes with it.</p>
+<p>For state, the interface uses the terminal's own red (the palette has no red on purpose) and never
+paints a background: a light terminal stays readable.</p>
+<p>The vector assets carry only these four values: a lighter step is the same token at reduced
+opacity, never a fifth colour. Measure it with <code>grep -o '#[0-9A-Fa-f]\{6\}' assets/*.svg | sort -u</code>.</p>
+    </div></section>
+
+    <section id="typography"><div class="wrap">
+      <p class="eyebrow">05</p>
+      <h2>Typography</h2>
+<table>
+<thead><tr><th>Role</th><th>Stack</th></tr></thead>
+<tbody>
+<tr><td>display / lockup</td><td>custom drawing (the wordmark is artwork, not a font)</td></tr>
+<tr><td>headings</td><td><code>Sora</code>, <code>Inter</code>, <code>Segoe UI</code>, sans-serif — heavy weight, tight tracking</td></tr>
+<tr><td>body</td><td><code>Inter</code>, <code>Segoe UI</code>, <code>Arial</code>, sans-serif</td></tr>
+<tr><td>code, metric and label</td><td><code>JetBrains Mono</code>, <code>Cascadia Code</code>, <code>Consolas</code>, monospace</td></tr>
+<tr><td>interface label</td><td>upper case, wide <code>letter-spacing</code>, monospace</td></tr>
+</tbody>
+</table>
+<p>No published asset carries a webfont: the stack is system-only, and the self-contained material
+makes no external request.</p>
+    </div></section>
+
+    <section id="assets"><div class="wrap">
+      <p class="eyebrow">06</p>
+      <h2>Assets</h2>
+<table>
+<thead><tr><th>File</th><th>Use</th></tr></thead>
+<tbody>
+<tr><td><code>assets/hpp-logo.png</code></td><td><strong>the official lockup</strong> — chrome on black, with the core in orange. It is the approved artwork; do not redraw, recolour or crop</td></tr>
+<tr><td><code>assets/hpp-icon-512.png</code> · <code>-256</code> · <code>-128</code> · <code>-64</code> · <code>-32</code></td><td>the badge alone, square — avatar, favicon and app icon. Derived from the lockup by cropping, never redrawn</td></tr>
+<tr><td><code>assets/hpp-logo-header.png</code></td><td>the same lockup at 1440 px, for page headers. It is the approved artwork <strong>resized</strong> — not redrawn, not recoloured, not cropped — so a header and the README show one brand</td></tr>
+<tr><td><code>assets/hpp-mark.svg</code></td><td>the symbol as vector, for where raster does not serve (print, large scale). Drawn after the approved badge, so it reads as the same mark; where fidelity decides, use the raster lockup</td></tr>
+<tr><td><code>assets/social-preview-1280x640.png</code> · <code>docs/assets/social-preview-1280x640.png</code></td><td>social card, 1280×640 — the lockup, the five words, <code>spec-driven · wave-driven · lane-isolated</code> and the signature on black. The copy under <code>assets/</code> is the file to upload as the repository's social preview (GitHub has no API for it); the site's <code>og:image</code> points at the copy under <code>docs/assets/</code>. Both carry the same bytes (<code>sha256sum</code> on the two files)</td></tr>
+</tbody>
+</table>
+<p><strong>Deprecated:</strong> <code>assets/hpp-logo-light.svg</code>, <code>assets/hpp-logo-dark.svg</code>,
+<code>assets/hpp-banner-light.svg</code> and <code>assets/hpp-banner-dark.svg</code> carry an earlier drawing of the
+mark (flat cream and orange), not the approved chrome-on-black lockup. Use
+<code>assets/hpp-logo-header.png</code> for the lockup and <code>assets/hpp-mark.svg</code> for the symbol. The four
+files stay in the repository for reference only; publishing them shows the wrong mark.</p>
+<p>The symbol does <strong>not</strong> encode the number of modules: the harness can grow without redrawing the
+brand.</p>
+<p>In the CLI, the lockup is rebuilt in terminal blocks (<code>█ ▓ ░</code>) in the same palette, with declared
+degradation: truecolor → 256 colours → 16 colours → no colour at all when there is no TTY or when
+<code>NO_COLOR</code> is set.</p>
+    </div></section>
+
+    <section id="message-architecture"><div class="wrap">
+      <p class="eyebrow">07</p>
+      <h2>Message architecture</h2>
+<ol>
+<li><strong>Harness</strong> — the product.</li>
+<li><strong>Protocol</strong> — the executable rules.</li>
+<li><strong>Modules</strong> — the installable capabilities.</li>
+<li><strong>Distribution</strong> — the channels per host.</li>
+</ol>
+<p>Do not open a page with the number of modules. Do not call distribution the product. Do not use
+"autonomous", "deterministic", "learns" or "cross-host" without bounding mechanism and scope.</p>
+    </div></section>
+
+    <section id="accessibility"><div class="wrap">
+      <p class="eyebrow">08</p>
+      <h2>Accessibility</h2>
+<ul>
+<li>minimum WCAG AA contrast;</li>
+<li>visible focus in <code>#FF6A00</code> on <code>#0F1113</code>, and <code>#0F1113</code> on <code>#F4F1EB</code>;</li>
+<li>support for 320, 375, 768 and 1280 px;</li>
+<li><code>prefers-reduced-motion</code> turns off all animation, and the information stays complete.</li>
+</ul>
+    </div></section>
+
+    <section id="do-not-use"><div class="wrap">
+      <p class="eyebrow">09</p>
+      <h2>Do not use</h2>
+<ul>
+<li>gradient as subject — the gradient exists in the lockup and is not repeated in the interface;</li>
+<li>colour without a label;</li>
+<li>robot, brain or humanoid illustration;</li>
+<li>franchise, character or film metaphor;</li>
+<li>number of modules as a headline;</li>
+<li>emoji in CLI output.</li>
+</ul>
+    </div></section>
+
+  </main>
+  <footer><div class="wrap">
+    <p class="five">AGENTS · EVIDENCE · MEMORY · PROTOCOL · CONTINUITY</p>
+    <strong>House Party Protocol</strong>
+    <p>Operate coding agents under evidence, not trust.</p>
+    <p><a href="index.html">Documentation</a> · <a href="MANUAL.html">Harness manual</a> · <a href="CATALOG.html">Module catalogue</a> · <a href="https://github.com/rusharlabs/house-party-protocol/blob/main/docs/BRAND.md">Markdown source</a> · <a href="BRAND.pt-BR.html" hreflang="pt-BR" lang="pt-BR">Português</a></p>
+  </div></footer>
+</body>
+</html>

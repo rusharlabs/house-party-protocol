@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>House Party Protocol — Proof matrix</title>
+  <meta name="description" content="Every public claim with the command that reproduces it and the criterion it must meet.">
+  <link rel="alternate" hreflang="en" href="PROOF.html">
+  <link rel="alternate" hreflang="pt-BR" href="PROOF.pt-BR.html">
+  <style>
+    :root{--hpp-black: #000000;--hpp-ink: #0F1113;--hpp-paper: #F4F1EB;--hpp-signal: #FF6A00;--line:rgba(15,17,19,.18);--surface:rgba(15,17,19,.04);--muted:rgba(15,17,19,.72);--max:1120px}
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;background:var(--hpp-paper);color:var(--hpp-ink);font:16px/1.65 Inter,"Segoe UI",Arial,sans-serif}
+    a{color:var(--hpp-ink);text-decoration:underline;text-decoration-color:var(--hpp-signal);text-decoration-thickness:2px;text-underline-offset:3px}
+    a:hover{color:var(--hpp-signal)}
+    a:focus-visible{outline:4px solid var(--hpp-signal);outline-offset:3px}
+    .wrap{width:min(var(--max),calc(100% - 40px));margin:auto}
+    .lang{background:var(--hpp-black);color:var(--hpp-paper);font-size:.9rem;padding:10px 0}
+    .lang a{color:var(--hpp-paper)}
+    .lang a[aria-current]{text-decoration:none;font-weight:700}
+    .hero{background:var(--hpp-ink);color:var(--hpp-paper);padding:44px 0 50px}
+    .hero img{width:min(720px,100%);display:block}
+    .hero h1{font:800 clamp(2.2rem,6vw,5rem)/.95 Sora,Inter,"Segoe UI",sans-serif;letter-spacing:-.02em;margin:.35em 0}
+    .hero p{max-width:760px;font-size:1.15rem;color:rgba(244,241,235,.82)}
+    .hero .eyebrow{color:var(--hpp-paper);border-color:var(--hpp-signal)}
+    .signal{color:var(--hpp-signal)}
+    .eyebrow,.mono,code,pre,.gate,.label{font-family:"JetBrains Mono","Cascadia Code",Consolas,monospace}
+    .eyebrow{display:inline-block;letter-spacing:.13em;text-transform:uppercase;font-size:.78rem;border-left:4px solid var(--hpp-signal);padding-left:.6em;margin:0 0 .6em}
+    nav{position:sticky;top:0;z-index:2;background:rgba(244,241,235,.96);border-bottom:1px solid var(--line);backdrop-filter:blur(8px)}
+    nav .wrap{display:flex;gap:20px;overflow:auto;padding:12px 0}
+    nav a{white-space:nowrap;text-decoration:none;font-weight:700}
+    nav a:hover{text-decoration:underline;text-decoration-color:var(--hpp-signal)}
+    section{padding:64px 0;border-bottom:1px solid var(--line)}
+    h2{font:800 clamp(1.7rem,3vw,2.6rem)/1.1 Sora,Inter,"Segoe UI",sans-serif;letter-spacing:-.01em;margin:0 0 .6em}
+    h3{margin:0 0 .4em;font-size:1.1rem}
+    .lead{max-width:780px;color:var(--muted)}
+    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:20px}
+    .card{grid-column:span 4;border:1px solid var(--line);border-radius:16px;padding:22px;background:var(--surface)}
+    .card.wide{grid-column:span 6}
+    .card.full{grid-column:1/-1}
+    pre{background:var(--hpp-ink);color:var(--hpp-paper);padding:20px;border-radius:12px;overflow:auto;border-left:6px solid var(--hpp-signal);font-size:.92rem;line-height:1.5}
+    code{font-size:.94em}
+    p code,li code,td code{background:var(--surface);padding:.08em .35em;border-radius:5px}
+    pre code{background:none;padding:0}
+    table{width:100%;border-collapse:collapse;background:var(--surface);margin:1em 0}
+    th,td{text-align:left;padding:12px;border-bottom:1px solid var(--line);vertical-align:top}
+    th{background:rgba(15,17,19,.08);font-weight:700}
+    .gate{display:inline-block;border-radius:999px;padding:.15rem .7rem;font-weight:700;font-size:.8rem;margin-bottom:.6em}
+    .gate.allow{background:var(--hpp-signal);color:var(--hpp-ink)}
+    .gate.manual{border:2px solid var(--hpp-ink);color:var(--hpp-ink)}
+    .gate.block{background:var(--hpp-ink);color:var(--hpp-paper)}
+    .label{font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+    .measured{border-left:4px solid var(--hpp-signal);padding-left:1em;color:var(--muted);font-size:.95rem}
+    ul,ol{padding-left:1.3em}
+    li{margin:.25em 0}
+    footer{padding:48px 0;background:var(--hpp-black);color:var(--hpp-paper)}
+    footer a{color:var(--hpp-paper)}
+    footer .five{letter-spacing:.2em;font-size:.8rem;color:rgba(244,241,235,.72)}
+    @media(max-width:760px){.card,.card.wide{grid-column:1/-1}.wrap{width:min(100% - 32px,var(--max))}th,td{font-size:.88rem;padding:8px}.hero{padding-top:28px}section{padding:44px 0}}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+    h3[id],h4[id],h5[id]{scroll-margin-top:64px}
+    ul.tasks{list-style:none;padding-left:.2em}
+    blockquote{margin:1em 0}
+  </style>
+</head>
+<body>
+  <div class="lang"><div class="wrap"><a href="PROOF.html" aria-current="page" hreflang="en">English</a> · <a href="PROOF.pt-BR.html" hreflang="pt-BR" lang="pt-BR">Português</a></div></div>
+  <header class="hero">
+    <div class="wrap">
+      <img src="assets/hpp-logo-header.png" alt="House Party Protocol">
+      <p class="eyebrow">Architecture · PROOF.md</p>
+      <h1>Proof matrix</h1>
+    </div>
+  </header>
+  <main>
+
+    <section><div class="wrap">
+<p>A public claim only enters here with a reproduction.</p>
+<table>
+<thead><tr><th>Claim</th><th>Command</th><th>Criterion</th></tr></thead>
+<tbody>
+<tr><td>consistent manifest</td><td><code>python -m hpp doctor</code></td><td>exit 0, ten modules, zero errors</td></tr>
+<tr><td>policy blocks</td><td><code>python -m hpp policy check --mode enforce --command "rm -rf src"</code></td><td>exit 2 and <code>BLOCK</code></td></tr>
+<tr><td>deterministic graphs</td><td><code>python -m hpp graph --view operational --format json</code> twice</td><td>identical hashes</td></tr>
+<tr><td>standalone eval</td><td><code>python -m hpp eval run examples/reliable-coding/benchmark-suite.json -k 3 --gate both</code></td><td>ten executable controls, no pre-approved replay</td></tr>
+<tr><td>stable benchmark</td><td><code>python -m hpp benchmark -k 3 --json</code></td><td>pass^k 1.00 on the critical cases</td></tr>
+<tr><td>decision ruler</td><td><code>python -m hpp decide eval examples/typed-decisions/gotcha-family-suite.json --decider-command '["python", "examples/typed-decisions/baseline_decider.py"]'</code></td><td>zero instrument failures; coverage and selective accuracy reported separately (the shipped suite proves the ruler, not a decider)</td></tr>
+<tr><td>evidence bundle</td><td><code>python -m hpp evidence run --id smoke-page --artifact out/report.html --artifact out/smoke.log -- python examples/evidence/smoke_page.py</code>, then <code>python -m hpp evidence verify &lt;record&gt;</code></td><td>exit 0 <code>passed</code>, then exit 0 <code>valid</code></td></tr>
+<tr><td>evidence bundle, control</td><td>the same run with <code>--break</code> after the script; then a passed record whose <code>out/report.html</code> was changed afterwards</td><td>exit 1 <code>failed</code>, and <code>verify</code> exit 1 <code>not-evidence</code>; the changed artifact makes <code>verify</code> exit 2 <code>blocked</code></td></tr>
+<tr><td>retrieval ruler</td><td><code>python -m hpp retrieval eval examples/retrieval/suite.json --retriever-command '["python", "examples/retrieval/keyword_retriever.py"]'</code></td><td>seven cases measured, zero instrument failures, the same metrics as the replay without <code>--retriever-command</code>; exit 1 on the default gate (the shipped suite proves the ruler, not a retriever)</td></tr>
+<tr><td>retrieval ruler, control</td><td><code>python -m hpp retrieval eval examples/retrieval/suite.json --retriever-command '["python", "-c", "import sys; sys.exit(3)"]'</code></td><td>exit 1, seven instrument failures, null metrics, never 0%</td></tr>
+<tr><td>citation check</td><td><code>python -m hpp cite check --text examples/citations/answer.md --context examples/citations/context.json</code></td><td>exit 0, verdict <code>ok</code></td></tr>
+<tr><td>citation check, control</td><td>the same on a copy of <code>answer.md</code> with <code>[ID:glossary]</code> changed to <code>[ID:glossary-v2]</code></td><td>exit 2, <code>UNKNOWN_ID</code></td></tr>
+<tr><td>criterion sensitivity</td><td><code>python -m hpp evidence mutate --id weak --generate examples/criterion-sensitivity/discount.py -- python examples/criterion-sensitivity/check_weak.py</code></td><td>exit 1, <code>blind-spots</code>, three survivors named by file and line</td></tr>
+<tr><td>criterion sensitivity, control</td><td>the same with <code>check_strong.py</code></td><td>exit 0, <code>sensitive</code>, score 1.0</td></tr>
+<tr><td>cited and executed</td><td><code>python -m pytest examples/cited-and-run/check_prices.py -q -p no:cacheprovider --junitxml out/cited-and-run.xml</code>, then <code>python -m hpp work coverage examples/cited-and-run/workgraph.json --tests examples/cited-and-run/check_prices.py --junit out/cited-and-run.xml</code></td><td>exit 1, <code>bulk-discount</code> in <code>cited_not_run</code> (skipped), two criteria <code>executed</code>, <code>matched_testcases</code> 3</td></tr>
+<tr><td>cited and executed, control</td><td>the same <code>hpp work coverage</code> without <code>--junit</code></td><td>exit 0, all three criteria <code>covered</code>: citation alone cannot see the skip</td></tr>
+<tr><td>review lenses</td><td><code>python -m hpp findings check examples/review-lenses/deletion-clean.json examples/review-lenses/partial-set.json</code></td><td>exit 1, <code>pass</code> then <code>warn</code>, one <code>CALLER_NOT_UPDATED</code> at <code>checkout.py:18</code></td></tr>
+<tr><td>review lenses, control</td><td>the same on a copy of <code>partial-set.json</code> with a <code>confidence</code> key added to its finding</td><td>exit 2, the whole document refused</td></tr>
+<tr><td>House Session</td><td><code>python -m hpp decide eval examples/typed-decisions/gotcha-family-suite.json --decider-command '["python", "examples/house-session/panel_decider.py"]'</code></td><td>15 recorded sessions sealed and verified, 12 decided, 3 abstained, 0 instrument failures, exit 0 (synthetic sessions: they prove the contract, not that a panel is better)</td></tr>
+<tr><td>House Session, control</td><td><code>python -m hpp deliberate verify</code> on a copy of a sealed record with the verdict edited</td><td>exit 2, <code>record_sha256 does not match</code></td></tr>
+<tr><td>best-of-N selection</td><td><code>python multi-session/lane-kit-1.7.0/scripts/lane_board.py --self-test</code></td><td>exit 0; the competitions block passes every check</td></tr>
+<tr><td>best-of-N selection, control</td><td><code>lane_board.py select</code> on a declared competition, by a reviewer of the same model family as one builder</td><td>exit 1, <code>SAME model family</code>; no winner recorded</td></tr>
+<tr><td>intact artifacts</td><td><code>python installers/kit-forge-1.5.0/kit_doctor.py marketplace .</code></td><td>status ok</td></tr>
+</tbody>
+</table>
+<p>Dated results belong to the release log, not to this living document.</p>
+    </div></section>
+
+  </main>
+  <footer><div class="wrap">
+    <p class="five">AGENTS · EVIDENCE · MEMORY · PROTOCOL · CONTINUITY</p>
+    <strong>House Party Protocol</strong>
+    <p>Operate coding agents under evidence, not trust.</p>
+    <p><a href="index.html">Documentation</a> · <a href="MANUAL.html">Harness manual</a> · <a href="CATALOG.html">Module catalogue</a> · <a href="https://github.com/rusharlabs/house-party-protocol/blob/main/docs/PROOF.md">Markdown source</a> · <a href="PROOF.pt-BR.html" hreflang="pt-BR" lang="pt-BR">Português</a></p>
+  </div></footer>
+</body>
+</html>

@@ -3,6 +3,9 @@ contact_links:
   - name: Security report (private)
     url: https://github.com/rusharlabs/house-party-protocol/security/advisories/new
     about: A vulnerability is never a public issue. Use the private advisory form, or the contact channel at https://rusharlabs.com (see SECURITY.md).
-  - name: Questions and discussion
-    url: https://github.com/rusharlabs/house-party-protocol/discussions
-    about: How-to questions, design conversations and announcements live in Discussions, not in the issue tracker.
+  - name: Ask a question
+    url: https://github.com/rusharlabs/house-party-protocol/discussions/new?category=q-a
+    about: How-to questions go to Discussions (Q&A), in English or Portuguese. Paste the command you ran and its output.
+  - name: Early idea or design question
+    url: https://github.com/rusharlabs/house-party-protocol/discussions/new?category=ideas
+    about: Not ready for the idea form yet? Start in Discussions (Ideas); a proposal that names the failure, the change and its proof comes back here as an idea.

@@ -16,11 +16,14 @@
 </p>
 
 <p align="center"><sub><a href="README.md">English</a> &nbsp;·&nbsp; Português (Brasil)</sub></p>
-<p align="center"><sub><a href="https://rusharlabs.github.io/house-party-protocol/">Site do projeto</a> &nbsp;·&nbsp; o catálogo, o manual e o design system, renderizados</sub></p>
+<p align="center"><sub><a href="https://rusharlabs.github.io/house-party-protocol/">Site do projeto</a> &nbsp;·&nbsp; o catálogo, o manual e o design system, renderizados &nbsp;·&nbsp; <a href="SUPPORT.pt-BR.md">Suporte</a> &nbsp;·&nbsp; <a href="https://github.com/rusharlabs/house-party-protocol/discussions">Discussões</a></sub></p>
 
 # House Party Protocol
 
-**Opere agentes de código sob evidência, não confiança.**
+**Times de agentes sob evidência: só conta como pronto o que provam.**
+Evidência, não confiança, para Claude Code e Codex CLI. Waves e lanes dividem o trabalho, um veredito
+da lane ou da família de modelo de quem construiu é recusado, e nada chega a `verified` sem evidência
+registrada.
 
 House Party Protocol (HPP) é um harness local-first para agentes de código. Ele fica em volta do
 trabalho que um agente faz no Claude Code ou no Codex CLI e transforma quatro perguntas em
@@ -32,6 +35,69 @@ isoladas, e toda wave fecha em evidência, nunca numa frase.
 O harness é um pacote Python sem dependência de runtime (`python -m hpp`), um manifesto que
 declara o protocol, um conjunto de módulos instaláveis e um canal de distribuição por host. Nada
 roda em segundo plano. Todo veredito que ele produz pode ser re-derivado de arquivos em disco.
+
+<p align="center">
+  <img alt="Uma sessão do House Party Protocol renderizada da saída real: hpp doctor, hpp init num repositório vazio, hpp eval run -k 3 --gate both e hpp benchmark -k 3 terminando em gate=PASS" src="assets/terminal/hpp-demo.svg" width="860">
+</p>
+
+**Instale em uma linha** — a mesma wheel que o workflow de release constrói e atesta:
+
+```bash
+pip install house-party-protocol
+hpp doctor && hpp init --target ../your-repo
+```
+
+No Claude Code: `/plugin marketplace add rusharlabs/house-party-protocol`. No Codex CLI:
+`codex plugin marketplace add rusharlabs/house-party-protocol`. Cada passo, e os checksums para
+conferir antes, estão no [Quickstart](#quickstart).
+
+- **Nenhuma chamada de modelo, nenhuma dependência em runtime.** O pacote usa só a biblioteca
+  padrão, e um teste reprova o build se isso mudar (`tests/test_stdlib_only.py`).
+- **Toda captura de terminal desta página é renderizada da saída real.** O comando que a produziu
+  fica gravado dentro do arquivo da imagem; nada é desenhado à mão.
+- **Releases que você confere.** `SHA256SUMS` em toda release, proveniência de build conferida com
+  `gh attestation verify` e o selo OpenSSF Best Practices acima.
+- **Limites por escrito.** O que o harness não faz é uma seção desta página:
+  [Limites honestos](#limites-honestos).
+
+## Times de agentes, sob evidência
+
+Um time de agentes, aqui, são duas ou mais sessões ou subagents de código trabalhando no mesmo
+repositório: em paralelo, revisando um ao outro, às vezes disputando a mesma tarefa. Cada um relata
+"pronto". Alguma coisa os orquestra: um agente líder distribuindo subagents, um script que reparte o
+trabalho, um job de CI, ou você com quatro terminais. O HPP não é esse orquestrador e fica abaixo de
+qualquer um deles: o orquestrador decide quem trabalha em quê; o HPP decide o que conta como pronto.
+Ele não agenda nada, não paga nada e não chama modelo; o lane-kit só inicia uma sessão por ação sua:
+uma ação do Lane Dashboard que você confirma, ou os assentos de um `/deliberate` que você chama. Cada
+contrato abaixo tem um comando que
+mostra que ele vale, e as recusas saem com código diferente de zero, então um script pode usá-las
+como portões.
+
+| o que o time faz | a que o HPP o submete | o comando que mostra |
+|---|---|---|
+| **dividir o trabalho** | | |
+| planeja trabalho para vários agentes | uma spec compila num WorkGraph; unidades sem aresta entre si dividem a mesma wave, e um ciclo é erro com o caminho nomeado | `hpp work plan` · `hpp work waves` |
+| roda sessões lado a lado | cada sessão reivindica uma lane: caminhos, exclusividade, heartbeat; só duas lanes exclusivas vivas nos mesmos caminhos colidem, e uma lane morta nunca colide | `hpp map lane --now` |
+| troca mensagens entre agentes | uma mensagem é um arquivo roteado por uma linha `## To: <lane>`; o heartbeat a anuncia no meio da sessão, e um veredito se entrega sozinho à lane a que se refere | lane-kit `evals/mailbox-e2e.sh` |
+| escala papéis de desenvolvimento | doze papéis como comandos e subagents, cada um com o conjunto de ferramentas declarado | `hpp graph --view capability --format json` (`agent-roles`) · `ls frameworks/dev-squad-kit-1.2.0/agents` (12) |
+| **revisar com independência** | | |
+| revisa o trabalho de outro agente | um veredito da lane ou da família de modelo de quem construiu é recusado; as lentes de revisão saem sem `Write` e sem `Edit`; um painel de roteamento julgado pela família de modelo do autor é recusado | `lane_board.py --self-test` · `hpp attest create --maker a --checker a` → exit 2 · `hpp route --deliberation <sessão> --maker-family <família>` |
+| roda revisores especialistas | quatro lentes read-only respondem num formato só (`hpp.findings/v1`); o núcleo deriva o veredito e recusa chave que o contrato não define | `hpp findings check` |
+| põe vários modelos para deliberar | assentos de pelo menos duas famílias de modelo, um juiz numa lane que nenhum participante usa, primeira rodada cega, parada por regra, e a divergência que perdeu guardada num registro selado | `hpp deliberate plan` · `hpp deliberate record` · `hpp deliberate verify` |
+| põe agentes para disputar uma tarefa | um revisor de outra lane e de outra família escolhe o vencedor; os demais viram `NOT-SELECTED`, e o vencedor ainda precisa do próprio `VERIFIED` | `lane_board.py compete` · `lane_board.py select` |
+| **aceitar só o que foi provado** | | |
+| diz "pronto" | o comando-critério roda com o exit code medido fora do modelo e os artefatos declarados ganham hash; `verified` exige evidência registrada | `hpp evidence run` · `hpp evidence verify` · `hpp status` |
+| repete até terminar | o loop só avança por evento registrado; uma tag de conclusão na transcrição não o encerra, e o teto de iterações é o orçamento | `hpp event append` · `hpp status` · gate de loop do operator-kit (testes T1–T4) |
+| entrega uma aprovação | presa ao hash da spec, ao commit base e a um snapshot de todos os arquivos; um byte alterado a bloqueia | `hpp attest verify` |
+| passa uma vez | `pass@k` e `pass^k` medidos à parte em k execuções | `hpp eval run -k 3 --gate both` |
+| compartilha contexto | blocos inteiros sob um orçamento de caracteres, um hash por bloco, os omitidos listados, texto com cara de segredo recusado | `hpp context compile --budget` |
+| retoma depois de uma queda | o próximo passo sai do event log encadeado por hash, não de um resumo | `hpp resume` · `hpp event verify` |
+| recebe conselho de um modelo | registrado como consultivo e só-para-cima; um decisor é medido em casos rotulados antes de alguém confiar nele | `hpp decide validate` · `hpp decide eval` |
+
+No Claude Code esses módulos rodam nativamente depois que você cola o wiring; no Codex CLI as mesmas
+capacidades são comandos explícitos. `hpp graph --view capability --format json` diz qual, por
+módulo. A wheel do pip carrega o harness (`hpp`); o lane board, a mailbox, os papéis e as lentes
+chegam com os módulos (ver [Quickstart](#quickstart)).
 
 ## O problema
 
@@ -72,13 +138,21 @@ Cada falha acima tem um mecanismo no código, e cada mecanismo tem um comando qu
 | contexto truncado em silêncio | o compilador encaixa blocos inteiros sob um orçamento em caracteres, registra um hash por bloco e recusa material com cara de segredo | `hpp context compile` |
 | uma rodada com sorte | `pass@k` e `pass^k` medidos separadamente em `k` execuções | `hpp eval run` · `hpp benchmark` |
 | um conselheiro que ninguém mediu | uma decisão tomada fora do harness é registrada como consultiva e raise-only, com abstenção e falha de instrumento como desfechos; um decisor declarado é medido em casos rotulados antes de ser confiável — o hpp não chama modelo | `hpp decide validate` · `hpp decide eval` (novo na 2.6.0) |
-| uma screenshot verde que ninguém consegue re-derivar | o comando-critério que você declara (uma spec end-to-end, uma suíte de testes) roda com o exit code medido fora do modelo e cada artefato declarado vira hash; só passa com exit 0 e cada padrão declarado casando com um arquivo que esta execução escreveu, e `verify` bloqueia registro editado ou artefato alterado — o auto-hash não é assinatura, então um checker roda o comando de novo; o hpp não dirige navegador | `hpp evidence run` · `hpp evidence verify` (novo na 2.6.0) |
+| uma screenshot verde que ninguém consegue re-derivar | o comando-critério que você declara (uma spec end-to-end, uma suíte de testes) roda com o exit code medido fora do modelo e cada artefato declarado vira hash; só passa com exit 0 e cada padrão declarado casando com um arquivo que esta execução escreveu, e `verify` bloqueia registro editado ou artefato alterado — o auto-hash não é assinatura, então um checker roda o comando de novo ou pede uma (`run --sign-key` assina o registro com uma chave SSH, `verify --allowed-signers` a exige); o hpp não dirige navegador | `hpp evidence run` · `hpp evidence verify` (novo na 2.6.0) |
 | um retriever que ninguém mediu | um retriever que você declara como comando é pontuado em consultas rotuladas — hit@k, recall@k, precision@k, MRR, nDCG@k — e timeout, crash ou resposta malformada é falha de instrumento contada à parte, nunca zero; a resposta gerada a partir do que ele achou não é julgada | `hpp retrieval eval` (novo na 2.6.0) |
 | citações que ninguém resolveu | cada marcador `[ID:x]` precisa nomear um id do contexto a partir do qual a resposta foi escrita: id desconhecido, intervalo ou marcador vazio bloqueia, número sem marcador avisa — um marcador que resolve prova que a fonte existe, não que ela sustenta a frase | `hpp cite check` (novo na 2.6.0) |
 | um vencedor escolhido por quem construiu | N lanes constroem, cada uma, a sua tentativa da mesma tarefa; um revisor de outra lane e de outra família de modelo escolhe o vencedor, os perdedores viram um `NOT-SELECTED` terminal, e nenhum candidato chega a `MERGED` antes da escolha — escolher 1 de N é `pass@N`, então o vencedor ainda precisa do próprio `VERIFIED` e de `pass^k` | `lane_board.py compete` · `lane_board.py select` (lane-kit 1.4.0, novo na 2.6.0) |
 | uma checagem verde que ninguém tentou quebrar | o critério roda numa cópia do workspace, limpa (tem de passar) e uma vez por mutante (tem de falhar); um mutante que ele deixa passar é um ponto cego nomeado, e um critério que falha na cópia limpa não tem controle e não ganha score | `hpp evidence mutate` (novo na 2.7.0) |
 | um painel de agentes concordando consigo mesmo | uma House Session nomeia o modelo pinado e a família de cada assento; exige duas famílias, um juiz fora das lanes dos participantes e um assento dissidente onde a pergunta pede; a primeira rodada é cega e isso é verificável, um assento que não respondeu não é julgado e bloqueia o veredito, a sessão para por regra, e o registro se sela e guarda a dissidência que perdeu; com evidência declarada um `fact` só fundamenta por uma referência que resolve, e um veredito sobre dissidência fundamentada exige o steelman dela pelo juiz (2.8.0) — o painel é medido como um decisor só pela mesma régua; o hpp não chama modelo | `hpp deliberate record` · `hpp deliberate verify` (novo na 2.7.0) |
 | instalador que escreve antes de você ler | `hpp init` imprime um plano; `--apply` escreve um arquivo; o wiring do host continua sendo um colar | `hpp init` |
+
+As linhas de atestação acima, rodadas de verdade num repositório descartável: um autor recusado
+como o próprio checker, uma aprovação que verifica, um byte acrescentado a um arquivo commitado, e a
+mesma aprovação bloqueada com exit 2.
+
+<p align="center">
+  <img alt="Uma aprovação velha recusada, renderizada da saída real: hpp attest create --maker a --checker a sai com 2 (maker and checker must be different non-empty actors); com --checker b a aprovação é registrada; hpp attest verify devolve valid; python -c acrescenta um byte ao app.py; hpp attest verify devolve blocked, mismatches snapshot_digest, exit 2" src="assets/terminal/hpp-attest-demo.svg" width="860">
+</p>
 
 ## Cross-model by construction
 
@@ -98,15 +172,16 @@ mapas. Uma lane conduzida por um e revisada pelo outro é o caso comum, não um 
 integração.
 
 Aquelas três linhas são uma máquina de estados, não uma convenção. O `lane-kit` mantém um board
-append-only por repositório e é o único escritor dele: `CHECKPOINT-READY` só da lane que reivindicou
-o item e só com evidência colada, veredito só de outra lane **e** de outra família de modelo,
+append-only por repositório e é o único escritor dele: `CHECKPOINT-READY` só da lane do último evento
+de construção do item (`CLAIMED`, `BUILDING` ou `CHECKPOINT-READY`) e só com evidência colada,
+veredito só de outra lane **e** de outra família de modelo,
 `DEFERRED` como único veredito que um checker inalcançável consegue produzir, e `MERGED` só sobre um
 `VERIFIED` que já está no board.
 
 <p align="center">
   <img alt="python lane_board.py render: quatro itens de exemplo num board — EXAMPLE-1 MERGED, EXAMPLE-2 VERIFIED esperando o gate humano, EXAMPLE-3 DEFERRED por falta de checker, EXAMPLE-4 de volta a BUILDING depois de NEEDS-FIX — e então os vereditos cuja lane ainda não foi avisada" src="assets/terminal/lane-board.svg" width="940">
 </p>
-<p align="center"><sub>O board que aquelas linhas produzem, como o <code>multi-session/lane-kit-1.6.0/scripts/lane_board.py</code> o imprime: quatro itens de exemplo conduzidos pela máquina, cada evento nomeando a lane que o escreveu, a evidência colada no checkpoint e — no caso de veredito — a lane e o modelo que o deram. Duas tentativas foram recusadas no caminho, as duas com <code>exit 1</code>: um veredito vindo da própria lane que construiu (<em>maker≠checker violated: reviewer (exec-b) is the SAME lane as the builder</em>) e o merge de um item 🔴 sem <code>--human-approved</code>. O último bloco é o que ninguém pensa em pedir — vereditos já decididos cuja lane ainda não foi avisada. Texto renderizado da saída real do comando pelo <code>scripts/render_terminal_svg.py</code>, como as duas capturas acima.</sub></p>
+<p align="center"><sub>O board que aquelas linhas produzem, como o <code>multi-session/lane-kit-1.7.0/scripts/lane_board.py</code> o imprime: quatro itens de exemplo conduzidos pela máquina, cada evento nomeando a lane que o escreveu, a evidência colada no checkpoint e — no caso de veredito — a lane e o modelo que o deram. Duas tentativas foram recusadas no caminho, as duas com <code>exit 1</code>: um veredito vindo da própria lane que construiu (<em>maker≠checker violated: reviewer (exec-b) is the SAME lane as the builder</em>) e o merge de um item 🔴 sem <code>--human-approved</code>. O último bloco é o que ninguém pensa em pedir — vereditos já decididos cuja lane ainda não foi avisada. Texto renderizado da saída real do comando pelo <code>scripts/render_terminal_svg.py</code>, como as duas capturas acima.</sub></p>
 
 ## Quickstart
 
@@ -122,7 +197,7 @@ nenhum pacote de terceiro. A CI exercita Python 3.10 a 3.13 em Linux, macOS e Wi
 (`.github/workflows/ci.yml`); interpretadores mais antigos não são prometidos porque nada os mede.
 
 ```bash
-pip install git+https://github.com/rusharlabs/house-party-protocol@v2.9.0
+pip install git+https://github.com/rusharlabs/house-party-protocol@v2.10.0
 hpp doctor
 hpp init --target ../your-repo
 ```
@@ -200,8 +275,12 @@ canais nada é escrito até você rodar de novo com `--apply`, e aí exatamente 
 `.hpp/profile.json`. `hpp init --json` devolve o mesmo relatório em JSON para CI e agentes;
 `--non-interactive`, `--yes` e `--profile` respondem às perguntas sem prompt. A quarta pergunta é
 opcional e nova na 2.6.0: `--decision-advisor off|typesafe|openrouter|compatible` registra um conselheiro de decisão
-tipada que você mesmo vai integrar (padrão `off`) e imprime como — veja
-[examples/typed-decisions](examples/typed-decisions/README.pt-BR.md).
+tipada que você mesmo vai integrar (padrão `off`) e imprime como. O conselheiro que o wizard conhece
+pelo nome é o Jev, um modelo hospedado de decisão tipada servido pela TypeSafe AI (`typesafe`) e
+pelo OpenRouter (`openrouter`); `compatible` aceita qualquer servidor que fale o mesmo formato. O hpp
+nunca o chama: o adaptador fica em [examples/typed-decisions](examples/typed-decisions/README.pt-BR.md),
+roda só quando você o roda, e `hpp decide eval` o mede contra um baseline antes que alguém confie
+nele — o [manual](https://rusharlabs.github.io/house-party-protocol/MANUAL.pt-BR.html#decide) mostra o passo a passo.
 
 Depois do `--apply`, cole o bloco de wiring que o comando imprimiu. Para Claude Code é o canal
 nativo de plugin:
@@ -211,19 +290,28 @@ nativo de plugin:
 /plugin install operator-kit@house-party-protocol
 ```
 
-Para Codex CLI o instalador de módulos copia cada módulo para `.agents/hpp/<módulo>` e roda os
-smokes declarados. No Claude Code, um módulo sem hook de plugin é copiado à mão (o README de cada
-módulo mostra a linha `cp -r`) e o instalador detecta, liga e verifica. Nos dois casos ele planeja
-primeiro e aplica só numa segunda invocação explícita:
+Para Codex CLI o mesmo repositório é um marketplace de plugins próprio, para os módulos que
+carregam skills (só skills; os hooks ficam desligados):
 
-```bash
-python installers/kit-forge-1.4.2/kit_doctor.py install \
-  --kit frameworks/operator-kit-1.7.0 --host codex --target ../your-repo
-python installers/kit-forge-1.4.2/kit_doctor.py install \
-  --kit frameworks/operator-kit-1.7.0 --host codex --target ../your-repo --apply
+```text
+codex plugin marketplace add rusharlabs/house-party-protocol
+codex plugin add operator-kit@house-party-protocol
 ```
 
-O instalador faz parte deste repositório, em `installers/kit-forge-1.4.2/kit_doctor.py`, ao
+O instalador de módulos copia qualquer módulo suportado para `.agents/hpp/<módulo>` e roda os
+smokes declarados; essa cópia é o que instala runtime, scripts e templates. No Claude Code, um
+módulo sem hook de plugin é copiado à mão (o README de cada módulo mostra a linha `cp -r`) e o
+instalador detecta, liga e verifica. Nos dois casos ele planeja primeiro e aplica só numa segunda
+invocação explícita:
+
+```bash
+python installers/kit-forge-1.5.0/kit_doctor.py install \
+  --kit frameworks/operator-kit-1.8.0 --host codex --target ../your-repo
+python installers/kit-forge-1.5.0/kit_doctor.py install \
+  --kit frameworks/operator-kit-1.8.0 --host codex --target ../your-repo --apply
+```
+
+O instalador faz parte deste repositório, em `installers/kit-forge-1.5.0/kit_doctor.py`, ao
 lado dos diretórios de módulo a partir dos quais ele instala. Uma instalação por pip não carrega
 nem um nem outro, e o `hpp init` avisa isso no bloco de wiring quando não encontra o instalador
 ao lado do manifesto.
@@ -245,13 +333,14 @@ protocol       hpp.manifest.json      the invariants: roles, loop transitions an
    │
 modules        ten versioned dirs     installable capabilities; each stands alone
    │
-distribution   marketplace · copy     Claude Code plugin channel · Codex CLI verified copy
+distribution   marketplace · copy     Claude Code plugin channel · Codex CLI plugin channel
+                                      (skills) and verified copy
 ```
 
 `hpp doctor` valida o manifesto e, quando `marketplace.json` está ao lado dele, cruza cada caminho
 de módulo, versão e manifesto de plugin. Neste repositório ele imprime
 `HPP doctor: ok · modules=10 · hosts=claude-code, codex · hooks=18 (permission gates=9 · llm egress=0)`; o cruzamento só aparece em
-`hpp doctor --json`, onde `distribution` lê `{"checked": true, "modules": 10, "status": "ok"}`.
+`hpp doctor --json`, onde `distribution` lê `{"checked": true, "codex_marketplace": {"checked": true, "plugins": 6}, "modules": 10, "status": "ok"}` — os seis são os módulos do canal de plugin do Codex.
 A partir de uma instalação por pip a linha única é a mesma e o campo lê
 `{"checked": false, "status": "source-contract"}`, porque nenhum `marketplace.json` está ao lado
 do manifesto empacotado.
@@ -273,16 +362,16 @@ mesma resposta em JSON. Nenhum dos dois pede a um modelo que lembre de alguma co
 
 | módulo | versão | uma linha |
 |---|---|---|
-| `operator-kit` | 1.6.2 | done gate com exit code real, política de comando em `audit` ou `enforce`, loops governados com charter e condições de parada, runner standalone de `pass@k` / `pass^k`, preflight, dois agentes checkers entregues sem `Write` nem `Edit` |
-| `lane-kit` | 1.4.1 | um quadro de lanes para sessões concorrentes: claim, território, liveness, maker ≠ checker, e um roteador que escolhe checker de outro provedor |
-| `continuity-kit` | 1.4.1 | handoff escrito antes de parada ou compactação, comandos de re-derivação em vez de estado lembrado, guardas contra replay de passo concluído |
-| `health-kit` | 1.3.3 | sondas de serviço config-driven que gravam um cache que a statusline lê sem tocar a rede; saúde de serviço separada de saúde de dado |
-| `gotcha-memory` | 1.0.3 | registra comandos que falharam por família de erro, detecta recorrência, injeta a lição antes da próxima execução; warn-only, segredo redigido por forma |
-| `kit-forge` | 1.4.2 | monta módulos a partir das fontes, faz lint de IP e PII, instala em seis estágios, escreve e verifica `CHECKSUMS.txt`, confere o marketplace |
-| `claude-dev-kit` | 1.3.3 | autoria de skills, hooks e plugins para Claude Code, wiring reversível de settings, secret scan na escrita |
-| `dev-squad-kit` | 1.1.1 | doze papéis de desenvolvimento como comandos e subagents com tools explícitos, mais skills de leitura e consolidação paralelas |
-| `agent-framework-wizard` | 1.2.1 | scaffold em seis passos para um projeto novo de agente ou skill, respondível por arquivo em execução não interativa |
-| `supabase-pack` | 1.1.2 | auditoria de RLS por `pg_policies` e advisors em vez de flag de tabela; scaffold de Edge Function |
+| `operator-kit` | 1.8.0 | done gate com exit code real, política de comando em `audit` ou `enforce`, loops governados com charter e condições de parada, runner standalone de `pass@k` / `pass^k`, preflight, dois agentes checkers entregues sem `Write` nem `Edit` |
+| `lane-kit` | 1.7.0 | um quadro de lanes para sessões concorrentes: claim, território, liveness, maker ≠ checker, e um roteador que escolhe checker de outro provedor |
+| `continuity-kit` | 1.5.0 | handoff escrito antes de parada ou compactação, comandos de re-derivação em vez de estado lembrado, guardas contra replay de passo concluído |
+| `health-kit` | 1.4.0 | sondas de serviço config-driven que gravam um cache que a statusline lê sem tocar a rede; saúde de serviço separada de saúde de dado |
+| `gotcha-memory` | 1.1.0 | registra comandos que falharam por família de erro, detecta recorrência, injeta a lição antes da próxima execução; warn-only, segredo redigido por forma |
+| `kit-forge` | 1.5.0 | monta módulos a partir das fontes, faz lint de IP e PII, instala em seis estágios, escreve e verifica `CHECKSUMS.txt`, confere o marketplace |
+| `claude-dev-kit` | 1.3.4 | autoria de skills, hooks e plugins para Claude Code, wiring reversível de settings, secret scan na escrita |
+| `dev-squad-kit` | 1.2.0 | doze papéis de desenvolvimento como comandos e subagents com tools explícitos, mais skills de leitura e consolidação paralelas |
+| `agent-framework-wizard` | 1.2.2 | scaffold em seis passos para um projeto novo de agente ou skill, respondível por arquivo em execução não interativa |
+| `supabase-pack` | 1.2.0 | auditoria de RLS por `pg_policies` e advisors em vez de flag de tabela; scaffold de Edge Function |
 
 O bundle `reliable-coding` são os seis primeiros. Cada módulo instala sozinho; `integrates_with`
 no manifesto é composição opcional, `requires` é dependência dura, e hoje nenhum módulo requer
@@ -311,9 +400,14 @@ grafo e attestation de evidência. `pass^k = 1.00` é exigido para o gate passar
 e o hash dele estão no relatório JSON (`hpp benchmark -k 3 --json`). Veja [PROOF.pt-BR.md](docs/PROOF.pt-BR.md)
 para a matriz de claims e [BENCHMARK.pt-BR.md](docs/BENCHMARK.pt-BR.md) para os cenários.
 
-Neste repositório, `python installers/kit-forge-1.4.2/kit_doctor.py verify <dir-do-módulo>`
+Neste repositório, `python installers/kit-forge-1.5.0/kit_doctor.py verify <dir-do-módulo>`
 compara cada arquivo de um módulo com o seu `CHECKSUMS.txt`, e
-`python installers/kit-forge-1.4.2/kit_doctor.py marketplace .` confere a árvore inteira.
+`python installers/kit-forge-1.5.0/kit_doctor.py marketplace .` confere a árvore inteira.
+
+Algo confuso, mais lento do que devia, ou uma peça que você deixou de usar?
+`python -m hpp doctor --report` imprime o link do formulário de feedback com o título preenchido e,
+abaixo, o relatório para colar (versões, plataforma, contagens; nenhum caminho da máquina). Ele não
+faz chamada de rede; nada é enviado até você abrir o link.
 
 ## Limites honestos
 
@@ -321,6 +415,10 @@ compara cada arquivo de um módulo com o seu `CHECKSUMS.txt`, e
   checagem não rodou, nada a rodou.
 - HPP nunca chama modelo. O roteamento devolve um tier e um id de provedor a partir de declarações
   que você passa; não escolhe fornecedor, nome de modelo nem preço.
+- O HPP não roda times de agentes. O pacote `hpp` não inicia agente nem agenda nada; o lane-kit só
+  inicia uma sessão por ação sua (uma ação do Lane Dashboard que você confirma, ou os assentos de um
+  `/deliberate` que você chama). Lanes, waves e House Sessions são contratos e projeções sobre o que
+  os seus hosts rodam, e um veredito só impede algo quando um hook, um job de CI ou uma pessoa o chama.
 - Os mapas são projeções de manifestos, event logs e JSON que você fornece. O Monitor Map não sonda
   nada; você fornece `last_signal`. O Lane Map não conhece suas sessões; você fornece heartbeats.
   `--now` é explícito para que nenhuma projeção dependa do relógio ambiente.

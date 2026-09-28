@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>House Party Protocol — INSTALL-CONTRACT — the installation contract of every kit in this marketplace</title>
+  <meta name="description" content="The installation contract of every kit: six stages in a fixed order, the plan before any write, and only a second, explicit invocation acts.">
+  <link rel="alternate" hreflang="en" href="INSTALL-CONTRACT.html">
+  <link rel="alternate" hreflang="pt-BR" href="INSTALL-CONTRACT.pt-BR.html">
+  <style>
+    :root{--hpp-black: #000000;--hpp-ink: #0F1113;--hpp-paper: #F4F1EB;--hpp-signal: #FF6A00;--line:rgba(15,17,19,.18);--surface:rgba(15,17,19,.04);--muted:rgba(15,17,19,.72);--max:1120px}
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;background:var(--hpp-paper);color:var(--hpp-ink);font:16px/1.65 Inter,"Segoe UI",Arial,sans-serif}
+    a{color:var(--hpp-ink);text-decoration:underline;text-decoration-color:var(--hpp-signal);text-decoration-thickness:2px;text-underline-offset:3px}
+    a:hover{color:var(--hpp-signal)}
+    a:focus-visible{outline:4px solid var(--hpp-signal);outline-offset:3px}
+    .wrap{width:min(var(--max),calc(100% - 40px));margin:auto}
+    .lang{background:var(--hpp-black);color:var(--hpp-paper);font-size:.9rem;padding:10px 0}
+    .lang a{color:var(--hpp-paper)}
+    .lang a[aria-current]{text-decoration:none;font-weight:700}
+    .hero{background:var(--hpp-ink);color:var(--hpp-paper);padding:44px 0 50px}
+    .hero img{width:min(720px,100%);display:block}
+    .hero h1{font:800 clamp(2.2rem,6vw,5rem)/.95 Sora,Inter,"Segoe UI",sans-serif;letter-spacing:-.02em;margin:.35em 0}
+    .hero p{max-width:760px;font-size:1.15rem;color:rgba(244,241,235,.82)}
+    .hero .eyebrow{color:var(--hpp-paper);border-color:var(--hpp-signal)}
+    .signal{color:var(--hpp-signal)}
+    .eyebrow,.mono,code,pre,.gate,.label{font-family:"JetBrains Mono","Cascadia Code",Consolas,monospace}
+    .eyebrow{display:inline-block;letter-spacing:.13em;text-transform:uppercase;font-size:.78rem;border-left:4px solid var(--hpp-signal);padding-left:.6em;margin:0 0 .6em}
+    nav{position:sticky;top:0;z-index:2;background:rgba(244,241,235,.96);border-bottom:1px solid var(--line);backdrop-filter:blur(8px)}
+    nav .wrap{display:flex;gap:20px;overflow:auto;padding:12px 0}
+    nav a{white-space:nowrap;text-decoration:none;font-weight:700}
+    nav a:hover{text-decoration:underline;text-decoration-color:var(--hpp-signal)}
+    section{padding:64px 0;border-bottom:1px solid var(--line)}
+    h2{font:800 clamp(1.7rem,3vw,2.6rem)/1.1 Sora,Inter,"Segoe UI",sans-serif;letter-spacing:-.01em;margin:0 0 .6em}
+    h3{margin:0 0 .4em;font-size:1.1rem}
+    .lead{max-width:780px;color:var(--muted)}
+    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:20px}
+    .card{grid-column:span 4;border:1px solid var(--line);border-radius:16px;padding:22px;background:var(--surface)}
+    .card.wide{grid-column:span 6}
+    .card.full{grid-column:1/-1}
+    pre{background:var(--hpp-ink);color:var(--hpp-paper);padding:20px;border-radius:12px;overflow:auto;border-left:6px solid var(--hpp-signal);font-size:.92rem;line-height:1.5}
+    code{font-size:.94em}
+    p code,li code,td code{background:var(--surface);padding:.08em .35em;border-radius:5px}
+    pre code{background:none;padding:0}
+    table{width:100%;border-collapse:collapse;background:var(--surface);margin:1em 0}
+    th,td{text-align:left;padding:12px;border-bottom:1px solid var(--line);vertical-align:top}
+    th{background:rgba(15,17,19,.08);font-weight:700}
+    .gate{display:inline-block;border-radius:999px;padding:.15rem .7rem;font-weight:700;font-size:.8rem;margin-bottom:.6em}
+    .gate.allow{background:var(--hpp-signal);color:var(--hpp-ink)}
+    .gate.manual{border:2px solid var(--hpp-ink);color:var(--hpp-ink)}
+    .gate.block{background:var(--hpp-ink);color:var(--hpp-paper)}
+    .label{font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+    .measured{border-left:4px solid var(--hpp-signal);padding-left:1em;color:var(--muted);font-size:.95rem}
+    ul,ol{padding-left:1.3em}
+    li{margin:.25em 0}
+    footer{padding:48px 0;background:var(--hpp-black);color:var(--hpp-paper)}
+    footer a{color:var(--hpp-paper)}
+    footer .five{letter-spacing:.2em;font-size:.8rem;color:rgba(244,241,235,.72)}
+    @media(max-width:760px){.card,.card.wide{grid-column:1/-1}.wrap{width:min(100% - 32px,var(--max))}th,td{font-size:.88rem;padding:8px}.hero{padding-top:28px}section{padding:44px 0}}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+    h3[id],h4[id],h5[id]{scroll-margin-top:64px}
+    ul.tasks{list-style:none;padding-left:.2em}
+    blockquote{margin:1em 0}
+  </style>
+</head>
+<body>
+  <div class="lang"><div class="wrap"><a href="INSTALL-CONTRACT.html" aria-current="page" hreflang="en">English</a> · <a href="INSTALL-CONTRACT.pt-BR.html" hreflang="pt-BR" lang="pt-BR">Português</a></div></div>
+  <header class="hero">
+    <div class="wrap">
+      <img src="assets/hpp-logo-header.png" alt="House Party Protocol">
+      <p class="eyebrow">Contracts · INSTALL-CONTRACT.md</p>
+      <h1>INSTALL-CONTRACT — the installation contract of every kit in this marketplace</h1>
+    </div>
+  </header>
+  <nav aria-label="Chapters"><div class="wrap"><a href="#principle">Principle</a><a href="#the-6-stages-fixed-order">The 6 stages (fixed order)</a><a href="#the-plan--apply-flow-confirm-step">The plan → apply flow (Confirm step)</a><a href="#schema-of-installkitinstallyaml">Schema of <code>install/kit.install.yaml</code></a><a href="#question-schema-questions">Question schema (<code>questions:</code>)</a><a href="#host-seam-claude-code--codex-cli">Host seam (Claude Code + Codex CLI)</a><a href="#exit-codes-kit_doctorpy-install">Exit codes (<code>kit_doctor.py install</code>)</a><a href="#checklist-before-considering-a-kit-really-installable">Checklist before considering a kit "really installable"</a></div></nav>
+  <main>
+
+    <section><div class="wrap">
+<blockquote class="measured">
+<p><strong>Version:</strong> 1.0.0 · <strong>Enforcement:</strong> <code>installers/kit-forge/kit_doctor.py</code> (subcommand <code>install</code>)
+<strong>Sibling of:</strong> <code>SKILL-CONTRACT.md</code> (the SKILL.md contract) — this one is the contract of the INSTALLER.</p>
+</blockquote>
+    </div></section>
+
+    <section id="principle"><div class="wrap">
+      <p class="eyebrow">01</p>
+      <h2>Principle</h2>
+<pre lang="pt-BR"><code>INSTALAR UM KIT NUNCA É UMA SURPRESA.
+O operador vê o PLANO antes de qualquer escrita acontecer, sabe se o projeto-alvo
+é NOVO ou JÁ TEM CONFIG, e só uma segunda invocação explícita (--apply) age.
+Nenhum instalador deste marketplace bloqueia esperando input() de terminal —
+o "sim" do humano é a re-invocação com --apply, não um prompt.</code></pre>
+<p>(Installing a kit is never a surprise. The operator sees the PLAN before any write happens,
+knows whether the target project is NEW or ALREADY HAS CONFIG, and only a second, explicit
+invocation (<code>--apply</code>) acts. No installer in this marketplace blocks waiting for terminal
+<code>input()</code> — the human's "yes" is the re-invocation with <code>--apply</code>, not a prompt.)</p>
+<p>Every kit in this marketplace that has installation steps (file copy, profile, wiring of
+hooks/statusLine) is installed by the SAME engine (<code>kit_doctor.py install</code>), which reads a
+declarative per-kit manifest (<code>install/kit.install.yaml</code>). The engine never carries hardcoded
+knowledge of a specific kit — all kit-specific knowledge lives in the YAML.</p>
+    </div></section>
+
+    <section id="the-6-stages-fixed-order"><div class="wrap">
+      <p class="eyebrow">02</p>
+      <h2>The 6 stages (fixed order)</h2>
+<pre><code>detect → prereqs → profile → configure → wire-suggest → smoke</code></pre>
+<h3 id="1-detect-new--always-first-read-only">1. <code>detect</code> (new — always first, read-only)</h3>
+<p>Classifies the target project (<code>--target</code>, default cwd) into one of three categories:</p>
+<table>
+<thead><tr><th>Classification</th><th>Signals</th></tr></thead>
+<tbody>
+<tr><td><code>greenfield</code></td><td>no <code>.claude/</code>, no <code>settings.json</code>/<code>settings.local.json</code>, git with few or no commits, no real profile present</td></tr>
+<tr><td><code>in-progress</code></td><td><code>.claude/</code> exists, <code>settings*.json</code> has hooks/statusLine in use, a real profile (<code>operator-profile.yaml</code>/<code>rollup.yaml</code>/etc.) present, non-trivial git history</td></tr>
+<tr><td><code>re-run</code></td><td>this <code>kit_dir</code> already has an entry in <code>~/.claude-kits/registry.json</code> pointing at this <code>--target</code></td></tr>
+</tbody>
+</table>
+<p>Output: <code>{"stage": "detect", "classification": "...", "signals": {...}, "existing_config": [list of already-configured items that will be preserved]}</code>. Never writes anything.</p>
+<h3 id="2-prereqs-existing--pythonpyyamldependencies-declared-in-requires">2. <code>prereqs</code> (existing — python/PyYAML/dependencies declared in <code>requires:</code>)</h3>
+<h3 id="3-profile-existing--copies-example--real-never-overwrites-if-the-target-already-exists-with-content-different-from-the-generated-one-skip-exists-is-reported-not-silent">3. <code>profile</code> (existing — copies <code>*.example.*</code> → real; <strong>never overwrites</strong> if the target already exists with content different from the generated one; <code>skip-exists</code> is reported, not silent)</h3>
+<h3 id="4-configure-new">4. <code>configure</code> (new)</h3>
+<p>Reads <code>questions:</code> from <code>kit.install.yaml</code>. Without <code>--answers</code>: uses the <code>default</code> of each question and lists, in the plan, which questions remain pending a human decision. With <code>--answers &lt;file.json|yaml&gt;</code>: loads, validates against the schema (type/options), applies; absent fields = default.</p>
+<h3 id="5-wire-suggest-existing--never-writes-settingshooks-only-detects-what-exists--claude-pluginpluginjson-installwiring-specyaml-readmemdguide--and-suggests-the-textual-command-mutating-settingshooks-remains-a-human-gate-always">5. <code>wire-suggest</code> (existing — NEVER writes settings/hooks; only detects what exists — <code>.claude-plugin/plugin.json</code>, <code>install/wiring-spec.yaml</code>, <code>README.md</code>/guide — and suggests the textual command. Mutating settings/hooks remains a human gate, always.)</h3>
+<h3 id="6-smoke-existing--runs---self-test-on-every-py-of-the-kit-scripts-without-that-support-are-skipped-not-a-failure">6. <code>smoke</code> (existing — runs <code>--self-test</code> on every <code>.py</code> of the kit; scripts without that support are <code>skipped</code>, not a failure)</h3>
+    </div></section>
+
+    <section id="the-plan--apply-flow-confirm-step"><div class="wrap">
+      <p class="eyebrow">03</p>
+      <h2>The plan → apply flow (Confirm step)</h2>
+<pre lang="pt-BR"><code>$ python kit_doctor.py install &lt;kit_dir&gt; --target &lt;project_dir&gt;
+   → roda os 6 estágios em MODO PLANO (nenhuma escrita real acontece)
+   → imprime o plano completo (JSON) e SAI COM EXIT 0
+   → o humano lê o plano (na conversa, se for um agente operando)
+
+$ python kit_doctor.py install &lt;kit_dir&gt; --target &lt;project_dir&gt; --apply
+   → roda os 6 estágios de verdade, aplicando profile/registrando install
+   → wire-suggest continua NUNCA escrevendo (gate humano é sempre manual)</code></pre>
+<p>(First invocation: runs the 6 stages in PLAN MODE — no real write happens — prints the full
+plan as JSON and EXITS 0; the human reads the plan, in the conversation if an agent is
+operating. Second invocation, with <code>--apply</code>: runs the 6 stages for real, applying the profile
+and registering the install; <code>wire-suggest</code> still NEVER writes — the human gate is always
+manual.)</p>
+<p>There is no (and there must not be a) blocking <code>input()</code> anywhere in this mechanism — the real
+operator of this ecosystem is frequently an agent acting on behalf of a human; a stdin prompt
+hangs exactly in that usage context. The "Confirm" is the double invocation (plan, then
+<code>--apply</code>), auditable and reproducible.</p>
+    </div></section>
+
+    <section id="schema-of-installkitinstallyaml"><div class="wrap">
+      <p class="eyebrow">04</p>
+      <h2>Schema of <code>install/kit.install.yaml</code></h2>
+<pre lang="pt-BR"><code class="language-yaml">kit: &lt;nome-do-kit&gt;
+requires:
+  python: "&gt;=3.9"          # opcional, default "&gt;=3.8"
+  pyyaml: true              # opcional, default false
+  external_services: []     # ex.: supabase-pack declara [{name: Supabase, via: MCP, credenciais: "URL + anon key"}]
+                             # REGRA DURA: nunca declarar ANTHROPIC_API_KEY aqui — a autenticação do modelo é do host, nunca do kit
+questions:                  # opcional — consumido pelo estágio `configure` E pelo modo --interview de wizards
+  - id: &lt;identificador&gt;
+    prompt: "&lt;pergunta em pt-BR&gt;"
+    type: choice|bool|string
+    options: [...]           # se type: choice
+    default: &lt;valor&gt;
+verification:               # comandos de aceite pós-install (cada um deve ser executável e sair 0)
+  - "python scripts/algo.py --self-test"
+hosts:
+  claude-code:               # host nativo de plugin — ver seção "Seam de host" abaixo
+    plugin: true|false        # tem .claude-plugin/plugin.json?
+    wiring_spec: install/wiring-spec.yaml   # se houver wiring de hooks/statusLine
+    manual_gates: [statusLine]              # o que NUNCA pode ser auto-armado (sempre gate humano)
+  codex:                     # host por cópia explícita, sem ativação automática de hooks
+    plugin: false
+    agents: AGENTS.md
+    skills_path: .agents/skills
+    runtime_path: .agents/hpp/&lt;nome-do-kit&gt;
+    manual_gates: [hooks]
+docs: README.md</code></pre>
+<p>Reading the block: <code>requires.python</code> is optional (default <code>"&gt;=3.8"</code>); <code>requires.pyyaml</code> is
+optional (default <code>false</code>); <code>requires.external_services</code> names each external service (e.g. the
+supabase-pack declares <code>[{name: Supabase, via: MCP, credenciais: "URL + anon key"}]</code>) — HARD RULE:
+never declare <code>ANTHROPIC_API_KEY</code> here, model authentication belongs to the host, never to the kit;
+<code>questions</code> is optional and is consumed by the <code>configure</code> stage AND by the <code>--interview</code> mode of
+wizards, <code>options</code> applying when <code>type: choice</code>; <code>verification</code> lists post-install acceptance
+commands, each of which must be executable and exit 0; under <code>hosts</code>, <code>claude-code</code> is the native
+plugin host (see "Host seam" below) — <code>plugin</code> says whether <code>.claude-plugin/plugin.json</code> exists,
+<code>wiring_spec</code> points at the hooks/statusLine wiring if there is one, and <code>manual_gates</code> lists what
+must NEVER be auto-armed (always a human gate); <code>codex</code> is the host installed by explicit copy,
+with no automatic activation of hooks.</p>
+    </div></section>
+
+    <section id="question-schema-questions"><div class="wrap">
+      <p class="eyebrow">05</p>
+      <h2>Question schema (<code>questions:</code>)</h2>
+<p>The same schema is consumed in two places: by the <code>configure</code> stage of <code>kit_doctor.py</code>, and by
+the <code>--interview</code> mode of standalone wizards (e.g. <code>agent-framework-wizard/wizard.py</code>). This
+guarantees that "answering questions" has ONE format, not two.</p>
+<pre lang="pt-BR"><code class="language-json">{"id": "lane_mode", "prompt": "Projeto roda multi-sessão (lanes) ou solo?", "type": "choice", "options": ["solo", "lanes"], "default": "solo"}</code></pre>
+    </div></section>
+
+    <section id="host-seam-claude-code--codex-cli"><div class="wrap">
+      <p class="eyebrow">06</p>
+      <h2>Host seam (Claude Code + Codex CLI)</h2>
+<p>The engine keeps an internal dict with the two proven hosts:</p>
+<pre><code class="language-python">HOSTS = {
+    "claude-code": {
+        "settings_path": ".claude/settings.local.json",
+        "plugin_manifest": ".claude-plugin/plugin.json",
+        "path_token": "${CLAUDE_PLUGIN_ROOT}",
+    },
+    "codex": {
+        "agents_file": "AGENTS.md",
+        "skills_path": ".agents/skills",
+        "runtime_path": ".agents/hpp",
+        "path_token": "{{HPP_CODEX_RUNTIME}}",
+    },
+}</code></pre>
+<p>NEW sources (<code>kit.install.yaml</code>, <code>install/wiring-spec.yaml</code>) use the neutral token
+<code>{{KIT_ROOT}}</code>, resolved to the <code>path_token</code> of the active host (<code>--host</code>; the default follows
+<code>claude-code</code>). EXISTING uses of <code>${CLAUDE_PLUGIN_ROOT}</code> in <code>hooks.json</code>/scripts are NOT
+rewritten — they are native Claude Code artefacts and remain so. On Codex, <code>codex_skills.py</code>
+copies the runtime to <code>.agents/hpp/&lt;kit&gt;</code> and generates namespaced skills under
+<code>.agents/skills/</code>, substituting the token only in those copies. Hooks stay off. A future
+host adapter = a new entry in <code>HOSTS</code> + a <code>hosts.&lt;new&gt;:</code> block in the YAMLs — zero
+change to the 6 stages. Do not invent a fake "neutral" event vocabulary: events such as
+<code>Stop</code>/<code>PreCompact</code> are Claude Code concepts and are declared under <code>hosts.claude-code</code>,
+honestly.</p>
+    </div></section>
+
+    <section id="exit-codes-kit_doctorpy-install"><div class="wrap">
+      <p class="eyebrow">07</p>
+      <h2>Exit codes (<code>kit_doctor.py install</code>)</h2>
+<table>
+<thead><tr><th>Exit</th><th>Meaning</th></tr></thead>
+<tbody>
+<tr><td>0</td><td>plan printed (default mode) OR applied successfully (<code>--apply</code>)</td></tr>
+<tr><td>1</td><td>some <code>smoke</code> stage failed</td></tr>
+<tr><td>3</td><td>usage error (kit_dir/target missing)</td></tr>
+</tbody>
+</table>
+    </div></section>
+
+    <section id="checklist-before-considering-a-kit-really-installable"><div class="wrap">
+      <p class="eyebrow">08</p>
+      <h2>Checklist before considering a kit "really installable"</h2>
+<pre lang="pt-BR"><code>[ ] install/kit.install.yaml existe e valida contra o schema acima
+[ ] requires.external_services declarado (mesmo que vazio) — nunca ANTHROPIC_API_KEY
+[ ] questions (se houver) têm default sensato — instalar sem --answers nunca trava
+[ ] verification: tem ≥1 comando real, executável, que sai 0 quando tudo está ok
+[ ] hosts.claude-code.manual_gates lista tudo que NUNCA deve ser auto-armado
+[ ] hosts.codex declara AGENTS.md, .agents/skills, runtime namespaced e hooks em manual_gates
+[ ] README.md segue o INSTALL-GUIDE-TEMPLATE.md
+[ ] kit_doctor.py install &lt;kit&gt; --target &lt;dir-virgem&gt; roda sem erro (plano)
+[ ] kit_doctor.py install &lt;kit&gt; --target &lt;dir-virgem&gt; --apply roda sem erro (aplica)
+[ ] rodar de novo (--apply) sobre o MESMO dir → detect classifica re-run, nada duplica</code></pre>
+<p>The ten boxes, in order: <code>install/kit.install.yaml</code> exists and validates against the schema
+above; <code>requires.external_services</code> is declared (even if empty) — never <code>ANTHROPIC_API_KEY</code>;
+<code>questions</code> (if any) have a sensible default — installing without <code>--answers</code> never hangs;
+<code>verification:</code> has ≥1 real, executable command that exits 0 when everything is fine;
+<code>hosts.claude-code.manual_gates</code> lists everything that must NEVER be auto-armed; <code>hosts.codex</code>
+declares <code>AGENTS.md</code>, <code>.agents/skills</code>, a namespaced runtime and hooks in <code>manual_gates</code>;
+<code>README.md</code> follows <code>INSTALL-GUIDE-TEMPLATE.md</code>; <code>kit_doctor.py install &lt;kit&gt; --target &lt;dir-virgem&gt;</code>
+runs without error (plan); the same with <code>--apply</code> runs without error (applies); running <code>--apply</code>
+again over the SAME dir → <code>detect</code> classifies <code>re-run</code>, nothing is duplicated.</p>
+    </div></section>
+
+  </main>
+  <footer><div class="wrap">
+    <p class="five">AGENTS · EVIDENCE · MEMORY · PROTOCOL · CONTINUITY</p>
+    <strong>House Party Protocol</strong>
+    <p>Operate coding agents under evidence, not trust.</p>
+    <p><a href="index.html">Documentation</a> · <a href="MANUAL.html">Harness manual</a> · <a href="CATALOG.html">Module catalogue</a> · <a href="https://github.com/rusharlabs/house-party-protocol/blob/main/INSTALL-CONTRACT.md">Markdown source</a> · <a href="INSTALL-CONTRACT.pt-BR.html" hreflang="pt-BR" lang="pt-BR">Português</a></p>
+  </div></footer>
+</body>
+</html>

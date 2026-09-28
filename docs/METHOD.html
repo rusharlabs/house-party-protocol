@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>House Party Protocol — Method</title>
+  <meta name="description" content="The way of working the harness enforces, where every practice ends in a command that passes or reports what it measured.">
+  <link rel="alternate" hreflang="en" href="METHOD.html">
+  <link rel="alternate" hreflang="pt-BR" href="METHOD.pt-BR.html">
+  <style>
+    :root{--hpp-black: #000000;--hpp-ink: #0F1113;--hpp-paper: #F4F1EB;--hpp-signal: #FF6A00;--line:rgba(15,17,19,.18);--surface:rgba(15,17,19,.04);--muted:rgba(15,17,19,.72);--max:1120px}
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;background:var(--hpp-paper);color:var(--hpp-ink);font:16px/1.65 Inter,"Segoe UI",Arial,sans-serif}
+    a{color:var(--hpp-ink);text-decoration:underline;text-decoration-color:var(--hpp-signal);text-decoration-thickness:2px;text-underline-offset:3px}
+    a:hover{color:var(--hpp-signal)}
+    a:focus-visible{outline:4px solid var(--hpp-signal);outline-offset:3px}
+    .wrap{width:min(var(--max),calc(100% - 40px));margin:auto}
+    .lang{background:var(--hpp-black);color:var(--hpp-paper);font-size:.9rem;padding:10px 0}
+    .lang a{color:var(--hpp-paper)}
+    .lang a[aria-current]{text-decoration:none;font-weight:700}
+    .hero{background:var(--hpp-ink);color:var(--hpp-paper);padding:44px 0 50px}
+    .hero img{width:min(720px,100%);display:block}
+    .hero h1{font:800 clamp(2.2rem,6vw,5rem)/.95 Sora,Inter,"Segoe UI",sans-serif;letter-spacing:-.02em;margin:.35em 0}
+    .hero p{max-width:760px;font-size:1.15rem;color:rgba(244,241,235,.82)}
+    .hero .eyebrow{color:var(--hpp-paper);border-color:var(--hpp-signal)}
+    .signal{color:var(--hpp-signal)}
+    .eyebrow,.mono,code,pre,.gate,.label{font-family:"JetBrains Mono","Cascadia Code",Consolas,monospace}
+    .eyebrow{display:inline-block;letter-spacing:.13em;text-transform:uppercase;font-size:.78rem;border-left:4px solid var(--hpp-signal);padding-left:.6em;margin:0 0 .6em}
+    nav{position:sticky;top:0;z-index:2;background:rgba(244,241,235,.96);border-bottom:1px solid var(--line);backdrop-filter:blur(8px)}
+    nav .wrap{display:flex;gap:20px;overflow:auto;padding:12px 0}
+    nav a{white-space:nowrap;text-decoration:none;font-weight:700}
+    nav a:hover{text-decoration:underline;text-decoration-color:var(--hpp-signal)}
+    section{padding:64px 0;border-bottom:1px solid var(--line)}
+    h2{font:800 clamp(1.7rem,3vw,2.6rem)/1.1 Sora,Inter,"Segoe UI",sans-serif;letter-spacing:-.01em;margin:0 0 .6em}
+    h3{margin:0 0 .4em;font-size:1.1rem}
+    .lead{max-width:780px;color:var(--muted)}
+    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:20px}
+    .card{grid-column:span 4;border:1px solid var(--line);border-radius:16px;padding:22px;background:var(--surface)}
+    .card.wide{grid-column:span 6}
+    .card.full{grid-column:1/-1}
+    pre{background:var(--hpp-ink);color:var(--hpp-paper);padding:20px;border-radius:12px;overflow:auto;border-left:6px solid var(--hpp-signal);font-size:.92rem;line-height:1.5}
+    code{font-size:.94em}
+    p code,li code,td code{background:var(--surface);padding:.08em .35em;border-radius:5px}
+    pre code{background:none;padding:0}
+    table{width:100%;border-collapse:collapse;background:var(--surface);margin:1em 0}
+    th,td{text-align:left;padding:12px;border-bottom:1px solid var(--line);vertical-align:top}
+    th{background:rgba(15,17,19,.08);font-weight:700}
+    .gate{display:inline-block;border-radius:999px;padding:.15rem .7rem;font-weight:700;font-size:.8rem;margin-bottom:.6em}
+    .gate.allow{background:var(--hpp-signal);color:var(--hpp-ink)}
+    .gate.manual{border:2px solid var(--hpp-ink);color:var(--hpp-ink)}
+    .gate.block{background:var(--hpp-ink);color:var(--hpp-paper)}
+    .label{font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+    .measured{border-left:4px solid var(--hpp-signal);padding-left:1em;color:var(--muted);font-size:.95rem}
+    ul,ol{padding-left:1.3em}
+    li{margin:.25em 0}
+    footer{padding:48px 0;background:var(--hpp-black);color:var(--hpp-paper)}
+    footer a{color:var(--hpp-paper)}
+    footer .five{letter-spacing:.2em;font-size:.8rem;color:rgba(244,241,235,.72)}
+    @media(max-width:760px){.card,.card.wide{grid-column:1/-1}.wrap{width:min(100% - 32px,var(--max))}th,td{font-size:.88rem;padding:8px}.hero{padding-top:28px}section{padding:44px 0}}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+    h3[id],h4[id],h5[id]{scroll-margin-top:64px}
+    ul.tasks{list-style:none;padding-left:.2em}
+    blockquote{margin:1em 0}
+  </style>
+</head>
+<body>
+  <div class="lang"><div class="wrap"><a href="METHOD.html" aria-current="page" hreflang="en">English</a> · <a href="METHOD.pt-BR.html" hreflang="pt-BR" lang="pt-BR">Português</a></div></div>
+  <header class="hero">
+    <div class="wrap">
+      <img src="assets/hpp-logo-header.png" alt="House Party Protocol">
+      <p class="eyebrow">Method · METHOD.md</p>
+      <h1>Method</h1>
+    </div>
+  </header>
+  <nav aria-label="Chapters"><div class="wrap"><a href="#1-open-a-unit-of-work">1. Open a unit of work</a><a href="#2-declare-done">2. Declare done</a><a href="#3-what-counts-as-proof">3. What counts as proof</a><a href="#4-review-without-a-pen">4. Review without a pen</a><a href="#5-when-the-budget-runs-out">5. When the budget runs out</a><a href="#6-resume-after-an-interruption">6. Resume after an interruption</a><a href="#7-every-gate-is-born-with-a-test-that-forces-it-to-fail">7. Every gate is born with a test that forces it to fail</a><a href="#8-plan-before-apply">8. Plan before apply</a><a href="#9-a-human-gate-where-the-action-is-irreversible">9. A human gate where the action is irreversible</a><a href="#10-let-the-graph-decide-the-order">10. Let the graph decide the order</a><a href="#the-loop-end-to-end">The loop, end to end</a></div></nav>
+  <main>
+
+    <section><div class="wrap">
+<p>The way of working that the harness enforces. A team can adopt it in a day, because every
+practice ends in a command that either passes or reports what it measured. The commands below
+use the harness CLI (<code>python -m hpp</code>) and, where a module is involved, the scripts that module
+installs. Module paths are shown relative to the emitted distribution.</p>
+    </div></section>
+
+    <section id="1-open-a-unit-of-work"><div class="wrap">
+      <p class="eyebrow">01</p>
+      <h2>1. Open a unit of work</h2>
+<p>Work starts as a spec, not as a conversation. A spec is a list of units, each with an <code>id</code>,
+its <code>depends_on</code>, at least one acceptance criterion written as something a command can decide,
+and a <code>tier</code> that states how much risk it carries. The harness compiles the spec into a WorkGraph
+and derives waves from the dependencies. Units in the same wave may run in parallel; a unit whose
+dependencies have not closed does not start.</p>
+<p>Before touching files in a shared repository, the session claims a lane: an id, the paths it
+will own, and a heartbeat it will keep updating. Two live lanes may not overlap on exclusive
+territory. A lane that stops heartbeating loses its claim by time, not by someone deleting a lock.</p>
+<p>Then the first event is recorded, and the loop leaves <code>planned</code>.</p>
+<pre><code class="language-bash">python -m hpp work plan SPEC.json
+python -m hpp work waves SPEC.json
+python multi-session/lane-kit-1.7.0/scripts/lane_board.py claim --help
+python -m hpp event append --type work_started --data '{"work":"ITEM-1","actor":"maker-a"}'</code></pre>
+    </div></section>
+
+    <section id="2-declare-done"><div class="wrap">
+      <p class="eyebrow">02</p>
+      <h2>2. Declare done</h2>
+<p>"Done" is a state the harness enters, not a word the agent says. It requires the acceptance
+criteria to run as commands and exit 0, in the current checkout, now. The done gate takes the
+criteria as arguments, runs each one, and prints <code>DONE-GATE: DONE</code> only when all pass. When some
+criterion cannot pass yet, the correct output is a declared partial: the gate accepts
+<code>--declare-partial "&lt;what is missing&gt;"</code> and reports <code>PARCIAL-DECLARADO</code> with that text and a
+non-zero exit. Without the declaration it reports <code>NOT-DONE</code>. Silence is not a state; an
+undeclared partial is a failure.</p>
+<p>Once the criteria pass, the evidence is recorded in the event log with a reference to where the
+output lives. The primary way is <code>hpp evidence run --record-event</code> (new in
+2.6.0): it runs the criterion itself, measures the exit
+code, hashes the files declared with <code>--artifact</code>, writes a record under <code>.hpp/evidence/</code>, and
+appends <code>evidence_recorded</code> only when that bundle passed. It needs at least one <code>--artifact</code>,
+because an exit code alone leaves nothing to re-derive later. On a release without it, the same
+event is appended by hand with <code>hpp event append</code>, and it then carries only what the person wrote.
+The loop moves to <code>evidenced</code>. It cannot move to <code>verified</code> without at least one such record.</p>
+<pre><code class="language-bash">python frameworks/operator-kit-1.8.0/scripts/done_gate.py "python -m pytest -q" "python -m py_compile app.py"
+python frameworks/operator-kit-1.8.0/scripts/done_gate.py "python -m pytest -q" --declare-partial "external target not yet validated"
+python -m hpp evidence run --id ITEM-1 --artifact artifacts/pytest.xml --record-event -- python -m pytest -q --junitxml=artifacts/pytest.xml
+python -m hpp event append --type evidence_recorded --data '{"work":"ITEM-1","ref":"artifacts/pytest.txt"}'</code></pre>
+    </div></section>
+
+    <section id="3-what-counts-as-proof"><div class="wrap">
+      <p class="eyebrow">03</p>
+      <h2>3. What counts as proof</h2>
+<p>A proof is reproducible by someone who was not there. It carries the command, the output or exit
+code, the version or commit it ran against, the scope it covered, and the time it ran. Any claim
+that lacks one of the five is a report of a belief.</p>
+<p>Two further rules separate proof from a green light. A number is published with the instrument
+that produced it, so that the next person can re-derive it instead of trusting it. And an
+instrument is trusted only after a control: pointed at a case known to be good and a case known
+to be bad, it must answer differently. A checker that would say "zero problems" about a broken
+tree cannot be used to say "zero problems" about a good one.</p>
+<p>The same control applies to the instruments an agent leans on (all new in 2.6.0). A retriever is
+trusted only after <code>hpp retrieval eval</code> has measured it on labelled queries, and a decider only
+after <code>hpp decide eval</code> has, each with instrument failures counted apart. A report written from
+sources marks each claim with the id of its source, and <code>hpp cite check</code> proves that every marker
+resolves to a source the report was given and flags a number with no marker; it does not prove
+that the source says what the sentence says.</p>
+<p>When a checker approves, the approval is bound to bytes. The attestation records the spec hash,
+the base commit and a snapshot of every tracked and untracked file. If the checkout changes
+afterwards, the approval is blocked on verification and must be given again on the new bytes.
+The evidence therefore comes first and the attestation last. In your own project, list <code>.hpp/</code> in
+<code>.gitignore</code>: the event log and the evidence records are per-checkout state, and the snapshot
+covers every untracked file that is not ignored, so without that line an event or a record
+written after <code>attest create</code> blocks <code>attest verify</code>.</p>
+<pre><code class="language-bash">python -m hpp cite check --text examples/citations/answer.md --context examples/citations/context.json
+python -m hpp retrieval eval examples/retrieval/suite.json \
+  --retriever-command '["python", "examples/retrieval/keyword_retriever.py"]'
+python -m hpp decide eval examples/typed-decisions/gotcha-family-suite.json \
+  --decider-command '["python", "examples/typed-decisions/baseline_decider.py"]'
+python -m hpp attest create --repo . --spec SPEC.md \
+  --maker maker-a --checker checker-b --session review:001 \
+  --verdict approved --output .hpp/attestation.json
+python -m hpp attest verify .hpp/attestation.json --repo .</code></pre>
+    </div></section>
+
+    <section id="4-review-without-a-pen"><div class="wrap">
+      <p class="eyebrow">04</p>
+      <h2>4. Review without a pen</h2>
+<p>The checker is a different actor from the maker, preferably on a different provider, and holds no
+file-editing tools: the host enforces the absence of <code>Write</code> and <code>Edit</code>. <code>Bash</code> remains available,
+so read-only is a promise, verified by comparing the working tree before and after the review —
+<code>git status --porcelain</code> captured on both sides must match, and a checker that changed the tree
+invalidates its own findings. Without a pen, the checker cannot "fix it and move on"; it has to
+point, with severity, file and line, and the maker has to answer. That friction is the mechanism:
+it is what makes a process defect visible instead of silently patched.</p>
+<p>The checker's report keeps the same criteria across rounds, names findings by a stable code
+rather than an adjective, and never asks the maker something it could verify itself by running a
+command. When no checker from a different provider is available, the review is recorded as not
+done, not as done by the maker.</p>
+<p>The checker's pass is an event. The loop moves from <code>evidenced</code> to <code>checked</code>.</p>
+<pre><code class="language-bash">python multi-session/lane-kit-1.7.0/scripts/checker_router.py --maker claude --require
+python -m hpp event append --type check_passed --data '{"work":"ITEM-1","checker":"checker-b"}'</code></pre>
+    </div></section>
+
+    <section id="5-when-the-budget-runs-out"><div class="wrap">
+      <p class="eyebrow">05</p>
+      <h2>5. When the budget runs out</h2>
+<p>Every loop declares its budget before the first iteration: iterations, time, and whatever the
+host meters. Stopping on budget is one of three legitimate ends, next to "the criterion passed"
+and "the circuit breaker tripped". It is not a failure and it is not a reason to try one more
+time.</p>
+<p>The loop driver in the operator module reads a charter with the criteria and a maximum number of
+iterations. A completion tag in the model's output does not release the loop; the done gate is
+re-run by the hook, outside the model's reach, and only its exit code counts. When the budget is
+reached, the driver stops, reports where it stopped and what remains, and waits for a person to
+extend the budget or close the work. Extending the budget is a human decision, never something
+the loop grants itself.</p>
+<pre><code class="language-bash">python frameworks/operator-kit-1.8.0/hooks/loop_gate.py start \
+  --charter "&lt;objective&gt;" --criteria "python -m pytest -q" --max-iterations 10
+python frameworks/operator-kit-1.8.0/hooks/loop_gate.py status
+python frameworks/operator-kit-1.8.0/hooks/loop_gate.py cancel</code></pre>
+    </div></section>
+
+    <section id="6-resume-after-an-interruption"><div class="wrap">
+      <p class="eyebrow">06</p>
+      <h2>6. Resume after an interruption</h2>
+<p>The recovery boundary is the last recorded event, not the last thing anyone remembers. After a
+crash, a context reset or a new day, the next step is derived from the event log: <code>hpp status</code>
+projects the log onto the loop and names the state; <code>hpp resume</code> returns the next step as JSON.
+Neither consults a summary and neither asks the model to reconstruct what happened.</p>
+<p>A restored summary or handoff is reference material. Before re-running anything it describes,
+the session checks whether that step already produced its effect (a file, a commit, an event). A
+step that already ran is not run again. When a step was accepted but its confirmation was lost,
+it is marked as unknown together with the command that resolves the doubt, and it is inspected
+before it is retried.</p>
+<pre><code class="language-bash">python -m hpp status --json
+python -m hpp resume</code></pre>
+    </div></section>
+
+    <section id="7-every-gate-is-born-with-a-test-that-forces-it-to-fail"><div class="wrap">
+      <p class="eyebrow">07</p>
+      <h2>7. Every gate is born with a test that forces it to fail</h2>
+<p>A gate that has only been seen passing cannot be distinguished from a gate that is missing. So
+a gate enters the codebase with two proofs. The first is a test that feeds it the case it exists
+to stop and asserts that it stops; if the gate were removed, this test would fail. The second is
+the call site: evidence that the gate is actually invoked on the live path, not merely defined.</p>
+<p>The same rule applies to bug fixes. The test is written first and run to see it fail for the
+right reason; then the fix; then the test again. A test written after the fix proves that the
+current code works, not that anything was fixed. When both sides of a fix produce the same
+result, the proof does not discriminate, and the usual cause is an earlier guard stopping the
+path before it reaches the defect.</p>
+<p>The benchmark is this rule applied to the harness itself: ten controls, each with a positive and
+a negative case, run <code>k</code> times, with <code>pass^k = 1.00</code> required.</p>
+<pre><code class="language-bash">python -m pytest tests/test_policy.py -q
+python -m hpp eval run examples/reliable-coding/benchmark-suite.json -k 3 --gate both
+python -m hpp benchmark -k 3 --json</code></pre>
+    </div></section>
+
+    <section id="8-plan-before-apply"><div class="wrap">
+      <p class="eyebrow">08</p>
+      <h2>8. Plan before apply</h2>
+<p>Anything that writes shows its plan first and writes on a second, explicit invocation. The plan
+lists what exists in the target and will be preserved, what would be written, and what stays a
+human action. Neither <code>hpp init</code> nor the module installer blocks on a terminal prompt; the "yes"
+is the re-invocation with <code>--apply</code>, which works the same for a person and for an agent acting
+on their behalf.</p>
+<p>Settings, hooks and <code>AGENTS.md</code> are never written by the harness. The wire block is printed for a
+person to paste, and the doctor is run afterwards to confirm the result.</p>
+<pre><code class="language-bash">python -m hpp init --target ../your-repo
+python -m hpp init --target ../your-repo --apply
+python installers/kit-forge-1.5.0/kit_doctor.py install --kit &lt;module-dir&gt; --host codex --target ../your-repo
+python installers/kit-forge-1.5.0/kit_doctor.py install --kit &lt;module-dir&gt; --host codex --target ../your-repo --apply
+python -m hpp doctor</code></pre>
+    </div></section>
+
+    <section id="9-a-human-gate-where-the-action-is-irreversible"><div class="wrap">
+      <p class="eyebrow">09</p>
+      <h2>9. A human gate where the action is irreversible</h2>
+<p>The command policy classifies what an agent is about to run. Recursive deletion in any flag
+order, force pushes, pushes to <code>main</code> or <code>master</code>, piping a download into a shell and destructive
+SQL are <code>BLOCK</code>. Any push and any outbound transfer are <code>MANUAL</code>: the action may be right, and a
+person confirms it. In <code>enforce</code> mode the classifier returns exit 2 and 1 respectively; in
+<code>audit</code> mode it reports the verdict and exits 0, so a team can measure false positives before
+switching.</p>
+<p>In the loop, the human gate is an event. <code>checked</code> becomes <code>approved</code> only through
+<code>human_approved</code>, and the final <code>verified</code> requires that step to have happened.</p>
+<pre><code class="language-bash">python -m hpp policy check --mode audit --command "git push origin feature"
+python -m hpp policy check --mode enforce --command "rm -rf build"
+python -m hpp event append --type human_approved --data '{"work":"ITEM-1","by":"operator"}'
+python -m hpp event append --type verified --data '{"work":"ITEM-1"}'</code></pre>
+    </div></section>
+
+    <section id="10-let-the-graph-decide-the-order"><div class="wrap">
+      <p class="eyebrow">10</p>
+      <h2>10. Let the graph decide the order</h2>
+<h3 id="write-a-spec-small-enough-to-compile">Write a spec small enough to compile</h3>
+<p>A spec is a JSON object with a <code>work</code> list. Each unit has an <code>id</code>, a <code>depends_on</code> list (empty
+when it depends on nothing), at least one <code>acceptance</code> criterion written as something a command
+can decide, and a <code>tier</code>. A unit is small enough when one person can say, in one command, what
+closes it; when a unit needs a paragraph, it is two units. The compiler does not measure size; it
+measures shape. Dependencies are written, not remembered: an edge that lives only in the
+conversation does not exist for the compiler. It refuses a spec with a duplicate id, an unknown
+dependency, an empty acceptance list or an invalid tier, and says which unit.</p>
+<pre><code class="language-bash">python -m hpp work plan SPEC.json</code></pre>
+<h3 id="read-the-waves-before-starting">Read the waves before starting</h3>
+<p><code>hpp work waves</code> prints the waves in order with the units of each. Read it as the plan of the
+day: everything in wave 1 may start now; nothing in wave 2 may start until every unit of wave 1
+has passed its criteria. A wave with a single unit is a serial step, and there is nothing to do
+about it except finish the unit. The order inside a wave is alphabetical, not a priority: pick
+any order, or all at once. Two units in the same wave may still touch the same paths; the graph
+does not know the files, so lanes are declared separately, and the Lane Map is what reports an
+overlap between live, exclusive territories.</p>
+<pre><code class="language-bash">python -m hpp work waves SPEC.json
+python -m hpp map lane LANES.json --now "$(date +%s)"</code></pre>
+<h3 id="when-the-graph-reports-a-cycle">When the graph reports a cycle</h3>
+<p><code>dependency cycle: a -&gt; c -&gt; b -&gt; a</code> means the spec contradicts itself: each unit in the path
+asks to run after the next one, and no order satisfies all of them. The harness names the path
+and exits 2; it never drops an edge to make the spec compile. The fix is in the spec, and it is
+one of three: an edge was declared backwards, two units are really one, or a unit does two
+things and the second half belongs to a new unit that depends on the first. Change the spec and
+recompile; the compiler is the test.</p>
+<pre><code class="language-bash">python -m hpp work waves SPEC.json</code></pre>
+<h3 id="deciding-that-a-unit-cannot-run-in-parallel">Deciding that a unit cannot run in parallel</h3>
+<p>A unit runs after another only when an edge says so, and the edge is worth declaring when the
+later unit reads what the earlier one produces: a schema before the code that uses it, a build
+before the check that runs it, a rename before the references to the new name. When the answer
+is "they touch the same files", that is a lane question, not a dependency: give the two units
+disjoint territories, or make one depend on the other and accept the serial step. Once declared,
+the edge appears in <code>edges</code>, from the dependency to the unit that waits for it, with the relation
+<code>depends-on</code>, and the later unit moves to a later wave; if it did not move, the edge is not the
+one you meant.</p>
+<pre><code class="language-bash">python -m hpp work plan SPEC.json</code></pre>
+    </div></section>
+
+    <section id="the-loop-end-to-end"><div class="wrap">
+      <p class="eyebrow">11</p>
+      <h2>The loop, end to end</h2>
+<pre><code class="language-text">work_started ─▶ evidence_recorded ─▶ check_passed ─▶ human_approved ─▶ verified
+   [scope]        [fresh-evidence]   [read-only-checker]   [human]        [closure]</code></pre>
+<p>Each arrow is an appended event. Each gate is a condition the harness checks before the append.
+<code>hpp status</code> tells you where you are; <code>hpp resume</code> tells you what comes next.</p>
+    </div></section>
+
+  </main>
+  <footer><div class="wrap">
+    <p class="five">AGENTS · EVIDENCE · MEMORY · PROTOCOL · CONTINUITY</p>
+    <strong>House Party Protocol</strong>
+    <p>Operate coding agents under evidence, not trust.</p>
+    <p><a href="index.html">Documentation</a> · <a href="MANUAL.html">Harness manual</a> · <a href="CATALOG.html">Module catalogue</a> · <a href="https://github.com/rusharlabs/house-party-protocol/blob/main/docs/METHOD.md">Markdown source</a> · <a href="METHOD.pt-BR.html" hreflang="pt-BR" lang="pt-BR">Português</a></p>
+  </div></footer>
+</body>
+</html>

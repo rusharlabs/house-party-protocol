@@ -53,7 +53,8 @@ body:
   - type: textarea
     id: doctor
     attributes:
-      label: Output of `python -m hpp doctor --json`
+      label: Output of `python -m hpp doctor --report`
+      description: The report block it prints, from the first `{` on. It carries versions, platform and the doctor's counts, and no path from your machine. On versions before 2.10, paste `python -m hpp doctor` instead, and leave the `manifest` value out of any `doctor --json` output; it is a path on your machine.
       render: json
     validations:
       required: false

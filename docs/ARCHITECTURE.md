@@ -36,19 +36,21 @@ new in 2.6.0; `deliberate` is new in 2.7.0.
 | file | responsibility | surface |
 |---|---|---|
 | `cli.py` | argument parsing, dispatch, the exit contract (`2` for a refused input, `3` for an internal error) | every subcommand, `--self-test` |
-| `manifest.py` | locate, load and validate the manifest; cross-check `marketplace.json` and each module's `plugin.json` when present | `doctor` |
-| `state.py` | append-only event log; projection of events onto the loop; refusal of invalid transitions before the write | `event append`, `status`, `resume` |
+| `manifest.py` | locate, load and validate the manifest; cross-check `marketplace.json` and each module's `plugin.json` when present, and the Codex marketplace (`.agents/plugins/marketplace.json`) with each listed module's `.codex-plugin/plugin.json` | `doctor` |
+| `state.py` | append-only, hash-chained event log (each line links to the sha256 of the one before it; a broken link names its first divergent step, a log written before the chain reads as `legacy`); projection of events onto the loop; refusal of invalid transitions before the write | `event append`, `event verify`, `status`, `resume` |
 | `workgraph.py` | validate a spec, reject cycles with the path named, order units into waves; link each acceptance criterion to the tests that cite it and, with a JUnit XML report, to the tests that ran it | `work plan`, `work waves`, `work coverage` |
 | `findings.py` | check the `hpp.findings/v1` document a review lens answers with (stable code, severity, file and line, evidence, the universe inspected), refuse a key the contract does not define, and derive the verdict | `findings check` (new in 2.8.0) |
-| `policy.py` | classify a command as `ALLOW`, `MANUAL` or `BLOCK`; map to exit code by mode | `policy check` |
-| `attest.py` | bind a verdict to repo identity, base commit, spec hash and a full file snapshot; verify later | `attest create`, `attest verify` |
+| `policy.py` | classify a command as `ALLOW`, `MANUAL` or `BLOCK`; apply a project's `.hpp/policy.json`, which can only add rules or raise a class, never lower one; map to exit code by mode | `policy check` |
+| `attest.py` | bind a verdict to repo identity, base commit, spec hash and a full file snapshot; verify later; sign the record with an SSH key on request (`--sign-key`) and demand that signature on verify (`--allowed-signers`) | `attest create`, `attest verify` |
+| `signing.py` | sign the canonical bytes of a record with `ssh-keygen -Y sign` (namespace `hpp`) and check them with `ssh-keygen -Y verify` against an allowed-signers file; without the binary nothing is signed and nothing is reported `verified` | used by `attest`, `evidence` |
+| `hosts.py` | the host x module x channel matrix derived from `hosts` and `components` in the manifest, rendered for the documents | `doctor --matrix` |
 | `context.py` | fit whole blocks under a character budget with provenance hashes; refuse secret-like input | `context compile`, `map context` |
 | `routing.py` | choose a tier and a provider id from declared risk, complexity, context size and stage; fall back only upward | `route` |
 | `maps.py` | Lane Map, Agent Map, Context Map and Monitor Map as sorted, data-only projections | `map lane`, `map agent`, `map context`, `map monitor` |
 | `graph.py` | capability, operational, agent, evidence and code views from the manifest; JSON or Mermaid | `graph` |
 | `evals.py` | `pass@k` / `pass^k` runner over a suite of cases with three runner kinds | `eval run`, `benchmark` |
 | `decision.py` | validate an `hpp.decision/v1` record made outside the harness (advisory, raise-only, abstention and instrument failure as outcomes); measure a declared decider with selective metrics. Calls no model | `decide validate`, `decide eval` (new in 2.6.0) |
-| `evidence.py` | run a declared criterion command (argv, no shell, its own process group), measure its exit code, hash the artifacts it declared and write a self-hashed record; re-derive a record later. Refuses a secret-like command line. The self-hash makes an edit visible; it is not a signature. Drives no browser | `evidence run`, `evidence verify` (new in 2.6.0); `evidence mutate` runs the criterion on a copy of the workspace, clean and once per mutant, and names the mutants it let through (new in 2.7.0) |
+| `evidence.py` | run a declared criterion command (argv, no shell, its own process group), measure its exit code, hash the artifacts it declared and write a self-hashed record; re-derive a record later. Refuses a secret-like command line. The self-hash makes an edit visible; it is not a signature — `--sign-key` adds one, and `verify --allowed-signers` demands it. Drives no browser | `evidence run`, `evidence verify` (new in 2.6.0); `evidence mutate` runs the criterion on a copy of the workspace, clean and once per mutant, and names the mutants it let through (new in 2.7.0) |
 | `retrieval.py` | score a retriever you declare as a command against the ids a suite labels relevant: hit@k, recall@k, precision@k, MRR, nDCG@k, with instrument failures counted apart. Runs no index | `retrieval eval` (new in 2.6.0) |
 | `citations.py` | check that every citation marker in a text resolves to one id of the context it was written from, and flag a quantitative sentence with no marker. Does not judge whether the source supports the sentence | `cite check` (new in 2.6.0) |
 | `deliberation.py` | House Session: validate a panel of pinned deciders (two model families, a judge outside the participants' lanes, the roles its session type needs, a declared budget), count its turns (grounded and ungrounded votes, abstentions, seats not judged, moves without new evidence; with declared evidence, only references that resolve ground a fact), stop it by rule, and seal it with the judge's decision and, over grounded dissent, the judge's steelman as a self-hashed record that re-derives from its own turns; project the panel as one `hpp.decision/v1`. Calls no model | `deliberate plan`, `validate`, `tally`, `stop`, `record`, `verify` (new in 2.7.0) |
@@ -65,6 +67,14 @@ any `MANUAL` rule. `BLOCK`: `recursive-delete`, `force-push`, `main-push`, `pipe
 changes only the exit code: `audit` exits 0 for every verdict, `enforce` exits 2 on `BLOCK` and 1
 on `MANUAL`. What each rule matches is in [CONCEPTS.md](CONCEPTS.md#command-policy); check one with
 `python -m hpp policy check --mode enforce --command "rm -rf src"` (exit 2).
+
+A project hardens the classifier with `.hpp/policy.json` (`hpp.policy/v1`, read by `policy check`
+from the current directory, or named with `--policy FILE`): rules of its own with a pattern, a class
+(`BLOCK` or `MANUAL`) and a reason, and built-in `MANUAL` rules raised to `BLOCK`. A file that would
+exempt anything — a rule with action `ALLOW`, a raise that keeps or lowers a class, a rule that
+reuses a built-in id — is refused as a whole, and a refused policy refuses the check (exit 2, no
+verdict printed) instead of falling back to the built-ins. Every verdict says its `source`
+(`built-in` or `policy`).
 
 Sizes are small by design; the whole package is readable in one sitting. Nothing imports outside
 the standard library.
@@ -102,7 +112,8 @@ files and writes at most one declared file.
 
 | path | written by | content | lifetime |
 |---|---|---|---|
-| `.hpp/events.jsonl` | `hpp event append` | one JSON object per line: `seq`, `id`, `type`, `data`; append-only | the workspace's loop history |
+| `.hpp/events.jsonl` | `hpp event append` | one JSON object per line: `seq`, `id`, `type`, `data` and `prev_sha256`, the sha256 of the line before it (the first links to the hash of nothing); append-only and hash-chained — `hpp event verify` names the first divergent step, and lines written before the chain read as `legacy` | the workspace's loop history |
+| `.hpp/policy.json` | the operator, by hand | `hpp.policy/v1`: rules that add `BLOCK` or `MANUAL`, and built-in `MANUAL` rules raised to `BLOCK`; read by `hpp policy check`, refused as a whole if it would exempt anything | until the operator changes it |
 | `.hpp/profile.json` | `hpp init --apply` | host, bundle, modules, policy mode, protocol and product version; `decision_advisor` only when one was declared | until the operator removes it |
 | `.hpp/attestation.json` | `hpp attest create --output` | the bound verdict; the path is yours to choose | until the bytes it describes change |
 | `.hpp/evidence/<id>-<UTC>.json` | `hpp evidence run` (new in 2.6.0) | one record per run, created exclusively: the command, base commit, exit code, verdict, byte count and sha256 of stdout and stderr (never the text), the sha256 of every declared artifact, and the record's own hash; `--out` picks another directory inside the workspace | until the operator removes it; `evidence verify` blocks it once an artifact it names changes |
@@ -173,11 +184,41 @@ skills path and runtime path for Codex CLI. `hpp init` uses it to name the same 
 installer will touch, and touches none of them. Adding a host means adding a row and a coverage
 value per module, not changing the six stages.
 
+### Hosts and channels
+
+One row per module, rendered from `hosts` and `components` in the manifest by `hpp doctor --matrix`
+(`hpp/hosts.py`); `tests/test_host_matrix.py` keeps this table equal to that render.
+
+| module | Claude Code | Codex CLI |
+|---|---|---|
+| `operator-kit` 1.8.0 | `native` · plugin + hooks after the wiring is pasted | `explicit-command` · plugin (skills only) + verified copy |
+| `kit-forge` 1.5.0 | `explicit-command` · plugin | `explicit-command` · verified copy |
+| `lane-kit` 1.7.0 | `native` · plugin + hooks after the wiring is pasted | `explicit-command` · verified copy |
+| `continuity-kit` 1.5.0 | `native` · plugin + hooks after the wiring is pasted | `explicit-command` · plugin (skills only) + verified copy |
+| `health-kit` 1.4.0 | `explicit-command` · plugin | `explicit-command` · plugin (skills only) + verified copy |
+| `claude-dev-kit` 1.3.4 | `native` · plugin | `unsupported` · — |
+| `supabase-pack` 1.2.0 | `explicit-command` · plugin | `explicit-command` · plugin (skills only) + verified copy |
+| `agent-framework-wizard` 1.2.2 | `explicit-command` · plugin | `explicit-command` · verified copy |
+| `dev-squad-kit` 1.2.0 | `native` · plugin | `explicit-command` · plugin (skills only) + verified copy |
+| `gotcha-memory` 1.1.0 | `native` · plugin + hooks after the wiring is pasted | `explicit-command` · plugin (skills only) + verified copy |
+
+On Claude Code every module is a plugin of the marketplace, and a module that declares hooks arms
+them once the wiring is pasted. On Codex CLI the plugin channel is the product's own marketplace,
+`.agents/plugins/marketplace.json` (`codex plugin marketplace add rusharlabs/house-party-protocol`,
+then `codex plugin add <module>@house-party-protocol`): it lists the modules that carry skills and
+are supported there, and it installs skills only — the hooks are Claude Code's, and the verified copy
+(`kit_doctor.py install --host codex`) is what installs runtime, scripts and templates. Each module's
+`.codex-plugin/plugin.json` carries an empty `hooks` object on purpose: with no `hooks` key, Codex
+loads the module's `hooks/hooks.json` by default.
+
 ## Distribution
 
 The published tree is emitted by the forge from module sources. Each module directory carries
 `CHECKSUMS.txt` (sha256 per file) and a `.zip` with the same bytes; `marketplace.json` lists the
-modules with `source` and `version`; the installer (`installers/kit-forge-<version>/kit_doctor.py`)
+modules with `source` and `version`; `.agents/plugins/marketplace.json` lists, in the form Codex CLI
+reads, the modules of the Codex plugin channel, each carrying a `.codex-plugin/plugin.json` rendered
+from its Claude one, and `hpp doctor` cross-checks the two channels against the manifest
+(`distribution.codex_marketplace`); the installer (`installers/kit-forge-<version>/kit_doctor.py`)
 runs the six install stages, verifies checksums and executes the module's declared smokes.
 
 ```text
@@ -200,7 +241,7 @@ not verified rather than assumed.
 |---|---|---|
 | `0` | ok; in `audit` mode, always | every command |
 | `1` | warn or manual gate; an eval gate that failed | `policy check` (`MANUAL` in `enforce`), `eval run`, `benchmark`, `init` with warnings, `decide eval` when its gate fails (new in 2.6.0), `evidence run` when the bundle did not pass, `evidence verify` on an intact record of a run that did not pass, `retrieval eval` when its gate fails, `cite check` with a warning (`TOO_MANY`, `UNCITED_CLAIM`) (new in 2.6.0), `deliberate record` when the verdict is blocked or the judge failed, `evidence mutate` with a blind spot, an incomplete run or no mutant applied (new in 2.7.0), `work coverage` when a criterion is not covered or, with `--junit`, not executed, `findings check` when a lens found something (new in 2.8.0) |
-| `2` | block; a refused input (bad manifest, bad spec, corrupt log, invalid attestation) | `policy check` (`BLOCK`), `attest`, `decide validate` and `decide eval` on a record or suite that breaks the contract (new in 2.6.0), `evidence run` on a refused request or an event it could not append, `evidence verify` on a record that was edited or contradicts itself or whose artifact changed or went missing, `retrieval eval` on a refused suite or argument, `cite check` on `UNKNOWN_ID`, `RANGE` or `EMPTY_MARKER` or a refused input (new in 2.6.0), `deliberate` on a refused panel, turn or judge, a session that has not stopped, or a record that does not verify, `evidence mutate` when the criterion does not pass on the clean copy (`no-control`) or a mutant is refused (new in 2.7.0), `work coverage` on a refused report or a test path with no Python source, `findings check` on a document that breaks the contract (new in 2.8.0), every validation error |
+| `2` | block; a refused input (bad manifest, bad spec, corrupt log, invalid attestation) | `policy check` (`BLOCK`), `attest`, `decide validate` and `decide eval` on a record or suite that breaks the contract (new in 2.6.0), `evidence run` on a refused request or an event it could not append, `evidence verify` on a record that was edited or contradicts itself or whose artifact changed or went missing, `retrieval eval` on a refused suite or argument, `cite check` on `UNKNOWN_ID`, `RANGE` or `EMPTY_MARKER` or a refused input (new in 2.6.0), `deliberate` on a refused panel, turn or judge, a session that has not stopped, or a record that does not verify, `evidence mutate` when the criterion does not pass on the clean copy (`no-control`) or a mutant is refused (new in 2.7.0), `work coverage` on a refused report or a test path with no Python source, `findings check` on a document that breaks the contract (new in 2.8.0), `event verify` and `status` on a broken hash chain, `policy check` on a refused policy file, `attest verify` and `evidence verify` with `--allowed-signers` on a record whose signature is missing, not accepted or over changed bytes, every validation error |
 | `3` | usage or internal error | `init` usage errors, unexpected exceptions |
 
 `hpp init` reports the code it will return inside its JSON report (`exit_code`) and halts the

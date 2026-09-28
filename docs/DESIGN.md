@@ -55,7 +55,7 @@ through an `rgba()` is invisible to a hex scan.
 
 ## The components that already exist
 
-Use these before inventing. Each one is in `docs/hpp.css` and is already rendered by the five
+Use these before inventing. Each one is in `docs/hpp.css` and is already rendered by the
 published pages, so anything you build with them looks like the rest of the project for free.
 
 | selector | what it is |
@@ -101,10 +101,16 @@ Then: `python -m pytest tests/test_design_system.py tests/test_docs_index.py -q`
 
 ## If it belongs in `docs/`, generate it
 
-The five pages in `docs/` are **emitted artefacts**. Editing them by hand works until the next
-`catalog_md.py --write`, which overwrites the edit without warning. If you want a page to live
-there, add it to `render_all()` in `tools/catalog_md.py` and to `OWN_FILES`, as `index.html` and
-`hpp.css` already are — then it is generated, it is listed once, and it cannot rot.
+The pages in `docs/` are **emitted artefacts**. `index.html`, `hpp.css` and the catalogue pair are
+written by `catalog_md.py --write`, which overwrites a hand edit without warning. If you want a
+page of that kind to live there, add it to `render_all()` in `tools/catalog_md.py` and to
+`OWN_FILES`, as `index.html` and `hpp.css` already are — then it is generated, it is listed once,
+and it cannot rot.
+
+The document pages — `X.html` beside each `X.md`, and the pages of the contract documents at the
+root — are rendered from their Markdown at release and listed in `docs/site-pages.json`, which
+`catalog_md.py` turns into the navigation of the landing page. Edit the Markdown, never the page:
+`tests/test_docs_html_pages.py` fails when a page no longer carries its Markdown's headings.
 
 A page that belongs anywhere else (a template, an example, a report) is yours to write by hand.
 `multi-session/lane-kit-*/templates/status-stakeholder.template.html` is the reference for that

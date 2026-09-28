@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="972" height="576" viewBox="0 0 972 576" role="img" aria-label="python -m hpp · diagnose → plan → measure → pass — measured output, 2026-09-28" font-family="ui-monospace, Menlo, Consolas, 'Liberation Mono', monospace" font-size="13">
+  <title>python -m hpp · diagnose → plan → measure → pass — measured output, 2026-09-28</title>
+  <desc>Rendered from the command's real stdout by scripts/render_terminal_svg.py; no image was edited by hand. Commands, in the order they ran, and the whole lines of each stdout shown: 1) python -m hpp doctor — line 1 of 1; 2) python -m hpp init --target your-repo --non-interactive --no-animation — lines 1-9 of 122; 3) python -m hpp eval run examples/reliable-coding/benchmark-suite.json -k 3 --gate both — lines 110-115 of 125; 4) python -m hpp benchmark -k 3 — line 1 of 1. Every command ran from one temporary directory holding an empty your-repo/ and a copy of examples/reliable-coding/; a line left out is counted on screen, and no line was edited.</desc>
+  <style>
+    .s{animation:s 25.1s step-end infinite}
+    .r,.t{animation-duration:25.1s;animation-timing-function:step-end;animation-iteration-count:infinite}
+    .b{animation:b 1.1s step-end infinite}
+    @keyframes s{0%{opacity:1}97.61%,100%{opacity:0}}
+    @keyframes b{50%{opacity:0}}
+    @keyframes r0{0%{opacity:0}1.59%,100%{opacity:1}}
+    @keyframes t0{0%,3.59%{transform:translateX(0px);opacity:1;animation-timing-function:steps(20,end)}7.57%{transform:translateX(158px);opacity:1;animation-timing-function:step-end}9.16%,100%{transform:translateX(158px);opacity:0}}
+    @keyframes r1{0%{opacity:0}9.16%,100%{opacity:1}}
+    @keyframes r2{0%{opacity:0}13.63%,100%{opacity:1}}
+    @keyframes t2{0%,15.62%{transform:translateX(0px);opacity:1;animation-timing-function:steps(70,end)}26.77%{transform:translateX(553px);opacity:1;animation-timing-function:step-end}28.37%,100%{transform:translateX(553px);opacity:0}}
+    @keyframes r3{0%{opacity:0}28.37%,100%{opacity:1}}
+    @keyframes r5{0%{opacity:0}29.32%,100%{opacity:1}}
+    @keyframes r6{0%{opacity:0}29.80%,100%{opacity:1}}
+    @keyframes r7{0%{opacity:0}30.28%,100%{opacity:1}}
+    @keyframes r8{0%{opacity:0}30.76%,100%{opacity:1}}
+    @keyframes r9{0%{opacity:0}31.24%,100%{opacity:1}}
+    @keyframes r10{0%{opacity:0}31.71%,100%{opacity:1}}
+    @keyframes r11{0%{opacity:0}32.19%,100%{opacity:1}}
+    @keyframes r12{0%{opacity:0}32.67%,100%{opacity:1}}
+    @keyframes r13{0%{opacity:0}40.72%,100%{opacity:1}}
+    @keyframes t13{0%,42.71%{transform:translateX(0px);opacity:1;animation-timing-function:steps(85,end)}53.86%{transform:translateX(671.5px);opacity:1;animation-timing-function:step-end}55.46%,100%{transform:translateX(671.5px);opacity:0}}
+    @keyframes r14{0%{opacity:0}55.46%,100%{opacity:1}}
+    @keyframes r15{0%{opacity:0}55.94%,100%{opacity:1}}
+    @keyframes r16{0%{opacity:0}56.41%,100%{opacity:1}}
+    @keyframes r17{0%{opacity:0}56.89%,100%{opacity:1}}
+    @keyframes r18{0%{opacity:0}57.37%,100%{opacity:1}}
+    @keyframes r19{0%{opacity:0}57.85%,100%{opacity:1}}
+    @keyframes r20{0%{opacity:0}58.33%,100%{opacity:1}}
+    @keyframes r21{0%{opacity:0}58.80%,100%{opacity:1}}
+    @keyframes r22{0%{opacity:0}66.06%,100%{opacity:1}}
+    @keyframes t22{0%,68.05%{transform:translateX(0px);opacity:1;animation-timing-function:steps(28,end)}73.63%{transform:translateX(221.2px);opacity:1;animation-timing-function:step-end}75.22%,100%{transform:translateX(221.2px);opacity:0}}
+    @keyframes r23{0%{opacity:0}75.22%,100%{opacity:1}}
+    @keyframes r24{0%{opacity:0}79.68%,100%{opacity:1}}
+    @media (prefers-reduced-motion:reduce){.s,.r,.t,.b{animation:none!important}}
+  </style>
+  <rect width="972" height="576" rx="10" fill="#0F1113"/>
+  <path d="M0 10a10 10 0 0 1 10-10h952a10 10 0 0 1 10 10v30H0z" fill="#16191C"/>
+  <circle cx="22" cy="20" r="5" fill="#FF6A00"/><circle cx="40" cy="20" r="5" fill="#8E8A83"/><circle cx="58" cy="20" r="5" fill="#8E8A83"/>
+  <text x="486" y="25" text-anchor="middle" fill="#8E8A83" font-size="12">python -m hpp · diagnose → plan → measure → pass</text>
+  <g class="s">
+    <g class="r" style="animation-name:r0"><text x="24" y="64" xml:space="preserve"><tspan fill="#FF6A00" font-weight="bold">$ </tspan></text><text x="39.8" y="64" xml:space="preserve" textLength="158"><tspan fill="#F4F1EB" font-weight="bold">python -m hpp doctor</tspan></text><g class="t" opacity="0" style="animation-name:t0"><rect x="39.8" y="50" width="165.9" height="18" fill="#0F1113"/><rect x="39.8" y="53" width="7.9" height="14" fill="#FF6A00"/></g></g>
+    <g class="r" style="animation-name:r1"><text x="24" y="84" xml:space="preserve"><tspan fill="#F4F1EB">HPP doctor: ok · modules=10 · hosts=claude-code, codex · hooks=18 (permission gates=9 · llm egress=0)</tspan></text></g>
+    <g class="r" style="animation-name:r2"><text x="24" y="104" xml:space="preserve"><tspan fill="#FF6A00" font-weight="bold">$ </tspan></text><text x="39.8" y="104" xml:space="preserve" textLength="553"><tspan fill="#F4F1EB" font-weight="bold">python -m hpp init --target your-repo --non-interactive --no-animation</tspan></text><g class="t" opacity="0" style="animation-name:t2"><rect x="39.8" y="90" width="560.9" height="18" fill="#0F1113"/><rect x="39.8" y="93" width="7.9" height="14" fill="#FF6A00"/></g></g>
+    <g class="r" style="animation-name:r3"><text x="24" y="124" xml:space="preserve"><tspan fill="#F4F1EB">house-party init · v2.10.0 · plan · target your-repo</tspan></text></g>
+    <g class="r" style="animation-name:r5"><text x="24" y="164" xml:space="preserve"><tspan fill="#FF6A00">&gt;</tspan><tspan fill="#F4F1EB"> detecting host...           </tspan><tspan fill="#FF6A00">✓</tspan><tspan fill="#F4F1EB"> greenfield · 0 existing item(s) preserved</tspan></text></g>
+    <g class="r" style="animation-name:r6"><text x="24" y="184" xml:space="preserve"><tspan fill="#FF6A00">&gt;</tspan><tspan fill="#F4F1EB"> checking prerequisites...   </tspan><tspan fill="#FF6A00">✓</tspan><tspan fill="#F4F1EB"> python 3.14.3 · protocol 2.1</tspan></text></g>
+    <g class="r" style="animation-name:r7"><text x="24" y="204" xml:space="preserve"><tspan fill="#FF6A00">&gt;</tspan><tspan fill="#F4F1EB"> mounting profile...         </tspan><tspan fill="#FF6A00">✓</tspan><tspan fill="#F4F1EB"> would-write · host=claude-code · bundle=reliable-coding · policy=audit · 3 default(s)</tspan></text></g>
+    <g class="r" style="animation-name:r8"><text x="24" y="224" xml:space="preserve"><tspan fill="#FF6A00">&gt;</tspan><tspan fill="#F4F1EB"> loading modules...          </tspan><tspan fill="#FF6A00">✓</tspan><tspan fill="#F4F1EB"> 6 modules · reliable-coding · claude-code · 6/6 checksums verified</tspan></text></g>
+    <g class="r" style="animation-name:r9"><text x="24" y="244" xml:space="preserve"><tspan fill="#FF6A00">&gt;</tspan><tspan fill="#F4F1EB"> wiring suggestions...       </tspan><tspan fill="#FF6A00">✓</tspan><tspan fill="#F4F1EB"> 7 commands to paste · 0 files written · 17 hooks declaring capabilities</tspan></text></g>
+    <g class="r" style="animation-name:r10"><text x="24" y="264" xml:space="preserve"><tspan fill="#FF6A00">&gt;</tspan><tspan fill="#F4F1EB"> verifying evidence...       </tspan><tspan fill="#FF6A00">✓</tspan><tspan fill="#F4F1EB"> policy · graph · events · benchmark</tspan></text></g>
+    <g class="r" style="animation-name:r11"><text x="24" y="284" xml:space="preserve"><tspan fill="#FF6A00">&gt;</tspan><tspan fill="#F4F1EB"> protocol online.</tspan></text></g>
+    <g class="r" style="animation-name:r12"><text x="24" y="304" xml:space="preserve"><tspan fill="#8E8A83">⋯ 113 lines not shown</tspan></text></g>
+    <g class="r" style="animation-name:r13"><text x="24" y="324" xml:space="preserve"><tspan fill="#FF6A00" font-weight="bold">$ </tspan></text><text x="39.8" y="324" xml:space="preserve" textLength="671.5"><tspan fill="#F4F1EB" font-weight="bold">python -m hpp eval run examples/reliable-coding/benchmark-suite.json -k 3 --gate both</tspan></text><g class="t" opacity="0" style="animation-name:t13"><rect x="39.8" y="310" width="679.4" height="18" fill="#0F1113"/><rect x="39.8" y="313" width="7.9" height="14" fill="#FF6A00"/></g></g>
+    <g class="r" style="animation-name:r14"><text x="24" y="344" xml:space="preserve"><tspan fill="#8E8A83">⋯ 109 lines not shown</tspan></text></g>
+    <g class="r" style="animation-name:r15"><text x="24" y="364" xml:space="preserve"><tspan fill="#F4F1EB">  "k": 3,</tspan></text></g>
+    <g class="r" style="animation-name:r16"><text x="24" y="384" xml:space="preserve"><tspan fill="#F4F1EB">  "metrics": {</tspan></text></g>
+    <g class="r" style="animation-name:r17"><text x="24" y="404" xml:space="preserve"><tspan fill="#F4F1EB">    "flaky": 0.0,</tspan></text></g>
+    <g class="r" style="animation-name:r18"><text x="24" y="424" xml:space="preserve"><tspan fill="#F4F1EB">    "pass_at_k": 1.0,</tspan></text></g>
+    <g class="r" style="animation-name:r19"><text x="24" y="444" xml:space="preserve"><tspan fill="#F4F1EB">    "pass_caret_k": 1.0</tspan></text></g>
+    <g class="r" style="animation-name:r20"><text x="24" y="464" xml:space="preserve"><tspan fill="#F4F1EB">  },</tspan></text></g>
+    <g class="r" style="animation-name:r21"><text x="24" y="484" xml:space="preserve"><tspan fill="#8E8A83">⋯ 10 lines not shown</tspan></text></g>
+    <g class="r" style="animation-name:r22"><text x="24" y="504" xml:space="preserve"><tspan fill="#FF6A00" font-weight="bold">$ </tspan></text><text x="39.8" y="504" xml:space="preserve" textLength="221.2"><tspan fill="#F4F1EB" font-weight="bold">python -m hpp benchmark -k 3</tspan></text><g class="t" opacity="0" style="animation-name:t22"><rect x="39.8" y="490" width="229.1" height="18" fill="#0F1113"/><rect x="39.8" y="493" width="7.9" height="14" fill="#FF6A00"/></g></g>
+    <g class="r" style="animation-name:r23"><text x="24" y="524" xml:space="preserve"><tspan fill="#F4F1EB">HPP benchmark: pass@k=1.00 · pass^k=1.00 · gate=PASS</tspan></text></g>
+    <g class="r" style="animation-name:r24"><text x="24" y="544" xml:space="preserve"><tspan fill="#FF6A00" font-weight="bold">$ </tspan></text><rect class="b" x="39.8" y="533" width="7.9" height="14" fill="#FF6A00"/></g>
+  </g>
+</svg>

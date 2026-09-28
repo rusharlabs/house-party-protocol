@@ -1,0 +1,434 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>House Party Protocol — UX-INSTALL-JOURNEY — the installation journey, told in the conversation</title>
+  <meta name="description" content="How an agent guides a human through the installation in the conversation, over the harness installer and the module installer.">
+  <link rel="alternate" hreflang="en" href="UX-INSTALL-JOURNEY.html">
+  <link rel="alternate" hreflang="pt-BR" href="UX-INSTALL-JOURNEY.pt-BR.html">
+  <style>
+    :root{--hpp-black: #000000;--hpp-ink: #0F1113;--hpp-paper: #F4F1EB;--hpp-signal: #FF6A00;--line:rgba(15,17,19,.18);--surface:rgba(15,17,19,.04);--muted:rgba(15,17,19,.72);--max:1120px}
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;background:var(--hpp-paper);color:var(--hpp-ink);font:16px/1.65 Inter,"Segoe UI",Arial,sans-serif}
+    a{color:var(--hpp-ink);text-decoration:underline;text-decoration-color:var(--hpp-signal);text-decoration-thickness:2px;text-underline-offset:3px}
+    a:hover{color:var(--hpp-signal)}
+    a:focus-visible{outline:4px solid var(--hpp-signal);outline-offset:3px}
+    .wrap{width:min(var(--max),calc(100% - 40px));margin:auto}
+    .lang{background:var(--hpp-black);color:var(--hpp-paper);font-size:.9rem;padding:10px 0}
+    .lang a{color:var(--hpp-paper)}
+    .lang a[aria-current]{text-decoration:none;font-weight:700}
+    .hero{background:var(--hpp-ink);color:var(--hpp-paper);padding:44px 0 50px}
+    .hero img{width:min(720px,100%);display:block}
+    .hero h1{font:800 clamp(2.2rem,6vw,5rem)/.95 Sora,Inter,"Segoe UI",sans-serif;letter-spacing:-.02em;margin:.35em 0}
+    .hero p{max-width:760px;font-size:1.15rem;color:rgba(244,241,235,.82)}
+    .hero .eyebrow{color:var(--hpp-paper);border-color:var(--hpp-signal)}
+    .signal{color:var(--hpp-signal)}
+    .eyebrow,.mono,code,pre,.gate,.label{font-family:"JetBrains Mono","Cascadia Code",Consolas,monospace}
+    .eyebrow{display:inline-block;letter-spacing:.13em;text-transform:uppercase;font-size:.78rem;border-left:4px solid var(--hpp-signal);padding-left:.6em;margin:0 0 .6em}
+    nav{position:sticky;top:0;z-index:2;background:rgba(244,241,235,.96);border-bottom:1px solid var(--line);backdrop-filter:blur(8px)}
+    nav .wrap{display:flex;gap:20px;overflow:auto;padding:12px 0}
+    nav a{white-space:nowrap;text-decoration:none;font-weight:700}
+    nav a:hover{text-decoration:underline;text-decoration-color:var(--hpp-signal)}
+    section{padding:64px 0;border-bottom:1px solid var(--line)}
+    h2{font:800 clamp(1.7rem,3vw,2.6rem)/1.1 Sora,Inter,"Segoe UI",sans-serif;letter-spacing:-.01em;margin:0 0 .6em}
+    h3{margin:0 0 .4em;font-size:1.1rem}
+    .lead{max-width:780px;color:var(--muted)}
+    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:20px}
+    .card{grid-column:span 4;border:1px solid var(--line);border-radius:16px;padding:22px;background:var(--surface)}
+    .card.wide{grid-column:span 6}
+    .card.full{grid-column:1/-1}
+    pre{background:var(--hpp-ink);color:var(--hpp-paper);padding:20px;border-radius:12px;overflow:auto;border-left:6px solid var(--hpp-signal);font-size:.92rem;line-height:1.5}
+    code{font-size:.94em}
+    p code,li code,td code{background:var(--surface);padding:.08em .35em;border-radius:5px}
+    pre code{background:none;padding:0}
+    table{width:100%;border-collapse:collapse;background:var(--surface);margin:1em 0}
+    th,td{text-align:left;padding:12px;border-bottom:1px solid var(--line);vertical-align:top}
+    th{background:rgba(15,17,19,.08);font-weight:700}
+    .gate{display:inline-block;border-radius:999px;padding:.15rem .7rem;font-weight:700;font-size:.8rem;margin-bottom:.6em}
+    .gate.allow{background:var(--hpp-signal);color:var(--hpp-ink)}
+    .gate.manual{border:2px solid var(--hpp-ink);color:var(--hpp-ink)}
+    .gate.block{background:var(--hpp-ink);color:var(--hpp-paper)}
+    .label{font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+    .measured{border-left:4px solid var(--hpp-signal);padding-left:1em;color:var(--muted);font-size:.95rem}
+    ul,ol{padding-left:1.3em}
+    li{margin:.25em 0}
+    footer{padding:48px 0;background:var(--hpp-black);color:var(--hpp-paper)}
+    footer a{color:var(--hpp-paper)}
+    footer .five{letter-spacing:.2em;font-size:.8rem;color:rgba(244,241,235,.72)}
+    @media(max-width:760px){.card,.card.wide{grid-column:1/-1}.wrap{width:min(100% - 32px,var(--max))}th,td{font-size:.88rem;padding:8px}.hero{padding-top:28px}section{padding:44px 0}}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+    h3[id],h4[id],h5[id]{scroll-margin-top:64px}
+    ul.tasks{list-style:none;padding-left:.2em}
+    blockquote{margin:1em 0}
+  </style>
+</head>
+<body>
+  <div class="lang"><div class="wrap"><a href="UX-INSTALL-JOURNEY.html" aria-current="page" hreflang="en">English</a> · <a href="UX-INSTALL-JOURNEY.pt-BR.html" hreflang="pt-BR" lang="pt-BR">Português</a></div></div>
+  <header class="hero">
+    <div class="wrap">
+      <img src="assets/hpp-logo-header.png" alt="House Party Protocol">
+      <p class="eyebrow">Method · UX-INSTALL-JOURNEY.md</p>
+      <h1>UX-INSTALL-JOURNEY — the installation journey, told in the conversation</h1>
+    </div>
+  </header>
+  <nav aria-label="Chapters"><div class="wrap"><a href="#principle">Principle</a><a href="#path-1--hpp-init-the-harness-journey-primary">Path 1 — <code>hpp init</code>, the harness journey (primary)</a><a href="#path-2--the-module-installer-kit_doctorpy">Path 2 — the module installer (<code>kit_doctor.py</code>)</a><a href="#what-the-agent-never-does-conduct-checklist">What the agent NEVER does (conduct checklist)</a></div></nav>
+  <main>
+
+    <section><div class="wrap">
+<blockquote class="measured">
+<p><strong>Version:</strong> 2.0.0 — a presentation layer over two frozen contracts.
+<strong>Path 1</strong> is <code>hpp init</code>, the harness installer (<code>hpp/wizard.py</code>, six stages, plan then
+<code>--apply</code>). <strong>Path 2</strong> is the module installer, <code>installers/kit-forge-1.5.0/kit_doctor.py</code>,
+whose mechanics live in <code>INSTALL-CONTRACT.md</code> and whose per-module README follows
+<code>INSTALL-GUIDE-TEMPLATE.md</code>; both ship at the root of this repository. This document describes
+the EXPERIENCE: how an AGENT (Claude Code or Codex CLI) guides a HUMAN through the installation,
+in a conversation. Nothing here changes the mechanics — if this document contradicts the code or
+<code>INSTALL-CONTRACT.md</code>, they win. Every <code>hpp init</code> output quoted in Path 1 was measured on
+2026-09-23 against version 2.5.8, from a clone of this repository at the <code>v2.5.8</code> tag unless the
+text says "pip install"; the <code>kit_doctor.py</code> outputs in Path 2 were captured on 2026-09-21 against
+version 2.4.1, and the end-to-end example says what has changed since. What is marked
+<em>new in 2.6.0</em> arrived after the version measured here.</p>
+</blockquote>
+    </div></section>
+
+    <section id="principle"><div class="wrap">
+      <p class="eyebrow">01</p>
+      <h2>Principle</h2>
+<p><strong>The human never sees a terminal prompt. The human sees a conversation.</strong> The agent runs the
+plan, translates the plan into the human's language, and waits for the human to say "apply it"
+in natural language. Only then does it re-invoke with <code>--apply</code>. There is no <code>input()</code> reached in
+an agent session — <code>hpp init</code> only prompts on a TTY, and <code>--non-interactive</code>, <code>--yes</code>, <code>--json</code>
+or <code>CI</code> in the environment take that path away; the "Confirm" is the double invocation.</p>
+<p>Three roles, with no overlap:</p>
+<table>
+<thead><tr><th>Role</th><th>Does</th><th>Never does</th></tr></thead>
+<tbody>
+<tr><td><strong>installer</strong> (<code>hpp init</code> · <code>kit_doctor.py</code>)</td><td>runs its stages; in plan mode, zero writes</td><td>asks on stdin in an agent session; writes settings/hooks</td></tr>
+<tr><td><strong>agent</strong></td><td>runs commands, translates the plan, asks for confirmation, reports with real output</td><td>applies without confirmation; edits <code>settings.local.json</code>/hooks on its own</td></tr>
+<tr><td><strong>human</strong></td><td>reads the plan in the conversation, decides, confirms in natural language</td><td>needs to memorise flags — the agent carries the command</td></tr>
+</tbody>
+</table>
+    </div></section>
+
+    <section id="path-1--hpp-init-the-harness-journey-primary"><div class="wrap">
+      <p class="eyebrow">02</p>
+      <h2>Path 1 — <code>hpp init</code>, the harness journey (primary)</h2>
+<p><code>hpp init</code> is the front door: it plans the whole installation for a host, verifies what it can,
+writes at most one file, and prints the module-installer lines of Path 2 in its wire block. The
+agent starts here, always.</p>
+<h3 id="the-six-stages">The six stages</h3>
+<p>The stages are fixed and run in this order; each boot line completes only when its stage has
+finished.</p>
+<table>
+<thead><tr><th>Stage</th><th>Boot line</th><th>What it measures</th><th>What can stop it</th></tr></thead>
+<tbody>
+<tr><td><code>detect</code></td><td><code>detecting host...</code></td><td><code>greenfield</code>, <code>in-progress</code> or <code>re-run</code>, from <code>.claude/settings*.json</code>, <code>AGENTS.md</code>, <code>.agents/</code>, <code>.hpp/events.jsonl</code>, a previous <code>.hpp/profile.json</code> and the git commit count; lists what exists and is kept</td><td>a corrupt event log or profile is a warning with the file to inspect</td></tr>
+<tr><td><code>prereqs</code></td><td><code>checking prerequisites...</code></td><td>Python at or above 3.10; the manifest contract; the distribution when <code>marketplace.json</code> sits beside the manifest; <code>git</code> on <code>PATH</code></td><td>Python below the floor or a manifest/marketplace divergence halts (exit 2)</td></tr>
+<tr><td><code>profile</code></td><td><code>mounting profile...</code></td><td>four answers — host, bundle, policy mode and an optional decision advisor (new in 2.6.0; default <code>off</code>, never counted as a pending default) — from flags, <code>--profile</code>, the prompt (TTY only) or the default, with the source of each recorded</td><td>a recorded profile with different answers is a <code>conflict</code>; nothing is overwritten</td></tr>
+<tr><td><code>configure</code></td><td><code>loading modules...</code></td><td>the module plan for the host, <code>native</code> or <code>explicit-command</code> per module, and <code>CHECKSUMS.txt</code> for every module directory present</td><td>a module unsupported on the host, or a checksum mismatch, halts (exit 2)</td></tr>
+<tr><td><code>wire-suggest</code></td><td><code>wiring suggestions...</code></td><td>the block to paste: plugin lines for Claude Code, module-installer lines for Codex CLI and for explicit-command modules, the policy command as configured; before the block, a HOOK CAPABILITIES table — each hook the chosen modules declare, with its events, its exit policy (<code>observe</code>, <code>warn</code>, <code>block</code>) and its capability groups — counted on the boot line (<code>17 hooks declaring capabilities</code> for <code>reliable-coding</code>)</td><td>nothing; it never writes</td></tr>
+<tr><td><code>smoke</code></td><td><code>verifying evidence...</code></td><td>four controls: policy classifier, capability graph, event log, benchmark at <code>k=1</code></td><td>a failed control sets exit 1 and names itself</td></tr>
+</tbody>
+</table>
+<h3 id="plan-then---apply">Plan, then <code>--apply</code></h3>
+<ol>
+<li><strong>Plan.</strong> The agent runs <code>python -m hpp init --target &lt;project&gt; --non-interactive --no-animation</code>
+(from a clone of this repository) or <code>hpp init --target &lt;project&gt; --non-interactive --no-animation</code>
+(from a pip install). Plan mode is the default: nothing is written, the target holds the same
+files afterwards, exit 0.</li>
+<li><strong>Translation.</strong> The agent pastes the confirmation block (template below) into the
+conversation: what <code>detect</code> saw, the four answers (the fourth, the decision advisor, is
+optional) and where each came from, the readiness line with what was and was not verified, the
+HOOK CAPABILITIES table read aloud, the wire block, and the pages the DOCUMENTATION section
+named.</li>
+<li><strong>Human confirmation.</strong> The human answers in natural language — "apply it", "go ahead",
+"yes". Anything that is not a clear confirmation = do not apply. If the human wants a
+different answer (another host, <code>enforce</code> instead of <code>audit</code>, an explicit module list), the
+agent re-runs the plan with <code>--host</code>, <code>--bundle</code>, <code>--policy-mode</code> or <code>--modules</code> and asks again.</li>
+<li><strong>Apply.</strong> The agent re-invokes the SAME command with <code>--apply</code>. Exactly one file is written,
+<code>.hpp/profile.json</code> inside the target; the boot line reads <code>written</code> and the readiness line
+gains one verified item:</li>
+</ol>
+<pre><code class="language-text">&gt; mounting profile...         ✓ written · host=claude-code · bundle=reliable-coding · policy=audit · 3 default(s)
+
+  ██████████████████░░  10/11 verified · 1 not verified · 0 failed
+    ✓ profile recorded        .hpp/profile.json written
+    · host wiring             not verified — manual gate — paste the block, then run doctor
+
+  APPLIED  1 file(s) written inside the target
+    .hpp/profile.json    written      host=claude-code · bundle=reliable-coding · policy=audit</code></pre>
+<ol start="5">
+<li><strong>Wiring, by the human.</strong> The agent shows the wire block as printed and <strong>the human pastes
+it</strong>: <code>/plugin marketplace add</code> and <code>/plugin install</code> lines on Claude Code, module-installer
+lines on Codex CLI and for explicit-command modules. <code>hpp init</code> never edits <code>settings.json</code>,
+hooks or <code>AGENTS.md</code>; host wiring stays <code>not verified</code> until the human has done it.</li>
+</ol>
+<p>Running the same command again is safe: <code>detect</code> reports <code>re-run · 1 existing item(s) preserved</code>
+and <code>profile</code> reports <code>unchanged</code>. Different answers against a recorded profile are a <code>conflict</code>:
+the differing keys are named, nothing is overwritten, exit 1.</p>
+<pre><code class="language-text">&gt; mounting profile...         ! conflict · host=claude-code · bundle=reliable-coding · policy=enforce · 2 default(s)
+
+  PROBLEMS  what was measured, what was expected, what to do
+    ✗ profile  [profile]
+        measured: existing .hpp/profile.json differs in: policy_mode
+        expected: the same answers as the recorded profile
+        └ re-run with the recorded answers, or remove .hpp/profile.json to initialise again (nothing was overwritten)</code></pre>
+<h3 id="readiness-per-channel">Readiness per channel</h3>
+<p>Readiness counts checks that ran, each with the command that reproduces it. What it can verify
+depends on where <code>hpp</code> runs, and the agent says which channel it used. From a clone of this
+repository — module directories, <code>CHECKSUMS.txt</code> and <code>marketplace.json</code> beside the manifest — a
+plan against an empty target reads:</p>
+<pre><code class="language-text">&gt; detecting host...           ✓ greenfield · 0 existing item(s) preserved
+&gt; checking prerequisites...   ✓ python 3.14.3 · protocol 2.1
+&gt; mounting profile...         ✓ would-write · host=claude-code · bundle=reliable-coding · policy=audit · 3 default(s)
+&gt; loading modules...          ✓ 6 modules · reliable-coding · claude-code · 6/6 checksums verified
+&gt; wiring suggestions...       ✓ 7 commands to paste · 0 files written · 17 hooks declaring capabilities
+&gt; verifying evidence...       ✓ policy · graph · events · benchmark
+&gt; protocol online.
+
+  READINESS  every line is a check that ran; the command below it reproduces it
+  ████████████████░░░░  9/11 verified · 2 not verified · 0 failed</code></pre>
+<p>The two not verified are the profile (plan only) and the host wiring (a paste). From a pip
+install, which carries the harness, the manifest and the benchmark suite but no module
+directories and no <code>marketplace.json</code>, the same plan reads <code>7/11 verified · 4 not verified</code>:
+distribution integrity and module checksums are reported as not verified because there is
+nothing to measure them against, never as passed. The agent quotes the line it got, not the
+line it expected.</p>
+<p>After NEXT, the report prints a DOCUMENTATION section that names only pages found on disk. From a clone it
+lists <code>INSTALL_FOR_AGENTS.md</code>, <code>docs/CATALOG.md</code> and <code>docs/MANUAL.html</code>; a pip install carries no
+documentation pages, and the section is then absent rather than pointing at files that are not
+there. The agent passes on the paths it was given and invents none.</p>
+<h3 id="flags">Flags</h3>
+<table>
+<thead><tr><th>Flag</th><th>Effect</th></tr></thead>
+<tbody>
+<tr><td><code>--target &lt;dir&gt;</code></td><td>the project to initialise (default: current directory)</td></tr>
+<tr><td><code>--apply</code></td><td>write <code>.hpp/profile.json</code>; without it, plan only</td></tr>
+<tr><td><code>--host</code>, <code>--bundle</code>, <code>--policy-mode audit|enforce</code></td><td>answer the three required questions; <code>--modules a,b</code> replaces the bundle with an explicit list</td></tr>
+<tr><td><code>--decision-advisor off|typesafe|openrouter|compatible</code></td><td>new in 2.6.0. The optional fourth question (default <code>off</code>): records a typed-decision advisor you declare and prints how to integrate it; hpp never calls it and stores no key</td></tr>
+<tr><td><code>--profile answers.json</code></td><td>the same answers from a file (keys <code>host</code>, <code>bundle</code>, <code>policy_mode</code>, <code>modules</code> and, new in 2.6.0, <code>decision_advisor</code>; an unknown key is a usage error)</td></tr>
+<tr><td><code>--yes</code>, <code>--non-interactive</code>, <code>--json</code>, or <code>CI</code> in the environment</td><td>no prompt is reached; unanswered questions take their defaults and the report says so</td></tr>
+<tr><td><code>--no-animation</code></td><td>plain output; <code>NO_COLOR</code> is honoured; without a TTY the output is complete and uncoloured</td></tr>
+<tr><td><code>--no-benchmark</code></td><td>skip the benchmark control in smoke; it is reported as not verified, not silently dropped</td></tr>
+<tr><td><code>--marketplace &lt;slug&gt;</code></td><td>the slug used in the Claude Code wire block, for forks</td></tr>
+<tr><td><code>--json</code></td><td>the same report as JSON (<code>schema: hpp.init-report/v1</code>), with <code>exit_code</code>, <code>readiness</code> and every stage's detail — for CI and for agents</td></tr>
+</tbody>
+</table>
+<h3 id="exit-codes">Exit codes</h3>
+<table>
+<thead><tr><th>Code</th><th>Meaning</th><th>Measured example</th></tr></thead>
+<tbody>
+<tr><td><code>0</code></td><td>plan or apply completed; every control that ran passed</td><td>the plans quoted above</td></tr>
+<tr><td><code>1</code></td><td>a warning: a smoke control failed, or the recorded profile conflicts with the answers given</td><td><code>--policy-mode enforce</code> over a profile recorded with <code>audit</code></td></tr>
+<tr><td><code>2</code></td><td>a blocking refusal: Python below 3.10, manifest/marketplace divergence, a module unsupported on the host, a checksum mismatch, an unknown module id</td><td><code>--host codex --modules claude-dev-kit</code> → <code>loading modules... ✗ bundle custom requires claude-dev-kit, unsupported on codex</code></td></tr>
+<tr><td><code>3</code></td><td>a usage error in the invocation itself</td><td>a <code>--profile</code> file with an unknown key → <code>hpp init: profile file has unknown keys: colour (allowed: bundle, host, modules, policy_mode)</code> (2.6.0 also lists <code>decision_advisor</code>)</td></tr>
+</tbody>
+</table>
+<p>With <code>--json</code>, the code the process will return is also inside the report (<code>exit_code</code>), and a
+stage that halted the run leaves the later ones as <code>not run</code>.</p>
+<h3 id="what-the-agent-says-template">What the agent says (template)</h3>
+<p>The text the agent pastes into the conversation when presenting an <code>hpp init</code> plan. Placeholders
+in <code>{}</code>; a part in <code>[]</code> enters only when it applies — the decision advisor only when it is not
+<code>off</code> (new in 2.6.0). The template is written in English; the agent speaks in the human's language
+and adapts the wording, not the structure.</p>
+<pre><code>I ran `hpp init` in plan mode against {target} -- nothing has been written. Summary:
+
+**Project diagnosis:** {greenfield | in-progress, preserving: {list} | re-run, profile already recorded}.
+**Answers:** host={host} ({flag|profile|default}) · bundle={bundle} ({source}) · policy={policy_mode} ({source})[ · decision-advisor={value} ({source})].
+**Readiness:** {n}/11 verified · {m} not verified · {f} failed -- not verified: {items}.
+  ({channel}: {clone of the repository | pip install}; the two extra items a pip install cannot measure are distribution integrity and module checksums.)
+**What --apply would do:** write exactly one file, {target}/.hpp/profile.json.
+**Hook capabilities:** {n} hooks declaring capabilities -- for each: {id}, {events}, {exit policy}, {capability groups}, as the HOOK CAPABILITIES table prints them[; on Codex CLI none of them is activated].
+**Wiring (settings/hooks/plugins):** never automatic. After the apply I bring you the wire block as printed and YOU paste it.
+**Documentation:** {the pages the DOCUMENTATION section named | none -- this copy ships no documentation pages}.
+
+If this is fine, say "apply it" and I run the same command with --apply.</code></pre>
+    </div></section>
+
+    <section id="path-2--the-module-installer-kit_doctorpy"><div class="wrap">
+      <p class="eyebrow">03</p>
+      <h2>Path 2 — the module installer (<code>kit_doctor.py</code>)</h2>
+<p>The lines <code>hpp init</code> prints in its wire block for Codex CLI, and for explicit-command modules on
+Claude Code, are this installer. It copies one module at a time into the target and runs the
+module's declared smokes; it plans first and applies only on a second, explicit invocation.</p>
+<h3 id="the-journey-in-5-steps-the-same-in-the-4-scenarios">The journey in 5 steps (the same in the 4 scenarios)</h3>
+<ol>
+<li><strong>Plan.</strong> The agent runs <code>python installers/kit-forge-1.5.0/kit_doctor.py install --kit &lt;module-dir&gt; --host &lt;host&gt; --target &lt;project&gt; --human</code>
+(<code>--human</code> selects the human-readable report). Plan mode is the default: nothing is written,
+exit 0.</li>
+<li><strong>Translation.</strong> The agent pastes the confirmation block into the conversation (template in
+the "Confirmation block" section below): what <code>detect</code> saw, what <code>--apply</code> would do, what is
+still pending a decision, and the smoke result.</li>
+<li><strong>Human confirmation.</strong> The human answers in natural language — "apply it", "go ahead",
+"yes". Anything that is not a clear confirmation = do not apply.
+If the human wants to change an answer to a question (<code>questions:</code>), the agent writes an
+<code>--answers</code> file and runs the plan AGAIN before asking for confirmation once more.</li>
+<li><strong>Apply.</strong> The agent re-invokes the SAME command with <code>--apply</code>. The installer applies the
+profile, runs the smoke for real and records the installation in the registry.</li>
+<li><strong>Report + manual wiring.</strong> The agent shows the real output of the apply. If <code>wire-suggest</code>
+listed options (plugin / settings block), the agent presents the exact content and <strong>the human
+pastes/triggers it</strong> — mutating <code>settings.local.json</code>/hooks is a human gate, always, even after
+<code>--apply</code>.</li>
+</ol>
+<h3 id="what-changes-between-the-4-scenarios">What changes between the 4 scenarios</h3>
+<p>Everything below uses REAL output of <code>kit_doctor.py</code>, which prints in Portuguese. The
+in-progress/re-run/failure outputs were captured against a minimal fixture (<code>demo-kit</code>) — same
+report structure, example module.</p>
+<h4 id="1-greenfield--new-project">1. <code>greenfield</code> — new project</h4>
+<pre><code>  ✓ detect
+      classification=greenfield · new project — no previous config detected</code></pre>
+<p>What the agent emphasises: <strong>there is nothing to preserve</strong>; the plan is the happy path.
+The human is asked one decision only: "is what <code>--apply</code> would do fine?".
+Complete end-to-end example in the last section of this path.</p>
+<h4 id="2-in-progress--project-with-existing-config">2. <code>in-progress</code> — project with existing config</h4>
+<pre lang="pt-BR"><code>  ✓ detect
+      classification=in-progress · project in progress — existing config detected (it will be preserved)
+      já existe (não será tocado): .claude/settings.local.json: statusLine/hooks já configurados</code></pre>
+<p>What changes in the conversation: the agent lists <strong>item by item what already exists and will be
+preserved</strong> — that is the information that removes the fear of installing on top. The profile
+never overwrites (<code>skip-exists</code> is reported, not silent). If the human WANTS to replace something
+that exists, that is a manual action of theirs, outside the installer.</p>
+<h4 id="3-re-run--the-same-moduletarget-pair-was-installed-before">3. <code>re-run</code> — the same module+target pair was installed before</h4>
+<pre lang="pt-BR"><code>  ✓ detect
+      classification=re-run · reinstall — this kit+target pair is already in the registry
+      já existe (não será tocado): profile.yaml presente (customizado)
+  ...
+  ✓ profile
+      já existe, preservado: profile.example.yaml -&gt; profile.yaml</code></pre>
+<p>What changes in the conversation: the agent says explicitly that <strong>running again is safe and
+idempotent</strong> — nothing is duplicated, customisation is preserved. Re-run is the normal way to
+(a) check an old installation and (b) update after pulling a new version of the module.
+The question to the human becomes: "do you want to re-apply anyway, or did you only want to check?".</p>
+<h4 id="4-smoke-failure--the-module-failed-its-own-self-test">4. Smoke failure — the module failed its own self-test</h4>
+<pre lang="pt-BR"><code>  ⚠ smoke  [FAIL]
+      self-tests: 1 ok · 0 sem suporte (ignorados)
+      ⚠ FALHOU: scripts\bad_tool.py (exit 1)
+
+RESULTADO: smoke FALHOU — não aplique este kit before de corrigir os self-tests acima.
+Depois de corrigir, rode o plano de novo para confirmar before do --apply.</code></pre>
+<p>Exit code = 1. What changes in the conversation: <strong>the agent does NOT offer <code>--apply</code>.</strong> It
+reports which script failed, with its exit code, and proposes the next step (investigate the
+script, check integrity with <code>kit_doctor.py verify &lt;module-dir&gt;</code>, or download the module again).
+It only offers to apply again after a new plan comes out clean. A human who insists on applying
+with a failing smoke is on their own — the agent records that it advised against it, and why.</p>
+<h3 id="questions-questions-in-the-conversation">Questions (<code>questions:</code>) in the conversation</h3>
+<p>Most modules have no questions (by design). When one does, the plan shows:</p>
+<pre><code>  ✓ configure
+      sem resposta (default assumido): modo
+      para responder de verdade: repetir com --answers &lt;arquivo.json|yaml&gt;</code></pre>
+<p>Agent flow: (1) present each pending question with the default highlighted — "I will use
+<code>full</code>, unless you prefer <code>lite</code>"; (2) if the human picks something other than the default, the
+agent writes an <code>answers.json</code> and runs the plan again with <code>--answers answers.json</code>; (3) only
+then ask for confirmation. Installing without answering anything never blocks — the default
+always resolves.</p>
+<h3 id="confirmation-block-template">Confirmation block (template)</h3>
+<p>The text the agent pastes into the conversation when presenting a module plan. Placeholders in
+<code>{}</code>. Lines marked <code>[scenario]</code> only enter in the matching scenario. The template is written in
+English; the agent speaks in the human's language and adapts the wording, not the structure.</p>
+<pre><code>I ran the {kit} installer in plan mode -- nothing has been written yet. Summary:
+
+**Project diagnosis** ({target}):
+[greenfield]   New project -- no previous config detected.
+[in-progress]  Project in progress. The installer detected and will PRESERVE:
+[in-progress]  {existing_config list, one per line}
+[re-run]       This module was installed in this project before (it is in the registry).
+[re-run]       Re-applying is safe: nothing is duplicated, your customisation is preserved.
+
+**What --apply would do:**
+- {profile actions: "copy profile.example.yaml -&gt; profile.yaml" | "nothing to copy (already exists, preserved)"}
+- record the installation in ~/.claude-kits/registry.json
+
+**Module questions:** {"none" | "pending, using default: {id}={default} -- want to change it?"}
+
+**Wiring (settings/hooks):** never automatic. After the apply I bring you the exact block
+({paths suggested by wire-suggest}) and YOU decide whether to paste it.
+
+**Smoke (module self-tests):** {N} ok, {N} ignored{" -- ALL passed" | see the failure block below}.
+
+[if smoke ok]   If this is fine, say "apply it" and I run:
+[if smoke ok]     python kit_doctor.py install {kit_dir} --target {target_dir} --apply
+[if smoke fail] The smoke FAILED: {file} (exit {N}). I do NOT recommend applying.
+[if smoke fail] Next step: {investigate the script | run kit_doctor.py verify {kit_dir}}.
+[if smoke fail] Once that is fixed, I run the plan again and bring you the result.</code></pre>
+<h3 id="end-to-end-example-greenfield-real-run">End-to-end example (greenfield, real run)</h3>
+<p>Module: <code>operator-kit-1.5.0</code>. Command the agent ran (real output below). This capture is dated:
+it predates the versioned installer path. In the current distribution the module is
+<code>operator-kit-1.5.0</code> and the installer lives at <code>installers/kit-forge-1.4.1/kit_doctor.py</code>;
+the stages, the flags (<code>--target</code>, <code>--host</code>, <code>--answers</code>, <code>--apply</code>, <code>--human</code>) and the shape of
+the output are the same.</p>
+<pre lang="pt-BR"><code>$ python installers/kit-forge-1.4.1/kit_doctor.py install frameworks/operator-kit-1.5.0 \
+    --target frameworks/operator-kit-1.5.0 --human
+
+INSTALL PLAN — operator-kit-1.5.0  (dry run: nothing was written)
+  target: frameworks\operator-kit-1.5.0
+  host:   claude-code
+
+  ✓ detect
+      classification=greenfield · new project — no previous config detected
+  ✓ prereqs
+  ✓ profile
+      would copy: profile.example.yaml -&gt; operator-profile.yaml
+  ✓ configure
+  ✓ wire-suggest
+      opção [plugin]: /plugin marketplace add . &amp;&amp; /plugin install &lt;name&gt;@&lt;marketplace&gt;
+      opção [doc]: seguir SETTINGS-WIRE.md
+      (nenhuma é executada automaticamente — mexer em settings/hooks é decisão humana)
+  ✓ smoke
+      self-tests: 27 ok · 0 sem suporte (ignorados)
+
+Nada foi modificado. Se o plano está de acordo, aplique com:
+  python kit_doctor.py install frameworks\operator-kit-1.5.0 --target frameworks\operator-kit-1.5.0 --apply</code></pre>
+<p>What the agent says to the human (exact text, following the template):</p>
+<blockquote class="measured">
+<p>I ran the operator-kit-1.5.0 installer in plan mode — nothing has been written yet. Summary:</p>
+<p><strong>Project diagnosis:</strong> new project (greenfield) — no previous config detected, nothing to
+preserve.</p>
+<p><strong>What --apply would do:</strong></p>
+<ul>
+<li>copy <code>profile.example.yaml</code> -&gt; <code>profile.yaml</code> (the profile you will customise)</li>
+<li>record the installation in <code>~/.claude-kits/registry.json</code></li>
+</ul>
+<p><strong>Module questions:</strong> none — this module has nothing configurable at install time.</p>
+<p><strong>Wiring (settings/hooks):</strong> never automatic. After the apply, the paths are installing as a
+plugin (<code>/plugin marketplace add .</code> + <code>/plugin install</code>) or following <code>SETTINGS-WIRE.md</code> — I
+bring you the step by step and you decide.</p>
+<p><strong>Smoke (module self-tests):</strong> 27 ok, 0 ignored — all passed.</p>
+<p>If this is fine, say "apply it" and I run the same command with <code>--apply</code>.</p>
+</blockquote>
+<p>Human: <strong>"apply it"</strong></p>
+<p>The agent runs the same command with <code>--apply</code>, pastes the real output (the header becomes
+<code>INSTALL APPLIED — ... (--apply)</code>, the profile line becomes <code>copied:</code>, the footer confirms
+<code>Install applied and registered. Wiring of settings/hooks (if suggested above) stays manual.</code>) and closes with the wiring:</p>
+<blockquote class="measured">
+<p>Applied and recorded. Only the wiring is left, and it is yours: do you want me to show you the
+block from <code>SETTINGS-WIRE.md</code> to paste into <code>settings.local.json</code>, or do you prefer the plugin
+path? In either one, the person who runs the final step is you.</p>
+</blockquote>
+    </div></section>
+
+    <section id="what-the-agent-never-does-conduct-checklist"><div class="wrap">
+      <p class="eyebrow">04</p>
+      <h2>What the agent NEVER does (conduct checklist)</h2>
+<ul class="tasks">
+<li><input type="checkbox" disabled> NEVER runs <code>--apply</code> — of <code>hpp init</code> or of <code>kit_doctor.py</code> — without explicit confirmation from the human IN THIS conversation</li>
+<li><input type="checkbox" disabled> NEVER edits <code>settings.local.json</code> / hooks / <code>AGENTS.md</code> — presents the block, the human pastes it</li>
+<li><input type="checkbox" disabled> NEVER reports "installed" without pasting the real output of <code>--apply</code> (exit code included)</li>
+<li><input type="checkbox" disabled> NEVER reports a readiness line it did not get — quotes the channel and the count as printed</li>
+<li><input type="checkbox" disabled> NEVER offers <code>--apply</code> when the smoke failed (exit 1) — fix first</li>
+<li><input type="checkbox" disabled> NEVER answers the module's questions alone when the human expressed a preference —
+writes <code>--answers</code> and re-plans</li>
+<li><input type="checkbox" disabled> On re-run, ALWAYS says it is idempotent before asking for confirmation</li>
+</ul>
+    </div></section>
+
+  </main>
+  <footer><div class="wrap">
+    <p class="five">AGENTS · EVIDENCE · MEMORY · PROTOCOL · CONTINUITY</p>
+    <strong>House Party Protocol</strong>
+    <p>Operate coding agents under evidence, not trust.</p>
+    <p><a href="index.html">Documentation</a> · <a href="MANUAL.html">Harness manual</a> · <a href="CATALOG.html">Module catalogue</a> · <a href="https://github.com/rusharlabs/house-party-protocol/blob/main/docs/UX-INSTALL-JOURNEY.md">Markdown source</a> · <a href="UX-INSTALL-JOURNEY.pt-BR.html" hreflang="pt-BR" lang="pt-BR">Português</a></p>
+  </div></footer>
+</body>
+</html>

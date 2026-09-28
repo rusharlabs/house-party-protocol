@@ -562,6 +562,14 @@ def stage_wire_suggest(ctx: _Context) -> dict[str, Any]:
         if hook_modules:
             lines.append(f"# modules that declare hooks (review their hooks.json before enabling): {', '.join(hook_modules)}")
     else:
+        # Why: Codex CLI has a plugin channel of its own, for the modules that carry skills; the
+        # verified copy below is what installs everything else (runtime, scripts, templates).
+        with_skills = [module for module in modules if "skills" in module["components"]]
+        if with_skills:
+            lines.append("# Codex CLI — plugin channel (skills only; hooks stay off)")
+            lines.append(f"codex plugin marketplace add {ctx.options.marketplace}")
+            lines.extend(f"codex plugin add {module['id']}@{manifest['name']}" for module in with_skills)
+            lines.append("")
         lines.append("# Codex CLI — verified copy per module, run from the product checkout; hooks stay off")
         lines.extend(f"python {installer_rel} install --kit {module['path']} --host codex --target {target} --apply"
                      for module in modules)

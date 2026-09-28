@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>House Party Protocol — DESIGN.pt-BR.md — como construir uma interface para este projeto</title>
+  <meta name="description" content="Como construir uma interface com a marca: os tokens como existem no código, os componentes que já existem e o que um pull request precisa cumprir.">
+  <link rel="alternate" hreflang="en" href="DESIGN.html">
+  <link rel="alternate" hreflang="pt-BR" href="DESIGN.pt-BR.html">
+  <style>
+    :root{--hpp-black: #000000;--hpp-ink: #0F1113;--hpp-paper: #F4F1EB;--hpp-signal: #FF6A00;--line:rgba(15,17,19,.18);--surface:rgba(15,17,19,.04);--muted:rgba(15,17,19,.72);--max:1120px}
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;background:var(--hpp-paper);color:var(--hpp-ink);font:16px/1.65 Inter,"Segoe UI",Arial,sans-serif}
+    a{color:var(--hpp-ink);text-decoration:underline;text-decoration-color:var(--hpp-signal);text-decoration-thickness:2px;text-underline-offset:3px}
+    a:hover{color:var(--hpp-signal)}
+    a:focus-visible{outline:4px solid var(--hpp-signal);outline-offset:3px}
+    .wrap{width:min(var(--max),calc(100% - 40px));margin:auto}
+    .lang{background:var(--hpp-black);color:var(--hpp-paper);font-size:.9rem;padding:10px 0}
+    .lang a{color:var(--hpp-paper)}
+    .lang a[aria-current]{text-decoration:none;font-weight:700}
+    .hero{background:var(--hpp-ink);color:var(--hpp-paper);padding:44px 0 50px}
+    .hero img{width:min(720px,100%);display:block}
+    .hero h1{font:800 clamp(2.2rem,6vw,5rem)/.95 Sora,Inter,"Segoe UI",sans-serif;letter-spacing:-.02em;margin:.35em 0}
+    .hero p{max-width:760px;font-size:1.15rem;color:rgba(244,241,235,.82)}
+    .hero .eyebrow{color:var(--hpp-paper);border-color:var(--hpp-signal)}
+    .signal{color:var(--hpp-signal)}
+    .eyebrow,.mono,code,pre,.gate,.label{font-family:"JetBrains Mono","Cascadia Code",Consolas,monospace}
+    .eyebrow{display:inline-block;letter-spacing:.13em;text-transform:uppercase;font-size:.78rem;border-left:4px solid var(--hpp-signal);padding-left:.6em;margin:0 0 .6em}
+    nav{position:sticky;top:0;z-index:2;background:rgba(244,241,235,.96);border-bottom:1px solid var(--line);backdrop-filter:blur(8px)}
+    nav .wrap{display:flex;gap:20px;overflow:auto;padding:12px 0}
+    nav a{white-space:nowrap;text-decoration:none;font-weight:700}
+    nav a:hover{text-decoration:underline;text-decoration-color:var(--hpp-signal)}
+    section{padding:64px 0;border-bottom:1px solid var(--line)}
+    h2{font:800 clamp(1.7rem,3vw,2.6rem)/1.1 Sora,Inter,"Segoe UI",sans-serif;letter-spacing:-.01em;margin:0 0 .6em}
+    h3{margin:0 0 .4em;font-size:1.1rem}
+    .lead{max-width:780px;color:var(--muted)}
+    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:20px}
+    .card{grid-column:span 4;border:1px solid var(--line);border-radius:16px;padding:22px;background:var(--surface)}
+    .card.wide{grid-column:span 6}
+    .card.full{grid-column:1/-1}
+    pre{background:var(--hpp-ink);color:var(--hpp-paper);padding:20px;border-radius:12px;overflow:auto;border-left:6px solid var(--hpp-signal);font-size:.92rem;line-height:1.5}
+    code{font-size:.94em}
+    p code,li code,td code{background:var(--surface);padding:.08em .35em;border-radius:5px}
+    pre code{background:none;padding:0}
+    table{width:100%;border-collapse:collapse;background:var(--surface);margin:1em 0}
+    th,td{text-align:left;padding:12px;border-bottom:1px solid var(--line);vertical-align:top}
+    th{background:rgba(15,17,19,.08);font-weight:700}
+    .gate{display:inline-block;border-radius:999px;padding:.15rem .7rem;font-weight:700;font-size:.8rem;margin-bottom:.6em}
+    .gate.allow{background:var(--hpp-signal);color:var(--hpp-ink)}
+    .gate.manual{border:2px solid var(--hpp-ink);color:var(--hpp-ink)}
+    .gate.block{background:var(--hpp-ink);color:var(--hpp-paper)}
+    .label{font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+    .measured{border-left:4px solid var(--hpp-signal);padding-left:1em;color:var(--muted);font-size:.95rem}
+    ul,ol{padding-left:1.3em}
+    li{margin:.25em 0}
+    footer{padding:48px 0;background:var(--hpp-black);color:var(--hpp-paper)}
+    footer a{color:var(--hpp-paper)}
+    footer .five{letter-spacing:.2em;font-size:.8rem;color:rgba(244,241,235,.72)}
+    @media(max-width:760px){.card,.card.wide{grid-column:1/-1}.wrap{width:min(100% - 32px,var(--max))}th,td{font-size:.88rem;padding:8px}.hero{padding-top:28px}section{padding:44px 0}}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+    h3[id],h4[id],h5[id]{scroll-margin-top:64px}
+    ul.tasks{list-style:none;padding-left:.2em}
+    blockquote{margin:1em 0}
+  </style>
+</head>
+<body>
+  <div class="lang"><div class="wrap"><a href="DESIGN.html" hreflang="en" lang="en">English</a> · <a href="DESIGN.pt-BR.html" aria-current="page" hreflang="pt-BR">Português</a></div></div>
+  <header class="hero">
+    <div class="wrap">
+      <img src="assets/hpp-logo-header.png" alt="House Party Protocol">
+      <p class="eyebrow">Marca e design · DESIGN.pt-BR.md</p>
+      <h1>DESIGN.pt-BR.md — como construir uma interface para este projeto</h1>
+    </div>
+  </header>
+  <nav aria-label="Capítulos"><div class="wrap"><a href="#a-folha-de-estilo-é-um-arquivo-e-é-a-única">A folha de estilo é um arquivo, e é a única</a><a href="#tokens">Tokens</a><a href="#os-componentes-que-já-existem">Os componentes que já existem</a><a href="#as-regras-que-não-se-negociam">As regras que não se negociam</a><a href="#o-que-um-pull-request-com-interface-tem-de-satisfazer">O que um pull request com interface tem de satisfazer</a><a href="#se-for-morar-em-docs-gere">Se for morar em <code>docs/</code>, gere</a><a href="#onde-mora-a-arte">Onde mora a arte</a></div></nav>
+  <main>
+
+    <section><div class="wrap">
+<p>O <a href="BRAND.pt-BR.html"><code>BRAND.pt-BR.md</code></a> diz o que a marca <strong>é</strong>: quatro cores, um acento, as cinco
+palavras, o que não usar. Este arquivo diz como <strong>construir</strong> com ela — os tokens como existem no
+código, os componentes que já embarcam, e o que um pull request que acrescenta interface tem de
+satisfazer.</p>
+<p>Leia o <code>BRAND.pt-BR.md</code> primeiro. Onde os dois discordarem, o BRAND vence e este arquivo é o
+defeito.</p>
+    </div></section>
+
+    <section id="a-folha-de-estilo-é-um-arquivo-e-é-a-única"><div class="wrap">
+      <p class="eyebrow">01</p>
+      <h2>A folha de estilo é um arquivo, e é a única</h2>
+<pre><code>docs/hpp.css</code></pre>
+<p>Ela é <strong>emitida</strong>, não escrita à mão: o <code>tools/catalog_md.py</code> guarda uma constante e produz tanto
+este arquivo quanto o bloco <code>&lt;style&gt;</code> embutido em cada página. É por isso que as duas não podem
+divergir, e o <code>tests/test_design_system.py</code> reprova se um dia divergirem.</p>
+<p>Duas formas de usar, as duas corretas:</p>
+<pre><code class="language-html">&lt;!-- a page inside this repository --&gt;
+&lt;link rel="stylesheet" href="hpp.css"&gt;
+
+&lt;!-- a page that must survive on its own: paste the file's contents --&gt;
+&lt;style&gt;/* contents of docs/hpp.css */&lt;/style&gt;</code></pre>
+<p>⚠️ <strong>Nunca a referencie por URL.</strong> Toda página publicada aqui é autossuficiente por regra — uma
+página que busca a folha de estilo no domínio de outra pessoa para de funcionar no dia em que
+aquele domínio parar, e a suíte recusa qualquer <code>@import</code>, qualquer <code>https://</code> dentro de <code>url()</code> e
+qualquer <code>@font-face</code>.</p>
+    </div></section>
+
+    <section id="tokens"><div class="wrap">
+      <p class="eyebrow">02</p>
+      <h2>Tokens</h2>
+<p>Quatro vêm da marca e são as únicas cores do sistema. Quatro são derivados e existem para que
+ninguém invente uma quinta.</p>
+<table>
+<thead><tr><th>token</th><th>valor</th><th>para que serve</th></tr></thead>
+<tbody>
+<tr><td><code>--hpp-black</code></td><td><code>#000000</code></td><td>fundo do material de marca e do lockup</td></tr>
+<tr><td><code>--hpp-ink</code></td><td><code>#0F1113</code></td><td>fundo de interface, superfície elevada</td></tr>
+<tr><td><code>--hpp-paper</code></td><td><code>#F4F1EB</code></td><td>texto principal sobre escuro</td></tr>
+<tr><td><code>--hpp-signal</code></td><td><code>#FF6A00</code></td><td>o acento, único</td></tr>
+<tr><td><code>--line</code></td><td><code>rgba(15,17,19,.18)</code></td><td>régua e borda — o ink a 18%</td></tr>
+<tr><td><code>--surface</code></td><td><code>rgba(15,17,19,.04)</code></td><td>bloco elevado — o ink a 4%</td></tr>
+<tr><td><code>--muted</code></td><td><code>rgba(15,17,19,.72)</code></td><td>texto secundário — o ink a 72%</td></tr>
+<tr><td><code>--max</code></td><td><code>1120px</code></td><td>a medida do <code>.wrap</code></td></tr>
+</tbody>
+</table>
+<p><strong>Os derivados são o ink com alpha reduzido, nunca uma cor nova.</strong> O BRAND declara isso: <em>um
+passo mais claro é o mesmo token com opacidade reduzida</em>. Um teste lê cada <code>rgb()</code> da folha e
+reprova qualquer trio que não seja <code>15,17,19</code> — porque uma quinta cor entrando por um <code>rgba()</code> é
+invisível para uma varredura de hex.</p>
+    </div></section>
+
+    <section id="os-componentes-que-já-existem"><div class="wrap">
+      <p class="eyebrow">03</p>
+      <h2>Os componentes que já existem</h2>
+<p>Use estes antes de inventar. Cada um está no <code>docs/hpp.css</code> e já é renderizado pelas páginas
+publicadas, então o que o senhor construir com eles fica parecido com o resto do projeto de graça.</p>
+<table>
+<thead><tr><th>seletor</th><th>o que é</th></tr></thead>
+<tbody>
+<tr><td><code>.wrap</code></td><td>o contêiner. Tudo mora dentro dele, na medida <code>--max</code></td></tr>
+<tr><td><code>.lang</code> · <code>.lang a[aria-current]</code></td><td>o seletor de idioma. O lado atual carrega <code>aria-current</code>, o outro é link</td></tr>
+<tr><td><code>.hero</code></td><td>a abertura da página: lockup, <code>.eyebrow</code>, <code>h1</code>, um parágrafo</td></tr>
+<tr><td><code>.eyebrow</code></td><td>o rótulo pequeno em monoespaçada acima do título — caixa alta, tracking largo</td></tr>
+<tr><td><code>.lead</code></td><td>o primeiro parágrafo de uma seção, um passo maior</td></tr>
+<tr><td><code>section</code> · <code>h2</code> · <code>h2 .version</code> · <code>h3</code></td><td>o corpo. O <code>h2 .version</code> imprime a versão ao lado de um título</td></tr>
+<tr><td><code>table</code> · <code>th</code> · <code>td</code></td><td>dado. <code>td.n</code> / <code>th.n</code> alinham número à direita; <code>tr.total</code> marca a linha de totais</td></tr>
+<tr><td><code>.chips code</code></td><td>uma lista de nomes curtos como chips em linha</td></tr>
+<tr><td><code>footer</code> · <code>footer .five</code></td><td>o fecho. O <code>.five</code> carrega as cinco palavras</td></tr>
+<tr><td><code>a:focus-visible</code></td><td>o anel de foco. Nunca remova</td></tr>
+</tbody>
+</table>
+    </div></section>
+
+    <section id="as-regras-que-não-se-negociam"><div class="wrap">
+      <p class="eyebrow">04</p>
+      <h2>As regras que não se negociam</h2>
+<ol>
+<li><strong>Um acento só.</strong> O laranja marca o ponto de atenção. Uma tela com dois pontos de atenção não
+tem nenhum — então, se algo novo precisa do laranja, algo perde o laranja.</li>
+<li><strong>Cor nunca carrega significado sozinha.</strong> Um rótulo ou um ícone vai sempre com ela. Quem não
+distingue o laranja ainda tem de conseguir ler o estado.</li>
+<li><strong>Sem webfont, sem pedido externo.</strong> A pilha de tipos é só de sistema (<code>Sora</code>, <code>Inter</code>,
+<code>Segoe UI</code> para títulos; <code>JetBrains Mono</code>, <code>Cascadia Code</code>, <code>Consolas</code> para código e rótulo).</li>
+<li><strong>Sem vermelho na paleta, de propósito.</strong> Para estado, use o vermelho do próprio terminal e
+nunca pinte fundo: um terminal claro tem de continuar legível.</li>
+<li><strong>Declare o idioma.</strong> <code>&lt;html lang&gt;</code>, e <code>lang</code> em qualquer bloco na outra língua. Leitor de tela
+que lê português com fonema inglês é página que excluiu alguém.</li>
+<li><strong>O anel de foco fica.</strong> Teclado não é plano B.</li>
+<li><strong>Todo documento de raiz é um par bilíngue.</strong> <code>X.md</code> e <code>X.pt-BR.md</code>, linkados um ao outro no
+topo. Há teste que cobra.</li>
+</ol>
+    </div></section>
+
+    <section id="o-que-um-pull-request-com-interface-tem-de-satisfazer"><div class="wrap">
+      <p class="eyebrow">05</p>
+      <h2>O que um pull request com interface tem de satisfazer</h2>
+<ul class="tasks">
+<li><input type="checkbox" disabled> usa o docs/hpp.css — linkado dentro do repo, ou embutido. Nunca por URL</li>
+<li><input type="checkbox" disabled> nao acrescenta uma quinta cor, nem em hex nem em rgb()</li>
+<li><input type="checkbox" disabled> nao busca nada: sem @import, sem @font-face, sem https:// em url()</li>
+<li><input type="checkbox" disabled> reusa os componentes acima antes de acrescentar seletor</li>
+<li><input type="checkbox" disabled> declara lang, e mantem o anel de foco</li>
+<li><input type="checkbox" disabled> traz o par .pt-BR, se for documento de raiz</li>
+<li><input type="checkbox" disabled> e' GERADO, se for morar junto das paginas geradas -- veja a secao seguinte</li>
+</ul>
+<p>Depois: <code>python -m pytest tests/test_design_system.py tests/test_docs_index.py -q</code>.</p>
+    </div></section>
+
+    <section id="se-for-morar-em-docs-gere"><div class="wrap">
+      <p class="eyebrow">06</p>
+      <h2>Se for morar em <code>docs/</code>, gere</h2>
+<p>As páginas de <code>docs/</code> são <strong>artefatos emitidos</strong>. O <code>index.html</code>, o <code>hpp.css</code> e o par do catálogo
+são escritos pelo <code>catalog_md.py --write</code>, que sobrescreve a edição à mão sem avisar. Se o senhor
+quer uma página desse tipo morando ali, acrescente-a ao <code>render_all()</code> do <code>tools/catalog_md.py</code> e
+ao <code>OWN_FILES</code>, como o <code>index.html</code> e o <code>hpp.css</code> já estão — aí ela é gerada, é listada uma vez, e
+não apodrece.</p>
+<p>As páginas de documento — o <code>X.html</code> ao lado de cada <code>X.md</code>, e as páginas dos documentos de
+contrato da raiz — são renderizadas a partir do Markdown na release e listadas no
+<code>docs/site-pages.json</code>, que o <code>catalog_md.py</code> transforma na navegação da página inicial. Edite o
+Markdown, nunca a página: o <code>tests/test_docs_html_pages.py</code> reprova quando uma página deixa de
+carregar os títulos do seu Markdown.</p>
+<p>Página que mora em qualquer outro lugar (template, exemplo, relatório) é sua para escrever à mão.
+O <code>multi-session/lane-kit-*/templates/status-stakeholder.template.html</code> é a referência desse caso:
+mesmos tokens, escrito à mão, e lê o board sem nunca escrever nele.</p>
+    </div></section>
+
+    <section id="onde-mora-a-arte"><div class="wrap">
+      <p class="eyebrow">07</p>
+      <h2>Onde mora a arte</h2>
+<p>O <code>BRAND.pt-BR.md</code> tem a tabela inteira. Os dois que o senhor vai buscar:</p>
+<ul>
+<li><code>assets/hpp-logo-header.png</code> — o lockup para topo de página, 1440 px. É a arte aprovada
+redimensionada; <strong>não redesenhar, não recolorir, não recortar.</strong></li>
+<li><code>assets/hpp-mark.svg</code> — o símbolo em vetor, para impressão ou escala grande. Onde a fidelidade
+decidir, use o lockup raster.</li>
+</ul>
+    </div></section>
+
+  </main>
+  <footer><div class="wrap">
+    <p class="five">AGENTS · EVIDENCE · MEMORY · PROTOCOL · CONTINUITY</p>
+    <strong>House Party Protocol</strong>
+    <p>Opere agentes de código sob evidência, não confiança.</p>
+    <p><a href="index.html">Documentação</a> · <a href="MANUAL.pt-BR.html">Manual do harness</a> · <a href="CATALOG.pt-BR.html">Catálogo de módulos</a> · <a href="https://github.com/rusharlabs/house-party-protocol/blob/main/docs/DESIGN.pt-BR.md">Fonte em Markdown</a> · <a href="DESIGN.html" hreflang="en" lang="en">English</a></p>
+  </div></footer>
+</body>
+</html>

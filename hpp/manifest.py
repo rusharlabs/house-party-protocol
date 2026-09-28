@@ -6,6 +6,17 @@ import re
 from pathlib import Path
 from typing import Any, Iterable
 
+from hpp.hosts import codex_plugin_eligible
+
+# Where Codex CLI reads the product's plugin channel: its marketplace at the product root and one
+# plugin manifest per module it lists. Both forms are the ones the Codex CLI documents and reads.
+CODEX_MARKETPLACE = Path(".agents") / "plugins" / "marketplace.json"
+CODEX_PLUGIN_MANIFEST = Path(".codex-plugin") / "plugin.json"
+# The empty inline hooks object. With no `hooks` key the Codex plugin loader reads the plugin's
+# `hooks/hooks.json`, and it drops an empty list as if the key were absent; this is the value that
+# makes it register no hook from the plugin.
+CODEX_NO_HOOKS: dict[str, Any] = {"hooks": {}}
+
 
 # The one place the protocol version lives in code. Why (cross-model review of 2.5.0): the bump
 # to 2.1 left the wizard's prerequisite check saying "protocol 2.0, validated" — the string
@@ -96,7 +107,70 @@ def validate_distribution(data: dict[str, Any], root: Path) -> dict[str, Any]:
                 raise ManifestError(f"plugin manifest diverges for module {module['id']}")
         _check_wired_hooks_are_declared(data, module["id"], module_path)
         checked_paths += 1
-    return {"checked": True, "status": "ok", "modules": checked_paths}
+    codex = _check_codex_marketplace(data, root, marketplace)
+    return {"checked": True, "status": "ok", "modules": checked_paths, "codex_marketplace": codex}
+
+
+def _check_codex_marketplace(data: dict[str, Any], root: Path, marketplace: dict[str, Any]) -> dict[str, Any]:
+    """Cross-check the Codex plugin channel when the product carries one.
+
+    Every plugin the Codex marketplace lists is a module that qualifies for the channel (supported
+    on Codex, carries skills), every qualifying module is listed, each `source` points at the
+    module's directory, each module carries a `.codex-plugin/plugin.json` that agrees on name and
+    version, and each of those manifests carries exactly the empty hooks override `{"hooks": {}}`:
+    the hooks are Claude Code's, and on Codex the same capabilities stay explicit commands. A manifest
+    with no `hooks` key is refused too -- Codex would then load the module's `hooks/hooks.json`.
+    Absent, the channel is reported as not checked.
+    """
+    path = root / CODEX_MARKETPLACE
+    if not path.is_file():
+        return {"checked": False}
+    try:
+        document = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        raise ManifestError(f"invalid Codex marketplace JSON: {exc.msg}") from exc
+    if not isinstance(document, dict):
+        raise ManifestError("Codex marketplace root must be an object")
+    if document.get("name") != marketplace.get("name"):
+        raise ManifestError("Codex marketplace name diverges from marketplace.json")
+    plugins = document.get("plugins")
+    if not isinstance(plugins, list):
+        raise ManifestError("Codex marketplace plugins must be a list")
+    modules = {module["id"]: module for module in data["modules"]}
+    eligible = {module_id for module_id, module in modules.items() if codex_plugin_eligible(module)}
+    listed: set[str] = set()
+    for plugin in plugins:
+        name = plugin.get("name") if isinstance(plugin, dict) else None
+        if name not in modules:
+            raise ManifestError(f"Codex marketplace lists {name!r}, which is not a module")
+        if name not in eligible:
+            raise ManifestError(f"Codex marketplace lists {name}, which does not qualify for the Codex plugin "
+                                "channel (unsupported on Codex, or no skills)")
+        if name in listed:
+            raise ManifestError(f"Codex marketplace lists {name} twice")
+        listed.add(name)
+        module = modules[name]
+        if plugin.get("source") != {"source": "local", "path": f"./{module['path']}"}:
+            raise ManifestError(f"Codex marketplace source diverges for module {name}")
+        plugin_manifest = root / module["path"] / CODEX_PLUGIN_MANIFEST
+        if not plugin_manifest.is_file():
+            raise ManifestError(f"Codex plugin manifest missing for module {name}")
+        try:
+            plugin_data = json.loads(plugin_manifest.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as exc:
+            raise ManifestError(f"invalid Codex plugin manifest for {name}: {exc.msg}") from exc
+        if not isinstance(plugin_data, dict) or plugin_data.get("name") != name \
+                or plugin_data.get("version") != module["version"]:
+            raise ManifestError(f"Codex plugin manifest diverges for module {name}")
+        if "hooks" not in plugin_data:
+            raise ManifestError(f"Codex plugin manifest for {name} omits the empty hooks override {{\"hooks\": {{}}}}: "
+                                "without it Codex loads the module's hooks/hooks.json")
+        if plugin_data["hooks"] != CODEX_NO_HOOKS:
+            raise ManifestError(f"Codex plugin manifest for {name} declares hooks; on Codex the hooks stay explicit commands")
+    missing = sorted(eligible - listed)
+    if missing:
+        raise ManifestError(f"Codex marketplace omits module(s) that qualify for the channel: {', '.join(missing)}")
+    return {"checked": True, "plugins": len(listed)}
 
 
 _SCRIPT_IN_COMMAND = re.compile(r"hooks/([A-Za-z0-9_.-]+\.(?:py|sh))")

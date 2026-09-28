@@ -34,7 +34,7 @@ da pessoa, não contorne a ausência do `git`.
 ## Passo 2 — instale a CLI
 
 ```bash
-pip install git+https://github.com/rusharlabs/house-party-protocol@v2.9.0
+pip install git+https://github.com/rusharlabs/house-party-protocol@v2.10.0
 ```
 
 `pipx install git+…` funciona igual. O pacote traz o próprio manifesto e a própria suíte de
@@ -83,10 +83,19 @@ que este harness existe para impedir. Se você pular, instalou o harness violand
 
 ## Passo 5 — wiring do Codex CLI
 
-O Claude Code é ligado pelo passo 4. O Codex CLI precisa de um comando a mais por módulo:
+O Claude Code é ligado pelo passo 4. O Codex CLI tem um canal de plugin próprio para os módulos que
+carregam skills (só skills; os hooks ficam desligados):
 
 ```bash
-installers/kit-forge-1.4.2/kit_doctor.py install --kit <kit> --host codex --target <repo> --apply
+codex plugin marketplace add rusharlabs/house-party-protocol
+codex plugin add <module>@house-party-protocol
+```
+
+Todo o resto — runtime, scripts, templates, e qualquer módulo sem skills — precisa de um comando a
+mais por módulo:
+
+```bash
+installers/kit-forge-1.5.0/kit_doctor.py install --kit <kit> --host codex --target <repo> --apply
 ```
 
 As skills vão para `.agents/skills`; o runtime completo vai para `.agents/hpp`. Os hooks

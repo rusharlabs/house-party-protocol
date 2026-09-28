@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>House Party Protocol — Manual do harness</title>
-  <meta name="description" content="Manual operacional do harness House Party Protocol 2.9.0: init, mapas, loop, política, prova, hosts e exit codes, cada afirmação com o comando que a reproduz.">
+  <meta name="description" content="Manual operacional do harness House Party Protocol 2.10.0: init, mapas, loop, política, prova, hosts e exit codes, cada afirmação com o comando que a reproduz.">
   <link rel="alternate" hreflang="en" href="MANUAL.html">
   <link rel="alternate" hreflang="pt-BR" href="MANUAL.pt-BR.html">
   <style>
@@ -66,12 +66,12 @@
   <header class="hero">
     <div class="wrap">
       <img src="assets/hpp-logo-header.png" alt="House Party Protocol — by Rushar Labs">
-      <p class="eyebrow">Manual do harness · v2.9.0 · Claude Code e Codex CLI</p>
+      <p class="eyebrow">Manual do harness · v2.10.0 · Claude Code e Codex CLI</p>
       <h1>Da spec à prova.<br><span class="signal">Sem salto de confiança.</span></h1>
       <p>Um guia operacional do harness: como o <code>hpp init</code> instala, o que cada mapa projeta, como o loop avança, o que a política bloqueia e o que conta como prova. Toda afirmação abaixo carrega o comando que a reproduz; as saídas citadas foram medidas em 2026-09-23 contra a versão 2.5.8, a partir de um clone deste repositório na tag <code>v2.5.8</code> e de uma instalação por pip da mesma versão, e cada bloco diz qual. O que está marcado como <em>novo na 2.6.0</em> teve as saídas medidas num checkout de <code>main</code> antes dessa versão.</p>
     </div>
   </header>
-  <nav aria-label="Capítulos"><div class="wrap"><a href="#model">Modelo</a><a href="#start">Começar</a><a href="#init">Init</a><a href="#maps">Mapas</a><a href="#loop">Loop</a><a href="#policy">Política</a><a href="#proof">Prova</a><a href="#hosts">Hosts</a><a href="#exit">Exit codes</a></div></nav>
+  <nav aria-label="Capítulos"><div class="wrap"><a href="#model">Modelo</a><a href="#start">Começar</a><a href="#init">Init</a><a href="#maps">Mapas</a><a href="#lanes">Lanes</a><a href="#loop">Loop</a><a href="#policy">Política</a><a href="#proof">Prova</a><a href="#decide">Decisões</a><a href="#hosts">Hosts</a><a href="#exit">Exit codes</a></div></nav>
   <main>
 
     <section id="model"><div class="wrap">
@@ -101,7 +101,7 @@ python -m hpp init --target ../seu-repo
 python -m hpp init --target ../seu-repo --apply
 python -m hpp benchmark -k 3</pre>
       <p>O <code>hpp doctor</code> valida o manifesto. Neste repositório ele imprime <code>HPP doctor: ok · modules=10 · hosts=claude-code, codex · hooks=18 (permission gates=9 · llm egress=0)</code> e, porque o <code>marketplace.json</code> está ao lado do manifesto, também cruza cada caminho de módulo, versão e manifesto de plugin; esse resultado só aparece com <code>--json</code>, onde <code>distribution</code> lê <code>{"checked": true, "modules": 10, "status": "ok"}</code>. A partir de uma instalação por pip a linha única é a mesma e o campo lê <code>{"checked": false, "status": "source-contract"}</code> — o comando diz o que não pôde verificar em vez de reportar uma checagem que não rodou.</p>
-      <p><code>hpp install --bundle reliable-coding --host codex --target ../seu-repo</code> imprime um recibo com <code>"mode": "plan-only"</code> e não copia nada. A cópia é feita pelo instalador de módulos, que faz parte deste repositório em <code>installers/kit-forge-1.4.2/kit_doctor.py</code>, ao lado dos diretórios de módulo a partir dos quais ele instala (uma instalação por pip não carrega nem um nem outro): <code>python installers/kit-forge-1.4.2/kit_doctor.py install --kit &lt;caminho-do-módulo&gt; --host &lt;host&gt; --target ../seu-repo</code> imprime um plano, e o mesmo comando com <code>--apply</code> o executa. O <code>hpp init</code> imprime essas linhas para você no bloco de wiring.</p>
+      <p><code>hpp install --bundle reliable-coding --host codex --target ../seu-repo</code> imprime um recibo com <code>"mode": "plan-only"</code> e não copia nada. A cópia é feita pelo instalador de módulos, que faz parte deste repositório em <code>installers/kit-forge-1.5.0/kit_doctor.py</code>, ao lado dos diretórios de módulo a partir dos quais ele instala (uma instalação por pip não carrega nem um nem outro): <code>python installers/kit-forge-1.5.0/kit_doctor.py install --kit &lt;caminho-do-módulo&gt; --host &lt;host&gt; --target ../seu-repo</code> imprime um plano, e o mesmo comando com <code>--apply</code> o executa. O <code>hpp init</code> imprime essas linhas para você no bloco de wiring.</p>
       <p class="measured">Requisitos: Python 3.10 ou mais novo (<code>pyproject.toml</code>), <code>git</code> no <code>PATH</code> para a atestação e para a contagem de commits do <code>detect</code>; nenhum pacote de terceiro.</p>
     </div></section>
 
@@ -183,17 +183,69 @@ python -m hpp benchmark -k 3</pre>
       <h3>Competições: escolher uma de N é pass@N</h3>
       <p class="label">Novo na 2.6.0</p>
       <p>O quadro do lane-kit (<code>lane_board.py</code>) roda um best-of-N: N lanes constroem, cada uma, o seu próprio item para uma mesma tarefa, o <code>compete</code> os declara candidatos e o <code>select</code> registra um vencedor. Quem seleciona tem de estar em outra lane e ser de outra família de modelo que todos os builders dos candidatos, e cada candidato tem de estar <code>CHECKPOINT-READY</code> com evidência, ou <code>VERIFIED</code>. Os perdedores viram <code>NOT-SELECTED</code>, um estado terminal; nenhum candidato chega a <code>MERGED</code> antes de a tarefa ter um vencedor; <code>select --checker-unavailable</code> registra <code>DEFERRED</code>, nunca um vencedor. Escolher uma de N é pass@N, não confiabilidade: o vencedor ainda precisa do seu próprio <code>VERIFIED</code> antes de <code>MERGED</code>, e de pass^k antes que alguém o chame de confiável.</p>
-      <pre>python multi-session/lane-kit-1.6.0/scripts/lane_board.py compete --task TASK-1 --items ITEM-A,ITEM-B --lane lane-a --model claude-opus-4-8
-python multi-session/lane-kit-1.6.0/scripts/lane_board.py select --task TASK-1 --winner ITEM-B --lane lane-r --model gpt-5.6 --reason "same tests, half the diff"</pre>
-      <p class="measured">Medido num checkout de main, num quadro de rascunho onde <code>ITEM-A</code> (lane <code>lane-a</code>, <code>claude-opus-4-8</code>) e <code>ITEM-B</code> (lane <code>lane-b</code>, <code>claude-sonnet-4-6</code>) foram cada um reivindicado, construído e posto em <code>CHECKPOINT-READY</code> com evidência: <code>compete</code> → exit 0; <code>select</code> por <code>claude-haiku-4-5</code> → <code>maker≠checker violated: … SAME model family (claude)</code>, exit 1; <code>select</code> por <code>gpt-5.6</code> → vencedor <code>ITEM-B</code>, <code>not_selected</code> <code>ITEM-A</code>, exit 0. Depois disso o <code>ITEM-A</code> não pôde se mover (<code>NOT-SELECTED -&gt; UNDER-REVIEW</code> recusado) e o <code>ITEM-B</code> não pôde ir de <code>CHECKPOINT-READY</code> para <code>MERGED</code>, exit 1 cada. O quadro sai com 0 ok · 1 recusado · 2 uso inválido.</p>
+      <pre>python multi-session/lane-kit-1.7.0/scripts/lane_board.py compete --task TASK-1 --items ITEM-A,ITEM-B --lane lane-a --model claude-opus-5-5
+python multi-session/lane-kit-1.7.0/scripts/lane_board.py select --task TASK-1 --winner ITEM-B --lane lane-r --model gpt-5.6-sol --reason "same tests, half the diff"</pre>
+      <p class="measured">Medido em 2026-09-27 na fonte do lane-kit 1.6.0, com ids de modelo atuais, num quadro de rascunho onde <code>ITEM-A</code> (lane <code>lane-a</code>, <code>claude-opus-5-5</code>) e <code>ITEM-B</code> (lane <code>lane-b</code>, <code>claude-sonnet-5</code>) foram cada um reivindicado, construído e posto em <code>CHECKPOINT-READY</code> com evidência: <code>compete</code> → exit 0; <code>select</code> por <code>claude-haiku-4-5-20251001</code> → <code>maker≠checker violated: … SAME model family (claude)</code>, exit 1; <code>select</code> por <code>gpt-5.6-sol</code> → vencedor <code>ITEM-B</code>, <code>not_selected</code> <code>ITEM-A</code>, exit 0. Depois disso o <code>ITEM-A</code> não pôde se mover (<code>NOT-SELECTED -&gt; UNDER-REVIEW</code> recusado) e o <code>ITEM-B</code> não pôde ir de <code>CHECKPOINT-READY</code> para <code>MERGED</code>, exit 1 cada. O quadro sai com 0 ok · 1 recusado · 2 uso inválido.</p>
       <h3>Context compile: blocos inteiros dentro de um orçamento</h3>
       <p><code>hpp context compile INPUTS --budget N</code> lê um array JSON de blocos — <code>source</code> (único), <code>priority</code> (um inteiro) e <code>content</code> — e preenche um orçamento de caracteres em ordem de prioridade. Um bloco entra inteiro ou não entra: o que não cabe é listado como omitido, nunca fatiado, e o bloco seguinte ainda é tentado. O separador entre dois blocos (duas quebras de linha) é cobrado do orçamento. Todo bloco, incluído ou omitido, carrega seus <code>chars</code> e seu <code>sha256</code>; o resultado carrega <code>used</code>, <code>remaining</code> e o <code>text</code> compilado. Conteúdo com cara de segredo — atribuição de chave, token, segredo ou senha, cabeçalho PEM, token <code>sk-</code> — é recusado antes de qualquer compilação, e a recusa nomeia a fonte.</p>
       <pre>python -m hpp context compile examples/reliable-coding/context.json --budget 100</pre>
       <p class="measured">Medido: <code>spec</code> e <code>acceptance</code> incluídos, <code>background</code> omitido, <code>used</code> 86, <code>remaining</code> 14. Um bloco cujo conteúdo era uma atribuição <code>api_key=</code> → <code>hpp: secret-like material refused from source: env</code>, exit 2.</p>
     </div></section>
 
+    <section id="lanes"><div class="wrap">
+      <p class="eyebrow">05 · lanes</p>
+      <h2>As lanes se coordenam por arquivos, nunca por uma sessão viva.</h2>
+      <p class="lead">Sessões em paralelo — Claude Code ou Codex CLI — trabalham cada uma como uma lane: worktree própria, território declarado e heartbeat. A lane-kit dá a elas quatro arquivos compartilhados e nenhum canal de mensagens próprio. Um arquivo sobrevive à sessão que o escreveu, e os dois hosts conseguem lê-lo.</p>
+      <table><thead><tr><th>Peça</th><th>Arquivo</th><th>O que garante</th><th>Quem escreve</th></tr></thead><tbody>
+        <tr><td>Registro</td><td><code>.claude/lanes/registry.json</code></td><td>quem está viva, com papel, modelo e worktree; uma lane morta é removida no registro seguinte, e o trabalho não commitado dela vira antes um patch de resgate</td><td><code>lane_register.py</code> no <code>SessionStart</code>, <code>--heartbeat</code> no <code>PostToolUse</code></td></tr>
+        <tr><td>Quadro</td><td><code>.claude/lanes/board.jsonl</code> (só acrescenta)</td><td>quem pegou qual item, cada veredito, cada competição</td><td><code>lane_board.py</code></td></tr>
+        <tr><td>Mailbox</td><td><code>.claude/lanes/mailbox/*.md</code></td><td>o contexto que o quadro não carrega — uma mudança de escopo no meio do trabalho</td><td>qualquer lane; lida pela lane que ela nomeia</td></tr>
+        <tr><td>Efeitos</td><td><code>.claude/lanes/effects.json</code></td><td>se um veredito foi só decidido, ou também entregue à lane que precisa agir</td><td><code>lane_effects.py</code>, a partir do quadro</td></tr>
+      </tbody></table>
+      <h3>O mailbox: escreve uma vez, lê, arquiva</h3>
+      <p>Uma mensagem é um arquivo Markdown em <code>.claude/lanes/mailbox/</code>. A linha de roteamento nomeia a lane de destino — <code>## To: &lt;lane_id&gt;</code> (a forma em português <code>## Para:</code>, das versões anteriores, continua valendo). A lane de destino fica sabendo pelo contexto da sessão quando se registra e, se a mensagem chega com ela já rodando, no heartbeat seguinte — uma vez por mensagem, não a cada chamada de ferramenta. Ela lê o arquivo e o move para <code>mailbox/_read/</code>; uma mensagem nunca é editada no lugar. <code>templates/REORIENT-MAILBOX.template.md</code> traz os campos que uma reorientação precisa: de quem, quando, itens afetados, o que mudou, por quê, o que o destino deve fazer, evidência.</p>
+      <pre>cp multi-session/lane-kit-1.7.0/templates/REORIENT-MAILBOX.template.md .claude/lanes/mailbox/2026-09-27-escopo.md
+# preencha os placeholders e mantenha "## To: exec-b" exatamente assim
+# exec-b vê: 1 unread mailbox message(s): .claude/lanes/mailbox/2026-09-27-escopo.md — read them and archive in mailbox/_read/</pre>
+      <h3>Decidido não é entregue</h3>
+      <p>Quando o quadro registra um veredito — <code>VERIFIED</code>, <code>NEEDS-FIX</code>, <code>DEFERRED</code>, <code>NOT-SELECTED</code> ou <code>WITHDRAWN</code> —, <code>lane_effects.py</code> reserva a entrega com um <code>reservation_id</code> derivado de item, decisão, destino, efeito e rodada: uma nova tentativa reusa a reserva, uma rodada nova ganha a sua. Em seguida o próprio quadro entrega: escreve o veredito no mailbox da lane que construiu o item — roteado com <code>## To:</code>, com o motivo, a evidência e a rodada — e marca a reserva como entregue, com o caminho da mensagem como evidência. Uma lane do Codex CLI também recebe um toque com <code>codex queue</code>; o Claude Code não tem comando que alcance uma sessão em andamento, então uma lane do Claude Code fica sabendo da mensagem no heartbeat seguinte. A entrega vem ligada por padrão. Com <code>mailbox.notify_on_verdict: false</code> no <code>lanes.yaml</code> o quadro não escreve nada: o veredito fica pendente — como também fica quando o mailbox não pode ser escrito — e <code>lane_board.py render</code> o lista em <strong>UNDELIVERED</strong> até que quem avisa a lane feche a entrega com <code>lane_effects.py deliver</code>.</p>
+      <pre>python multi-session/lane-kit-1.7.0/scripts/lane_effects.py pending
+python multi-session/lane-kit-1.7.0/scripts/lane_effects.py deliver &lt;reservation_id&gt; --evidence .claude/lanes/mailbox/_read/2026-09-27-escopo.md</pre>
+      <h3>Duas guardas em volta dos arquivos compartilhados</h3>
+      <p><code>lane_territory_guard.py</code> avisa quando uma lane edita dentro do território exclusivo de outra lane viva, nomeando a dona; nunca bloqueia. <code>lane_git_guard.py</code> vigia o índice git que as lanes compartilham: com outra lane viva, ele pega os comandos que o varrem — <code>add -A</code>/<code>--all</code>/<code>.</code>, <code>commit -a</code>, um <code>commit</code> sem pathspec explícito, <code>stash</code>, <code>reset --hard</code>, <code>checkout .</code>, <code>commit --amend</code>. Roda em modo <code>warn</code> por padrão e só passa a <code>block</code> depois de zero falso positivo em uso real, configurado em <code>lanes.yaml</code>; uma lane trabalhando sozinha nunca é barrada.</p>
+      <p class="measured">Medido na árvore da 2.10.0: <code>evals/collision-2lanes.sh</code> → 10/10 linhas válidas, 0 corrupção; <code>evals/collision-git-guard.sh</code> e <code>evals/collision-territory-guard.sh</code> → 18/18 checagens em 3 rodadas cada (pass^k = 1,00); o self-test do registro mostra uma mensagem endereçada à lane aparecendo, e sumindo depois de arquivada.</p>
+      <h3>Hand-offs do operador: encaminhar uma correção, abrir uma revisão, aprovar um item red</h3>
+      <p>Três comandos do quadro pertencem ao operador, não a uma lane — contribuídos por @kleinelizeu junto com o Lane Dashboard. <code>release-fix</code> leva um item em <code>NEEDS-FIX</code> para <code>FIX-QUEUED</code> para uma executora nomeada que está registrada, viva e autorizada a construir o item; só essa lane pode levá-lo de volta a <code>BUILDING</code>, e uma correção cuja lane parou de bater pode ser roteada de novo, com o re-roteamento registrado. <code>start-review</code> leva um checkpoint, ou um item em <code>DEFERRED</code>, para <code>UNDER-REVIEW</code> para uma revisora viva nomeada que não construiu nenhuma tentativa dele. Os dois escrevem um kickoff no mailbox do alvo, roteado com <code>## To:</code>. <code>approve</code> registra o gate humano de um item red como <code>APPROVED</code> — não <code>MERGED</code>: o merge acontece depois, no git, e é registrado depois.</p>
+      <pre>python multi-session/lane-kit-1.7.0/scripts/lane_board.py release-fix ITEM-1 --target-lane exec-b
+python multi-session/lane-kit-1.7.0/scripts/lane_board.py start-review ITEM-1 --target-lane rev-x
+python multi-session/lane-kit-1.7.0/scripts/lane_board.py approve ITEM-1</pre>
+      <p>Duas regras do veredito ficaram mais estritas com eles. A família de modelo de quem confere é comparada com toda lane que construiu o item, não só com a que fez o claim, e apelidos da OpenAI como <code>codex-*</code> contam como <code>gpt</code>. A tag pertence ao item: uma vez red, todo evento seguinte é red, qualquer que seja o <code>--tag</code> que um chamador passe.</p>
+      <h3>O Lane Dashboard: o quadro numa página, toda ação também um comando de terminal</h3>
+      <p><code>scripts/lane_dashboard.py</code> serve o quadro como uma página em <code>127.0.0.1</code>: as colunas, as lanes vivas, as competições, o mailbox de cada lane (não lidas, anunciadas, lidas), as entregas com o desfecho da campainha, as sessões que ele iniciou, o backlog com as waves e — perguntado ao git, não ao quadro — se cada item revisado está integrado. É opcional. Toda ação nele é um comando de terminal que faz exatamente a mesma coisa, e a página só chama esse comando.</p>
+      <table><thead><tr><th>Ação na página</th><th>Comando de terminal</th></tr></thead><tbody>
+        <tr><td>Nova spec · Iniciar wave</td><td><code>lane_dashboard.py spec add</code> · <code>lane_dashboard.py wave start</code></td></tr>
+        <tr><td>Encaminhar correção · Iniciar revisão — a uma lane viva</td><td><code>lane_board.py release-fix</code> · <code>lane_board.py start-review</code></td></tr>
+        <tr><td>Encaminhar correção · Iniciar revisão — com uma sessão nova</td><td><code>lane_dashboard.py fix launch</code> · <code>lane_dashboard.py review launch</code></td></tr>
+        <tr><td>Aprovar merge · Registrar merge</td><td><code>lane_board.py approve</code> · <code>lane_dashboard.py merged</code></td></tr>
+        <tr><td>Pedir briefing · Relatório de integração</td><td><code>lane_dashboard.py brief request</code> · <code>lane_dashboard.py integration report</code></td></tr>
+        <tr><td>Iniciar a sessão de novo · Parar uma sessão</td><td><code>lane_dashboard.py session relaunch</code> · <code>lane_dashboard.py session cancel</code></td></tr>
+      </tbody></table>
+      <pre>python multi-session/lane-kit-1.7.0/scripts/lane_dashboard.py --project-dir . --open
+python multi-session/lane-kit-1.7.0/scripts/lane_dashboard.py merged ITEM-1 --branch feat/item-1 --project-dir .</pre>
+      <p>A mesma linha o inicia no macOS, no Linux e no Windows (com <code>python3</code> ou <code>py</code> onde esse for o nome do interpretador); ela imprime a URL, e Ctrl+C o encerra. <code>merged</code> escreve <code>MERGED</code> só quando o <code>git cherry</code> mostra a branch de quem construiu no destino — por sha ou por patch-id, medido naquele momento — e a medição vira a evidência do evento.</p>
+      <p><strong>Modelo de segurança.</strong> O servidor é a exceção delimitada que o <a href="MANIFESTO.pt-BR.html">manifesto</a> abre para módulos. O operador o inicia e o encerra; ele escuta só em loopback e responde só a um <code>Host</code> de loopback; toda ação é um POST que carrega um token emitido para aquela execução, como <code>application/json</code>; a página se recusa a ser emoldurada; um GET não escreve nada e não inicia nada; toda escrita passa pelo <code>lane_board.py</code> e pelo <code>_lane_io.py</code>. Uma sessão de agente só começa quando o operador confirma uma ação, com o modelo declarado em <code>.claude/lanes/dashboard.json</code>: maker ≠ checker compara a família do modelo que uma sessão de fato roda, então uma CLI que serve vários fornecedores é recusada até o modelo dela ser declarado.</p>
+      <table><thead><tr><th>Lançador</th><th>macOS</th><th>Linux</th><th>Windows</th></tr></thead><tbody>
+        <tr><td><code>terminal</code></td><td>Terminal.app</td><td>o terminal do desktop (<code>$TERMINAL</code>, depois os de costume)</td><td>um console PowerShell</td></tr>
+        <tr><td><code>iterm</code></td><td>iTerm2, com o script da sessão passado ao <code>osascript</code> como argumento</td><td>—</td><td>—</td></tr>
+        <tr><td><code>tmux</code></td><td colspan="2">uma janela na sessão tmux em que o dashboard roda, ou em <code>hpp-lanes</code></td><td>—</td></tr>
+        <tr><td><code>orca</code></td><td colspan="3">um terminal na worktree do projeto, pelo <code>orca terminal create</code></td></tr>
+        <tr><td><code>external</code></td><td colspan="3">qualquer terminal declarado no <code>dashboard.json</code> como um argv com <code>{script}</code></td></tr>
+        <tr><td><code>headless</code></td><td colspan="3">o modo não interativo do agente sob um supervisor: tempo limite, botão de parar e log com teto</td></tr>
+      </tbody></table>
+      <p class="measured">Medido na árvore da 2.10.0: o self-test do dashboard → 77 de 77 checagens em 9,3 s numa cópia nova do módulo (o instalador dá 30 s a cada self-test); <code>tests/test_lane_dashboard.py</code> e <code>tests/test_lane_board_release.py</code> → 66 testes, com controles ao lado das recusas; 65 passaram e 1 foi pulado no Windows, o que roda o script da sessão num shell POSIX.</p>
+    </div></section>
     <section id="loop"><div class="wrap">
-      <p class="eyebrow">05 · loop e waves</p>
+      <p class="eyebrow">06 · loop e waves</p>
       <h2>O loop só avança por um evento registrado.</h2>
       <pre>planned --work_started--&gt; active --evidence_recorded--&gt; evidenced --check_passed--&gt; checked
         [scope]                   [fresh-evidence]                 [read-only-checker]
@@ -228,7 +280,7 @@ python -m hpp findings check examples/review-lenses/deletion-clean.json examples
     </div></section>
 
     <section id="policy"><div class="wrap">
-      <p class="eyebrow">06 · política</p>
+      <p class="eyebrow">07 · política</p>
       <h2>Advisory não se fantasia de bloqueio.</h2>
       <p class="lead">O classificador devolve um de três vereditos e nunca executa o comando. O modo decide o que o veredito custa: em <code>audit</code> o exit code é sempre 0 e o veredito só é registrado; em <code>enforce</code> o veredito vira o exit code.</p>
       <div class="grid">
@@ -248,7 +300,7 @@ python -m hpp policy check --mode enforce --command "git push origin main"</pre>
     </div></section>
 
     <section id="proof"><div class="wrap">
-      <p class="eyebrow">07 · prova</p>
+      <p class="eyebrow">08 · prova</p>
       <h2>Capacidade e confiabilidade não são a mesma métrica.</h2>
       <p><code>pass@k</code> mede se um caso passou ao menos uma vez em <code>k</code> execuções. <code>pass^k</code> mede se passou todas as vezes. O gate de capacidade exige <code>pass@k ≥ 0.90</code>; o gate de regressão exige <code>pass^k = 1.0</code>; <code>--gate both</code> exige os dois. Uma suíte que passa no primeiro e reprova no segundo é instável, e o relatório diz em quanto.</p>
       <pre>python -m hpp eval run examples/reliable-coding/benchmark-suite.json -k 3 --gate both
@@ -264,7 +316,7 @@ python -m hpp decide eval examples/typed-decisions/gotcha-family-suite.json --de
         <li><code>decide validate RECORD</code> — imprime <code>valid</code> e o valor efetivo sobre o qual um consumidor pode agir, com a sua ação (<code>raised</code>, <code>kept</code>, <code>advised</code> ou <code>none</code>). Exit <code>0</code> válido · <code>2</code> recusado, nomeando a primeira regra quebrada.</li>
       </ul>
       <p class="measured">Medido num checkout de main: o decisor baseline na suíte de exemplo → 15 casos, 12 decididos, 3 abstenções, 0 falhas de instrumento, cobertura 0.8, acerto seletivo 1.0, <code>every threshold held</code>, exit 0. A mesma suíte sem <code>--decider-command</code> não guarda registros → 15 falhas de instrumento, <code>no decision was made</code>, exit 1. Um registro com <code>"authority": "binding"</code> → <code>hpp: authority must be 'advisory': …</code>, exit 2. O pacote 2.5.8 não tem o comando <code>decide</code>: ali, <code>hpp decide</code> é uma escolha inválida, exit 2.</p>
-      <p>Veja <a href="https://github.com/rusharlabs/house-party-protocol/tree/main/examples/typed-decisions">examples/typed-decisions</a> para o adaptador, seus riscos e como medi-lo antes de confiar nele.</p>
+      <p>Como funciona de ponta a ponta — declarar um conselheiro como o Jev, fixar a versão, registrar, validar e medir — está no <a href="#decide">capítulo 09</a>. O adaptador e os riscos dele estão em <a href="https://github.com/rusharlabs/house-party-protocol/tree/main/examples/typed-decisions">examples/typed-decisions</a>.</p>
       <h3>Pacotes de evidência: o exit code de um critério, medido fora do modelo</h3>
       <p class="label">Novo na 2.6.0</p>
       <p>O hpp não dirige navegador e não chama modelo. O <code>hpp evidence run</code> roda o comando-critério que você declara — uma spec ponta a ponta, uma suíte pytest, qualquer script — como argv sem shell, mede o exit code, faz o hash de cada arquivo de artefato que você declarou e escreve <code>.hpp/evidence/&lt;id&gt;-&lt;UTC&gt;.json</code> (<code>hpp.evidence/v1</code>): o comando, o commit-base, o exit code, o veredito, stdout e stderr como contagem de bytes e sha256 (nunca o texto), os artefatos e um auto-hash. O veredito só é <code>passed</code> quando o comando saiu com 0 e cada padrão declarado casou com um arquivo que esta execução escreveu (um arquivo intocado desde antes da execução sai como <code>unchanged</code> e não conta); fora isso é <code>failed</code>, <code>missing-artifacts</code>, <code>timeout</code> ou <code>could-not-start</code>. O <code>hpp evidence verify</code> re-deriva um registro a partir dos arquivos no disco. O auto-hash torna visível um registro editado; ele não é assinatura — quem pode escrever o arquivo pode reescrevê-lo —, então um checker que não pode confiar no maker roda o comando de novo a partir da sua própria lane em vez de se apoiar só no <code>verify</code>.</p>
@@ -319,23 +371,63 @@ python -m hpp deliberate verify out/record.json</pre>
       <pre>python -m hpp attest create --repo . --spec spec.md --output att.json --maker a --checker b --session s1 --verdict approved
 python -m hpp attest verify att.json --repo .</pre>
       <p class="measured">Medido num repositório de rascunho: <code>--maker a --checker a</code> → <code>hpp: maker and checker must be different non-empty actors</code>, exit 2. Com atores diferentes o registro sai <code>approved</code> e o <code>verify</code> devolve <code>valid</code>, exit 0; depois de uma linha da spec mudar, o <code>verify</code> devolve <code>blocked</code> com <code>mismatches: spec_sha256, snapshot_digest</code>, exit 2. A atestação exige <code>git</code>.</p>
-      <p>Veja a <a href="PROOF.pt-BR.md">matriz de prova</a> e o <a href="BENCHMARK.pt-BR.md">contrato do benchmark</a>.</p>
+      <img src="assets/terminal/hpp-attest-demo.svg" alt="Uma aprovação velha recusada, renderizada da saída real: um autor recusado como o próprio checker, uma aprovação registrada e verificada, um byte acrescentado a um arquivo commitado, e a mesma aprovação bloqueada com exit 2">
+      <p class="measured">Renderizado de uma execução real (<code>scripts/render_terminal_svg.py --animate --session attest</code>): num repositório cujo único commit guarda <code>spec.md</code> e <code>app.py</code>, um byte acrescentado ao <code>app.py</code> depois da aprovação faz o <code>verify</code> devolver <code>blocked</code> só com <code>mismatches: snapshot_digest</code>, exit 2, enquanto o <code>base_commit</code> não se move: uma edição não commitada move o snapshot, não o commit.</p>
+      <p>Veja a <a href="PROOF.pt-BR.html">matriz de prova</a> e o <a href="BENCHMARK.pt-BR.html">contrato do benchmark</a>.</p>
     </div></section>
 
+    <section id="decide"><div class="wrap">
+      <p class="eyebrow">09 · decisões</p>
+      <h2>Um conselheiro é declarado, medido, e nunca chamado pelo harness.</h2>
+      <p class="lead">Algumas decisões são pequenas: escolher uma entre poucas opções sobre uma mudança — o risco dela, a rota, se precisa de uma pessoa. Elas podem vir de fora do harness: uma regra, uma pessoa, um modelo local, ou um modelo hospedado de decisão tipada como o <strong>Jev</strong>. O hpp continua sem chamar modelo e sem guardar chave. O que ele acrescenta é um registro que se confere e uma régua que mede o conselheiro antes que alguém confie nele.</p>
+      <table><thead><tr><th>Peça</th><th>Onde</th><th>Chama modelo?</th></tr></thead><tbody>
+        <tr><td>o registro <code>hpp.decision/v1</code></td><td><code>hpp/decision.py</code> · <code>hpp decide validate</code></td><td>não</td></tr>
+        <tr><td>a régua</td><td><code>hpp decide eval</code></td><td>não — roda o decisor que <em>você</em> nomeia, como comando</td></tr>
+        <tr><td>um baseline léxico</td><td><code>examples/typed-decisions/baseline_decider.py</code></td><td>não</td></tr>
+        <tr><td>um adaptador HTTP</td><td><code>examples/typed-decisions/decide.py</code></td><td><strong>sim</strong> — só quando você o roda, com a sua chave</td></tr>
+      </tbody></table>
+      <h3>Como funciona com o Jev</h3>
+      <ol>
+        <li><strong>Declare.</strong> <code>hpp init --decision-advisor typesafe</code> (ou <code>openrouter</code>, ou <code>compatible</code>) registra qual conselheiro você usa e imprime como ligá-lo. O padrão é <code>off</code>. A chave fica no seu shell — <code>TYPESAFE_API_KEY</code> para a TypeSafe AI, que serve o Jev; <code>OPENROUTER_API_KEY</code> para o mesmo modelo pelo endpoint de decisões do OpenRouter (alpha); <code>--endpoint</code> para um servidor local ou próprio que fale o mesmo formato.</li>
+        <li><strong>Fixe a versão.</strong> O adaptador manda a pergunta, as opções e o estado para uma versão <em>fixada</em> do modelo, como <code>jev-1.13.0</code>. Um alias como <code>jev-latest</code> é recusado, inclusive quando o servidor responde sob um, para que o registro possa dizer quem respondeu.</li>
+        <li><strong>Registre.</strong> A resposta vira um registro <code>hpp.decision/v1</code> com um de três desfechos: <code>recommendation</code> (uma das suas opções, com a confiança que o decisor informou, ou nula), <code>abstention</code> (ele não quis escolher — não muda nada) ou <code>instrument-failure</code> (timeout, erro HTTP, uma página HTML, uma resposta malformada — não muda nada, nunca é veredito). O registro é sempre <code>advisory</code>; com <code>--declared &lt;valor&gt;</code> ele é <code>raise-only</code>: o conselho pode subir o valor que você declarou, nunca baixar.</li>
+        <li><strong>Valide.</strong> <code>hpp decide validate registro.json</code> imprime o valor efetivo sobre o qual um consumidor pode agir e a ação — <code>raised</code>, <code>kept</code>, <code>advised</code> ou <code>none</code>.</li>
+        <li><strong>Meça antes de confiar.</strong> <code>hpp decide eval</code> roda o baseline e o seu conselheiro na mesma suíte rotulada e reporta cobertura, acerto seletivo, erros confiantes, abstenções corretas e perdidas, falhas de instrumento e, quando há confiança, uma curva de cobertura nos pisos 0,5–0,9. Uma suíte sem nenhuma decisão é reportada como sem amostra, nunca como 0%.</li>
+      </ol>
+      <pre>export TYPESAFE_API_KEY=&lt;sua chave&gt;
+python -m hpp decide eval examples/typed-decisions/gotcha-family-suite.json \
+  --decider-command '["python", "examples/typed-decisions/baseline_decider.py"]'
+python -m hpp decide eval examples/typed-decisions/gotcha-family-suite.json \
+  --decider-command '["python", "examples/typed-decisions/decide.py", "--provider", "typesafe", "--model", "jev-1.13.0"]'
+
+python examples/typed-decisions/decide.py --provider typesafe --model jev-1.13.0 \
+  --question examples/typed-decisions/route-risk-question.json --state-file change.txt --declared low &gt; decision.json
+python -m hpp decide validate decision.json</pre>
+      <h3>O que o adaptador recusa, e por quê</h3>
+      <ul>
+        <li><strong>Uma resposta válida pode estar errada.</strong> O esquema garante que a resposta é uma das suas opções, não que está certa; <code>confidence</code> é uma fórmula sobre a distribuição da resposta, não a probabilidade de acertar. Calibre um piso por pergunta, com os seus rótulos.</li>
+        <li><strong>A abstenção é nossa.</strong> O fornecedor não tem estado de abstenção; confiança baixa vira <code>abstention</code> aqui.</li>
+        <li><strong>O texto julgado pode puxar a resposta.</strong> Instruções plantadas no texto podem desviá-la — é por isso que <code>raise-only</code> existe.</li>
+        <li><strong>Nada se reproduz perguntando de novo.</strong> O registro guarda o modelo fixado que respondeu e o hash da resposta crua, gravada ao lado em <code>.hpp/decisions/raw/</code>.</li>
+        <li><strong>Toda chamada manda texto para fora da sua máquina.</strong> Nunca chame um conselheiro a partir de um hook; o adaptador recusa texto com cara de segredo, faz uma tentativa só, nunca repete, limita o corpo a 1 MiB, recusa redirecionamento e só manda chave por https ou para um endereço de loopback. <code>hpp policy check</code> classifica rodá-lo como <code>MANUAL</code>, como um <code>curl</code> para uma URL.</li>
+      </ul>
+      <p>A versão 1 mede só perguntas de <strong>escolha</strong>; uma nota ou uma probabilidade de sim não têm definição acordada de certo, então o contrato recusa esses tipos em vez de reportar um 0% vazio. A suíte que acompanha o produto tem quinze casos sintéticos escritos à mão, e o baseline foi escrito junto com ela — a nota dele prova que a régua funciona, não a qualidade do baseline. Monte a sua suíte com casos rotulados seus antes de ler qualquer número como qualidade.</p>
+      <p class="measured">Medido na árvore da 2.10.0: o decisor baseline na suíte do produto → 15 casos, 12 decididos, 3 abstenções, 0 falhas de instrumento, cobertura 0,8, acerto seletivo 1,0, saída 0.</p>
+    </div></section>
     <section id="hosts"><div class="wrap">
-      <p class="eyebrow">08 · hosts</p>
+      <p class="eyebrow">10 · hosts</p>
       <h2>Mesmo contrato, diferenças visíveis.</h2>
       <table><thead><tr><th></th><th>Claude Code</th><th>Codex CLI</th></tr></thead><tbody>
-        <tr><td>Distribuição</td><td>marketplace de plugins (<code>/plugin marketplace add rusharlabs/house-party-protocol</code>, depois <code>/plugin install &lt;módulo&gt;@house-party-protocol</code>)</td><td>cópia verificada por módulo via <code>kit_doctor.py install --host codex</code></td></tr>
+        <tr><td>Distribuição</td><td>marketplace de plugins (<code>/plugin marketplace add rusharlabs/house-party-protocol</code>, depois <code>/plugin install &lt;módulo&gt;@house-party-protocol</code>)</td><td>um marketplace de plugins próprio para os módulos que carregam skills (<code>codex plugin marketplace add rusharlabs/house-party-protocol</code>, depois <code>codex plugin add &lt;módulo&gt;@house-party-protocol</code>; só skills, lido de <code>.agents/plugins/marketplace.json</code>), mais uma cópia verificada por módulo via <code>kit_doctor.py install --host codex</code> para runtime, scripts e templates</td></tr>
         <tr><td>Onde cai</td><td>o store de plugins do host; <code>.claude/settings.local.json</code> para hooks e statusLine</td><td><code>.agents/skills</code> para skills, <code>.agents/hpp/&lt;módulo&gt;</code> para runtime; <code>AGENTS.md</code> é o que o host lê</td></tr>
         <tr><td>Lifecycle hooks</td><td>nativos, depois que o wiring é colado (gate humano; o <code>hpp init</code> lista os módulos que declaram hooks)</td><td>nenhum; as mesmas capacidades são comandos explícitos</td></tr>
-        <tr><td>Cobertura no manifesto</td><td>seis módulos <code>native</code>, quatro <code>explicit-command</code></td><td>nove <code>explicit-command</code>; <code>claude-dev-kit</code> é <code>unsupported</code>, e o <code>hpp init</code> interrompe em vez de planejá-lo ali</td></tr>
+        <tr><td>Cobertura no manifesto</td><td>seis módulos <code>native</code>, quatro <code>explicit-command</code></td><td>nove <code>explicit-command</code>, seis deles no canal de plugin; <code>claude-dev-kit</code> é <code>unsupported</code>, e o <code>hpp init</code> interrompe em vez de planejá-lo ali</td></tr>
       </tbody></table>
-      <p class="measured">Fonte: <code>hosts</code> em cada entrada de módulo do <code>hpp.manifest.json</code>; os caminhos por host são os que o <code>hpp init</code> imprime no bloco de wiring. <code>hpp init --host codex</code> planeja o bundle <code>reliable-coding</code> com os seis módulos como <code>explicit-command</code>.</p>
+      <p class="measured">Fonte: <code>hosts</code> em cada entrada de módulo do <code>hpp.manifest.json</code>; os caminhos por host são os que o <code>hpp init</code> imprime no bloco de wiring. <code>hpp init --host codex</code> planeja o bundle <code>reliable-coding</code> com os seis módulos como <code>explicit-command</code>, abrindo com as linhas do canal de plugin para os quatro que carregam skills. A matriz host × módulo × canal, uma linha por módulo, é renderizada do manifesto por <code>hpp doctor --matrix</code> e mantida em <a href="ARCHITECTURE.pt-BR.html#hosts-e-canais">Arquitetura · Hosts e canais</a>; um teste falha quando as duas divergem.</p>
     </div></section>
 
     <section id="exit"><div class="wrap">
-      <p class="eyebrow">09 · exit codes</p>
+      <p class="eyebrow">11 · exit codes</p>
       <h2>Um contrato: 0 ok · 1 warn · 2 block · 3 error.</h2>
       <table><thead><tr><th>Comando</th><th>0</th><th>1</th><th>2</th><th>3</th></tr></thead><tbody>
         <tr><td><code>policy check --mode enforce</code></td><td><code>ALLOW</code></td><td><code>MANUAL</code></td><td><code>BLOCK</code></td><td>—</td></tr>
@@ -364,7 +456,7 @@ python -m hpp attest verify att.json --repo .</pre>
     <p class="five">AGENTS · EVIDENCE · MEMORY · PROTOCOL · CONTINUITY</p>
     <strong>House Party Protocol</strong>
     <p>Opere agentes de código sob evidência, não confiança.</p>
-    <p><a href="../README.pt-BR.md">README</a> · <a href="CONCEPTS.pt-BR.md">Conceitos</a> · <a href="ARCHITECTURE.pt-BR.md">Arquitetura</a> · <a href="../CHANGELOG.pt-BR.md">Changelog</a> · <a href="CATALOG.pt-BR.html">Catálogo de módulos</a></p>
+    <p><a href="../README.pt-BR.md">README</a> · <a href="CONCEPTS.pt-BR.html">Conceitos</a> · <a href="ARCHITECTURE.pt-BR.html">Arquitetura</a> · <a href="../CHANGELOG.pt-BR.md">Changelog</a> · <a href="CATALOG.pt-BR.html">Catálogo de módulos</a></p>
   </div></footer>
 </body>
 </html>

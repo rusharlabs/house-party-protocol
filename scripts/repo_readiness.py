@@ -152,8 +152,10 @@ def language_pairs() -> dict:
                f"{len(bases)} files, every one has its pair" if not missing else f"without pair: {missing}")
 
 
-def readme_modules_vs_marketplace() -> dict:
-    marketplace = ROOT / "marketplace.json"
+def readme_modules_vs_marketplace(marketplace: Path | None = None) -> dict:
+    """`marketplace` defaults to the file beside the manifest (the emitted repository); the test
+    suite passes the copy it finds, so the source tree measures the same row instead of skipping."""
+    marketplace = marketplace or ROOT / "marketplace.json"
     if not marketplace.is_file():
         return row("README module table == marketplace.json", None,
                    "no marketplace.json beside the manifest (source tree); measured in the emitted repository")

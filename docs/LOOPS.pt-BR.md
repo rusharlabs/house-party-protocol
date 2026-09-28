@@ -15,7 +15,7 @@ Um loop HPP possui:
 7. escalonamento humano;
 8. feedback persistido.
 
-`ralph_gate.py` implementa o stop gate: uma marca textual de conclusão não libera o loop sem que
+`loop_gate.py` implementa o stop gate: uma marca textual de conclusão não libera o loop sem que
 o `done_gate` correspondente passe. `autoprompt_resume.py` produz retomada; não altera o veredito.
 
 Para um critério end-to-end ou visual, a trava é o `hpp evidence run` (novo na

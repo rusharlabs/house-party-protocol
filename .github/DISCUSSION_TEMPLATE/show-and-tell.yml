@@ -1,0 +1,62 @@
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Show what you run with HPP: a setup, a workflow, a module you built, a write-up or a talk.
+        The house style applies here too: a command and its output say more than a screenshot.
+        Do not post credentials, private logs, customer data or internal links; redact first, or
+        describe a synthetic example.
+  - type: textarea
+    id: what
+    attributes:
+      label: What it is
+      description: What you built or how you use HPP, and the problem it solves for you.
+    validations:
+      required: true
+  - type: dropdown
+    id: host
+    attributes:
+      label: Host
+      options:
+        - Claude Code
+        - Codex CLI
+        - Both
+        - Other, or not host-specific
+    validations:
+      required: true
+  - type: input
+    id: modules
+    attributes:
+      label: Bundle and modules
+      placeholder: "reliable-coding · operator-kit, lane-kit"
+    validations:
+      required: false
+  - type: input
+    id: link
+    attributes:
+      label: Link
+      description: Repository, post or recording, if it is public.
+    validations:
+      required: false
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Command and output
+      description: A command that shows it working, and what it printed.
+      render: shell
+    validations:
+      required: false
+  - type: textarea
+    id: ask
+    attributes:
+      label: Feedback you would like
+      description: A review of the setup, a question, or nothing at all.
+    validations:
+      required: false
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before posting
+      options:
+        - label: Nothing above contains a token, a secret, a personal path or private data.
+          required: true

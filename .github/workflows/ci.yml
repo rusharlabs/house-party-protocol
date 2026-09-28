@@ -130,3 +130,40 @@ jobs:
               sys.exit(1)
 
           print(f"CHECKSUMS.txt verified for {len(checksum_files)} module(s).")
+
+  # Why (2026-09-27): the modules' own self-tests and evals ran only on the machines that wrote
+  # them, and all seven evals failed on a stock Mac (a bare `python`; a Mac has only `python3`).
+  # This job runs them on the three systems the way a user would get them: macOS with the stock
+  # /bin/bash (3.2) and BSD tools, macOS and Linux with no `python` on PATH, Windows with Git
+  # Bash. The oldest and newest supported Pythons are enough here; the suite above covers all four.
+  # In the source tree there are no modules and the script says so and exits 0.
+  modules:
+    name: module self-tests + evals (${{ matrix.os }}, py${{ matrix.python-version }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: ["3.10", "3.13"]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Modules on macOS (stock /bin/bash 3.2, BSD tools, no python on PATH)
+        if: runner.os == 'macOS'
+        run: python scripts/module_checks.py --bash /bin/bash --without-python
+
+      - name: Modules on Linux (no python on PATH)
+        if: runner.os == 'Linux'
+        run: python scripts/module_checks.py --without-python
+
+      - name: Modules on Windows (Git Bash)
+        if: runner.os == 'Windows'
+        run: python scripts/module_checks.py --bash "C:\Program Files\Git\bin\bash.exe"

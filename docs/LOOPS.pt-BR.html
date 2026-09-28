@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>House Party Protocol — Loops, autoprompt e waves</title>
+  <meta name="description" content="O que um loop governado tem — objetivo, estado observável, próxima ação, orçamento, gate de evidência e condições de parada — e o autoloop, o autoprompt, a memória de falhas e a avaliação em volta dele.">
+  <link rel="alternate" hreflang="en" href="LOOPS.html">
+  <link rel="alternate" hreflang="pt-BR" href="LOOPS.pt-BR.html">
+  <style>
+    :root{--hpp-black: #000000;--hpp-ink: #0F1113;--hpp-paper: #F4F1EB;--hpp-signal: #FF6A00;--line:rgba(15,17,19,.18);--surface:rgba(15,17,19,.04);--muted:rgba(15,17,19,.72);--max:1120px}
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;background:var(--hpp-paper);color:var(--hpp-ink);font:16px/1.65 Inter,"Segoe UI",Arial,sans-serif}
+    a{color:var(--hpp-ink);text-decoration:underline;text-decoration-color:var(--hpp-signal);text-decoration-thickness:2px;text-underline-offset:3px}
+    a:hover{color:var(--hpp-signal)}
+    a:focus-visible{outline:4px solid var(--hpp-signal);outline-offset:3px}
+    .wrap{width:min(var(--max),calc(100% - 40px));margin:auto}
+    .lang{background:var(--hpp-black);color:var(--hpp-paper);font-size:.9rem;padding:10px 0}
+    .lang a{color:var(--hpp-paper)}
+    .lang a[aria-current]{text-decoration:none;font-weight:700}
+    .hero{background:var(--hpp-ink);color:var(--hpp-paper);padding:44px 0 50px}
+    .hero img{width:min(720px,100%);display:block}
+    .hero h1{font:800 clamp(2.2rem,6vw,5rem)/.95 Sora,Inter,"Segoe UI",sans-serif;letter-spacing:-.02em;margin:.35em 0}
+    .hero p{max-width:760px;font-size:1.15rem;color:rgba(244,241,235,.82)}
+    .hero .eyebrow{color:var(--hpp-paper);border-color:var(--hpp-signal)}
+    .signal{color:var(--hpp-signal)}
+    .eyebrow,.mono,code,pre,.gate,.label{font-family:"JetBrains Mono","Cascadia Code",Consolas,monospace}
+    .eyebrow{display:inline-block;letter-spacing:.13em;text-transform:uppercase;font-size:.78rem;border-left:4px solid var(--hpp-signal);padding-left:.6em;margin:0 0 .6em}
+    nav{position:sticky;top:0;z-index:2;background:rgba(244,241,235,.96);border-bottom:1px solid var(--line);backdrop-filter:blur(8px)}
+    nav .wrap{display:flex;gap:20px;overflow:auto;padding:12px 0}
+    nav a{white-space:nowrap;text-decoration:none;font-weight:700}
+    nav a:hover{text-decoration:underline;text-decoration-color:var(--hpp-signal)}
+    section{padding:64px 0;border-bottom:1px solid var(--line)}
+    h2{font:800 clamp(1.7rem,3vw,2.6rem)/1.1 Sora,Inter,"Segoe UI",sans-serif;letter-spacing:-.01em;margin:0 0 .6em}
+    h3{margin:0 0 .4em;font-size:1.1rem}
+    .lead{max-width:780px;color:var(--muted)}
+    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:20px}
+    .card{grid-column:span 4;border:1px solid var(--line);border-radius:16px;padding:22px;background:var(--surface)}
+    .card.wide{grid-column:span 6}
+    .card.full{grid-column:1/-1}
+    pre{background:var(--hpp-ink);color:var(--hpp-paper);padding:20px;border-radius:12px;overflow:auto;border-left:6px solid var(--hpp-signal);font-size:.92rem;line-height:1.5}
+    code{font-size:.94em}
+    p code,li code,td code{background:var(--surface);padding:.08em .35em;border-radius:5px}
+    pre code{background:none;padding:0}
+    table{width:100%;border-collapse:collapse;background:var(--surface);margin:1em 0}
+    th,td{text-align:left;padding:12px;border-bottom:1px solid var(--line);vertical-align:top}
+    th{background:rgba(15,17,19,.08);font-weight:700}
+    .gate{display:inline-block;border-radius:999px;padding:.15rem .7rem;font-weight:700;font-size:.8rem;margin-bottom:.6em}
+    .gate.allow{background:var(--hpp-signal);color:var(--hpp-ink)}
+    .gate.manual{border:2px solid var(--hpp-ink);color:var(--hpp-ink)}
+    .gate.block{background:var(--hpp-ink);color:var(--hpp-paper)}
+    .label{font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+    .measured{border-left:4px solid var(--hpp-signal);padding-left:1em;color:var(--muted);font-size:.95rem}
+    ul,ol{padding-left:1.3em}
+    li{margin:.25em 0}
+    footer{padding:48px 0;background:var(--hpp-black);color:var(--hpp-paper)}
+    footer a{color:var(--hpp-paper)}
+    footer .five{letter-spacing:.2em;font-size:.8rem;color:rgba(244,241,235,.72)}
+    @media(max-width:760px){.card,.card.wide{grid-column:1/-1}.wrap{width:min(100% - 32px,var(--max))}th,td{font-size:.88rem;padding:8px}.hero{padding-top:28px}section{padding:44px 0}}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+    h3[id],h4[id],h5[id]{scroll-margin-top:64px}
+    ul.tasks{list-style:none;padding-left:.2em}
+    blockquote{margin:1em 0}
+  </style>
+</head>
+<body>
+  <div class="lang"><div class="wrap"><a href="LOOPS.html" hreflang="en" lang="en">English</a> · <a href="LOOPS.pt-BR.html" aria-current="page" hreflang="pt-BR">Português</a></div></div>
+  <header class="hero">
+    <div class="wrap">
+      <img src="assets/hpp-logo-header.png" alt="House Party Protocol">
+      <p class="eyebrow">Conceitos · LOOPS.pt-BR.md</p>
+      <h1>Loops, autoprompt e waves</h1>
+    </div>
+  </header>
+  <nav aria-label="Capítulos"><div class="wrap"><a href="#loop-governado">Loop governado</a><a href="#autoloop-e-loopgraph">Autoloop e LoopGraph</a><a href="#spec-driven">Spec-driven</a><a href="#autoprompt">Autoprompt</a><a href="#memória-de-falhas">Memória de falhas</a><a href="#avaliação">Avaliação</a></div></nav>
+  <main>
+
+    <section id="loop-governado"><div class="wrap">
+      <p class="eyebrow">01</p>
+      <h2>Loop governado</h2>
+<p>Um loop HPP possui:</p>
+<ol>
+<li>objetivo e spec;</li>
+<li>estado observável;</li>
+<li>próxima ação;</li>
+<li>budget de tempo/iterações;</li>
+<li>gate de evidência;</li>
+<li>stop conditions;</li>
+<li>escalonamento humano;</li>
+<li>feedback persistido.</li>
+</ol>
+<p><code>loop_gate.py</code> implementa o stop gate: uma marca textual de conclusão não libera o loop sem que
+o <code>done_gate</code> correspondente passe. <code>autoprompt_resume.py</code> produz retomada; não altera o veredito.</p>
+<p>Para um critério end-to-end ou visual, a trava é o <code>hpp evidence run</code> (novo na
+2.6.0): ele reexecuta o comando declarado, mede
+o código de saída fora do modelo e faz hash dos artefatos que ficaram. O <code>hpp evidence verify</code> é
+reconciliação posterior — re-deriva um registro a partir dos arquivos em disco — e nunca a trava: o
+hash próprio do registro torna uma edição visível, não é uma assinatura, então quem não pode
+confiar no maker roda o comando de novo. O hpp não dirige navegador; o navegador roda dentro do
+comando que você declara.</p>
+    </div></section>
+
+    <section id="autoloop-e-loopgraph"><div class="wrap">
+      <p class="eyebrow">02</p>
+      <h2>Autoloop e LoopGraph</h2>
+<p>Autoloop é o ciclo finito <code>observe → choose → act → verify → record → stop/continue</code>. No HPP ele
+não significa autonomia sem teto. O <code>loop</code> de <code>hpp.manifest.json</code> é o LoopGraph mínimo: estados,
+eventos, gates e transições permitidas. Repetição intencional fica no charter com budget e saída;
+ciclo acidental no WorkGraph é erro.</p>
+    </div></section>
+
+    <section id="spec-driven"><div class="wrap">
+      <p class="eyebrow">03</p>
+      <h2>Spec-driven</h2>
+<p>A spec é compilada em WorkGraph. Acceptance criteria viajam com cada unidade. Dependências viram
+waves topológicas e cada wave fecha testes e review antes de liberar a próxima.</p>
+    </div></section>
+
+    <section id="autoprompt"><div class="wrap">
+      <p class="eyebrow">04</p>
+      <h2>Autoprompt</h2>
+<p>Autoprompt responde “qual é o próximo passo derivável do estado?”. Ele não decide risco, não
+aprova mudança sensível e não substitui checker. Se o estado é insuficiente, a saída correta é
+declarar o dado faltante.</p>
+    </div></section>
+
+    <section id="memória-de-falhas"><div class="wrap">
+      <p class="eyebrow">05</p>
+      <h2>Memória de falhas</h2>
+<p>Gotcha Memory classifica falhas, mede recorrência e propõe uma lição. A promoção é controlada para
+evitar transformar um incidente isolado ou ambíguo em regra permanente.</p>
+<p>Uma falha que não casa com nenhuma família fica <code>unknown</code> e nunca é reclassificada
+automaticamente. Uma reclassificação consultiva via <code>hpp decide</code> (novo na 2.6.0) é offline:
+uma pessoa a roda, nunca um hook, depois de medir o decisor com <code>hpp decide eval</code>; o registro
+continua consultivo, e uma família nova só entra no classificador como mudança revisada.</p>
+    </div></section>
+
+    <section id="avaliação"><div class="wrap">
+      <p class="eyebrow">06</p>
+      <h2>Avaliação</h2>
+<p>pass@k mede se o sistema consegue; pass^k mede se repete. O loop só trata release-critical como
+estável quando o gate de regressão passa no universo e no <code>k</code> declarados.</p>
+<p>A mesma regra vale para os instrumentos em que um loop se apoia. <code>hpp retrieval eval</code> mede um
+retriever e <code>hpp decide eval</code> um decisor (ambos novos na 2.6.0), cada um em casos rotulados,
+com falhas de instrumento — timeout, crash, resposta malformada — contadas à parte e nunca
+pontuadas. Best-of-N, em que N lanes constroem alternativas e um revisor de outra lane e de outra
+família de modelo escolhe uma (<code>lane_board.py compete</code> e <code>select</code>, novos na 2.6.0), é pass@N:
+escolher 1 de N mede se o sistema consegue, não se repete, então o vencedor ainda precisa da
+própria verificação e de pass^k.</p>
+    </div></section>
+
+  </main>
+  <footer><div class="wrap">
+    <p class="five">AGENTS · EVIDENCE · MEMORY · PROTOCOL · CONTINUITY</p>
+    <strong>House Party Protocol</strong>
+    <p>Opere agentes de código sob evidência, não confiança.</p>
+    <p><a href="index.html">Documentação</a> · <a href="MANUAL.pt-BR.html">Manual do harness</a> · <a href="CATALOG.pt-BR.html">Catálogo de módulos</a> · <a href="https://github.com/rusharlabs/house-party-protocol/blob/main/docs/LOOPS.pt-BR.md">Fonte em Markdown</a> · <a href="LOOPS.html" hreflang="en" lang="en">English</a></p>
+  </div></footer>
+</body>
+</html>

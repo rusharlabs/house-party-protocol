@@ -9,6 +9,8 @@ import subprocess
 from pathlib import Path
 from typing import Any, Optional
 
+from hpp.signing import SigningError, canonical as signable, sign as sign_bytes, signature_report
+
 
 # Ordered from the least to the most strict: a gate may only move a verdict to the right.
 VERDICTS = ("approved", "revise", "blocked")
@@ -96,6 +98,8 @@ def create_attestation(
     session: str,
     verdict: str,
     panel: Optional[dict[str, Any]] = None,
+    sign_key: Optional[Path] = None,
+    signer: Optional[str] = None,
 ) -> dict[str, Any]:
     """Record a verdict bound to the repository, the spec and a full snapshot.
 
@@ -103,6 +107,10 @@ def create_attestation(
     verdict is the STRICTER of the declared one and the panel's: a panel can block or send back a
     declared approval, never approve a declared block, and a panel that did not decide sends it back
     for revision. The panel's record hash is kept, so the attestation names the session behind it.
+
+    With `sign_key`, the record is signed with that SSH private key through `ssh-keygen -Y sign`
+    (namespace `hpp`) as `signer` -- by default the checker, who signs its own verdict. Without the
+    binary nothing is written: a record is signed or it is not, never "signed" by assertion.
     """
     root = _repo_root(repo)
     maker_id = maker.strip()
@@ -141,6 +149,11 @@ def create_attestation(
     }
     if deliberation is not None:
         record["deliberation"] = deliberation
+    if sign_key is not None:
+        try:
+            record["signature"] = sign_bytes(signable(record), Path(sign_key), signer or checker_id)
+        except SigningError as exc:
+            raise AttestationError(str(exc)) from exc
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(
         json.dumps(record, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
@@ -149,7 +162,10 @@ def create_attestation(
     return record
 
 
-def verify_attestation(path: Path, repo: Path) -> dict[str, Any]:
+def verify_attestation(path: Path, repo: Path, allowed_signers: Optional[Path] = None) -> dict[str, Any]:
+    """Re-derive every binding of an attestation; with `allowed_signers`, also demand a signature
+    that `ssh-keygen -Y verify` accepts for the signer it names. Without the file the signature is
+    reported (`not-signed` or `not-verified`) and never claimed."""
     try:
         record = json.loads(path.read_text(encoding="utf-8"))
     except FileNotFoundError as exc:
@@ -186,10 +202,15 @@ def verify_attestation(path: Path, repo: Path) -> dict[str, Any]:
     stored_snapshot = record.get("snapshot", {})
     if not isinstance(stored_snapshot, dict) or stored_snapshot.get("digest") != current_snapshot["digest"]:
         mismatches.append("snapshot_digest")
+    signature = signature_report(signable(record), record.get("signature"),
+                                 Path(allowed_signers) if allowed_signers is not None else None)
+    if allowed_signers is not None and signature["status"] != "verified":
+        mismatches.append("signature")
     return {
         "schema": "hpp.attestation-verification/v1",
         "status": "valid" if not mismatches else "blocked",
         "mismatches": sorted(set(mismatches)),
         "base_commit": _git(root, "rev-parse", "HEAD"),
         "snapshot_digest": current_snapshot["digest"],
+        "signature": signature,
     }

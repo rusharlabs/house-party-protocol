@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>House Party Protocol — Benchmark reproduzível</title>
+  <meta name="description" content="O benchmark público: mede o harness local sem chamar APIs de modelo.">
+  <link rel="alternate" hreflang="en" href="BENCHMARK.html">
+  <link rel="alternate" hreflang="pt-BR" href="BENCHMARK.pt-BR.html">
+  <style>
+    :root{--hpp-black: #000000;--hpp-ink: #0F1113;--hpp-paper: #F4F1EB;--hpp-signal: #FF6A00;--line:rgba(15,17,19,.18);--surface:rgba(15,17,19,.04);--muted:rgba(15,17,19,.72);--max:1120px}
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;background:var(--hpp-paper);color:var(--hpp-ink);font:16px/1.65 Inter,"Segoe UI",Arial,sans-serif}
+    a{color:var(--hpp-ink);text-decoration:underline;text-decoration-color:var(--hpp-signal);text-decoration-thickness:2px;text-underline-offset:3px}
+    a:hover{color:var(--hpp-signal)}
+    a:focus-visible{outline:4px solid var(--hpp-signal);outline-offset:3px}
+    .wrap{width:min(var(--max),calc(100% - 40px));margin:auto}
+    .lang{background:var(--hpp-black);color:var(--hpp-paper);font-size:.9rem;padding:10px 0}
+    .lang a{color:var(--hpp-paper)}
+    .lang a[aria-current]{text-decoration:none;font-weight:700}
+    .hero{background:var(--hpp-ink);color:var(--hpp-paper);padding:44px 0 50px}
+    .hero img{width:min(720px,100%);display:block}
+    .hero h1{font:800 clamp(2.2rem,6vw,5rem)/.95 Sora,Inter,"Segoe UI",sans-serif;letter-spacing:-.02em;margin:.35em 0}
+    .hero p{max-width:760px;font-size:1.15rem;color:rgba(244,241,235,.82)}
+    .hero .eyebrow{color:var(--hpp-paper);border-color:var(--hpp-signal)}
+    .signal{color:var(--hpp-signal)}
+    .eyebrow,.mono,code,pre,.gate,.label{font-family:"JetBrains Mono","Cascadia Code",Consolas,monospace}
+    .eyebrow{display:inline-block;letter-spacing:.13em;text-transform:uppercase;font-size:.78rem;border-left:4px solid var(--hpp-signal);padding-left:.6em;margin:0 0 .6em}
+    nav{position:sticky;top:0;z-index:2;background:rgba(244,241,235,.96);border-bottom:1px solid var(--line);backdrop-filter:blur(8px)}
+    nav .wrap{display:flex;gap:20px;overflow:auto;padding:12px 0}
+    nav a{white-space:nowrap;text-decoration:none;font-weight:700}
+    nav a:hover{text-decoration:underline;text-decoration-color:var(--hpp-signal)}
+    section{padding:64px 0;border-bottom:1px solid var(--line)}
+    h2{font:800 clamp(1.7rem,3vw,2.6rem)/1.1 Sora,Inter,"Segoe UI",sans-serif;letter-spacing:-.01em;margin:0 0 .6em}
+    h3{margin:0 0 .4em;font-size:1.1rem}
+    .lead{max-width:780px;color:var(--muted)}
+    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:20px}
+    .card{grid-column:span 4;border:1px solid var(--line);border-radius:16px;padding:22px;background:var(--surface)}
+    .card.wide{grid-column:span 6}
+    .card.full{grid-column:1/-1}
+    pre{background:var(--hpp-ink);color:var(--hpp-paper);padding:20px;border-radius:12px;overflow:auto;border-left:6px solid var(--hpp-signal);font-size:.92rem;line-height:1.5}
+    code{font-size:.94em}
+    p code,li code,td code{background:var(--surface);padding:.08em .35em;border-radius:5px}
+    pre code{background:none;padding:0}
+    table{width:100%;border-collapse:collapse;background:var(--surface);margin:1em 0}
+    th,td{text-align:left;padding:12px;border-bottom:1px solid var(--line);vertical-align:top}
+    th{background:rgba(15,17,19,.08);font-weight:700}
+    .gate{display:inline-block;border-radius:999px;padding:.15rem .7rem;font-weight:700;font-size:.8rem;margin-bottom:.6em}
+    .gate.allow{background:var(--hpp-signal);color:var(--hpp-ink)}
+    .gate.manual{border:2px solid var(--hpp-ink);color:var(--hpp-ink)}
+    .gate.block{background:var(--hpp-ink);color:var(--hpp-paper)}
+    .label{font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+    .measured{border-left:4px solid var(--hpp-signal);padding-left:1em;color:var(--muted);font-size:.95rem}
+    ul,ol{padding-left:1.3em}
+    li{margin:.25em 0}
+    footer{padding:48px 0;background:var(--hpp-black);color:var(--hpp-paper)}
+    footer a{color:var(--hpp-paper)}
+    footer .five{letter-spacing:.2em;font-size:.8rem;color:rgba(244,241,235,.72)}
+    @media(max-width:760px){.card,.card.wide{grid-column:1/-1}.wrap{width:min(100% - 32px,var(--max))}th,td{font-size:.88rem;padding:8px}.hero{padding-top:28px}section{padding:44px 0}}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+    h3[id],h4[id],h5[id]{scroll-margin-top:64px}
+    ul.tasks{list-style:none;padding-left:.2em}
+    blockquote{margin:1em 0}
+  </style>
+</head>
+<body>
+  <div class="lang"><div class="wrap"><a href="BENCHMARK.html" hreflang="en" lang="en">English</a> · <a href="BENCHMARK.pt-BR.html" aria-current="page" hreflang="pt-BR">Português</a></div></div>
+  <header class="hero">
+    <div class="wrap">
+      <img src="assets/hpp-logo-header.png" alt="House Party Protocol">
+      <p class="eyebrow">Arquitetura · BENCHMARK.pt-BR.md</p>
+      <h1>Benchmark reproduzível</h1>
+    </div>
+  </header>
+  <nav aria-label="Capítulos"><div class="wrap"><a href="#executar">Executar</a><a href="#cenários">Cenários</a><a href="#critério">Critério</a></div></nav>
+  <main>
+
+    <section><div class="wrap">
+<p>O benchmark público mede o harness local sem chamar APIs de modelo.</p>
+    </div></section>
+
+    <section id="executar"><div class="wrap">
+      <p class="eyebrow">01</p>
+      <h2>Executar</h2>
+<pre><code class="language-bash">python -m hpp doctor
+python -m hpp benchmark -k 3
+python -m hpp benchmark -k 3 --json</code></pre>
+    </div></section>
+
+    <section id="cenários"><div class="wrap">
+      <p class="eyebrow">02</p>
+      <h2>Cenários</h2>
+<table>
+<thead><tr><th>Cenário</th><th>Controle positivo</th><th>Controle negativo</th><th>Gate</th></tr></thead>
+<tbody>
+<tr><td>manifesto</td><td>dez módulos resolvidos</td><td>integração aponta módulo ausente</td><td>validação bloqueia</td></tr>
+<tr><td>política</td><td>comando seguro</td><td>operação destrutiva</td><td>enforce retorna 2</td></tr>
+<tr><td>event log</td><td>sequência válida chega a verified</td><td>verified sem evidência</td><td>append é recusado sem criar log</td></tr>
+<tr><td>WorkGraph</td><td>DAG com duas waves</td><td>ciclo A→B→A</td><td>compilação falha</td></tr>
+<tr><td>Lane Map</td><td>lane morta não bloqueia</td><td>sobreposição viva</td><td>colisão aparece</td></tr>
+<tr><td>Monitor Map</td><td>sinal fresco</td><td>sonda do serviço recente, sonda do dado antiga</td><td>um status por monitor: o serviço lê healthy, o dado lê stale</td></tr>
+<tr><td>contexto</td><td>fonte com hash e orçamento</td><td>material semelhante a segredo</td><td>compilação recusa</td></tr>
+<tr><td>roteamento</td><td>trabalho seguro usa economy</td><td>alto risco sem frontier</td><td>não rebaixa o piso</td></tr>
+<tr><td>grafos</td><td>mesma entrada duas vezes</td><td>projeção vazia</td><td>JSON idêntico e não vazio</td></tr>
+<tr><td>atestação de evidência</td><td>aprovação vinculada aos bytes dos arquivos verifica como <code>valid</code></td><td>arquivo alterado depois da aprovação</td><td>verify bloqueia pela divergência do snapshot</td></tr>
+</tbody>
+</table>
+    </div></section>
+
+    <section id="critério"><div class="wrap">
+      <p class="eyebrow">03</p>
+      <h2>Critério</h2>
+<p>O benchmark executa cada controle local <code>k=3</code>; não usa outcomes replayados como verdade pronta.
+Casos release-critical exigem <code>pass^k=1.00</code>. <code>hpp benchmark</code> sempre roda o gate <code>both</code>
+(<code>pass@k &gt;= 0.90</code> e <code>pass^k = 1.0</code>); <code>hpp eval run</code> usa por padrão o gate <code>capability</code>
+(só <code>pass@k &gt;= 0.90</code>), a menos que se passe <code>--gate regression</code> ou <code>--gate both</code>. A saída JSON
+inclui versão, plataforma, hash da suite, tentativas e resultado individual. Integridade dos
+ZIPs é um gate separado da release.</p>
+<p>O benchmark prova somente o checkout, a plataforma e os cenários executados. Não mede qualidade
+geral de um modelo e não transforma um host sem lifecycle hook em enforcement automático.</p>
+    </div></section>
+
+  </main>
+  <footer><div class="wrap">
+    <p class="five">AGENTS · EVIDENCE · MEMORY · PROTOCOL · CONTINUITY</p>
+    <strong>House Party Protocol</strong>
+    <p>Opere agentes de código sob evidência, não confiança.</p>
+    <p><a href="index.html">Documentação</a> · <a href="MANUAL.pt-BR.html">Manual do harness</a> · <a href="CATALOG.pt-BR.html">Catálogo de módulos</a> · <a href="https://github.com/rusharlabs/house-party-protocol/blob/main/docs/BENCHMARK.pt-BR.md">Fonte em Markdown</a> · <a href="BENCHMARK.html" hreflang="en" lang="en">English</a></p>
+  </div></footer>
+</body>
+</html>

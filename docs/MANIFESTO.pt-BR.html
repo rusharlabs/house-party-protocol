@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>House Party Protocol — Manifesto do House Party Protocol</title>
+  <meta name="description" content="Por que um harness: agentes capazes ainda precisam de uma casa operacional, e cada distância entre uma resposta convincente e a prova vira um contrato que um comando confere.">
+  <link rel="alternate" hreflang="en" href="MANIFESTO.html">
+  <link rel="alternate" hreflang="pt-BR" href="MANIFESTO.pt-BR.html">
+  <style>
+    :root{--hpp-black: #000000;--hpp-ink: #0F1113;--hpp-paper: #F4F1EB;--hpp-signal: #FF6A00;--line:rgba(15,17,19,.18);--surface:rgba(15,17,19,.04);--muted:rgba(15,17,19,.72);--max:1120px}
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;background:var(--hpp-paper);color:var(--hpp-ink);font:16px/1.65 Inter,"Segoe UI",Arial,sans-serif}
+    a{color:var(--hpp-ink);text-decoration:underline;text-decoration-color:var(--hpp-signal);text-decoration-thickness:2px;text-underline-offset:3px}
+    a:hover{color:var(--hpp-signal)}
+    a:focus-visible{outline:4px solid var(--hpp-signal);outline-offset:3px}
+    .wrap{width:min(var(--max),calc(100% - 40px));margin:auto}
+    .lang{background:var(--hpp-black);color:var(--hpp-paper);font-size:.9rem;padding:10px 0}
+    .lang a{color:var(--hpp-paper)}
+    .lang a[aria-current]{text-decoration:none;font-weight:700}
+    .hero{background:var(--hpp-ink);color:var(--hpp-paper);padding:44px 0 50px}
+    .hero img{width:min(720px,100%);display:block}
+    .hero h1{font:800 clamp(2.2rem,6vw,5rem)/.95 Sora,Inter,"Segoe UI",sans-serif;letter-spacing:-.02em;margin:.35em 0}
+    .hero p{max-width:760px;font-size:1.15rem;color:rgba(244,241,235,.82)}
+    .hero .eyebrow{color:var(--hpp-paper);border-color:var(--hpp-signal)}
+    .signal{color:var(--hpp-signal)}
+    .eyebrow,.mono,code,pre,.gate,.label{font-family:"JetBrains Mono","Cascadia Code",Consolas,monospace}
+    .eyebrow{display:inline-block;letter-spacing:.13em;text-transform:uppercase;font-size:.78rem;border-left:4px solid var(--hpp-signal);padding-left:.6em;margin:0 0 .6em}
+    nav{position:sticky;top:0;z-index:2;background:rgba(244,241,235,.96);border-bottom:1px solid var(--line);backdrop-filter:blur(8px)}
+    nav .wrap{display:flex;gap:20px;overflow:auto;padding:12px 0}
+    nav a{white-space:nowrap;text-decoration:none;font-weight:700}
+    nav a:hover{text-decoration:underline;text-decoration-color:var(--hpp-signal)}
+    section{padding:64px 0;border-bottom:1px solid var(--line)}
+    h2{font:800 clamp(1.7rem,3vw,2.6rem)/1.1 Sora,Inter,"Segoe UI",sans-serif;letter-spacing:-.01em;margin:0 0 .6em}
+    h3{margin:0 0 .4em;font-size:1.1rem}
+    .lead{max-width:780px;color:var(--muted)}
+    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:20px}
+    .card{grid-column:span 4;border:1px solid var(--line);border-radius:16px;padding:22px;background:var(--surface)}
+    .card.wide{grid-column:span 6}
+    .card.full{grid-column:1/-1}
+    pre{background:var(--hpp-ink);color:var(--hpp-paper);padding:20px;border-radius:12px;overflow:auto;border-left:6px solid var(--hpp-signal);font-size:.92rem;line-height:1.5}
+    code{font-size:.94em}
+    p code,li code,td code{background:var(--surface);padding:.08em .35em;border-radius:5px}
+    pre code{background:none;padding:0}
+    table{width:100%;border-collapse:collapse;background:var(--surface);margin:1em 0}
+    th,td{text-align:left;padding:12px;border-bottom:1px solid var(--line);vertical-align:top}
+    th{background:rgba(15,17,19,.08);font-weight:700}
+    .gate{display:inline-block;border-radius:999px;padding:.15rem .7rem;font-weight:700;font-size:.8rem;margin-bottom:.6em}
+    .gate.allow{background:var(--hpp-signal);color:var(--hpp-ink)}
+    .gate.manual{border:2px solid var(--hpp-ink);color:var(--hpp-ink)}
+    .gate.block{background:var(--hpp-ink);color:var(--hpp-paper)}
+    .label{font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+    .measured{border-left:4px solid var(--hpp-signal);padding-left:1em;color:var(--muted);font-size:.95rem}
+    ul,ol{padding-left:1.3em}
+    li{margin:.25em 0}
+    footer{padding:48px 0;background:var(--hpp-black);color:var(--hpp-paper)}
+    footer a{color:var(--hpp-paper)}
+    footer .five{letter-spacing:.2em;font-size:.8rem;color:rgba(244,241,235,.72)}
+    @media(max-width:760px){.card,.card.wide{grid-column:1/-1}.wrap{width:min(100% - 32px,var(--max))}th,td{font-size:.88rem;padding:8px}.hero{padding-top:28px}section{padding:44px 0}}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+    h3[id],h4[id],h5[id]{scroll-margin-top:64px}
+    ul.tasks{list-style:none;padding-left:.2em}
+    blockquote{margin:1em 0}
+  </style>
+</head>
+<body>
+  <div class="lang"><div class="wrap"><a href="MANIFESTO.html" hreflang="en" lang="en">English</a> · <a href="MANIFESTO.pt-BR.html" aria-current="page" hreflang="pt-BR">Português</a></div></div>
+  <header class="hero">
+    <div class="wrap">
+      <img src="assets/hpp-logo-header.png" alt="House Party Protocol">
+      <p class="eyebrow">Conceitos · MANIFESTO.pt-BR.md</p>
+      <h1>Manifesto do House Party Protocol</h1>
+    </div>
+  </header>
+  <nav aria-label="Capítulos"><div class="wrap"><a href="#agentes-capazes-ainda-precisam-de-uma-casa-operacional">Agentes capazes ainda precisam de uma casa operacional</a><a href="#o-protocol">O protocol</a><a href="#o-harness">O harness</a><a href="#a-ordem-vem-da-spec-não-da-conversa">A ordem vem da spec, não da conversa</a><a href="#por-que-isto-não-é-burocracia">Por que isto não é burocracia</a><a href="#o-que-o-projeto-se-recusa-a-fazer">O que o projeto se recusa a fazer</a><a href="#loops-com-freio-e-memória">Loops com freio e memória</a><a href="#grafos-sem-teatro-de-infraestrutura">Grafos sem teatro de infraestrutura</a><a href="#portabilidade-honesta">Portabilidade honesta</a><a href="#prova-antes-de-escala">Prova antes de escala</a><a href="#mais-agentes-mais-afirmações">Mais agentes, mais afirmações</a><a href="#o-compromisso">O compromisso</a></div></nav>
+  <main>
+
+    <section id="agentes-capazes-ainda-precisam-de-uma-casa-operacional"><div class="wrap">
+      <p class="eyebrow">01</p>
+      <h2>Agentes capazes ainda precisam de uma casa operacional</h2>
+<p>House Party Protocol é um harness para operar agentes de código sob evidência. O modelo raciocina.
+O harness delimita, observa, registra, verifica e decide quando o trabalho pode avançar.</p>
+<p>Uma resposta convincente não é prova. Uma sessão aberta não é coordenação. Um processo que
+responde não é dado fresco. Um autor revisando o próprio trabalho não é revisão independente. O HPP
+existe para transformar cada uma dessas diferenças num contrato que um comando consegue checar.</p>
+    </div></section>
+
+    <section id="o-protocol"><div class="wrap">
+      <p class="eyebrow">02</p>
+      <h2>O protocol</h2>
+<p>O protocol é o conjunto de invariantes que todo módulo e todo host precisam respeitar:</p>
+<ol>
+<li>Estado declarado não substitui estado medido.</li>
+<li>Maker e checker são atores diferentes, e o checker não tem caneta.</li>
+<li>Conclusão exige um critério, um comando, a saída dele e o frescor dela.</li>
+<li>Trabalho concorrente declara uma lane, um dono e um território.</li>
+<li>Uma wave fecha a própria barreira antes de a próxima abrir.</li>
+<li>Retomada deriva do event log, nunca da memória de uma conversa.</li>
+<li>Um monitor mantém disponibilidade, frescor e correção separados.</li>
+<li>Política distingue um aviso, um bloqueio e um gate humano.</li>
+<li>Capacidade e confiabilidade são medidas separadamente, como <code>pass@k</code> e <code>pass^k</code>.</li>
+<li>Um artefato distribuído é reaberto e verificado antes de ser chamado de release.</li>
+</ol>
+<p>Quatro desses estão escritos em <code>hpp.manifest.json</code> como invariantes checados por máquina: um
+resultado verificado tem evidência registrada e um gate humano explícito; um checker é read-only em
+relação ao workspace do maker (sem ferramenta <code>Write</code> ou <code>Edit</code>; o <code>Bash</code> fica, então a árvore de
+trabalho é comparada antes e depois da revisão); um loop só avança por meio de um evento registrado; uma aprovação é
+inválida assim que a spec, o commit ou o snapshot do repositório a que ela está vinculada mudam. Os
+demais são impostos pelos módulos que os implementam e pelos testes que os forçam a falhar.</p>
+    </div></section>
+
+    <section id="o-harness"><div class="wrap">
+      <p class="eyebrow">03</p>
+      <h2>O harness</h2>
+<p>O harness torna o protocol operável. Ele mantém um manifesto de capacidades, compila uma spec num
+WorkGraph, ordena dependências em waves, projeta mapas de lane e de agente, compila contexto com
+proveniência, acrescenta eventos, deriva a retomada e vincula evidência a um veredito.</p>
+<p>Os módulos fornecem os mecanismos especializados. A distribuição os leva ao Claude Code e ao Codex
+CLI sem fingir que os dois hosts oferecem os mesmos hooks de lifecycle.</p>
+    </div></section>
+
+    <section id="a-ordem-vem-da-spec-não-da-conversa"><div class="wrap">
+      <p class="eyebrow">04</p>
+      <h2>A ordem vem da spec, não da conversa</h2>
+<p>O trabalho entra na casa como uma spec: unidades com um id, as unidades de que dependem, os
+critérios que as decidem e o risco que carregam. O harness a compila, recusa um ciclo com o
+caminho nomeado e devolve waves. Uma dependência que foi discutida mas nunca escrita em
+<code>depends_on</code> não existe para o harness, e nenhuma quantidade de contexto num transcript a faz
+existir.</p>
+<p>Paralelismo é consequência desse grafo, não meta. Unidades sem aresta entre si caem na mesma
+wave; uma unidade espera a última de suas dependências. Ninguém define um número de agentes em
+paralelo, e ninguém é perguntado se duas unidades "podem" rodar juntas: a ausência de aresta já
+respondeu. Rodar tudo de uma vez ignoraria as arestas; rodar por wave não ignora nada e ainda
+roda junto tudo o que pode.</p>
+<p>A barreira é o que torna o progresso legível. Quando uma wave fecha, toda unidade dela cumpriu os
+próprios critérios; uma unidade da wave seguinte que começa cedo constrói sobre uma dependência
+que não passou, e a evidência dela descreve um checkout que pode não sobreviver. "A wave dois
+fechou" é uma frase que um comando consegue checar. "Estamos uns setenta por cento prontos" não é.</p>
+<p>O que isto não promete: o harness não descobre dependências. Ele não lê os arquivos que uma
+unidade vai tocar, não deduz que duas unidades colidem a partir do que elas fazem, e não impede um
+operador de começar uma unidade antes da wave dela. Ele compila as dependências que foram
+declaradas, reporta onde está cada barreira, e deixa o declarar e o honrar com as pessoas e os
+agentes que fazem o trabalho. Uma aresta que falta é um defeito na spec, e a spec é onde ele se
+conserta.</p>
+    </div></section>
+
+    <section id="por-que-isto-não-é-burocracia"><div class="wrap">
+      <p class="eyebrow">05</p>
+      <h2>Por que isto não é burocracia</h2>
+<p>Processo falha em duas direções. Processo que protege torna o custo de um erro visível antes de o
+erro ser cometido. Processo que obstrui faz as pessoas pagarem esse custo a cada passo, tenha ou
+não havido a possibilidade de erro. A diferença não é a quantidade de cerimônia. É se cada passo
+responde a uma pergunta que, de outro modo, seria respondida por adivinhação.</p>
+<p>Todo gate no HPP é uma pergunta com resposta mensurável: o comando do critério saiu com 0; o
+snapshot é o mesmo que o checker viu; esta lane está viva; este sinal é mais fresco que o frescor
+declarado; este comando casa com uma forma destrutiva. Quando a resposta é sim, o gate custa um
+comando e nada mais. Quando a resposta é não, o gate reporta o que foi medido, o que era esperado e
+o que fazer em seguida, e a pessoa decide.</p>
+<p>Três propriedades mantêm os gates do lado que protege. Primeira, um gate nunca pergunta o que
+consegue medir: readiness, liveness, frescor e checksums são computados, não solicitados. Segunda,
+um gate que dispararia sobre trabalho legítimo não é publicado; <code>hpp policy check</code> bloqueia
+<code>rm -rf</code>, <code>rm -fr</code> e <code>rm --recursive --force</code>, e deixa <code>rm file.txt</code>, <code>grep -rf patterns.txt</code> e
+<code>cp -rf a b</code> em paz, porque um guarda que grita com o inocente é desligado antes do dia em que
+estaria certo. Terceira, todo gate é publicado com o teste que o força a falhar, para que um gate
+que parou de guardar em silêncio seja pego pela suíte, e não por um incidente.</p>
+<p>Burocracia é um passo cuja ausência ninguém notaria. Cada passo aqui tem uma falha para a qual foi
+construído, escrita ao lado dele.</p>
+    </div></section>
+
+    <section id="o-que-o-projeto-se-recusa-a-fazer"><div class="wrap">
+      <p class="eyebrow">06</p>
+      <h2>O que o projeto se recusa a fazer</h2>
+<p>Estas são decisões, não lacunas. Cada uma tem uma razão que teria de mudar antes de a decisão
+mudar.</p>
+<ul>
+<li><strong>Sem daemon, sem servidor, sem scheduler.</strong> Uma checagem que não rodou não foi rodada. Um
+processo em segundo plano tornaria "está rodando?" uma segunda pergunta a verificar, e carregaria
+estado que o event log não vê. O pacote <code>hpp</code> não roda nenhum. <em>Uma exceção delimitada, só para
+módulos:</em> um módulo pode servir uma página local que o operador inicia e encerra (o Lane Dashboard
+do lane-kit é o que faz isso), com todas estas condições: escuta só em loopback e responde só à
+própria página; toda ação carrega um token emitido para aquela execução; a página se recusa a ser
+emoldurada; uma requisição que só lê não escreve nada e não inicia nada; toda escrita passa pelas
+ferramentas de linha de comando do próprio módulo, e toda ação também é um comando de terminal que
+faz exatamente o mesmo; nada a agenda, e o que ela roda fica dentro dos limites do item seguinte. A
+página em si não envia nada para fora da máquina.</li>
+<li><strong>Sem chamada a modelo.</strong> O harness roteia trabalho para um tier e um id de provedor que você
+declarou. Ele não escolhe fornecedor, nome de modelo nem preço, e não guarda credencial. No
+momento em que chamasse um modelo, os vereditos dele dependeriam de algo que ele não consegue
+reproduzir. Uma decisão obtida em outro lugar pode ser registrada e medida (<code>hpp decide</code>); o
+adaptador de exemplo que consulta um modelo hospedado mora em <code>examples/</code>, só roda quando uma
+pessoa o roda, e a política o classifica como <code>MANUAL</code>. <em>Uma exceção delimitada, só para módulos:</em>
+essa página pode iniciar uma sessão de agente, e só como uma ação que o operador confirma, nunca a
+partir de uma requisição que só lê, nunca por temporizador e nunca sozinha, com o modelo que o
+operador declarou para ela. Uma sessão que roda em segundo plano roda sob um supervisor com tempo
+limite, botão de parar e log com teto. A sessão é o agente do operador, na conta do próprio
+operador; o pacote <code>hpp</code> continua sem chamar modelo, sem escolher nenhum e sem guardar credencial.</li>
+<li><strong>Sem banco de grafo.</strong> Todo mapa é uma projeção de manifestos, eventos e JSON que você fornece.
+A mesma entrada produz os mesmos nós e arestas, na mesma ordem, e você pode fazer hash do
+resultado. Um grafo armazenado seria uma segunda fonte de verdade que deriva da primeira.</li>
+<li><strong>Sem escrita silenciosa.</strong> <code>hpp init</code> planeja primeiro e escreve um arquivo com <code>--apply</code>. O
+instalador de módulos planeja primeiro e aplica numa segunda invocação explícita. Nenhum dos dois
+toca <code>settings.json</code>, hooks ou <code>AGENTS.md</code>; esse wiring é impresso para uma pessoa colar.</li>
+<li><strong>Nenhuma promessa aceita como evidência.</strong> Uma marca de conclusão num transcript não para um
+loop; o done gate reexecuta os comandos do critério fora do alcance do modelo. Uma saída vazia,
+um maker e um checker idênticos, ou um veredito diferente de <code>approved</code> nunca viram prova.</li>
+<li><strong>Sem paridade de host por afirmação.</strong> O Claude Code executa hooks de lifecycle; o Codex CLI
+não. A cobertura é declarada por módulo como <code>native</code>, <code>explicit-command</code> ou <code>unsupported</code>, e um
+módulo não suportado interrompe o plano em vez de ser instalado como se funcionasse.</li>
+<li><strong>Sem número de manchete.</strong> A contagem de módulos não é uma afirmação de qualidade. Um número
+aparece ao lado do comando que o produziu, ou não aparece.</li>
+<li><strong>Sem telemetria remota.</strong> Nada sai da máquina a menos que uma pessoa rode um comando que envie,
+e esse comando é classificado como <code>MANUAL</code> pela política.</li>
+</ul>
+    </div></section>
+
+    <section id="loops-com-freio-e-memória"><div class="wrap">
+      <p class="eyebrow">07</p>
+      <h2>Loops com freio e memória</h2>
+<p>Um loop útil tem um objetivo, uma observação, uma ação, um orçamento, um gate, uma condição de
+parada e um caminho de escalonamento. Sem eles, repetição é insistência com temporizador.</p>
+<p>O autoprompt preserva continuidade: ele responde "qual é o próximo passo derivável do estado
+registrado?". Os gotchas preservam memória operacional: uma falha que recorre vira uma lição
+injetada antes da próxima tentativa, e é redigida por forma antes de ser armazenada. Os monitores
+preservam consciência do estado. Nenhum dos três concede a um loop o direito de passar do próprio
+orçamento, do próprio território, do próprio gate de evidência ou do gate humano quando há um
+declarado. Parar por orçamento é um fim legítimo, registrado como tal, não uma falha.</p>
+    </div></section>
+
+    <section id="grafos-sem-teatro-de-infraestrutura"><div class="wrap">
+      <p class="eyebrow">08</p>
+      <h2>Grafos sem teatro de infraestrutura</h2>
+<p>O HPP usa grafos como explicação, não como decoração e não como motivo para subir um banco de
+dados. Os mapas de capability, agente, lane, trabalho, execução, evidência, contexto e monitor são
+derivados de arquivos locais. Se uma aresta não muda uma decisão, ela não é desenhada.</p>
+    </div></section>
+
+    <section id="portabilidade-honesta"><div class="wrap">
+      <p class="eyebrow">09</p>
+      <h2>Portabilidade honesta</h2>
+<p>Dois hosts não são uma identidade só. O Claude Code consegue rodar hooks em <code>Stop</code>, <code>PreToolUse</code> e
+<code>SessionStart</code>; o Codex CLI lê <code>AGENTS.md</code> e skills, e roda o resto como comandos explícitos. O
+doctor mostra a diferença. Cobertura ausente é <code>unsupported</code>, nunca "provavelmente funciona".</p>
+    </div></section>
+
+    <section id="prova-antes-de-escala"><div class="wrap">
+      <p class="eyebrow">10</p>
+      <h2>Prova antes de escala</h2>
+<p>O HPP não se chama de confiável por ter muitos componentes. Confiabilidade vem de controles
+negativos, execução repetida, revisão independente e uma cadeia de release verificável. Uma release
+crítica precisa demonstrar o próprio piso, <code>pass^k</code>, não o melhor resultado que já obteve.</p>
+    </div></section>
+
+    <section id="mais-agentes-mais-afirmações"><div class="wrap">
+      <p class="eyebrow">11</p>
+      <h2>Mais agentes, mais afirmações</h2>
+<p>Um time de agentes multiplica o que um agente já faz: afirmar. Cada sessão relata o próprio
+"pronto", um revisor da família de modelo do autor pode carregar os pontos cegos do autor, e um
+painel de uma família só pode concordar pelo mesmo motivo pelo qual erra. Somar agentes soma
+produção; não soma prova. O harness não torna um time mais capaz e não decide quantos agentes rodar.
+Ele submete cada membro aos mesmos contratos: o trabalho se divide só onde a spec não tem aresta, um
+veredito vem de outra lane e de outra família de modelo, uma deliberação guarda a divergência que
+perdeu, e nada chega a <code>verified</code> sem critério, comando, saída e frescor. Mais agentes é motivo para
+mais evidência, não para menos.</p>
+    </div></section>
+
+    <section id="o-compromisso"><div class="wrap">
+      <p class="eyebrow">12</p>
+      <h2>O compromisso</h2>
+<p>Operar agentes sob evidência. Manter maker e checker separados. Expor os limites de cada host.
+Tornar o estado retomável a partir do que foi registrado. Bloquear a conclusão que não passou pelo
+próprio gate.</p>
+<p>Essa é a casa. O protocol são as regras. Os módulos são as ferramentas. Prova é o que abre a
+próxima porta.</p>
+    </div></section>
+
+  </main>
+  <footer><div class="wrap">
+    <p class="five">AGENTS · EVIDENCE · MEMORY · PROTOCOL · CONTINUITY</p>
+    <strong>House Party Protocol</strong>
+    <p>Opere agentes de código sob evidência, não confiança.</p>
+    <p><a href="index.html">Documentação</a> · <a href="MANUAL.pt-BR.html">Manual do harness</a> · <a href="CATALOG.pt-BR.html">Catálogo de módulos</a> · <a href="https://github.com/rusharlabs/house-party-protocol/blob/main/MANIFESTO.pt-BR.md">Fonte em Markdown</a> · <a href="MANIFESTO.html" hreflang="en" lang="en">English</a></p>
+  </div></footer>
+</body>
+</html>

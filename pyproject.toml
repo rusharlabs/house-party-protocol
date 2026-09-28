@@ -6,8 +6,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "house-party-protocol"
-version = "2.9.0"
-description = "A local-first reliability harness for coding agents."
+version = "2.10.0"
+description = "Local-first harness for coding-agent teams: cross-model review and evidence before done."
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
@@ -18,7 +18,8 @@ requires-python = ">=3.10"  # Why: the CI matrix covers 3.10-3.13. The code uses
 dependencies = []
 keywords = [
   "coding-agents", "claude-code", "codex-cli", "harness", "evidence", "attestation",
-  "verification", "guardrails", "pass-at-k", "local-first",
+  "verification", "guardrails", "pass-at-k", "local-first", "agent-harness", "maker-checker",
+  "cross-model", "provider-neutral", "typed-decisions", "multi-agent", "jev", "agent-teams",
 ]
 classifiers = [
   "Development Status :: 4 - Beta",

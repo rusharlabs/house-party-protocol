@@ -1,0 +1,802 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>House Party Protocol — Conceitos</title>
+  <meta name="description" content="O vocabulário: cada termo com uma definição de uma frase, a confusão com que costuma ser trocado e um jeito de verificá-lo na sua máquina.">
+  <link rel="alternate" hreflang="en" href="CONCEPTS.html">
+  <link rel="alternate" hreflang="pt-BR" href="CONCEPTS.pt-BR.html">
+  <style>
+    :root{--hpp-black: #000000;--hpp-ink: #0F1113;--hpp-paper: #F4F1EB;--hpp-signal: #FF6A00;--line:rgba(15,17,19,.18);--surface:rgba(15,17,19,.04);--muted:rgba(15,17,19,.72);--max:1120px}
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;background:var(--hpp-paper);color:var(--hpp-ink);font:16px/1.65 Inter,"Segoe UI",Arial,sans-serif}
+    a{color:var(--hpp-ink);text-decoration:underline;text-decoration-color:var(--hpp-signal);text-decoration-thickness:2px;text-underline-offset:3px}
+    a:hover{color:var(--hpp-signal)}
+    a:focus-visible{outline:4px solid var(--hpp-signal);outline-offset:3px}
+    .wrap{width:min(var(--max),calc(100% - 40px));margin:auto}
+    .lang{background:var(--hpp-black);color:var(--hpp-paper);font-size:.9rem;padding:10px 0}
+    .lang a{color:var(--hpp-paper)}
+    .lang a[aria-current]{text-decoration:none;font-weight:700}
+    .hero{background:var(--hpp-ink);color:var(--hpp-paper);padding:44px 0 50px}
+    .hero img{width:min(720px,100%);display:block}
+    .hero h1{font:800 clamp(2.2rem,6vw,5rem)/.95 Sora,Inter,"Segoe UI",sans-serif;letter-spacing:-.02em;margin:.35em 0}
+    .hero p{max-width:760px;font-size:1.15rem;color:rgba(244,241,235,.82)}
+    .hero .eyebrow{color:var(--hpp-paper);border-color:var(--hpp-signal)}
+    .signal{color:var(--hpp-signal)}
+    .eyebrow,.mono,code,pre,.gate,.label{font-family:"JetBrains Mono","Cascadia Code",Consolas,monospace}
+    .eyebrow{display:inline-block;letter-spacing:.13em;text-transform:uppercase;font-size:.78rem;border-left:4px solid var(--hpp-signal);padding-left:.6em;margin:0 0 .6em}
+    nav{position:sticky;top:0;z-index:2;background:rgba(244,241,235,.96);border-bottom:1px solid var(--line);backdrop-filter:blur(8px)}
+    nav .wrap{display:flex;gap:20px;overflow:auto;padding:12px 0}
+    nav a{white-space:nowrap;text-decoration:none;font-weight:700}
+    nav a:hover{text-decoration:underline;text-decoration-color:var(--hpp-signal)}
+    section{padding:64px 0;border-bottom:1px solid var(--line)}
+    h2{font:800 clamp(1.7rem,3vw,2.6rem)/1.1 Sora,Inter,"Segoe UI",sans-serif;letter-spacing:-.01em;margin:0 0 .6em}
+    h3{margin:0 0 .4em;font-size:1.1rem}
+    .lead{max-width:780px;color:var(--muted)}
+    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:20px}
+    .card{grid-column:span 4;border:1px solid var(--line);border-radius:16px;padding:22px;background:var(--surface)}
+    .card.wide{grid-column:span 6}
+    .card.full{grid-column:1/-1}
+    pre{background:var(--hpp-ink);color:var(--hpp-paper);padding:20px;border-radius:12px;overflow:auto;border-left:6px solid var(--hpp-signal);font-size:.92rem;line-height:1.5}
+    code{font-size:.94em}
+    p code,li code,td code{background:var(--surface);padding:.08em .35em;border-radius:5px}
+    pre code{background:none;padding:0}
+    table{width:100%;border-collapse:collapse;background:var(--surface);margin:1em 0}
+    th,td{text-align:left;padding:12px;border-bottom:1px solid var(--line);vertical-align:top}
+    th{background:rgba(15,17,19,.08);font-weight:700}
+    .gate{display:inline-block;border-radius:999px;padding:.15rem .7rem;font-weight:700;font-size:.8rem;margin-bottom:.6em}
+    .gate.allow{background:var(--hpp-signal);color:var(--hpp-ink)}
+    .gate.manual{border:2px solid var(--hpp-ink);color:var(--hpp-ink)}
+    .gate.block{background:var(--hpp-ink);color:var(--hpp-paper)}
+    .label{font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+    .measured{border-left:4px solid var(--hpp-signal);padding-left:1em;color:var(--muted);font-size:.95rem}
+    ul,ol{padding-left:1.3em}
+    li{margin:.25em 0}
+    footer{padding:48px 0;background:var(--hpp-black);color:var(--hpp-paper)}
+    footer a{color:var(--hpp-paper)}
+    footer .five{letter-spacing:.2em;font-size:.8rem;color:rgba(244,241,235,.72)}
+    @media(max-width:760px){.card,.card.wide{grid-column:1/-1}.wrap{width:min(100% - 32px,var(--max))}th,td{font-size:.88rem;padding:8px}.hero{padding-top:28px}section{padding:44px 0}}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+    h3[id],h4[id],h5[id]{scroll-margin-top:64px}
+    ul.tasks{list-style:none;padding-left:.2em}
+    blockquote{margin:1em 0}
+  </style>
+</head>
+<body>
+  <div class="lang"><div class="wrap"><a href="CONCEPTS.html" hreflang="en" lang="en">English</a> · <a href="CONCEPTS.pt-BR.html" aria-current="page" hreflang="pt-BR">Português</a></div></div>
+  <header class="hero">
+    <div class="wrap">
+      <img src="assets/hpp-logo-header.png" alt="House Party Protocol">
+      <p class="eyebrow">Conceitos · CONCEPTS.pt-BR.md</p>
+      <h1>Conceitos</h1>
+    </div>
+  </header>
+  <nav aria-label="Capítulos"><div class="wrap"><a href="#harness">harness</a><a href="#protocol">protocol</a><a href="#módulo">módulo</a><a href="#host">host</a><a href="#gate">gate</a><a href="#hook-capability">hook capability</a><a href="#evidência">evidência</a><a href="#attestation">attestation</a><a href="#decisão-tipada">decisão tipada</a><a href="#pacote-de-evidência">pacote de evidência</a><a href="#sensibilidade-do-critério">sensibilidade do critério</a><a href="#régua-de-recuperação">régua de recuperação</a><a href="#checagem-de-citação">checagem de citação</a><a href="#seleção-best-of-n">seleção best-of-N</a><a href="#house-session">House Session</a><a href="#maker-e-checker">maker e checker</a><a href="#time-de-agentes">time de agentes</a><a href="#orquestração">orquestração</a><a href="#lane">lane</a><a href="#wave">wave</a><a href="#workgraph">WorkGraph</a><a href="#trabalho-derivado-de-spec">trabalho derivado de spec</a><a href="#citado-e-executado">citado e executado</a><a href="#lente-de-revisão">lente de revisão</a><a href="#execução-por-waves">execução por waves</a><a href="#paralelo-e-sequencial">paralelo e sequencial</a><a href="#ordem-topológica">ordem topológica</a><a href="#barreira">barreira</a><a href="#orçamento-de-contexto">orçamento de contexto</a><a href="#readiness">readiness</a><a href="#monitor">monitor</a><a href="#gotcha">gotcha</a><a href="#passk-e-passk">pass@k e pass^k</a><a href="#política-de-comandos">política de comandos</a><a href="#contrato-de-saída">contrato de saída</a><a href="#plano-e-aplicação">plano e aplicação</a><a href="#controle">controle</a><a href="#event-log">event log</a><a href="#bundle">bundle</a></div></nav>
+  <main>
+
+    <section><div class="wrap">
+<p>O vocabulário do House Party Protocol. Cada termo tem uma definição de uma frase, a confusão com
+que ele costuma ser trocado, e um jeito de verificá-lo na sua máquina. Os comandos rodam a partir
+da raiz do repositório, salvo indicação em contrário.</p>
+    </div></section>
+
+    <section id="harness"><div class="wrap">
+      <p class="eyebrow">01</p>
+      <h2>harness</h2>
+<p><strong>É:</strong> a camada que fica em volta do trabalho de um agente e decide, a partir de estado medido, se
+o trabalho pode avançar.</p>
+<p><strong>Não é:</strong> um agente, um modelo, uma biblioteca de prompts ou um plugin de IDE. O harness nunca
+chama um modelo e nunca edita as configurações do agente.</p>
+<p><strong>Verifique:</strong> <code>python -m hpp --help</code> lista a superfície de operação; <code>python -m hpp --self-test</code>
+a exercita sem tocar num workspace.</p>
+    </div></section>
+
+    <section id="protocol"><div class="wrap">
+      <p class="eyebrow">02</p>
+      <h2>protocol</h2>
+<p><strong>É:</strong> o conjunto de invariantes que todo módulo e todo host precisam respeitar, escrito em
+<code>hpp.manifest.json</code> como papéis, transições do loop com gates nomeados, códigos de saída,
+cobertura por host e monitores.</p>
+<p><strong>Não é:</strong> um protocolo de rede, um formato de prompt ou um guia de estilo. Nada no protocol
+depende de qual modelo está do outro lado.</p>
+<p><strong>Verifique:</strong> <code>python -m hpp doctor</code> rejeita um manifesto cujo <code>protocol_version</code> não seja <code>2.1</code>,
+cujos códigos de saída desviem de <code>0/1/2/3</code>, ou cujos módulos referenciem módulos ou hosts
+desconhecidos. O <code>2.1</code> acrescentou duas chaves obrigatórias no topo, <code>hook_capabilities</code> e
+<code>hooks</code>; um manifesto 2.0 que não declara hook nenhum é recusado, o que é mudança de contrato e
+não acréscimo.</p>
+    </div></section>
+
+    <section id="módulo"><div class="wrap">
+      <p class="eyebrow">03</p>
+      <h2>módulo</h2>
+<p><strong>É:</strong> uma capacidade instalável, versionada de forma independente, com um caminho declarado,
+componentes declarados (skills, hooks, commands, agents, rules, templates, scripts) e cobertura
+declarada por host.</p>
+<p><strong>Não é:</strong> um plugin só no sentido do Claude Code. O mesmo módulo é um plugin no Claude Code e uma
+cópia verificada no Codex CLI. Um módulo também não é dependência de outro por padrão: hoje toda
+lista <code>requires</code> do manifesto está vazia; <code>integrates_with</code> é composição opcional.</p>
+<p><strong>Verifique:</strong> <code>python -m hpp graph --view capability --format json</code> mostra as arestas
+<code>provides</code>, <code>supports:&lt;coverage&gt;</code>, <code>requires</code> e <code>integrates-with</code> por módulo.</p>
+    </div></section>
+
+    <section id="host"><div class="wrap">
+      <p class="eyebrow">04</p>
+      <h2>host</h2>
+<p><strong>É:</strong> o ambiente que executa o agente e consegue executar um módulo: Claude Code ou Codex CLI.</p>
+<p><strong>Não é:</strong> intercambiável. A cobertura é declarada por módulo e por host como <code>native</code> (o host
+dispara a capacidade no próprio lifecycle), <code>explicit-command</code> (a capacidade existe como chamada
+de CLI) ou <code>unsupported</code> (nenhum mecanismo verificado).</p>
+<p><strong>Verifique:</strong> <code>python -m hpp init --target . --host codex --modules claude-dev-kit --json</code> para
+em <code>configure</code>, porque esse módulo é <code>unsupported</code> no Codex CLI.</p>
+<p><strong>Medido em 2026-09-22, Codex CLI 0.153.4:</strong> o host <em>tem</em> superfície nativa de hook —
+<code>codex features list</code> imprime <code>hooks  stable  true</code>, e <code>codex --help</code> traz
+<code>--dangerously-bypass-hook-trust</code> ("run enabled hooks without requiring persisted hook trust"),
+então ligar um é decisão explícita de confiança. Isso <strong>não</strong> promoveu nenhum módulo a <code>native</code>
+no Codex, e o mesmo censo diz por quê: <code>plugin_hooks</code> imprime <code>removed  false</code>, e a string
+<code>codex-hooks.json</code> não aparece no binário instalado (<code>hooks.json</code>, <code>SessionStart</code>, <code>PreToolUse</code>
+e <code>hook_trust</code> aparecem). Um módulo instalado por cópia de arquivo continua, portanto, sem
+conseguir wirar os próprios hooks nesse host; o operador cola no arquivo de hooks do Codex e
+aceita o prompt de confiança. <code>explicit-command</code> segue sendo a cobertura honesta. Dois
+instrumentos foram testados e recusados para esta pergunta porque não discriminam:
+<code>codex features list</code> e <code>codex doctor</code> produzem saída idêntica byte a byte com um <code>hooks.json</code>
+propositalmente malformado em <code>CODEX_HOME</code> e sem nenhum.</p>
+    </div></section>
+
+    <section id="gate"><div class="wrap">
+      <p class="eyebrow">05</p>
+      <h2>gate</h2>
+<p><strong>É:</strong> uma condição nomeada, com resposta mensurável, que um pedaço de trabalho precisa satisfazer
+antes de passar ao próximo estado.</p>
+<p><strong>Não é:</strong> uma caixa de seleção, um comentário de revisão ou uma instrução de prompt. Um gate que
+não pode ser forçado a falhar por um teste é uma hipótese de proteção, não um gate.</p>
+<p><strong>Verifique:</strong> os cinco gates do loop são <code>scope</code>, <code>fresh-evidence</code>, <code>read-only-checker</code>, <code>human</code>
+e <code>closure</code> (<code>python -m hpp graph --view operational --format mermaid</code>). Acrescentar <code>verified</code>
+como primeiro evento é recusado antes de qualquer escrita: <code>python -m hpp event append --type verified</code>
+sai com 2 e não cria <code>.hpp/</code>.</p>
+    </div></section>
+
+    <section id="hook-capability"><div class="wrap">
+      <p class="eyebrow">06</p>
+      <h2>hook capability</h2>
+<p><strong>É:</strong> o que um hook é capaz de fazer, declarado no manifesto antes de você instalá-lo, a partir
+de um vocabulário fechado de seis grupos: <code>automatic-source-writes</code> (escreve arquivos dentro do
+seu projeto por conta própria), <code>command-rewrite-and-process-control</code> (muda o que roda, ou o que
+o modelo recebe antes de rodar), <code>transcript-derived-llm-egress</code> (manda texto derivado do
+transcript para um modelo), <code>mcp-network-and-process-activity</code> (sonda a rede, fala com um servidor
+MCP ou dispara um processo), <code>automatic-permission-gates</code> (pode recusar ou avisar sobre uma
+chamada de ferramenta) e <code>session-observation-and-cost-records</code> (lê estado de sessão e mantém
+registros). Cada hook também declara seus <code>events</code> e um <code>exit_policy</code> de <code>observe</code> (sempre exit 0),
+<code>warn</code> (pode sair 1) ou <code>block</code> (pode sair 2, ou emitir uma decisão que bloqueia).</p>
+<p><strong>Não é:</strong> uma descrição do que o hook <em>serve</em>, e não é opcional. Hook sem declaração é recusado;
+lista <code>capabilities</code> vazia é recusada; módulo que declara o componente <code>hooks</code> e não declara hook
+nenhum é recusado. Ausente nunca se lê como vazio — uma declaração faltando que valesse como "não
+faz nada" seria a permissão mais ampla do manifesto, escrita como silêncio.</p>
+<p><strong>Verifique:</strong> <code>python -m hpp doctor</code> imprime <code>hooks=&lt;n&gt;</code> com as contagens de permission gate e de
+egresso a LLM, e o <code>--json</code> carrega o censo completo por grupo — inclusive os grupos que contam
+zero, para que o zero seja medição e não omissão. <code>python -m hpp init</code> imprime a tabela de
+capacidades dos módulos escolhidos <em>antes</em> dos comandos para colar; escolha um módulo sem hooks e
+a tabela vem vazia, não ausente. Remova o <code>capabilities</code> de um hook no manifesto e o mesmo
+<code>doctor</code> sai 2.</p>
+    </div></section>
+
+    <section id="evidência"><div class="wrap">
+      <p class="eyebrow">07</p>
+      <h2>evidência</h2>
+<p><strong>É:</strong> a saída registrada de um comando que decide um critério, com contexto suficiente para
+reexecutá-lo: o comando, o código de saída ou a saída dele, a versão contra a qual rodou, o escopo
+e quando rodou.</p>
+<p><strong>Não é:</strong> uma frase num transcript, uma captura de tela sem comando, um teste que passou em outro
+checkout, ou um status verde que ninguém re-derivou. Uma promessa não é evidência; uma tag
+<code>&lt;promise&gt;</code> não passa pelo done gate.</p>
+<p><strong>Verifique:</strong> novo na 2.6.0 —
+depois de <code>python -m hpp event append --type work_started</code>,
+<code>python -m hpp evidence run --id smoke-page --artifact out/report.html --record-event -- python examples/evidence/smoke_page.py</code>
+roda o critério, grava o pacote em <code>.hpp/evidence/</code> e acrescenta <code>evidence_recorded</code> só quando ele
+passou; <code>python -m hpp evidence verify &lt;record&gt;</code> re-deriva o pacote a partir do disco. A alternativa
+de nível mais baixo, <code>python -m hpp event append --type evidence_recorded --data '{"work":"ITEM-1","ref":"pytest.txt"}'</code>,
+que as versões anteriores também têm, registra uma referência sem rodar nem hashear nada, depois do mesmo
+<code>work_started</code>. Nos dois casos, o loop não consegue chegar a
+<code>verified</code> sem ao menos um evento desses.</p>
+    </div></section>
+
+    <section id="attestation"><div class="wrap">
+      <p class="eyebrow">08</p>
+      <h2>attestation</h2>
+<p><strong>É:</strong> um registro JSON que vincula o veredito de um checker à identidade do repositório, ao commit
+base, ao hash da spec, ao maker, ao checker, a um id de sessão e a um snapshot sha256 de todo
+arquivo rastreado e não rastreado.</p>
+<p><strong>Não é:</strong> um certificado ou uma prova de que o veredito estava certo. Ela prova que o veredito foi
+dado sobre estes bytes. Ela também não armazena a URL do seu remoto; armazena um hash dela. Por si
+só ela também não é uma assinatura: <code>--sign-key</code> a torna uma (o checker assina o registro com uma
+chave SSH via <code>ssh-keygen -Y sign</code>, namespace <code>hpp</code>), e <code>attest verify --allowed-signers</code> então
+recusa um registro não assinado, assinado por uma chave que o arquivo não lista para aquele signer,
+ou alterado depois de assinado. Sem as flags o relatório diz <code>not-signed</code> ou <code>not-verified</code>, nunca
+<code>verified</code>.</p>
+<p><strong>Verifique:</strong> <code>python -m hpp attest create --repo . --spec SPEC.md --maker maker-a --checker checker-b --session review:001 --verdict approved --output .hpp/attestation.json</code>
+e em seguida <code>python -m hpp attest verify .hpp/attestation.json --repo .</code> devolve <code>valid</code>; altere
+qualquer arquivo e ele devolve <code>blocked</code> com <code>snapshot_digest</code> em <code>mismatches</code>. O controle
+<code>evidence-attestation</code> do benchmark roda exatamente esta sequência.</p>
+    </div></section>
+
+    <section id="decisão-tipada"><div class="wrap">
+      <p class="eyebrow">09</p>
+      <h2>decisão tipada</h2>
+<p><strong>É:</strong> um registro, <code>hpp.decision/v1</code>, de uma pergunta pequena respondida fora do harness — por uma
+regra, uma pessoa, um modelo local ou um modelo hospedado de decisão tipada — que o harness
+consegue checar e medir. A <code>authority</code> dele é sempre <code>advisory</code>. Com <code>direction: raise-only</code> numa
+pergunta ordenada (<code>ladder: true</code>), o valor sobre o qual um consumidor pode agir é o maior entre o
+valor <code>declared</code> e o aconselhado: o conselho pode aumentar a cautela, nunca diminuí-la.
+<code>abstention</code> e <code>instrument-failure</code> são desfechos, não erros, e nenhum dos dois muda um valor
+declarado; um timeout, uma página HTML ou uma resposta malformada é falha de instrumento, nunca
+veredito.</p>
+<p><strong>Não é:</strong> uma chamada de modelo, uma aprovação ou uma nota. O harness não chama modelo por conta
+própria: <code>hpp decide eval</code> roda o decisor que você nomeia como comando (que pode chamar um, com a
+sua chave), ou reexecuta os registros que já estão na suíte. Um registro nunca concede nem aprova
+nada, e uma <code>authority</code> diferente de <code>advisory</code> é recusada. A versão 1 mede só perguntas <code>choice</code>;
+uma nota ou uma probabilidade de sim não tem definição combinada de "correto", então esses tipos
+são recusados em vez de reportados como um 0% vazio. O texto julgado nunca entra no registro, só o
+sha256 dele, e texto que se pareça com segredo é recusado antes de virar hash. Um registro de
+modelo precisa nomear a versão fixada que respondeu (um alias como <code>-latest</code> é recusado) e, salvo
+quando registra uma falha de instrumento, o hash da resposta bruta.</p>
+<p><strong>Verifique:</strong> novo na 2.6.0 —
+<code>python -m hpp decide validate &lt;record.json&gt;</code> imprime <code>"status": "valid"</code> e o valor
+<code>effective</code> (<code>action</code> é <code>raised</code>, <code>kept</code>, <code>advised</code> ou <code>none</code>) e sai com 0; troque <code>authority</code> por
+qualquer coisa diferente de <code>advisory</code> e ele sai com 2. <code>python -m hpp decide eval examples/typed-decisions/gotcha-family-suite.json --decider-command '["python", "examples/typed-decisions/baseline_decider.py"]'</code>
+reporta cobertura, acurácia seletiva, abstenções e falhas de instrumento em separado, e sai com 0
+quando todo limiar se sustenta, 1 quando o gate falha e 2 para uma suíte que quebra o contrato.</p>
+    </div></section>
+
+    <section id="pacote-de-evidência"><div class="wrap">
+      <p class="eyebrow">10</p>
+      <h2>pacote de evidência</h2>
+<p><strong>É:</strong> um registro, <code>hpp.evidence/v1</code>, de uma execução de um comando de critério declarado: o
+argv, o commit base, o código de saída medido fora do modelo, um veredito, a contagem de bytes e o
+sha256 de stdout e stderr (nunca o texto), e o caminho, o tamanho e o sha256 de todo arquivo que
+casa com um glob de artefato que você declarou. O veredito é <code>passed</code> só quando o comando saiu com 0
+e cada padrão declarado casou com um arquivo que esta execução escreveu (um arquivo intocado desde
+antes da execução sai como <code>unchanged</code> e não conta); senão é <code>failed</code>, <code>missing-artifacts</code>, <code>timeout</code> ou
+<code>could-not-start</code>. O <code>run</code> sai com 0 quando o pacote passou, 1 quando não passou, e 2 quando foi
+recusado ou o <code>--record-event</code> não conseguiu acrescentar o evento.</p>
+<p><strong>Não é:</strong> um controlador de navegador, uma chamada de modelo nem uma assinatura. O hpp não dirige
+navegador e não chama modelo: ele roda o comando que você nomeia (uma spec ponta a ponta, uma suíte
+de testes, qualquer script) com <code>shell=False</code>. O registro carrega um hash de si mesmo, o que torna
+uma edição visível e não prova nada sobre quem o escreveu — quem consegue escrever o arquivo
+consegue reescrever o hash. Por isso o <code>verify</code> sozinho é reconciliação, e um checker que não pode
+confiar no maker reexecuta o <code>command</code> em vez disso — ou pede uma assinatura: <code>run --sign-key CHAVE --signer NOME</code> assina o registro com uma chave SSH, e <code>verify --allowed-signers ARQUIVO</code> recusa um
+registro não assinado, assinado por alguém que o arquivo não lista, ou alterado depois de assinado,
+por mais consistente que o hash tenha sido recalculado. O <code>run</code> escreve o registro e o que o comando escrever;
+um checker somente leitura aponta o <code>--out</code> para um diretório de rascunho próprio dentro do
+workspace, ou reexecuta na própria lane. Uma linha de comando que pareça carregar um segredo, e um
+caminho de artefato ou de <code>--out</code> fora do workspace, são recusados antes de qualquer coisa rodar.</p>
+<p><strong>Verifique:</strong> novo na 2.6.0 —
+<code>python -m hpp evidence run --id smoke-page --artifact out/report.html --artifact out/smoke.log -- python examples/evidence/smoke_page.py</code>
+imprime <code>passed</code> e sai com 0, e <code>python -m hpp evidence verify &lt;record&gt;</code>, sobre o <code>record_path</code> que
+ele imprimiu, imprime <code>valid</code> e sai com 0. A mesma execução com <code>--break</code> depois do script escreve os dois
+arquivos e ainda assim sai com 1 e <code>failed</code>; o registro dela verifica como <code>not-evidence</code> (saída
+1). Altere <code>out/report.html</code> depois de uma execução que passou e o <code>verify</code> sai com 2 e <code>blocked</code>.</p>
+    </div></section>
+
+    <section id="sensibilidade-do-critério"><div class="wrap">
+      <p class="eyebrow">11</p>
+      <h2>sensibilidade do critério</h2>
+<p><strong>É:</strong> uma medição de se um critério perceberia código quebrado. <code>hpp evidence mutate</code> roda o
+comando do critério numa cópia do workspace, primeiro limpa — tem de passar, senão o veredito é
+<code>no-control</code> e nada mais roda — depois uma vez por mutante, uma cópia com uma pequena mudança que
+deixa o código errado, onde ele tem de falhar. Os mutantes são declarados (<code>hpp.mutants/v1</code>:
+arquivo, find, replace) ou gerados a partir dos tokens Python com uma tabela fixa de operadores. Um
+mutante que o critério deixa passar é um ponto cego, nomeado por arquivo e linha em <code>survivors</code>.</p>
+<p><strong>Não é:</strong> cobertura, nem prova de que um mutante sobrevivente é bug. O score é mortos ÷ (mortos +
+sobreviventes), null quando nada foi medido; um mutante cujo texto não está no arquivo é
+<code>not-applied</code>, nunca morto. Um mutante sobrevivente pode ser equivalente — uma mudança que não muda
+o comportamento — e só um leitor sabe dizer. O hpp nunca escreve na árvore do usuário: cada execução
+ganha uma cópia nova, e um arquivo de mutante alcançado por symlink é recusado. O comando roda
+dentro da cópia, então os caminhos dele precisam ser relativos; um install editável ou um
+<code>PYTHONPATH</code> apontando para o checkout faz todo mutante sobreviver.</p>
+<p><strong>Verifique:</strong> novo na 2.7.0 —
+<code>python -m hpp evidence mutate --id weak --generate examples/criterion-sensitivity/discount.py -- python examples/criterion-sensitivity/check_weak.py</code>
+relata <code>blind-spots</code> com três sobreviventes e sai com 1; o mesmo com <code>check_strong.py</code> relata
+<code>sensitive</code> e sai com 0.</p>
+    </div></section>
+
+    <section id="régua-de-recuperação"><div class="wrap">
+      <p class="eyebrow">12</p>
+      <h2>régua de recuperação</h2>
+<p><strong>É:</strong> uma medição de um recuperador que você declara, separada de qualquer etapa de geração. O
+recuperador é um comando que lê <code>{"query", "k"}</code> como JSON no stdin e imprime ids ranqueados; a
+régua pontua o top k de cada resposta contra os ids que uma suíte rotulada
+(<code>hpp.retrieval-suite/v1</code>) marca como relevantes, e reporta hit@k, recall@k, precision@k, MRR e
+nDCG@k. A ordem impressa é o ranking; um <code>score</code> é conferido, nunca usado para reordenar.</p>
+<p><strong>Não é:</strong> um índice, um mecanismo de busca nem um juiz da resposta final. O harness não roda
+índice e não chama modelo; sem <code>--retriever-command</code> a régua reexecuta os resultados gravados na
+suíte. Um recuperador que responde e não acha nada relevante marca um 0 de verdade. Um timeout, uma
+saída diferente de zero, uma saída que não é JSON ou um id duplicado é falha de instrumento:
+contada à parte e excluída das médias. Sem nenhum caso medido as métricas são nulas e o gate diz
+por quê, nunca 0%.</p>
+<p><strong>Verifique:</strong> novo na 2.6.0 —
+<code>python -m hpp retrieval eval examples/retrieval/suite.json --retriever-command '["python", "examples/retrieval/keyword_retriever.py"]'</code>
+mede sete casos com zero falhas de instrumento e sai com 1: o recall@3 médio do baseline por
+palavra-chave é 0.786, abaixo do <code>--min-recall 0.8</code> padrão, então a suíte que vem junto prova a
+régua, não um recuperador. Com <code>--retriever-command '["python", "-c", "import sys; sys.exit(3)"]'</code>
+a mesma suíte reporta sete falhas de instrumento e métricas nulas, e sai com 1. A saída é 0 quando
+o gate passa, 1 quando falha e 2 para uma suíte ou um argumento recusado.</p>
+    </div></section>
+
+    <section id="checagem-de-citação"><div class="wrap">
+      <p class="eyebrow">13</p>
+      <h2>checagem de citação</h2>
+<p><strong>É:</strong> uma checagem determinística, <code>hpp.citation-check/v1</code>, dos marcadores de citação de um texto
+contra os ids do contexto a partir do qual o texto foi escrito. Um marcador é <code>[ID:&lt;id&gt;]</code>, salvo
+quando <code>--marker</code> dá uma regex com um grupo de captura para o id. Um marcador que nomeia um id
+ausente do contexto (<code>UNKNOWN_ID</code>), um intervalo ou lista dentro de um marcador (<code>RANGE</code>) e um
+marcador vazio (<code>EMPTY_MARKER</code>) bloqueiam com saída 2; mais de <code>--max-per-sentence</code> marcadores numa
+frase (<code>TOO_MANY</code>, padrão 4) e uma frase que afirma um número, percentual, valor ou data sem
+marcador (<code>UNCITED_CLAIM</code>) avisam com saída 1. Um texto limpo sai com 0.</p>
+<p><strong>Não é:</strong> uma checagem de fatos. Ela nunca lê uma fonte citada para ver se ela sustenta a frase:
+um marcador que resolve prova que o id existe, não que a fonte diga o que a frase diz. A divisão em
+frases e a detecção de números são heurísticas, descritas por inteiro em <code>hpp/citations.py</code>, e os
+erros conhecidos delas são avisos, nunca bloqueios. Contexto que o texto nunca cita é reportado
+como contagem, não como achado. Texto vazio, texto ou contexto com cara de segredo e uma regex de
+marcador inutilizável são recusados com saída 2.</p>
+<p><strong>Verifique:</strong> novo na 2.6.0 —
+<code>python -m hpp cite check --text examples/citations/answer.md --context examples/citations/context.json</code>
+imprime o veredito <code>ok</code> e sai com 0. Numa cópia de <code>answer.md</code> com <code>[ID:glossary]</code> trocado por
+<code>[ID:glossary-v2]</code> ela sai com 2 e <code>UNKNOWN_ID</code>; com <code>[ID:runbook-7]</code> removido no lugar disso, sai
+com 1 e <code>UNCITED_CLAIM</code>.</p>
+    </div></section>
+
+    <section id="seleção-best-of-n"><div class="wrap">
+      <p class="eyebrow">14</p>
+      <h2>seleção best-of-N</h2>
+<p><strong>É:</strong> N lanes constroem cada uma a própria tentativa de uma tarefa, e um revisor fica com uma. No
+módulo de lane, <code>lane_board.py compete --task T --items A,B[,C...]</code> declara os candidatos, cada um
+construído por uma lane diferente; <code>lane_board.py select --task T --winner A</code> registra o vencedor,
+depois que todo candidato está <code>CHECKPOINT-READY</code> com evidência ou <code>VERIFIED</code>, e só um revisor cuja
+lane difere de toda lane construtora e cuja família de modelo difere da família de todo construtor
+pode escrevê-lo. Os perdedores viram <code>NOT-SELECTED</code>, um estado terminal do qual nenhuma transição
+sai.</p>
+<p><strong>Não é:</strong> uma verificação, e não é uma medida de confiabilidade. Escolher 1 entre N é pass@N: uma
+tentativa entre N foi boa o bastante, o que não diz nada sobre o vencedor passar em toda execução.
+O vencedor mantém o próprio estado, ainda precisa do <code>VERIFIED</code> de sempre antes de <code>MERGED</code>, e o
+critério dele ainda precisa de pass^k. Um candidato não pode ir a <code>MERGED</code> enquanto a tarefa não
+tem vencedor, e <code>select --checker-unavailable</code> registra <code>DEFERRED</code>, nunca um vencedor.</p>
+<p><strong>Verifique:</strong> novo na 2.6.0 —
+numa competição declarada com <code>compete</code> cujos candidatos estão <code>CHECKPOINT-READY</code>,
+<code>lane_board.py select</code> por um revisor da mesma família de modelo de um construtor sai com 1 e
+"SAME model family"; um revisor de outra lane e de outra família sai com 0, e mover o item perdedor
+para qualquer estado depois disso sai com 1. <code>lane_board.py --self-test</code> roda toda recusa de
+<code>compete</code> e de <code>select</code> ao lado do seu controle.</p>
+    </div></section>
+
+    <section id="house-session"><div class="wrap">
+      <p class="eyebrow">15</p>
+      <h2>House Session</h2>
+<p><strong>É:</strong> uma deliberação entre decisores pinados, registrada para poder ser verificada e medida.
+<code>hpp.panel/v1</code> nomeia a pergunta, o hash do estado julgado, cada assento
+(<code>{id, role, provider, model_served, family, lane}</code>) e o orçamento (<code>max_rounds</code>, <code>max_chars</code>).
+Um painel não começa sem duas famílias de modelo entre os participantes, exatamente um juiz numa
+lane que nenhum participante usa, e os papéis que o <code>session_type</code> exige (<code>plan</code>, <code>review</code>,
+<code>release-gate</code>, <code>incident</code>, <code>design</code>). Cada <code>hpp.turn/v1</code> carrega a posição de um assento, as
+afirmações com os ids em que se apoiam, o hash do texto verbatim e <code>seen_turns</code>: um turno da
+rodada 1 que viu qualquer coisa é recusado, então a rodada cega é verificável. A sessão para por
+regra (<code>not-judged</code>, <code>grounded-convergence</code>, <code>paused-budget</code>, <code>no-new-evidence</code>, <code>max-rounds</code>), e
+<code>hpp.deliberation/v2</code> sela o painel, os turnos, a contagem, a parada, o <code>hpp.decision/v1</code> do
+juiz, o veredito, a dissidência que perdeu e o rationale do assento do juiz — um steelman de cada
+posição dissidente e o que mudaria o veredito, exigido quando uma dissidência fundamentada fica de
+pé; <code>human_decision</code> fica fora do selo. Um painel pode declarar <code>evidence.ids</code>: aí um <code>fact</code> só
+fundamenta por uma referência que resolve, e a que não resolve é <code>unsupported</code>.</p>
+<p><strong>Não é:</strong> uma chamada de modelo, um voto que substitui uma pessoa, nem prova de que um painel
+vence um agente sozinho. Os assentos e o juiz respondem fora do harness. Um assento que não
+respondeu <strong>não é julgado</strong> — nunca é voto contra — e bloqueia o veredito. Uma posição é
+fundamentada quando o turno afirma um <code>fact</code> cuja referência resolve contra a evidência declarada
+(ou, sem nenhuma declarada, qualquer referência — o registro diz <code>not-declared</code>); um id resolvido
+prova que a fonte existe, não que ela sustenta a afirmação. O painel não publica confiança que não mediu. O selo não é assinatura: <code>verify</code> prova que tudo o
+que é derivado bate com os turnos e o registro do juiz que o arquivo guarda, e esses só são
+ancorados pelos hashes do texto verbatim e da resposta bruta guardados ao lado. A sessão termina na
+primeira rodada em que uma regra vale; turnos de rodadas posteriores são recusados. Se um painel vale o custo é
+medido com <code>hpp decide eval</code>, que lê o painel como um decisor só (<code>method: panel</code>), não afirmado
+aqui.</p>
+<p><strong>Verifique:</strong> novo na 2.7.0, rationale novo na 2.8.0 —
+<code>python -m hpp deliberate record --panel examples/house-session/review/panel.json --turns examples/house-session/review/turns.json --judge examples/house-session/review/judge.json --rationale examples/house-session/review/rationale.json --out out/record.json</code>
+sela a revisão com <code>stop</code> <code>max-rounds</code>, <code>escalate: true</code>, o veredito <code>high</code> e o assento <code>c</code>
+mantido como dissidência, exit 0; <code>python -m hpp deliberate verify out/record.json</code> sai com 0, e
+numa cópia com o veredito editado sai com 2. Um painel com assento servido por <code>-latest</code>, ou com
+participantes de uma família só, sai com 2 em <code>deliberate plan</code>.</p>
+    </div></section>
+
+    <section id="maker-e-checker"><div class="wrap">
+      <p class="eyebrow">16</p>
+      <h2>maker e checker</h2>
+<p><strong>É:</strong> dois papéis. O maker produz a mudança. O checker a revisa e reporta acertos e defeitos com
+severidade, arquivo e linha, sem ferramentas de edição de arquivo: o host impõe a ausência de
+<code>Write</code> e <code>Edit</code>. O <code>Bash</code> continua disponível, e um shell altera o que alcançar, então somente
+leitura é uma promessa, verificada comparando a árvore de trabalho antes e depois da revisão — o
+<code>git status --porcelain</code> capturado dos dois lados precisa bater, e um checker que alterou a árvore
+invalida os próprios achados.</p>
+<p><strong>Não é:</strong> dois turnos do mesmo agente, nem o mesmo agente com outro nome. A attestation recusa um
+maker e um checker cujos nomes coincidam ignorando caixa. Os agentes checker dos módulos declaram
+conjuntos de ferramentas sem <code>Write</code> nem <code>Edit</code>.</p>
+<p><strong>Verifique:</strong> <code>python -m hpp attest create ... --maker a --checker A ...</code> sai com 2 e "maker and
+checker must be different non-empty actors". No módulo de lane,
+<code>checker_router.py --maker claude --require</code> escolhe um checker de outro provedor e sai com 2
+quando nenhum está disponível.</p>
+    </div></section>
+
+    <section id="time-de-agentes"><div class="wrap">
+      <p class="eyebrow">17</p>
+      <h2>time de agentes</h2>
+<p><strong>É:</strong> duas ou mais sessões ou subagents trabalhando no mesmo repositório, cada um na sua lane, com o
+trabalho dividido por uma spec compilada e vereditos vindos de outra lane e de outra família de modelo.</p>
+<p><strong>Não é:</strong> algo que o harness roda. O pacote <code>hpp</code> não inicia agente, não agenda nada e não chama
+modelo; o time é o que os seus hosts rodam, e o lane-kit só inicia uma sessão por ação do operador
+(uma ação confirmada no Lane Dashboard, ou os assentos de um <code>/deliberate</code> chamado). Também não é
+promessa de segurança em paralelo: o WorkGraph não olha caminhos; o Lane Map olha.</p>
+<p><strong>Verifique:</strong> <code>python -m hpp work waves examples/reliable-coding/workgraph.json</code> põe <code>build</code> e <code>docs</code>
+juntos na wave 2; <code>python -m hpp deliberate plan examples/house-session/review/panel.json</code> imprime um
+painel de quatro assentos de quatro famílias com o juiz em <code>lane-judge</code>; no módulo de lanes,
+<code>lane_board.py --self-test</code> roda cada recusa ao lado do seu controle.</p>
+    </div></section>
+
+    <section id="orquestração"><div class="wrap">
+      <p class="eyebrow">18</p>
+      <h2>orquestração</h2>
+<p><strong>É:</strong> o que decide qual agente trabalha em quê, e quando: um agente líder distribuindo subagents, um
+script que reparte o trabalho entre agentes, um job de CI, ou uma pessoa com vários terminais. O HPP
+fica abaixo disso: o orquestrador decide quem trabalha em quê; o HPP decide o que conta como pronto.</p>
+<p><strong>Não é:</strong> algo que o HPP faz. O pacote <code>hpp</code> não inicia agente, não agenda nada e não chama modelo;
+ele planeja uma ordem (uma spec compila em waves) e não a executa. O lane-kit só inicia uma sessão
+por ação do operador: uma ação confirmada no Lane Dashboard, ou os assentos de um <code>/deliberate</code>
+chamado.</p>
+<p><strong>Verifique:</strong> uma recusa é um código de saída diferente de zero, então um orquestrador pode usá-la
+como portão: <code>python -m hpp attest create ... --maker a --checker a ...</code> sai com 2; <code>python -m hpp findings check</code> sobre um registro com uma chave que o contrato não define sai com 2; <code>python -m hpp evidence verify</code> sobre um registro que não existe sai com 2.</p>
+    </div></section>
+
+    <section id="lane"><div class="wrap">
+      <p class="eyebrow">19</p>
+      <h2>lane</h2>
+<p><strong>É:</strong> a reivindicação de uma sessão concorrente sobre um território: um id, uma lista de
+caminhos, uma flag de exclusividade e um heartbeat.</p>
+<p><strong>Não é:</strong> uma branch, um worktree ou um arquivo de lock. A autoridade de uma lane expira: com
+<code>--now</code>, um heartbeat mais velho que <code>--suspect-after</code> a torna <code>suspect</code>, mais velho que
+<code>--dead-after</code> a torna <code>dead</code>, e uma lane morta nunca produz colisão. Um heartbeat no futuro é um
+erro, não liveness.</p>
+<p><strong>Verifique:</strong> <code>python -m hpp map lane examples/reliable-coding/lanes.json --now 1000 --suspect-after 60 --dead-after 300</code>
+reporta liveness por lane e uma lista <code>collisions</code> vazia; o controle <code>lane-collision</code> do benchmark
+acrescenta uma lane viva sobreposta e uma morta, e confere que só o par vivo colide.</p>
+    </div></section>
+
+    <section id="wave"><div class="wrap">
+      <p class="eyebrow">20</p>
+      <h2>wave</h2>
+<p><strong>É:</strong> um conjunto de unidades de trabalho sem dependência entre si, liberadas juntas, cuja
+barreira fecha antes de a próxima wave abrir.</p>
+<p><strong>Não é:</strong> um tamanho de lote, um número de agentes em paralelo ou um sprint. Paralelismo é
+consequência do grafo de dependências, não um parâmetro.</p>
+<p><strong>Verifique:</strong> <code>python -m hpp work waves examples/reliable-coding/workgraph.json</code> produz
+<code>spec</code> → <code>build, docs</code> → <code>verify</code>.</p>
+    </div></section>
+
+    <section id="workgraph"><div class="wrap">
+      <p class="eyebrow">21</p>
+      <h2>WorkGraph</h2>
+<p><strong>É:</strong> a forma compilada de uma spec: unidades de trabalho com <code>id</code>, <code>depends_on</code>, critérios de
+<code>acceptance</code> não vazios e um <code>tier</code>, ordenadas em waves.</p>
+<p><strong>Não é:</strong> um executor. Ele não agenda nada e não lança nada. Um ciclo é um erro de compilação com
+o caminho do ciclo na mensagem, nunca uma wave vazia.</p>
+<p><strong>Verifique:</strong> <code>python -m hpp work plan examples/reliable-coding/workgraph.json</code> imprime unidades,
+arestas, waves e contagens por tier; o controle <code>workgraph-waves</code> do benchmark o alimenta com
+<code>a -&gt; b -&gt; a</code> e espera um erro.</p>
+    </div></section>
+
+    <section id="trabalho-derivado-de-spec"><div class="wrap">
+      <p class="eyebrow">22</p>
+      <h2>trabalho derivado de spec</h2>
+<p><strong>É:</strong> trabalho que deriva de uma especificação declarada: um objeto JSON cuja lista <code>work</code>
+nomeia cada unidade com um <code>id</code>, o próprio <code>depends_on</code>, critérios de <code>acceptance</code> não vazios e
+um <code>tier</code>. A spec é a entrada; a ordem, as waves e as arestas são saídas de compilá-la.</p>
+<p><strong>Não é:</strong> uma cascata, e não é "escrever documento antes de codar". A spec é pequena o bastante
+para ser recompilada toda vez que muda, e compilá-la custa um comando. Também não é uma conversa:
+uma dependência combinada no chat mas não escrita em <code>depends_on</code> não existe para o harness.</p>
+<p><strong>Verifique:</strong> <code>python -m hpp work plan examples/reliable-coding/workgraph.json</code> imprime a forma
+compilada; remova uma lista <code>acceptance</code> e o mesmo comando sai com 2 e "needs non-empty
+acceptance criteria"; nomeie uma dependência que não é unidade e ele sai com 2 e "unknown
+dependency".</p>
+    </div></section>
+
+    <section id="citado-e-executado"><div class="wrap">
+      <p class="eyebrow">23</p>
+      <h2>citado e executado</h2>
+<p><strong>É:</strong> a diferença entre um teste que nomeia um critério de aceite e um teste que o rodou. Um
+teste cita um critério com <code>[spec: capability/scenario]</code> na sua docstring; o <code>hpp work coverage</code>
+liga cada critério de uma spec aos testes que o citam (<code>hpp.spec-coverage/v1</code>). Dado o relatório
+JUnit XML da execução, ele junta cada teste que cita aos casos que o runner executou e separa os
+critérios em <code>executed</code>, <code>failed</code>, <code>cited_not_run</code>, <code>orphans</code> e <code>unknown</code>
+(<code>hpp.spec-execution/v1</code>); <code>complete</code> só vale quando todo critério foi executado.</p>
+<p><strong>Não é:</strong> um runner de testes, e não é prova de que um teste que passa confere o que o seu
+critério diz — isso é o que o <code>hpp evidence mutate</code> mede. Um teste pulado, um teste desmarcado e
+uma docstring de módulo ou de classe citam um critério sem rodá-lo, e nenhum deles conta. Um caso
+do relatório é ligado pela convenção do pytest (módulo pontuado mais cadeia de classes em
+<code>classname</code>, função mais <code>[parâmetros]</code> em <code>name</code>); o <code>matched_testcases</code> publica quantos casos
+foram ligados, para que um relatório que descreve outra execução apareça como zero, e não como se
+nada tivesse rodado.</p>
+<p><strong>Verifique:</strong> novo na 2.8.0 — <code>python -m hpp work coverage examples/cited-and-run/workgraph.json --tests examples/cited-and-run/check_prices.py</code>
+informa todo critério coberto e sai com 0; depois de
+<code>python -m pytest examples/cited-and-run/check_prices.py -q -p no:cacheprovider --junitxml out/cited-and-run.xml</code>,
+o mesmo comando com <code>--junit out/cited-and-run.xml</code> informa <code>bulk-discount</code> como <code>cited_not_run</code>
+(o seu teste foi pulado) e sai com 1.</p>
+    </div></section>
+
+    <section id="lente-de-revisão"><div class="wrap">
+      <p class="eyebrow">24</p>
+      <h2>lente de revisão</h2>
+<p><strong>É:</strong> um revisor somente-leitura que olha uma mudança atrás de um tipo de defeito — lacuna de
+verificação, conjunto parcial, deleção com leitores sobrando, evidência velha — e responde com um
+documento <code>hpp.findings/v1</code>: cada achado tem um <code>code</code> estável, uma <code>severity</code>, um <code>file</code> e uma
+<code>line</code>, a <code>claim</code> e a <code>evidence</code> em que se apoia, e o documento declara o que <code>inspected</code>. O
+<code>hpp findings check</code> segura a forma e deriva o veredito (<code>fail</code>, <code>warn</code> ou <code>pass</code>).</p>
+<p><strong>Não é:</strong> prova de que a revisão está certa. A checagem lê a resposta, nunca a mudança. Ela
+recusa o que torna uma revisão ilegível: uma chave que o contrato não define (o documento
+inteiro), um <code>inspected</code> vazio (não achar nada e não olhar nada se leem igual), um achado sem
+evidência, o mesmo achado duas vezes. As quatro lentes vêm como sub-agentes do módulo operator;
+elas viram os assentos de um painel de revisão.</p>
+<p><strong>Verifique:</strong> novo na 2.8.0 — <code>python -m hpp findings check examples/review-lenses/deletion-clean.json examples/review-lenses/partial-set.json</code>
+informa <code>pass</code> para o primeiro documento e <code>warn</code> para o segundo, com um <code>CALLER_NOT_UPDATED</code>, e
+sai com 1; <code>python -m hpp findings check examples/review-lenses/deletion-clean.json</code> sozinho sai com 0.</p>
+    </div></section>
+
+    <section id="execução-por-waves"><div class="wrap">
+      <p class="eyebrow">25</p>
+      <h2>execução por waves</h2>
+<p><strong>É:</strong> avançar por wave em vez de por tarefa: toda unidade de uma wave pode começar quando a wave
+abre, e a wave seguinte só abre depois que toda unidade da atual fechou.</p>
+<p><strong>Não é:</strong> uma fila de tarefas pegas em qualquer ordem, e não é uma promessa que o harness impõe
+sozinho. <code>hpp work waves</code> calcula onde está cada barreira; nada em <code>python -m hpp</code> impede um
+operador de começar cedo uma unidade da wave 2. Honrar a barreira é contrato do operador, e os
+eventos do loop não nomeiam wave nenhuma.</p>
+<p><strong>Verifique:</strong> <code>python -m hpp work waves examples/reliable-coding/workgraph.json</code> devolve <code>waves</code>
+com um <code>index</code> por wave e as unidades que pertencem a ela; <code>verify</code> aparece só na wave 3, depois
+de <code>build</code> e <code>docs</code>.</p>
+    </div></section>
+
+    <section id="paralelo-e-sequencial"><div class="wrap">
+      <p class="eyebrow">26</p>
+      <h2>paralelo e sequencial</h2>
+<p><strong>É:</strong> uma consequência do grafo de dependências, não uma escolha. Duas unidades sem caminho entre
+si, cujas dependências já fecharam, caem na mesma wave; uma unidade cai na wave seguinte à da
+mais tardia de suas dependências. Ninguém decide que <code>build</code> e <code>docs</code> podem rodar juntas; a
+ausência de aresta entre elas decide.</p>
+<p><strong>Não é:</strong> "rodar tudo em paralelo". Rodar tudo de uma vez ignora as arestas; rodar por wave não
+ignora nada. Também não é uma afirmação de segurança sobre arquivos: duas unidades na mesma wave
+ainda podem escrever os mesmos caminhos, e o WorkGraph não olha caminhos. Essa pergunta é
+respondida pelo Lane Map, cuja colisão é duas lanes vivas e exclusivas cujos territórios são
+iguais ou aninhados.</p>
+<p><strong>Verifique:</strong> <code>python -m hpp work waves examples/reliable-coding/workgraph.json</code> coloca <code>build</code> e
+<code>docs</code> juntas na wave 2 (as duas dependem só de <code>spec</code>); <code>python -m hpp map lane examples/reliable-coding/lanes.json --now 1000</code>
+reporta <code>collisions: []</code> para duas lanes em caminhos disjuntos.</p>
+    </div></section>
+
+    <section id="ordem-topológica"><div class="wrap">
+      <p class="eyebrow">27</p>
+      <h2>ordem topológica</h2>
+<p><strong>É:</strong> a ordem em que as unidades são liberadas, derivada das arestas: uma unidade nunca é liberada
+antes de toda unidade de que depende. Dentro de uma wave a ordem é alfabética por <code>id</code>, então a
+mesma spec produz a mesma saída em toda máquina.</p>
+<p><strong>Não é:</strong> uma lista de prioridade, e não é a ordem em que as unidades foram escritas na spec. A
+pessoa declara arestas; o grafo decide a ordem; nem a pessoa nem o agente escolhem a sequência à
+mão. Um ciclo é uma spec que se contradiz: <code>a</code> precisa terminar antes de <code>c</code>, <code>c</code> antes de <code>b</code>,
+<code>b</code> antes de <code>a</code>, e nenhuma ordem satisfaz as três. O compilador a recusa e nomeia o caminho;
+ele nunca quebra o ciclo por você.</p>
+<p><strong>Verifique:</strong> uma spec com <code>a -&gt; c -&gt; b -&gt; a</code> faz <code>python -m hpp work waves SPEC.json</code> sair com 2
+e <code>dependency cycle: a -&gt; c -&gt; b -&gt; a</code>; uma unidade que depende de si mesma sai com 2 e
+<code>dependency cycle: a -&gt; a</code>. O controle <code>workgraph-waves</code> do benchmark roda o caso de duas unidades.</p>
+    </div></section>
+
+    <section id="barreira"><div class="wrap">
+      <p class="eyebrow">28</p>
+      <h2>barreira</h2>
+<p><strong>É:</strong> a fronteira entre duas waves: o ponto em que toda unidade da wave atual cumpriu os próprios
+critérios de aceite e a wave seguinte pode abrir.</p>
+<p><strong>Não é:</strong> uma reunião de checkpoint nem uma atualização de status. Uma unidade da wave <code>n+1</code>
+depende, diretamente ou por meio de outras unidades, de algo de uma wave anterior; começá-la antes
+de a barreira fechar é construir sobre uma dependência cujos critérios não passaram. Se essa
+dependência então muda, a evidência da unidade adiantada descreve um checkout que não existe mais,
+e "a wave <code>n</code> fechou" deixa de ser uma frase com significado mensurável.</p>
+<p><strong>Verifique:</strong> <code>python -m hpp work waves examples/reliable-coding/workgraph.json</code> mostra três waves;
+a barreira é a fronteira entre índices consecutivos. O harness a calcula e a reporta, e não a
+impõe: não há wave nos eventos do loop, só <code>work_started</code> até <code>verified</code>
+(<code>python -m hpp graph --view operational --format mermaid</code>).</p>
+    </div></section>
+
+    <section id="orçamento-de-contexto"><div class="wrap">
+      <p class="eyebrow">29</p>
+      <h2>orçamento de contexto</h2>
+<p><strong>É:</strong> um limite em caracteres sob o qual o compilador de contexto encaixa blocos de entrada
+inteiros, do de maior prioridade para o de menor, registrando para cada bloco a fonte, o tamanho e
+o sha256, e listando o que ficou de fora.</p>
+<p><strong>Não é:</strong> uma contagem de tokens, um sumarizador ou um sistema de recuperação. Um bloco que não
+cabe é omitido por inteiro, nunca fatiado. Conteúdo que se parece com segredo (uma atribuição de
+chave de API, um cabeçalho PEM, um prefixo de chave no estilo de provedor) é recusado, não
+redigido.</p>
+<p><strong>Verifique:</strong> <code>python -m hpp context compile examples/reliable-coding/context.json --budget 160</code>
+reporta <code>used</code> e <code>remaining</code> em caracteres, com o separador entre blocos cobrado do orçamento.</p>
+    </div></section>
+
+    <section id="readiness"><div class="wrap">
+      <p class="eyebrow">30</p>
+      <h2>readiness</h2>
+<p><strong>É:</strong> a contagem das checagens que o <code>hpp init</code> de fato rodou e o resultado delas, cada uma com o
+comando que a reproduz: <code>verified</code>, <code>failed</code> ou <code>not-verified</code>.</p>
+<p><strong>Não é:</strong> um percentual de conclusão ou uma estimativa. Uma checagem que não rodou é reportada
+como não verificada, nunca como zero e nunca como cem.</p>
+<p><strong>Verifique:</strong> <code>python -m hpp init --target &lt;dir&gt; --json</code> devolve <code>readiness.items</code> com onze
+entradas. A partir de um clone deste repositório, a integridade da distribuição e os checksums dos
+módulos são <code>verified</code>, porque o <code>marketplace.json</code> e o <code>CHECKSUMS.txt</code> de cada módulo ficam ao
+lado do manifesto; a partir de uma instalação por pip, que não carrega nenhum dos dois, os mesmos
+dois itens são <code>not-verified</code>.</p>
+    </div></section>
+
+    <section id="monitor"><div class="wrap">
+      <p class="eyebrow">31</p>
+      <h2>monitor</h2>
+<p><strong>É:</strong> um contrato de observação declarado: um alvo, um tipo de sonda, uma cadência, uma janela de
+frescor, uma severidade, um custo e o gate que o consome.</p>
+<p><strong>Não é:</strong> um processo em execução. O Monitor Map projeta o <code>last_signal</code> que você fornece contra
+o <code>--now</code> que você fornece. E um monitor saudável não é um resultado correto. Três perguntas
+permanecem separadas:</p>
+<table>
+<thead><tr><th>pergunta</th><th>o que a responde</th></tr></thead>
+<tbody>
+<tr><td>o serviço está no ar?</td><td>a sonda respondeu dentro da cadência</td></tr>
+<tr><td>o dado está fresco?</td><td><code>now - last_signal &lt;= freshness</code>, e <code>last_signal</code> não está no futuro além de <code>--skew-tolerance</code></td></tr>
+<tr><td>o resultado está correto?</td><td>um comando de critério, registrado como evidência; nenhum monitor responde isso</td></tr>
+</tbody>
+</table>
+<p>Um sinal carimbado no futuro é <code>skew</code>, não <code>healthy</code>; um sinal ausente é <code>unknown</code>, não <code>stale</code>.</p>
+<p><strong>Verifique:</strong> <code>python -m hpp map monitor examples/reliable-coding/monitors.json --now 1000</code> mostra
+uma sonda de serviço <code>healthy</code> ao lado de uma sonda de dado <code>stale</code> na mesma projeção.</p>
+    </div></section>
+
+    <section id="gotcha"><div class="wrap">
+      <p class="eyebrow">32</p>
+      <h2>gotcha</h2>
+<p><strong>É:</strong> uma lição derivada de uma falha de comando que recorreu, armazenada por família de erro e
+injetada como preâmbulo antes da próxima execução do mesmo tipo de tarefa.</p>
+<p><strong>Não é:</strong> uma regra permanente criada a partir de um incidente, e não é um registro de segredos.
+A promoção de falha a gotcha exige recorrência dentro de uma janela; saída ambígua não conta como
+falha; toda entrada armazenada é redigida por forma (chaves privadas, credenciais em URLs, tokens
+bearer, JWTs, blobs de alta entropia) antes de ser escrita. Os hooks são warn-only e nunca
+bloqueiam.</p>
+<p><strong>Verifique:</strong> num módulo <code>gotcha-memory</code> instalado, a skill <code>gotcha-memory</code> lista, semeia e
+inspeciona o store; os hooks saem com 0 em todos os casos.</p>
+    </div></section>
+
+    <section id="passk-e-passk"><div class="wrap">
+      <p class="eyebrow">33</p>
+      <h2>pass@k e pass^k</h2>
+<p><strong>É:</strong> duas métricas sobre <code>k</code> execuções do mesmo caso. <code>pass@k</code> é verdadeiro quando ao menos uma
+execução passou e mede capacidade. <code>pass^k</code> é verdadeiro quando toda execução passou e mede
+confiabilidade. A diferença entre os dois é a taxa de flake.</p>
+<p><strong>Não é:</strong> intercambiável, e não é um benchmark de modelo. Um gate de capacidade exige
+<code>pass@k &gt;= 0.90</code>; um gate de regressão exige <code>pass^k == 1.00</code>; <code>--gate both</code> exige os dois.</p>
+<p><strong>Verifique:</strong> <code>python -m hpp eval run examples/reliable-coding/benchmark-suite.json -k 3 --gate both</code>
+imprime as duas métricas e o gate; saída 0 quando passa, 1 quando falha.</p>
+    </div></section>
+
+    <section id="política-de-comandos"><div class="wrap">
+      <p class="eyebrow">34</p>
+      <h2>política de comandos</h2>
+<p><strong>É:</strong> um classificador que lê um comando como texto e devolve um de três vereditos, <code>ALLOW</code>,
+<code>MANUAL</code> ou <code>BLOCK</code>, com a regra que casou, o motivo dela e a sua <code>source</code>. As regras embutidas são
+fixas em <code>hpp/policy.py</code>; um projeto acrescenta as suas em <code>.hpp/policy.json</code> (<code>hpp.policy/v1</code>, ou
+<code>--policy ARQUIVO</code>): regras próprias que ganham <code>BLOCK</code> ou <code>MANUAL</code>, e regras <code>MANUAL</code> embutidas
+elevadas a <code>BLOCK</code>. A primeira que casa vence, e toda regra <code>BLOCK</code> é testada antes de qualquer
+regra <code>MANUAL</code>, seja qual for a origem.</p>
+<table>
+<thead><tr><th>veredito</th><th>regra</th><th>casa com</th></tr></thead>
+<tbody>
+<tr><td><code>BLOCK</code></td><td><code>recursive-delete</code></td><td><code>rm</code> com uma opção recursiva e uma de força em qualquer grafia (<code>-rf</code>, <code>-fr</code>, <code>-r -f</code>, <code>--recursive --force</code>), ou <code>rmdir /s</code></td></tr>
+<tr><td><code>BLOCK</code></td><td><code>force-push</code></td><td><code>git push</code> com <code>--force</code> ou <code>-f</code></td></tr>
+<tr><td><code>BLOCK</code></td><td><code>main-push</code></td><td><code>git push</code> que nomeia <code>main</code> ou <code>master</code></td></tr>
+<tr><td><code>BLOCK</code></td><td><code>pipe-to-shell</code></td><td><code>curl</code> ou <code>wget</code> canalizado para um shell (<code>sh</code>, <code>bash</code>, <code>zsh</code>, <code>dash</code>, <code>ksh</code>), com ou sem <code>sudo</code></td></tr>
+<tr><td><code>BLOCK</code></td><td><code>destructive-sql</code></td><td><code>DROP</code> ou <code>TRUNCATE</code> seguido de <code>TABLE</code> ou <code>DATABASE</code></td></tr>
+<tr><td><code>MANUAL</code></td><td><code>external-push</code></td><td>qualquer outro <code>git push</code></td></tr>
+<tr><td><code>MANUAL</code></td><td><code>external-send</code></td><td><code>curl</code> ou <code>wget</code> cuja palavra seguinte é uma URL <code>http://</code> ou <code>https://</code></td></tr>
+<tr><td><code>MANUAL</code></td><td><code>decision-advisor</code></td><td>um comando que nomeia <code>typed-decisions/decide.py</code> — novo na 2.6.0</td></tr>
+</tbody>
+</table>
+<p>Qualquer outra coisa é <code>ALLOW</code> (regra <code>allow</code>), e um comando vazio é <code>ALLOW</code> (regra <code>empty</code>).</p>
+<p><strong>Não é:</strong> uma sandbox, um parser de shell nem uma afirmação de que um comando é seguro. Ele nunca
+roda o comando, e <code>ALLOW</code> quer dizer que nenhuma regra casou: uma transferência feita por qualquer outra
+ferramenta (<code>scp</code>, <code>rsync</code>, uma linha de Python) não casa regra nenhuma e é <code>ALLOW</code>. O modo muda só o código de saída, nunca o veredito: em
+<code>audit</code> todo veredito sai com 0; em <code>enforce</code>, <code>BLOCK</code> sai com 2 e <code>MANUAL</code> sai com 1. Se um
+veredito para alguma coisa depende de quem o chama — um hook no Claude Code, um comando de
+preflight no Codex CLI. Também não é algo que um arquivo de política possa afrouxar: uma regra com
+ação <code>ALLOW</code>, uma elevação que mantém ou baixa a classe, ou uma regra que reutiliza um id embutido
+recusa o arquivo inteiro, e um arquivo recusado recusa a checagem (saída 2) em vez de recair nas
+regras embutidas.</p>
+<p><strong>Verifique:</strong> <code>python -m hpp policy check --mode enforce --command "rm -rf src"</code> imprime <code>BLOCK</code>
+com a regra <code>recursive-delete</code> e sai com 2; <code>--command "git push origin feature"</code> imprime <code>MANUAL</code>
+(regra <code>external-push</code>) e sai com 1; <code>--command "python -m pytest -q"</code> imprime <code>ALLOW</code> e sai com 0;
+os mesmos três com <code>--mode audit</code> imprimem os mesmos vereditos e saem com 0.</p>
+    </div></section>
+
+    <section id="contrato-de-saída"><div class="wrap">
+      <p class="eyebrow">35</p>
+      <h2>contrato de saída</h2>
+<p><strong>É:</strong> quatro códigos de saída de processo com significado fixo em todo o harness e em todo
+módulo: <code>0</code> ok, <code>1</code> warn ou gate manual, <code>2</code> block, <code>3</code> erro de uso ou interno.</p>
+<p><strong>Não é:</strong> uma sugestão. O manifesto é rejeitado se declarar qualquer outra coisa. No modo
+<code>enforce</code>, <code>BLOCK</code> sai com 2 e <code>MANUAL</code> sai com 1; no modo <code>audit</code> o veredito é impresso e a saída
+é sempre 0.</p>
+<p><strong>Verifique:</strong> <code>python -m hpp policy check --mode enforce --command "rm -rf src"</code> sai com 2;
+<code>--command "git push origin feature"</code> sai com 1; <code>--mode audit</code> com qualquer um dos dois sai com 0.</p>
+    </div></section>
+
+    <section id="plano-e-aplicação"><div class="wrap">
+      <p class="eyebrow">36</p>
+      <h2>plano e aplicação</h2>
+<p><strong>É:</strong> o contrato de duas invocações para qualquer coisa que escreve: a primeira execução imprime o
+que aconteceria e sai com 0 sem escrever; uma segunda execução com <code>--apply</code> executa.</p>
+<p><strong>Não é:</strong> um prompt de confirmação. Nada no harness bloqueia em <code>input()</code>; o "sim" é a
+reinvocação, que é auditável e funciona quando o operador é um agente.</p>
+<p><strong>Verifique:</strong> <code>python -m hpp init --target &lt;empty-dir&gt;</code> deixa o diretório vazio (<code>find &lt;dir&gt; -type f | wc -l</code> é 0);
+o mesmo comando com <code>--apply</code> escreve exatamente <code>.hpp/profile.json</code>. O wiring de settings e hooks
+é impresso nos dois casos e escrito em nenhum.</p>
+    </div></section>
+
+    <section id="controle"><div class="wrap">
+      <p class="eyebrow">37</p>
+      <h2>controle</h2>
+<p><strong>É:</strong> um caso sabidamente bom e um caso sabidamente ruim passados pelo mesmo instrumento, de modo
+que o instrumento demonstre distingui-los antes de o veredito dele ser confiado.</p>
+<p><strong>Não é:</strong> um teste que só exercita o caminho feliz. Um gate que passa com entrada boa e nunca foi
+visto falhar com entrada ruim não se distingue de um gate ausente.</p>
+<p><strong>Verifique:</strong> todo caso em <code>examples/reliable-coding/benchmark-suite.json</code> é um controle nas duas
+direções: <code>policy-enforcement</code> confere que <code>python -m pytest -q</code> é <code>ALLOW</code> e <code>rm -rf src</code> é
+<code>BLOCK</code>; <code>event-evidence-gate</code> confere que uma sequência válida chega a <code>verified</code> e que um
+<code>verified</code> solto é recusado sem criar o log. Cada arquivo de teste em <code>tests/</code> carrega ao menos um
+teste chamado <code>CONTROLE</code> que prova que o arquivo sabe falhar.</p>
+    </div></section>
+
+    <section id="event-log"><div class="wrap">
+      <p class="eyebrow">38</p>
+      <h2>event log</h2>
+<p><strong>É:</strong> um arquivo JSON-lines append-only em <code>.hpp/events.jsonl</code> no workspace, em que cada linha
+carrega um <code>seq</code> contíguo, um <code>id</code> na forma <code>event:&lt;seq&gt;</code>, um <code>type</code>, um objeto <code>data</code> e um
+<code>prev_sha256</code>: o sha256 da linha anterior, a primeira apontando para o hash do vazio.</p>
+<p><strong>Não é:</strong> um histórico de chat, e não é algo que o harness vá reparar. Uma linha cujo <code>seq</code> não é
+contíguo ou cujo <code>id</code> não bate é um log corrompido, e a projeção para em vez de adivinhar. Uma linha
+cujo <code>prev_sha256</code> não bate com a linha anterior é uma cadeia quebrada: o <code>status</code> a recusa e o
+<code>event verify</code> nomeia o primeiro passo divergente. Um log escrito antes da cadeia não carrega elos;
+ele lê como antes e verifica como <code>legacy</code>. A cadeia sozinha não vê uma edição da sua última linha:
+a cauda só é ancorada por uma cópia do <code>head_sha256</code> da cadeia guardada fora dessa linha — o próximo
+append, que o carrega como seu <code>prev_sha256</code>, ou uma cópia que você guarda em outro lugar. Uma
+attestation não registra o <code>head_sha256</code>; o snapshot dela só vincula o log quando o
+<code>.hpp/events.jsonl</code> não é ignorado pelo git, e o repositório publicado ignora <code>.hpp/</code>. Um evento
+cuja transição não é permitida a partir do estado atual é recusado antes da escrita.</p>
+<p><strong>Verifique:</strong> <code>python -m hpp status --json</code> mostra o estado, a contagem, o histórico e o resumo da
+cadeia; <code>python -m hpp event verify</code> reporta <code>intact</code>, <code>legacy</code>, <code>broken</code> (com <code>first_divergent</code>)
+ou <code>empty</code>; <code>python -m hpp resume</code> devolve o próximo passo derivado do mesmo log.</p>
+    </div></section>
+
+    <section id="bundle"><div class="wrap">
+      <p class="eyebrow">39</p>
+      <h2>bundle</h2>
+<p><strong>É:</strong> um conjunto nomeado de módulos recomendado para um objetivo, com as capacidades que ele deve
+fornecer.</p>
+<p><strong>Não é:</strong> uma dependência. <code>reliable-coding</code> nomeia seis módulos; instalar um deles sozinho é
+válido.</p>
+<p><strong>Verifique:</strong> <code>python -m hpp install --bundle reliable-coding --host codex --target &lt;dir&gt;</code> imprime
+um recibo só de plano listando cada módulo e o modo de integração dele nesse host.</p>
+    </div></section>
+
+  </main>
+  <footer><div class="wrap">
+    <p class="five">AGENTS · EVIDENCE · MEMORY · PROTOCOL · CONTINUITY</p>
+    <strong>House Party Protocol</strong>
+    <p>Opere agentes de código sob evidência, não confiança.</p>
+    <p><a href="index.html">Documentação</a> · <a href="MANUAL.pt-BR.html">Manual do harness</a> · <a href="CATALOG.pt-BR.html">Catálogo de módulos</a> · <a href="https://github.com/rusharlabs/house-party-protocol/blob/main/docs/CONCEPTS.pt-BR.md">Fonte em Markdown</a> · <a href="CONCEPTS.html" hreflang="en" lang="en">English</a></p>
+  </div></footer>
+</body>
+</html>

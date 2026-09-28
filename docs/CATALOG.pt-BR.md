@@ -11,17 +11,17 @@ Documentos válidos para todos os kits: [`ARCHITECTURE.md`](ARCHITECTURE.md) · 
 
 | kit | versão | skills | commands | agents | hooks | rules | templates | scripts |
 |---|---|---:|---:|---:|---:|---:|---:|---:|
-| [kit-forge](#kit-forge) | 1.4.2 | 0 | 0 | 0 | 1 | 0 | 0 | 0 |
-| [operator-kit](#operator-kit) | 1.7.0 | 13 | 2 | 6 | 10 | 13 | 1 | 17 |
-| [continuity-kit](#continuity-kit) | 1.4.1 | 2 | 0 | 0 | 3 | 0 | 12 | 2 |
-| [lane-kit](#lane-kit) | 1.6.0 | 2 | 1 | 0 | 4 | 0 | 4 | 5 |
-| [health-kit](#health-kit) | 1.3.3 | 2 | 0 | 0 | 1 | 0 | 0 | 3 |
-| [claude-dev-kit](#claude-dev-kit) | 1.3.3 | 8 | 0 | 0 | 1 | 0 | 0 | 2 |
-| [supabase-pack](#supabase-pack) | 1.1.2 | 2 | 0 | 0 | 0 | 0 | 0 | 0 |
-| [agent-framework-wizard](#agent-framework-wizard) | 1.2.1 | 1 | 0 | 0 | 0 | 0 | 5 | 0 |
-| [dev-squad-kit](#dev-squad-kit) | 1.1.1 | 3 | 12 | 12 | 0 | 0 | 0 | 0 |
-| [gotcha-memory](#gotcha-memory) | 1.0.3 | 1 | 0 | 0 | 3 | 0 | 0 | 0 |
-| **total** | | **34** | **15** | **18** | **23** | **13** | **22** | **29** |
+| [kit-forge](#kit-forge) | 1.5.0 | 0 | 0 | 0 | 1 | 0 | 0 | 0 |
+| [operator-kit](#operator-kit) | 1.8.0 | 13 | 4 | 6 | 10 | 13 | 1 | 17 |
+| [continuity-kit](#continuity-kit) | 1.5.0 | 2 | 0 | 0 | 3 | 0 | 12 | 2 |
+| [lane-kit](#lane-kit) | 1.7.0 | 2 | 1 | 0 | 4 | 0 | 4 | 6 |
+| [health-kit](#health-kit) | 1.4.0 | 2 | 0 | 0 | 1 | 0 | 0 | 3 |
+| [claude-dev-kit](#claude-dev-kit) | 1.3.4 | 8 | 0 | 0 | 1 | 0 | 0 | 2 |
+| [supabase-pack](#supabase-pack) | 1.2.0 | 2 | 0 | 0 | 0 | 0 | 0 | 0 |
+| [agent-framework-wizard](#agent-framework-wizard) | 1.2.2 | 1 | 0 | 0 | 0 | 0 | 5 | 0 |
+| [dev-squad-kit](#dev-squad-kit) | 1.2.0 | 3 | 12 | 12 | 0 | 0 | 0 | 0 |
+| [gotcha-memory](#gotcha-memory) | 1.1.0 | 1 | 0 | 0 | 3 | 0 | 0 | 0 |
+| **total** | | **34** | **17** | **18** | **23** | **13** | **22** | **30** |
 
 ## kit-forge
 
@@ -49,13 +49,13 @@ Módulo operacional do harness: gates executáveis, loops governados, pass@k/pas
 | `gate-sheet-collector` | Drains everything that depends on the human into ONE form (exact command + what-it-unblocks), without ever blocking the loop |
 | `gated-improvement-proposal` | Every self-edit of the harness (rule/CLAUDE.md/prompt/hook) becomes a PROPOSAL that passes a gate before being applied — never a sensitive auto-merge |
 | `live-source-prover` | Before citing ANY number/status/metric, re-derives it at the live source and labels it "live @ HH:MM + source" — never repeats stale data |
+| `loop-driver` | Turns the agent into an autonomous lead engineer — reads charter+work-list, executes until exhausted, self-prompts, stops at the stop-conditions |
 | `parallel-dispatch` | Fires independent tasks in waves with a concurrency ceiling + sequential fallback on rate limit |
 | `pre-clear-boot-block` | Before a /clear, emits the DONE / MISSING / read-in-this-order block so the fresh session resumes with zero loss |
-| `ralph-loop-driver` | Turns the agent into an autonomous lead engineer — reads charter+work-list, executes until exhausted, self-prompts, stops at the stop-conditions |
 | `rls-audit` | Really audits the RLS of a Supabase project — pg_policies per permissive anon policy + get_advisors, not just the relrowsecurity flag |
 | `supabase-edge-scaffold` | Scaffolds a Supabase Edge Function with correct CORS + service-role + error handling, instead of copying boilerplate by hand |
 
-**Commands** — `/cancel-ralph-gate` · `/ralph-gate`
+**Commands** — `/cancel-loop-gate` · `/cancel-ralph-gate` · `/loop-gate` · `/ralph-gate`
 
 **Agents** — `lens-deletion` · `lens-partial-set` · `lens-stale-evidence` · `lens-verification-gap` · `refutador` · `silent-failure-hunter`
 
@@ -71,7 +71,7 @@ Módulo operacional do harness: gates executáveis, loops governados, pass@k/pas
 | PreToolUse · `Edit|Write|MultiEdit|NotebookEdit` | `project_root_confirm.py` |
 | PreToolUse · `Edit|Write|MultiEdit|NotebookEdit` | `fact_force_gate.py` |
 | UserPromptSubmit · `*` | `rule_capture.py` |
-| Stop · `*` | `ralph_gate.py` |
+| Stop · `*` | `loop_gate.py` |
 | Stop · `*` | `autoprompt_resume.py` |
 
 **Rules** — `agent-cognition` · `agent-integrity` · `epistemic-standards` · `gateguard` · `learned-corrections` · `loop-cost-budget` · `loop-maker-checker` · `loop-operator` · `loop-passk` · `loop-patterns-catalog` · `no-secrets-in-memory` · `partial-autonomy-slider` · `stale-replay-guard`
@@ -107,7 +107,7 @@ Handoff-v1.1: uma sessao sobrevive a parada/clear/crash sem perder o proximo pas
 
 ## lane-kit
 
-N sessoes sem colisao. Lane board, maker!=checker cross-model, lock por diretorio, git-guard e territory-guard. O checker_router detecta Codex, Cursor e Gemini e escolhe um provider diferente do maker. Best-of-N: compete/select registram qual de N tentativas concorrentes venceu. House Session: /deliberate e house_session.py sentam um painel de duas familias de modelo e recusam o turno de um assento que escreveu; select --deliberation decide uma competicao com uma sessao selada.
+N sessoes sem colisao. Lane board, maker!=checker cross-model, lock por diretorio, git-guard e territory-guard. O checker_router detecta Codex, Cursor e Gemini e escolhe um provider diferente do maker. Best-of-N: compete/select registram qual de N tentativas concorrentes venceu. House Session: /deliberate e house_session.py sentam um painel de duas familias de modelo e recusam o turno de um assento que escreveu; select --deliberation decide uma competicao com uma sessao selada. Lane Dashboard: uma pagina local sobre o quadro, as lanes e o mailbox em que toda acao tambem e um comando de terminal; release-fix, start-review e approve sao os hand-offs do operador.
 
 **Skills**
 
@@ -129,7 +129,7 @@ N sessoes sem colisao. Lane board, maker!=checker cross-model, lock por diretori
 
 **Templates** — `lane-registry.example.json` · `lanes.example.yaml` · `REORIENT-MAILBOX.template.md` · `status-stakeholder.template.html`
 
-**Scripts** — `checker_router.py` · `house_session.py` · `lane_board.py` · `lane_effects.py` · `lane_rescue.py`
+**Scripts** — `checker_router.py` · `house_session.py` · `lane_board.py` · `lane_dashboard.py` · `lane_effects.py` · `lane_rescue.py`
 
 ## health-kit
 

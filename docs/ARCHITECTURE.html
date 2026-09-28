@@ -1,0 +1,380 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>House Party Protocol — Architecture</title>
+  <meta name="description" content="How the pieces fit together, where state lives, and what deliberately does not exist.">
+  <link rel="alternate" hreflang="en" href="ARCHITECTURE.html">
+  <link rel="alternate" hreflang="pt-BR" href="ARCHITECTURE.pt-BR.html">
+  <style>
+    :root{--hpp-black: #000000;--hpp-ink: #0F1113;--hpp-paper: #F4F1EB;--hpp-signal: #FF6A00;--line:rgba(15,17,19,.18);--surface:rgba(15,17,19,.04);--muted:rgba(15,17,19,.72);--max:1120px}
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;background:var(--hpp-paper);color:var(--hpp-ink);font:16px/1.65 Inter,"Segoe UI",Arial,sans-serif}
+    a{color:var(--hpp-ink);text-decoration:underline;text-decoration-color:var(--hpp-signal);text-decoration-thickness:2px;text-underline-offset:3px}
+    a:hover{color:var(--hpp-signal)}
+    a:focus-visible{outline:4px solid var(--hpp-signal);outline-offset:3px}
+    .wrap{width:min(var(--max),calc(100% - 40px));margin:auto}
+    .lang{background:var(--hpp-black);color:var(--hpp-paper);font-size:.9rem;padding:10px 0}
+    .lang a{color:var(--hpp-paper)}
+    .lang a[aria-current]{text-decoration:none;font-weight:700}
+    .hero{background:var(--hpp-ink);color:var(--hpp-paper);padding:44px 0 50px}
+    .hero img{width:min(720px,100%);display:block}
+    .hero h1{font:800 clamp(2.2rem,6vw,5rem)/.95 Sora,Inter,"Segoe UI",sans-serif;letter-spacing:-.02em;margin:.35em 0}
+    .hero p{max-width:760px;font-size:1.15rem;color:rgba(244,241,235,.82)}
+    .hero .eyebrow{color:var(--hpp-paper);border-color:var(--hpp-signal)}
+    .signal{color:var(--hpp-signal)}
+    .eyebrow,.mono,code,pre,.gate,.label{font-family:"JetBrains Mono","Cascadia Code",Consolas,monospace}
+    .eyebrow{display:inline-block;letter-spacing:.13em;text-transform:uppercase;font-size:.78rem;border-left:4px solid var(--hpp-signal);padding-left:.6em;margin:0 0 .6em}
+    nav{position:sticky;top:0;z-index:2;background:rgba(244,241,235,.96);border-bottom:1px solid var(--line);backdrop-filter:blur(8px)}
+    nav .wrap{display:flex;gap:20px;overflow:auto;padding:12px 0}
+    nav a{white-space:nowrap;text-decoration:none;font-weight:700}
+    nav a:hover{text-decoration:underline;text-decoration-color:var(--hpp-signal)}
+    section{padding:64px 0;border-bottom:1px solid var(--line)}
+    h2{font:800 clamp(1.7rem,3vw,2.6rem)/1.1 Sora,Inter,"Segoe UI",sans-serif;letter-spacing:-.01em;margin:0 0 .6em}
+    h3{margin:0 0 .4em;font-size:1.1rem}
+    .lead{max-width:780px;color:var(--muted)}
+    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:20px}
+    .card{grid-column:span 4;border:1px solid var(--line);border-radius:16px;padding:22px;background:var(--surface)}
+    .card.wide{grid-column:span 6}
+    .card.full{grid-column:1/-1}
+    pre{background:var(--hpp-ink);color:var(--hpp-paper);padding:20px;border-radius:12px;overflow:auto;border-left:6px solid var(--hpp-signal);font-size:.92rem;line-height:1.5}
+    code{font-size:.94em}
+    p code,li code,td code{background:var(--surface);padding:.08em .35em;border-radius:5px}
+    pre code{background:none;padding:0}
+    table{width:100%;border-collapse:collapse;background:var(--surface);margin:1em 0}
+    th,td{text-align:left;padding:12px;border-bottom:1px solid var(--line);vertical-align:top}
+    th{background:rgba(15,17,19,.08);font-weight:700}
+    .gate{display:inline-block;border-radius:999px;padding:.15rem .7rem;font-weight:700;font-size:.8rem;margin-bottom:.6em}
+    .gate.allow{background:var(--hpp-signal);color:var(--hpp-ink)}
+    .gate.manual{border:2px solid var(--hpp-ink);color:var(--hpp-ink)}
+    .gate.block{background:var(--hpp-ink);color:var(--hpp-paper)}
+    .label{font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+    .measured{border-left:4px solid var(--hpp-signal);padding-left:1em;color:var(--muted);font-size:.95rem}
+    ul,ol{padding-left:1.3em}
+    li{margin:.25em 0}
+    footer{padding:48px 0;background:var(--hpp-black);color:var(--hpp-paper)}
+    footer a{color:var(--hpp-paper)}
+    footer .five{letter-spacing:.2em;font-size:.8rem;color:rgba(244,241,235,.72)}
+    @media(max-width:760px){.card,.card.wide{grid-column:1/-1}.wrap{width:min(100% - 32px,var(--max))}th,td{font-size:.88rem;padding:8px}.hero{padding-top:28px}section{padding:44px 0}}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+    h3[id],h4[id],h5[id]{scroll-margin-top:64px}
+    ul.tasks{list-style:none;padding-left:.2em}
+    blockquote{margin:1em 0}
+  </style>
+</head>
+<body>
+  <div class="lang"><div class="wrap"><a href="ARCHITECTURE.html" aria-current="page" hreflang="en">English</a> · <a href="ARCHITECTURE.pt-BR.html" hreflang="pt-BR" lang="pt-BR">Português</a></div></div>
+  <header class="hero">
+    <div class="wrap">
+      <img src="assets/hpp-logo-header.png" alt="House Party Protocol">
+      <p class="eyebrow">Architecture · ARCHITECTURE.md</p>
+      <h1>Architecture</h1>
+    </div>
+  </header>
+  <nav aria-label="Chapters"><div class="wrap"><a href="#four-layers">Four layers</a><a href="#the-hpp-package">The <code>hpp/</code> package</a><a href="#the-flow">The flow</a><a href="#where-state-lives">Where state lives</a><a href="#the-manifest-as-executable-contract">The manifest as executable contract</a><a href="#maps">Maps</a><a href="#two-hosts">Two hosts</a><a href="#distribution">Distribution</a><a href="#exit-contract">Exit contract</a><a href="#tests-and-ci">Tests and CI</a><a href="#what-deliberately-does-not-exist">What deliberately does not exist</a></div></nav>
+  <main>
+
+    <section><div class="wrap">
+<p>How the pieces of House Party Protocol fit together, where state lives, and what deliberately
+does not exist.</p>
+    </div></section>
+
+    <section id="four-layers"><div class="wrap">
+      <p class="eyebrow">01</p>
+      <h2>Four layers</h2>
+<pre><code class="language-text">┌──────────────────────────────────────────────────────────────────────────┐
+│ HARNESS       python -m hpp                                              │
+│               doctor · init · event · status · resume · attest · policy  │
+│               work · route · context · map · graph · eval · benchmark    │
+│               decide · evidence · retrieval · cite (new in 2.6.0)        │
+│               deliberate (new in 2.7.0)                                  │
+├──────────────────────────────────────────────────────────────────────────┤
+│ PROTOCOL      hpp.manifest.json                                          │
+│               roles · loop transitions and gates · exit codes            │
+│               host coverage · monitors · bundles · invariants            │
+├──────────────────────────────────────────────────────────────────────────┤
+│ MODULES       ten versioned directories, each installable on its own     │
+│               skills · hooks · commands · agents · rules · scripts       │
+├──────────────────────────────────────────────────────────────────────────┤
+│ DISTRIBUTION  Claude Code: marketplace.json + plugin per module          │
+│               Codex CLI:   verified copy into .agents/ by the installer  │
+└──────────────────────────────────────────────────────────────────────────┘</code></pre>
+<p>The harness is stdlib-only and executes no model. It reads files, runs the commands you name,
+and writes to a small number of declared paths. <code>decide</code>, <code>evidence</code>, <code>retrieval</code> and <code>cite</code> are
+new in 2.6.0; <code>deliberate</code> is new in 2.7.0.</p>
+    </div></section>
+
+    <section id="the-hpp-package"><div class="wrap">
+      <p class="eyebrow">02</p>
+      <h2>The <code>hpp/</code> package</h2>
+<table>
+<thead><tr><th>file</th><th>responsibility</th><th>surface</th></tr></thead>
+<tbody>
+<tr><td><code>cli.py</code></td><td>argument parsing, dispatch, the exit contract (<code>2</code> for a refused input, <code>3</code> for an internal error)</td><td>every subcommand, <code>--self-test</code></td></tr>
+<tr><td><code>manifest.py</code></td><td>locate, load and validate the manifest; cross-check <code>marketplace.json</code> and each module's <code>plugin.json</code> when present, and the Codex marketplace (<code>.agents/plugins/marketplace.json</code>) with each listed module's <code>.codex-plugin/plugin.json</code></td><td><code>doctor</code></td></tr>
+<tr><td><code>state.py</code></td><td>append-only, hash-chained event log (each line links to the sha256 of the one before it; a broken link names its first divergent step, a log written before the chain reads as <code>legacy</code>); projection of events onto the loop; refusal of invalid transitions before the write</td><td><code>event append</code>, <code>event verify</code>, <code>status</code>, <code>resume</code></td></tr>
+<tr><td><code>workgraph.py</code></td><td>validate a spec, reject cycles with the path named, order units into waves; link each acceptance criterion to the tests that cite it and, with a JUnit XML report, to the tests that ran it</td><td><code>work plan</code>, <code>work waves</code>, <code>work coverage</code></td></tr>
+<tr><td><code>findings.py</code></td><td>check the <code>hpp.findings/v1</code> document a review lens answers with (stable code, severity, file and line, evidence, the universe inspected), refuse a key the contract does not define, and derive the verdict</td><td><code>findings check</code> (new in 2.8.0)</td></tr>
+<tr><td><code>policy.py</code></td><td>classify a command as <code>ALLOW</code>, <code>MANUAL</code> or <code>BLOCK</code>; apply a project's <code>.hpp/policy.json</code>, which can only add rules or raise a class, never lower one; map to exit code by mode</td><td><code>policy check</code></td></tr>
+<tr><td><code>attest.py</code></td><td>bind a verdict to repo identity, base commit, spec hash and a full file snapshot; verify later; sign the record with an SSH key on request (<code>--sign-key</code>) and demand that signature on verify (<code>--allowed-signers</code>)</td><td><code>attest create</code>, <code>attest verify</code></td></tr>
+<tr><td><code>signing.py</code></td><td>sign the canonical bytes of a record with <code>ssh-keygen -Y sign</code> (namespace <code>hpp</code>) and check them with <code>ssh-keygen -Y verify</code> against an allowed-signers file; without the binary nothing is signed and nothing is reported <code>verified</code></td><td>used by <code>attest</code>, <code>evidence</code></td></tr>
+<tr><td><code>hosts.py</code></td><td>the host x module x channel matrix derived from <code>hosts</code> and <code>components</code> in the manifest, rendered for the documents</td><td><code>doctor --matrix</code></td></tr>
+<tr><td><code>context.py</code></td><td>fit whole blocks under a character budget with provenance hashes; refuse secret-like input</td><td><code>context compile</code>, <code>map context</code></td></tr>
+<tr><td><code>routing.py</code></td><td>choose a tier and a provider id from declared risk, complexity, context size and stage; fall back only upward</td><td><code>route</code></td></tr>
+<tr><td><code>maps.py</code></td><td>Lane Map, Agent Map, Context Map and Monitor Map as sorted, data-only projections</td><td><code>map lane</code>, <code>map agent</code>, <code>map context</code>, <code>map monitor</code></td></tr>
+<tr><td><code>graph.py</code></td><td>capability, operational, agent, evidence and code views from the manifest; JSON or Mermaid</td><td><code>graph</code></td></tr>
+<tr><td><code>evals.py</code></td><td><code>pass@k</code> / <code>pass^k</code> runner over a suite of cases with three runner kinds</td><td><code>eval run</code>, <code>benchmark</code></td></tr>
+<tr><td><code>decision.py</code></td><td>validate an <code>hpp.decision/v1</code> record made outside the harness (advisory, raise-only, abstention and instrument failure as outcomes); measure a declared decider with selective metrics. Calls no model</td><td><code>decide validate</code>, <code>decide eval</code> (new in 2.6.0)</td></tr>
+<tr><td><code>evidence.py</code></td><td>run a declared criterion command (argv, no shell, its own process group), measure its exit code, hash the artifacts it declared and write a self-hashed record; re-derive a record later. Refuses a secret-like command line. The self-hash makes an edit visible; it is not a signature — <code>--sign-key</code> adds one, and <code>verify --allowed-signers</code> demands it. Drives no browser</td><td><code>evidence run</code>, <code>evidence verify</code> (new in 2.6.0); <code>evidence mutate</code> runs the criterion on a copy of the workspace, clean and once per mutant, and names the mutants it let through (new in 2.7.0)</td></tr>
+<tr><td><code>retrieval.py</code></td><td>score a retriever you declare as a command against the ids a suite labels relevant: hit@k, recall@k, precision@k, MRR, nDCG@k, with instrument failures counted apart. Runs no index</td><td><code>retrieval eval</code> (new in 2.6.0)</td></tr>
+<tr><td><code>citations.py</code></td><td>check that every citation marker in a text resolves to one id of the context it was written from, and flag a quantitative sentence with no marker. Does not judge whether the source supports the sentence</td><td><code>cite check</code> (new in 2.6.0)</td></tr>
+<tr><td><code>deliberation.py</code></td><td>House Session: validate a panel of pinned deciders (two model families, a judge outside the participants' lanes, the roles its session type needs, a declared budget), count its turns (grounded and ungrounded votes, abstentions, seats not judged, moves without new evidence; with declared evidence, only references that resolve ground a fact), stop it by rule, and seal it with the judge's decision and, over grounded dissent, the judge's steelman as a self-hashed record that re-derives from its own turns; project the panel as one <code>hpp.decision/v1</code>. Calls no model</td><td><code>deliberate plan</code>, <code>validate</code>, <code>tally</code>, <code>stop</code>, <code>record</code>, <code>verify</code> (new in 2.7.0)</td></tr>
+<tr><td><code>controls.py</code></td><td>the ten executable controls the benchmark runs, each with a positive and a negative case</td><td><code>benchmark</code>, <code>--self-test</code></td></tr>
+<tr><td><code>install.py</code></td><td>plan-only installation receipt for a bundle on a host; refuses unsupported coverage</td><td><code>install</code></td></tr>
+<tr><td><code>wizard.py</code></td><td><code>hpp init</code>: six stages, readiness, plan versus apply, wire block</td><td><code>init</code></td></tr>
+<tr><td><code>term.py</code></td><td>colour tier detection, ANSI output, ASCII glyph fallback, no-TTY behaviour</td><td>used by <code>init</code></td></tr>
+<tr><td><code>brand.py</code></td><td>palette, block wordmark and closing lines for the terminal</td><td>used by <code>init</code></td></tr>
+</tbody>
+</table>
+<p><code>policy.py</code> holds eight fixed rules; the first match wins and every <code>BLOCK</code> rule is tried before
+any <code>MANUAL</code> rule. <code>BLOCK</code>: <code>recursive-delete</code>, <code>force-push</code>, <code>main-push</code>, <code>pipe-to-shell</code>,
+<code>destructive-sql</code>. <code>MANUAL</code>: <code>external-push</code>, <code>external-send</code>, <code>decision-advisor</code> (new in
+2.6.0). Anything else is <code>ALLOW</code>. The mode
+changes only the exit code: <code>audit</code> exits 0 for every verdict, <code>enforce</code> exits 2 on <code>BLOCK</code> and 1
+on <code>MANUAL</code>. What each rule matches is in <a href="CONCEPTS.html#command-policy">CONCEPTS.md</a>; check one with
+<code>python -m hpp policy check --mode enforce --command "rm -rf src"</code> (exit 2).</p>
+<p>A project hardens the classifier with <code>.hpp/policy.json</code> (<code>hpp.policy/v1</code>, read by <code>policy check</code>
+from the current directory, or named with <code>--policy FILE</code>): rules of its own with a pattern, a class
+(<code>BLOCK</code> or <code>MANUAL</code>) and a reason, and built-in <code>MANUAL</code> rules raised to <code>BLOCK</code>. A file that would
+exempt anything — a rule with action <code>ALLOW</code>, a raise that keeps or lowers a class, a rule that
+reuses a built-in id — is refused as a whole, and a refused policy refuses the check (exit 2, no
+verdict printed) instead of falling back to the built-ins. Every verdict says its <code>source</code>
+(<code>built-in</code> or <code>policy</code>).</p>
+<p>Sizes are small by design; the whole package is readable in one sitting. Nothing imports outside
+the standard library.</p>
+    </div></section>
+
+    <section id="the-flow"><div class="wrap">
+      <p class="eyebrow">03</p>
+      <h2>The flow</h2>
+<pre><code class="language-text">  spec (JSON)
+     │  hpp work plan
+     ▼
+  WorkGraph ──── waves ───▶ wave 1 ──▶ wave 2 ──▶ ... (barrier between waves)
+     │                        │
+     │  hpp route             │  per unit: tier → provider id (never a model call)
+     │                        ▼
+     │                     lane claim ◀── hpp map lane (liveness from heartbeat)
+     │                        │
+     │                        ▼
+     │                     work_started ─▶ evidence_recorded ─▶ check_passed
+     │                        │                 ▲                    │
+     │                        │      hpp context compile             │
+     │                        │      (what the maker saw, hashed)    ▼
+     │                        │                              hpp attest create
+     │                        │                              (verdict bound to bytes)
+     ▼                        ▼                                      │
+  hpp map monitor        .hpp/events.jsonl  ◀── human_approved ◀─────┘
+  (up · fresh · skew)         │
+                              ▼
+                          verified  ── hpp status / hpp resume derive the next step</code></pre>
+<p>Every arrow that changes state is an appended event. Every box that decides something reads
+files and writes at most one declared file.</p>
+    </div></section>
+
+    <section id="where-state-lives"><div class="wrap">
+      <p class="eyebrow">04</p>
+      <h2>Where state lives</h2>
+<table>
+<thead><tr><th>path</th><th>written by</th><th>content</th><th>lifetime</th></tr></thead>
+<tbody>
+<tr><td><code>.hpp/events.jsonl</code></td><td><code>hpp event append</code></td><td>one JSON object per line: <code>seq</code>, <code>id</code>, <code>type</code>, <code>data</code> and <code>prev_sha256</code>, the sha256 of the line before it (the first links to the hash of nothing); append-only and hash-chained — <code>hpp event verify</code> names the first divergent step, and lines written before the chain read as <code>legacy</code></td><td>the workspace's loop history</td></tr>
+<tr><td><code>.hpp/policy.json</code></td><td>the operator, by hand</td><td><code>hpp.policy/v1</code>: rules that add <code>BLOCK</code> or <code>MANUAL</code>, and built-in <code>MANUAL</code> rules raised to <code>BLOCK</code>; read by <code>hpp policy check</code>, refused as a whole if it would exempt anything</td><td>until the operator changes it</td></tr>
+<tr><td><code>.hpp/profile.json</code></td><td><code>hpp init --apply</code></td><td>host, bundle, modules, policy mode, protocol and product version; <code>decision_advisor</code> only when one was declared</td><td>until the operator removes it</td></tr>
+<tr><td><code>.hpp/attestation.json</code></td><td><code>hpp attest create --output</code></td><td>the bound verdict; the path is yours to choose</td><td>until the bytes it describes change</td></tr>
+<tr><td><code>.hpp/evidence/&lt;id&gt;-&lt;UTC&gt;.json</code></td><td><code>hpp evidence run</code> (new in 2.6.0)</td><td>one record per run, created exclusively: the command, base commit, exit code, verdict, byte count and sha256 of stdout and stderr (never the text), the sha256 of every declared artifact, and the record's own hash; <code>--out</code> picks another directory inside the workspace</td><td>until the operator removes it; <code>evidence verify</code> blocks it once an artifact it names changes</td></tr>
+<tr><td><code>hpp.manifest.json</code></td><td>the project</td><td>the protocol; found by walking up from the current directory, then next to the source package, then the copy shipped inside the installed package</td><td>versioned with the product</td></tr>
+<tr><td>module <code>CHECKSUMS.txt</code></td><td>the forge</td><td>sha256 per distributed file</td><td>versioned with each emitted module</td></tr>
+</tbody>
+</table>
+<p>Everything else the harness consumes is an input you pass on the command line: specs, lanes,
+monitors, providers, routing requests, context blocks, evaluation suites. There is no hidden
+cache, no user-level state directory and no environment variable that changes a verdict; the
+only environment the harness reads is <code>NO_COLOR</code>, <code>FORCE_COLOR</code>, <code>TERM</code>, <code>COLORTERM</code>, <code>CI</code> and the
+Windows terminal session flag, and those affect rendering only.</p>
+<p>The event log is the recovery boundary. Reading it validates that <code>seq</code> is contiguous and that
+<code>id</code> equals <code>event:&lt;seq&gt;</code>; a corrupt line stops the projection with the line number instead of
+skipping it. Appending validates the transition against the manifest before opening the file, so
+a refused event leaves no trace and cannot create the log.</p>
+    </div></section>
+
+    <section id="the-manifest-as-executable-contract"><div class="wrap">
+      <p class="eyebrow">05</p>
+      <h2>The manifest as executable contract</h2>
+<p><code>hpp.manifest.json</code> declares the protocol version, the hosts, the modules with their paths,
+versions, capabilities, relations and per-host coverage, the bundles, the roles, the exit codes,
+the routing tiers and rule, the map names, the installer path, the monitors and the loop.</p>
+<p><code>hpp doctor</code> rejects a manifest that violates any of: unique hosts, modules, capabilities, paths
+and monitor ids; relative module paths; coverage values outside <code>native</code> / <code>explicit-command</code> /
+<code>unsupported</code>; unknown relations; cycles in <code>requires</code>; bundles naming unknown modules or
+capabilities; exit codes other than <code>0/1/2/3</code>; routing tiers other than
+<code>economy/balanced/frontier</code>; monitors with non-positive cadence or freshness.</p>
+<p>When <code>marketplace.json</code> sits beside the manifest, the doctor also checks that the product version
+matches, that the module set matches, that each module's <code>source</code> and <code>version</code> match, that the
+module directory exists inside the product root, and that its <code>.claude-plugin/plugin.json</code> agrees
+on name and version. In a source checkout without a marketplace the doctor says so
+(<code>distribution: source-contract</code>) instead of reporting a check it could not run.</p>
+    </div></section>
+
+    <section id="maps"><div class="wrap">
+      <p class="eyebrow">06</p>
+      <h2>Maps</h2>
+<p>Maps have no state of their own. Each is a projection of one or two inputs, sorted so that the
+same input yields the same output byte for byte.</p>
+<table>
+<thead><tr><th>map</th><th>input</th><th>question it answers</th></tr></thead>
+<tbody>
+<tr><td>capability</td><td>manifest</td><td>which module provides which capability, on which host, in which bundle</td></tr>
+<tr><td>operational</td><td>manifest <code>loop</code></td><td>which event moves which state through which gate</td></tr>
+<tr><td>agent</td><td>manifest roles and modules, optional events</td><td>who may make, check and approve; what has happened in order</td></tr>
+<tr><td>evidence</td><td>fixed</td><td>how a criterion, a record and a verdict relate</td></tr>
+<tr><td>code</td><td>manifest components</td><td>which surfaces each module declares (not an AST)</td></tr>
+<tr><td>lane</td><td>lanes JSON, <code>--now</code>, thresholds</td><td>who owns what, who is alive, where live claims overlap</td></tr>
+<tr><td>context</td><td>context JSON, <code>--budget</code></td><td>what entered the compiled context, what was omitted, with hashes</td></tr>
+<tr><td>monitor</td><td>monitors JSON, <code>--now</code>, <code>--skew-tolerance</code></td><td>what is observed, how fresh, and which gate consumes it</td></tr>
+<tr><td>work</td><td>spec JSON</td><td>which units can run together and in which order</td></tr>
+</tbody>
+</table>
+<p>The Context Map is provenance for one compilation; it is not retrieval and not a knowledge base.
+The Code Map inventories declared components; it is not a call graph.</p>
+    </div></section>
+
+    <section id="two-hosts"><div class="wrap">
+      <p class="eyebrow">07</p>
+      <h2>Two hosts</h2>
+<table>
+<thead><tr><th>capability</th><th>Claude Code</th><th>Codex CLI</th></tr></thead>
+<tbody>
+<tr><td>skills and instructions</td><td>plugin, native</td><td>copied into <code>.agents/skills</code>, namespaced</td></tr>
+<tr><td>lifecycle hooks (<code>Stop</code>, <code>PreToolUse</code>, <code>SessionStart</code>, ...)</td><td>native once wired by a person</td><td>none; the same scripts run as explicit commands</td></tr>
+<tr><td>command policy</td><td>hook plus CLI</td><td>CLI or preflight</td></tr>
+<tr><td>event log, attestation, maps, WorkGraph, eval</td><td>CLI</td><td>CLI</td></tr>
+<tr><td>install</td><td>marketplace plugin, or installer copy for <code>explicit-command</code> modules</td><td>installer copy into <code>.agents/hpp/&lt;module&gt;</code></td></tr>
+</tbody>
+</table>
+<p>The host seam is a small table: settings path and manual gates for Claude Code; <code>AGENTS.md</code>,
+skills path and runtime path for Codex CLI. <code>hpp init</code> uses it to name the same paths the module
+installer will touch, and touches none of them. Adding a host means adding a row and a coverage
+value per module, not changing the six stages.</p>
+<h3 id="hosts-and-channels">Hosts and channels</h3>
+<p>One row per module, rendered from <code>hosts</code> and <code>components</code> in the manifest by <code>hpp doctor --matrix</code>
+(<code>hpp/hosts.py</code>); <code>tests/test_host_matrix.py</code> keeps this table equal to that render.</p>
+<table>
+<thead><tr><th>module</th><th>Claude Code</th><th>Codex CLI</th></tr></thead>
+<tbody>
+<tr><td><code>operator-kit</code> 1.8.0</td><td><code>native</code> · plugin + hooks after the wiring is pasted</td><td><code>explicit-command</code> · plugin (skills only) + verified copy</td></tr>
+<tr><td><code>kit-forge</code> 1.5.0</td><td><code>explicit-command</code> · plugin</td><td><code>explicit-command</code> · verified copy</td></tr>
+<tr><td><code>lane-kit</code> 1.7.0</td><td><code>native</code> · plugin + hooks after the wiring is pasted</td><td><code>explicit-command</code> · verified copy</td></tr>
+<tr><td><code>continuity-kit</code> 1.5.0</td><td><code>native</code> · plugin + hooks after the wiring is pasted</td><td><code>explicit-command</code> · plugin (skills only) + verified copy</td></tr>
+<tr><td><code>health-kit</code> 1.4.0</td><td><code>explicit-command</code> · plugin</td><td><code>explicit-command</code> · plugin (skills only) + verified copy</td></tr>
+<tr><td><code>claude-dev-kit</code> 1.3.4</td><td><code>native</code> · plugin</td><td><code>unsupported</code> · —</td></tr>
+<tr><td><code>supabase-pack</code> 1.2.0</td><td><code>explicit-command</code> · plugin</td><td><code>explicit-command</code> · plugin (skills only) + verified copy</td></tr>
+<tr><td><code>agent-framework-wizard</code> 1.2.2</td><td><code>explicit-command</code> · plugin</td><td><code>explicit-command</code> · verified copy</td></tr>
+<tr><td><code>dev-squad-kit</code> 1.2.0</td><td><code>native</code> · plugin</td><td><code>explicit-command</code> · plugin (skills only) + verified copy</td></tr>
+<tr><td><code>gotcha-memory</code> 1.1.0</td><td><code>native</code> · plugin + hooks after the wiring is pasted</td><td><code>explicit-command</code> · plugin (skills only) + verified copy</td></tr>
+</tbody>
+</table>
+<p>On Claude Code every module is a plugin of the marketplace, and a module that declares hooks arms
+them once the wiring is pasted. On Codex CLI the plugin channel is the product's own marketplace,
+<code>.agents/plugins/marketplace.json</code> (<code>codex plugin marketplace add rusharlabs/house-party-protocol</code>,
+then <code>codex plugin add &lt;module&gt;@house-party-protocol</code>): it lists the modules that carry skills and
+are supported there, and it installs skills only — the hooks are Claude Code's, and the verified copy
+(<code>kit_doctor.py install --host codex</code>) is what installs runtime, scripts and templates. Each module's
+<code>.codex-plugin/plugin.json</code> carries an empty <code>hooks</code> object on purpose: with no <code>hooks</code> key, Codex
+loads the module's <code>hooks/hooks.json</code> by default.</p>
+    </div></section>
+
+    <section id="distribution"><div class="wrap">
+      <p class="eyebrow">08</p>
+      <h2>Distribution</h2>
+<p>The published tree is emitted by the forge from module sources. Each module directory carries
+<code>CHECKSUMS.txt</code> (sha256 per file) and a <code>.zip</code> with the same bytes; <code>marketplace.json</code> lists the
+modules with <code>source</code> and <code>version</code>; <code>.agents/plugins/marketplace.json</code> lists, in the form Codex CLI
+reads, the modules of the Codex plugin channel, each carrying a <code>.codex-plugin/plugin.json</code> rendered
+from its Claude one, and <code>hpp doctor</code> cross-checks the two channels against the manifest
+(<code>distribution.codex_marketplace</code>); the installer (<code>installers/kit-forge-&lt;version&gt;/kit_doctor.py</code>)
+runs the six install stages, verifies checksums and executes the module's declared smokes.</p>
+<pre><code class="language-text">sources ──forge──▶ module dir + CHECKSUMS.txt + .zip ──▶ marketplace.json
+                        │                                     │
+                        └── kit_doctor.py verify ◀────────────┘── hpp doctor (cross-check)</code></pre>
+<p>This repository is that published tree: the module directories with their <code>CHECKSUMS.txt</code>, the
+installer and <code>marketplace.json</code> sit beside the harness, so <code>hpp init</code> verifies distribution
+integrity and module checksums here (9 of 11 readiness items). Two other layouts carry less and
+say so: the pip wheel ships the harness, the manifest and the benchmark suite but no module
+directories, and the harness source tree has none of the emitted artefacts; in both, the doctor,
+the benchmark and the suite run, and distribution integrity and module checksums are reported as
+not verified rather than assumed.</p>
+    </div></section>
+
+    <section id="exit-contract"><div class="wrap">
+      <p class="eyebrow">09</p>
+      <h2>Exit contract</h2>
+<table>
+<thead><tr><th>code</th><th>meaning</th><th>where</th></tr></thead>
+<tbody>
+<tr><td><code>0</code></td><td>ok; in <code>audit</code> mode, always</td><td>every command</td></tr>
+<tr><td><code>1</code></td><td>warn or manual gate; an eval gate that failed</td><td><code>policy check</code> (<code>MANUAL</code> in <code>enforce</code>), <code>eval run</code>, <code>benchmark</code>, <code>init</code> with warnings, <code>decide eval</code> when its gate fails (new in 2.6.0), <code>evidence run</code> when the bundle did not pass, <code>evidence verify</code> on an intact record of a run that did not pass, <code>retrieval eval</code> when its gate fails, <code>cite check</code> with a warning (<code>TOO_MANY</code>, <code>UNCITED_CLAIM</code>) (new in 2.6.0), <code>deliberate record</code> when the verdict is blocked or the judge failed, <code>evidence mutate</code> with a blind spot, an incomplete run or no mutant applied (new in 2.7.0), <code>work coverage</code> when a criterion is not covered or, with <code>--junit</code>, not executed, <code>findings check</code> when a lens found something (new in 2.8.0)</td></tr>
+<tr><td><code>2</code></td><td>block; a refused input (bad manifest, bad spec, corrupt log, invalid attestation)</td><td><code>policy check</code> (<code>BLOCK</code>), <code>attest</code>, <code>decide validate</code> and <code>decide eval</code> on a record or suite that breaks the contract (new in 2.6.0), <code>evidence run</code> on a refused request or an event it could not append, <code>evidence verify</code> on a record that was edited or contradicts itself or whose artifact changed or went missing, <code>retrieval eval</code> on a refused suite or argument, <code>cite check</code> on <code>UNKNOWN_ID</code>, <code>RANGE</code> or <code>EMPTY_MARKER</code> or a refused input (new in 2.6.0), <code>deliberate</code> on a refused panel, turn or judge, a session that has not stopped, or a record that does not verify, <code>evidence mutate</code> when the criterion does not pass on the clean copy (<code>no-control</code>) or a mutant is refused (new in 2.7.0), <code>work coverage</code> on a refused report or a test path with no Python source, <code>findings check</code> on a document that breaks the contract (new in 2.8.0), <code>event verify</code> and <code>status</code> on a broken hash chain, <code>policy check</code> on a refused policy file, <code>attest verify</code> and <code>evidence verify</code> with <code>--allowed-signers</code> on a record whose signature is missing, not accepted or over changed bytes, every validation error</td></tr>
+<tr><td><code>3</code></td><td>usage or internal error</td><td><code>init</code> usage errors, unexpected exceptions</td></tr>
+</tbody>
+</table>
+<p><code>hpp init</code> reports the code it will return inside its JSON report (<code>exit_code</code>) and halts the
+remaining stages when a stage fails with a blocking hint.</p>
+    </div></section>
+
+    <section id="tests-and-ci"><div class="wrap">
+      <p class="eyebrow">10</p>
+      <h2>Tests and CI</h2>
+<p>The suite under <code>tests/</code> is stdlib-only and runs without network. Each test file carries at least
+one test named <code>CONTROLE</code> that proves the file can fail. In this repository one test skips by
+design (the emitted copy is covered by the next test); the harness source tree, which has no
+<code>marketplace.json</code>, skips the two tests that need it. CI runs the suite,
+<code>hpp doctor</code> and <code>hpp benchmark -k 3</code> on Linux, macOS and Windows across Python 3.10 to 3.13,
+with read-only permissions and no step allowed to fail silently.</p>
+<pre><code class="language-bash">python -m pytest tests -q
+python -m hpp doctor
+python -m hpp benchmark -k 3</code></pre>
+    </div></section>
+
+    <section id="what-deliberately-does-not-exist"><div class="wrap">
+      <p class="eyebrow">11</p>
+      <h2>What deliberately does not exist</h2>
+<table>
+<thead><tr><th>absent</th><th>why it is a choice</th></tr></thead>
+<tbody>
+<tr><td>daemon or background service</td><td>a check that did not run was not run; a resident process would be a second thing to verify and would hold state the log cannot see</td></tr>
+<tr><td>server, API or control plane</td><td>the harness is operated from the repository it protects; a remote plane would move the verdict away from the bytes it is about</td></tr>
+<tr><td>scheduler or queue</td><td>cadence in the Monitor Map is declared for the consumer to honour; the harness does not wake itself up</td></tr>
+<tr><td>graph database</td><td>every map is re-derivable from files; a stored graph would drift from its sources and require its own doctor</td></tr>
+<tr><td>model execution</td><td>routing returns a tier and a provider id; calling a model would make verdicts depend on something the harness cannot reproduce or afford to hold credentials for</td></tr>
+<tr><td>credential storage</td><td>there is none to leak; secret-like input to the context compiler is refused, and the failure memory redacts by shape</td></tr>
+<tr><td>telemetry</td><td>nothing leaves the machine; <code>git push</code>, <code>curl</code>/<code>wget</code> to a URL and the example decision adapter are classified <code>MANUAL</code> (a transfer by another tool, such as <code>scp</code>, matches no rule)</td></tr>
+<tr><td>automatic settings or hook wiring</td><td>enabling a hook changes what runs on every future tool call; that is a human action, printed for pasting</td></tr>
+<tr><td>token counting</td><td>the budget is in characters, which every host measures the same way; a token count would tie the harness to a tokenizer</td></tr>
+</tbody>
+</table>
+<p>A layer is added only when there is a consumer for it and a benchmark that shows what it costs.
+Until then, the absence is the feature.</p>
+    </div></section>
+
+  </main>
+  <footer><div class="wrap">
+    <p class="five">AGENTS · EVIDENCE · MEMORY · PROTOCOL · CONTINUITY</p>
+    <strong>House Party Protocol</strong>
+    <p>Operate coding agents under evidence, not trust.</p>
+    <p><a href="index.html">Documentation</a> · <a href="MANUAL.html">Harness manual</a> · <a href="CATALOG.html">Module catalogue</a> · <a href="https://github.com/rusharlabs/house-party-protocol/blob/main/docs/ARCHITECTURE.md">Markdown source</a> · <a href="ARCHITECTURE.pt-BR.html" hreflang="pt-BR" lang="pt-BR">Português</a></p>
+  </div></footer>
+</body>
+</html>

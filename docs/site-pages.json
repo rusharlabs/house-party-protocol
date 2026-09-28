@@ -1,0 +1,252 @@
+{
+  "schema": "hpp.site-pages/v1",
+  "description": "Document pages rendered from their Markdown, grouped for the landing page; read by kit-forge's tools/catalog_md.py.",
+  "groups": [
+    {
+      "id": "concepts",
+      "label": {
+        "en": "Concepts",
+        "pt-BR": "Conceitos"
+      },
+      "pages": [
+        {
+          "en": {
+            "href": "MANIFESTO.html",
+            "title": "House Party Protocol Manifesto",
+            "summary": "Why a harness: capable agents still need an operating house, and each gap between a convincing answer and proof becomes a contract a command can check."
+          },
+          "pt-BR": {
+            "href": "MANIFESTO.pt-BR.html",
+            "title": "Manifesto do House Party Protocol",
+            "summary": "Por que um harness: agentes capazes ainda precisam de uma casa operacional, e cada distância entre uma resposta convincente e a prova vira um contrato que um comando confere."
+          }
+        },
+        {
+          "en": {
+            "href": "CONCEPTS.html",
+            "title": "Concepts",
+            "summary": "The vocabulary: each term with a one-sentence definition, the confusion it is mistaken for, and a way to verify it on your machine."
+          },
+          "pt-BR": {
+            "href": "CONCEPTS.pt-BR.html",
+            "title": "Conceitos",
+            "summary": "O vocabulário: cada termo com uma definição de uma frase, a confusão com que costuma ser trocado e um jeito de verificá-lo na sua máquina."
+          }
+        },
+        {
+          "en": {
+            "href": "GRAPH-MODEL.html",
+            "title": "Graph Model",
+            "summary": "The graphs the harness projects: local and deterministic, every node and edge pointing at a source and changing a decision."
+          },
+          "pt-BR": {
+            "href": "GRAPH-MODEL.pt-BR.html",
+            "title": "Graph Model",
+            "summary": "Os grafos que o harness projeta: locais e determinísticos, cada nó e aresta apontando para uma fonte e mudando uma decisão."
+          }
+        },
+        {
+          "en": {
+            "href": "LOOPS.html",
+            "title": "Loops, autoprompt and waves",
+            "summary": "What a governed loop has — objective, observable state, next action, budget, evidence gate and stop conditions — and the autoloop, autoprompt, failure memory and evaluation around it."
+          },
+          "pt-BR": {
+            "href": "LOOPS.pt-BR.html",
+            "title": "Loops, autoprompt e waves",
+            "summary": "O que um loop governado tem — objetivo, estado observável, próxima ação, orçamento, gate de evidência e condições de parada — e o autoloop, o autoprompt, a memória de falhas e a avaliação em volta dele."
+          }
+        }
+      ]
+    },
+    {
+      "id": "architecture",
+      "label": {
+        "en": "Architecture",
+        "pt-BR": "Arquitetura"
+      },
+      "pages": [
+        {
+          "en": {
+            "href": "ARCHITECTURE.html",
+            "title": "Architecture",
+            "summary": "How the pieces fit together, where state lives, and what deliberately does not exist."
+          },
+          "pt-BR": {
+            "href": "ARCHITECTURE.pt-BR.html",
+            "title": "Arquitetura",
+            "summary": "Como as peças se encaixam, onde o estado mora e o que deliberadamente não existe."
+          }
+        },
+        {
+          "en": {
+            "href": "PROOF.html",
+            "title": "Proof matrix",
+            "summary": "Every public claim with the command that reproduces it and the criterion it must meet."
+          },
+          "pt-BR": {
+            "href": "PROOF.pt-BR.html",
+            "title": "Matriz de prova",
+            "summary": "Cada claim pública com o comando que a reproduz e o critério que ela precisa cumprir."
+          }
+        },
+        {
+          "en": {
+            "href": "BENCHMARK.html",
+            "title": "Reproducible benchmark",
+            "summary": "The public benchmark: it measures the local harness without calling model APIs."
+          },
+          "pt-BR": {
+            "href": "BENCHMARK.pt-BR.html",
+            "title": "Benchmark reproduzível",
+            "summary": "O benchmark público: mede o harness local sem chamar APIs de modelo."
+          }
+        }
+      ]
+    },
+    {
+      "id": "method",
+      "label": {
+        "en": "Method",
+        "pt-BR": "Método"
+      },
+      "pages": [
+        {
+          "en": {
+            "href": "METHOD.html",
+            "title": "Method",
+            "summary": "The way of working the harness enforces, where every practice ends in a command that passes or reports what it measured."
+          },
+          "pt-BR": {
+            "href": "METHOD.pt-BR.html",
+            "title": "Método",
+            "summary": "O modo de trabalhar que o harness impõe, em que cada prática termina num comando que passa ou relata o que mediu."
+          }
+        },
+        {
+          "en": {
+            "href": "TIPS.html",
+            "title": "Tactical patterns",
+            "summary": "Short commands to operate the kits without relying on implicit memory."
+          },
+          "pt-BR": {
+            "href": "TIPS.pt-BR.html",
+            "title": "Padrões táticos",
+            "summary": "Comandos curtos para operar os kits sem depender de memória implícita."
+          }
+        },
+        {
+          "en": {
+            "href": "UX-INSTALL-JOURNEY.html",
+            "title": "UX-INSTALL-JOURNEY — the installation journey, told in the conversation",
+            "summary": "How an agent guides a human through the installation in the conversation, over the harness installer and the module installer."
+          },
+          "pt-BR": {
+            "href": "UX-INSTALL-JOURNEY.pt-BR.html",
+            "title": "UX-INSTALL-JOURNEY — a jornada de instalação, contada na conversa",
+            "summary": "Como um agente conduz um humano pela instalação na conversa, sobre o instalador do harness e o instalador de módulos."
+          }
+        }
+      ]
+    },
+    {
+      "id": "contracts",
+      "label": {
+        "en": "Contracts",
+        "pt-BR": "Contratos"
+      },
+      "pages": [
+        {
+          "en": {
+            "href": "INSTALL-CONTRACT.html",
+            "title": "INSTALL-CONTRACT — the installation contract of every kit in this marketplace",
+            "summary": "The installation contract of every kit: six stages in a fixed order, the plan before any write, and only a second, explicit invocation acts."
+          },
+          "pt-BR": {
+            "href": "INSTALL-CONTRACT.pt-BR.html",
+            "title": "INSTALL-CONTRACT — o contrato de instalação de qualquer kit deste marketplace",
+            "summary": "O contrato de instalação de todo kit: seis estágios em ordem fixa, o plano antes de qualquer escrita, e só uma segunda invocação explícita age."
+          }
+        },
+        {
+          "en": {
+            "href": "SKILL-CONTRACT.html",
+            "title": "SKILL-CONTRACT — what separates a \"pile of scripts\" from a \"system\"",
+            "summary": "The six clauses that make a skill a product: header, I/O contract, executed examples, proof, portability and an executable body."
+          },
+          "pt-BR": {
+            "href": "SKILL-CONTRACT.pt-BR.html",
+            "title": "SKILL-CONTRACT — o que separa \"pilha de scripts\" de \"sistema\"",
+            "summary": "As seis cláusulas que fazem de uma skill um produto: cabeçalho, contrato de I/O, exemplos executados, prova, portabilidade e corpo executável."
+          }
+        },
+        {
+          "en": {
+            "href": "INSTALL_FOR_AGENTS.html",
+            "title": "Installing House Party Protocol — a guide for agents",
+            "summary": "The whole instruction for an agent asked to install the harness into a repository, including the gate it must not skip."
+          },
+          "pt-BR": {
+            "href": "INSTALL_FOR_AGENTS.pt-BR.html",
+            "title": "Instalando o House Party Protocol — um guia para agentes",
+            "summary": "A instrução inteira para um agente a quem pediram instalar o harness num repositório, incluindo o gate que ele não pode pular."
+          }
+        }
+      ]
+    },
+    {
+      "id": "brand",
+      "label": {
+        "en": "Brand & design",
+        "pt-BR": "Marca e design"
+      },
+      "pages": [
+        {
+          "en": {
+            "href": "BRAND.html",
+            "title": "House Party Protocol identity",
+            "summary": "What the brand is: four colours, one accent, the five words, and what not to use."
+          },
+          "pt-BR": {
+            "href": "BRAND.pt-BR.html",
+            "title": "Identidade do House Party Protocol",
+            "summary": "O que a marca é: quatro cores, um acento, as cinco palavras e o que não usar."
+          }
+        },
+        {
+          "en": {
+            "href": "DESIGN.html",
+            "title": "DESIGN.md — how to build an interface for this project",
+            "summary": "How to build an interface with the brand: the tokens as they exist in code, the components that already ship, and what a pull request has to satisfy."
+          },
+          "pt-BR": {
+            "href": "DESIGN.pt-BR.html",
+            "title": "DESIGN.pt-BR.md — como construir uma interface para este projeto",
+            "summary": "Como construir uma interface com a marca: os tokens como existem no código, os componentes que já existem e o que um pull request precisa cumprir."
+          }
+        }
+      ]
+    },
+    {
+      "id": "help",
+      "label": {
+        "en": "Help",
+        "pt-BR": "Ajuda"
+      },
+      "pages": [
+        {
+          "en": {
+            "href": "SUPPORT.html",
+            "title": "Support",
+            "summary": "Where each request goes — questions, problem reports, feedback, ideas and private vulnerability reports — and what to include in each."
+          },
+          "pt-BR": {
+            "href": "SUPPORT.pt-BR.html",
+            "title": "Suporte",
+            "summary": "Para onde vai cada pedido — dúvidas, relatos de problema, feedback, ideias e relatos privados de vulnerabilidade — e o que incluir em cada um."
+          }
+        }
+      ]
+    }
+  ]
+}

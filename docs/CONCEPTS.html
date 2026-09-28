@@ -1,0 +1,797 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>House Party Protocol — Concepts</title>
+  <meta name="description" content="The vocabulary: each term with a one-sentence definition, the confusion it is mistaken for, and a way to verify it on your machine.">
+  <link rel="alternate" hreflang="en" href="CONCEPTS.html">
+  <link rel="alternate" hreflang="pt-BR" href="CONCEPTS.pt-BR.html">
+  <style>
+    :root{--hpp-black: #000000;--hpp-ink: #0F1113;--hpp-paper: #F4F1EB;--hpp-signal: #FF6A00;--line:rgba(15,17,19,.18);--surface:rgba(15,17,19,.04);--muted:rgba(15,17,19,.72);--max:1120px}
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;background:var(--hpp-paper);color:var(--hpp-ink);font:16px/1.65 Inter,"Segoe UI",Arial,sans-serif}
+    a{color:var(--hpp-ink);text-decoration:underline;text-decoration-color:var(--hpp-signal);text-decoration-thickness:2px;text-underline-offset:3px}
+    a:hover{color:var(--hpp-signal)}
+    a:focus-visible{outline:4px solid var(--hpp-signal);outline-offset:3px}
+    .wrap{width:min(var(--max),calc(100% - 40px));margin:auto}
+    .lang{background:var(--hpp-black);color:var(--hpp-paper);font-size:.9rem;padding:10px 0}
+    .lang a{color:var(--hpp-paper)}
+    .lang a[aria-current]{text-decoration:none;font-weight:700}
+    .hero{background:var(--hpp-ink);color:var(--hpp-paper);padding:44px 0 50px}
+    .hero img{width:min(720px,100%);display:block}
+    .hero h1{font:800 clamp(2.2rem,6vw,5rem)/.95 Sora,Inter,"Segoe UI",sans-serif;letter-spacing:-.02em;margin:.35em 0}
+    .hero p{max-width:760px;font-size:1.15rem;color:rgba(244,241,235,.82)}
+    .hero .eyebrow{color:var(--hpp-paper);border-color:var(--hpp-signal)}
+    .signal{color:var(--hpp-signal)}
+    .eyebrow,.mono,code,pre,.gate,.label{font-family:"JetBrains Mono","Cascadia Code",Consolas,monospace}
+    .eyebrow{display:inline-block;letter-spacing:.13em;text-transform:uppercase;font-size:.78rem;border-left:4px solid var(--hpp-signal);padding-left:.6em;margin:0 0 .6em}
+    nav{position:sticky;top:0;z-index:2;background:rgba(244,241,235,.96);border-bottom:1px solid var(--line);backdrop-filter:blur(8px)}
+    nav .wrap{display:flex;gap:20px;overflow:auto;padding:12px 0}
+    nav a{white-space:nowrap;text-decoration:none;font-weight:700}
+    nav a:hover{text-decoration:underline;text-decoration-color:var(--hpp-signal)}
+    section{padding:64px 0;border-bottom:1px solid var(--line)}
+    h2{font:800 clamp(1.7rem,3vw,2.6rem)/1.1 Sora,Inter,"Segoe UI",sans-serif;letter-spacing:-.01em;margin:0 0 .6em}
+    h3{margin:0 0 .4em;font-size:1.1rem}
+    .lead{max-width:780px;color:var(--muted)}
+    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:20px}
+    .card{grid-column:span 4;border:1px solid var(--line);border-radius:16px;padding:22px;background:var(--surface)}
+    .card.wide{grid-column:span 6}
+    .card.full{grid-column:1/-1}
+    pre{background:var(--hpp-ink);color:var(--hpp-paper);padding:20px;border-radius:12px;overflow:auto;border-left:6px solid var(--hpp-signal);font-size:.92rem;line-height:1.5}
+    code{font-size:.94em}
+    p code,li code,td code{background:var(--surface);padding:.08em .35em;border-radius:5px}
+    pre code{background:none;padding:0}
+    table{width:100%;border-collapse:collapse;background:var(--surface);margin:1em 0}
+    th,td{text-align:left;padding:12px;border-bottom:1px solid var(--line);vertical-align:top}
+    th{background:rgba(15,17,19,.08);font-weight:700}
+    .gate{display:inline-block;border-radius:999px;padding:.15rem .7rem;font-weight:700;font-size:.8rem;margin-bottom:.6em}
+    .gate.allow{background:var(--hpp-signal);color:var(--hpp-ink)}
+    .gate.manual{border:2px solid var(--hpp-ink);color:var(--hpp-ink)}
+    .gate.block{background:var(--hpp-ink);color:var(--hpp-paper)}
+    .label{font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+    .measured{border-left:4px solid var(--hpp-signal);padding-left:1em;color:var(--muted);font-size:.95rem}
+    ul,ol{padding-left:1.3em}
+    li{margin:.25em 0}
+    footer{padding:48px 0;background:var(--hpp-black);color:var(--hpp-paper)}
+    footer a{color:var(--hpp-paper)}
+    footer .five{letter-spacing:.2em;font-size:.8rem;color:rgba(244,241,235,.72)}
+    @media(max-width:760px){.card,.card.wide{grid-column:1/-1}.wrap{width:min(100% - 32px,var(--max))}th,td{font-size:.88rem;padding:8px}.hero{padding-top:28px}section{padding:44px 0}}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+    h3[id],h4[id],h5[id]{scroll-margin-top:64px}
+    ul.tasks{list-style:none;padding-left:.2em}
+    blockquote{margin:1em 0}
+  </style>
+</head>
+<body>
+  <div class="lang"><div class="wrap"><a href="CONCEPTS.html" aria-current="page" hreflang="en">English</a> · <a href="CONCEPTS.pt-BR.html" hreflang="pt-BR" lang="pt-BR">Português</a></div></div>
+  <header class="hero">
+    <div class="wrap">
+      <img src="assets/hpp-logo-header.png" alt="House Party Protocol">
+      <p class="eyebrow">Concepts · CONCEPTS.md</p>
+      <h1>Concepts</h1>
+    </div>
+  </header>
+  <nav aria-label="Chapters"><div class="wrap"><a href="#harness">harness</a><a href="#protocol">protocol</a><a href="#module">module</a><a href="#host">host</a><a href="#gate">gate</a><a href="#hook-capability">hook capability</a><a href="#evidence">evidence</a><a href="#attestation">attestation</a><a href="#typed-decision">typed decision</a><a href="#evidence-bundle">evidence bundle</a><a href="#criterion-sensitivity">criterion sensitivity</a><a href="#retrieval-ruler">retrieval ruler</a><a href="#citation-check">citation check</a><a href="#best-of-n-selection">best-of-N selection</a><a href="#house-session">House Session</a><a href="#maker-and-checker">maker and checker</a><a href="#agent-team">agent team</a><a href="#orchestration">orchestration</a><a href="#lane">lane</a><a href="#wave">wave</a><a href="#workgraph">WorkGraph</a><a href="#spec-driven-work">spec-driven work</a><a href="#cited-and-executed">cited and executed</a><a href="#review-lens">review lens</a><a href="#wave-driven-execution">wave-driven execution</a><a href="#parallel-and-sequential">parallel and sequential</a><a href="#topological-order">topological order</a><a href="#barrier">barrier</a><a href="#context-budget">context budget</a><a href="#readiness">readiness</a><a href="#monitor">monitor</a><a href="#gotcha">gotcha</a><a href="#passk-and-passk">pass@k and pass^k</a><a href="#command-policy">command policy</a><a href="#exit-contract">exit contract</a><a href="#plan-and-apply">plan and apply</a><a href="#control">control</a><a href="#event-log">event log</a><a href="#bundle">bundle</a></div></nav>
+  <main>
+
+    <section><div class="wrap">
+<p>The vocabulary of House Party Protocol. Each term has a one-sentence definition, the confusion
+it is most often mistaken for, and a way to verify it on your machine. Commands run from the
+repository root unless stated otherwise.</p>
+    </div></section>
+
+    <section id="harness"><div class="wrap">
+      <p class="eyebrow">01</p>
+      <h2>harness</h2>
+<p><strong>Is:</strong> the layer that sits around an agent's work and decides, from measured state, whether the
+work may advance.</p>
+<p><strong>Is not:</strong> an agent, a model, a prompt library or an IDE plugin. The harness never calls a
+model and never edits the agent's settings.</p>
+<p><strong>Verify:</strong> <code>python -m hpp --help</code> lists the operating surface; <code>python -m hpp --self-test</code>
+exercises it without touching a workspace.</p>
+    </div></section>
+
+    <section id="protocol"><div class="wrap">
+      <p class="eyebrow">02</p>
+      <h2>protocol</h2>
+<p><strong>Is:</strong> the set of invariants every module and host must respect, written in
+<code>hpp.manifest.json</code> as roles, loop transitions with named gates, exit codes, host coverage and
+monitors.</p>
+<p><strong>Is not:</strong> a network protocol, a prompt format or a style guide. Nothing about the protocol
+depends on which model is on the other side.</p>
+<p><strong>Verify:</strong> <code>python -m hpp doctor</code> rejects a manifest whose <code>protocol_version</code> is not <code>2.1</code>,
+whose exit codes deviate from <code>0/1/2/3</code>, or whose modules reference unknown modules or hosts.
+<code>2.1</code> added two required top-level keys, <code>hook_capabilities</code> and <code>hooks</code>; a 2.0 manifest that
+declares no hook is refused, which is a contract change and not an addition.</p>
+    </div></section>
+
+    <section id="module"><div class="wrap">
+      <p class="eyebrow">03</p>
+      <h2>module</h2>
+<p><strong>Is:</strong> an installable, independently versioned capability with a declared path, declared
+components (skills, hooks, commands, agents, rules, templates, scripts) and declared coverage per
+host.</p>
+<p><strong>Is not:</strong> a plugin in the Claude Code sense only. The same module is a plugin on Claude Code
+and a verified copy on Codex CLI. A module is also not a dependency of another by default: today
+every <code>requires</code> list in the manifest is empty; <code>integrates_with</code> is optional composition.</p>
+<p><strong>Verify:</strong> <code>python -m hpp graph --view capability --format json</code> shows <code>provides</code>,
+<code>supports:&lt;coverage&gt;</code>, <code>requires</code> and <code>integrates-with</code> edges per module.</p>
+    </div></section>
+
+    <section id="host"><div class="wrap">
+      <p class="eyebrow">04</p>
+      <h2>host</h2>
+<p><strong>Is:</strong> the environment that runs the agent and can execute a module: Claude Code or Codex CLI.</p>
+<p><strong>Is not:</strong> interchangeable. Coverage is declared per module and per host as <code>native</code> (the host
+fires the capability in its lifecycle), <code>explicit-command</code> (the capability exists as a CLI call)
+or <code>unsupported</code> (no verified mechanism).</p>
+<p><strong>Verify:</strong> <code>python -m hpp init --target . --host codex --modules claude-dev-kit --json</code> halts at
+<code>configure</code>, because that module is <code>unsupported</code> on Codex CLI.</p>
+<p><strong>Measured, 2026-09-22, Codex CLI 0.153.4:</strong> the host <em>does</em> have a native hook surface —
+<code>codex features list</code> prints <code>hooks  stable  true</code>, and <code>codex --help</code> carries
+<code>--dangerously-bypass-hook-trust</code> ("run enabled hooks without requiring persisted hook trust"),
+so enabling one is an explicit trust decision. That did <strong>not</strong> promote any module to <code>native</code>
+on Codex, and the same census says why: <code>plugin_hooks</code> prints <code>removed  false</code>, and the string
+<code>codex-hooks.json</code> does not appear in the installed binary (<code>hooks.json</code>, <code>SessionStart</code>,
+<code>PreToolUse</code> and <code>hook_trust</code> do). A module installed by file copy therefore still cannot wire
+its own hooks on this host; the operator pastes them into a Codex hook configuration and
+accepts the trust prompt. <code>explicit-command</code> stays the honest coverage. Two instruments were
+tried and rejected for this question because they do not discriminate: <code>codex features list</code>
+and <code>codex doctor</code> produce byte-identical output with a deliberately malformed <code>hooks.json</code> in
+<code>CODEX_HOME</code> and with none at all.</p>
+    </div></section>
+
+    <section id="gate"><div class="wrap">
+      <p class="eyebrow">05</p>
+      <h2>gate</h2>
+<p><strong>Is:</strong> a named condition, with a measurable answer, that a piece of work must satisfy before it
+moves to the next state.</p>
+<p><strong>Is not:</strong> a checkbox, a review comment or a prompt instruction. A gate that cannot be forced to
+fail by a test is a hypothesis of protection, not a gate.</p>
+<p><strong>Verify:</strong> the five loop gates are <code>scope</code>, <code>fresh-evidence</code>, <code>read-only-checker</code>, <code>human</code> and
+<code>closure</code> (<code>python -m hpp graph --view operational --format mermaid</code>). Appending <code>verified</code> as the
+first event is refused before anything is written: <code>python -m hpp event append --type verified</code>
+exits 2 and creates no <code>.hpp/</code>.</p>
+    </div></section>
+
+    <section id="hook-capability"><div class="wrap">
+      <p class="eyebrow">06</p>
+      <h2>hook capability</h2>
+<p><strong>Is:</strong> what a hook is able to do, declared in the manifest before you install it, from a
+closed vocabulary of six groups: <code>automatic-source-writes</code> (it writes files inside your project
+on its own), <code>command-rewrite-and-process-control</code> (it changes what runs, or what the model is
+given before it runs), <code>transcript-derived-llm-egress</code> (it sends transcript-derived text to a
+model), <code>mcp-network-and-process-activity</code> (it probes the network, talks to an MCP server or
+spawns a process), <code>automatic-permission-gates</code> (it can refuse or warn on a tool call) and
+<code>session-observation-and-cost-records</code> (it reads session state and keeps records). Each hook
+also declares its <code>events</code> and an <code>exit_policy</code> of <code>observe</code> (always exit 0), <code>warn</code> (may exit</p>
+<ol>
+<li>or <code>block</code> (may exit 2, or emit a blocking decision).</li>
+</ol>
+<p><strong>Is not:</strong> a description of what the hook is <em>for</em>, and not optional. A hook with no
+declaration is refused; an empty <code>capabilities</code> list is refused; a module that declares the
+<code>hooks</code> component and declares no hook is refused. Absent is never read as empty — a missing
+declaration that validated as "does nothing" would be the widest permission in the manifest,
+written as silence.</p>
+<p><strong>Verify:</strong> <code>python -m hpp doctor</code> prints <code>hooks=&lt;n&gt;</code> with the permission-gate and LLM-egress
+counts, and <code>--json</code> carries the full census per group — including the groups that count zero,
+so the zero is a measurement and not an omission. <code>python -m hpp init</code> prints the capability
+table of the modules you chose <em>before</em> the commands to paste; choose a module with no hooks
+and the table is empty rather than absent. Remove a hook's <code>capabilities</code> from the manifest and
+the same <code>doctor</code> exits 2.</p>
+    </div></section>
+
+    <section id="evidence"><div class="wrap">
+      <p class="eyebrow">07</p>
+      <h2>evidence</h2>
+<p><strong>Is:</strong> the recorded output of a command that decides a criterion, with enough context to rerun
+it: the command, its exit code or output, the version it ran against, its scope, and when it ran.</p>
+<p><strong>Is not:</strong> a sentence in a transcript, a screenshot without a command, a test that passed on a
+different checkout, or a green status that nobody re-derived. A promise is not evidence; a
+<code>&lt;promise&gt;</code> tag does not pass the done gate.</p>
+<p><strong>Verify:</strong> new in 2.6.0 —
+after <code>python -m hpp event append --type work_started</code>,
+<code>python -m hpp evidence run --id smoke-page --artifact out/report.html --record-event -- python examples/evidence/smoke_page.py</code>
+runs the criterion, writes the bundle under <code>.hpp/evidence/</code> and appends <code>evidence_recorded</code> only
+when it passed; <code>python -m hpp evidence verify &lt;record&gt;</code> re-derives the bundle from disk. The
+lower-level alternative, <code>python -m hpp event append --type evidence_recorded --data '{"work":"ITEM-1","ref":"pytest.txt"}'</code>,
+which earlier releases also have, records a reference without running or hashing anything, after
+the same <code>work_started</code>. Either way, the loop cannot reach
+<code>verified</code> without at least one such event.</p>
+    </div></section>
+
+    <section id="attestation"><div class="wrap">
+      <p class="eyebrow">08</p>
+      <h2>attestation</h2>
+<p><strong>Is:</strong> a JSON record that binds a checker's verdict to the repository identity, the base commit,
+the spec's hash, the maker, the checker, a session id and a sha256 snapshot of every tracked and
+untracked file.</p>
+<p><strong>Is not:</strong> a certificate or a proof that the verdict was right. It proves the verdict was given on
+these bytes. It also does not store your remote URL; it stores a hash of it. By itself it is not a
+signature either: <code>--sign-key</code> makes it one (the checker signs the record with an SSH key through
+<code>ssh-keygen -Y sign</code>, namespace <code>hpp</code>), and <code>attest verify --allowed-signers</code> then refuses a record
+that is unsigned, signed by a key the file does not list for that signer, or changed after it was
+signed. Without the flags the report says <code>not-signed</code> or <code>not-verified</code>, never <code>verified</code>.</p>
+<p><strong>Verify:</strong> <code>python -m hpp attest create --repo . --spec SPEC.md --maker maker-a --checker checker-b --session review:001 --verdict approved --output .hpp/attestation.json</code>
+then <code>python -m hpp attest verify .hpp/attestation.json --repo .</code> returns <code>valid</code>; change any
+file and it returns <code>blocked</code> with <code>snapshot_digest</code> in <code>mismatches</code>. The benchmark control
+<code>evidence-attestation</code> runs exactly this sequence.</p>
+    </div></section>
+
+    <section id="typed-decision"><div class="wrap">
+      <p class="eyebrow">09</p>
+      <h2>typed decision</h2>
+<p><strong>Is:</strong> a record, <code>hpp.decision/v1</code>, of a small question answered outside the harness — by a
+rule, a person, a local model or a hosted typed-decision model — that the harness can check and
+measure. Its <code>authority</code> is always <code>advisory</code>. With <code>direction: raise-only</code> on an ordered question
+(<code>ladder: true</code>), the value a consumer may act on is the higher of the <code>declared</code> value and the
+advised one: advice can raise caution, never lower it. <code>abstention</code> and <code>instrument-failure</code> are
+outcomes, not errors, and neither changes a declared value; a timeout, an HTML page or a malformed
+answer is an instrument failure, never a verdict.</p>
+<p><strong>Is not:</strong> a model call, an approval or a score. The harness calls no model itself:
+<code>hpp decide eval</code> runs the decider you name as a command (which may call one, with your key), or
+replays the records already in the suite. A record never grants or approves anything, and an
+<code>authority</code> other than <code>advisory</code> is refused. Version 1 measures <code>choice</code> questions only; a score
+or a probability of yes has no agreed definition of "correct", so those kinds are refused rather
+than reported as a vacuous 0%. The judged text never enters the record, only its sha256, and
+secret-like text is refused before it is hashed. A model record must name the pinned version that
+answered (an alias such as <code>-latest</code> is refused) and, unless it records an instrument failure, the
+hash of the raw response.</p>
+<p><strong>Verify:</strong> new in 2.6.0 —
+<code>python -m hpp decide validate &lt;record.json&gt;</code> prints <code>"status": "valid"</code> and the <code>effective</code>
+value (<code>action</code> is <code>raised</code>, <code>kept</code>, <code>advised</code> or <code>none</code>) and exits 0; set <code>authority</code> to anything
+but <code>advisory</code> and it exits 2. <code>python -m hpp decide eval examples/typed-decisions/gotcha-family-suite.json --decider-command '["python", "examples/typed-decisions/baseline_decider.py"]'</code>
+reports coverage, selective accuracy, abstentions and instrument failures separately, and exits 0
+when every threshold holds, 1 when the gate fails and 2 for a suite that breaks the contract.</p>
+    </div></section>
+
+    <section id="evidence-bundle"><div class="wrap">
+      <p class="eyebrow">10</p>
+      <h2>evidence bundle</h2>
+<p><strong>Is:</strong> a record, <code>hpp.evidence/v1</code>, of one run of a declared criterion command: the argv, the
+base commit, the exit code measured outside the model, a verdict, the byte count and sha256 of
+stdout and stderr (never the text), and the path, size and sha256 of every file that matches an
+artifact glob you declared. The verdict is <code>passed</code> only when the command exited 0 and every
+declared pattern matched a file this run wrote (a file left untouched from before the run is
+listed as <code>unchanged</code> and does not count); otherwise it is <code>failed</code>, <code>missing-artifacts</code>, <code>timeout</code> or
+<code>could-not-start</code>. <code>run</code> exits 0 when the bundle passed, 1 when it did not, and 2 when it was
+refused or <code>--record-event</code> could not append the event.</p>
+<p><strong>Is not:</strong> a browser driver, a model call or a signature. hpp drives no browser and calls no
+model: it runs the command you name (an end-to-end spec, a test suite, any script) with
+<code>shell=False</code>. The record carries a hash of itself, which makes an edit visible and proves nothing
+about who wrote it — anyone who can write the file can rewrite the hash. So <code>verify</code> alone is
+reconciliation, and a checker that must not trust the maker re-runs <code>command</code> instead — or asks for
+a signature: <code>run --sign-key KEY --signer NAME</code> signs the record with an SSH key, and
+<code>verify --allowed-signers FILE</code> refuses one that is unsigned, signed by someone the file does not
+list, or changed after signing, however consistently its hash was recomputed. <code>run</code> writes
+the record and whatever the command writes; a read-only checker points <code>--out</code> at its own scratch
+directory inside the workspace, or re-runs in its own lane. A command line that looks like it
+carries a secret, and an artifact or <code>--out</code> path outside the workspace, are refused before
+anything runs.</p>
+<p><strong>Verify:</strong> new in 2.6.0 —
+<code>python -m hpp evidence run --id smoke-page --artifact out/report.html --artifact out/smoke.log -- python examples/evidence/smoke_page.py</code>
+prints <code>passed</code> and exits 0, and <code>python -m hpp evidence verify &lt;record&gt;</code>, on the <code>record_path</code> it
+printed, prints <code>valid</code> and exits 0. The same run with <code>--break</code> after the script writes both files and
+still exits 1 with <code>failed</code>; its record verifies as <code>not-evidence</code> (exit 1). Change
+<code>out/report.html</code> after a passed run and <code>verify</code> exits 2 with <code>blocked</code>.</p>
+    </div></section>
+
+    <section id="criterion-sensitivity"><div class="wrap">
+      <p class="eyebrow">11</p>
+      <h2>criterion sensitivity</h2>
+<p><strong>Is:</strong> a measurement of whether a criterion would notice broken code. <code>hpp evidence mutate</code> runs
+the criterion command on a copy of the workspace, first clean — it must pass, or the verdict is
+<code>no-control</code> and nothing else runs — then once per mutant, a copy with one small change that makes
+the code wrong, where it must fail. Mutants are declared (<code>hpp.mutants/v1</code>: file, find, replace) or
+generated from Python tokens with a fixed operator table. A mutant the criterion lets through is a
+blind spot, named by file and line in <code>survivors</code>.</p>
+<p><strong>Is not:</strong> coverage, and not proof that a surviving mutant is a bug. The score is killed ÷
+(killed + survived), null when nothing was measured; a mutant whose text is absent is
+<code>not-applied</code>, never killed. A surviving mutant can be equivalent — a change that does not change
+behaviour — which only a reader can tell. hpp never writes to the user's tree: every run gets a fresh copy, and a mutant
+file reached through a symlink is refused. The command runs inside the copy, so its paths must be
+relative; an editable install or a <code>PYTHONPATH</code> pointing at the checkout makes every mutant survive.</p>
+<p><strong>Verify:</strong> new in 2.7.0 —
+<code>python -m hpp evidence mutate --id weak --generate examples/criterion-sensitivity/discount.py -- python examples/criterion-sensitivity/check_weak.py</code>
+reports <code>blind-spots</code> with three survivors and exits 1; the same with <code>check_strong.py</code> reports
+<code>sensitive</code> and exits 0.</p>
+    </div></section>
+
+    <section id="retrieval-ruler"><div class="wrap">
+      <p class="eyebrow">12</p>
+      <h2>retrieval ruler</h2>
+<p><strong>Is:</strong> a measurement of a retriever you declare, apart from any generation step. The retriever is
+a command that reads <code>{"query", "k"}</code> as JSON on stdin and prints ranked ids; the ruler scores the
+top k of each answer against the ids a labelled suite (<code>hpp.retrieval-suite/v1</code>) marks relevant,
+and reports hit@k, recall@k, precision@k, MRR and nDCG@k. The printed order is the ranking; a
+<code>score</code> is checked, never used to re-sort.</p>
+<p><strong>Is not:</strong> an index, a search engine or a judge of the final answer. The harness runs no index
+and calls no model; without <code>--retriever-command</code> the ruler replays the results recorded in the
+suite. A retriever that answers and finds nothing relevant scores a real 0. A timeout, a non-zero
+exit, output that is not JSON or a duplicate id is an instrument failure: counted apart and
+excluded from the means. With no measured case the metrics are null and the gate says why, never
+0%.</p>
+<p><strong>Verify:</strong> new in 2.6.0 —
+<code>python -m hpp retrieval eval examples/retrieval/suite.json --retriever-command '["python", "examples/retrieval/keyword_retriever.py"]'</code>
+measures seven cases with zero instrument failures and exits 1: the keyword baseline's mean
+recall@3 is 0.786, under the default <code>--min-recall 0.8</code>, so the shipped suite proves the ruler,
+not a retriever. With <code>--retriever-command '["python", "-c", "import sys; sys.exit(3)"]'</code> the same
+suite reports seven instrument failures and null metrics, and exits 1. The exit is 0 when the gate
+passes, 1 when it fails and 2 for a suite or argument that is refused.</p>
+    </div></section>
+
+    <section id="citation-check"><div class="wrap">
+      <p class="eyebrow">13</p>
+      <h2>citation check</h2>
+<p><strong>Is:</strong> a deterministic check, <code>hpp.citation-check/v1</code>, of the citation markers in a text against
+the ids of the context the text was written from. A marker is <code>[ID:&lt;id&gt;]</code> unless <code>--marker</code> gives a
+regex with one capture group for the id. A marker that names an id missing from the context
+(<code>UNKNOWN_ID</code>), a range or list inside one marker (<code>RANGE</code>) and an empty marker (<code>EMPTY_MARKER</code>)
+block with exit 2; more than <code>--max-per-sentence</code> markers in one sentence (<code>TOO_MANY</code>, default 4)
+and a sentence that states a number, percentage, amount or date with no marker (<code>UNCITED_CLAIM</code>)
+warn with exit 1. A clean text exits 0.</p>
+<p><strong>Is not:</strong> a fact check. It never reads a cited source to see whether it supports the sentence:
+a marker that resolves proves the id exists, not that the source says what the sentence says.
+Sentence splitting and number detection are heuristics, written out in <code>hpp/citations.py</code>, and
+their known misses are warnings, never blocks. Context the text never cites is reported as a
+count, not as a finding. Empty text, secret-like text or context, and an unusable marker regex are
+refused with exit 2.</p>
+<p><strong>Verify:</strong> new in 2.6.0 —
+<code>python -m hpp cite check --text examples/citations/answer.md --context examples/citations/context.json</code>
+prints verdict <code>ok</code> and exits 0. On a copy of <code>answer.md</code> with <code>[ID:glossary]</code> changed to
+<code>[ID:glossary-v2]</code> it exits 2 with <code>UNKNOWN_ID</code>; with <code>[ID:runbook-7]</code> removed instead it exits 1
+with <code>UNCITED_CLAIM</code>.</p>
+    </div></section>
+
+    <section id="best-of-n-selection"><div class="wrap">
+      <p class="eyebrow">14</p>
+      <h2>best-of-N selection</h2>
+<p><strong>Is:</strong> N lanes each build their own attempt at one task, and a reviewer keeps one. In the lane
+module, <code>lane_board.py compete --task T --items A,B[,C...]</code> declares the candidates, each built by
+a different lane; <code>lane_board.py select --task T --winner A</code> records the winner, once every
+candidate is <code>CHECKPOINT-READY</code> with evidence or <code>VERIFIED</code>, and only a reviewer whose lane differs
+from every builder lane and whose model family differs from every builder's family may write it.
+The losers become <code>NOT-SELECTED</code>, a terminal state that no transition leaves.</p>
+<p><strong>Is not:</strong> a verification, and not a reliability measure. Choosing 1 of N is pass@N: one attempt
+out of N was good enough, which says nothing about whether the winner passes every run. The winner
+keeps its state, still needs its ordinary <code>VERIFIED</code> before <code>MERGED</code>, and its criterion still needs
+pass^k. A candidate cannot be <code>MERGED</code> while its task has no winner, and
+<code>select --checker-unavailable</code> records <code>DEFERRED</code>, never a winner.</p>
+<p><strong>Verify:</strong> new in 2.6.0 —
+on a competition declared with <code>compete</code> whose candidates are <code>CHECKPOINT-READY</code>,
+<code>lane_board.py select</code> by a reviewer of the same model family as one builder exits 1 with
+"SAME model family"; a reviewer of another lane and another family exits 0, and moving the losing
+item to any state afterwards exits 1. <code>lane_board.py --self-test</code> runs every refusal of <code>compete</code>
+and <code>select</code> next to its control.</p>
+    </div></section>
+
+    <section id="house-session"><div class="wrap">
+      <p class="eyebrow">15</p>
+      <h2>House Session</h2>
+<p><strong>Is:</strong> a deliberation between pinned deciders, recorded so it can be verified and measured.
+<code>hpp.panel/v1</code> names the question, the hash of the state judged, every seat
+(<code>{id, role, provider, model_served, family, lane}</code>) and the budget (<code>max_rounds</code>, <code>max_chars</code>).
+A panel does not start without two model families among the participants, exactly one judge in a
+lane no participant uses, and the roles its <code>session_type</code> needs (<code>plan</code>, <code>review</code>,
+<code>release-gate</code>, <code>incident</code>, <code>design</code>). Each <code>hpp.turn/v1</code> carries a seat's position, its claims
+with the ids they rest on, the hash of the verbatim text and <code>seen_turns</code>: a round-1 turn that
+saw anything is refused, so the blind round is checkable. The session stops by rule
+(<code>not-judged</code>, <code>grounded-convergence</code>, <code>paused-budget</code>, <code>no-new-evidence</code>, <code>max-rounds</code>), and
+<code>hpp.deliberation/v2</code> seals the panel, the turns, the tally, the stop, the judge's
+<code>hpp.decision/v1</code>, the verdict, the dissent that lost and the judge seat's rationale — a steelman
+of each dissenting position and what would change the verdict, required when grounded dissent
+stands; <code>human_decision</code> stays outside the seal. A panel may declare <code>evidence.ids</code>: then a <code>fact</code>
+grounds only through a reference that resolves, and one that does not is <code>unsupported</code>.</p>
+<p><strong>Is not:</strong> a model call, a vote that replaces a person, or proof that a panel beats one agent.
+The seats and the judge answer outside the harness. A seat that did not answer is <strong>not judged</strong>
+— never a vote against — and it blocks the verdict. A position is grounded when its turn states a
+<code>fact</code> whose reference resolves against the declared evidence (or, with none declared, any
+reference — the record says <code>not-declared</code>); a resolved id proves the source exists, not that it
+supports the claim. The panel publishes no confidence it did not measure. The seal is not a signature: <code>verify</code> proves
+that everything derived matches the turns and the judge's record the file holds, and those are
+anchored only by the hashes of the verbatim text and the raw response kept beside it. A session
+ends at the first round where a rule holds; turns of later rounds are refused. Whether a panel is worth its cost is measured
+with <code>hpp decide eval</code>, which reads the panel as one decider (<code>method: panel</code>), not asserted here.</p>
+<p><strong>Verify:</strong> new in 2.7.0, rationale new in 2.8.0 —
+<code>python -m hpp deliberate record --panel examples/house-session/review/panel.json --turns examples/house-session/review/turns.json --judge examples/house-session/review/judge.json --rationale examples/house-session/review/rationale.json --out out/record.json</code>
+seals the review with <code>stop</code> <code>max-rounds</code>, <code>escalate: true</code>, the verdict <code>high</code> and seat <code>c</code>
+kept as dissent, exit 0; <code>python -m hpp deliberate verify out/record.json</code> exits 0, and on a copy
+with the verdict edited exits 2. A panel whose seat is served by <code>-latest</code>, or whose participants
+share one family, exits 2 on <code>deliberate plan</code>.</p>
+    </div></section>
+
+    <section id="maker-and-checker"><div class="wrap">
+      <p class="eyebrow">16</p>
+      <h2>maker and checker</h2>
+<p><strong>Is:</strong> two roles. The maker produces the change. The checker reviews it and reports achievements
+and defects with severity, file and line, without file-editing tools: the host enforces the
+absence of <code>Write</code> and <code>Edit</code>. <code>Bash</code> remains available, and a shell can change whatever it
+reaches, so read-only is a promise, verified by comparing the working tree before and after the
+review — <code>git status --porcelain</code> captured on both sides must match, and a checker that changed
+the tree invalidates its own findings.</p>
+<p><strong>Is not:</strong> two turns of the same agent, or the same agent under a different name. Attestation
+refuses a maker and checker whose names match ignoring case. The modules' checker agents declare
+tool sets without <code>Write</code> or <code>Edit</code>.</p>
+<p><strong>Verify:</strong> <code>python -m hpp attest create ... --maker a --checker A ...</code> exits 2 with "maker and
+checker must be different non-empty actors". In the lane module,
+<code>checker_router.py --maker claude --require</code> picks a checker from a different provider and exits
+2 when none is available.</p>
+    </div></section>
+
+    <section id="agent-team"><div class="wrap">
+      <p class="eyebrow">17</p>
+      <h2>agent team</h2>
+<p><strong>Is:</strong> two or more agent sessions or subagents working on one repository, each in its own lane, whose
+work is split by a compiled spec and whose verdicts come from another lane and another model family.</p>
+<p><strong>Is not:</strong> something the harness runs. The <code>hpp</code> package starts no agent, schedules nothing and calls
+no model; a team is whatever your hosts run, and the lane-kit starts a session only on an action the
+operator takes (a Lane Dashboard action confirmed, or the seats of an invoked <code>/deliberate</code>). Nor is it
+a promise of parallel safety: the WorkGraph does not look at paths; the Lane Map does.</p>
+<p><strong>Verify:</strong> <code>python -m hpp work waves examples/reliable-coding/workgraph.json</code> places <code>build</code> and <code>docs</code>
+in wave 2 together; <code>python -m hpp deliberate plan examples/house-session/review/panel.json</code> prints a
+panel of four seats from four families with the judge in <code>lane-judge</code>; in the lane module,
+<code>lane_board.py --self-test</code> runs every refusal next to its control.</p>
+    </div></section>
+
+    <section id="orchestration"><div class="wrap">
+      <p class="eyebrow">18</p>
+      <h2>orchestration</h2>
+<p><strong>Is:</strong> whatever decides which agent works on what, and when: a lead agent handing out subagents, a
+script that fans the work out to agents, a CI job, or a person with several terminals. HPP sits under
+it: the orchestrator decides who works on what; HPP decides what counts as done.</p>
+<p><strong>Is not:</strong> something HPP does. The <code>hpp</code> package starts no agent, schedules nothing and calls no
+model; it plans an order (a spec compiles into waves) and does not run it. The lane-kit starts a
+session only on an action the operator takes: a Lane Dashboard action confirmed, or the seats of an
+invoked <code>/deliberate</code>.</p>
+<p><strong>Verify:</strong> a refusal is a non-zero exit code, so an orchestrator can use it as a gate:
+<code>python -m hpp attest create ... --maker a --checker a ...</code> exits 2; <code>python -m hpp findings check</code> on a
+record with a key the contract does not define exits 2; <code>python -m hpp evidence verify</code> on a record that
+does not exist exits 2.</p>
+    </div></section>
+
+    <section id="lane"><div class="wrap">
+      <p class="eyebrow">19</p>
+      <h2>lane</h2>
+<p><strong>Is:</strong> one concurrent session's claim on a territory: an id, a list of paths, an exclusivity
+flag and a heartbeat.</p>
+<p><strong>Is not:</strong> a branch, a worktree or a lock file. A lane's authority expires: with <code>--now</code>, a
+heartbeat older than <code>--suspect-after</code> makes it <code>suspect</code>, older than <code>--dead-after</code> makes it
+<code>dead</code>, and a dead lane never produces a collision. A heartbeat in the future is an error, not
+liveness.</p>
+<p><strong>Verify:</strong> <code>python -m hpp map lane examples/reliable-coding/lanes.json --now 1000 --suspect-after 60 --dead-after 300</code>
+reports liveness per lane and an empty <code>collisions</code> list; the benchmark control <code>lane-collision</code>
+adds an overlapping live lane and a dead one and checks that only the live pair collides.</p>
+    </div></section>
+
+    <section id="wave"><div class="wrap">
+      <p class="eyebrow">20</p>
+      <h2>wave</h2>
+<p><strong>Is:</strong> a set of work units with no dependency among them, released together, whose barrier
+closes before the next wave opens.</p>
+<p><strong>Is not:</strong> a batch size, a number of parallel agents, or a sprint. Parallelism is a consequence
+of the dependency graph, not a parameter.</p>
+<p><strong>Verify:</strong> <code>python -m hpp work waves examples/reliable-coding/workgraph.json</code> yields
+<code>spec</code> → <code>build, docs</code> → <code>verify</code>.</p>
+    </div></section>
+
+    <section id="workgraph"><div class="wrap">
+      <p class="eyebrow">21</p>
+      <h2>WorkGraph</h2>
+<p><strong>Is:</strong> the compiled form of a spec: work units with <code>id</code>, <code>depends_on</code>, non-empty <code>acceptance</code>
+criteria and a <code>tier</code>, ordered into waves.</p>
+<p><strong>Is not:</strong> an executor. It schedules nothing and launches nothing. A cycle is a compilation
+error with the cycle path in the message, never an empty wave.</p>
+<p><strong>Verify:</strong> <code>python -m hpp work plan examples/reliable-coding/workgraph.json</code> prints units, edges,
+waves and tier counts; the benchmark control <code>workgraph-waves</code> feeds it <code>a -&gt; b -&gt; a</code> and expects
+an error.</p>
+    </div></section>
+
+    <section id="spec-driven-work"><div class="wrap">
+      <p class="eyebrow">22</p>
+      <h2>spec-driven work</h2>
+<p><strong>Is:</strong> work that derives from a declared specification: a JSON object whose <code>work</code> list names
+each unit with an <code>id</code>, its <code>depends_on</code>, non-empty <code>acceptance</code> criteria and a <code>tier</code>. The spec
+is the input; the order, the waves and the edges are outputs of compiling it.</p>
+<p><strong>Is not:</strong> a waterfall, and not "write a document before coding". The spec is small enough to
+be recompiled every time it changes, and compiling it costs one command. It is also not a
+conversation: a dependency that was agreed in chat but not written in <code>depends_on</code> does not
+exist for the harness.</p>
+<p><strong>Verify:</strong> <code>python -m hpp work plan examples/reliable-coding/workgraph.json</code> prints the compiled
+form; remove an <code>acceptance</code> list and the same command exits 2 with "needs non-empty acceptance
+criteria"; name a dependency that is not a unit and it exits 2 with "unknown dependency".</p>
+    </div></section>
+
+    <section id="cited-and-executed"><div class="wrap">
+      <p class="eyebrow">23</p>
+      <h2>cited and executed</h2>
+<p><strong>Is:</strong> the difference between a test that names an acceptance criterion and a test that ran it.
+A test cites a criterion with <code>[spec: capability/scenario]</code> in its docstring; <code>hpp work coverage</code>
+links every criterion of a spec to the tests that cite it (<code>hpp.spec-coverage/v1</code>). Given the
+JUnit XML report of the run, it joins each citing test to the cases the runner executed and sorts
+the criteria into <code>executed</code>, <code>failed</code>, <code>cited_not_run</code>, <code>orphans</code> and <code>unknown</code>
+(<code>hpp.spec-execution/v1</code>); <code>complete</code> holds only when every criterion was executed.</p>
+<p><strong>Is not:</strong> a test runner, and not proof that a passing test checks what its criterion says —
+that is what <code>hpp evidence mutate</code> measures. A skipped test, a deselected one and a docstring on a
+module or a class all cite a criterion without running it, and none of them counts. A report case
+is joined by pytest's convention (dotted module plus class chain in <code>classname</code>, function plus
+<code>[parameters]</code> in <code>name</code>); <code>matched_testcases</code> publishes how many cases were joined, so a report
+that describes another run shows up as zero, not as nothing having run.</p>
+<p><strong>Verify:</strong> new in 2.8.0 — <code>python -m hpp work coverage examples/cited-and-run/workgraph.json --tests examples/cited-and-run/check_prices.py</code>
+reports every criterion covered and exits 0; after
+<code>python -m pytest examples/cited-and-run/check_prices.py -q -p no:cacheprovider --junitxml out/cited-and-run.xml</code>,
+the same command with <code>--junit out/cited-and-run.xml</code> reports <code>bulk-discount</code> as <code>cited_not_run</code>
+(its test was skipped) and exits 1.</p>
+    </div></section>
+
+    <section id="review-lens"><div class="wrap">
+      <p class="eyebrow">24</p>
+      <h2>review lens</h2>
+<p><strong>Is:</strong> a read-only reviewer that looks at a change for one kind of defect — a verification gap,
+a partial set, a deletion with readers left, stale evidence — and answers with an
+<code>hpp.findings/v1</code> document: each finding has a stable <code>code</code>, a <code>severity</code>, a <code>file</code> and <code>line</code>,
+the <code>claim</code> and the <code>evidence</code> it rests on, and the document states what it <code>inspected</code>.
+<code>hpp findings check</code> holds the shape and derives the verdict (<code>fail</code>, <code>warn</code> or <code>pass</code>).</p>
+<p><strong>Is not:</strong> proof that the review is right. The check reads the answer, never the change. It
+refuses what makes a review unreadable: a key the contract does not define (the whole document),
+an empty <code>inspected</code> (nothing found and nothing looked at read the same), a finding without
+evidence, the same finding twice. The four lenses ship as sub-agents of the operator module;
+they become the seats of a review panel.</p>
+<p><strong>Verify:</strong> new in 2.8.0 — <code>python -m hpp findings check examples/review-lenses/deletion-clean.json examples/review-lenses/partial-set.json</code>
+reports <code>pass</code> for the first document and <code>warn</code> for the second, with one <code>CALLER_NOT_UPDATED</code>,
+and exits 1; <code>python -m hpp findings check examples/review-lenses/deletion-clean.json</code> alone exits 0.</p>
+    </div></section>
+
+    <section id="wave-driven-execution"><div class="wrap">
+      <p class="eyebrow">25</p>
+      <h2>wave-driven execution</h2>
+<p><strong>Is:</strong> advancing by wave rather than by task: every unit in a wave may start once the wave
+opens, and the next wave opens only after every unit in the current one has closed.</p>
+<p><strong>Is not:</strong> a queue of tasks picked in any order, and not a promise the harness enforces on its
+own. <code>hpp work waves</code> computes where each barrier is; nothing in <code>python -m hpp</code> stops an
+operator from starting a wave-2 unit early. Honouring the barrier is the operator's contract,
+and the loop's events name no wave.</p>
+<p><strong>Verify:</strong> <code>python -m hpp work waves examples/reliable-coding/workgraph.json</code> returns
+<code>waves</code> with an <code>index</code> per wave and the units that belong to it; <code>verify</code> appears only in
+wave 3, after <code>build</code> and <code>docs</code>.</p>
+    </div></section>
+
+    <section id="parallel-and-sequential"><div class="wrap">
+      <p class="eyebrow">26</p>
+      <h2>parallel and sequential</h2>
+<p><strong>Is:</strong> a consequence of the dependency graph, not a choice. Two units with no path between
+them, whose dependencies have all closed, land in the same wave; a unit lands in the wave after
+the latest of its dependencies. Nobody decides that <code>build</code> and <code>docs</code> may run together; the
+absence of an edge between them decides it.</p>
+<p><strong>Is not:</strong> "run everything in parallel". Running everything at once ignores the edges; running
+by wave ignores nothing. It is also not a safety claim about files: two units in the same wave
+may still write the same paths, and the WorkGraph does not look at paths. That question is
+answered by the Lane Map, whose collision is two live exclusive lanes whose territories are
+equal or nested.</p>
+<p><strong>Verify:</strong> <code>python -m hpp work waves examples/reliable-coding/workgraph.json</code> places <code>build</code>
+and <code>docs</code> in wave 2 together (both depend only on <code>spec</code>); <code>python -m hpp map lane examples/reliable-coding/lanes.json --now 1000</code>
+reports <code>collisions: []</code> for two lanes on disjoint paths.</p>
+    </div></section>
+
+    <section id="topological-order"><div class="wrap">
+      <p class="eyebrow">27</p>
+      <h2>topological order</h2>
+<p><strong>Is:</strong> the order in which units are released, derived from the edges: a unit is never released
+before every unit it depends on. Within one wave the order is alphabetical by <code>id</code>, so the same
+spec yields the same output on every machine.</p>
+<p><strong>Is not:</strong> a priority list, and not the order in which units were written in the spec. The
+person declares edges; the graph decides the order; neither the person nor the agent picks the
+sequence by hand. A cycle is a spec that contradicts itself: <code>a</code> must finish before <code>c</code>, <code>c</code>
+before <code>b</code>, <code>b</code> before <code>a</code>, and no order satisfies all three. The compiler refuses it and names
+the path; it never breaks the cycle for you.</p>
+<p><strong>Verify:</strong> a spec with <code>a -&gt; c -&gt; b -&gt; a</code> makes <code>python -m hpp work waves SPEC.json</code> exit 2 with
+<code>dependency cycle: a -&gt; c -&gt; b -&gt; a</code>; a unit that depends on itself exits 2 with
+<code>dependency cycle: a -&gt; a</code>. The benchmark control <code>workgraph-waves</code> runs the two-unit case.</p>
+    </div></section>
+
+    <section id="barrier"><div class="wrap">
+      <p class="eyebrow">28</p>
+      <h2>barrier</h2>
+<p><strong>Is:</strong> the boundary between two waves: the point at which every unit of the current wave has
+met its acceptance criteria and the next wave may open.</p>
+<p><strong>Is not:</strong> a checkpoint meeting or a status update. A unit in wave <code>n+1</code> depends, directly or
+through other units, on something in an earlier wave; starting it before the barrier closes means
+building on a dependency whose criteria have not passed. If that dependency then changes, the
+early unit's evidence describes a checkout that no longer exists, and "wave <code>n</code> is closed" stops
+being a sentence with a measurable meaning.</p>
+<p><strong>Verify:</strong> <code>python -m hpp work waves examples/reliable-coding/workgraph.json</code> shows three waves;
+the barrier is the boundary between consecutive indices. The harness computes it and reports it,
+and does not enforce it: there is no wave in the loop's events, only <code>work_started</code> through
+<code>verified</code> (<code>python -m hpp graph --view operational --format mermaid</code>).</p>
+    </div></section>
+
+    <section id="context-budget"><div class="wrap">
+      <p class="eyebrow">29</p>
+      <h2>context budget</h2>
+<p><strong>Is:</strong> a character limit under which the context compiler fits whole input blocks, highest
+priority first, recording for each block its source, size and sha256, and listing what it left
+out.</p>
+<p><strong>Is not:</strong> a token count, a summariser or a retrieval system. A block that does not fit is
+omitted entirely, never sliced. Content that looks like a secret (an API key assignment, a PEM
+header, a provider-style key prefix) is refused, not redacted.</p>
+<p><strong>Verify:</strong> <code>python -m hpp context compile examples/reliable-coding/context.json --budget 160</code>
+reports <code>used</code> and <code>remaining</code> in characters, with the separator between blocks charged to the
+budget.</p>
+    </div></section>
+
+    <section id="readiness"><div class="wrap">
+      <p class="eyebrow">30</p>
+      <h2>readiness</h2>
+<p><strong>Is:</strong> the count of checks that <code>hpp init</code> actually ran and their result, each with the command
+that reproduces it: <code>verified</code>, <code>failed</code> or <code>not-verified</code>.</p>
+<p><strong>Is not:</strong> a percentage of completion or an estimate. A check that did not run is reported as
+not verified, never as zero and never as one hundred.</p>
+<p><strong>Verify:</strong> <code>python -m hpp init --target &lt;dir&gt; --json</code> returns <code>readiness.items</code> with eleven
+entries. From a clone of this repository, distribution integrity and module checksums are
+<code>verified</code>, because <code>marketplace.json</code> and every module's <code>CHECKSUMS.txt</code> sit beside the manifest;
+from a pip install, which carries neither, the same two items are <code>not-verified</code>.</p>
+    </div></section>
+
+    <section id="monitor"><div class="wrap">
+      <p class="eyebrow">31</p>
+      <h2>monitor</h2>
+<p><strong>Is:</strong> a declared observation contract: a target, a probe type, a cadence, a freshness window, a
+severity, a cost and the gate that consumes it.</p>
+<p><strong>Is not:</strong> a running process. The Monitor Map projects the <code>last_signal</code> you supply against the
+<code>--now</code> you supply. And a healthy monitor is not a correct result. Three questions stay separate:</p>
+<table>
+<thead><tr><th>question</th><th>what answers it</th></tr></thead>
+<tbody>
+<tr><td>is the service up?</td><td>the probe returned within its cadence</td></tr>
+<tr><td>is the data fresh?</td><td><code>now - last_signal &lt;= freshness</code>, and <code>last_signal</code> is not in the future beyond <code>--skew-tolerance</code></td></tr>
+<tr><td>is the result correct?</td><td>a criterion command, recorded as evidence; no monitor answers this</td></tr>
+</tbody>
+</table>
+<p>A signal stamped in the future is <code>skew</code>, not <code>healthy</code>; a missing signal is <code>unknown</code>, not
+<code>stale</code>.</p>
+<p><strong>Verify:</strong> <code>python -m hpp map monitor examples/reliable-coding/monitors.json --now 1000</code> shows a
+<code>healthy</code> service probe beside a <code>stale</code> data probe in the same projection.</p>
+    </div></section>
+
+    <section id="gotcha"><div class="wrap">
+      <p class="eyebrow">32</p>
+      <h2>gotcha</h2>
+<p><strong>Is:</strong> a lesson derived from a command failure that recurred, stored by error family and
+injected as a preamble before the next run of the same kind of task.</p>
+<p><strong>Is not:</strong> a permanent rule created from one incident, and not a record of secrets. Promotion
+from failure to gotcha requires recurrence within a window; ambiguous output does not count as a
+failure; every stored entry is redacted by shape (private keys, credentials in URLs, bearer
+tokens, JWTs, high-entropy blobs) before it is written. The hooks are warn-only and never block.</p>
+<p><strong>Verify:</strong> in an installed <code>gotcha-memory</code> module, the <code>gotcha-memory</code> skill lists, seeds and
+inspects the store; the hooks exit 0 in every case.</p>
+    </div></section>
+
+    <section id="passk-and-passk"><div class="wrap">
+      <p class="eyebrow">33</p>
+      <h2>pass@k and pass^k</h2>
+<p><strong>Is:</strong> two metrics over <code>k</code> executions of the same case. <code>pass@k</code> is true when at least one run
+passed and measures capability. <code>pass^k</code> is true when every run passed and measures reliability.
+The difference between them is the flake rate.</p>
+<p><strong>Is not:</strong> interchangeable, and not a model benchmark. A capability gate requires
+<code>pass@k &gt;= 0.90</code>; a regression gate requires <code>pass^k == 1.00</code>; <code>--gate both</code> requires both.</p>
+<p><strong>Verify:</strong> <code>python -m hpp eval run examples/reliable-coding/benchmark-suite.json -k 3 --gate both</code>
+prints both metrics and the gate; exit 0 on pass, 1 on fail.</p>
+    </div></section>
+
+    <section id="command-policy"><div class="wrap">
+      <p class="eyebrow">34</p>
+      <h2>command policy</h2>
+<p><strong>Is:</strong> a classifier that reads one command as text and returns one of three verdicts, <code>ALLOW</code>,
+<code>MANUAL</code> or <code>BLOCK</code>, with the rule that matched, its reason and its <code>source</code>. The built-in rules
+are fixed in <code>hpp/policy.py</code>; a project adds to them in <code>.hpp/policy.json</code> (<code>hpp.policy/v1</code>, or
+<code>--policy FILE</code>): rules of its own that earn <code>BLOCK</code> or <code>MANUAL</code>, and built-in <code>MANUAL</code> rules raised
+to <code>BLOCK</code>. The first match wins, and every <code>BLOCK</code> rule is tried before any <code>MANUAL</code> rule, whatever
+its origin.</p>
+<table>
+<thead><tr><th>verdict</th><th>rule</th><th>matches</th></tr></thead>
+<tbody>
+<tr><td><code>BLOCK</code></td><td><code>recursive-delete</code></td><td><code>rm</code> with both a recursive and a force option in any spelling (<code>-rf</code>, <code>-fr</code>, <code>-r -f</code>, <code>--recursive --force</code>), or <code>rmdir /s</code></td></tr>
+<tr><td><code>BLOCK</code></td><td><code>force-push</code></td><td><code>git push</code> with <code>--force</code> or <code>-f</code></td></tr>
+<tr><td><code>BLOCK</code></td><td><code>main-push</code></td><td><code>git push</code> naming <code>main</code> or <code>master</code></td></tr>
+<tr><td><code>BLOCK</code></td><td><code>pipe-to-shell</code></td><td><code>curl</code> or <code>wget</code> piped into a shell (<code>sh</code>, <code>bash</code>, <code>zsh</code>, <code>dash</code>, <code>ksh</code>), with or without <code>sudo</code></td></tr>
+<tr><td><code>BLOCK</code></td><td><code>destructive-sql</code></td><td><code>DROP</code> or <code>TRUNCATE</code> followed by <code>TABLE</code> or <code>DATABASE</code></td></tr>
+<tr><td><code>MANUAL</code></td><td><code>external-push</code></td><td>any other <code>git push</code></td></tr>
+<tr><td><code>MANUAL</code></td><td><code>external-send</code></td><td><code>curl</code> or <code>wget</code> whose next word is an <code>http://</code> or <code>https://</code> URL</td></tr>
+<tr><td><code>MANUAL</code></td><td><code>decision-advisor</code></td><td>a command naming <code>typed-decisions/decide.py</code> — new in 2.6.0</td></tr>
+</tbody>
+</table>
+<p>Anything else is <code>ALLOW</code> (rule <code>allow</code>), and an empty command is <code>ALLOW</code> (rule <code>empty</code>).</p>
+<p><strong>Is not:</strong> a sandbox, a shell parser or a statement that a command is safe. It never runs the
+command, and <code>ALLOW</code> means that no rule matched: a transfer made by any other tool (<code>scp</code>, <code>rsync</code>, a
+Python one-liner) matches no rule and is <code>ALLOW</code>. The mode changes only the exit code, never the verdict: in
+<code>audit</code> every verdict exits 0; in <code>enforce</code>, <code>BLOCK</code> exits 2 and <code>MANUAL</code> exits 1. Whether a
+verdict stops anything depends on what calls it — a hook on Claude Code, a preflight command on
+Codex CLI. Nor is it something a policy file can loosen: a rule with action <code>ALLOW</code>, a raise that
+keeps or lowers a class, or a rule that reuses a built-in id refuses the whole file, and a refused
+file refuses the check (exit 2) rather than falling back to the built-ins.</p>
+<p><strong>Verify:</strong> <code>python -m hpp policy check --mode enforce --command "rm -rf src"</code> prints <code>BLOCK</code> with
+rule <code>recursive-delete</code> and exits 2; <code>--command "git push origin feature"</code> prints <code>MANUAL</code> (rule
+<code>external-push</code>) and exits 1; <code>--command "python -m pytest -q"</code> prints <code>ALLOW</code> and exits 0; the
+same three with <code>--mode audit</code> print the same verdicts and exit 0.</p>
+    </div></section>
+
+    <section id="exit-contract"><div class="wrap">
+      <p class="eyebrow">35</p>
+      <h2>exit contract</h2>
+<p><strong>Is:</strong> four process exit codes with fixed meaning across the harness and every module:
+<code>0</code> ok, <code>1</code> warn or manual gate, <code>2</code> block, <code>3</code> usage or internal error.</p>
+<p><strong>Is not:</strong> a suggestion. The manifest is rejected if it declares anything else. In <code>enforce</code>
+mode, <code>BLOCK</code> exits 2 and <code>MANUAL</code> exits 1; in <code>audit</code> mode the verdict is printed and the exit
+is always 0.</p>
+<p><strong>Verify:</strong> <code>python -m hpp policy check --mode enforce --command "rm -rf src"</code> exits 2;
+<code>--command "git push origin feature"</code> exits 1; <code>--mode audit</code> with either exits 0.</p>
+    </div></section>
+
+    <section id="plan-and-apply"><div class="wrap">
+      <p class="eyebrow">36</p>
+      <h2>plan and apply</h2>
+<p><strong>Is:</strong> the two-invocation contract for anything that writes: the first run prints what would
+happen and exits 0 without writing; a second run with <code>--apply</code> performs it.</p>
+<p><strong>Is not:</strong> a confirmation prompt. Nothing in the harness blocks on <code>input()</code>; the "yes" is the
+re-invocation, which is auditable and works when the operator is an agent.</p>
+<p><strong>Verify:</strong> <code>python -m hpp init --target &lt;empty-dir&gt;</code> leaves the directory empty (<code>find &lt;dir&gt; -type f | wc -l</code> is 0);
+the same command with <code>--apply</code> writes exactly <code>.hpp/profile.json</code>. Wiring for settings and hooks
+is printed in both cases and written in neither.</p>
+    </div></section>
+
+    <section id="control"><div class="wrap">
+      <p class="eyebrow">37</p>
+      <h2>control</h2>
+<p><strong>Is:</strong> a known-good and a known-bad case run through the same instrument, so that the
+instrument is shown to distinguish them before its verdict is trusted.</p>
+<p><strong>Is not:</strong> a test that only exercises the happy path. A gate that passes on good input and was
+never shown to fail on bad input cannot be told apart from a gate that is absent.</p>
+<p><strong>Verify:</strong> every case in <code>examples/reliable-coding/benchmark-suite.json</code> is a control with both
+directions: <code>policy-enforcement</code> checks that <code>python -m pytest -q</code> is <code>ALLOW</code> and <code>rm -rf src</code> is
+<code>BLOCK</code>; <code>event-evidence-gate</code> checks that a valid sequence reaches <code>verified</code> and that a bare
+<code>verified</code> is refused without creating the log. Each test file in <code>tests/</code> carries at least one
+test named <code>CONTROLE</code> that proves the file knows how to fail.</p>
+    </div></section>
+
+    <section id="event-log"><div class="wrap">
+      <p class="eyebrow">38</p>
+      <h2>event log</h2>
+<p><strong>Is:</strong> an append-only JSON-lines file at <code>.hpp/events.jsonl</code> in the workspace, where each line
+carries a contiguous <code>seq</code>, an <code>id</code> of the form <code>event:&lt;seq&gt;</code>, a <code>type</code>, a <code>data</code> object and a
+<code>prev_sha256</code>: the sha256 of the line before it, the first linking to the hash of nothing.</p>
+<p><strong>Is not:</strong> a chat history, and not something the harness will repair. A line whose <code>seq</code> is not
+contiguous or whose <code>id</code> does not match is a corrupt log, and the projection stops rather than
+guessing. A line whose <code>prev_sha256</code> does not match the line before it is a broken chain: <code>status</code>
+refuses it and <code>event verify</code> names the first divergent step. A log written before the chain
+carries no links; it reads as before and verifies as <code>legacy</code>. The chain alone cannot see an edit
+of its last line: the tail is anchored only by a copy of the chain's <code>head_sha256</code> kept outside that
+line — the next append, which carries it as its <code>prev_sha256</code>, or a copy you keep elsewhere. An
+attestation records no <code>head_sha256</code>; its snapshot binds the log only when <code>.hpp/events.jsonl</code> is not
+ignored by git, and the published repository ignores <code>.hpp/</code>. An event whose transition is not
+allowed from the current state is refused before the write.</p>
+<p><strong>Verify:</strong> <code>python -m hpp status --json</code> shows the state, the count, the history and the chain
+summary; <code>python -m hpp event verify</code> reports <code>intact</code>, <code>legacy</code>, <code>broken</code> (with <code>first_divergent</code>)
+or <code>empty</code>; <code>python -m hpp resume</code> returns the next step derived from the same log.</p>
+    </div></section>
+
+    <section id="bundle"><div class="wrap">
+      <p class="eyebrow">39</p>
+      <h2>bundle</h2>
+<p><strong>Is:</strong> a named set of modules recommended for one objective, with the capabilities it is
+expected to provide.</p>
+<p><strong>Is not:</strong> a dependency. <code>reliable-coding</code> names six modules; installing one of them alone is
+valid.</p>
+<p><strong>Verify:</strong> <code>python -m hpp install --bundle reliable-coding --host codex --target &lt;dir&gt;</code> prints a
+plan-only receipt listing each module and its integration mode on that host.</p>
+    </div></section>
+
+  </main>
+  <footer><div class="wrap">
+    <p class="five">AGENTS · EVIDENCE · MEMORY · PROTOCOL · CONTINUITY</p>
+    <strong>House Party Protocol</strong>
+    <p>Operate coding agents under evidence, not trust.</p>
+    <p><a href="index.html">Documentation</a> · <a href="MANUAL.html">Harness manual</a> · <a href="CATALOG.html">Module catalogue</a> · <a href="https://github.com/rusharlabs/house-party-protocol/blob/main/docs/CONCEPTS.md">Markdown source</a> · <a href="CONCEPTS.pt-BR.html" hreflang="pt-BR" lang="pt-BR">Português</a></p>
+  </div></footer>
+</body>
+</html>

@@ -132,9 +132,13 @@ que as versões anteriores também têm, registra uma referência sem rodar nem 
 base, ao hash da spec, ao maker, ao checker, a um id de sessão e a um snapshot sha256 de todo
 arquivo rastreado e não rastreado.
 
-**Não é:** uma assinatura, um certificado ou uma prova de que o veredito estava certo. Ela prova
-que o veredito foi dado sobre estes bytes. Ela também não armazena a URL do seu remoto; armazena um
-hash dela.
+**Não é:** um certificado ou uma prova de que o veredito estava certo. Ela prova que o veredito foi
+dado sobre estes bytes. Ela também não armazena a URL do seu remoto; armazena um hash dela. Por si
+só ela também não é uma assinatura: `--sign-key` a torna uma (o checker assina o registro com uma
+chave SSH via `ssh-keygen -Y sign`, namespace `hpp`), e `attest verify --allowed-signers` então
+recusa um registro não assinado, assinado por uma chave que o arquivo não lista para aquele signer,
+ou alterado depois de assinado. Sem as flags o relatório diz `not-signed` ou `not-verified`, nunca
+`verified`.
 
 **Verifique:** `python -m hpp attest create --repo . --spec SPEC.md --maker maker-a --checker checker-b --session review:001 --verdict approved --output .hpp/attestation.json`
 e em seguida `python -m hpp attest verify .hpp/attestation.json --repo .` devolve `valid`; altere
@@ -184,8 +188,11 @@ recusado ou o `--record-event` não conseguiu acrescentar o evento.
 navegador e não chama modelo: ele roda o comando que você nomeia (uma spec ponta a ponta, uma suíte
 de testes, qualquer script) com `shell=False`. O registro carrega um hash de si mesmo, o que torna
 uma edição visível e não prova nada sobre quem o escreveu — quem consegue escrever o arquivo
-consegue reescrever o hash. Por isso o `verify` é reconciliação, e um checker que não pode confiar
-no maker reexecuta o `command` em vez disso. O `run` escreve o registro e o que o comando escrever;
+consegue reescrever o hash. Por isso o `verify` sozinho é reconciliação, e um checker que não pode
+confiar no maker reexecuta o `command` em vez disso — ou pede uma assinatura: `run --sign-key CHAVE
+--signer NOME` assina o registro com uma chave SSH, e `verify --allowed-signers ARQUIVO` recusa um
+registro não assinado, assinado por alguém que o arquivo não lista, ou alterado depois de assinado,
+por mais consistente que o hash tenha sido recalculado. O `run` escreve o registro e o que o comando escrever;
 um checker somente leitura aponta o `--out` para um diretório de rascunho próprio dentro do
 workspace, ou reexecuta na própria lane. Uma linha de comando que pareça carregar um segredo, e um
 caminho de artefato ou de `--out` fora do workspace, são recusados antes de qualquer coisa rodar.
@@ -341,6 +348,37 @@ conjuntos de ferramentas sem `Write` nem `Edit`.
 checker must be different non-empty actors". No módulo de lane,
 `checker_router.py --maker claude --require` escolhe um checker de outro provedor e sai com 2
 quando nenhum está disponível.
+
+## time de agentes
+
+**É:** duas ou mais sessões ou subagents trabalhando no mesmo repositório, cada um na sua lane, com o
+trabalho dividido por uma spec compilada e vereditos vindos de outra lane e de outra família de modelo.
+
+**Não é:** algo que o harness roda. O pacote `hpp` não inicia agente, não agenda nada e não chama
+modelo; o time é o que os seus hosts rodam, e o lane-kit só inicia uma sessão por ação do operador
+(uma ação confirmada no Lane Dashboard, ou os assentos de um `/deliberate` chamado). Também não é
+promessa de segurança em paralelo: o WorkGraph não olha caminhos; o Lane Map olha.
+
+**Verifique:** `python -m hpp work waves examples/reliable-coding/workgraph.json` põe `build` e `docs`
+juntos na wave 2; `python -m hpp deliberate plan examples/house-session/review/panel.json` imprime um
+painel de quatro assentos de quatro famílias com o juiz em `lane-judge`; no módulo de lanes,
+`lane_board.py --self-test` roda cada recusa ao lado do seu controle.
+
+## orquestração
+
+**É:** o que decide qual agente trabalha em quê, e quando: um agente líder distribuindo subagents, um
+script que reparte o trabalho entre agentes, um job de CI, ou uma pessoa com vários terminais. O HPP
+fica abaixo disso: o orquestrador decide quem trabalha em quê; o HPP decide o que conta como pronto.
+
+**Não é:** algo que o HPP faz. O pacote `hpp` não inicia agente, não agenda nada e não chama modelo;
+ele planeja uma ordem (uma spec compila em waves) e não a executa. O lane-kit só inicia uma sessão
+por ação do operador: uma ação confirmada no Lane Dashboard, ou os assentos de um `/deliberate`
+chamado.
+
+**Verifique:** uma recusa é um código de saída diferente de zero, então um orquestrador pode usá-la
+como portão: `python -m hpp attest create ... --maker a --checker a ...` sai com 2; `python -m hpp
+findings check` sobre um registro com uma chave que o contrato não define sai com 2; `python -m hpp
+evidence verify` sobre um registro que não existe sai com 2.
 
 ## lane
 
@@ -575,9 +613,11 @@ imprime as duas métricas e o gate; saída 0 quando passa, 1 quando falha.
 ## política de comandos
 
 **É:** um classificador que lê um comando como texto e devolve um de três vereditos, `ALLOW`,
-`MANUAL` ou `BLOCK`, com a regra que casou e o motivo dela. As regras são fixas em
-`hpp/policy.py`; a primeira que casa vence, e toda regra `BLOCK` é testada antes de qualquer regra
-`MANUAL`.
+`MANUAL` ou `BLOCK`, com a regra que casou, o motivo dela e a sua `source`. As regras embutidas são
+fixas em `hpp/policy.py`; um projeto acrescenta as suas em `.hpp/policy.json` (`hpp.policy/v1`, ou
+`--policy ARQUIVO`): regras próprias que ganham `BLOCK` ou `MANUAL`, e regras `MANUAL` embutidas
+elevadas a `BLOCK`. A primeira que casa vence, e toda regra `BLOCK` é testada antes de qualquer
+regra `MANUAL`, seja qual for a origem.
 
 | veredito | regra | casa com |
 |---|---|---|
@@ -597,7 +637,10 @@ roda o comando, e `ALLOW` quer dizer que nenhuma regra casou: uma transferência
 ferramenta (`scp`, `rsync`, uma linha de Python) não casa regra nenhuma e é `ALLOW`. O modo muda só o código de saída, nunca o veredito: em
 `audit` todo veredito sai com 0; em `enforce`, `BLOCK` sai com 2 e `MANUAL` sai com 1. Se um
 veredito para alguma coisa depende de quem o chama — um hook no Claude Code, um comando de
-preflight no Codex CLI.
+preflight no Codex CLI. Também não é algo que um arquivo de política possa afrouxar: uma regra com
+ação `ALLOW`, uma elevação que mantém ou baixa a classe, ou uma regra que reutiliza um id embutido
+recusa o arquivo inteiro, e um arquivo recusado recusa a checagem (saída 2) em vez de recair nas
+regras embutidas.
 
 **Verifique:** `python -m hpp policy check --mode enforce --command "rm -rf src"` imprime `BLOCK`
 com a regra `recursive-delete` e sai com 2; `--command "git push origin feature"` imprime `MANUAL`
@@ -645,14 +688,23 @@ teste chamado `CONTROLE` que prova que o arquivo sabe falhar.
 ## event log
 
 **É:** um arquivo JSON-lines append-only em `.hpp/events.jsonl` no workspace, em que cada linha
-carrega um `seq` contíguo, um `id` na forma `event:<seq>`, um `type` e um objeto `data`.
+carrega um `seq` contíguo, um `id` na forma `event:<seq>`, um `type`, um objeto `data` e um
+`prev_sha256`: o sha256 da linha anterior, a primeira apontando para o hash do vazio.
 
 **Não é:** um histórico de chat, e não é algo que o harness vá reparar. Uma linha cujo `seq` não é
-contíguo ou cujo `id` não bate é um log corrompido, e a projeção para em vez de adivinhar. Um
-evento cuja transição não é permitida a partir do estado atual é recusado antes da escrita.
+contíguo ou cujo `id` não bate é um log corrompido, e a projeção para em vez de adivinhar. Uma linha
+cujo `prev_sha256` não bate com a linha anterior é uma cadeia quebrada: o `status` a recusa e o
+`event verify` nomeia o primeiro passo divergente. Um log escrito antes da cadeia não carrega elos;
+ele lê como antes e verifica como `legacy`. A cadeia sozinha não vê uma edição da sua última linha:
+a cauda só é ancorada por uma cópia do `head_sha256` da cadeia guardada fora dessa linha — o próximo
+append, que o carrega como seu `prev_sha256`, ou uma cópia que você guarda em outro lugar. Uma
+attestation não registra o `head_sha256`; o snapshot dela só vincula o log quando o
+`.hpp/events.jsonl` não é ignorado pelo git, e o repositório publicado ignora `.hpp/`. Um evento
+cuja transição não é permitida a partir do estado atual é recusado antes da escrita.
 
-**Verifique:** `python -m hpp status --json` mostra o estado, a contagem e o histórico;
-`python -m hpp resume` devolve o próximo passo derivado do mesmo log.
+**Verifique:** `python -m hpp status --json` mostra o estado, a contagem, o histórico e o resumo da
+cadeia; `python -m hpp event verify` reporta `intact`, `legacy`, `broken` (com `first_divergent`)
+ou `empty`; `python -m hpp resume` devolve o próximo passo derivado do mesmo log.
 
 ## bundle
 

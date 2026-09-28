@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>House Party Protocol — Padrões táticos</title>
+  <meta name="description" content="Comandos curtos para operar os kits sem depender de memória implícita.">
+  <link rel="alternate" hreflang="en" href="TIPS.html">
+  <link rel="alternate" hreflang="pt-BR" href="TIPS.pt-BR.html">
+  <style>
+    :root{--hpp-black: #000000;--hpp-ink: #0F1113;--hpp-paper: #F4F1EB;--hpp-signal: #FF6A00;--line:rgba(15,17,19,.18);--surface:rgba(15,17,19,.04);--muted:rgba(15,17,19,.72);--max:1120px}
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;background:var(--hpp-paper);color:var(--hpp-ink);font:16px/1.65 Inter,"Segoe UI",Arial,sans-serif}
+    a{color:var(--hpp-ink);text-decoration:underline;text-decoration-color:var(--hpp-signal);text-decoration-thickness:2px;text-underline-offset:3px}
+    a:hover{color:var(--hpp-signal)}
+    a:focus-visible{outline:4px solid var(--hpp-signal);outline-offset:3px}
+    .wrap{width:min(var(--max),calc(100% - 40px));margin:auto}
+    .lang{background:var(--hpp-black);color:var(--hpp-paper);font-size:.9rem;padding:10px 0}
+    .lang a{color:var(--hpp-paper)}
+    .lang a[aria-current]{text-decoration:none;font-weight:700}
+    .hero{background:var(--hpp-ink);color:var(--hpp-paper);padding:44px 0 50px}
+    .hero img{width:min(720px,100%);display:block}
+    .hero h1{font:800 clamp(2.2rem,6vw,5rem)/.95 Sora,Inter,"Segoe UI",sans-serif;letter-spacing:-.02em;margin:.35em 0}
+    .hero p{max-width:760px;font-size:1.15rem;color:rgba(244,241,235,.82)}
+    .hero .eyebrow{color:var(--hpp-paper);border-color:var(--hpp-signal)}
+    .signal{color:var(--hpp-signal)}
+    .eyebrow,.mono,code,pre,.gate,.label{font-family:"JetBrains Mono","Cascadia Code",Consolas,monospace}
+    .eyebrow{display:inline-block;letter-spacing:.13em;text-transform:uppercase;font-size:.78rem;border-left:4px solid var(--hpp-signal);padding-left:.6em;margin:0 0 .6em}
+    nav{position:sticky;top:0;z-index:2;background:rgba(244,241,235,.96);border-bottom:1px solid var(--line);backdrop-filter:blur(8px)}
+    nav .wrap{display:flex;gap:20px;overflow:auto;padding:12px 0}
+    nav a{white-space:nowrap;text-decoration:none;font-weight:700}
+    nav a:hover{text-decoration:underline;text-decoration-color:var(--hpp-signal)}
+    section{padding:64px 0;border-bottom:1px solid var(--line)}
+    h2{font:800 clamp(1.7rem,3vw,2.6rem)/1.1 Sora,Inter,"Segoe UI",sans-serif;letter-spacing:-.01em;margin:0 0 .6em}
+    h3{margin:0 0 .4em;font-size:1.1rem}
+    .lead{max-width:780px;color:var(--muted)}
+    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:20px}
+    .card{grid-column:span 4;border:1px solid var(--line);border-radius:16px;padding:22px;background:var(--surface)}
+    .card.wide{grid-column:span 6}
+    .card.full{grid-column:1/-1}
+    pre{background:var(--hpp-ink);color:var(--hpp-paper);padding:20px;border-radius:12px;overflow:auto;border-left:6px solid var(--hpp-signal);font-size:.92rem;line-height:1.5}
+    code{font-size:.94em}
+    p code,li code,td code{background:var(--surface);padding:.08em .35em;border-radius:5px}
+    pre code{background:none;padding:0}
+    table{width:100%;border-collapse:collapse;background:var(--surface);margin:1em 0}
+    th,td{text-align:left;padding:12px;border-bottom:1px solid var(--line);vertical-align:top}
+    th{background:rgba(15,17,19,.08);font-weight:700}
+    .gate{display:inline-block;border-radius:999px;padding:.15rem .7rem;font-weight:700;font-size:.8rem;margin-bottom:.6em}
+    .gate.allow{background:var(--hpp-signal);color:var(--hpp-ink)}
+    .gate.manual{border:2px solid var(--hpp-ink);color:var(--hpp-ink)}
+    .gate.block{background:var(--hpp-ink);color:var(--hpp-paper)}
+    .label{font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+    .measured{border-left:4px solid var(--hpp-signal);padding-left:1em;color:var(--muted);font-size:.95rem}
+    ul,ol{padding-left:1.3em}
+    li{margin:.25em 0}
+    footer{padding:48px 0;background:var(--hpp-black);color:var(--hpp-paper)}
+    footer a{color:var(--hpp-paper)}
+    footer .five{letter-spacing:.2em;font-size:.8rem;color:rgba(244,241,235,.72)}
+    @media(max-width:760px){.card,.card.wide{grid-column:1/-1}.wrap{width:min(100% - 32px,var(--max))}th,td{font-size:.88rem;padding:8px}.hero{padding-top:28px}section{padding:44px 0}}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+    h3[id],h4[id],h5[id]{scroll-margin-top:64px}
+    ul.tasks{list-style:none;padding-left:.2em}
+    blockquote{margin:1em 0}
+  </style>
+</head>
+<body>
+  <div class="lang"><div class="wrap"><a href="TIPS.html" hreflang="en" lang="en">English</a> · <a href="TIPS.pt-BR.html" aria-current="page" hreflang="pt-BR">Português</a></div></div>
+  <header class="hero">
+    <div class="wrap">
+      <img src="assets/hpp-logo-header.png" alt="House Party Protocol">
+      <p class="eyebrow">Método · TIPS.pt-BR.md</p>
+      <h1>Padrões táticos</h1>
+    </div>
+  </header>
+  <main>
+
+    <section><div class="wrap">
+<p>Comandos curtos para operar os kits sem depender de memória implícita. Ajuste
+caminhos ao diretório emitido e leia o plano antes de usar <code>--apply</code>. As dicas marcadas
+como <em>novo na 2.6.0</em> exigem a versão 2.6.0 ou posterior.</p>
+<h3 id="1-inventarie-antes-de-criar">1. Inventarie antes de criar</h3>
+<pre><code class="language-bash">rg --files | rg '(^|/)(name|termo)'</code></pre>
+<h3 id="2-meça-a-árvore-git-sem-confundir-não-rastreado">2. Meça a árvore Git sem confundir não rastreado</h3>
+<pre><code class="language-bash">git status --short --branch</code></pre>
+<h3 id="3-separe-mudança-local-do-último-commit">3. Separe mudança local do último commit</h3>
+<pre><code class="language-bash">git diff --stat &amp;&amp; git diff --cached --stat</code></pre>
+<h3 id="4-encontre-a-decisão-não-só-a-implementação">4. Encontre a decisão, não só a implementação</h3>
+<pre><code class="language-bash">rg -n -i 'decisão|decision|rejeitad|supersed' docs . --glob '*.md'</code></pre>
+<h3 id="5-execute-o-preflight-antes-do-done-gate">5. Execute o preflight antes do done gate</h3>
+<pre><code class="language-bash">python frameworks/operator-kit-*/scripts/preflight.py --project .</code></pre>
+<h3 id="6-faça-o-critério-falhar-antes-da-correção">6. Faça o critério falhar antes da correção</h3>
+<pre><code class="language-bash">python -m pytest caminho/do/teste.py::test_caso -q</code></pre>
+<h3 id="7-valide-sintaxe-python-isoladamente">7. Valide sintaxe Python isoladamente</h3>
+<pre><code class="language-bash">python -m py_compile caminho/do/script.py</code></pre>
+<h3 id="8-rode-o-self-test-do-artefato">8. Rode o self-test do artefato</h3>
+<pre><code class="language-bash">python caminho/do/script.py --self-test</code></pre>
+<h3 id="9-feche-múltiplos-critérios-com-and">9. Feche múltiplos critérios com AND</h3>
+<pre><code class="language-bash">python frameworks/operator-kit-*/scripts/done_gate.py "python -m pytest -q" "python -m py_compile app.py"</code></pre>
+<h3 id="10-declare-parcial-sem-pintar-de-verde">10. Declare parcial sem pintar de verde</h3>
+<pre><code class="language-bash">python frameworks/operator-kit-*/scripts/done_gate.py "python -m pytest -q" --declare-partial "falta validar o destino externo"</code></pre>
+<h3 id="11-instale-um-kit-primeiro-em-modo-plano">11. Instale um kit primeiro em modo plano</h3>
+<pre><code class="language-bash">python installers/kit-forge-*/kit_doctor.py install --kit &lt;kit&gt; --target . --host claude-code</code></pre>
+<h3 id="12-aplique-a-instalação-somente-após-ler-o-plano">12. Aplique a instalação somente após ler o plano</h3>
+<pre><code class="language-bash">python installers/kit-forge-*/kit_doctor.py install --kit &lt;kit&gt; --target . --host claude-code --apply</code></pre>
+<h3 id="13-instale-skills-namespaced-no-codex">13. Instale skills namespaced no Codex</h3>
+<pre><code class="language-bash">python installers/kit-forge-*/kit_doctor.py install --kit &lt;kit&gt; --target . --host codex --apply</code></pre>
+<h3 id="14-verifique-integridade-de-um-kit-emitido">14. Verifique integridade de um kit emitido</h3>
+<pre><code class="language-bash">python installers/kit-forge-*/kit_doctor.py verify &lt;kit&gt;</code></pre>
+<h3 id="15-liste-instalações-registradas">15. Liste instalações registradas</h3>
+<pre><code class="language-bash">python installers/kit-forge-*/kit_doctor.py registry</code></pre>
+<h3 id="16-escolha-checker-de-outro-provider">16. Escolha checker de outro provider</h3>
+<pre><code class="language-bash">python multi-session/lane-kit-*/scripts/checker_router.py --maker claude --require</code></pre>
+<h3 id="17-veja-as-lanes-sem-editar-o-registry">17. Veja as lanes sem editar o registry</h3>
+<pre><code class="language-bash">python multi-session/lane-kit-*/scripts/lane_board.py --help</code></pre>
+<h3 id="18-conte-itens-com-uma-régua-explícita">18. Conte itens com uma régua explícita</h3>
+<pre><code class="language-bash">python frameworks/operator-kit-*/scripts/live_count.py --help</code></pre>
+<h3 id="19-procure-erros-silenciosos-comuns">19. Procure erros silenciosos comuns</h3>
+<pre><code class="language-bash">rg -n 'except\s+Exception|catch\s*\(|\.catch\(' --glob '*.py' --glob '*.js' --glob '*.ts'</code></pre>
+<h3 id="20-confirme-a-conta-github-ativa">20. Confirme a conta GitHub ativa</h3>
+<pre><code class="language-bash">gh api user --jq .login</code></pre>
+<h3 id="21-compare-o-remoto-antes-de-enviar">21. Compare o remoto antes de enviar</h3>
+<pre><code class="language-bash">git ls-remote origin refs/heads/main</code></pre>
+<h3 id="22-liste-mcps-por-host">22. Liste MCPs por host</h3>
+<pre><code class="language-bash">claude mcp list &amp;&amp; codex mcp list</code></pre>
+<h3 id="23-gere-o-catálogo-a-partir-da-árvore">23. Gere o catálogo a partir da árvore</h3>
+<pre><code class="language-bash">python installers/kit-forge-*/tools/catalog_md.py . --write</code></pre>
+<h3 id="24-valide-todas-as-skills-publicadas">24. Valide todas as skills publicadas</h3>
+<pre><code class="language-bash">find . -type d -name skills -exec python installers/kit-forge-*/tools/skill_lint.py --all {} \;</code></pre>
+<h3 id="25-registre-uma-execução-end-to-end-como-evidência-novo-na-260">25. Registre uma execução end-to-end como evidência (novo na 2.6.0)</h3>
+<pre><code class="language-bash">python -m hpp evidence run --id smoke-page --artifact out/report.html --artifact out/smoke.log -- python examples/evidence/smoke_page.py</code></pre>
+<h3 id="26-re-derive-um-bundle-a-partir-dos-arquivos-em-disco-novo-na-260">26. Re-derive um bundle a partir dos arquivos em disco (novo na 2.6.0)</h3>
+<pre><code class="language-bash">python -m hpp evidence verify "$(ls -t .hpp/evidence/smoke-page-*.json | head -1)"</code></pre>
+<h3 id="27-meça-um-retriever-antes-de-confiar-nele-novo-na-260">27. Meça um retriever antes de confiar nele (novo na 2.6.0)</h3>
+<pre><code class="language-bash">python -m hpp retrieval eval examples/retrieval/suite.json --retriever-command '["python", "examples/retrieval/keyword_retriever.py"]'</code></pre>
+<h3 id="28-confira-que-toda-citação-resolve-novo-na-260">28. Confira que toda citação resolve (novo na 2.6.0)</h3>
+<pre><code class="language-bash">python -m hpp cite check --text examples/citations/answer.md --context examples/citations/context.json</code></pre>
+<h3 id="29-meça-um-decisor-antes-de-confiar-nele-novo-na-260">29. Meça um decisor antes de confiar nele (novo na 2.6.0)</h3>
+<pre><code class="language-bash">python -m hpp decide eval examples/typed-decisions/gotcha-family-suite.json --decider-command '["python", "examples/typed-decisions/baseline_decider.py"]'</code></pre>
+<h3 id="30-best-of-n-é-passn-escolha-um-e-ainda-verifique-novo-na-260">30. Best-of-N é pass@N: escolha um e ainda verifique (novo na 2.6.0)</h3>
+<pre><code class="language-bash">python multi-session/lane-kit-*/scripts/lane_board.py compete --task T-1 --items T-1a,T-1b --lane lead --model claude-opus-5-5
+python multi-session/lane-kit-*/scripts/lane_board.py select --task T-1 --winner T-1a --lane review --model gpt-5.6-sol --reason "smaller diff, same tests"</code></pre>
+    </div></section>
+
+  </main>
+  <footer><div class="wrap">
+    <p class="five">AGENTS · EVIDENCE · MEMORY · PROTOCOL · CONTINUITY</p>
+    <strong>House Party Protocol</strong>
+    <p>Opere agentes de código sob evidência, não confiança.</p>
+    <p><a href="index.html">Documentação</a> · <a href="MANUAL.pt-BR.html">Manual do harness</a> · <a href="CATALOG.pt-BR.html">Catálogo de módulos</a> · <a href="https://github.com/rusharlabs/house-party-protocol/blob/main/docs/TIPS.pt-BR.md">Fonte em Markdown</a> · <a href="TIPS.html" hreflang="en" lang="en">English</a></p>
+  </div></footer>
+</body>
+</html>

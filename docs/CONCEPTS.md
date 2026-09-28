@@ -131,8 +131,12 @@ the same `work_started`. Either way, the loop cannot reach
 the spec's hash, the maker, the checker, a session id and a sha256 snapshot of every tracked and
 untracked file.
 
-**Is not:** a signature, a certificate or a proof that the verdict was right. It proves the
-verdict was given on these bytes. It also does not store your remote URL; it stores a hash of it.
+**Is not:** a certificate or a proof that the verdict was right. It proves the verdict was given on
+these bytes. It also does not store your remote URL; it stores a hash of it. By itself it is not a
+signature either: `--sign-key` makes it one (the checker signs the record with an SSH key through
+`ssh-keygen -Y sign`, namespace `hpp`), and `attest verify --allowed-signers` then refuses a record
+that is unsigned, signed by a key the file does not list for that signer, or changed after it was
+signed. Without the flags the report says `not-signed` or `not-verified`, never `verified`.
 
 **Verify:** `python -m hpp attest create --repo . --spec SPEC.md --maker maker-a --checker checker-b --session review:001 --verdict approved --output .hpp/attestation.json`
 then `python -m hpp attest verify .hpp/attestation.json --repo .` returns `valid`; change any
@@ -180,8 +184,11 @@ refused or `--record-event` could not append the event.
 **Is not:** a browser driver, a model call or a signature. hpp drives no browser and calls no
 model: it runs the command you name (an end-to-end spec, a test suite, any script) with
 `shell=False`. The record carries a hash of itself, which makes an edit visible and proves nothing
-about who wrote it — anyone who can write the file can rewrite the hash. So `verify` is
-reconciliation, and a checker that must not trust the maker re-runs `command` instead. `run` writes
+about who wrote it — anyone who can write the file can rewrite the hash. So `verify` alone is
+reconciliation, and a checker that must not trust the maker re-runs `command` instead — or asks for
+a signature: `run --sign-key KEY --signer NAME` signs the record with an SSH key, and
+`verify --allowed-signers FILE` refuses one that is unsigned, signed by someone the file does not
+list, or changed after signing, however consistently its hash was recomputed. `run` writes
 the record and whatever the command writes; a read-only checker points `--out` at its own scratch
 directory inside the workspace, or re-runs in its own lane. A command line that looks like it
 carries a secret, and an artifact or `--out` path outside the workspace, are refused before
@@ -335,6 +342,37 @@ tool sets without `Write` or `Edit`.
 checker must be different non-empty actors". In the lane module,
 `checker_router.py --maker claude --require` picks a checker from a different provider and exits
 2 when none is available.
+
+## agent team
+
+**Is:** two or more agent sessions or subagents working on one repository, each in its own lane, whose
+work is split by a compiled spec and whose verdicts come from another lane and another model family.
+
+**Is not:** something the harness runs. The `hpp` package starts no agent, schedules nothing and calls
+no model; a team is whatever your hosts run, and the lane-kit starts a session only on an action the
+operator takes (a Lane Dashboard action confirmed, or the seats of an invoked `/deliberate`). Nor is it
+a promise of parallel safety: the WorkGraph does not look at paths; the Lane Map does.
+
+**Verify:** `python -m hpp work waves examples/reliable-coding/workgraph.json` places `build` and `docs`
+in wave 2 together; `python -m hpp deliberate plan examples/house-session/review/panel.json` prints a
+panel of four seats from four families with the judge in `lane-judge`; in the lane module,
+`lane_board.py --self-test` runs every refusal next to its control.
+
+## orchestration
+
+**Is:** whatever decides which agent works on what, and when: a lead agent handing out subagents, a
+script that fans the work out to agents, a CI job, or a person with several terminals. HPP sits under
+it: the orchestrator decides who works on what; HPP decides what counts as done.
+
+**Is not:** something HPP does. The `hpp` package starts no agent, schedules nothing and calls no
+model; it plans an order (a spec compiles into waves) and does not run it. The lane-kit starts a
+session only on an action the operator takes: a Lane Dashboard action confirmed, or the seats of an
+invoked `/deliberate`.
+
+**Verify:** a refusal is a non-zero exit code, so an orchestrator can use it as a gate:
+`python -m hpp attest create ... --maker a --checker a ...` exits 2; `python -m hpp findings check` on a
+record with a key the contract does not define exits 2; `python -m hpp evidence verify` on a record that
+does not exist exits 2.
 
 ## lane
 
@@ -566,8 +604,11 @@ prints both metrics and the gate; exit 0 on pass, 1 on fail.
 ## command policy
 
 **Is:** a classifier that reads one command as text and returns one of three verdicts, `ALLOW`,
-`MANUAL` or `BLOCK`, with the rule that matched and its reason. The rules are fixed in
-`hpp/policy.py`; the first match wins, and every `BLOCK` rule is tried before any `MANUAL` rule.
+`MANUAL` or `BLOCK`, with the rule that matched, its reason and its `source`. The built-in rules
+are fixed in `hpp/policy.py`; a project adds to them in `.hpp/policy.json` (`hpp.policy/v1`, or
+`--policy FILE`): rules of its own that earn `BLOCK` or `MANUAL`, and built-in `MANUAL` rules raised
+to `BLOCK`. The first match wins, and every `BLOCK` rule is tried before any `MANUAL` rule, whatever
+its origin.
 
 | verdict | rule | matches |
 |---|---|---|
@@ -587,7 +628,9 @@ command, and `ALLOW` means that no rule matched: a transfer made by any other to
 Python one-liner) matches no rule and is `ALLOW`. The mode changes only the exit code, never the verdict: in
 `audit` every verdict exits 0; in `enforce`, `BLOCK` exits 2 and `MANUAL` exits 1. Whether a
 verdict stops anything depends on what calls it — a hook on Claude Code, a preflight command on
-Codex CLI.
+Codex CLI. Nor is it something a policy file can loosen: a rule with action `ALLOW`, a raise that
+keeps or lowers a class, or a rule that reuses a built-in id refuses the whole file, and a refused
+file refuses the check (exit 2) rather than falling back to the built-ins.
 
 **Verify:** `python -m hpp policy check --mode enforce --command "rm -rf src"` prints `BLOCK` with
 rule `recursive-delete` and exits 2; `--command "git push origin feature"` prints `MANUAL` (rule
@@ -635,15 +678,23 @@ test named `CONTROLE` that proves the file knows how to fail.
 ## event log
 
 **Is:** an append-only JSON-lines file at `.hpp/events.jsonl` in the workspace, where each line
-carries a contiguous `seq`, an `id` of the form `event:<seq>`, a `type` and a `data` object.
+carries a contiguous `seq`, an `id` of the form `event:<seq>`, a `type`, a `data` object and a
+`prev_sha256`: the sha256 of the line before it, the first linking to the hash of nothing.
 
 **Is not:** a chat history, and not something the harness will repair. A line whose `seq` is not
 contiguous or whose `id` does not match is a corrupt log, and the projection stops rather than
-guessing. An event whose transition is not allowed from the current state is refused before the
-write.
+guessing. A line whose `prev_sha256` does not match the line before it is a broken chain: `status`
+refuses it and `event verify` names the first divergent step. A log written before the chain
+carries no links; it reads as before and verifies as `legacy`. The chain alone cannot see an edit
+of its last line: the tail is anchored only by a copy of the chain's `head_sha256` kept outside that
+line — the next append, which carries it as its `prev_sha256`, or a copy you keep elsewhere. An
+attestation records no `head_sha256`; its snapshot binds the log only when `.hpp/events.jsonl` is not
+ignored by git, and the published repository ignores `.hpp/`. An event whose transition is not
+allowed from the current state is refused before the write.
 
-**Verify:** `python -m hpp status --json` shows the state, the count and the history;
-`python -m hpp resume` returns the next step derived from the same log.
+**Verify:** `python -m hpp status --json` shows the state, the count, the history and the chain
+summary; `python -m hpp event verify` reports `intact`, `legacy`, `broken` (with `first_divergent`)
+or `empty`; `python -m hpp resume` returns the next step derived from the same log.
 
 ## bundle
 

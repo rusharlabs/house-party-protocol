@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>House Party Protocol — Instalando o House Party Protocol — um guia para agentes</title>
+  <meta name="description" content="A instrução inteira para um agente a quem pediram instalar o harness num repositório, incluindo o gate que ele não pode pular.">
+  <link rel="alternate" hreflang="en" href="INSTALL_FOR_AGENTS.html">
+  <link rel="alternate" hreflang="pt-BR" href="INSTALL_FOR_AGENTS.pt-BR.html">
+  <style>
+    :root{--hpp-black: #000000;--hpp-ink: #0F1113;--hpp-paper: #F4F1EB;--hpp-signal: #FF6A00;--line:rgba(15,17,19,.18);--surface:rgba(15,17,19,.04);--muted:rgba(15,17,19,.72);--max:1120px}
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;background:var(--hpp-paper);color:var(--hpp-ink);font:16px/1.65 Inter,"Segoe UI",Arial,sans-serif}
+    a{color:var(--hpp-ink);text-decoration:underline;text-decoration-color:var(--hpp-signal);text-decoration-thickness:2px;text-underline-offset:3px}
+    a:hover{color:var(--hpp-signal)}
+    a:focus-visible{outline:4px solid var(--hpp-signal);outline-offset:3px}
+    .wrap{width:min(var(--max),calc(100% - 40px));margin:auto}
+    .lang{background:var(--hpp-black);color:var(--hpp-paper);font-size:.9rem;padding:10px 0}
+    .lang a{color:var(--hpp-paper)}
+    .lang a[aria-current]{text-decoration:none;font-weight:700}
+    .hero{background:var(--hpp-ink);color:var(--hpp-paper);padding:44px 0 50px}
+    .hero img{width:min(720px,100%);display:block}
+    .hero h1{font:800 clamp(2.2rem,6vw,5rem)/.95 Sora,Inter,"Segoe UI",sans-serif;letter-spacing:-.02em;margin:.35em 0}
+    .hero p{max-width:760px;font-size:1.15rem;color:rgba(244,241,235,.82)}
+    .hero .eyebrow{color:var(--hpp-paper);border-color:var(--hpp-signal)}
+    .signal{color:var(--hpp-signal)}
+    .eyebrow,.mono,code,pre,.gate,.label{font-family:"JetBrains Mono","Cascadia Code",Consolas,monospace}
+    .eyebrow{display:inline-block;letter-spacing:.13em;text-transform:uppercase;font-size:.78rem;border-left:4px solid var(--hpp-signal);padding-left:.6em;margin:0 0 .6em}
+    nav{position:sticky;top:0;z-index:2;background:rgba(244,241,235,.96);border-bottom:1px solid var(--line);backdrop-filter:blur(8px)}
+    nav .wrap{display:flex;gap:20px;overflow:auto;padding:12px 0}
+    nav a{white-space:nowrap;text-decoration:none;font-weight:700}
+    nav a:hover{text-decoration:underline;text-decoration-color:var(--hpp-signal)}
+    section{padding:64px 0;border-bottom:1px solid var(--line)}
+    h2{font:800 clamp(1.7rem,3vw,2.6rem)/1.1 Sora,Inter,"Segoe UI",sans-serif;letter-spacing:-.01em;margin:0 0 .6em}
+    h3{margin:0 0 .4em;font-size:1.1rem}
+    .lead{max-width:780px;color:var(--muted)}
+    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:20px}
+    .card{grid-column:span 4;border:1px solid var(--line);border-radius:16px;padding:22px;background:var(--surface)}
+    .card.wide{grid-column:span 6}
+    .card.full{grid-column:1/-1}
+    pre{background:var(--hpp-ink);color:var(--hpp-paper);padding:20px;border-radius:12px;overflow:auto;border-left:6px solid var(--hpp-signal);font-size:.92rem;line-height:1.5}
+    code{font-size:.94em}
+    p code,li code,td code{background:var(--surface);padding:.08em .35em;border-radius:5px}
+    pre code{background:none;padding:0}
+    table{width:100%;border-collapse:collapse;background:var(--surface);margin:1em 0}
+    th,td{text-align:left;padding:12px;border-bottom:1px solid var(--line);vertical-align:top}
+    th{background:rgba(15,17,19,.08);font-weight:700}
+    .gate{display:inline-block;border-radius:999px;padding:.15rem .7rem;font-weight:700;font-size:.8rem;margin-bottom:.6em}
+    .gate.allow{background:var(--hpp-signal);color:var(--hpp-ink)}
+    .gate.manual{border:2px solid var(--hpp-ink);color:var(--hpp-ink)}
+    .gate.block{background:var(--hpp-ink);color:var(--hpp-paper)}
+    .label{font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+    .measured{border-left:4px solid var(--hpp-signal);padding-left:1em;color:var(--muted);font-size:.95rem}
+    ul,ol{padding-left:1.3em}
+    li{margin:.25em 0}
+    footer{padding:48px 0;background:var(--hpp-black);color:var(--hpp-paper)}
+    footer a{color:var(--hpp-paper)}
+    footer .five{letter-spacing:.2em;font-size:.8rem;color:rgba(244,241,235,.72)}
+    @media(max-width:760px){.card,.card.wide{grid-column:1/-1}.wrap{width:min(100% - 32px,var(--max))}th,td{font-size:.88rem;padding:8px}.hero{padding-top:28px}section{padding:44px 0}}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+    h3[id],h4[id],h5[id]{scroll-margin-top:64px}
+    ul.tasks{list-style:none;padding-left:.2em}
+    blockquote{margin:1em 0}
+  </style>
+</head>
+<body>
+  <div class="lang"><div class="wrap"><a href="INSTALL_FOR_AGENTS.html" hreflang="en" lang="en">English</a> · <a href="INSTALL_FOR_AGENTS.pt-BR.html" aria-current="page" hreflang="pt-BR">Português</a></div></div>
+  <header class="hero">
+    <div class="wrap">
+      <img src="assets/hpp-logo-header.png" alt="House Party Protocol">
+      <p class="eyebrow">Contratos · INSTALL_FOR_AGENTS.pt-BR.md</p>
+      <h1>Instalando o House Party Protocol — um guia para agentes</h1>
+    </div>
+  </header>
+  <nav aria-label="Capítulos"><div class="wrap"><a href="#passo-0--identifique-o-seu-host">Passo 0 — identifique o seu host</a><a href="#passo-1--confira-os-pré-requisitos-não-os-presuma">Passo 1 — confira os pré-requisitos, não os presuma</a><a href="#passo-2--instale-a-cli">Passo 2 — instale a CLI</a><a href="#passo-3--prove-a-instalação-antes-de-usá-la">Passo 3 — prove a instalação antes de usá-la</a><a href="#passo-4--leia-o-plano-para-a-pessoa-não-pule">Passo 4 — leia o plano para a pessoa. NÃO PULE</a><a href="#passo-5--wiring-do-codex-cli">Passo 5 — wiring do Codex CLI</a><a href="#passo-6--verifique-e-reporte-o-código-de-saída-não-a-sua-impressão">Passo 6 — verifique, e reporte o código de saída, não a sua impressão</a><a href="#códigos-de-saída">Códigos de saída</a><a href="#não-faça">Não faça</a><a href="#atualizando">Atualizando</a><a href="#se-falhar">Se falhar</a></div></nav>
+  <main>
+
+    <section><div class="wrap">
+<p>Você é um agente a quem pediram para instalar o House Party Protocol num repositório. Este
+arquivo é a instrução inteira. Leia até o fim antes de rodar qualquer coisa: o passo 4 contém um
+portão que você não pode pular, e saber que ele existe muda o que você faz no passo 3.</p>
+<p>O House Party Protocol é um harness local-first de confiabilidade, governança e avaliação de
+agentes de código. Ele não tem dependência de runtime e não fala com serviço de rede. Instalar
+escreve arquivos num repositório e os liga a um host; nada além disso acontece.</p>
+    </div></section>
+
+    <section id="passo-0--identifique-o-seu-host"><div class="wrap">
+      <p class="eyebrow">01</p>
+      <h2>Passo 0 — identifique o seu host</h2>
+<p>Os dois hosts se ligam de formas diferentes, e a diferença não é cosmética.</p>
+<table>
+<thead><tr><th>você é</th><th>vá para</th></tr></thead>
+<tbody>
+<tr><td><strong>Claude Code</strong></td><td>passos 1 → 4, depois o 6</td></tr>
+<tr><td><strong>Codex CLI</strong></td><td>passos 1 → 4, depois o 5, depois o 6</td></tr>
+<tr><td>nenhum dos dois</td><td>a CLI instala e o <code>hpp doctor</code> responde, mas não existe wiring de host para você; pare depois do passo 3 e avise a pessoa</td></tr>
+</tbody>
+</table>
+    </div></section>
+
+    <section id="passo-1--confira-os-pré-requisitos-não-os-presuma"><div class="wrap">
+      <p class="eyebrow">02</p>
+      <h2>Passo 1 — confira os pré-requisitos, não os presuma</h2>
+<ul>
+<li><strong>Python 3.10 ou mais novo.</strong> A CI exercita 3.10 a 3.13 em Linux, macOS e Windows.
+Interpretadores mais antigos não são prometidos, porque nada os mede.</li>
+<li><strong><code>git</code> no <code>PATH</code></strong>, para attestation.</li>
+<li><strong>Um repositório-alvo.</strong> Instalar num diretório vazio funciona e é assim que o wizard é
+testado, mas o harness só é útil onde há trabalho a governar.</li>
+</ul>
+<p>Se um pré-requisito falhar, diga qual e pare. Não instale um Python, não troque o interpretador
+da pessoa, não contorne a ausência do <code>git</code>.</p>
+    </div></section>
+
+    <section id="passo-2--instale-a-cli"><div class="wrap">
+      <p class="eyebrow">03</p>
+      <h2>Passo 2 — instale a CLI</h2>
+<pre><code class="language-bash">pip install git+https://github.com/rusharlabs/house-party-protocol@v2.10.0</code></pre>
+<p><code>pipx install git+…</code> funciona igual. O pacote traz o próprio manifesto e a própria suíte de
+benchmark, então a CLI responde de qualquer diretório depois de instalada.</p>
+    </div></section>
+
+    <section id="passo-3--prove-a-instalação-antes-de-usá-la"><div class="wrap">
+      <p class="eyebrow">04</p>
+      <h2>Passo 3 — prove a instalação antes de usá-la</h2>
+<pre><code class="language-bash">hpp doctor</code></pre>
+<p>Ele imprime uma linha e sai com <code>0</code>:</p>
+<pre><code>HPP doctor: ok - modules=10 - hosts=claude-code, codex - hooks=18 (permission gates=9 - llm egress=0)</code></pre>
+<p>Saída diferente de zero aqui significa instalação quebrada. Reporte a linha e pare; não siga
+para o passo 4 esperando que se resolva sozinho.</p>
+    </div></section>
+
+    <section id="passo-4--leia-o-plano-para-a-pessoa-não-pule"><div class="wrap">
+      <p class="eyebrow">05</p>
+      <h2>Passo 4 — leia o plano para a pessoa. NÃO PULE</h2>
+<pre><code class="language-bash">hpp init --target &lt;path-to-the-repository&gt;</code></pre>
+<p>Sem <code>--apply</code>, o <code>hpp init</code> <strong>não escreve nada</strong>. Ele roda seis estágios fixos e imprime um
+plano do que escreveria.</p>
+<p>Leia o plano em voz alta, e não só as linhas a colar. Quando os módulos escolhidos declaram
+hooks, ele imprime uma tabela HOOK CAPABILITIES antes do bloco WIRE: para cada hook, seus eventos,
+sua política de saída (<code>observe</code>, <code>warn</code> ou <code>block</code>) e seus grupos de capacidade. Essa tabela é o
+que os hooks conseguem fazer depois de ligados; as linhas a colar sozinhas são só nomes de
+arquivo. Deixe o <code>--decision-advisor</code> em <code>off</code>, a menos que a pessoa tenha pedido (novo na
+2.6.0).</p>
+<p><strong>Mostre esse plano à pessoa e espere o sim dela.</strong> Só então:</p>
+<pre><code class="language-bash">hpp init --target &lt;path-to-the-repository&gt; --apply</code></pre>
+<p>Isso não é cerimônia. O plano é o único instante em que a pessoa consegue ver o que está prestes
+a entrar no repositório dela, e um instalador que escreve antes de você ler é exatamente a falha
+que este harness existe para impedir. Se você pular, instalou o harness violando-o.</p>
+    </div></section>
+
+    <section id="passo-5--wiring-do-codex-cli"><div class="wrap">
+      <p class="eyebrow">06</p>
+      <h2>Passo 5 — wiring do Codex CLI</h2>
+<p>O Claude Code é ligado pelo passo 4. O Codex CLI tem um canal de plugin próprio para os módulos que
+carregam skills (só skills; os hooks ficam desligados):</p>
+<pre><code class="language-bash">codex plugin marketplace add rusharlabs/house-party-protocol
+codex plugin add &lt;module&gt;@house-party-protocol</code></pre>
+<p>Todo o resto — runtime, scripts, templates, e qualquer módulo sem skills — precisa de um comando a
+mais por módulo:</p>
+<pre><code class="language-bash">installers/kit-forge-1.5.0/kit_doctor.py install --kit &lt;kit&gt; --host codex --target &lt;repo&gt; --apply</code></pre>
+<p>As skills vão para <code>.agents/skills</code>; o runtime completo vai para <code>.agents/hpp</code>. Os hooks
+declarados em <code>hooks.json</code> pertencem ao Claude Code e <strong>não</strong> são ativados no Codex. O
+<code>hpp init --host codex</code> imprime a tabela HOOK CAPABILITIES mesmo assim; leia-a em voz alta como o
+que esses hooks fariam no Claude Code, e diga que nenhum deles roda aqui, em vez de deixar a
+pessoa acreditar que um portão está armado quando não está.</p>
+    </div></section>
+
+    <section id="passo-6--verifique-e-reporte-o-código-de-saída-não-a-sua-impressão"><div class="wrap">
+      <p class="eyebrow">07</p>
+      <h2>Passo 6 — verifique, e reporte o código de saída, não a sua impressão</h2>
+<pre><code class="language-bash">hpp doctor
+hpp benchmark</code></pre>
+<p>O <code>hpp benchmark</code> reporta <code>pass@k</code> e <code>pass^k</code> separadamente e imprime o próprio veredito de
+gate. Cite as duas saídas à pessoa. Transcrição não é código de saída.</p>
+<p>Se o <code>hpp init</code> imprimiu uma seção DOCUMENTATION, aponte à pessoa as páginas que ela nomeia; cada
+uma foi encontrada no disco. Uma instalação por pip não carrega páginas de documentação, então
+depois do passo 2 a seção não aparece — não invente caminhos.</p>
+    </div></section>
+
+    <section id="códigos-de-saída"><div class="wrap">
+      <p class="eyebrow">08</p>
+      <h2>Códigos de saída</h2>
+<p><code>0</code> ok · <code>1</code> warn/manual · <code>2</code> block · <code>3</code> error.</p>
+    </div></section>
+
+    <section id="não-faça"><div class="wrap">
+      <p class="eyebrow">09</p>
+      <h2>Não faça</h2>
+<ul>
+<li><strong>Não edite os diretórios versionados de módulo.</strong> Eles são artefatos emitidos. Uma edição à
+mão faz o checksum divergir, e a próxima instalação os recusa.</li>
+<li><strong>Não baixe um gate para ficar verde.</strong> Conserte o artefato que o gate reprovou.</li>
+<li><strong>Não registre credencial, caminho pessoal, cliente ou infraestrutura privada</strong> em lugar
+nenhum onde o harness escreve.</li>
+<li><strong>Não trate <code>healthy</code> como correto.</strong> Ele prova o frescor do sinal declarado, nada mais.</li>
+</ul>
+    </div></section>
+
+    <section id="atualizando"><div class="wrap">
+      <p class="eyebrow">10</p>
+      <h2>Atualizando</h2>
+<p>Refaça o passo 2 com a tag nova e o passo 3. O <code>hpp init</code> é idempotente: rode de novo e leia o
+plano de novo. O plano é o que mudou.</p>
+    </div></section>
+
+    <section id="se-falhar"><div class="wrap">
+      <p class="eyebrow">11</p>
+      <h2>Se falhar</h2>
+<p>Rode <code>hpp doctor</code> e cite a linha inteira. Abra uma issue em
+<a href="https://github.com/rusharlabs/house-party-protocol/issues">https://github.com/rusharlabs/house-party-protocol/issues</a> com essa linha, a sua versão de
+Python e o seu host. Não cole credencial, token nem caminho absoluto da máquina da pessoa.</p>
+    </div></section>
+
+  </main>
+  <footer><div class="wrap">
+    <p class="five">AGENTS · EVIDENCE · MEMORY · PROTOCOL · CONTINUITY</p>
+    <strong>House Party Protocol</strong>
+    <p>Opere agentes de código sob evidência, não confiança.</p>
+    <p><a href="index.html">Documentação</a> · <a href="MANUAL.pt-BR.html">Manual do harness</a> · <a href="CATALOG.pt-BR.html">Catálogo de módulos</a> · <a href="https://github.com/rusharlabs/house-party-protocol/blob/main/INSTALL_FOR_AGENTS.pt-BR.md">Fonte em Markdown</a> · <a href="INSTALL_FOR_AGENTS.html" hreflang="en" lang="en">English</a></p>
+  </div></footer>
+</body>
+</html>

@@ -1,0 +1,57 @@
+labels: ["idea"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Ideas start here as a conversation. The project accepts what it can prove and refuses what
+        it cannot (MANIFESTO.md), so an idea is ready for the tracker when it names the failure it
+        removes, the proposal, and the command that would show it working. At that point a
+        maintainer opens an idea issue from this discussion and links it back. A rough sketch is
+        welcome: getting it to that point is what this category is for.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Harness CLI (hpp)
+        - Maps, graphs and views
+        - Evidence, attestation and review
+        - Lanes and parallel sessions
+        - Policy and hooks
+        - Installation and hosts (Claude Code, Codex CLI)
+        - A module (name it below)
+        - Documentation
+        - Something else
+    validations:
+      required: true
+  - type: textarea
+    id: failure
+    attributes:
+      label: The failure or friction
+      description: What goes wrong today, what you have to do by hand, and how you notice it.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What you have in mind
+      description: What the harness or a module would do differently. A sketch is fine.
+    validations:
+      required: true
+  - type: textarea
+    id: proof
+    attributes:
+      label: How it could be proven (optional)
+      description: The command or test that would show it working, and the case that would show it refusing. Leave it empty if you do not know yet.
+    validations:
+      required: false
+  - type: checkboxes
+    id: limits
+    attributes:
+      label: Honest limits
+      description: The harness keeps these (README, "Honest limits"). Tick the ones the idea keeps; if it would change one, say which and why above.
+      options:
+        - label: No daemon, scheduler, queue, server, database or remote telemetry.
+        - label: Never calls a model.
+        - label: Zero third-party runtime dependencies (stdlib only).
+        - label: Writes nothing to the host's settings or hooks; wiring stays a human paste.

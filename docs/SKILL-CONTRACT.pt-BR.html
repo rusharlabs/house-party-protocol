@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>House Party Protocol — SKILL-CONTRACT — o que separa &quot;pilha de scripts&quot; de &quot;sistema&quot;</title>
+  <meta name="description" content="As seis cláusulas que fazem de uma skill um produto: cabeçalho, contrato de I/O, exemplos executados, prova, portabilidade e corpo executável.">
+  <link rel="alternate" hreflang="en" href="SKILL-CONTRACT.html">
+  <link rel="alternate" hreflang="pt-BR" href="SKILL-CONTRACT.pt-BR.html">
+  <style>
+    :root{--hpp-black: #000000;--hpp-ink: #0F1113;--hpp-paper: #F4F1EB;--hpp-signal: #FF6A00;--line:rgba(15,17,19,.18);--surface:rgba(15,17,19,.04);--muted:rgba(15,17,19,.72);--max:1120px}
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;background:var(--hpp-paper);color:var(--hpp-ink);font:16px/1.65 Inter,"Segoe UI",Arial,sans-serif}
+    a{color:var(--hpp-ink);text-decoration:underline;text-decoration-color:var(--hpp-signal);text-decoration-thickness:2px;text-underline-offset:3px}
+    a:hover{color:var(--hpp-signal)}
+    a:focus-visible{outline:4px solid var(--hpp-signal);outline-offset:3px}
+    .wrap{width:min(var(--max),calc(100% - 40px));margin:auto}
+    .lang{background:var(--hpp-black);color:var(--hpp-paper);font-size:.9rem;padding:10px 0}
+    .lang a{color:var(--hpp-paper)}
+    .lang a[aria-current]{text-decoration:none;font-weight:700}
+    .hero{background:var(--hpp-ink);color:var(--hpp-paper);padding:44px 0 50px}
+    .hero img{width:min(720px,100%);display:block}
+    .hero h1{font:800 clamp(2.2rem,6vw,5rem)/.95 Sora,Inter,"Segoe UI",sans-serif;letter-spacing:-.02em;margin:.35em 0}
+    .hero p{max-width:760px;font-size:1.15rem;color:rgba(244,241,235,.82)}
+    .hero .eyebrow{color:var(--hpp-paper);border-color:var(--hpp-signal)}
+    .signal{color:var(--hpp-signal)}
+    .eyebrow,.mono,code,pre,.gate,.label{font-family:"JetBrains Mono","Cascadia Code",Consolas,monospace}
+    .eyebrow{display:inline-block;letter-spacing:.13em;text-transform:uppercase;font-size:.78rem;border-left:4px solid var(--hpp-signal);padding-left:.6em;margin:0 0 .6em}
+    nav{position:sticky;top:0;z-index:2;background:rgba(244,241,235,.96);border-bottom:1px solid var(--line);backdrop-filter:blur(8px)}
+    nav .wrap{display:flex;gap:20px;overflow:auto;padding:12px 0}
+    nav a{white-space:nowrap;text-decoration:none;font-weight:700}
+    nav a:hover{text-decoration:underline;text-decoration-color:var(--hpp-signal)}
+    section{padding:64px 0;border-bottom:1px solid var(--line)}
+    h2{font:800 clamp(1.7rem,3vw,2.6rem)/1.1 Sora,Inter,"Segoe UI",sans-serif;letter-spacing:-.01em;margin:0 0 .6em}
+    h3{margin:0 0 .4em;font-size:1.1rem}
+    .lead{max-width:780px;color:var(--muted)}
+    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:20px}
+    .card{grid-column:span 4;border:1px solid var(--line);border-radius:16px;padding:22px;background:var(--surface)}
+    .card.wide{grid-column:span 6}
+    .card.full{grid-column:1/-1}
+    pre{background:var(--hpp-ink);color:var(--hpp-paper);padding:20px;border-radius:12px;overflow:auto;border-left:6px solid var(--hpp-signal);font-size:.92rem;line-height:1.5}
+    code{font-size:.94em}
+    p code,li code,td code{background:var(--surface);padding:.08em .35em;border-radius:5px}
+    pre code{background:none;padding:0}
+    table{width:100%;border-collapse:collapse;background:var(--surface);margin:1em 0}
+    th,td{text-align:left;padding:12px;border-bottom:1px solid var(--line);vertical-align:top}
+    th{background:rgba(15,17,19,.08);font-weight:700}
+    .gate{display:inline-block;border-radius:999px;padding:.15rem .7rem;font-weight:700;font-size:.8rem;margin-bottom:.6em}
+    .gate.allow{background:var(--hpp-signal);color:var(--hpp-ink)}
+    .gate.manual{border:2px solid var(--hpp-ink);color:var(--hpp-ink)}
+    .gate.block{background:var(--hpp-ink);color:var(--hpp-paper)}
+    .label{font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+    .measured{border-left:4px solid var(--hpp-signal);padding-left:1em;color:var(--muted);font-size:.95rem}
+    ul,ol{padding-left:1.3em}
+    li{margin:.25em 0}
+    footer{padding:48px 0;background:var(--hpp-black);color:var(--hpp-paper)}
+    footer a{color:var(--hpp-paper)}
+    footer .five{letter-spacing:.2em;font-size:.8rem;color:rgba(244,241,235,.72)}
+    @media(max-width:760px){.card,.card.wide{grid-column:1/-1}.wrap{width:min(100% - 32px,var(--max))}th,td{font-size:.88rem;padding:8px}.hero{padding-top:28px}section{padding:44px 0}}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+    h3[id],h4[id],h5[id]{scroll-margin-top:64px}
+    ul.tasks{list-style:none;padding-left:.2em}
+    blockquote{margin:1em 0}
+  </style>
+</head>
+<body>
+  <div class="lang"><div class="wrap"><a href="SKILL-CONTRACT.html" hreflang="en" lang="en">English</a> · <a href="SKILL-CONTRACT.pt-BR.html" aria-current="page" hreflang="pt-BR">Português</a></div></div>
+  <header class="hero">
+    <div class="wrap">
+      <img src="assets/hpp-logo-header.png" alt="House Party Protocol">
+      <p class="eyebrow">Contratos · SKILL-CONTRACT.pt-BR.md</p>
+      <h1>SKILL-CONTRACT — o que separa "pilha de scripts" de "sistema"</h1>
+    </div>
+  </header>
+  <nav aria-label="Capítulos"><div class="wrap"><a href="#princípio">Princípio</a><a href="#tokens-de-schema--canônicos-e-legados">Tokens de schema — canônicos e legados</a><a href="#as-6-cláusulas">As 6 cláusulas</a><a href="#enforcement-automático">Enforcement automático</a></div></nav>
+  <main>
+
+    <section><div class="wrap">
+<blockquote class="measured">
+<p><strong>Versão:</strong> 1.1.0 (2026-09-21 — os tokens de schema em inglês são canônicos; os em português
+são aceitos como legado).
+<strong>Enforcement:</strong> <code>skill_lint.py</code> — <code>installers/kit-forge/tools/skill_lint.py</code> na raiz do
+marketplace, vendorizado como <code>tools/skill_lint.py</code> dentro do <code>claude-dev-kit</code>.</p>
+</blockquote>
+    </div></section>
+
+    <section id="princípio"><div class="wrap">
+      <p class="eyebrow">01</p>
+      <h2>Princípio</h2>
+<pre><code>UMA SKILL É PRODUTO QUANDO UM ESTRANHO, NUM REPO VIRGEM, EM QUALQUER OS,
+CONSEGUE: (1) saber QUANDO ela dispara, (2) saber O QUE entra e O QUE sai,
+(3) copiar-colar um comando que FUNCIONA, (4) provar com exit 0 que funcionou.
+Prosa numerada sem comando literal NAO e skill — e ensaio.</code></pre>
+<p>Uma skill que só descreve passos em prosa, sem contrato de I/O e sem prova executável, é um
+ensaio sobre a tarefa — não uma ferramenta que um estranho pode operar sem adivinhar.</p>
+    </div></section>
+
+    <section id="tokens-de-schema--canônicos-e-legados"><div class="wrap">
+      <p class="eyebrow">02</p>
+      <h2>Tokens de schema — canônicos e legados</h2>
+<p>O lint casa os tokens abaixo literalmente. <strong>Inglês é canônico</strong> (escreva skills novas com ele);
+as <strong>formas em português são aceitas como legado</strong> (skills escritas antes de 2026-09-21 seguem
+passando sem alteração). Cada cláusula aceita qualquer uma das duas formas por si só, então uma
+skill que mistura formas linta exatamente como uma pura — o contrato é estrutural, e a língua de
+um token não é cláusula.</p>
+<table>
+<thead><tr><th>Cláusula</th><th>Canônico (inglês)</th><th>Legado aceito (português)</th></tr></thead>
+<tbody>
+<tr><td>C1 header</td><td><code>&gt; **Priority:**</code> HIGH / MEDIUM / LOW</td><td><code>&gt; **Prioridade:**</code> ALTA / MÉDIA / BAIXA</td></tr>
+<tr><td>C1 seção</td><td><code>## When NOT to Activate</code></td><td><code>## Quando NÃO Ativar</code></td></tr>
+<tr><td>C2 seção</td><td><code>## Contract</code></td><td><code>## Contrato</code></td></tr>
+<tr><td>C2 campos</td><td><code>**INPUT:**</code> · <code>**OUTPUT:**</code> · <code>**EXIT CODES**</code> · <code>**STATE IT TOUCHES:**</code></td><td><code>**ENTRADA:**</code> · <code>**SAÍDA:**</code> · <code>**EXIT CODES**</code> · <code>**ESTADO QUE TOCA:**</code></td></tr>
+<tr><td>C2 linha do exit 0</td><td>a palavra <code>always</code> na linha do exit 0 (contrato de exit único)</td><td><code>sempre</code></td></tr>
+<tr><td>C3 marcador</td><td><code>&lt;!-- executed: YYYY-MM-DD · exit=N --&gt;</code></td><td><code>&lt;!-- executado: YYYY-MM-DD · exit=N --&gt;</code></td></tr>
+<tr><td>C4 seção</td><td><code>## Proof</code></td><td><code>## Prova</code></td></tr>
+</tbody>
+</table>
+<p><code>Auto-Trigger</code>, <code>Keywords</code>, <code>Tools</code> e <code>EXIT CODES</code> nunca foram traduzidos e têm uma forma só.</p>
+    </div></section>
+
+    <section id="as-6-cláusulas"><div class="wrap">
+      <p class="eyebrow">03</p>
+      <h2>As 6 cláusulas</h2>
+<h3 id="c1--header">C1 · HEADER</h3>
+<p>Frontmatter <code>name</code> + <code>description</code>, mais 4 linhas de metadado:</p>
+<ul>
+<li><code>&gt; **Auto-Trigger:**</code> — quando a skill dispara automaticamente.</li>
+<li><code>&gt; **Keywords:**</code> — mínimo 4 palavras/frases, sem wikilinks <code>[[...]]</code> (contaminação de staging).</li>
+<li><code>&gt; **Priority:**</code> — HIGH/MEDIUM/LOW (legado <code>Prioridade:</code> ALTA/MÉDIA/BAIXA). O lint confere o
+nome do campo (L1b); o valor é a convenção, não é checado por máquina.</li>
+<li><code>&gt; **Tools:**</code> — lista explícita das ferramentas que a skill usa.</li>
+</ul>
+<p>Mais uma seção <code>## When NOT to Activate</code> (legado <code>## Quando NÃO Ativar</code>) com ≥2 bullets —
+nomeando a skill vizinha quando há fronteira confundível (ex.: "não confundir com a skill X, que
+cobre Y").</p>
+<h3 id="c2--contrato-de-io">C2 · CONTRATO DE I/O</h3>
+<p>Seção <code>## Contract</code> (legado <code>## Contrato</code>) com:</p>
+<ul>
+<li><strong>INPUT</strong> (legado ENTRADA) — tipos aceitos (arquivo, string, flag).</li>
+<li><strong>OUTPUT</strong> (legado SAÍDA) — paths + formato modelado (não "gera um relatório", mas o schema do
+relatório).</li>
+<li><strong>EXIT CODES</strong> — tabela <code>0 / 1 / 2</code> (e além, se aplicável) com o significado de cada um. Um
+mecanismo que só consegue sair 0 (um conector que nunca quebra quem chama) diz isso com a
+palavra <code>always</code> (legado <code>sempre</code>) na linha do exit 0 — aí a C3 não cobra exemplo de falha.</li>
+<li><strong>STATE IT TOUCHES</strong> (legado ESTADO QUE TOCA) — tabela <code>arquivo → lê/escreve → propósito</code>
+(uma linha por arquivo que a skill lê ou escreve).</li>
+</ul>
+<h3 id="c3--3-exemplos-executados">C3 · ≥3 EXEMPLOS EXECUTADOS</h3>
+<p>Saída REAL colada (não inventada — viola <code>agent-integrity.md</code> inventar saída), com marcador
+parseável <code>&lt;!-- executed: YYYY-MM-DD · exit=N --&gt;</code> (legado <code>executado:</code>) em cada exemplo. Pelo
+menos 1 exemplo deve ser de FALHA (mostrar o exit != 0 e a mensagem real). Exemplos expiram em 90
+dias (o lint emite WARN, não FAIL, para exemplo velho — ele pode ainda ser verdadeiro, mas merece
+re-verificação).</p>
+<h3 id="c4--prova">C4 · PROVA</h3>
+<p>Seção <code>## Proof</code> (legado <code>## Prova</code>) com um comando único, que roda em menos de 5 segundos, sem
+rede, que demonstra o contrato e termina com exit 0 esperado. Herda o padrão <code>--self-test</code> de um
+script bem-comportado. O <code>--run-proofs</code> executa a primeira linha do bloco a partir do diretório da
+skill: um <code># comentário</code> no fim da linha é removido antes de rodar (no Windows o shell é o
+cmd.exe, onde <code>#</code> não é comentário e <code>&gt;</code> é redirecionamento) e <code>${CLAUDE_PLUGIN_ROOT}</code> é
+expandido para a raiz do módulo da skill.</p>
+<h3 id="c5--portabilidade">C5 · PORTABILIDADE</h3>
+<ul>
+<li>Launcher: <code>python</code> sempre. <strong><code>py</code> é PROIBIDO</strong> (Windows-only — bug real de
+<code>pre-clear-boot-block:16</code>).</li>
+<li><strong><code>ScheduleWakeup</code> é PROIBIDO como dependência</strong> — é uma tool exclusiva do main-loop <code>/loop</code>;
+subagentes e instalações externas não a enxergam (bug real de <code>loop-driver:47</code>).</li>
+<li><strong>Self-containment:</strong> tudo que a skill executa é resolvível via <code>${CLAUDE_PLUGIN_ROOT}</code>
+(modo plugin) ou vendorizado pelo assembler (modo cópia). Referência a <code>operator-kit/scripts/</code>
+ou a um <code>_lib</code> solto sem essas duas vias = quebra garantida pós-install.</li>
+</ul>
+<h3 id="c6--corpo-executável">C6 · CORPO EXECUTÁVEL</h3>
+<p>Comando literal por passo (não "rode o script apropriado" — o comando exato), formato de saída
+modelado, templates INTEIROS quando a skill emite um artefato (não esboço/trecho), anti-patterns
+documentados quando há armadilha conhecida, e cross-link entre skills irmãs quando há fronteira
+compartilhada.</p>
+    </div></section>
+
+    <section id="enforcement-automático"><div class="wrap">
+      <p class="eyebrow">04</p>
+      <h2>Enforcement automático</h2>
+<p><code>skill_lint.py</code> implementa os checks <code>L1a</code>–<code>L6</code> (mapeamento 1:1 às cláusulas acima). Os ids de
+achado (<code>L1b.prioridade</code>, <code>L2a.contrato_ausente</code>, <code>L4a.prova_ausente</code>, ...) são o contrato
+estável de saída do checker e não mudaram com os tokens em inglês — só as mensagens mudaram.
+Contrato de exit do lint:</p>
+<table>
+<thead><tr><th>Exit</th><th>Significado</th></tr></thead>
+<tbody>
+<tr><td><code>0</code></td><td>PASS — nenhuma violação</td></tr>
+<tr><td><code>1</code></td><td>Só WARNs (ex.: exemplo com &gt;90 dias)</td></tr>
+<tr><td><code>2</code></td><td>≥1 FAIL (violação de cláusula obrigatória)</td></tr>
+</tbody>
+</table>
+<p>Ajuste de C5 no lint: <code>${CLAUDE_PLUGIN_ROOT}/...</code> é referência VÁLIDA (L5c aceita). FAIL só ocorre
+em path relativo cru tipo <code>operator-kit/scripts/...</code> ou <code>_lib</code> fora de resolução declarada.</p>
+    </div></section>
+
+  </main>
+  <footer><div class="wrap">
+    <p class="five">AGENTS · EVIDENCE · MEMORY · PROTOCOL · CONTINUITY</p>
+    <strong>House Party Protocol</strong>
+    <p>Opere agentes de código sob evidência, não confiança.</p>
+    <p><a href="index.html">Documentação</a> · <a href="MANUAL.pt-BR.html">Manual do harness</a> · <a href="CATALOG.pt-BR.html">Catálogo de módulos</a> · <a href="https://github.com/rusharlabs/house-party-protocol/blob/main/SKILL-CONTRACT.pt-BR.md">Fonte em Markdown</a> · <a href="SKILL-CONTRACT.html" hreflang="en" lang="en">English</a></p>
+  </div></footer>
+</body>
+</html>

@@ -34,7 +34,7 @@ person's interpreter, do not work around a missing `git`.
 ## Step 2 — install the CLI
 
 ```bash
-pip install git+https://github.com/rusharlabs/house-party-protocol@v2.9.0
+pip install git+https://github.com/rusharlabs/house-party-protocol@v2.10.0
 ```
 
 `pipx install git+…` works the same way. The package ships its own manifest and benchmark
@@ -82,10 +82,19 @@ harness exists to prevent. If you skip it, you have installed the harness by vio
 
 ## Step 5 — Codex CLI wiring
 
-Claude Code is wired by step 4. Codex CLI needs one more command per module:
+Claude Code is wired by step 4. Codex CLI has a plugin channel of its own for the modules that
+carry skills (skills only; hooks stay off):
 
 ```bash
-installers/kit-forge-1.4.2/kit_doctor.py install --kit <kit> --host codex --target <repo> --apply
+codex plugin marketplace add rusharlabs/house-party-protocol
+codex plugin add <module>@house-party-protocol
+```
+
+Everything else — runtime, scripts, templates, and any module without skills — needs one more
+command per module:
+
+```bash
+installers/kit-forge-1.5.0/kit_doctor.py install --kit <kit> --host codex --target <repo> --apply
 ```
 
 Skills land in `.agents/skills`; the full runtime lands in `.agents/hpp`. Hooks declared in

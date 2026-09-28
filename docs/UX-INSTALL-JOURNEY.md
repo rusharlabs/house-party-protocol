@@ -4,7 +4,7 @@
 
 > **Version:** 2.0.0 — a presentation layer over two frozen contracts.
 > **Path 1** is `hpp init`, the harness installer (`hpp/wizard.py`, six stages, plan then
-> `--apply`). **Path 2** is the module installer, `installers/kit-forge-1.4.2/kit_doctor.py`,
+> `--apply`). **Path 2** is the module installer, `installers/kit-forge-1.5.0/kit_doctor.py`,
 > whose mechanics live in `INSTALL-CONTRACT.md` and whose per-module README follows
 > `INSTALL-GUIDE-TEMPLATE.md`; both ship at the root of this repository. This document describes
 > the EXPERIENCE: how an AGENT (Claude Code or Codex CLI) guides a HUMAN through the installation,
@@ -189,7 +189,7 @@ module's declared smokes; it plans first and applies only on a second, explicit 
 
 ### The journey in 5 steps (the same in the 4 scenarios)
 
-1. **Plan.** The agent runs `python installers/kit-forge-1.4.2/kit_doctor.py install --kit <module-dir> --host <host> --target <project> --human`
+1. **Plan.** The agent runs `python installers/kit-forge-1.5.0/kit_doctor.py install --kit <module-dir> --host <host> --target <project> --human`
    (`--human` selects the human-readable report). Plan mode is the default: nothing is written,
    exit 0.
 2. **Translation.** The agent pastes the confirmation block into the conversation (template in

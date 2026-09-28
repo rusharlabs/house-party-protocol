@@ -4,7 +4,9 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import platform
 import sys
+import urllib.parse
 from pathlib import Path
 from typing import Any, Optional
 
@@ -25,13 +27,14 @@ from hpp.evidence import (
 )
 from hpp.findings import check as check_findings, exit_for as findings_exit_for
 from hpp.graph import build_graph, to_mermaid
+from hpp.hosts import render_host_matrix
 from hpp.install import InstallError, installation_plan
 from hpp.manifest import ManifestError, hook_capability_census, load_manifest, validate_distribution
 from hpp.maps import build_agent_map, build_context_map, build_lane_map, build_monitor_map
-from hpp.policy import assess, exit_for as policy_exit_for
+from hpp.policy import assess, exit_for as policy_exit_for, policy_for_workspace
 from hpp.retrieval import exit_for as retrieval_exit_for, run_retrieval_suite
 from hpp.routing import route
-from hpp.state import StateError, append_event, event_path, project, read_events
+from hpp.state import StateError, append_event, event_path, project, read_events, verify_chain
 from hpp.term import Console
 from hpp.wizard import DECISION_ADVISORS, InitUsageError, prepare_options, run_init_command
 from hpp.workgraph import cited_tests, citation_coverage, compile_workgraph, read_junit, spec_execution
@@ -68,8 +71,42 @@ def _read_json(path: str, expected: type) -> Any:
     return value
 
 
+# Why: the feedback form ships in `.github/ISSUE_TEMPLATE/feedback.yml`; the CLI prints the link
+# with the title filled in and never opens it. Where the link goes is the tracker `pyproject.toml`
+# declares, and a test keeps the two equal.
+FEEDBACK_ISSUES = "https://github.com/rusharlabs/house-party-protocol/issues/new"
+# Why: the feedback form is one channel; the support page at the product root names every other
+# one (questions, problem reports, ideas, private vulnerability reports). Printed, never fetched;
+# a test ties the address to the file that ships beside `pyproject.toml`.
+SUPPORT_PAGE = "https://github.com/rusharlabs/house-party-protocol/blob/main/SUPPORT.md"
+
+
+def _doctor_report(manifest: dict[str, Any], distribution: dict[str, Any], hooks: dict[str, Any]) -> dict[str, Any]:
+    """What a person pastes into the feedback form: versions, platform and the doctor's counts.
+    No path from this machine is in it."""
+    return {
+        "schema": "hpp.doctor-report/v1",
+        "version": __version__,
+        "protocol_version": str(manifest["protocol_version"]),
+        "python": platform.python_version(),
+        "platform": " ".join(part for part in (platform.system(), platform.machine()) if part) or "unknown",
+        "modules": len(manifest["modules"]),
+        "hosts": list(manifest["hosts"]),
+        "hooks": {"declared": hooks["declared"], "by_capability": hooks["by_capability"]},
+        "distribution": {"checked": distribution["checked"], "status": distribution["status"]},
+    }
+
+
+def _feedback_url(report: dict[str, Any]) -> str:
+    title = f"[feedback] hpp {report['version']} on {report['platform']}"
+    return f"{FEEDBACK_ISSUES}?template=feedback.yml&title={urllib.parse.quote(title, safe='')}"
+
+
 def command_doctor(args: argparse.Namespace) -> int:
     manifest, path = _manifest(args)
+    if args.matrix:
+        print(render_host_matrix(manifest, "en"), end="")
+        return 0
     distribution = validate_distribution(manifest, path.parent)
     # Why (hook capability census, 2026-09-22): load_manifest already refuses a hook without a declaration, so
     # reaching this line IS the pass. The census is printed so the answer to "what can the
@@ -78,13 +115,30 @@ def command_doctor(args: argparse.Namespace) -> int:
     result = {"status": "ok", "version": __version__, "manifest": str(path),
               "modules": len(manifest["modules"]), "bundles": sorted(manifest["bundles"]),
               "hosts": manifest["hosts"], "distribution": distribution, "hooks": hooks}
+    gates = hooks["by_capability"].get("automatic-permission-gates", 0)
+    egress = hooks["by_capability"].get("transcript-derived-llm-egress", 0)
+    summary = (f"HPP doctor: ok · modules={result['modules']} · hosts={', '.join(result['hosts'])} "
+               f"· hooks={hooks['declared']} (permission gates={gates} · llm egress={egress})")
+    if args.report:
+        report = _doctor_report(manifest, distribution, hooks)
+        url = _feedback_url(report)
+        if args.json:
+            _json({"feedback_url": url, "report": report, "support_url": SUPPORT_PAGE})
+        else:
+            _line(summary)
+            print()
+            print("Feedback: no network call was made; nothing is sent until you open this link yourself.")
+            print(url)
+            print("Questions, problem reports, ideas and private vulnerability reports:")
+            print(SUPPORT_PAGE)
+            print()
+            print("Paste this report into the form:")
+            _json(report)
+        return 0
     if args.json:
         _json(result)
     else:
-        gates = hooks["by_capability"].get("automatic-permission-gates", 0)
-        egress = hooks["by_capability"].get("transcript-derived-llm-egress", 0)
-        _line(f"HPP doctor: ok · modules={result['modules']} · hosts={', '.join(result['hosts'])} "
-              f"· hooks={hooks['declared']} (permission gates={gates} · llm egress={egress})")
+        _line(summary)
     return 0
 
 
@@ -117,12 +171,19 @@ def command_init(args: argparse.Namespace) -> int:
 
 
 def command_policy(args: argparse.Namespace) -> int:
-    verdict = assess(args.command)
-    _json({"mode": args.mode, **verdict})
+    # Why: a refused policy file refuses the check (exit 2, no verdict printed). Falling back to the
+    # built-ins would print ALLOW for the very command the project asked to block.
+    policy, policy_path = policy_for_workspace(args.policy, Path.cwd())
+    verdict = assess(args.command, policy)
+    _json({"mode": args.mode, "policy": str(policy_path) if policy_path else None, **verdict})
     return policy_exit_for(verdict, args.mode)
 
 
 def command_event(args: argparse.Namespace) -> int:
+    if args.event_command == "verify":
+        report = verify_chain(event_path())
+        _json(report)
+        return 0 if report["status"] != "broken" else 2
     manifest, _ = _manifest(args)
     data: dict[str, Any] = {}
     if args.data:
@@ -138,7 +199,9 @@ def command_event(args: argparse.Namespace) -> int:
 def _status(manifest: dict[str, Any]) -> dict[str, Any]:
     path = event_path()
     events = read_events(path)
-    return {"event_log": str(path), **project(events, manifest)}
+    chain = verify_chain(path)
+    return {"event_log": str(path), **project(events, manifest),
+            "chain": {key: chain[key] for key in ("status", "chained", "legacy", "head_sha256")}}
 
 
 def command_status(args: argparse.Namespace) -> int:
@@ -147,7 +210,10 @@ def command_status(args: argparse.Namespace) -> int:
     if args.json:
         _json(status)
     else:
-        _line(f"HPP status: {status['state']} · events={status['event_count']} · next={status['next_step']}")
+        chain = status["chain"]["status"]
+        if status["chain"]["legacy"]:
+            chain += f" ({status['chain']['legacy']} unchained)"
+        _line(f"HPP status: {status['state']} · events={status['event_count']} · next={status['next_step']} · chain={chain}")
     return 0
 
 
@@ -192,10 +258,13 @@ def command_attest(args: argparse.Namespace) -> int:
             session=args.session,
             verdict=args.verdict,
             panel=panel,
+            sign_key=Path(args.sign_key) if args.sign_key else None,
+            signer=args.signer,
         )
         _json({"status": "recorded", **record})
         return 0 if record["verdict"] == "approved" else 2
-    report = verify_attestation(Path(args.attestation), Path(args.repo))
+    report = verify_attestation(Path(args.attestation), Path(args.repo),
+                                allowed_signers=Path(args.allowed_signers) if args.allowed_signers else None)
     _json(report)
     return 0 if report["status"] == "valid" else 2
 
@@ -418,7 +487,8 @@ def command_cite(args: argparse.Namespace) -> int:
 def command_evidence(args: argparse.Namespace) -> int:
     root = Path.cwd()
     if args.evidence_command == "verify":
-        report = verify_evidence(Path(args.record), root=root)
+        report = verify_evidence(Path(args.record), root=root,
+                                 allowed_signers=Path(args.allowed_signers) if args.allowed_signers else None)
         _json(report)
         return evidence_verify_exit(report)
     command = list(args.criterion)
@@ -441,7 +511,8 @@ def command_evidence(args: argparse.Namespace) -> int:
         return exit_for_mutation(record)
     manifest = _manifest(args)[0] if args.record_event else None
     record = run_evidence(args.id, command, args.artifact or [], root=root, timeout=args.timeout,
-                          out_dir=Path(args.out) if args.out else None, manifest=manifest)
+                          out_dir=Path(args.out) if args.out else None, manifest=manifest,
+                          sign_key=Path(args.sign_key) if args.sign_key else None, signer=args.signer)
     _json(record)
     return evidence_run_exit(record)
 
@@ -492,6 +563,11 @@ def build_parser() -> argparse.ArgumentParser:
     doctor = sub.add_parser("doctor")
     doctor.add_argument("--manifest")
     doctor.add_argument("--json", action="store_true")
+    doctor.add_argument("--report", action="store_true",
+                        help="print the feedback-form link, the support page and the report to paste into the form; "
+                             "no network call is made")
+    doctor.add_argument("--matrix", action="store_true",
+                        help="print the host x module x channel matrix (Markdown) rendered from the manifest")
     doctor.set_defaults(func=command_doctor)
 
     graph = sub.add_parser("graph")
@@ -539,6 +615,8 @@ def build_parser() -> argparse.ArgumentParser:
     check = policy_sub.add_parser("check")
     check.add_argument("--mode", choices=["audit", "enforce"], required=True)
     check.add_argument("--command", required=True)
+    check.add_argument("--policy", help="an hpp.policy/v1 file that only hardens the built-in rules "
+                                        "(default: .hpp/policy.json in the current directory, when present)")
     check.set_defaults(func=command_policy)
 
     event = sub.add_parser("event")
@@ -548,6 +626,9 @@ def build_parser() -> argparse.ArgumentParser:
     append.add_argument("--type", required=True)
     append.add_argument("--data")
     append.set_defaults(func=command_event)
+    event_verify = event_sub.add_parser(
+        "verify", help="check the hash chain of .hpp/events.jsonl; a broken chain names its first divergent step")
+    event_verify.set_defaults(func=command_event)
 
     status = sub.add_parser("status")
     status.add_argument("--manifest")
@@ -585,10 +666,15 @@ def build_parser() -> argparse.ArgumentParser:
                                                        "the stricter of the two verdicts is recorded")
     attest_create.add_argument("--maker-family", dest="maker_family",
                                help="the maker's model family; a judge of that family is refused")
+    attest_create.add_argument("--sign-key", dest="sign_key",
+                               help="SSH private key; the record is signed with ssh-keygen -Y sign (namespace hpp)")
+    attest_create.add_argument("--signer", help="the principal the signature names (default: the checker)")
     attest_create.set_defaults(func=command_attest)
     attest_verify = attest_sub.add_parser("verify")
     attest_verify.add_argument("attestation")
     attest_verify.add_argument("--repo", default=".")
+    attest_verify.add_argument("--allowed-signers", dest="allowed_signers",
+                               help="ssh-keygen allowed_signers file; the record must carry a signature it accepts")
     attest_verify.set_defaults(func=command_attest)
 
     work = sub.add_parser("work")
@@ -651,7 +737,7 @@ def build_parser() -> argparse.ArgumentParser:
     deliberate = sub.add_parser(
         "deliberate",
         description="House Session: validate a panel of pinned deciders, count its turns, decide when it stops, "
-                    "and seal the session as an hpp.deliberation/v1 record. hpp never calls a model; seats and "
+                    f"and seal the session as an {DELIBERATION_SCHEMA} record. hpp never calls a model; seats and "
                     "the judge answer outside it.",
     )
     deliberate_sub = deliberate.add_subparsers(dest="deliberate_command", required=True)
@@ -670,7 +756,7 @@ def build_parser() -> argparse.ArgumentParser:
     deliberate_validate.set_defaults(func=command_deliberate)
     for name, text in (("tally", "count every round: grounded and ungrounded votes, abstentions, seats not judged"),
                        ("stop", "continue with the next round, or stop with the rule that stopped the session"),
-                       ("record", "seal a stopped session with the judge's decision into an hpp.deliberation/v1")):
+                       ("record", f"seal a stopped session with the judge's decision into an {DELIBERATION_SCHEMA}")):
         action = deliberate_sub.add_parser(name, help=text)
         action.add_argument("--panel", required=True, help="the hpp.panel/v1 file")
         action.add_argument("--turns", required=True, help="JSON list of hpp.turn/v1 turns")
@@ -728,6 +814,9 @@ def build_parser() -> argparse.ArgumentParser:
     evidence_run.add_argument("--record-event", dest="record_event", action="store_true",
                               help="append evidence_recorded to the event log when, and only when, the bundle passed")
     evidence_run.add_argument("--manifest")
+    evidence_run.add_argument("--sign-key", dest="sign_key",
+                              help="SSH private key; the record is signed with ssh-keygen -Y sign (namespace hpp)")
+    evidence_run.add_argument("--signer", help="the principal the signature names; required with --sign-key")
     evidence_run.add_argument("criterion", nargs=argparse.REMAINDER, help="-- then the command to run")
     evidence_run.set_defaults(func=command_evidence)
     evidence_mutate = evidence_sub.add_parser(
@@ -743,6 +832,8 @@ def build_parser() -> argparse.ArgumentParser:
     evidence_mutate.set_defaults(func=command_evidence)
     evidence_verify = evidence_sub.add_parser("verify", help="re-hash a record and its artifacts")
     evidence_verify.add_argument("record")
+    evidence_verify.add_argument("--allowed-signers", dest="allowed_signers",
+                                 help="ssh-keygen allowed_signers file; the record must carry a signature it accepts")
     evidence_verify.set_defaults(func=command_evidence)
 
     context = sub.add_parser("context")

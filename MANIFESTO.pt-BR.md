@@ -99,13 +99,25 @@ mudar.
 
 - **Sem daemon, sem servidor, sem scheduler.** Uma checagem que não rodou não foi rodada. Um
   processo em segundo plano tornaria "está rodando?" uma segunda pergunta a verificar, e carregaria
-  estado que o event log não vê.
+  estado que o event log não vê. O pacote `hpp` não roda nenhum. *Uma exceção delimitada, só para
+  módulos:* um módulo pode servir uma página local que o operador inicia e encerra (o Lane Dashboard
+  do lane-kit é o que faz isso), com todas estas condições: escuta só em loopback e responde só à
+  própria página; toda ação carrega um token emitido para aquela execução; a página se recusa a ser
+  emoldurada; uma requisição que só lê não escreve nada e não inicia nada; toda escrita passa pelas
+  ferramentas de linha de comando do próprio módulo, e toda ação também é um comando de terminal que
+  faz exatamente o mesmo; nada a agenda, e o que ela roda fica dentro dos limites do item seguinte. A
+  página em si não envia nada para fora da máquina.
 - **Sem chamada a modelo.** O harness roteia trabalho para um tier e um id de provedor que você
   declarou. Ele não escolhe fornecedor, nome de modelo nem preço, e não guarda credencial. No
   momento em que chamasse um modelo, os vereditos dele dependeriam de algo que ele não consegue
   reproduzir. Uma decisão obtida em outro lugar pode ser registrada e medida (`hpp decide`); o
   adaptador de exemplo que consulta um modelo hospedado mora em `examples/`, só roda quando uma
-  pessoa o roda, e a política o classifica como `MANUAL`.
+  pessoa o roda, e a política o classifica como `MANUAL`. *Uma exceção delimitada, só para módulos:*
+  essa página pode iniciar uma sessão de agente, e só como uma ação que o operador confirma, nunca a
+  partir de uma requisição que só lê, nunca por temporizador e nunca sozinha, com o modelo que o
+  operador declarou para ela. Uma sessão que roda em segundo plano roda sob um supervisor com tempo
+  limite, botão de parar e log com teto. A sessão é o agente do operador, na conta do próprio
+  operador; o pacote `hpp` continua sem chamar modelo, sem escolher nenhum e sem guardar credencial.
 - **Sem banco de grafo.** Todo mapa é uma projeção de manifestos, eventos e JSON que você fornece.
   A mesma entrada produz os mesmos nós e arestas, na mesma ordem, e você pode fazer hash do
   resultado. Um grafo armazenado seria uma segunda fonte de verdade que deriva da primeira.
@@ -152,6 +164,17 @@ doctor mostra a diferença. Cobertura ausente é `unsupported`, nunca "provavelm
 O HPP não se chama de confiável por ter muitos componentes. Confiabilidade vem de controles
 negativos, execução repetida, revisão independente e uma cadeia de release verificável. Uma release
 crítica precisa demonstrar o próprio piso, `pass^k`, não o melhor resultado que já obteve.
+
+## Mais agentes, mais afirmações
+
+Um time de agentes multiplica o que um agente já faz: afirmar. Cada sessão relata o próprio
+"pronto", um revisor da família de modelo do autor pode carregar os pontos cegos do autor, e um
+painel de uma família só pode concordar pelo mesmo motivo pelo qual erra. Somar agentes soma
+produção; não soma prova. O harness não torna um time mais capaz e não decide quantos agentes rodar.
+Ele submete cada membro aos mesmos contratos: o trabalho se divide só onde a spec não tem aresta, um
+veredito vem de outra lane e de outra família de modelo, uma deliberação guarda a divergência que
+perdeu, e nada chega a `verified` sem critério, comando, saída e frescor. Mais agentes é motivo para
+mais evidência, não para menos.
 
 ## O compromisso
 

@@ -1,0 +1,1443 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark light">
+<meta name="hpp-session" content="__HPP_DASHBOARD_SESSION__">
+<title>Lane Board · House Party Protocol</title>
+<link rel="icon" href="data:,">
+<style>
+/* docs/hpp.css — inlined verbatim: this page is served from an installed kit, where docs/ does not exist. */
+:root{--hpp-black: #000000;--hpp-ink: #0F1113;--hpp-paper: #F4F1EB;--hpp-signal: #FF6A00;--line:rgba(15,17,19,.18);--surface:rgba(15,17,19,.04);--muted:rgba(15,17,19,.72);--max:1120px}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--hpp-paper);color:var(--hpp-ink);font:16px/1.6 Inter,"Segoe UI",Arial,sans-serif}
+a{color:var(--hpp-ink);text-decoration:underline;text-decoration-color:var(--hpp-signal);text-decoration-thickness:2px;text-underline-offset:3px}
+a:hover{color:var(--hpp-signal)}
+a:focus-visible{outline:4px solid var(--hpp-signal);outline-offset:3px}
+.wrap{width:min(var(--max),calc(100% - 40px));margin:auto}
+.lang{background:var(--hpp-black);color:var(--hpp-paper);font-size:.9rem;padding:10px 0}
+.lang a{color:var(--hpp-paper)}
+.lang a[aria-current]{text-decoration:none;font-weight:700}
+.hero{background:var(--hpp-ink);color:var(--hpp-paper);padding:44px 0 50px;border-bottom:8px solid var(--hpp-signal)}
+.hero img{width:min(720px,100%);display:block}
+.hero h1{font:800 clamp(2.2rem,6vw,4.6rem)/.95 Sora,Inter,"Segoe UI",sans-serif;letter-spacing:-.02em;margin:.35em 0}
+.hero p{max-width:760px;font-size:1.1rem;color:rgba(244,241,235,.82)}
+.hero code{color:var(--hpp-paper)}
+.eyebrow,code,.mono{font-family:"JetBrains Mono","Cascadia Code",Consolas,monospace}
+.eyebrow{display:inline-block;letter-spacing:.13em;text-transform:uppercase;font-size:.78rem;border-left:4px solid var(--hpp-signal);padding-left:.6em;margin:0 0 .6em;color:var(--hpp-paper)}
+main{padding:24px 0 56px}
+section{padding:36px 0;border-bottom:1px solid var(--line)}
+h2{font:800 clamp(1.5rem,3vw,2.2rem)/1.1 Sora,Inter,"Segoe UI",sans-serif;letter-spacing:-.01em;margin:0 0 .5em}
+h2 .version{font:700 .8rem/1 "JetBrains Mono",Consolas,monospace;color:var(--hpp-paper);background:var(--hpp-ink);border-radius:999px;padding:.35em .7em;vertical-align:middle;margin-left:.5em}
+h3{margin:1.4em 0 .4em;font-size:1rem;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.lead{max-width:780px;color:var(--muted)}
+table{border-collapse:collapse;width:100%;font-size:.95rem;background:var(--surface);border:1px solid var(--line)}
+th,td{text-align:left;padding:.55em .8em;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+tr.total td{font-weight:700;border-top:2px solid var(--hpp-ink)}
+.chips code{display:inline-block;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:.15em .5em;margin:.15em .35em .15em 0}
+footer{padding:48px 0;background:var(--hpp-black);color:var(--hpp-paper);font-size:.9rem}
+footer a{color:var(--hpp-paper)}
+footer .five{letter-spacing:.2em;font-size:.8rem;color:rgba(244,241,235,.72)}
+@media(max-width:700px){.wrap{width:calc(100% - 26px)}table{display:block;overflow-x:auto}}
+
+/* Lane Board — built on the tokens above. Four colours, one accent; a lighter step is a token at
+   reduced opacity. Dark is the ink interface; light is the paper of the published pages. */
+:root{
+  color-scheme:dark;
+  --bg:var(--hpp-ink);--fg:var(--hpp-paper);--deep:var(--hpp-black);
+  --fg-82:rgba(244,241,235,.82);--fg-64:rgba(244,241,235,.64);--fg-46:rgba(244,241,235,.46);
+  --rule:rgba(244,241,235,.13);--rule-strong:rgba(244,241,235,.26);
+  --raise:rgba(244,241,235,.035);--raise-2:rgba(244,241,235,.07);--raise-3:rgba(244,241,235,.11);
+  --signal-soft:rgba(255,106,0,.10);--signal-line:rgba(255,106,0,.55);
+  --shadow:0 18px 50px rgba(0,0,0,.45);
+  --wide:1680px;
+}
+:root[data-theme="light"]{
+  color-scheme:light;
+  --bg:var(--hpp-paper);--fg:var(--hpp-ink);--deep:rgba(15,17,19,.05);
+  --fg-82:rgba(15,17,19,.82);--fg-64:rgba(15,17,19,.66);--fg-46:rgba(15,17,19,.5);
+  --rule:rgba(15,17,19,.14);--rule-strong:rgba(15,17,19,.28);
+  --raise:rgba(15,17,19,.03);--raise-2:rgba(15,17,19,.055);--raise-3:rgba(15,17,19,.09);
+  --shadow:0 18px 50px rgba(15,17,19,.18);
+}
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]){
+    color-scheme:light;
+    --bg:var(--hpp-paper);--fg:var(--hpp-ink);--deep:rgba(15,17,19,.05);
+    --fg-82:rgba(15,17,19,.82);--fg-64:rgba(15,17,19,.66);--fg-46:rgba(15,17,19,.5);
+    --rule:rgba(15,17,19,.14);--rule-strong:rgba(15,17,19,.28);
+    --raise:rgba(15,17,19,.03);--raise-2:rgba(15,17,19,.055);--raise-3:rgba(15,17,19,.09);
+    --shadow:0 18px 50px rgba(15,17,19,.18);
+  }
+}
+body{background:var(--bg);color:var(--fg);font-size:15px}
+.wrap.wide{width:min(var(--wide),calc(100% - 40px))}
+a{color:var(--fg)}
+code{font-size:.86em}
+button,select,input,textarea{font:inherit;color:inherit}
+:is(button,select,input,textarea,summary,[tabindex]):focus-visible{outline:3px solid var(--hpp-signal);outline-offset:2px}
+[hidden]{display:none !important}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* top bar */
+.lang .wrap{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.lang .brand{font:700 .72rem/1 "JetBrains Mono",Consolas,monospace;letter-spacing:.16em;text-transform:uppercase;color:rgba(244,241,235,.72)}
+.lang .spacer{flex:1}
+.lang .switch{display:flex;gap:10px;align-items:center}
+.lang button.link{background:none;border:0;padding:0;cursor:pointer;color:var(--hpp-paper);text-decoration:underline;text-decoration-color:var(--hpp-signal);text-decoration-thickness:2px;text-underline-offset:3px}
+.lang button.link[aria-current]{text-decoration:none;font-weight:700;cursor:default}
+.lang .theme{background:none;border:1px solid rgba(244,241,235,.28);border-radius:999px;padding:2px 10px;cursor:pointer;color:var(--hpp-paper);font:600 .74rem/1.6 "JetBrains Mono",Consolas,monospace}
+.live{display:inline-flex;align-items:center;gap:7px;font:600 .74rem/1 "JetBrains Mono",Consolas,monospace;letter-spacing:.08em;text-transform:uppercase;color:rgba(244,241,235,.72)}
+.live .dot{width:9px;height:9px;border-radius:50%;border:2px solid rgba(244,241,235,.72)}
+.live.on{color:var(--hpp-paper)}
+.live.on .dot{background:var(--hpp-paper);border-color:var(--hpp-paper);animation:beat 2.4s ease-in-out infinite}
+@keyframes beat{50%{opacity:.35}}
+@media (prefers-reduced-motion: reduce){.live.on .dot{animation:none}}
+
+/* header */
+.masthead{background:var(--hpp-ink);color:var(--hpp-paper);border-bottom:6px solid var(--hpp-signal);padding:26px 0 24px}
+:root[data-theme="light"] .masthead{background:var(--hpp-black)}
+.masthead .wrap{display:grid;grid-template-columns:auto 1fr auto;gap:22px;align-items:center}
+.masthead img{width:58px;height:58px;border-radius:14px;display:block}
+.masthead h1{font:800 clamp(1.9rem,3.4vw,2.9rem)/.95 Sora,Inter,"Segoe UI",sans-serif;letter-spacing:-.025em;margin:.1em 0 .18em}
+.masthead .eyebrow{margin:0}
+.masthead .sub{margin:0;color:rgba(244,241,235,.72);font-size:.92rem}
+.masthead .sub code{color:var(--hpp-paper)}
+.actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+.btn{white-space:nowrap;display:inline-flex;align-items:center;gap:8px;border-radius:10px;padding:.62em 1.05em;font-weight:650;font-size:.92rem;cursor:pointer;border:1px solid var(--rule-strong);background:var(--raise-2);color:var(--fg);transition:background .15s,border-color .15s}
+.btn:hover{background:var(--raise-3);border-color:var(--fg-64)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn .g{font-family:"JetBrains Mono",Consolas,monospace}
+.masthead .btn{border-color:rgba(244,241,235,.3);background:rgba(244,241,235,.06);color:var(--hpp-paper)}
+.masthead .btn:hover{background:rgba(244,241,235,.12);border-color:rgba(244,241,235,.6)}
+.btn.primary{background:var(--hpp-signal);border-color:var(--hpp-signal);color:var(--hpp-black)}
+.btn.primary:hover{background:var(--hpp-signal);border-color:var(--hpp-paper)}
+.btn.small{padding:.38em .75em;font-size:.82rem;border-radius:8px}
+.btn.ghost{background:none}
+
+main{padding:22px 0 40px}
+section.block{padding:30px 0;border-bottom:1px solid var(--rule)}
+section.block:last-child{border-bottom:0}
+.block-head{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;flex-wrap:wrap;margin-bottom:18px}
+.block-head h2{margin:0}
+.block-head h2 .version{background:var(--raise-3);color:var(--fg)}
+.block-head .lead{margin:.35em 0 0;color:var(--fg-64);font-size:.93rem}
+.block-head .lead code{color:var(--fg-82)}
+
+/* metrics */
+.metrics{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:10px;margin:4px 0 6px}
+.metric{background:var(--raise);border:1px solid var(--rule);border-radius:12px;padding:14px 14px 12px;min-width:0}
+.metric span{display:block;font:600 .66rem/1.25 "JetBrains Mono",Consolas,monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--fg-64);min-height:2.5em}
+.metric strong{display:block;font:800 1.9rem/1 Sora,Inter,"Segoe UI",sans-serif;font-variant-numeric:tabular-nums;margin-top:6px}
+.metric.attention.on{border-color:var(--signal-line);background:var(--signal-soft)}
+.metric.attention.on strong{color:var(--hpp-signal)}
+.metric.attention.on span::before{content:"● ";color:var(--hpp-signal)}
+@media(max-width:1200px){.metrics{grid-template-columns:repeat(5,minmax(0,1fr))}}
+@media(max-width:560px){.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+.warnings{margin:14px 0 0;border:1px solid var(--rule-strong);border-left:4px solid var(--fg);border-radius:10px;padding:10px 14px;background:var(--raise);font-size:.88rem}
+.warnings[hidden]{display:none}
+.warnings strong{font:700 .72rem/1 "JetBrains Mono",Consolas,monospace;letter-spacing:.1em;text-transform:uppercase}
+.warnings ul{margin:.4em 0 0;padding-left:1.1em;color:var(--fg-82)}
+
+/* segmented control */
+.seg{display:inline-flex;border:1px solid var(--rule-strong);border-radius:10px;overflow:hidden}
+.seg button{background:none;border:0;padding:.42em .9em;cursor:pointer;font-size:.85rem;color:var(--fg-64)}
+.seg button[aria-pressed="true"]{background:var(--raise-3);color:var(--fg);font-weight:650}
+.scope{display:grid;gap:14px;margin:0 0 16px;padding:14px 16px 16px;border:1px solid var(--rule);border-radius:16px;background:var(--raise)}
+.scope[hidden]{display:none}
+.scope-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.scope-row.stack{display:grid;gap:10px}
+.scope-label{font:700 .68rem/1.2 "JetBrains Mono",Consolas,monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--fg-64);margin-right:6px}
+.scope-chip{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--rule-strong);background:none;border-radius:999px;padding:.42em .95em;cursor:pointer;font:inherit;font-size:.88rem;color:var(--fg-82);transition:background .15s,border-color .15s,color .15s}
+.scope-chip:hover{color:var(--fg);border-color:var(--fg-46)}
+.scope-chip[aria-pressed="true"]{background:var(--raise-3);color:var(--fg);font-weight:650;border-color:var(--fg-64)}
+.scope .n{font:650 .7rem/1 "JetBrains Mono",Consolas,monospace;color:var(--fg-46)}
+.scope .n.need{color:var(--fg);font-weight:800}
+.wt-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}
+.wt{display:grid;gap:8px;min-width:0;text-align:left;font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--rule);border-radius:12px;padding:12px 14px;cursor:pointer;transition:border-color .15s,box-shadow .15s,transform .15s}
+:root:not([data-theme="light"]) .wt{background:rgba(0,0,0,.28)}
+.wt:hover{border-color:var(--rule-strong);transform:translateY(-1px);box-shadow:0 8px 22px rgba(0,0,0,.22)}
+.wt[aria-pressed="true"]{border-color:var(--signal-line);box-shadow:inset 0 3px 0 var(--hpp-signal)}
+.wt-top{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0}
+.wt-name{display:flex;align-items:center;gap:8px;min-width:0;font:750 1rem/1.2 Sora,Inter,"Segoe UI",sans-serif;letter-spacing:-.01em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wt-name i{font-style:normal;color:var(--fg-46)}
+.wt[aria-pressed="true"] .wt-name i{color:var(--hpp-signal)}
+.wt-badge{flex:none;font:700 .6rem/1 "JetBrains Mono",Consolas,monospace;letter-spacing:.12em;text-transform:uppercase;border:1px solid var(--rule-strong);border-radius:999px;padding:.42em .65em;color:var(--fg-64)}
+.wt-path{font:600 .72rem/1.35 "JetBrains Mono",Consolas,monospace;color:var(--fg-46);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wt-path b{color:var(--fg-82);font-weight:700}
+.wt.all .wt-path{white-space:normal}
+.wt-stats{display:flex;flex-wrap:wrap;gap:6px 12px;padding-top:8px;border-top:1px dashed var(--rule);font:600 .72rem/1.2 "JetBrains Mono",Consolas,monospace;color:var(--fg-46)}
+.wt-stats span{display:inline-flex;align-items:center;gap:5px}
+.wt-stats i{font-style:normal}
+.wt-stats .on{color:var(--fg-82)}
+.wt-stats .need{color:var(--fg);font-weight:800}
+.scope-hint{margin:0;font-size:.8rem;color:var(--fg-46)}
+.chip.where{border-color:var(--rule-strong);background:var(--raise-3);color:var(--fg)}
+
+/* backlog */
+.specs{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px}
+.spec{position:relative;display:flex;flex-direction:column;gap:9px;background:var(--raise);border:1px solid var(--rule);border-radius:14px;padding:14px 14px 12px}
+.spec[data-state="ready"]{border-color:var(--rule-strong)}
+.spec[data-state="done"]{opacity:.62}
+.spec-top{display:flex;gap:10px;align-items:flex-start}
+.spec-top input{margin-top:4px;accent-color:var(--hpp-signal);width:16px;height:16px}
+.spec-id{font:700 .74rem/1 "JetBrains Mono",Consolas,monospace;letter-spacing:.06em;color:var(--fg-64)}
+.spec h3{margin:.3em 0 0;font:750 1rem/1.3 Sora,Inter,"Segoe UI",sans-serif;letter-spacing:-.005em;text-transform:none;color:var(--fg)}
+.spec p{margin:0;color:var(--fg-64);font-size:.86rem}
+.spec .foot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:auto;padding-top:6px;border-top:1px dashed var(--rule)}
+.tagline{display:flex;gap:6px;flex-wrap:wrap}
+.tagline code{background:var(--raise-2);border:1px solid var(--rule);border-radius:6px;padding:.08em .45em;font-size:.72rem;color:var(--fg-82)}
+.pill{display:inline-flex;align-items:center;gap:6px;font:650 .7rem/1 "JetBrains Mono",Consolas,monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--fg-82)}
+.dep-waves{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 0;align-items:center;font-size:.85rem;color:var(--fg-64)}
+.dep-waves .w{display:inline-flex;gap:6px;align-items:center;border:1px solid var(--rule);border-radius:999px;padding:.2em .7em;background:var(--raise)}
+.dep-waves .w b{font:700 .7rem/1 "JetBrains Mono",Consolas,monospace;letter-spacing:.08em;color:var(--fg)}
+.dep-waves .arrow{color:var(--fg-46)}
+.wave-list{margin:14px 0 0;display:grid;gap:6px}
+.wave-row{display:flex;gap:12px;flex-wrap:wrap;align-items:baseline;font-size:.85rem;padding:8px 12px;border:1px solid var(--rule);border-radius:10px;background:var(--raise)}
+.wave-row b{font:700 .78rem/1.3 "JetBrains Mono",Consolas,monospace}
+.wave-row span{color:var(--fg-64)}
+.muted{color:var(--fg-64)}
+
+/* empty states */
+.empty{border:1px dashed var(--rule-strong);border-radius:16px;padding:26px 24px;background:var(--raise);display:grid;gap:10px;justify-items:start}
+.empty h3{margin:0;font:800 1.15rem/1.2 Sora,Inter,"Segoe UI",sans-serif;text-transform:none;letter-spacing:-.01em;color:var(--fg)}
+.empty p{margin:0;color:var(--fg-64);max-width:720px}
+.empty ol{margin:4px 0 0;padding-left:1.3em;color:var(--fg-82);display:grid;gap:6px}
+.empty pre{margin:4px 0 0;max-width:100%;overflow-x:auto;background:var(--deep);border:1px solid var(--rule);border-radius:10px;padding:10px 12px;font-size:.8rem}
+:root:not([data-theme="light"]) .empty pre{background:var(--hpp-black)}
+
+/* board */
+.board-scroll{overflow-x:auto;padding-bottom:10px;scrollbar-color:var(--rule-strong) transparent}
+.board{display:grid;grid-template-columns:repeat(6,minmax(232px,1fr));gap:12px;min-width:1452px}
+.column{padding:0;background:var(--raise);border:1px solid var(--rule);border-radius:16px;display:flex;flex-direction:column;min-height:280px}
+.column-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 14px;border-bottom:1px solid var(--rule)}
+.column-head h3{margin:0;display:flex;align-items:center;gap:8px;font:700 .72rem/1.2 "JetBrains Mono",Consolas,monospace;letter-spacing:.12em;color:var(--fg-82)}
+.column-head .count{font:800 .95rem/1 Sora,Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--fg-64)}
+.column[data-group="decision"].on{border-color:var(--signal-line);background:var(--signal-soft);box-shadow:inset 0 3px 0 var(--hpp-signal)}
+.column[data-group="decision"].on .column-head h3,.column[data-group="decision"].on .count{color:var(--fg)}
+.column[data-group="decision"] .count.on{color:var(--hpp-signal)}
+.cards{display:flex;flex-direction:column;gap:10px;padding:10px}
+.board.is-empty .column{min-height:118px}
+.column-empty{margin:18px 6px;text-align:center;color:var(--fg-46);font-size:.84rem}
+.more{align-self:center}
+
+.card{background:var(--bg);border:1px solid var(--rule);border-radius:12px;padding:12px 12px 10px;display:grid;grid-template-columns:minmax(0,1fr);gap:9px;box-shadow:0 1px 0 var(--rule)}
+:root:not([data-theme="light"]) .card{background:rgba(0,0,0,.28)}
+.card-top{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:6px 10px}
+.card .id{font:750 .98rem/1.2 Sora,Inter,"Segoe UI",sans-serif;letter-spacing:-.005em;word-break:break-word}
+.state{display:inline-flex;align-items:center;gap:6px;flex:none;font:700 .66rem/1 "JetBrains Mono",Consolas,monospace;letter-spacing:.08em;border:1px solid var(--rule-strong);border-radius:999px;padding:.35em .6em;color:var(--fg-82)}
+.state i{font-style:normal;font-size:.95em}
+.card[data-group="decision"] .state{border-color:var(--signal-line);color:var(--fg)}
+.card[data-group="decision"] .state i{color:var(--hpp-signal)}
+.chips-row{display:flex;flex-wrap:wrap;gap:5px}
+.chip{display:inline-flex;align-items:center;gap:5px;max-width:100%;font:600 .7rem/1.3 "JetBrains Mono",Consolas,monospace;border:1px solid var(--rule);background:var(--raise-2);border-radius:6px;padding:.18em .5em;color:var(--fg-82);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chip.red{border-color:var(--rule-strong);color:var(--fg);font-weight:750}
+.evidence{margin:0;font:500 .76rem/1.5 "JetBrains Mono",Consolas,monospace;color:var(--fg-82);background:var(--raise);border:1px solid var(--rule);border-left:3px solid var(--rule-strong);border-radius:8px;padding:8px 10px;max-height:9.2em;overflow:auto;white-space:pre-wrap;word-break:break-word}
+.facts{margin:0;padding:0;list-style:none;display:grid;gap:3px;font-size:.78rem;color:var(--fg-64)}
+.facts li{display:flex;gap:6px}
+.facts b{font-weight:650;color:var(--fg-82)}
+.card-foot{display:grid;gap:8px}
+.card-actions{padding-top:8px;border-top:1px dashed var(--rule)}
+.card-foot time{font:600 .7rem/1 "JetBrains Mono",Consolas,monospace;color:var(--fg-46)}
+.card-actions{display:flex;gap:6px;flex-wrap:wrap}
+.brief{border:1px solid var(--rule-strong);border-radius:10px;padding:10px 11px;display:grid;gap:6px;font-size:.82rem;background:var(--raise)}
+.brief-head{display:flex;justify-content:space-between;gap:8px;font:700 .66rem/1.2 "JetBrains Mono",Consolas,monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--fg-64)}
+.brief p{margin:0;color:var(--fg-82)}
+.brief ol{margin:0;padding-left:1.2em;display:grid;gap:3px;color:var(--fg-82)}
+.brief .rec{border-top:1px dashed var(--rule);padding-top:6px}
+
+/* lower panels */
+.lower{display:grid;grid-template-columns:1.25fr 1fr;gap:14px}
+@media(max-width:1000px){.lower{grid-template-columns:1fr}}
+.panel{background:var(--raise);border:1px solid var(--rule);border-radius:16px;overflow:hidden}
+.panel-head{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;border-bottom:1px solid var(--rule)}
+.panel-head h3{margin:0;font:700 .72rem/1.2 "JetBrains Mono",Consolas,monospace;letter-spacing:.12em;color:var(--fg-82)}
+.panel-head .count{font:700 .78rem/1 "JetBrains Mono",Consolas,monospace;color:var(--fg-46)}
+.rows{display:grid}
+.row{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:10px 16px;border-bottom:1px solid var(--rule);font-size:.86rem}
+.row:last-child{border-bottom:0}
+.row time,.row .meta{font:600 .72rem/1.3 "JetBrains Mono",Consolas,monospace;color:var(--fg-46)}
+.row .what{min-width:0}
+.row .what b{font-weight:700}
+.row .what span{color:var(--fg-64)}
+.row .glyph{font-family:"JetBrains Mono",Consolas,monospace;width:1.4em;text-align:center;color:var(--fg-64)}
+.panel .none{padding:18px 16px;color:var(--fg-46);font-size:.86rem}
+.lane-state{font:700 .66rem/1 "JetBrains Mono",Consolas,monospace;letter-spacing:.08em;text-transform:uppercase;border:1px solid var(--rule-strong);border-radius:999px;padding:.35em .6em;white-space:nowrap}
+.lane-state[data-s="alive"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.lane-state[data-s="dead"]{color:var(--fg-46);border-style:dashed}
+.stack{display:grid;gap:14px}
+
+/* dialogs */
+dialog{border:1px solid var(--rule-strong);border-radius:18px;padding:0;background:var(--bg);color:var(--fg);box-shadow:var(--shadow);width:min(640px,calc(100% - 24px));max-height:calc(100vh - 40px)}
+dialog::backdrop{background:rgba(0,0,0,.62)}
+dialog form{display:grid;gap:14px;padding:22px 22px 18px;max-height:calc(100vh - 42px);overflow:auto}
+dialog h2{font-size:1.45rem;margin:0}
+dialog .lead{margin:0;color:var(--fg-64);font-size:.9rem}
+dialog .lead code,dialog .note code{color:var(--fg-82)}
+.field{display:grid;gap:6px}
+.field>label,.field>legend,.label{font:700 .68rem/1.2 "JetBrains Mono",Consolas,monospace;letter-spacing:.11em;text-transform:uppercase;color:var(--fg-64)}
+fieldset.field{border:0;padding:0;margin:0}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media(max-width:560px){.grid2,.grid3{grid-template-columns:1fr}}
+input[type=text],input[type=number],select,textarea{width:100%;background:var(--raise);border:1px solid var(--rule-strong);border-radius:10px;padding:.55em .7em;font-size:.92rem}
+textarea{min-height:92px;resize:vertical;font-family:"JetBrains Mono",Consolas,monospace;font-size:.82rem}
+select option{background:var(--bg);color:var(--fg)}
+.hint{font-size:.78rem;color:var(--fg-46)}
+.choices{display:grid;gap:8px}
+.choice{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start;border:1px solid var(--rule);border-radius:12px;padding:10px 12px;cursor:pointer;background:var(--raise)}
+.choice:has(input:checked){border-color:var(--signal-line);background:var(--signal-soft)}
+.choice:has(input:disabled){opacity:.45;cursor:not-allowed}
+.choice input{margin-top:3px;accent-color:var(--hpp-signal)}
+.choice b{display:block;font-weight:700;font-size:.9rem}
+.choice span{display:block;font-size:.8rem;color:var(--fg-64)}
+.checks{display:grid;gap:6px;max-height:210px;overflow:auto;border:1px solid var(--rule);border-radius:10px;padding:8px 10px;background:var(--raise)}
+.checks label{display:flex;gap:8px;align-items:baseline;font-size:.88rem}
+.checks input{accent-color:var(--hpp-signal)}
+.checks .none{color:var(--fg-46);font-size:.85rem}
+.tabs{display:flex;gap:6px;border-bottom:1px solid var(--rule)}
+.tabs button{background:none;border:0;border-bottom:3px solid transparent;padding:.5em .2em;margin-right:.9em;cursor:pointer;color:var(--fg-64);font-weight:650}
+.tabs button[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--hpp-signal)}
+.dialog-actions{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap;padding-top:4px}
+.status-line{min-height:1.2em;margin:0;font-size:.86rem;color:var(--fg-82)}
+.status-line.error{border-left:3px solid var(--fg);padding-left:10px}
+.status-line.error::before{content:"✕ ";font-weight:800}
+.problems{margin:0;padding-left:1.2em;font-size:.82rem;color:var(--fg-82)}
+.result{display:grid;gap:10px;border:1px solid var(--rule-strong);border-radius:12px;padding:12px;background:var(--raise)}
+.result[hidden]{display:none}
+.result h3{margin:0;font:700 .7rem/1.2 "JetBrains Mono",Consolas,monospace;letter-spacing:.1em;color:var(--fg-64)}
+.report{display:grid;gap:10px;font-size:.86rem}
+.report table{background:var(--raise);border-color:var(--rule)}
+.report th,.report td{border-color:var(--rule);color:var(--fg-82)}
+.report th{color:var(--fg-64)}
+.report ul{margin:0;padding-left:1.2em;color:var(--fg-64);font-size:.8rem;display:grid;gap:4px}
+
+footer.site{padding:34px 0 40px;margin-top:10px}
+footer.site .wrap{display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap;align-items:baseline}
+footer.site p{margin:0}
+</style>
+</head>
+<body>
+<div class="lang">
+  <div class="wrap wide">
+    <span class="brand">House Party Protocol · lane-kit</span>
+    <span class="spacer"></span>
+    <span class="live" id="live" role="status"><span class="dot" aria-hidden="true"></span><span id="live-text">Connecting</span></span>
+    <button class="theme" id="theme" type="button"></button>
+    <span class="switch" aria-label="Language">
+      <button class="link" type="button" data-lang="en" lang="en">English</button>
+      <span aria-hidden="true">·</span>
+      <button class="link" type="button" data-lang="pt-BR" lang="pt-BR">Português</button>
+    </span>
+  </div>
+</div>
+
+<header class="masthead">
+  <div class="wrap wide">
+    <img id="badge" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAACVKklEQVR42uy9BXhUWde2ecrdUnH3QNBAQoAAIbi7u9NY4+7uBHd3d3e3xt3dobFuaEjtxcyzz6lKKpD3fb9/5p+Zf2Y+ruu5ThESCLXu/SzZ+5wIwv/ivwZD16An0Jl4QbarjCCb3VSQz24oyCc2E+TzagqKnaUExbYKgnJFbUG5uJ6gWl1PUO9tIWi2N5Vr9zYStIdbGLRnWtp1R9ob9Sfb2fSn2/roj7XzMhxrZzce/81uOt4WamM3HW1vNx78zct4uo2X4dBv3obTHXz1x1p66Y62tuuOtgnUHmjhrd3f1Kbd3lKr3tDMqF7eQFBxbaoqKNdVFhSLqgoK/r0triXIZ7URZIeSBdnfelz59x8ovf7fBEH2Gr8v6Py/xQr//SvLXzEWQbZJkN4w/kbOayHIUztLmo/XsxD42RUFBX/zt1ZE4BsKqrVNBfXW5oJ6F4K/q7FGu7uxVb+nmZd+Xwsvw9HmnsZjHezG0x3txgudPExnO9rMF9pZrJfam62XOphtlzuabRc7WKwX2lkt56E/2lgtp9p4mDgkh1oBiDbehn1tfPR7W/nqtzQL0O1p7q3d2cauWVlPrl7cWqNaXUdQzqwlKCdVEBRj8X3NainIR/cW5Pj+ZA9DEHQvQXYxjyB76SP9nzjUi6CmUJ7/DnfmX7WhhwDgZoz0hq2vgVXfRpAvaYTg1xIUU8oJionlBeXSeoJyGQK/opag3tQMK76ZoN2KVb+1gUm3vyWC3spuPNrKZj7bAUFFcC+3N9uu/m7yuNrO5HG9o9F+o6PR81pHg/f1zkYfvPa+0dngxT92sZPR88LvRvtlfO4FfM35jhbrqd+sltNtbeZjre2mA829DDua++q3Ng7Q7Wjpr9ncwku9prZcvbS5UpVaV1AOKy4o5lSC8P1O6CrIFzUVZNPbCbJZbSUYPlgkCD7g/5n63wD8+uuhXnqjdpUVZPzNm9JRkC/lwa8iKEaWEZQTq2O1NRaUWHWqVbD7JQ0Ezcb6Mu22pib97iZexr2tPEyHW1stR9sicB1MHufbG7wuI9BXO5l8EWzfW92sfre7Wv3vdLME3utuCb7fzRryoIs15G43U9DtruaAW7+b/W90tfhd+93ie6Wb2QcO4X2ug9nrzG9G+5HfzLZDba2W/a09TLvhLFsa+ulW1Q/UrmwZqlnb0Fu9uImgmoRUNAluMLGyoJwNYDkEY3sI8hF9JRj4/2tNLQmCh/j/VoVCIC/I8v/34CdDl6KlN4gHfg7P93gTp8FWeeD5G7y4hqBeAa2pIWjW1VFo1zUw63c09DLsbuJh3t/MajnUwuRxprXRfratwet8O6PPlY5W/xu/W4PudLGEPOpuCXvcyxz+pLcl8lkfSwyU/WkfS85nfcw5n/Qxxz7uZYl51MsS+aCXNeJuD2vYnZ6W0GtdrMGXO9gCz7Xz8Dv5m83naBuz58FWZtuullbLzhZ205am3obNjf10y5sEa1fUClAvra9XLW5iUc1tplFNqiYoZ+F7X1oHjtAK/x9oLAe6oSBbVTezEwx2qrMThOT/D8dZ5pTrtaDRSB/bheuw/rD7etKKn8TtHqtpQSNBtbKmoJ5TRVDPri5oFtcVtOubmHUbG3kZNja0m3Y0tlr2NMPqbG7wPNHS4HOqtdnv/G/WgPMdrMHXO1nC73azRD/saYl92tuSG0HP+6KvJf5VP0uhN/3Nxd/2N5fiet3PkvKqvzXpRT9rwrN+1nxPetvyPuxly3WrqzX71d+tkRc6WMLOtrMGn2jjEXC0jd0HLuC5s4XZtqWp1bK+qd24vqmvfkH9EO20ihGaeZWj1cuqZ1Mva+ivmlRPoxpVRqnkaYH/n/h1Ik9lHcWaRqwNXGkhK13EG3PR6RT/bw+4zOz22qVAVMjxqPBjYwVZU1jkmNaCfDICP7yooJyM4iq1saCaXU1Qz6gqaBY20GiX1tLqVjW061fV9zSub+Bh3tDYYt3VxGgHAD6HWxj9T7a0BF1oawlFgRd5/XdL9tvdLLkf9rAkPOttTnrZx5Lytr+lzJ8DzJU/DjDX+zTQ1PLzIFP7vwab2n4aYmn+5yBrvXeDbFVf97eWAwglHvexFb3X3VrgRhdrnku/W2PPt/eIOdXaGn6stTX4YCsP/50tvHy2N7d7rm9os65qYDctbuCrX9goQDerRrB2Rs1QzfSq4ZrxNSLUI+rEqEZUsCiHl7cqU2v5KSdVClVOr2VRjEJ6QH0g5453siCKw9iMbiErTXd2EMnOlOH1v2rENVCgUZAFYEUHqQRZYbsgr2UT5A09BXl9H0FesawgL1NCkDeCPTatIMjbVRfkveoLik6lBeWQFEE1toxOPaK0RjOqmk47trJeN72mXj+1hs0wq5bdNLe6zby4nsW6vJ7FY2VDi9eGpha/HU0swftbWCIPtzBnP9XWlPv8b6a46x1NBW7/bkp+1NVc8UUPc823fUwNPvYztv17gKH3P4MMI74NMUxLG2pY7hhmXJ82zLAqbYRh9j/DjBO+DDaN+jzQ3PfPAZa2L/taGjzuZa1+r6u1/PXfrcXOt7cWONHWGne4tUeu/S09one08Ajb2tQeuLGxt9/qRj7eS+p62+Y38LJMr+tlnlLT2zShnpdxXG1f/cQa/vqR1QJ0k2qGaIdVDtWOrhmpmVgrt3popVjVuLqeyjGNAEYznXJKbb1ick2jYnMxg3xfMYv8TJxFvrWcpP3RFvn9aIXsiRm1kbOL2OQsmv8f/+Ui0V8rV+cM1IUmhMtLVAk3NiwfLO9QPljoXilE1qtKiKxP1RBZv8FVZQMHNZENGtxYNmR0bdnwKU1Sxoxrkn1cz6ZhE1KbxU2cWNUvdWJ5w+QxJZWpo4uoUyekKCdPSNFNnZBinjo5xThtRoph+txS+hmLy6pnrC6nnb2hgmb+toqapXsqalYdrqRad6qycsPF6ooNN2srNz+op9z1srHy4J+tlEf/6qg88b2n4jIbIr9L4+SPaJb8OS1Rvv6xVP32x3zFG5qB34+TP3YMlj/61lt550tX1cWPHZTH3rZWHXzWXLXnQWP1tmt11evO1tSsOVpNu2pPJe3SzeU1C9aV1c5bWVo3b3Fp/Zz5ZQzTZpUyTple0jJtUknTjEmlzNMnlbFOSy1pnT6hhHXGhFIeM8dW9J45qVLgzAnVfGdNaxw6fX6b2MnzmxdOnds6euqc1nFT2hfwHdcgWjeyQYxuZKNsuhGNYvRDm8Ya+zfPbe7ZuqBvyz4lg8uPLRGYbWX5YMPKchGKk7FGmaudTHZe/29zBjuWejGr2qdQoLJe1TDl7FYRivvjEmXf11RTOPa2UaSd6S9PuzJennZtsiLt6mRl2pUp0GSF4/IkuePSOEXaFej6JKXj5lSV4+4MLbs/W8cezdc5Hi/SO54sMjieLDQ4ni02OZ4tsTieL/NkL1f4ON6s9nK8W2Nn79f5sI8bgtnnjSGi/tocwb7uyM6+7c3Dvh0q6Ph+rITj+6nKjrTzzR2OK70c7NYwB90f66DHk9mPl7MYfVzP2LdTjL6dZ/R5i+PH+xWOH2/mOn48nuRgd4Y5HDd7OdKu/OZwnK3JHCfKMHY8mbFjRVnawUT2z+549mVHHPsb+mt7bvbXtpzs06Zs7MOaMMf7VSGOP1dHOt6tjXa8Wx3meLcyxPF2Vajj1eoQx8sVoez5sjD2bFmkUxHs2QqucPYEH3+8NJQ9WhrqeLQszPFkebTj2crsac/W5kl7vDLecXN2rrRTg/3StjVVOWYkK771yal+Pri4184RzXJ2ndEsMnhRNX/lupqh8j2lVOKcIfn/yq5Cr1IJMb6mmNpRukW982r+3NTC958HC8t8/3awtePrpsbs5ZREdra3ie1qrmIba8vZuppythpaVQvX2gpcFbS6upytgTbUVtDm+kra0lhNW5toaEdzHe1opaddrfRsdwsd29/GQIc7GOlIJwsd62xlJ7pa2MluFjrdw0bnenvRpT4edLWvhW4PttLj0XZ6PsGL3kz2pvczfenvJUH0bU12cmxOZLS3JPtxvCrRH3WJXWxMabfb0PfHfej7kwGUdrcdc9xoydjlRozO1GI/jlRgdKAEYzsK4Ouj6eOCEHo7N4hezQ6hp1ND6P6YELozIpBujwihG8OC6erAQLrYy4fOdPGg453s7HhnX3YMOtLRkx3s4MX2dvBlO9v70vY2vrSlJdTCjzZD4uvWfrSplT+tb+ZHaxv70KpGPoxrdUM/traRP9vQPJjt+D2GnR6dyB4vqUMfd7en71d7sL8vtWI3ZkQ7NjcwfR+eT/d8RMXwkdM6FfGd3C6/kg/PPjhTxP9UCExQvL86R5Vo08rucaYPVybU/f7l5MS0h4s6pm1ukSutey6jIynIyoLtOvKxaSAt+eF1oKeegjz1LNjbwEJ8DBQKhfkYKcLXSFF+JorxN1O2ADPFBlooV5CVckNxIVZKCLVS4QgbJUd5UIkoG5WJslL5aCtVyWalmjms1DCXlVrlsVCnfCbqlWCkwYkGGl1QT1ML62heES0tS9bQxpJqOlhaRefKKehedQW9aqyiD21U9HcnJX3trqCvvRT0pauCPrVX0p/NVfSigYru11HT1ZpaOlVNT3sqGmhtWTMtKGmhqck2Gl3UToOKeFOvon7UtWgQdSgSTC2TwqhRwTCqkxhO1RMjqErBaKpUKDuVL5yTyiXlodKF4yilUF4qXiiOihfOD8VTSpFEKpFcmEqXKEplSxWncmVLUvlypahypfJUs0ZVqlevFjVu3ICat2xGbdq2phbNm1C9KuWpWnxOqh/lTVOrxdHNJV3Zt0cj2IdjVRx723p/H5WgfZhaN2/j+XXjVe9MEgSL/mcFX62QyatHGzv2SbC/vjik0vePu8alHexWPq1akM4RZNU67Badw9tD7/C1G5if3Uh+nkby9+IyUQCuAbgGehshEwX7mCnU10xhfhaK8LdSZICNogNtlC3IRtmDPChHsAflCrFT3lA7xYd7UoFITyoEFYmyU3KMJ5XM5klls3tSpRx2qpHTg+rm9qBGeazUPM5KbfJZqGO8mbonmKgvgBhayEDjk/Q0oyiAKKGmTeU0tLuSho5WUdPp6ir6o4ZKvB6tqqLdFVW0uZyaVpXW0IISOppeXE8TihlpeDErDUiyUc/Cdvq9kBe1K+RHrQoHUvOkUGqSFE71k6KodlI0VU/KTlWSYqlSkZxUqWheqpgcT+WLJ1L5lEJUrkRhKl+yKFUsk0xVypWg6pXKUe0alalBnRrUpGFdatG0IbVp2ZQ6tGtF3Tq3p769u9PQwf1p3OjhNDV1PM2dPYPWrF5FO/fspV0HDtOSZauoR4vm1CHOl+3qW5H9fW2U49WmMo6lxXVf+1aLWjW7TUG/ma1scj5Ua/p/JvBo3YQKEXJFo3zm3pOK+3796+T8tNerejiG5DEwq07FTEYds5n1zG7JkKdVT142A3l7GMnHLsmXy5ODYSJ/p0QYvM0U7GsBDFYJBhEIK0UDihhAEQsocoXYAIMH5Q/zoIRwOxWMsFNSpJ2KwRVKwBHKxFipYqyNquW0Uu3cVqqf20JN8pipZV4jtYszUJd4A/UpoAMMGhoDZ5hUTE3Tk1U0N0VJC4oraW6ykmZCqUVUNC5JQ8MKa6l/op56FDBSJ4DUNt5CLfJZqUk+G9WPs1PtOG+qkc+PquYLpEr5gqlc/lAqnT+cSsVHUomEaEpJyEYpBXJg1eehlKR8WO3xVKJoASpZrCCVLp6EFV+MypctQZUqlKGqVSpgxVehOrWqUf26NalRg9rUvGkDatu6GXXq0Ia6delAfXp1pSED+9GoUSNo/MSJNHPOPNq2azc9efac7t97QD3at2UDivqx1ydHsS+nKzvWldCmDUgwXxzfNp/vgvq55dvj0+cu/2O/gtB7likiUzVLMY1cVC38r79OL0473K6QI8lLxfQ6NTMaNMxk0DIzIOCymCRZzXqyWfTkYTWQHSB42oyivACEt1MiGIDAz8ssKtDbQkFwhmAfC9zBCiBsFA5F+ttEGLIHelBOOEPuEA8RhnyAIR4qGG6jJDFNAIYYKyudzcrKZ7eyKrEWqp7DTHVympAqjNQ8j5G1jTOwTvF66pqgp54JWupdQEO9ce2RX0tdoE75dCIwrePw+XlN1BgQ1QNQtXIBrlweVDmnnSrk9KKyOb2pVE5fKpHTn1JyBVHRXCFUJHcYJeWJoMJ5o6hQ3hgqnC87FY7PRUkJeSgpMY6KFMxPRQsXoOSiBSkluQiVTEmm0qVKULlypalixXJUuXJFqlatCtWsWQ32X1u0/xYtmlKbNq2oU6f21KNndxowaAANHzmSJqSm0pwFC2jdps108sxZev3mLVu1bDlrUzCI3V3fhn29WI9tqatz9CzovWtEg9y25WXMsgT9/wEI8pkUupJhpqWzyvl//Xx4RtqSGqEOD62SaTUqptOqSKdTk16nIYOeSyvKaNASXIHMJj2ZAYIFsloMkBFQGEQoJDCMTjBMAMNE3nYzoDDBJTgQFqQMiwhFsI+VQkQgrCIMUYAhG2DgQOTg7gDlhUPEh9qoQJiVFYSKRFhZcqQVdYOFykSbqXyMmSpnM1O17CaqlcNEdaB6OY3UIKeB6uNaJ4eRaseaqEasmapmN1MlqAI+vxxqjTLZbFQqm11MO8WzeVGxbN6UFO1DhWJ8KTHGnwpkC6T4bMGUP3sI5YsNo7gcEZQvRyTlzxVD+XPHUv68OSk+Lhcl5M9LBRLyU2JiAhUqVICSkgpR0WJFqXjxZCpZsgSVLlOGypUvTxUrV6Jq1atRrdq1qG79etSwcSNqDqtv264dde7ahXr26UsDhgyhEWPG0KSp0wDCIlq5bjOdOHuZ9uw/ROVzhtDWQeXZP5d6sPWVtd97F/VZurxqtIoPkpKF/wEIlAqZLNFflzqxqO3rn7vHpU0v4uXQqZVMrZIzjVpJgIC0WnW6dABB7xKHwaATZYScQDBRZgOzQFYuEQpJHlYj2a0uIMwAwoK0YUHKsKCOABDcIbwBA4AIAxARcAeuKICRDSkjNtDKC0iGApLFBVtZfIiVJYZaWOEwCxUJt1CxcDMVjzBTSoSJSkaZqXSUiXGVEmUWP1YiEp8Tic+FikZY4Sy8CPWgQhE87aAWgeIjvChfuDfljfClPBF+lCvCn3JGBlKOqGAohHJEh1GOmAjKmT2KcsXGUK4c2Sh3rhyUJ3dOypM3D+XNF0f58uej+AIJVKBgQSqUlERFihWj5JQUSilZkkqVLUvlKlSkSlWqAIQaVKNWbapTrz41atKEWrZuTW07dKBOXbtR9169qd+gwTR01BgaP3kazZwHENZvoXUbt1ChnNFseZcUx7cT7RzTCii/9SnvVe91rJds8H8VAF7tl/A21uwTZ/vn3cGJjiVVgh16ldKhUsiYUiknNQDQiFKRRiNJq+EgaEjnko5Li1QhOgMDDEgZkFGPugEyGTgMcAhJVrPLJUyAwQSHcIIgKjMMgQAhyOUO6UBYWZS/jcX4WxlgYDkAAgciD5Qv2AIgLJQAFQgxQ7iGmhlei5BwwTkIV3xc6j7yQ/ngLHE85aAgzQPlCvGknCFeFBviTdlDfChbqC/FhPpRdFgARYUFUlR4EEVFhFB0RBhFR4VTTHQkxcREUUy2GMqePTvF5shBOXLnppx58lCeuDiKyx9P8YmJlFi4MBUuUpSKJhen4iVKUkm4QZly5alcxYpUESBUBQi16tSFGzShJs1bUMs2bem3Dh3hCN2oZ99+1H/IUBo+ZhxNnDqD5i1eTms3badicbHs7LQG7N2C4qxnDs3zaa2i89WK1f/XAMjtJ7dXD1A/vDX/d8feWgHMrlMypULOFJBSqSCVSimKg6AGBGoRBLUorUYjgaDTMFFa7gpauIKOGbicEDhFACFdEhBGEQSrEwQXDJ42swiEj7szePJUARggwMBCIcDAJBisLCbAyrJDsVDOALSYgZLyBFnQalpYboCR2+kavPXkwOSCk+SEeHqJRUfCxdNNTJAdnYqdogI9KTLQiyICvSk8yIfCRPlRKBQWEgAFUVhoMIWHh1I4QIiICKeIyEiKjIqiqJgYiomNpWwAITYXByEv5cmfn/IlFKCEgoWoYFIRSoIbFCsOEOAGJUqXodIchEqVqHK16lSzdh2qU78+NWjcmJq1aEmt2/5G7X//nTp3Awj9+tHAYSNoxNgJNAEgjJ6QSqXROX3c34O2V9c7WuYxX+/VMo/NYvkPLsDn+AX9DSPnVc71z6WR1R3BOgVTqpRMLucAKIgDoFQq0yFQqQCASuUEQU1q1AcAAdIwgOCUlnE30AEAfbr0gEGPFAEZDaJMkNlkBAhGsuDqggGuwGxWE/OwmkUQuLgr+Didwd/TykFgkjNYMWtwwWBh4VAkgIhGy8kFhxBTRnYnHNkkiR+PFoW0AkU6UwwvRMP8PESFcvl6oGuxU5AflxfkTUH+PpAvBQX4UVCgPwUFBVBQcBAFh4ZQSGgohYSFUWh4OIUDhIioaIqMyUbRACF7zlxwhDyUK28c5Y1PoPwFEqlAocISCEWLiY6QnMIdoSyV5WmhajWqWqMm1QAI9Ro2osbNmlPzVq2p9W+/iY7QqWt36tq7D/UeMJgGjxxLtRo0poWNc9Ofiyo7fo9UfuuaEtkiMd9/cIEok9qW7KV8em9ux+8ds2sdGiUAkAlMrpCTQpSCFE4XkEBQZYgDoFYzURoujQiCBgBodVw6ggCC3iU4AwQIDO4giI5glGAwGVEzSOLpISNFmH9yBTPSg5WLcRg4CMEcBqQKrlAoDB1GOBThTBkIMMNrQGIlLp5KwnmQfWzi1wSLsokOE4grV4CXDf+GB/l5u2QnPx9PyIv8/XwgX/Lz9yP/gAAKCAykwKAgCgwOpqCQEAoK5SBEAIQoiojORlHZslOMyw0AQe58+X8FoVgyJZeQIChTvgLcoLIIguQGDag+0kKjps2oCRyhWas21OK39tS2Y2f6vUcv6jV4OJWPDWDvt3R2bExRprWItWxv1ShU8S+DH4wiIY+vsXXPWN2XOzNapIWbVA6+8uVymWj/YvBFAJQiBEoOgTsAEgROAKTgqzWSAziDLwIgQqDTkwSAzgmBARAY0iEwGo0iBBDjMksQiKnB6gTBbnVBYHF2EQDB08L8PK0M6YEFuLoJKMiLg2AVJQaYr2SnYzhFLgUi4AGe0tfyNIO/T5Qv5GPnsony9vQgHy+7JG9P8gEEPj7e5OPrS75+fgDBn/wAgj9ACBBBkCAIgRuEAYJwuIEIQWwOuEFuuEFeuEE+ypMvXkwL8UgLiYUlCIqllKAUpISSZcqJblCxSlW4QS2qXrsu1apbj+o0aEj1GjWhhs1aUNOWralVuw7UsVtPKlqkMDs6oRV70MnT0TJE9WfPutEB/xKAvB4yRaKX8sjWZnHf59SMS4O1Mzlf/RwCdwAUynQn4C4gOoFSlQEDnEB0Aw0XB0HLXQC1gZbcQBDFIXDJ5QSiMkBgRicEbq6AopGnBjN5AAC7CwIPC/N2qxN8PTNqBR7UEFh32eLF6MjBg1SqRAmsZJvoGH4cGldt4ZQv/3tEWcQrTzn83/DksllxdQogeNo9yBMweHp5Ql7k5e1NXj4+5A0QfACCbzoIQQAhWAQhWAQhAiBIKSEqWyxAyJmeFnLH5RPdIF+BglSgcBIVKlKMiiSnAISSqA9KO0GoRBUqV6WKcIQqYmoADHCFOg0aUUO4QvPWv1GNOnVZ26LZ2Jd1DRyDYuTfO5cOb6DRZBF8XxhDbps2oohZeH9vXOW0Kh4Kh4qvfAAgE11ABAAgKEguQYCC8CcBGC6VSs2c6cAJgoY4AL/KBQIHQOdUBgySDKgVDCgYRblcAXUCdwIz2aySXBBIbiCtVF/nyuWpISY8hJYuWkh///03ff36lZJRbPmJANgYdw0OjhfvPCBvfkWa8UyX9Pdzx/EQZSGbDcLVAzB42Gxk87CRB0Dw8LRDnmQHCJ5e3uTpDRB8JBB8MjlCCAWGhFJwWDiFRkTCDWKcaUECIRYQiGkhjqcFuEFiIYBQhAoChKRixSVHKAVHKFuOSpevKKaGClWqUcVqNagyhwFdQ92Gjal+0+YsLtCbvdnSmy1IlKc1j/Oa4G0y/VoHmAFAfJCuVW1P4eu9kRXTgtVyBz4LDiATU4DcCQHEARBhEIXAK34FAU6g/tkJMulnCHTpjvAzBAYmQsCdQJKzWMQ8AcWh1QkAD4odQfFC4L09bQg+8jVydIifJ3Vu345evXxJ379/p2/fvtGXv79Q4UKFyIwZhbfNzLx5PcFnECg47U55cCHt4Mo8zFJ7arNI0FnMZvHK/20r/l2r1UpWQCDKg8PgQTa7GwhOR/BycwTfgEDy524ACHhaCA6LcIIQTRHcEbLzbiEX6gOAADfInT8BICRSPoCQUKiI0xGKU1GAULxUaSoBRyhZtjxgqEBlAUP5ylXgDNWpSs1aLCYijJ2c14ttL6dxVIvQ70wonfCrA3hABbwVi3qEy78d756Cnl/hEBB8mVNuAHAXYO4Q/AsnSK8L1OpfAciAQKoJskoJEgROAEQIJCdwpQKLJcMFPGySPbsA8IEll4LdHz1yhNLS0kj8xUiE4J9//qGiRYsyE+YTHma+d2FidgymPNCGumQDYNZ0of5IlwkDLZPoQBwECwfCYiELILBkAgEQeNg5CMzD0wsgeIsgeMINJBA4BAHkh7TAQQgACIHpIEj1gdgtZEd9gCIxR544OEJ+EYS4hMRMjlAYjlC0ONIDisViSA/F4QwppctK7lCuAgZROdmSbjXY2WZBjtL+qtu5UkzKXwDIo5HJY63CiRE5VN83t0zAqpaLgUddCBeQZwLAWRByCBxY/Q5FlmkgoxZQuaWCDIkOIHYIGp0bBL8AoBeLQ1G8JhBTgCsALgD46pdyspdYnNlp/LhxYrC5GGP0g0kMiADABZKTk5mZA4C9C7vFIIJgw/iay4oZBZclXRhauWRyFacm5/fxbyCwZXYDDoIrLXgBBG9fnhYCyBcpwY9DEAwIQsLEtCDVB1EiBDwlxMANssMNOAi5kBbyuEAoWJji0TEUQMdQEK1joaLJlARnEOuF4iXEDiJv/vxsZLV87GrnOFbCR/muUC6t7hcAcurk6miTcGNCPn3a7GrZ+MRPAsDlAFm7gEORAYFDKSodgAypxZoA3YHUFUhyBj9dGS6gzewA6R2CwVUDmJ0AOINvE1c/D74HJWLEevjwYTHQDqx8HnzGHFj9uDoc6Q5QrFgxEQCrUcsDL8qKkTUCTxZAxwNvNnDpsOHFp5ciAEg/RkmiC0kApAsQZEiCwSKC4CE5gl2CQATBCYEXIPDmbuAfmOEGwSFOEAABd4PoGIpEtxAFN+AgZHM6AgchNzoGFww8PXAgEuAMiZgsFipaVOwg4hISqFtyJLvZM4kV91Z8Tk7QGn4BIJtWpo00CPcm5tenjUrxFce+MhSA+KNMAMgyIJCC7waAuxsonCBkwKDODIJb4CVpnfMCZ1EozQtECAzpLaJz5bkF3y5W4xjcYOI2fdo0scgTA5/2XZSDXx1pTmUAgCKQmTCbMGNaicBLwUdNYIHMqEN4fcAlBR8uYHKufmNmB0gXAMgkNxDMojvYJBjSHQEgwA3sAIGnBU+A4OXrLzmCe30QxruFSApxghCOQjEyJjMMsWgff3YGPkuITyyIeqGwOF/oUDCYbvYswop6KT7ljtL86gARWpkhVCc8nFDAkDampA9LB0AmpNcBopwtoTMVZECQAYMTgIx0IEmdDoE0JPrZAZwu4HSC9DTgcgCjMZPl8uLLA8H3RuvVsX0HFHmv6DusPQ1yfIdcVycIEgxpAOCbWAhiFw4AaJhZq5IAwLa2BZtYZqdMXE4I+MpviD57QP8B5IWiTgywE0TX6pc+lhkCI/7c6ITB5ILB6kwNgMDmhMADELhAcDmCT0DgT/VBOGCIAAiRFCrOEGLEYjESXUN0LIchp5QiAENOcZaQH3sN0pg5B/YefksIomvdkliSl/xjgkmj/RUAjcwUpBWejI03pI0r7cvUPzlAJgDcUoBL7gD8UhMoM7WHXA4OQGYIxOCnt4VaXUYKMLgGQ66Vj3xvF+0+kY4fO07fsKL/+fqFvn39m77j+v2fL5SGj6VD4Kbvor5TyRIpIgAWHGqxIfgSABrigisQ3EES3+KGBg8egq9L+3H12jVs3ZYTizpu7Xx1uwWdSTJlBD9dmSGwiGnB7pYWvDM5AncDEQR/qVD0Q9so1ggoFIN4jeAOgnOqyAvGbDlcs4TclAuBz43dx+w5cwKAQLrcpRAVsis+JRiyACBUIzMHaoRnYxKMaePL+DG1UiYOgTgA7hA4U4EUeHkWAIidgZKlzwncXMAVfJVa43DVAWo3B8iwf/fgG6XCT8yxPPjYpInNTvPnzaO//vpMf3/+RH9/+kBf/vqE9u4T/fP3X/Tty98SDP9wGL7CFb6KMKTx4H/jAgApKaL9W3CwxYqDLVa9RgJAxwFQI/iAQM+lZUaAMGTIMHI4HD8Az49v/3yjOXPmUAx2+Lilu9UBjAvugOGVEwJ+NbkD4oLACQIg4CBYAQJ3BFum1ODnBCEAjhCEYjEYjhAiOkJQaDjjNQJPD66pYgRSRBQvGvF9Zc8RS7EIPAeB7zt0iA+gq10xXrYrPv9LAOAAz8YBgLGl/cQUkAkAdwgAgIxD4K4sAFD8kgpcAKjTAdBo/kURKFq/EQBIb6Ir+B07dqS3b9/SX58+0Yc/39JH6POH9/j9B8DwUQTh69+fob/ony8uGAAChj/fAcK3b/+INUDx5GIkAoAUYNNzANRcYvDNON9g4tJJVwO2u4cNHyECkJaeSr7T58+ff4wbPwFjX3/R1tEJZAYA4BpwdYrBEbjc0gIvFD1EN3DJ5QoiCGJq8JUcARB4+wdkpIZgaZAktY7h4h6DNEdA5xAdLe08Zs9G2RD8KFw75vel690wUbTLPyUY/w0A4xONjnGlfJnqFwdIB8DhgiCz0p1AahGVPwOgdtUBDpVG8xMAOlcr6Fb9G0lvlN5AbrP+GJ5sxhEoHrx3r19Dr+hP6P3b14DgnQTBx4+iG7hA+PLXZxEGDsI/ThC4eLooXrQIVj8HQAkA1KKsYvBVCLpKAoAHH1veRmgotlpRT/xIA0Df/5GU9k1ylDM4lpUdedjD7snwvYppwJgOgckJsTmz0tOCVRLcwOyCARBYXBDwGQIHgReK3BGcacGXpwWnI7gmiiFQWATfbIrA9nMkRcdEIy2gg8C1XYI/Xe+OAZKn4mOCUa3JCgBTkEZ4PqGgyTEBKUD1L1KALKMbcFv9clcqQF2gzDQhVLjVAhk1gAsATYb9uxV/6daPN4n30Y2w/33r1i36hAC/evGcXkNvX70QJUHwRoTg04c/AQF3Aw4CIEB64PrqAkFMD4ABbiACoEXQnQDwA65WuAEcIR0Co0ZJBpUCECho6PCRqCG4/X8VAfpHvMJR/vkq1iAvX72ijp06MdQGDGmBYYW7IBBBMDhBcDmCBIFFlOgG5oz6wOyEIHNayFwouroFvwARBIb9BRYUIm09h4XjHEJkOEU5IYjEoZSOBfzpRo8irLCn/GO0UaP+BYAwrcwIB3g+saDRMfGnGsAVeMGtEHQqPRWkr3z3KeEvALjqAOcswL0D4A4grn6DuPL5G5SM6dYff5xD4D/Q8ydP6Nnjx7g+ppfPnooQvHGC8Oeb16ITfHiHlPBeAuEzBwFfJ9YH3BGgrzw9AAgRgCJJCDgCr1EwDz3SgAiAUnQEs1ZJJo0CK19BeohDwB2Ar/ivcBKuL67r33+Lo+WvX76I3cWly5f5MS4GNxCDKlq+M+A/Q2AQ3cCSGQSnG5hcIPC0YOcwcBBQGzhB8PLxSy8Sff0DGNICCwgOFreeQ3AOIcx5IIU7AVenAn50CwAkeSk+ehnVWQCgEQzBKALRBjomlfXNogj8tRuQudu/PHPwlT9tFqnc2kAOgMrNAbRS8MW+n78xPiB8Kg488hX/FEF/cPcOPbx/jx4/uE9PHz0ECI/oBYBwgfD25QukhJeiG3AYRBC4I7wHCNwVoL+dMHBnwApmKdgm5QB4aOTMU6cUD7vaICcEZELgTc7gcw2DA3Db/xtu8peovyR9/pyuz+L1LzFNrV23jnKgGudFIkBwpQXR2QzGTLVBOgyGzPUBM2U4AoMjsPTawFUkoj4QQfD1Y9hfYH4BfJMpEIdRAimYn0wKAwSR4aI6xPvQre6FOQAfvAy4tSsrAEI0wtPx8TrHpFKeaAOFXwAQ3GqAzAC4hkNOCJSKn8fDDrcu4CcHcAYfs36e65s2aUp37tyh58+f0+0bN+jOzRt07/Ytuo+PPbx3lx4BhCcP79MzgCC5wRNA8IzevJTc4B2Xszb4wFMDYPjEawQ3GFAgsuJJiVj1ambXcgAUIgASBApmweq3IPhmtWT/XBwAXj98BkCfUYC669PHTyKsXB8/SOKu8P79e+qJw5t8I0hMCwAh3QWMJnGDSy9eTfzjzAkCQOHFooUZM2oEJkJgy0gLzv0FhokiQ1pg2HpmfH/BL8AfB1H8cRAlgEI4BHACrvbx3nSzexJDDfBnYJYOoBUM0NPUBK1jQopHFgA4gy/PAMDVDbhPB933B5wQOH5qA52rX7J9Xu3z/3hB7M6dPn2aXqPAu45e+/LFi3TtymW6ide3AcHdWzd/3Lt9+wd3g0cA4Ql3g4cP6Dnc4OXTJ/TqOXeDp1JacDrCew4CdwReKL57I+oTxGuC4on5EXAV8wQAXnqFw46jbx5aSTYRADlZNPKMGgApgBeSHz98yFIfEOz3f/5Jf757B+GK1+/ffxC3nm8DXn6Gj69gHlSDlA4QfABgMEpXoyn9yiEQQTCbRSDc3cDikd4p8E0mseZwgcDPH/iKp5H8AIA/BcMJ+PnE0LBg6pDPEw5QCDWA4n2urGqAUK1gjNAJz6cU0DjGp1jFFCATMgCQWkE3B5AgcGS0hJlnAvL0qaA4CHL8AgB2Arnl89Mz48ePp3dYqVevXqVzf/xB58+dowvnz9GlCxfo6qVLdOPq1R+3rl/7ARB+3AMI9+/c+vHw7p0fj+/f+/Hs0YMfzx8/REqAGzx9TK+4Izx3gfBcdIT3gOHDm5ciCB/wmheGJRLyYuWrmLdO7vDRK7gLiG7ggsDKAYCMAMCk4l3AcLG15EGW9E4MdkbQ34ntKdebN2/o7Zu3gPkNvXr1GjC8F0HYunU75cQ+vxktI28JJQAMWATuILi7glmqE3hq4EMkPjuwuYZIHjwlpAsHURh3Gh9+JA3yd55PDA0JpNDQINz04kl3uxfkDvABbeCvXQDs3wQHeDklQc0m4UbITA7gnvsBgNgF/ASATK5wbwUdvA2UKxVZDoP4biAv+CpUqEAvEKiHsPOTJ07S6VOn6Axc4OyZM3Tu7FkRhEvnz4sQwA1+3Lx29cftG9d/3AUI92+7ILj7gzvBM+jFEw7Cox8vnz6i1wDhDUB4i/TwDiD8ycVhwJW3ieUK5mM+KP58dDKHr14OEBTMS4QAAGhkzIbgW9UysRA0ow3kKeALcvw7BPcdUosY7Ddv0gOeLgT9NYLOA8/H0y9evKTn0Au8/vTps/g5DRs1EreKRQgQeJ0IgbTt7Q6Czs0R+OdKBaLTCaRpInOBYPcEBN5eOHzijbmED46j+VBgoB8FwwlCggOoM25pu9u9AMMc4H28UfmrA4SoRQBeTc6vZqmlzPRzCoAczlQgzQFk6RtDbhCkt4MOZy3AxHTgBgDP/XZUtZMnTxbfoNMI9sGDh7Bvf1Qc6544foJOnTxJZ06dpj/wZxfO/UGXRSe4+OM6h+DqFdENAAEBAnp49zZSwh16cv8uUsJ9DsKPF3CEl08e0Ss4Agfh7XOup/SOw4DrFxSDFQvnY74AwFcnMH8A4AsXgBswL7iAnQMgSawDeD0wfPgocc7wBt/zG7R8r93E/x+i8PolDp68RMD59cWLF/QMtczTZxnirvD16z+0efNm3C+QTWwTXQBkgPCrI6TPDtI3mMTdRoYBlAiB3dOOVOCJ42g4l+jLIfCmAH5amUMQ7E+/cwC6JrCCHiIAWcwB1IIRALyYEq9mU8oYSa38BQDxbIAEgFwcCbsXgj8F3+HWCjpcdQDfBcyXLz+7evUaXbh4ifbu20/79h+gAwcO0KFDh+gIDm8cP3qMTgCEkwCBO8K5dAi4E1z4cf3yJbp59TLdvn6V7t64Rvdv3aQHAOERQBAhgCM8e3CPngOGl48eAISH9BowvAEMb549pre4igAUzEP+eiUL0MlYIADw4xDo5OkQeAIA7gQoCNEqKnFj5hgUku9RazzHLOIFgvwceiHqBT72/Nkz6HmGeOCfPqUnT57SY3Qsjx4/gdM9hp7Qg4f4Xt7wdPGO3w0kuYDe4DwpbciQmyNII3FTekpw7Ta6tpz5vMQDC8sLEHjjgKqvLz+l7E2BARIEv+W20d1OcayATf4pd1YAhKkFfQSKwGkFVGx6WcO/ACBTN5DJAdzaQbehkDgWFgFQqSUASuOkyqHDR2kH7m7duXM37dq1h/bs3UcH9h8UIeB7+UegY0ePAoLjcIKTcILTdOGPs3QJIFwBCNcuXaAbAOEWQLgDEO7dvA4IbtCjO7fo8d1b9AQwPIMrPAcQLx7eAwj36fXjB/QGMLzBlbeElQrmpkAAEKwXWLBBxgI4BDoJAh+tBAEXCkKxKBw9eqwIwEsE+gUC+wyF53NcnyK4Lj1BQfoEbesT8TWC/ugRAv6IHjx4SPehe/e5HqWL1wZFSpQSawDeCWn1mY7MZ4JA55yM6jPvLWScPbBJZxI9cUKZ75DyU8p+vp5wAQ6BrwjAvU5xVMAm+8vboPp1FByuFXSRWuHxjIIqNrW0nnEAZLLMq190AGdNIEGQeU/A5QIydwBch0V4K4h6oEyZcuzAwSO0ddsO2r5jpxOC3bRXhOAAHTwAEHBq9whgECE4dozOnDxBfwCE82fP0CWAcOX8H3Tt4nlAcJFuXblEt69eobsA4cGt66IeAYYngOEpB+H+HXrx4C69fHiXXgGG17h+4QAUyElBsP0wg8BCAUCQnjuBTEwHAIF8uBtIRSHZ0A2MQA3wEYUeH0Y9QVAfo24R9fAhPUrXg/TXDx48oPv37yPQ9+nuvXvoBKC790XduvtA1Lt3AKBkabEdlk5E6Z1yzUUMTjCk164awTVLcI2aXYdQ+H6E3XlC2Rsg+PrYyR9OwFNBp7xWetI9Hytsl33yNiqzAEAj6KJ0wuOZAGBySR37Vw6QLmdBKIitoRMAmdtcwH0qKLWEDn64tGzZ8mwv7mLdtGWrWBVv276DduzYJUGwZw/t27uXDiA1HERaOHLoIB0/chgQHKXTJ47TWYBw7vQpunj2NF0554Tg0nm6CRDuXL1Ed69dpnvXr9CDG1fpEUB4DBCe3rlBz6Dnd2/Sy/u36TX09dN7qor790MAQIRRgGQsJB0COfPXuSCQEYpCwrCIhmM38ANaVN5+8qHUAwTVdRWF1/fhOGLQ8fu7d++K7d+t23fo5i1JN7jw+6s3Jb1+8y4dAD4l1Wacj3ST3k1SatDr+QEZaZfUHQIrtsltOCNhx5lIL34ukt+4wiHAHUxd8hjpeY+8rJin7IO3IYsUwB0AADyZWUDpmFJK818FwFUTOOSZ3cDtGLlzb0Ah3V5WCilg1559tH7DJtq4aQtt2ryVtgCG7XCEnTt30e5du2jP7j20HyAcOrCfjnIIkBJOHD1CpwDC2ZPH6fzpkyIEl+EGV+EG1wHCTaSF2xwEOMK9a1fo4Y0r9OjmFXpy85qoZ7eu0qt7t+n9k7t0alIPqhjjQ9EIfDaTwHAUTgSBO0GwQc4CDRwCGflqZeQJAJAKaCRuyX6HfP8YqeX+ndui7nGh/riL6124zV0E/A5e3759G4G/RTdv3qQbN27S9es36Rp0FboCXbom6cXL11S0VBlxGsrdUZqM6jKk07mflxQhSL+jyu2gjNF1OMV5SMaOg7Ge/CYWHHvnAPBU0DmPjp50zsmSPGQfPA1ZdAEAQB8JAGYnKBzTyuDevp8AkAkZKSHzPMDZAcjSHcDt8Kgy0+lh/rESJUvRNqz4NevW0/r1G2kDF2CQINhOO3fsoF07d9De3bsBwT5AACc4eICOISWcOHyITgOCP+AG50+doItnTgGCMyIENy6cpVsX/qA7cIS7Vy7Qw+uX6TEgeAI3eAq9vHuDXhxeSzOK+1Jeq4Jy2uQUBfvPYRFYdrMLAlk6BAF6GXEIUBSSFzQKB0LeIv8/vH0TQb9Jd26JwylxSHX7Fv/9Legm3ULQbyLoN67foGvXrtNVp65cuU6XrqD4vXyNzl26KurJs5dUHI7IHQA32TBeJ2ncNsgyHZlzQeAEQNwz+fmwjHg+EgDwm1dcx+N9PMRU0D2vlh51imWFrbKPnvqsANAI+hi98HReQYVjZnn1v3QA53DI4TYVdGSeB/x6fNzlBvxuIg7Alm07aeXqNbR6zVpas3YdQNhAGzdyCLbQtq1baef27bRrhwTBAe4E+/fRYbjBMYDAIThz7AidPX6Uzp04JoJwCSBc/eM03Th3hm6ePyNCcP/KRXp47ZIY/HePYNELu9Jv2XSU0yIjrHrKCeWFcgOAHGZB/FiUKSMdoB4gdAi8FiDUAjR20CB0EKjg4SZ3rl+jW27CbAIgXEfgryPw1xH4a+JQ6/LlK3Tx0mXoCl2Azl28TGcvXKIz56Dzl+jR0+eseNkK4srn749zRpJpl1Tz04aZBMKvx+WMzptl+AFZDwBgx91N3k4X8MH9i70BwJOuOViSTYa9gKwBMGTTC88WFVY4ZlVQ/7sUgKBDAvK/kFEDuBwgEwSuGsDpBhwAngI2IfcvXb6KVqxcTasAwhqAsG6dBALvjzkE20UQttEeuMH+Pbvo4N49dGjfHjp6YB8dP3SATh0BCNAfxw7TeTjCpVPH6crpE3TtzEm6+ccpunv+ND1FKvjzzFba2BzP6/FVULxNoFxGgRIsApX2llGyB17jY3nx+1wSBCzKJGPhACAEAASJLiAndAY0vl9vdBIP6e7Vi2LNcf0Kn1Behq6I4+obKEKv4fUV7AZe5kHHKPv8+Qv0x7nzdPaP83QaOnXmHB7pco5OSGL3Hj5hyaXLi3sj/P1SOVvljJPT7iC43WirlW6k4TfRpB+bd56Y5vdK2HCji4eH88ZZ3BbHa4GBeTSoAXKx4nbZey+jXJ3FmUAAYBCeLyosZ7MrKP8VAI7M+qkIzCzp8KhC7u4ArCTuYlmPp1gsWrIMT7paTsuWrwQIqwDCaloLN9iwARBsghts3kTbt2xOh2AfaoMDAOEQQDi6fy+dOLifTgKE04cP0h9HD9OF40fo0okjdOXkUboFCJ6e2k4HB1aiBlFqysFXPQIfC8Uj0DzwdQJkVMlboGJ2gRIBQT6bjLgTxOBzoqAwg4xCAQCKQswL5DSpdzd6iW7i9kVec5yjqxd5O3pRFAZUdBVQXLp4ASPs83SOBx2TzNM4KHISA60T0LGTp+godOTEKTp8/BQ7cuI0u3X3Pitaqlw6ANKuqfummXSjrUqdGQjp5lqdeLt9OgTpAOAuJv5cBf5MBeeTVkQA8uvoZc9crISn7E/vrCaBmAEY4QAvlyTJ2ZyK/xoAvvJlrhTg6gJkGang1x1C94JQzlJwo8LqtRto3vyFtHDRElq8ZCktXbqMlq9YSasBwbq1a1EXrKeNAGHLxo2AYAvt2raNdiMt7AUIB3btpEO7d9KRvbvo2P49dAognAEIfwCEC4f30+1zp+jK3K5ULwbPIjTIKQbWHqmH5SOo+RDgJKtA5b0E6hQho6aBeO2CAFDkxZ9xCKLxuREGQICvQz1AAVBqz86YLdymG0g115BqrkK8Hb1y4Zyoi+hKzqEoPYtWlW9qnTxxgo5jmHUUQ63DGG4dOnKMDmLaeQAzkH2HjjKuazfvsGKlyot7IyIAql8ByATDT7fb65wSH77hvL1evIMat7mlA8AdAGlgAJ569qJHTpYCAPJkNQhyAvBiSRE5m1dV+UsR6Mz/6atfAkECQPgJgKxAcAdgxao1NHvOfJo7bwHNX7CQFi1eIkGwfDmtWrWS1q7hIKyhjUgLmwHCNrjBDrjBrm1baS8cYf+OrXRo13YJAqSFU3CEq5gYvjq+mpY0yA1bR5FnlgIPV6M8ZmmVl/AUqAoC3jJIoGm5ZNQ/QqAGARIEKfizgs50kAPQROPrIvD1qAcIXQFN7dYWLSUq+dPH6TJ0CS5zCQXoReg8OpI/0J6eQpt6AsOrYyhU+S1phw8fwXDrMB04eJj2Y9y9F8OuXfsO0s69B9j23fvZxSvXWXKpjBTAAch8lF6VyQm4NE4I3B+84XzohnhXNe6ZlB6qwe91dKUA3Bw7KF5Dr3rn4A7wNjGrFBDpBGBZUQVbVEOVDoAso/DLMgW47Q46nBtFznpA5jYTcKUAEQC2dNkKmj5jNs2cNZfmzp1P8+cvoIV42tUSgLB82TJauWI5rV61itatWUMb4Aib1q+lrRs30PZNG2k3QNi7bQsd2LkdEOygo3CDq2gLb83rTDVDVISHalMkVnCIFkF0rvwCWNnFEeDKvlLAeyHwOwsAgmwCtQ4WqKafQOUAQVE4QQGbwDgwPF1wCELENCCjaa1r0WMUepdOoOY4Dp06RudO8dkEBlUoRvms4jha1aOoSw6jYzmIYdYBDLX2YaaxZ+9+sfXdvmsvbcXga/OOXWzD1h3s7PlLrFiJMiIA/D103VCTvnfifpfVzw/ecD59xc0FxGctmEx66ZlLFg4ADtfgqWu+AGBoPiW96ZOdlfaSvQk1KX49EIKtYGN2g/BqRTE5W1hDyUfBpPiPALg5wk8QSCDIHO63lnOhC2DI/2zKtBmAYBYgmE1z5s6TIFi4kBYvWkTLli6lFXCD1UgLa1eupPV4QuZGOMIWgLB9wzrauXE97d2yiQ4AhBObV9Ga1gUpN1Y9b918NAL5I/hhOkHM+3m57cPey8L26/oL1CFUoKk5ZPSwsoy25hWoZ7hATZAKqgGOUl7i57J4q8Bym6Wv57UALwYn1U2hRygqzx85QGcPQ8d4S3qYTh09hGHVQXFecQSp6BA6lQP7scexbx8Cj6d6YqaxHUHfitZ3M2YdG7ZsY+s3b2OrNmxmJ06fZYWTUyQA+K34zt1TCQL3+yqk1KBWuTuBOv0RPE4IRACMzkf08Ufz8cfwcQB88KCLIfmV9LZPNlbGCz/DypgFAHAAcw6j8GZNcTktqKYgzU8AyP49AFkeHnUHwKWSpUqxhYuW0qTJU2nKlGk0bdp0mjFzFs0GCHNFEObTIoCwBCAsX7KYVi5dQquXLwUIy2nDqhW0Zc0q2rZ2Ne1Yt4Z2r19DmxbNo1CTSuzZ/RD8QK2Uv7PDxuNg54Wc1l8dAW6L1T4yWqAjBQX6PkNF14oKNDFGoPYhEhw8FSTbBYZUwPLja0UITDIKx983qU4xenD5Ap3Zv5NOHdhNJw7soeMH96A13UtHkIIOQweRjg6gSOUTzV0oWndg1L0FHc/GzdtoA4ZeazdsptXrN9GKtRvY0lVr2OHjJ1liUlFxdUtPYVFIB2jcbrNzP1bP5wTSnorkBOkuID6US5v+WD6zSXo+o91qwHMPTMzbbmLD4hX0rk8Mw0J452OQZwGATgJgHQCYnwEAuQPwX4EgI/jyTPcSKtIBKM3mIPePn5hKEydNptTJUwDCVBGEmTNmAoRZeC7ubJo/dy4tmj+Pli5cQCsWL6SV0Ooli2g9YNi4chltWbWctq1aRjuWLqBcXnryRfCDdVLwY81SLud5nxd43N7rI8A9sNqX5RbofW2B0q570duaMvH3ffBxXhBW8RFYSU+BcRdIRNoQIYBizDKaXLco3Tt/lk7s3ERHoSM7tyAFoRbZjW4DOrAbnQq0B2lp547tYiu7efMWTDw3ikXvyjXraNmqtbQUWoQWeP7SFbT/8DFWIKmYeFbSlQKUme+zzHSnVeYbblWZnEByAG36cxn5E1s9+GN7bQaGJ7SyEYkK9ueAWFbOC6Ngo0KTlQOYchiE1+tS5GxBTWW6A8gFSf8ZANmvx8ezuLOY1wDTZ86m0Xiu3dhx43EaaCJNmDCRJuIZuJMnp9LUKVNoBg6Ezp6BZ97NnkUL586mxdDSeXNo+fw5tHLhPFq7eAGtXzxfXP07l8ylvHj6eADGttjYEds43tPnRwALeUjFHQJLLVD4DY5C7s8v0LcWAjleVqRPzeS0Jb9MdAW4AKvjJ+ANElgxAFAYLsABinN2BjMaJNHdsyfpKFLOoU2raP+mNbRv81rau3UDapJNtHvrJtq1dTPt2LqFtqJo5V0Mb2tXouBdtmI1LUbds3DJcloAzV20lM2av5jt3HcI9/cnp9cArt1TMfD86jpV9XM9IM4LMuR0AdQBeB6jXnpSq8XsBMCqZ142IxvJARiUnZX3kn3yMSq0WaaA3AbhzYYSqAFqi13ALyng39UCMjdlBYLC6QI46s0m4cmWw0eMxB77aFFjRo+hsWPGivf0T8DxsFTAMH3KZJo5bSrNmTGd5s2YRgtmzqBFs6bTUjw1e/ncmbQKWjt3Bu0BAAn+JgrRSf27++rnRV0ZrP46WP0dkfsnZhfoaCIA+A0APKtBn9vKaT+KwSmxUi3QLFBgNXwFVhouAOdghQFQPqs0H5jVoADdOnmEDq5dQvug3WuX0q51y2nnhlW0Y8Nq2rae1yi8c1mD4nW1WMSuQA2zBN3NQhS38xcupjnzF9Hs+QvZjLnz2dRZc9n2XfvwkAcpBfD3yVknZRypy/z8BfrZBdRq1yP51BIAuNHFYJAe12vGbe9Ws056eLdNz0YVUrD3A7Oxit6yTzFGhS4rADzijMKHLWUUbHEdOIBKIKWbA7g5gePfAiAT5wQs/fEyvCiU8fsGJAcoViyZjR0/kQ3C7tqQocNpGM7aDcdtVyNHjAAMo2jMyFE0YewYSp0wjqZNwpOxp6TSLGjO1Mk0f9pkWjh9Mi2ZnkrLZ6TSyumTaM/i2VQwwMjCsZOHvM9yWaTVj59TRCW8pMq/GVZ/b1T+c3IKdD4J9t9VTo47MfSlo4xOFsLH0RIOihSoHWqB+ugSKvlIBSEHCAWhODae0yA/3Tiyj/avmEe7V8ynHcvn09aVi2jLysW0acViWr8CdQrE65UVy5bSsiWYcSxaLBa3c9DpzJozl6bPmkNTZ85mk6fPYhOnTmebUBTmTyxMSmcKcHZLP99xLRaHGWkgIx24HCATALjNDQ/x5gCQ1YQHYFgkCEYXlLMPfSNYFThAnHfWANjzm4VP28rKaRF+ioc7AIrMELivdPfgM8Ht47KM5wo4uBTOlpADMGrMONav/yAaMHAwDRo4iIZgo2UIdtuGDRtGI6ExcIfxo0dT6rgxNIWDMHE8zUqdQHMnT6R5kyfQgtRxtGTyOFqeOpb2Lp5FSUFGFoUZPlYqc63+ZFh/WQSyFgLaNkRGQ2HzK1D130jG6u+nIMejQErrK9CVYvh4nIxGoxjsHCp1BNX9MmYDSXZxQMTmNcpL1w9ip3LJLNqxeCZtWTSLNi6eQxvgQGsXz6XVSEcrkZqWL1pASxbMp4WoX3hRO3v2HOIpb+r0mZQ6bQabMHkaG586lY2dOJnxojBfgUL8MTqSS2YNgCPzo3gyHsmjdnMBPK9ZfDKrCAC/qRUQ8IdfeIguoGNjC8vYx37hrBocIK+f/NcUEOUt2BPMwsftZWVsfi05aVUCU8ozA+CWChxZ6OcbSaWW0CVna1gcKWDEqDGsT99+rC+ec9uvX3/qD/F77wdjw2UYNBwwjB4+nMaNHE6TxoyiyWNH0fTxY2jWhLE0e/womjt+BC2cMIKWTRhO+xdNpWKBOj69460bb+HEoJVEACsjkI2CZNQtXEapOQTaGi/QvVIAYKiKHH8m04/RCnpUGh9PwEwAf94HLtEaLlAP0FSBc5T1FkHCMSoZW9wsD7u2D/sT81Np89xU2jBvKq2dN41Wz5tOK+dKaWnp/Nm0aO4smj97Js2ZOZNmTJ9OU1HcTka3MzF1CgrfyWwM3G/U2Als5JjxbPnqtSwuPpG5AMg4Wi//ty7gcgI1l6sOEJ/grna5AHEXEB3ACcCkojL2aVAYq+Uj+xBvk/0KQB4vwTPRInzaWU7G5qE65gCo5FLwFT+lAPl/CL5raihBIDgBkCBILl6c4T471r1HL9azZy/WuxcebYqbJ/ryx6DjebeD+venoQMH0Ighg2gUNG74UJo4YihNHjWMpo0eRjNGDaHZowbS/NEDacnoAXRo3jhKCVSLu3l5zRmrv7wPn/cL9BtW9VCs7iVY/UcLC/S0POx/vJrY17HkmKKiVxWljy/Dn4/C53VDLdAc7WJtwFOZdwVeYjHJVrTMwa7uwjBq5hjaOGMsrZ05gVbMmEDLZ05ESpqE1JRKC2dOoblIUTOnptI0FLSTJ6HTmTgJRe4kFLwTaNTYcSL8w0eOYYOHjWSLlq5gefPHi8XdL8frFJlBkLoDRSYAVG4AaJwQ6AGBATe5cheQHEALALRscnEZfRocyur6CR8KGuW/dgHoD70xJ/97b0UZLaidAQAeJyXqJwh+doKfi8RMf46JokPhTAOFk5JY/wGDWJcu3VjXbt1Zt67dWI/uPahXz17Up3dv6t+nDw0CCEP796PhA/BTMgbhx6YM6U8ThvSjycMH0PTh/Wn28L40b3gfWjysJx2aNZxKBynF4i8Bq78IVn9pBK0aAtg8SGr9eJG3BcXetRSB3tZSkmOWhtj3/cTmG+hzTaSB4gJtgwvMgAsMRi3QHgA0Bjy1pNmAWBCubJWdXdu+hnZMHUYbpoygNVNG0tLUkbQodRQtmDwGqWkszZkynqZPGkdTJ46jSeOlonbs2LE0CkXuiJGj+Q2mbPDQ4WzgkGGs/6ChbN7CJQxP8EgvAuW/nLGUi++ZuxMoXXKHQOUCQC3+IA8JADUed6PBE88gk4alig4QwOr6Ch8LGbIAIJen4FPUKnw9UElGi+uJKYDUAECFOkDplKstlP0H/QyA6AKCBEFiwYKsV68+rGOnzqzz751Zl85dWdcuXTkI1LN7d+rdowf169WTBvTuRUP69qbh2IYd1a8nje3fiyYN6kVTB/eimYN70PyhPWjJ4C50dNpAqhisEFs/se1D8CvxkW+gNPUbitZvEXr9oyj+HpfDKmiuJscKDzwz6i+itVH0T1N8vKxAxwpLNcJEjId7hgnUBvA0DJBAAlBsdZtYdn3rStqROpA2ThpIKycMpsXjB9H88UOQkobTLKSl6eNGIF2NoImjR9BYpK/RI0egwEWhO3QYnjAyFD/xYwjrN3Aw64sF0KvvAJo5dwFqgET6CYBfQFA4pUyvBSSpMh7azX+GQ3oayABAzYMPqdiUogL7NDiQ1fYVPhfMCoBYD8G7uFX4criqnFY0wQ+EUAuk+RcAiJL96+C7AyCXuSRLB4Dbf/v2nViHDp3Y751+hzoBht+pa5fO1AM/FaN3t67Ut3s36t+jGw3q0YWG9exCo/Bzc8b36Uqp/brSzAFdaf6grrR0QEc6M60v1QxViFM/PvThhV9Nf2nDpxdWfypav63o/a9hlb+vIae/u2gobUcUnhrHfrCdxSmts4w+VJfRrRIC7cOEcGFuaVrYLUz6O2rj76qAswObOuZhN7cso23je9O6sX1o2Zi+tHBMf5o7uj/NREqaOnIQTRoxiMYPH0hjhg6k4YMH0JBBA2nggAHUH2mtb9/+1LtPP+rZuy/rgQXQtUdvmopReF481EmsAZwP4/wZBFfw5Rl3YTtTAgfAKQkA8ec36Plt7SIAuM3doHICoKapmHp+GhqIGkD4K2+ALHMXgJ8tJ0vxELxK2YS/jlbFz/RrphQdQIubQzQItFomgaD4tSPIyhEcWaUAVzGYmJjIunXvydq2bcfatWsPENqzDrh2bN8ePySpPXXu2IG6dupAPTt3pD5dOlH/Lh1pSNeONKJ7RxrbqxOl9u5EM/t2ogX9O9Gy/u3o6szu1CBcIW748LaPF2985XbC6h8WLa3+42j1XpXH+LeFnL6M1P5wnKv0Aw+N+kGXf6O04Qr6hoHQhypSR7AJsExDyhgYIaUC/ndV9ZXRzm5xdGfLEto+pjutHdmdlo7sSQtH9aE5I3rTtKG9adLg3jRuUB8aPbA3jRjQmwb17UX9+/ZBbYMaB6kN9Q51Q6rrCnXu2oN+79KdJmIcngdPAeUP1ZQ5n8mcPjhzdlAKZ+2kcHMD/OwGACB3qNwgUKsUTAsIdHiaiUGEQOXuADQN3c+n4UGslrfwV1yITC+4//SQePymgU3wKmsXPp+oqWCrG4sAMB0A0MIFeCpQuzvBvwcgk+TpEGQ4QNeu3Vnr1v97e+8BXVW5rQ2/a5dkZyc7hEDoLfQeeichpPfee+8JkIB0ULqAKIiKYAHFhgW7cuwcFVFUjsfey9FjASlSstc7M75nrrV2somcc+//j/t9437fuBljjg0Yk73XfN45n1nfSllVWaVJdVWVrKmqotqqSqqDNNVU06K6GlrcUEPLGmtozYJaWrewljYvqqHtLdW0e0kN3bGshu5bVkmf3Q4ADDQh56+0Ez/O+a+AL78FPv1pMP+PcPrPZwqSq8zkPOjZJn9Y1UbOc21tv+wn9V4vUq+xUGuOoK/BEV4GV7hrnKDNAM+SQP1n5aJ55KXlU+iLx++kZzY20UPrm+jAOlih65rp1rXNdBMs0rbli2jT8hZat6yZVuPKtxVLmmkpLnpaApfWAmle1ExNCxZRY9NCaoDUNy6g65EOn4htXrxUE8+I3BTfuY5ikGjF4AQGCBA2Wi0mDQC81t8TlsCLl1pcAQAPDQA7QQLPrIMLAAAy+yj29vuDeuIPNVZhShouuscHiDPHMnHDZ65Z2gEAOwBgNxkgYCtwFUL4H4Ggw2Xw4mlFYgpYNsHnl5aWybKyMlkOqSgvl5Xl5VRVXkY1kDrclNVYVY7r0CpoaX0lrWqopGsbK2hjUwVtW1BONzeX077FFXRwcRF9jTJwUaCJgv0VLX5ns70cp3c3TvHTUOaHUOrv6VD+AhPRXij/ndFtdPmrtjZ5EXKK5Lsj6NIuE51vUOg3WIEPYSqfm6KD4HpEBcuG6HmENzfMoq8P76Fn19XQw9fW0oHV9bRvVSPdsqKRdixrpC2wTBuWNNG1SxbAdTXR0uaFtASurAWyEG5tQdMCaoDS6xoaNampa6DNiAwm4doYBgCspDsA1E5htL6X0QUAkzsAOixAZwD4AQDdYAG6+Vjp5lAAYH1/mQUXkDRc8W4JECYBO6BEQWonC1PCCNEtOUD8fjwbV7rmm6WvhyKxUVZ6Q/leEE93KyA68YFOCaI/AUCPAjQATJ8+Q9bWN8qCwmJZWFAoiwsLZUlRkSwtKqTyYlyTVlJM1aXFVIcbM5twd15LZTEtrSqmVTVFtL6uiK6vL6QbGwro9oWFdN/CHPppfz1Vo7sHvW6aueaT/9gcQZ/lKnSuBYx/51iiw8lE76xsa/v5cBupF9qwNLJNhWDhU5t6+R/k/Gk/tZ5YSK2PJdGFG8fT7wts9GmqQk8CQJwgqgMA3t4WTN89fgs9t6aMHllVSfeurKZ9K2ppNyzRdlikzYvraF1LPa1aVE/L4LJa4MIWNTbQgoYGaqxvoDrc6FELqcFOw2rs8q/CxQ7rMG7Gu/wMCyA7AUAq7jkUt4SaYQG0ba7tANAsgFl68T4DLLjw8bIAABh/92Gx4NZTQee29JOFvcXZRbGKd+0sYRYDofwS3CdXFSzM6UNFt4wAceqdTJP6SBEGJD2E9AMAHGbdErRbAaXDClwtQ2hyyxMYf9aTSQYApiDsqaiskdnZuTI3J0/m5+bJgrxcWZiXRyX5eVRWWECVRQVUXVxA9SX51FSaTy1lebS0PI/WVObSxupc2l6bTbc05NCB+nT6+e5yagIAuM2rHOZ6LVj/oekKvZ9mop/qcT3sluEkH0gm+eZikt/f1yZbfwMAWjUAYNtXm3rpFApDjxCdXEHyqWySu2fQ+cW+9EWehZ4EKVwJC5APDvDKtTPoq4duoCeXFdFDy8to/9IKuu2aSrppcSVtbamiDc1wVQvhspqqaXF9NS2sq6ZGbCmvx3VvNbjbpwpSWVmt3fNTgdfyiipac+163CQ28T8CgFs21U0MAGiCP3vgtR0AGGVzAABdMfoW4GORPRxm2gl+c2F7X1nRV5zBDe4+5fEAQA0AUBUkTA1hwpwyWHTP7yVOvZ+rqIeLMR/nKaQ/3IAvQOBjuAIXIbR0EELVHQBXKF+5OgAmT5kiS8sqZWZGlszOypa52dkyLzubCnJzqSg3h0rycqksP5cq83OopjCHGgqzaUFRNi0uyaIVZVl0XXkmba3Ool21WbS3OoW+uLGIygeZtIYPTuMuYPIHEOxF3v+pSYLeC1bo5yRBF5H3v3Szhei1vtR26W8w/xeoTf2F6EQQqfthKdYALNkKfYNM4VEo/n6EhNsQEjZxfQDE8umGIfTpfTfQI0sK6eCSYtrbUkK7W8rphkXltHlhBV0H97QSrmpJXQUtqmEXVgE+U0E1lRVUWVFOcHNUpkkF7gMux12A5YR8CI3HxVEcBXRUT8UVPMAdAB08gItriqZ4l/wJADzSZrcQGkBlLwBgDz7Xxe39ZHU/cebGbMV7WSgAgHvkTEUZwlwfLCwZAEBpX3H6g0JFfbIUgxE2IQNgBboCBOwK7IYraLcC/zoqUE1/Ov0dAIDPkyUl5TI9NV1mpmXILCxUys7MoLzsLMqHFEKKc3CXbk4mVeVlUG1+BjUVZFBzUQYtK06nNaXptLkig3bWZNKeqmT6aGsRFcJEhyIETO+tl305hNsEEnc3IoAXoczPkO49n4ci0AoTXTqALOC3i6jNeYbot9vI+aiN5HorIgQFWUJBb8F9PDpR0M1GJFCFnwe/SU/XDZCf3reDDi0uoAPNhbRnYRHdtKCYti4oofUNpbS6rpSW1pZRc3UpNVWWUH1FCVWXl+I+4BKqKMVVbyW44Km4mIpx0VMRpACrcBASugCgk0Bj9lIxgOBWTVXdRQcAFK+BQAeCFeIJEGCplfQBAHx5pE0DgFn2AQDuiRfy4o6+sqGfOHt9nLBvmiMsYns/YQIyzBunC0vuENGjpr8482GhIp8p5754oVmBbgBAFzcr0NkVaAked+UrfwaAOwgmTpqk+f/k5BSZlpIqM1JTZSYkKy2NctLTKA83ZhZAijPTqCw7lapzUqkuN5UW5KfSksI0WlmcShvKUmlbeSrdXJZAf9ucR7nI98/x7+j546oeN3xyBvAQrMDbMH//jBd0qcKEUwCFn0yktlYntX1eT86bzNRaZ6ZfU2EtEC08B79/9zgdQJwQKodVQexMT9X0lR/fs5XuX5RLdyzIo92N+XRDQyFtBidZW1NIy6oKaXFlETWVF1IDLoGuKS2kCvCaMkgJLn0E16EiXPBUwJc8QXJxrQvyITQWi6Q4qydcZFpxFdE6gNBJ+XpWlRtITEo7CHixp83KADBJ3nDWBQDoZjdTbwBggK+J7k/kLqhecukgcW5rtOKzLURYxcE4YdqbIMzrJglreaDoiWrYmY+KFPVZAAAdsbKPbgWoKwCAG0U0QmhTdFegRQRuVsDNJahXswImAwATJkyUefmFMikxSaYkJctUSHpyssxMSaHs1BTKTUulvPQUKoAUZyRTeWYSVWclUX1OMjXnJdOygiS6tiiJNpUk0Y6iGHpvA65G6afQDD+984etQNkAhVoCdQJ3V5Cgl2AFPp0v5Pk8k7y4BgB4c4Z2eQQdTyG5BlfI55vo61iFjs5VNMDw6V89RMimAUIW90WPAAOgqid9uH8L3dOURbc35tDO+lzaWpdH62vyaHVVPl1TkU+LyvKpEZylrjifqiBlBXlUDHdWhI0ghZC8PF1y+YIn3O2zaFELFkyO1u5cEm7JNe2eJuUKTnA1HgDlm9pPv4cBAG8NACbqimmmAMwz9HWY5GDMRTyUAgu4t4dcP1Sc2xarOG6YDQvAyr8J/n/jeGGtHCt6Im/++ydlQh6pRG0d1TW0WMmeAACsALmsgJfBBTqTQXOHNXCarwYCNwDk5ObLxIREmZyYKFPwmorXtCTcoI3Lk7NSkig3NYnyIUVpiVSankCVGQlUl5VIC3MSaUluAq0uSKANRQm0NT+K3gUAeMiDp33CjRpAIQDRyGlgnOJbcZoPI7nzDlKhv6UpkjOB6pFA6B+3iLwwB70BCjKECn0QptBzMxQ6AMBsHS7k0kAhkQiSeX2ERCu5fLy8h/zgzo3y7oZMurUuk3aAiG6uzqHrqnJoeXkOLS7LpQWluVRfnEs1uP27ooD5TA4V5mZTPi57zOMr3nAFbDYkC5KJm75QD6GR2OvLFuCqYfRVAOAOBPfT7wKADwDgawCgBwAwwIHZCDybR1DzcO4LkFuHifPr0xTHztmwAGtChGX7DGG5fr7wuH+O6LlssDj9eY1JvtZkkTxEMRht1X3QaxcAALgiAq+rk0Ht9BvKdxp/vhIEbgDIzcmVifHxLJQESY6Po1S8puHi5IzEeMpOSqC85AQqTE2g0tR4qkiLp5qMeGrMjKOW7DhakRdH6/LjaHNOOL19XSZSvwpN6aLX7+N66uXcavCCpUMV2o7TfO8EsHjk+r9Does8agHyUDfUAk4hPBxCl4q5FqDQ6/D9D+H070bq+Fqc/oVoESvvL2Q2AIAJIvlIUYB8by8KOLVp8ubqdNpWlUkbKrNoTUUWLSvNopYSKLQ4h+pAWKsKsqksN5OKwGPyszIpNxMXPfI9fxm4BxivGZB03Alcj3yABgCQQPHvcintINDDaVdOhQHgUr4nlnp5aRZAAQAU8keLXG90NAeiqXUsrOOT6INsvTNA3jRcnN+RanHsiAIAtswSlttjhPWuSOF5c7rouW6YOP0NlP/mIqtkk8r9df3RasWt1swF2t1AJx5giGr+F+KyAjoAJsicrByKx4KoBEgiC27NTsZralwspcfHUmZiHOUkxVN+chwVp8RRWWosVaXFUENGLC3KjKGlOTG0NjeG1meF0bG16ZQMADBgQ7rpNXyu4nFJd8Fg3QrcjojgaVT7PsQpP51lJrnXDgC8S4Si0B+ZXCVU6Pnpetp4MyKIxVB+NZRf0EdvEUOEIR8u6CbfvnWtvLUqRe6sTKXry9NoXXk6rQQpvaY4gxYVZlBDQSbVgLRW5GZQSRa4TGY65fIt4OA3mZB0TdJxRTzu+8PNXpwPGIXLoVwAuFpyzfQnlyBcKeIrAQDxAggcAIAfLEB3dEn3RY/kMDS0TkSS7NlcAODe/nLPSOWPO9I8/fYm45LYW0D+DiQKjz3RwnZbnOgD0nTqx8Vm9e0Wi5yHGjhaoaRmBdBq3d3IC1zNDVh0PnCFwv8EBMNiBGFNWgbQHxsdTXHR0TI+KgoSCRBEU0psNKVCMuKjKSshhvISY6goKYZKkqOpIiWa6tNjaGFGNC3JiqJVOVG0LnM+vb4CFygCABO5/7+r7gaSjHoAp3G5FezGUfrpfhtu4BcUu+R2K8lLO4lu86TfESIeg+9/FP/9FliLNfj+Bpj+kr56kyif/vkoB9+f7SvfvHmV3F2RJHeUJ9Hm0mRaW5JCy0FKFxel0cKCNKrPS6MqkNayrFQqykilfEhOWgqB5FI6LoBO49vAISmQJNz1V46bPkePHn2FBWhXtlsG1Z0P6NGU9jw1F8BX+3lAbACA3QAAL7jqgYM7AAd4JHoaZ8IyvghL1/rQULl/tHLhYLYj4ECmzSbuyxAeB6OE58F44XUgTgy8M0ic/mW1ST251CJjA7TeeMnTMdghTOACWl5Ayw6adTLYyQqona2ApeO1vY4wftw47UHEREXK2MgIGQeJj4ygRIAgOSaSUiHpsVGUFRdFufFRVJAQScWJkVSeHEm1qVG0ID2KFmdE0oqsSLouI5TeWJlIsVD4ODSEzDAmgGINMsit3swFNsIK7A/SS77foySsbrYSXVhAcqeVfowGSZypt4tvG6Hn/1EK1nw/n36tHwCH4b4sh/zrrhW0sySOthXHaxxkdWGiRkqb81OoKS+FahGtVGWlUGkmk9hkcJlkjdOkJycRyC6lJCVRMt//yxc94sLHUuQCNAvgHgWIKyuuLjEUL10HyaV8q1GrcQHAl/WE6K0nADAIz2QcaiTz8DyOVpqo9fEgejRIuXhnhl+fA6m97OJwAgCQKmwPJArvhxKUEfdPFmdPb7KoHy2zyjR8cDxQOdpbn7Lp7XIDBgC8ru4K1HZR2v9slJIV3QIwAHATdkxEOMVGhMs4SEJkOCVCkqIiKCU6nNKiIygzJpxy4iIoPy6ciuPDqSwpgmpTIqkpNYKa08NpWWYEXZseSm+tTUUJWNFGwLghhEvCkQH6pA9bgWpYAW74vB1k8EVkCL+EG1CvQ0LofAEROoI48cM1A04cwQVqiR9m/uickUmG+Z8LANyT4UOv715JOwpjaAvkurxYWgkesjQ/gRblJlJDThLVZCdpUUtJehIVpCZSDnhMJvhMWmICpSQkUBILroNPxLWvCbjXr6SkjEaNZBJoJdFZ6Z3cgdnFt1wg+BMAYJ2hHz8AoBsA0BuWezAPxyA8jgQveqfBSpePTJYvTTFdOJjp6H8orbuPOJAnbI9lCq9H0oXj0RTz2Kemi7Pnd9nUL1Z7yiI8gGCY1CBenOCtT9y4k0FXTkAjhKK9UNQZALIDALpMwA0WmQAAFE/x4WFSl/mUAEmKDKMUSFpUGGVGh1FOTBgVxIUBAGFUlhBG1Ulh1JgSRovSwmhpehitSQuhN1anUTjq9YhatEEOHgPjNi7u7OV28HLuCB6s9/w9Ax7w2XxFy/rJ36NJ7rDQZygWPTpF0bqBVhvdQPk4/Wm9dPMf3l2fEdif5kOv3bySbiiIos350XRtXgytyI1FVBKH6CSB6rMSqArRSikIa1Eqk9h4ygKhTQexTdGIbjwlapJACXiNj8P3FRYDACMZAO0WwKXkf336FU1Y8S7lc52GK7cOAKArABBg492HGI6FW5yGA5EIa/j+IhtdfnUmHZ9lunA4z3vwE3m4SP6hdE359qeyTF2ezfac9MYccebiHV3Vf2z2lo3okY+COZ1mTMsOsmtuoD0n4GO6Mj1s1XMDqrXTyXcVjyzG90zCPTY58IlQvAGA+TI+bJ5MCJtHiZDk8FBKiwylzKhQyokOpfzY+VQcN5/K4kOpOmE+NSTNp+aUUFqWFkqrkufQy0ti0ACqaFPAzAM0N2BMA/E4GLd2LYBZ3woe8BgU/SkDYDUA8OtsuAIzfYzq333I/O0YqU8IcSdQNp/+nvqQCH6WRK+BvDPZR750I+r+CD0350XRWnCQ5TnR1JIVQwuy4qg2g6OVOCpJiaWCpFjKTQSZBY9JA6lNRZTDkU5SXBwlQOIhsbjhMw/JoFG44kWrBrplVc3KVUQYyjcp7c+Sn7uncfq9WS8AQDeboi2/HID1NyO5S6qbPvb28WJvuvzXWSiNmy49W2Qf82yRTzdxOF94PV9g9nkx38v/lQLPWR+Ei99b7xug/rKjm1w5SOGHQDB/2ng1j1xxSNgNv6iLGwBciSE3IKhWAwBWl7i9YQZALgCQAAuQEBEmE8JDZfz8EJkwP4SSwkIoJTyE0iBZkfMoN3oeFcTMo5LYUKoAAGoS5lFjYgi1JIfQ8pQQWpk4i15aFIY2MKV9DJwbQ/g9RxgTQTnGUMgGKPjByXp5WAcAcgDrTfTBTD1lvIW7gPB9peANmUZDKLeCcT/gVAZAopf8y7Zm2pYXTptyImhNdiQtBRltzoymJkQmNemxVJ4CwgrSmp8QRdngLxlx0ZQGSY7VoxyOeBKg+HhEPbHR+D4khMbAAmiXdIsrTbz5z0m2Dv/vep4Ag+v0+1jY/Cuu0y8DkccZi8MbEqCnx79c4UeXjwfTt7Hm1lfKfSa/WO7TQzxf7OP9UmmXLq+UePd4s9Qr+ut45azz8FT11K5+cvMQE2JghTArp5nWEQYZ7OGyAiY9JLS7lYvdgeASFwhcaJ2Ai4xyU0CEIsIoCac9EcpPDA2mJEjy/GBKCwumjPBgyo4IobyoECqKDqGSmBCqiA2hmrhgaoyfS4sTg2lZcjAtj5tOLzbidkyUgvn9MRHkfMAcuK4wgwyyG6geqIeDB3HS3w9RyLkKHOC3cHQDmehd+P/bYf7Xwfw34vuKYDFg/imuhw6iYH99pcxdSZ70/PVNdH1OGG3MDqPVmeF0TUY4NYOQNqZFUW1aNJUlR4GwRlF+fCRlx0ZQRmwkpYHQpsREgeBGUxIUzyFvfIwWASFDWED8PDxxq6rZzVJ2zrBalCtFV37H6edqLZNzf5j/ngBAf5x+HpHnhRfs/5sB7J829KXLH0bQz5nmy8erHHP/WuvXTzxb0M1xtNS3619LvfqcqLCn/5RhPuc8kqKevXOkvGWEGc0VepkVPlAjWS4y2J3JhlnnAu4gcFkD5gR/AoP+hilozBjKYVIE5afwicfJZ8WnuJQPyQyfSzkRwZQfGUxFUXOpLDqYKmPmUm3sHGqKn0MtCXNoWdJcWhE3jV5oCgfxU7RZfp7g4XwAv99Qww3w7H8lFLsGDP8AAPD2HFQFVyAMPBVOrRsUOoH4/9YxevhXx/6/r+46GDxhBgDYqtydbKPntyygLRgT35A1n1ZngIcwANLCNWLKEUoFAFCCiKUQkQsT2EyAID0mglJBapM1idLCXZYEAIHrBFMmTHABgK6m6M5/v0L5xnNnUs7kvDuTP5j/gWz+HfrWE06SbUBC7NSOILr8bbY8VWK5fLLWO/atat9A8XxJV9+/ljm6vVXtNfCDau/cU4XWs+rRAmfrk3Hy0ASrNlDBp2G+YQWGuYWEmiuw6K7ABYJ2ILgRxHYx3vSU8WNhImEaI+ZRevg8nPYQvOqnPlM7+cGUC8mLmEsFEbOpJHIOlUfNoeqYOVQXM4uaYmdRS/wsWp44m9bET6NXwQGY+fMyCEw3azxgpp++B4hLxKkAQDkAsGqYPhtwbBYAsBwA+D2MnNeb6L0ZeuuY1g6O78uFxWDXx8BH/E9zu2oWQN6dZKO/bGqk67Pm0frMEFqDEHRp2nxqSQ2jJhDTuuRwqkyMoNKECCqKj6C82HDKQiSTEc2kNpxSohgAkbAGkbo1ABhKc7No+qQJ7AIIJ50B4JJ2ZbsJd2mT51WUzwfRD4cyAADoCwBgnF1yl3Qw9FY0wER7Mfp24fb51Prjcnm2wXLp0wavnBN1juHiSHFX3zcqfLq/V2cf9Em9T/G5Oo+z6okqpzxaKl+b7YmmSoVK+umngden8Mw9bhd1pYelPwZIQQjJgTfWGQgaGBRDXKDAnwd28aQtYf2oEKY9O2oe5USG4LSHuCk+mAoiofzw2VQYNpNKI2ZReeRMqo6aRXXRM6kpZiYtjptBKxJm0bWwAEevicYH1V2ABgAjH8Anl8NBbhMrxcleOVTP9L2JfP9FtgC/zyfndhO9Dw5w61gdANpsYB99jUx0d92KsDthIrw/wZNe3FhP27AnYENGMK1JBw9JnUeLU+bRguRQqkeEUpWoRysctRTE6lFMNoRBkM7hLZTPvCAzLoZyYCXWx42g4f527fTDTZJxusmdM7kJeSoaAKiz8vkgco6mBwCAzK3kIdlJfnpWtGawCeTXRM4Hkqj1t23yjxWmS18usFecbPQZJV4t7+L3erlPwPt1jkFfNHrXXV5pviD/uVuV77fIDyNtKKcqWnctm9FggwyyFRjYAQJiEIATEBNDX+MNucCgAULpsAwuIICl4h47By2LGUt50bri83HiWQohRTj1xeGzqCR8JlWEz6CqyBlUGzWDGqOm06KYGbQkdjqtSphB6+Km0ptLI7V2sD8BwJgMZnPOJIhbxbjPTwPAGk/NAqg7zfT32XqqmF1AzYAOAKBBltAprVkA3hVwAC7glQ2VWBQxlzalz6Xr0oJpRWoILQUZXZQMcpoEkpo4nyoSOGLRIxcGQV7MfMqBNciOZbcAfgCOcG3aBFo0o6uWZncny+4K93TjVS7l23TlEz9Hu/6ctQOIng0tU9sb/h+LrSRHbTwjkQF3tnqUmY7PNxM9V4ZuuEPSeYNy+ZuF9vqTdb7jxMtlvn7Hqr0D3qv1HvhRvU/9mWbzZfnTbqn+4zb5a7Gn5Nn5LfrsvJZe5Ribt2aMMJJDaBqhXh46ENgldDUiBN9OYHAHBL9ph1mXKVDc2hlYX5I4jipj51J59ByqgLmvjJpNVTjx1az4yOlUD8U3Rk+nhVHTaHHMNABnKq2F+d8QO5GOXRMBX60DYGwnF9BuAQCAVQDAfgMAl9Z5kTyf1Cb3IA8wVwfGWgMA7AKSe+oWgF0A50JmagDwpKMbyuimjFm0JW0WrU+bizwEiGhKMC1JCqGFiE7qEaVUx8+jSkhZHKKXuFANCMVwCUVQ/Jr0qbjE2UFDoCCbcerd+VK7qzT+3O5KdaWT3RB+jsbJ1w4gOJl2IHmrGfMg3ooSi8/QiLD23ilYDVMCi/fZBlyne1xe3mG6/M0CbwDAMV4cKfTrcrTCp9uxWq/+f6vxrjhVar0oT1ao8uvVUn4SIs9v6ULvTjfRraO5MVIHAVsC5gN82ngLFy9j4l/OvIDdAmcLuxpgYKLI0sUlBm8w/k5dIX5mLGzshUWMUT1pReIUaoSPr4+eTQ1RM6kBym+KnEZNUHxzjKH82Km0Bid/XfwU2hw7no4tnkeRAABnLMd3JoEuDmAshzgYxOPhCrVu8iG6VEryTgt9hWaRAzwMgv/egCJQoV7/l3EIAcMRAs7rqiWC6N4UD3p9QwXtSp9JW1Nn0sbU2XRtKohoylxaioikOSmYFgAEDQkhVAcg1CWEUh1cQkNyBG3BboHNkd0pCGlZ7SQL40RD2EXa3MXNv7tEUzqelY9xcPgZss/Hqdc2o3CSbqi3fjjZYrEF4xT4I5PQ6by1B0bhp5P8sJTo7C106Vql9esm78r363zHir8Ud3EcrfLteqzCq88H1Z65Z7Isf8hX5qnOw6Hyt3SrvPhsAMlPHfTTSiRRQCSWAgSZAEFkd73wMtHYpqWtU2OLwCwUQOhh1URDJgPCXxfNVLG70BTvAgI+oJ9J5xP5o620P6kPrU2CsuNmaqZ+SfQ0yBRaAcWvguKvg+I3JUym6xMn0w1x4+h4y2yKRR5grJEH0OYD/Y0wsKc+5MlFofWIAh7CGPjJYOTEt/kSXW4huR/TwaF6/9/16AFAHkCC80h8RpnQQ08DcyGIH+pBLM56Y30R3Zo+jW5InUZbUmfQBgZBymxaxSBAVHINgLA4icGAXEVqKG3Ln0pbov1pbm9F40l2VrjQX+2m9tcO3mSEdN6G+OiiKd1Xf2a6ubfqFdp+XnrJfrQxFMtcrQKc7UZYu2OY8L70dgBdfHkY/ZiO0Pee6aR+X09nmiytn9Z75xyv9hkhXqjoYn+pws/3tTLvHm+X2+J+ilXOq48MUE/v6ycfHmmSB0eZ6K1UM516xkIX3jLTyUL0lwcqtAAPFLlyjWTww+bYe5y+W08GchgC4WgBgNAQalgHzVXwm+/OIUsnCcCHY+mDWnbDFA86WDSMNiZPo+sSptG18VNpYwJOPJS+NWky7UieRDshNyeMpbdbplEclD3OWz/90w0CGGFMCXGLGJ+GzUgEHUbF75MwTAfv7ELk3EJ0wEw/hAl6GP9+40ghkTKWeIAyB5lAuAEZa6SC2Z3cl2Gh4+szaV/6ZNqVOpm2AwSbYQk2pc7SgLAudQ5tgEvYBJK4u3Aa3Zvbm5Iwr+BnkGSX+LjE7Pbq5io198jk2qKd9Halo0tby8G4TjwfOiblTPZ4Ghp9C7QZ3dEnizzo4otdyflBF/oazS9HJproiSD0QewagjxANv2UY750osI79vVyR6B4qlTxOlLczefZIke3l/Nts5AlO9t6dzf1m20Bcs1AhWviWnFk23ATvZmLsaq/doX0oC8XeNDjE3XiVNJXD5vCuulsmYHAWblhdp0nDDCAwG6it4fOGXoZlqKz8H/j7+kLmdDNRLuQf7+/aDgUPpluSoLSkybQ7uSJdGvqBNoLuTN5NJ1YPIVSAcQgrgUYJeH5xulPxUMpwmdoRir4RrixZ1EL+CISyyFuQ0OIepDoPhv9M0qfHuJcAJpAJXIBshC1gHSjFsDpYICAHspCxLAhke7JmEj70ibSzQDBjanTAYTptC1tJm3PmE0HiibRMxU9qXaqhfowN4Iy/Q3paiiTXZ9LfA1x/zc/43v9jcPCSge505Q+2EvfXcjPmE881zy46rkQzS9PZnrQ6Re60/lj3ei9GivdCQK/AVZv9TD9s/++pRddPpFAPyaYL75e5jX75TJ7X3EoX9ieKDZ7P5Fh93s21xZ0bI44ffFWT/WLTTZZx6awj55HLh2ok6iD+EHfrPAh548DqPWjnvRphRfdy9Mz+O+FPErdXV/FyieRlzKP8unYuMlgYL4wgDNVnpqFkP2MV/57vw6h/rzxi5EOa5AVZKYXarvRwawxtD89iA6kT6B7MyfQ/ZBDGaPp/aWTqHKA3hDC7F9vClE0vpKrbQfRG0SZ6fN6uG9iAYDb4RfVpzEd7EunEzAONkMniGgElegllGgElbmGFUA+gDeH0SG0jH+8OYkOZQXRQfzuu9Mn0R0gdfsyp9Pe7Cl0tLYfrYswaYmy3lbdmvVwWT1LuzvUxdIh/q6/G68upfNJZ5I9wDDzTHInGPyG8xucst4MkvdyHNa/Pd2VWn/wpY9Xm2kHrE41ngevuuHB1hx830J8/q+X26n1jXlYiGG6+Gqp16QjyP6KB3OE7XCqsD+Upvg+kWke+fJM8esfO8zq5xsssqiP3l7FZp5n7rjLhhMqK5lMTTDRx6vsdPmT/nT+1R50El21d6DY0oJflt1DJ19sNpk9s3tg38yoZb6ADyJhHbSmUyBacxntAjAMtmn/ToPZzEFwiYW2pGlztCcdq+9Hz+SPpyfzJtCTuUH0dNYo+vuyiZgFULQl0FoNAHwgAeXhDOP0u/oB7pvALd9o/U7ADMC+XgDAUZIPd6Wz6AZ+C8TwkYn6UChOjGQyiBZ5yUUh5gIggwCbQp+tj6RHM0fTI1nj6ZHsSXQ4D4qvHEJPFHhRFB46g7cvM3IP3eK5W72eVr2YdsWfPfXMam/j+/pooNf5FIfbox36xjPeesL5CC7OoU9By+whe0tnX+xN6tf96Ifddnpohgnt8Ip2YFln3BfBoTC/spV4pwHdzy+Mp4/nKRefyfca/UShb1dxW4zwRFOI7f5M4XN/kjL88BRx+ux6Rf37SpNM6qH/UvapnAqdYezci+ihF1nK0Hi5c5iZTtR40O/PeNDlL+FP91jpSKSJbhymb9rg5Uwch3M4xv8vhycAhESJWSJk414DOcqQkfxqb/87uUQjdxze4TUOH/CRSi889MH0l7yx9FL2cPp0WRD38GkxO5PThJ468gvBU2qg/OV4WDtH61O/J1EH+Dkd62Hu7Q8A/J3k4QA6n8Wj42gJQ03gDkQDm0bqG8O4IbREtwSUgp/5ZK6Vvt4QS09ljKDHAYI3awfSS9VeVI7/ZzSAOsIA7GBjSyku4tQsHnOh/oZV669bQE1YySyDjBPOVpKtJcfwvOfIteuAW925sWUFPstDkVb6akdPuvjxIDoLd3ys0kp7kay7ZrAiC9DEEge3xQsy+NCxteCDxxEbu7DXKhH9PD5AvjFNXHg0w2vY4Uw/X3F3hLDuBwjuTBD2O2PF8H3jxLlfVyhoCVPkHD89rmbTw2jkNzfK2MHHxRE+bTgdWoy9mhWD0/XdTQ5q/W4kXXwzkH7c5EuvwSTugotYOEjPsXN8HWVk2MCsJdwFL2TUyq04wXKSQxPtIgf+ABxlTHIJNzfg94/Hg6pGaPpGvQ99jFbtr9YEERodKQrvB6GblrQqwAOrwu9cDFLE5O9uhH8vwMx/EYGewHwsiHhsBADwG8lnhpCzRKEforkpVKH7ETbxPgEeB+MJI24mKeunK+C5Sjv9uj2F3qvoTS/V2qgQURFbpxG8kpaFzbRhqkcawunpYW4y3FCya3U9x+wcuk3qoh8yVy8DHzAolBaCu+xFLua9xeBebwRS61fD6Z97fehFRCRrkKbP66cXrVwla96RNNJwu67fwyDgbWcvYDdi6wO95JPjxR/3pHj0vyfZ7CP2zRHWAzHC44444XXXfDFwy0hx5oeFinq0UeF+QA3JLjbf19jEyf82zG0JM3fiMhC47r4YpngfHsz79Tb6/ZHu5PwOLgJm6qOFXegRJGC2DeHv0WvuDAhsq9A+bLRReJnnrwOLLc9sN+G/M7Nnt8InPYIF/7ZlPojZqu7U3F/P3PFJzdcGQ3AqoPyNIxXagxP6OMjfCQxH/hP7gc9V2tAWPpWcTiepL80gWW+i08kKfRTKC6QVJIXwPgGoVYOZXAFIeMicDj9Y6U3/vL0XbQtHhRR99sx1mHQyKCcwMF3i0B86N9K4/o0t2AQjRzHVsKYcPYUa3UtJxvvW3BWe0YMh+FxrHCB18O3f96OfDnehl0vg34chAsNnKzBW2c01IjBYDTnUrrfx9zUIYz/DyjAQ+FKMZ/IBgLsC5J0jxR93xSu9+NCLG7gtHF3B2yOE5/Yo0XP5UPHLl5WK+mKdSbrq/z2MTF+A4bd6G2BgE+eqwE02dvKyqeFTjoWLdA1Oz+1QwDtwEWef7Uryl9l06fUg+nFHfzqeZKUHx/OeXkVrwuAuHCRgtNASfXiaIhkY/CHZpDPA+HIHRns8m0V+aHzaudqH10w+MTD7lQP0sbC1UOBNYPV3BHG3D/rhkO79CuNhf2D1zflmGzmPIg3sVEl9M4EuLwYoMk30A6KB48gKPjtNTxjdDEuwEa4M8wFUj5+LDint9yRwhNFddzecKWRQcrZwrhtY5xh/dwGWI6RIozzNz4dzKWg706qPqwCyvXBRL6eY6YutPnThOPjJdwPo5/u96XitmQ7AAiwZoM898vPgZpepHWG365BK6EX28NAHeVzCHIPTzVwZPIS28Mu7u8ltQ8X5W6KVHnsihE1ci5nAbZDNIcLjunDh3xQofvy4UKhPlykaktxz/X4uxuoGhr4GYRlimD7NPSDbFaxn4XgfjeTZuk3ww0/OAXFc6ENn7u9O6rf9qfXznnTqnj640tyXXsB+4v1Q2A0AzHUw2cuH6cudeMcPl3J55p9PIT+0Yl7/gteKvvrprO+vn1Rm+tzTx9tAuf/vgUn6SnhW/qeI9Zntt1YovCGE1HeTiOdC5Af5dHkTEiZlJjqTDJDg+04gM3gE/98hkMI7EDncABe2Bu+lBb+jlq0Bu5he+sBougFWFq6aphn/BvKokTU+qczWa4wWdQ7J2F09CEL6OpZVfbPFn8696E/qP7rQ5ZO+8oc9dvlStpm2w69XoxTPP4e5GB8s3lrKa2t5YGeInmdpV3p3I9nGyTVD2nMHDAJeobs/HbOBN3WX+Cxnrw9Xul8fKzzEzmhh3orJoM1oD88fIXzhN787maHIx/MVLi5oP4STEQ63bJQrhdvN3AEEthQD9OQE+yDNF8HsMCGRUUaHLu/lXwwlbRuFfTuIIj6psNC5R33J+cNocp6fQurJYDp3y2D6ociGWT5FS9rwjB4TOF7UwEyed/dwynajIdzDjyke2gnQ7Bmjd/Y8MFHf+MWr307C7H+Jk3+K5+IK0Am0DMq+DaNhH2VjOBSjYV9UYlwKW0MWIzlUiBUq+L4f0CT6N1iC18AZnsB7uBc/8zaA6ib8ji3D9MaRtUN1wDFZZH7DeQZuumC5JlAvPPF6Gp4u3ov39QgSMUfRjPrdShtdeqE/yZ9HozAzgVpP9qUf13vRqyChtyH64DwEnpM2isaRB4d8zA84GhiqF+EkZ1t7dlJ6F8uVRTiHqSNzyBacrcA90OvFrX7qNYPE6Q1zhf8GDAOJjZHCdG2IMDdjUnTJOMVeOkh8djRSkUfLFU35vkb+2dvUIVekJs26hWgHgk3PAg711oEwjhc3dtFz6eEGQ+cwhef4l6BMuQMJpkeD0JUDhv3LzQ66/OZwUn+ZixMxjy6+NodO7Qqkb+q86RPsLXoXJ/OtWbpijkDBT4LVPz5Jz+5xIueF6XrbN0bA6KP53P6NU4+e/0sYiFArsCGkBa/bUQl8CJNBXxdhTdxlon80UeujCI+2W6htiUISE8KXYSp/i0XcDGtwEj/rr/h9z+PnHwaw2G0xILiFfP94vYjEwtvFHoDbeGy8voz6jUi8hzor/XRjDzp3BMr+ehqpv46hi+8GgkcE0MkmGz0NgnwTTnpzoF5yzzZmEHgeA/saJXMGrrcw3+JIoZ9eeNMU7yq6OYx0sXtTjlE70MDAOmKrzYm3xwpN8uw1nmrjAPHrmrnCb8sETAYt8BSma3oKU/U8YS6ZIjzyB4oXHpmuOL9GW3iA/oO1KpSXWynS7gYGh1H1c2Wv+M0xOvsYCR6O7Tk9zB+ESdFUg+lypo79GScrmBByyMhLGvfBOjyMB/oqlPd5i5VO3+NPrR/MJnk2Cz18BST/nkfqM8mk3hJEF1cjhq/xpDNI0JxBLH8Oue/zyNZdwN+1084LoRfyXiBBtE2htn2Qx9AKdhxp4NObiNSLJM9gPPyYg5z4d3k7vg8dQm3gBFSF/7cIYMDPOoe5wV8xWfwDLMnXmB7+HFblc0wSfQNC+WORlX5d5qAzO/vTH4/PoNZ3Ad4fY0j9eQy1/n0anX1gOH21ypvexM95DADdPUzPnnKTagXIHLfcGXcUcBJLIvKRiA40QjfISKf31lPpWoLI35jUdpj+rHT3iqLN6MHw1i2BVqR7p9mqfpWpqHBL3y+fLuxLMRCsLYdK4iURc4WpebqwVo9SNm0dqTj/uNZDjvW8oumTy5bkKld2RpqRw9Yqf/4WHaVcEOL0LpCrfRj+UO01e1+dCc8zljrGGUUb9vHV/XSfvnYwm148uPEmOo5EzVf5qEmsd9Cle4aQ+vJYkp8koq0LJ/n8ehDMtSS/wKDH+3XU+mYRXXotiy69mowu2HhqPR5DzveiSMX3t31fhIrYRmqTPxO2RCEdjB1BZ1ET+C6O6MOZmBqepkUG6vMzSX02lOTz+H9eziN6swErZpagorYSBA0j5b/mk/p7pbZxvPXtELr02DD6Zfsg+rTGRsdijWhijAl8xKS1mnNIWYnPlYfPmNxD7zbiqMdVR0HkoA3jcoJskJEh7WUQum7W9n4L6tyC17ntrr330tATfx93Cw/0FOrvt3ipL84RTmQGX2+ZITyWgfu17whaaBemqlBhCe8hZhT1EJfPtnipRSMs+l4g058bFtpRZoi9w/e4LIIGBK4EMklhssJA0NKaRmgCIPDdPHKyERZxrBpmWAaO5V1DHexfednjjtF6PI9kFb2CLp63YJ7/jpDsW5yuXxtx8rf40cW7R5LzSAjJ9yrb1C+3tMmf9rchS4UxsHdA+r4jXgrVRuchl9pAAdvaqLVN+7v8HdtCfiJq/ZDa/niN5G+PgpvsJuenawCqMmo7mkTyMQDjlkC6uMyLfkPu4OsYhf4WorudJ3C67wkScscIIa9FQQmhrjZZXGTUFBC9SEQCck5XPe+BAyDHOfSkl9tp1/x7L1dZ3dVfYWl3w1pzjc1d6Z26rl1LvKzG97i6huL6ClW9s6u6b6xoLRoitiyeIaz5MVgSxV8jAIAmSNF4YQrpK7zj/MWXx8IU9aFiL+3iKPd1sa5f5g4EV+OCvaPhQwMB+yj+AAwE/kC9dNeghSwDbdrMoeYeGPk8g8jmj13ETCPjGB7QAYZcY/Ejb/PmE8XJGiSt6P4gfQ3Mq1DAB4jjf4jjkA7hTrnSJheY22iNtY12eLTRHZ5t9BDkiL2NjnVta/t4MNFP5W306dg29XVfUp/zIHoEPOAuuIgbMDu4Em4ECyQvghOcy1LoF5j7r+DXWeGvzdTJ4T34/beN1qOEa4fqSq9C+rgAvjwDNQSEqjKyuzZcI5ES18bsggwTP8JIgw80TjtbynZiZzB5raHG1LGk64r2e3HFME57F7H7II7V0Av//7tTHOrlhTa1ure4XDFKJC3AUDCvBurYEsqr4rAuJthHWIDUg7hUyfnLGi8VbF+alSv3BVvcUOYhOlmEKwnIFdbA4AcakWGkc9KCkc8hzTAjBTzOuOdnihsQ2CqwyeQQi2NhbvFm5s35Azx4LWmzB4B4EGB4DuTwTd4QFq4z/wvZmInHUKQKn04ggXQdOMEOyB3482GlTT0g2tSb8feN+DtWx6s1AE8x5wuQNML//3kkuoYRkbw8Xd82enC8vn6Ot4csc8sWFhqDpFw3iNTLx7ijVyfAE4zTrineOPGBxonvYyj+ihNv7hi88e40e+GueGsnhV/RRu6yAsZB/GJNL/VvwYqKLqezZWNE/wpshUEWsQMAvC0syiqUwu7CjFXr2en+4vI/6zzUiikeugVwuzfAHQjubsHm1gDq3YkbuFsDrv33MCyCBgRbBxDYNXCK1AWE6UbGjBMqHEVwIogTRWwRSoz4unkgp6IRDg7TQ8H7cTqfB3PHlBO9B7L2KdzED/DLp7Ah4w+Qw0sAQ2szlL2ew0L8uR5AQZr0dJaudO2kz9P/fx4ZZyuzZ7TWL6ArfrDWOaRZJI71XVvFXYpHMkhLy7qb+eF2/fMNMiqfrPhe1g7F+xvdU+6n3m48T0/RcdCuUHqnTW2dh0hcAIgdaJLO1V3VVQOEE+vznysZK2zV04Q5xH1TqBsQRLBZeIR2FW/sCzK1fr26izoIb9hschtS7AwC5UoQ2DrxAncQ+BlA6ObuFjx0M2i4BXIHQZBRB+A+g1ku0thdzwpyq1eOCwj99akejs1ZSVzVw6Szlts/PFVfEfM2FPoxwsNvEGH8gqjhPOL+31Dh+xbLsT9BjeBdmPdXYd6fmsKdQ3oOAqtiJPIOvC1E64vgpJYrY8nJHwYkZ/hCDcWzf8f7lePdFD/US69wDjQqfb2NaiAfBH/zlYp3HRpXR7X7yXebvfyXyzqvsABGBPDO8q7yaLBZRW3nYt5wMa/aR5jnmK+ifNeXN2RuPxE1zyEuflnoqb5W7y/ZFVhNf/4lls4gEJ0IogsE5g5ecEWkYBDEvkbYOMhoehhq7yg+cao5yJVuNrp92C1wTZwVkGRk4dgqcNaNG1hbjKwbV/a4GeJ2LVZHNnIKbwqBWccJ/wQn/QQsxEuIMPjCCG4L46QNzwhykom5BncIYVpI6xLigVGtdoHfidF5iuzWkQpmcw+QXnHqhxmmfoBB7voYpeAeRn+Av55Qu/LUu7XSewq3cTvxp0Ucf7rEoxMQyAM/f+VMq/x9kU0WBQjnjG5iZ0EPYRoh/o3yXV89FWFGe/XTFX2E+scSH7k/q4emVLNyVRCo1k4gsLlzAqXDCrg4AX/wbjoI+IHouQMjtcxlUy6jBnJm0UtPMY8yumAmGEDgEjXn3ee6Ciouq9BTP5083sV1AS6uLDG4At8PyF0/9yAr9wj8+bMw7w9P1reD32xkGzlGbxmk5/451cwsnhtDeEtYYoDe8BLBNXZ2TcxTuujWiSuZE/i+IqPEzSefT/0ABjeDnD+j0fbWzejk9TPG61wn31txM/tXI3riqpd3XG01L1mh/Ng+ZlwQ0VXuHKlw9HGi2i68g3Tl/8cA4FsFQWAGB+Ey6RaEMxdW9pG7UvtpQ4idQXAFMfwXpPCqrkC3BNppCNCBQL2MZoq+Ru38Cotg10uurqSSyzW4rAKfxig3ILBF4KIUm22e+eMULQNhKxS9a5S+D4BTyJtw2lcO1lfCIUumxevcDIO+QF4Ph0uW0BXEUYm/rvi5huKn+uozCOP1jJ0cae8w+YFuyu9lED0GenfD37dn8tyV/6/N/r80+VcBAbGlTurrIf+xfpB8Yiqu6fMX58J9xGS7+P/45YBgucB81N9PL+xvUs+sCZQHSsbArygETkCmqyjfaqDWU1ydC7hHB66aApvC7gYQrgCBR4c1GGRYA66/jzT6/zW34OIHfnpFbr6/bpoZBCmGNWCfzW3hXHFcBCAsH6zn87mGsA4nHrlxrcmVCz3l+qmnXJh6DuWQtNHaw/EzJXiR/JPy8T7GuGr/BpEN1P29xms0lm8kxdqZvp5C1z5/Z8J3tRjfcvU7m65QOlSlLZrkPUHrogbKP26bIf8yy6LO9BWXIhxKnkP8//zCxnBlyjgRPNpLnK7to6inWobTkWtCaCiWEGFOna6mfBcA2pNEio5wVzesVqgwGUUl12CDpaOHjglSLzd3MMjosGEAsBXQ3IFRX+c2sOkGALj8yv0EfFLZEnDJOK2nztRLuUeAM4xQNBYlakMgm7lgYwCA/73OAEAhV/p6aqVfiWZTifKzRK+BBLi09vAZfC2dQ6/xc7cSzyNwIwiDc4juujQAtLN9jz8DQGsINRkAMJ6R3Tg0nsbzs/57AJC7sNl34GDuSRksz+2aJo9MMqsz/ZRW3J+wYch/xuT/WxDgBwR5i3mj7eL78t6K/LxqMP28B9s6Y4ej3Ggid5LiAkCn09+heLeKoquQ5Cov9zAU77IA/Y2GhkDDBQwzlP+n029wAU353fScARM1jRj21pXP3c18ypfx7sDBuvK5LLuNiaIBhBWBekhZh+8th+/HVm2ZjSxeipsVYBfAjSDTjA6lq4FgqJfOX1zkr3enWN8V8rksgI9rfM7dCog/WwDzvzT5CkX19aJ3NoTSr9dNlDvRHjbNIVqn+Ck7JtmFVfxXfOGXK3jwgTB7J8JBeO6aYKFTy8fSN9fPozWpg2mcn4WBQK4FBjbj1Bup4XaFu4pG3dx8f0/D7Pc1wqQBbr5/mGFetfYpN8XzqWdFsEKYlHErGPt99tvcL8B+nP35Es4ccqEJSr4Rvn8vfP9BEMFDiAqeRJj4OFfwwP4fwuuBcXrZF/kEuRadwWho0baklAEMWKKtZfcSdWuguZrO7oDnEjR3YIDVPe5vz/YZ7sBI+lAXwyU6jGflsgadeUDnXQF8vUw/m0nWhwyk41tj6I9dc+n1+d5U0kuBlVI+x7NJ7W9yS/T8V30FWoQNJnAJPvTnuF9I3QS0vZfkkL+t6S+/2TRAPrl6pFyXN0RWzfGXeUE+MnOkXaYN9ZTJgz1lfKCnjAu0yvhBFpkcaJEpQ60ydZiF0odaKHOombIgecPNVIgScekIE1WONFHtWBPVoRjUON5MC9FDsGSSiVZg0vVa9ARuRBfsVsiNs0x0y1yMQKON6i7IwVATHQo301PRFno5wUrH0+30YSGGJGp60U+L+tHvKwfT+S2j6cKeuXT+hvF0ZtVA+qWpN31f5S+/KvGVH+d5y3fTveRbKR7ylUSrfDbGIg/Nt8h7Qyxy71yz3DXbLLdOM9H1U/Ee8F7WQpZPMtNiDGC04D0uGGeiBvTk14J9V45QZBmkeBiaNrFwo2CoSeYNM0t8VpkaaKaUQAuGRywyARI30CKjB1hkeH+rnD/AKsP4tZ9VhvTzkMEDPGVKUBfZFBco9zRMlG9smC7P7Q6Wvy4ZI5+eYkILvyL5zsfJDmXjVJvo4in+N37xDx8GdM2yiXDU+49MsIvLWYgzNw0W6hMTFfXjTF/11OLB6rn1Y+QfW0fL81uHyT+2DZDnsav+j+095IUdPeTl3QHSeWdP6dzfWzrv6o0Nlr0wutSbnPfj9RA6hh5Fl8zjeH2qL6pyg8j5/GBU6YaR869BKN9OIefx6eQ8MR2XPKAE+/5MTLyEoUU9klo/jaLWzxLQPJmDXrpKqf7aLOnMRkl/PCDlpde0Yg85v0Yp+J+oBV3C62nI9/i3j9Af8CK+ZzcuE1spL5+ql5d/KVMv/7NIbf1Hger8Lkuq36ZL9esEqX4UItUTk6R6bAypr0OOjiLna6Ol+soQqb48lOQLg0g+i/f9OFq7Husp1UfxGR/uJVsf7C1b74cc7Cdb0Ql1+Y4+dGlvTwj+vAd/3tWfLt3Yny7e0E+yXNjSR57f0Ede2NhfXlg3WJ5eHCi/zO+qvoqkzu6RQq3oqzjRKd2KZpEvQ73F5jCr0gflYkX8n/wa5yWU+XaEi71EEQjZjfDHx2Y4xC+QS7AQrfMhYX7CiQZOZxReY/Ga5C+c6d2FE/MDzpweQs01pLgXPhTyDmDj6oL+wokWLHUJBO3QKkyyimZJdftwoe7Ch799tFDvHivUB8cJ9cmJQn1pulCx7FE9GSrUzyKF+kO8UH9LF85zRaL1Up1wti6FbFLUy7tNztb9ZmfrIauz9UiA6nzCW1XvsajyFpMqtyhOdaVovdwoWs+XCOdvWaL1+yTRip/XikKTE5lCJ+oMTgyROJ+eLNSHJwgVBSF13xjhvHWUcKJjyIn5QhXLmCXyCSr4htqM9CvciLOmr3DClTjRV+jM6ylUfHYVz0BN6SbUJEgiJNn1Z3+hxkNQlFPxvFi05xbmK1rnIDk3q4v4YW538XRQH7Eqo7uYji5ia5//04q/2leAQyiTvYUCX+4Bv9x93GgxLH6cCKoYIqajTXsW+vhm1/QRM/MCxTRM60zNHy+mV0xE+XmcmFExRsysGm+a3TRBmbtwkhK8eJJ53tLJlvAVU8zRq6daY66bbo3dPNMSv2OOJenmuZbkO+Zb0/ZHWLIeiLDmHY62Fj4bby1+Mcmj8vU0z8a3Mz1aTubYFn9S4Lns21Lbmp+qvLaerve659wC2ysXFnm8e7nF+pHzGvMXcoX5B3WZ+R/qEvO3zmbLx5cWWF7+o97y8O9Vlv3/LLPu/rbIsunzPMuKDzIt17ydYmk5mmhuejHBUvdMnLX+8RhrE3r0q+8NtxTdGWrOuy3Ykn3TbHP65hnmpPXTzHFrp5pj4KoiFwYpEU1jlIiGMUpU7WglqmKUEloxVswpmChmovo6s3SUmNnQR8xq6KvMbuxjmlPfV5mT3U+ZVTQA/62vEpLZQwlN7qXMze6rzMCsf1DmQNE3dbTwHA2Fj/MUynRwM7v4b6D8/+xXP7c/czNKCipSOdOEqX6mMNehLa15kvBYOl3YVswR9tWzhWP9XNFl/WyT3/WhZv9t883dboHsibL0uCPas9f+OFufBxNtAx5O8Qx8OtU29IVM26hXczzGH8uzTTlR5DXzgzL7vE+q7VFf1nsnfN9oz/15oVfjqWbb2rMttm3nl3juurDUc9+Fazzvwp/3nF1su/70Is8lvyyw1v7Q4FH8TZ01/Ytqa8ynZdbQvxV6zD2ea535erZl6ssZ1gnPp1rHP5lkHXMo3mP4vbEegXdHWQbsDvfosyvU1GN7qPC/fpboum626LJ6hnDgs3gvmyK8micIW90E4VkUJiyoKZjqvYQJ7lNTXsC/UaCv63Dp8m+/9//ar4FGTwLfXVQ/Dp1J2GO/GN1JLdOFx7o5wrYlWHitCxVeW+cL+03zhP22cOF9V7Tw2Z8gfO9LtHR5MNne9fFUn+7PZdp7Hsnx6v1qnq3/G4W2wLdL7MNPlnuP/qjKe/wXtd4Tv2mwT/txodfcXxZ5zf+t2Svyt8VeMb+1eEb/3GyL/GmRV/g/mmyh39Xb5n5d6zn90yrPoL+XW0edLPUYdrzAY8jreZ6BL+fYBvwly9bv6XSP3o+mWHs+mGAOuCfe7H9njPDbHSF8b5ovfG4IFfb1s4XXBrzvTcHCcyna7BZNFdb6ecJSPEOYuPFmoH5q/+frT/UHozElH5cZNaNdqWmKsKyZKKybpgqPjWhh3ga5OVx43obF1nfECq874oX9QDxW3KYrPo9mevs+kebwey7b4f9SrnfA0UJ7L6y963ei3DHwZJXv4L/XOYZ+Vu8Y/k2j96hvm+zjvmuyj9fFi1/HfdtoH/tNvX3Ml3W2kZ9Vewz9qNJz0N/KbP1PYHvam0X2Xq/l2nu8mG0PeD7L0u3JVFPXR1KE34OJwveeWOHYFyl8bg4DOEOE1+ZQABYt9tjC7rEpCCDGKv6aKGEuQ8vdSlzN1/P/xRP8X/il+bTa0cJUGwmXgAd3DdzCppnCchNeN0cK6zZsNr8BQLgdgyx3xQgbrIDX3QDC/anC57FUk+PpDN8uR3J9/V7Id3Q7WugdcKzU3uutSq++71Z69/+gxj7go1qvQZ/U2QZ/WuM55JMaz8Ef13kG4jXw4xrPQR/VeGJTmq3/+5W2fifKvPq8XWrveazYO+CvhT7dXsi1d30+2+T3VIbwfTRNOB6IFz734t4d/G6vvXgfO1nxGLHbNF9Yd0wW1hvRcLkUIK6dL8zcebMCzbdJ/6P8/xwIYrlJFfXq+mHwlXAJTXHCjNOu3WxygwGEnWHCemec8NiHh343tp1j2bXXoTRhfzxd8X4q3ep4LreL7wv5XfxeLXL4Hy326X6szDvgOJZgHK+w93q7wqv3u1VevU9WefV6v9Le690ye6/3KjTpyXKCv7fEp/ub+H9fLeni90Kepcsz2SbHkxigfTwdFgfT1PfHCtvt+L17ILdHA5ShmK6aKyw3Rwjz7bHCvAR38lVNh8nvI0z5nE7/z1bh/uerwx2EGB3L9XiASNWaMMRquhVguBHWYTesw3aMte2G7I0AEBIw5ZwibA+nCa/HsP/46QzF/ky2j89fCnx9Xiz28X2pxKfLqyW+fq9jKdbrpY6ub5T7dn2z2OH/RqnD/1iZT9e38Xf+tzfKfLu+XqQBp8srhTbHi3mKz/O4Yu0pgOuhDOHFk9T3JQnPffidd8wT1lswW7kD72FXkjDjvZluAmiX4rRzo+04q95wO/D/Nqb+3+mriwGEIgj70G2DccsZ/OmefFx2VSBMO3HitsFF3BKMW08ShfWBVFiDbIAhS9gOMRigtKcyFfuRbIs3K/PVPMXxaoGX47VCD8crBVbH0XxPx18LTI7X8vHv+fj3fDv2Jnv6PJ8vvJ/OFvYnsoTXo+nCdjBb2B6PF54PJgmPvTDzN+J3bgJZvR7kbl+hMG1qEqY1XfCK9zna7bR7/jdX/P8CCgTbY8XMl/UAAAAASUVORK5CYII=" alt="House Party Protocol">
+    <div>
+      <p class="eyebrow" id="eyebrow">Lane Board</p>
+      <h1 data-t="title">Lane Board</h1>
+      <p class="sub" id="updated">…</p>
+    </div>
+    <div class="actions">
+      <button class="btn" type="button" data-action="new-spec"><span class="g" aria-hidden="true">+</span><span data-t="newSpec">New spec</span></button>
+      <button class="btn" type="button" data-action="wave" id="wave-button"><span class="g" aria-hidden="true">▶</span><span data-t="startWave">Start a wave</span></button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="wrap wide">
+    <nav class="scope" id="scope" aria-label="Scope" hidden></nav>
+    <div class="metrics" id="metrics" aria-label="Metrics"></div>
+    <div class="warnings" id="warnings" role="status" hidden></div>
+
+    <section class="block" aria-labelledby="backlog-title">
+      <div class="block-head">
+        <div>
+          <h2 id="backlog-title"><span data-t="backlog">Backlog</span><span class="version" id="backlog-count">0</span></h2>
+          <p class="lead" id="backlog-lead"></p>
+        </div>
+        <div class="seg" role="group" aria-label="Filter">
+          <button type="button" data-filter="open" aria-pressed="true" data-t="open">Open</button>
+          <button type="button" data-filter="all" aria-pressed="false" data-t="all">All</button>
+        </div>
+      </div>
+      <div id="backlog"></div>
+      <div class="dep-waves" id="dep-waves"></div>
+      <div class="wave-list" id="waves"></div>
+    </section>
+
+    <section class="block" aria-labelledby="board-title">
+      <div class="block-head">
+        <div>
+          <h2 id="board-title"><span data-t="board">Board</span><span class="version" id="board-count">0</span></h2>
+          <p class="lead" data-t="boardLead">Every move is an append-only event written by lane_board.py. Maker ≠ checker is enforced in code.</p>
+        </div>
+      </div>
+      <div id="board-empty"></div>
+      <div class="board-scroll" tabindex="0" aria-label="Board columns"><div class="board" id="board"></div></div>
+    </section>
+
+    <section class="block lower" aria-label="Activity">
+      <div class="panel"><div class="panel-head"><h3 data-t="activity">Activity</h3><span class="count" id="activity-count"></span></div><div class="rows" id="activity"></div></div>
+      <div class="stack">
+        <div class="panel"><div class="panel-head"><h3 data-t="lanes">Lanes</h3><span class="count" id="lanes-count"></span></div><div class="rows" id="lanes"></div></div>
+        <div class="panel"><div class="panel-head"><h3 data-t="competitions">Competitions</h3><span class="count" id="competitions-count"></span></div><div class="rows" id="competitions"></div></div>
+        <div class="panel"><div class="panel-head"><h3 data-t="effects">Owed to a lane</h3><span class="count" id="effects-count"></span></div><div class="rows" id="effects"></div></div>
+      </div>
+    </section>
+
+    <section class="block lower" aria-label="Mailbox and sessions">
+      <div class="panel"><div class="panel-head"><h3 data-t="mailbox">Mailbox</h3><span class="count" id="mailbox-count"></span></div>
+        <p class="hint" id="mailbox-lead" style="margin:10px 16px 0"></p><div class="rows" id="mailbox-lanes"></div><div class="rows" id="mailbox"></div></div>
+      <div class="stack">
+        <div class="panel"><div class="panel-head"><h3 data-t="sessions">Sessions</h3><span class="count" id="sessions-count"></span></div><div class="rows" id="sessions"></div></div>
+        <div class="panel"><div class="panel-head"><h3 data-t="deliveries">Delivered</h3><span class="count" id="deliveries-count"></span></div><div class="rows" id="deliveries"></div></div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer class="site">
+  <div class="wrap wide">
+    <p class="five">AGENTS · EVIDENCE · MEMORY · PROTOCOL · CONTINUITY</p>
+    <p data-t="signature">Operate coding agents under evidence, not trust.</p>
+  </div>
+</footer>
+
+<!-- New spec -->
+<dialog id="spec-dialog" aria-labelledby="spec-title">
+  <form method="dialog" data-form="spec">
+    <h2 id="spec-title" data-t="newSpec">New spec</h2>
+    <p class="lead" id="spec-lead"></p>
+    <div class="field"><label for="spec-worktree" data-t="projectLabel">Project · worktree</label><select id="spec-worktree"></select></div>
+    <div class="grid2">
+      <div class="field"><label for="spec-id">Id</label><input type="text" id="spec-id" required pattern="[A-Za-z0-9][A-Za-z0-9._-]*" placeholder="SPEC-1" autocomplete="off"></div>
+      <div class="field"><label for="spec-name" data-t="fTitle">Title</label><input type="text" id="spec-name" required autocomplete="off"></div>
+    </div>
+    <div class="field"><label for="spec-plan" data-t="fPlan">Plan</label><input type="text" id="spec-plan" placeholder="specs/SPEC-1.md" autocomplete="off"><span class="hint" data-t="fPlanHint">Relative to docs/plans/execution/.</span>
+      <label class="hint"><input type="checkbox" id="spec-stub" checked> <span data-t="fStub">Create a stub plan if the file does not exist</span></label></div>
+    <div class="field"><label for="spec-acceptance" data-t="fAcceptance">Acceptance criteria — one per line</label><textarea id="spec-acceptance" required></textarea><span class="hint" data-t="fAcceptanceHint">A test cites each criterion as [spec: ID/criterion].</span></div>
+    <div class="field"><span class="label" data-t="fDepends">Depends on</span><div class="checks" id="spec-depends"></div></div>
+    <div class="grid3">
+      <div class="field"><label for="spec-tier" data-t="fTier">Tier</label><select id="spec-tier"><option value="economy">economy</option><option value="balanced" selected>balanced</option><option value="frontier">frontier</option></select></div>
+      <div class="field"><label for="spec-mode" data-t="fMode">Suggested mode</label><select id="spec-mode"><option value="solo">solo</option><option value="overnight">overnight</option><option value="parallel">parallel</option></select></div>
+      <div class="field"><label for="spec-priority" data-t="fPriority">Priority</label><input type="number" id="spec-priority" value="0" step="1"></div>
+    </div>
+    <p class="hint" data-cli></p>
+    <p class="status-line" role="status"></p>
+    <div class="dialog-actions"><button class="btn ghost" type="button" data-close data-t="cancel">Cancel</button><button class="btn primary" type="submit" data-t="fSubmit">Add to backlog</button></div>
+  </form>
+</dialog>
+
+<!-- Start a wave -->
+<dialog id="wave-dialog" aria-labelledby="wave-title">
+  <form method="dialog" data-form="wave">
+    <h2 id="wave-title" data-t="startWave">Start a wave</h2>
+    <p class="lead" data-t="waveLead">Preflight, a write-once request in .claude/lanes/waves/, then a planner session. No executor starts before the manifest.</p>
+    <div class="field"><label for="wave-worktree" data-t="projectLabel">Project · worktree</label><select id="wave-worktree"></select></div>
+    <div class="field"><span class="label" data-t="waveSpecs">Specs in this wave</span><div class="checks" id="wave-specs"></div></div>
+    <fieldset class="field"><legend data-t="waveMode">Mode</legend><div class="choices" id="wave-modes"></div></fieldset>
+    <div class="field"><label for="wave-agent" data-t="plannerAgent">Planner agent</label><select id="wave-agent"></select></div>
+    <fieldset class="field"><legend data-t="whereRuns">Where it runs</legend><div class="choices" data-launchers></div></fieldset>
+    <p class="hint" data-cli></p>
+    <p class="status-line" role="status"></p>
+    <div class="result" hidden></div>
+    <div class="dialog-actions"><button class="btn ghost" type="button" data-close data-t="close">Close</button><button class="btn primary" type="submit" data-t="waveSubmit">Create the wave and start the planner</button></div>
+  </form>
+</dialog>
+
+<!-- Fix / review hand-off -->
+<dialog id="handoff-dialog" aria-labelledby="handoff-title">
+  <form method="dialog" data-form="handoff">
+    <h2 id="handoff-title"></h2>
+    <p class="lead" id="handoff-lead"></p>
+    <pre class="evidence" id="handoff-evidence" hidden></pre>
+    <div class="tabs" role="tablist">
+      <button type="button" role="tab" data-tab="new" aria-selected="true" id="tab-new"></button>
+      <button type="button" role="tab" data-tab="live" aria-selected="false" id="tab-live"></button>
+    </div>
+    <div data-pane="new" class="field" style="gap:14px">
+      <div class="field"><label for="handoff-agent" id="handoff-agent-label"></label><select id="handoff-agent"></select></div>
+      <fieldset class="field"><legend data-t="whereRuns">Where it runs</legend><div class="choices" data-launchers></div></fieldset>
+    </div>
+    <div data-pane="live" class="field" hidden><label for="handoff-lane" id="handoff-lane-label"></label><select id="handoff-lane"></select><span class="hint" id="handoff-lane-hint"></span></div>
+    <p class="hint" data-cli></p>
+    <p class="status-line" role="status"></p>
+    <div class="result" hidden></div>
+    <div class="dialog-actions"><button class="btn ghost" type="button" data-close data-t="close">Close</button><button class="btn primary" type="submit" id="handoff-submit"></button></div>
+  </form>
+</dialog>
+
+<!-- Approve a red merge -->
+<dialog id="approve-dialog" aria-labelledby="approve-title">
+  <form method="dialog" data-form="approve">
+    <h2 id="approve-title" data-t="approveTitle">Approve the merge</h2>
+    <p class="lead" id="approve-lead"></p>
+    <div class="brief" id="approve-brief" hidden></div>
+    <p class="hint" data-cli></p>
+    <p class="status-line" role="status"></p>
+    <div class="dialog-actions"><button class="btn ghost" type="button" data-close data-t="cancel">Cancel</button><button class="btn primary" type="submit" data-t="approveSubmit">Record my approval</button></div>
+  </form>
+</dialog>
+
+<!-- Record a measured merge -->
+<dialog id="merged-dialog" aria-labelledby="merged-title">
+  <form method="dialog" data-form="merged">
+    <h2 id="merged-title" data-t="mergedTitle">Record the merge</h2>
+    <p class="lead" id="merged-lead"></p>
+    <div class="grid2">
+      <div class="field"><label for="merged-branch" data-t="branch">Branch</label><input type="text" id="merged-branch" required autocomplete="off"></div>
+      <div class="field"><label for="merged-target" data-t="target">Target</label><input type="text" id="merged-target" value="HEAD" autocomplete="off"></div>
+    </div>
+    <p class="hint" data-cli></p>
+    <p class="status-line" role="status"></p>
+    <div class="dialog-actions"><button class="btn ghost" type="button" data-close data-t="cancel">Cancel</button><button class="btn primary" type="submit" data-t="mergedSubmit">Measure and record</button></div>
+  </form>
+</dialog>
+
+<!-- Ask for a decision brief: an agent runs only when the operator confirms it here -->
+<dialog id="brief-dialog" aria-labelledby="brief-title">
+  <form method="dialog" data-form="brief">
+    <h2 id="brief-title" data-t="briefConfirmTitle">Ask for a decision brief</h2>
+    <p class="lead" id="brief-lead"></p>
+    <p class="hint" data-cli></p>
+    <p class="status-line" role="status"></p>
+    <div class="dialog-actions"><button class="btn ghost" type="button" data-close data-t="cancel">Cancel</button><button class="btn primary" type="submit" data-t="briefSubmit">Start the brief</button></div>
+  </form>
+</dialog>
+
+<!-- A session this panel started: start it again, or stop it -->
+<dialog id="session-dialog" aria-labelledby="session-title">
+  <form method="dialog" data-form="session">
+    <h2 id="session-title"></h2>
+    <p class="lead" id="session-lead"></p>
+    <fieldset class="field" id="session-launchers"><legend data-t="whereRuns">Where it runs</legend><div class="choices" data-launchers></div></fieldset>
+    <p class="hint" data-cli></p>
+    <p class="status-line" role="status"></p>
+    <div class="result" hidden></div>
+    <div class="dialog-actions"><button class="btn ghost" type="button" data-close data-t="close">Close</button><button class="btn primary" type="submit" id="session-submit"></button></div>
+  </form>
+</dialog>
+
+<!-- Integration report -->
+<dialog id="report-dialog" aria-labelledby="report-title">
+  <form method="dialog" data-form="report">
+    <h2 id="report-title" data-t="reportTitle">Integration report</h2>
+    <p class="lead" data-t="reportLead">A question that is answered, not a button that acts: nothing here merges, and the report says what it did not check.</p>
+    <div class="grid2">
+      <div class="field"><label for="report-branch" data-t="branch">Branch</label><input type="text" id="report-branch" required autocomplete="off"></div>
+      <div class="field"><label for="report-target" data-t="target">Target</label><input type="text" id="report-target" value="HEAD" autocomplete="off"></div>
+    </div>
+    <label class="hint"><input type="checkbox" id="report-measure"> <span id="report-measure-label"></span></label>
+    <p class="hint" data-cli></p>
+    <p class="status-line" role="status"></p>
+    <div class="report" id="report-out"></div>
+    <div class="dialog-actions"><button class="btn ghost" type="button" data-close data-t="close">Close</button><button class="btn primary" type="submit" data-t="reportSubmit">Build the report</button></div>
+  </form>
+</dialog>
+
+<script>
+"use strict";
+// This run's session value, put in the page by lane_dashboard.py; every action sends it back.
+const TOKEN = (document.querySelector('meta[name="hpp-session"]') || {}).content || "__";
+const T = {
+  en: {
+    title:"Lane Board", live:"Live", reconnecting:"Reconnecting", connecting:"Connecting",
+    themeAuto:"Theme: auto", themeDark:"Theme: dark", themeLight:"Theme: light",
+    updated:"Updated {time}", watching:"watching {path}", noServer:"Open this page through lane_dashboard.py — the file alone cannot act.",
+    loadError:"The board could not be loaded.", newSpec:"New spec", startWave:"Start a wave",
+    m_lanes:"Live lanes", m_items:"Items", m_active:"Building", m_ready:"Ready for review", m_review:"In review",
+    m_attention:"Your decision", m_awaiting:"Awaiting integration", m_backlog:"Specs ready",
+    m_mail:"Unread mail", m_sessions:"Sessions running",
+    warnings:"Warnings", backlog:"Backlog", open:"Open", all:"All",
+    backlogLead:"Specs from {path}. A wave always starts with a planner, and nothing is built before its manifest.",
+    s_ready:"ready", s_blocked:"blocked", s_planning:"planning", s_started:"started", s_done:"done", inWave:"Held by {x} — the planner writes the manifest first.",
+    dependsOn:"Depends on {x}", onBoard:"On the board: {x}", phases:"Phases: {x}", readyToPlan:"Ready to plan",
+    closed:"Closed", start:"Start", waiting:"Waiting", depWaves:"Dependency waves", waveN:"Wave {n}",
+    noWaves:"No wave started from this machine yet.", manifestReady:"manifest ready", manifestPending:"waiting for the manifest",
+    backlogEmptyTitle:"No backlog yet",
+    backlogEmpty:"Add the first spec here, or write {path} by hand. It is a WorkGraph spec: the same file compiles into waves with {cmd}.",
+    backlogAllDone:"Every spec is done. Show all to see them, or add the next one.",
+    board:"Board", boardLead:"Every move is an append-only event written by lane_board.py. Maker ≠ checker is enforced in code.",
+    c_active:"Building", c_ready:"Ready for review", c_review:"In review", c_decision:"Your decision", c_queued:"Fix queued", c_result:"Result",
+    columnEmpty:"Nothing here", showMore:"Show {n} more",
+    boardEmptyTitle:"The board is empty", boardEmpty1:"Add a spec to the backlog.",
+    boardEmpty2:"Start a wave: a planner session reads it and writes the manifest before anything is built.",
+    boardEmpty3:"Every session starts from here, where the panel detects: Orca, your tmux, a terminal window (Terminal, iTerm2 or one you declare), or the background.",
+    forLane:"for", verdictBy:"verdict by", rerouted:"rerouted from", competition:"competition", record:"evidence record",
+    builtBy:"built by", git:"git", gitPending:"{n} commit(s) not integrated", gitIntegrated:"integrated", gitEquivalent:"integrated (patch-id)",
+    a_review:"Start review", a_fix:"Route the fix", a_approve:"Approve merge", a_report:"Integration",
+    a_brief:"Ask for a brief", a_briefRetry:"Try again", a_merged:"Record merged", a_stop:"Stop", a_restart:"Start again",
+    briefTitle:"Decision brief", briefPending:"Preparing the options…", briefFailed:"No brief", recommendation:"Recommendation", risks:"Risks",
+    now:"now", agoMin:"{n} min ago", agoH:"{n} h ago", agoD:"{n} d ago", heartbeat:"heartbeat {x}",
+    l_alive:"alive", l_suspect:"suspect", l_dead:"dead",
+    activity:"Activity", lanes:"Lanes", competitions:"Competitions", effects:"Owed to a lane",
+    noActivity:"Waiting for the first event.", noLanes:"No lane registered. A session registers when lane-kit's hooks run, or when you launch one from here.",
+    noCompetitions:"No competition declared.", noEffects:"Every decision was delivered.",
+    candidates:"candidates", winner:"winner", withdrawn:"withdrawn",
+    cancel:"Cancel", close:"Close",
+    specLead:"Added to {path}. The whole backlog is checked before it is written: an unknown dependency or a cycle is refused.",
+    fTitle:"Title", fPlan:"Plan", fPlanHint:"Relative to docs/plans/execution/.", fStub:"Create a stub plan if the file does not exist",
+    fAcceptance:"Acceptance criteria — one per line", fAcceptanceHint:"A test cites each criterion as [spec: ID/criterion].",
+    fDepends:"Depends on", fTier:"Tier", fMode:"Suggested mode", fPriority:"Priority", fSubmit:"Add to backlog", noOtherSpecs:"No other spec yet.",
+    added:"{id} added to the backlog.",
+    waveLead:"Preflight, a write-once request in .claude/lanes/waves/, then a planner session. No executor starts before the manifest.",
+    waveSpecs:"Specs in this wave", waveNone:"No spec is ready: resolve its dependencies first.", waveMode:"Mode",
+    solo:"Solo, accompanied", soloD:"One spec. You follow along.", overnight:"Overnight loop", overnightD:"The planner only orchestrates and stops at every human gate.",
+    parallel:"Parallel", parallelD:"Up to 3 specs and executors, on territories that do not overlap.",
+    plannerAgent:"Planner agent", whereRuns:"Where it runs", waveSubmit:"Create the wave and start the planner", pickOne:"Select at least one ready spec.",
+    soloOne:"Solo mode starts one spec at a time.", parallelMax:"Parallel mode takes at most 3 specs.",
+    projectsLabel:"Projects", projectLabel:"Project · worktree", allProjectsShort:"All", allProjects:"{n} projects",
+    projectWorktrees:"{name} · {n} worktrees", worktreesN:"{n} worktrees", worktreesOf:"Worktrees of {name}",
+    allWorktrees:"All worktrees", allWorktreesD:"Every board of this project, side by side.", mainWorktree:"primary",
+    wtLanes:"{n} live lanes", wtLanes1:"1 live lane", wtActive:"{n} in progress", wtActive1:"1 in progress",
+    wtAttention:"{n} awaiting you", wtAttention1:"1 awaiting you", wtReady:"{n} specs ready", wtReady1:"1 spec ready",
+    orcaWithout:"In Orca without lane-kit (install it there to orchestrate): {x}",
+    o_orca:"Orca terminal", o_orcaD:"A terminal in the project's Orca worktree.",
+    o_tmux:"tmux", o_tmuxD:"A window in the detached tmux session {x} — attach to it to watch.",
+    o_tmuxHereD:"A window in the tmux session this panel runs in.",
+    o_terminal:"Terminal window", o_terminalD:"A new {x} window, in the project folder.",
+    o_iterm:"iTerm2 window", o_itermD:"A new iTerm2 window, in the project folder.",
+    o_external:"External terminal", o_externalD:"{x}, declared in .claude/lanes/dashboard.json.",
+    o_headless:"Headless", o_headlessD:"The agent's non-interactive mode, in the background, under a supervisor: a timeout, a stop button and a capped log.",
+    unavailable:"not available here", notOnPath:"(not on PATH)", sameFamily:"(same family as the builder)",
+    needsModel:"(declare its model in .claude/lanes/dashboard.json)",
+    fixTitle:"Route the fix", fixLead:"A reviewer recorded NEEDS-FIX on {item}. Its direction goes to the executor as a kickoff.",
+    fixNew:"Launch a new executor", fixLive:"Hand it to a live executor", fixAgent:"Executor agent", fixLane:"Executor lane",
+    fixSubmit:"Release the fix", reviewTitle:"Start review",
+    reviewLead:"{item} is waiting for a checker. The verdict must come from another lane and another model family than the builders: {builders}.",
+    reviewNew:"Launch a new reviewer", reviewLive:"Hand it to a live reviewer", reviewAgent:"Reviewer agent", reviewLane:"Reviewer lane",
+    reviewSubmit:"Open the review", noLive:"No live lane with this role right now.", liveHint:"The writer checks the lane is registered and alive.",
+    approveTitle:"Approve the merge",
+    approveLead:"{item} is red: merging it needs you. Your approval is recorded on the board as APPROVED — it merges nothing. Merge in git yourself (the integration report says what it involves), then use “Record merged”: MERGED is written only when git shows the branch integrated.",
+    approveSubmit:"Record my approval",
+    reportTitle:"Integration report", reportLead:"A question that is answered, not a button that acts: nothing here merges, and the report says what it did not check.",
+    branch:"Branch", target:"Target", reportSubmit:"Build the report",
+    measure:"Measure the junction (runs {env} in a throwaway worktree)", measureOff:"Set {env} before starting the dashboard to measure the junction.",
+    r_recommendation:"Recommendation", r_commits:"Commits", r_files:"Files touched", r_stacked:"Comes along", r_collides:"Collides with the live tree",
+    r_junction:"Junction", r_notCovered:"What this report does NOT check", none:"none",
+    working:"Working…", started:"Started.", retry:"Start the session again", attach:"watch it with", log:"Log",
+    orcaOpened:"Terminal opened in Orca ({x}).", tmuxOpened:"Window opened in tmux ({x}).",
+    terminalOpened:"Window opened in {x}.", headlessStarted:"Running in the background under its supervisor ({x}).",
+    itermOpened:"Window opened in iTerm2.", externalOpened:"Opened in {x}.",
+    mailbox:"Mailbox", deliveries:"Delivered", sessions:"Sessions",
+    mailLead:"{path} — read-only here: each lane reads its own messages and moves them to _read/.",
+    noMail:"The mailbox is empty.", noDeliveries:"No decision delivered yet.", noSessions:"No session started from this panel.",
+    mail_unread:"unread", mail_announced:"announced", mail_archived:"read", mailTo:"to", mailFrom:"from",
+    noRoute:"no routing line", doorbell:"doorbell", evidenceFile:"message",
+    ss_running:"running", ss_exited:"exited", ss_timeout:"timed out", ss_cancelled:"stopped", ss_failed:"failed to start",
+    ss_prepared:"prepared", ss_started:"started", exitCode:"exit {n}", logCapped:"log capped",
+    mergedTitle:"Record the merge", mergedApproved:" and approved by you",
+    mergedLead:"{item} was reviewed{approved}. MERGED is written only when git shows the builder's branch in the target — measured now, and the measurement becomes the event's evidence. Merge first, then record it here.",
+    mergedSubmit:"Measure and record",
+    briefConfirmTitle:"Ask for a decision brief", briefSubmit:"Start the brief",
+    briefConfirmLead:"One headless session of a model family none of the builders is ({builders}) reads {item} and answers once, in the background, with a timeout. It never writes the board, merges or opens a review.",
+    sessionTitle:"Start the session again",
+    sessionLead:"{lane} keeps its prompt and its hand-off: the session starts again on the launcher you choose. Nothing is written to the board.",
+    cancelTitle:"Stop the session", cancelSubmit:"Stop it", stopped:"Stopped.",
+    cancelLead:"{lane} runs headless under its supervisor. Stopping it ends the agent and everything it started; the lane and its hand-off stay on the board.",
+    sameAs:"The same from a terminal:",
+    promptFile:"Prompt", laneLabel:"Lane", signature:"Operate coding agents under evidence, not trust."
+  },
+  "pt-BR": {
+    title:"Lane Board", live:"Ao vivo", reconnecting:"Reconectando", connecting:"Conectando",
+    themeAuto:"Tema: auto", themeDark:"Tema: escuro", themeLight:"Tema: claro",
+    updated:"Atualizado às {time}", watching:"observando {path}", noServer:"Abra esta página pelo lane_dashboard.py — o arquivo sozinho não age.",
+    loadError:"Não foi possível carregar o quadro.", newSpec:"Nova spec", startWave:"Iniciar wave",
+    m_lanes:"Lanes vivas", m_items:"Itens", m_active:"Em execução", m_ready:"Pronto p/ revisão", m_review:"Em revisão",
+    m_attention:"Sua decisão", m_awaiting:"Aguardando integração", m_backlog:"Specs prontas",
+    m_mail:"Mensagens não lidas", m_sessions:"Sessões rodando",
+    warnings:"Avisos", backlog:"Backlog", open:"Abertas", all:"Todas",
+    backlogLead:"Specs de {path}. Uma wave sempre começa pela planejadora, e nada é construído antes do manifesto.",
+    s_ready:"pronta", s_blocked:"bloqueada", s_planning:"planejando", s_started:"iniciada", s_done:"concluída", inWave:"Na {x} — a planejadora escreve o manifesto antes.",
+    dependsOn:"Depende de {x}", onBoard:"No quadro: {x}", phases:"Fases: {x}", readyToPlan:"Apta para planejar",
+    closed:"Encerrada", start:"Iniciar", waiting:"Aguardando", depWaves:"Waves por dependência", waveN:"Wave {n}",
+    noWaves:"Nenhuma wave iniciada nesta máquina ainda.", manifestReady:"manifesto pronto", manifestPending:"aguardando o manifesto",
+    backlogEmptyTitle:"Ainda não há backlog",
+    backlogEmpty:"Adicione a primeira spec aqui, ou escreva {path} à mão. É uma spec WorkGraph: o mesmo arquivo vira waves com {cmd}.",
+    backlogAllDone:"Todas as specs estão concluídas. Mostre todas para vê-las, ou adicione a próxima.",
+    board:"Quadro", boardLead:"Cada movimento é um evento append-only escrito pelo lane_board.py. Maker ≠ checker é garantido no código.",
+    c_active:"Em execução", c_ready:"Pronto para revisão", c_review:"Em revisão", c_decision:"Sua decisão", c_queued:"Correção na fila", c_result:"Resultado",
+    columnEmpty:"Nada nesta etapa", showMore:"Mostrar mais {n}",
+    boardEmptyTitle:"O quadro está vazio", boardEmpty1:"Adicione uma spec ao backlog.",
+    boardEmpty2:"Inicie uma wave: a planejadora lê a spec e escreve o manifesto antes de qualquer construção.",
+    boardEmpty3:"Toda sessão começa daqui, onde o painel detectar: Orca, seu tmux, uma janela de terminal (Terminal, iTerm2 ou um que você declarar) ou segundo plano.",
+    forLane:"para", verdictBy:"veredito de", rerouted:"re-roteado de", competition:"competição", record:"registro de evidência",
+    builtBy:"construído por", git:"git", gitPending:"{n} commit(s) fora do histórico", gitIntegrated:"integrado", gitEquivalent:"integrado (patch-id)",
+    a_review:"Iniciar revisão", a_fix:"Encaminhar correção", a_approve:"Aprovar merge", a_report:"Integração",
+    a_brief:"Pedir briefing", a_briefRetry:"Tentar de novo", a_merged:"Registrar merge", a_stop:"Parar", a_restart:"Iniciar de novo",
+    briefTitle:"Briefing de decisão", briefPending:"Preparando as opções…", briefFailed:"Sem briefing", recommendation:"Recomendação", risks:"Riscos",
+    now:"agora", agoMin:"há {n} min", agoH:"há {n} h", agoD:"há {n} d", heartbeat:"heartbeat {x}",
+    l_alive:"viva", l_suspect:"suspeita", l_dead:"morta",
+    activity:"Atividade", lanes:"Lanes", competitions:"Competições", effects:"Devido a uma lane",
+    noActivity:"Aguardando o primeiro evento.", noLanes:"Nenhuma lane registrada. Uma sessão se registra quando os hooks do lane-kit rodam, ou quando você a lança daqui.",
+    noCompetitions:"Nenhuma competição declarada.", noEffects:"Toda decisão foi entregue.",
+    candidates:"candidatos", winner:"vencedor", withdrawn:"retirados",
+    cancel:"Cancelar", close:"Fechar",
+    specLead:"Vai para {path}. O backlog inteiro é conferido antes de gravar: dependência desconhecida ou ciclo é recusado.",
+    fTitle:"Título", fPlan:"Plano", fPlanHint:"Relativo a docs/plans/execution/.", fStub:"Criar um plano-esqueleto se o arquivo não existir",
+    fAcceptance:"Critérios de aceite — um por linha", fAcceptanceHint:"Um teste cita cada critério como [spec: ID/criterio].",
+    fDepends:"Depende de", fTier:"Tier", fMode:"Modo sugerido", fPriority:"Prioridade", fSubmit:"Adicionar ao backlog", noOtherSpecs:"Nenhuma outra spec ainda.",
+    added:"{id} adicionada ao backlog.",
+    waveLead:"Preflight, um pedido write-once em .claude/lanes/waves/, e então a sessão da planejadora. Nenhuma executora começa antes do manifesto.",
+    waveSpecs:"Specs desta wave", waveNone:"Nenhuma spec pronta: resolva as dependências antes.", waveMode:"Cenário",
+    solo:"Solo acompanhada", soloD:"Uma spec. Você acompanha.", overnight:"Looping noturno", overnightD:"A planejadora só orquestra e para em todo gate humano.",
+    parallel:"Paralelo", parallelD:"Até 3 specs e executoras, em territórios sem sobreposição.",
+    plannerAgent:"Agente da planejadora", whereRuns:"Onde roda", waveSubmit:"Criar a wave e iniciar a planejadora", pickOne:"Selecione ao menos uma spec pronta.",
+    soloOne:"O modo solo inicia uma spec por vez.", parallelMax:"O modo paralelo aceita no máximo 3 specs.",
+    projectsLabel:"Projetos", projectLabel:"Projeto · worktree", allProjectsShort:"Todos", allProjects:"{n} projetos",
+    projectWorktrees:"{name} · {n} worktrees", worktreesN:"{n} worktrees", worktreesOf:"Worktrees de {name}",
+    allWorktrees:"Todas as worktrees", allWorktreesD:"Todos os quadros deste projeto, lado a lado.", mainWorktree:"principal",
+    wtLanes:"{n} lanes vivas", wtLanes1:"1 lane viva", wtActive:"{n} em execução", wtActive1:"1 em execução",
+    wtAttention:"{n} aguardando você", wtAttention1:"1 aguardando você", wtReady:"{n} specs prontas", wtReady1:"1 spec pronta",
+    orcaWithout:"No Orca sem lane-kit (instale nele para orquestrar): {x}",
+    o_orca:"Terminal do Orca", o_orcaD:"Um terminal no worktree do projeto no Orca.",
+    o_tmux:"tmux", o_tmuxD:"Uma janela na sessão tmux destacada {x} — conecte-se a ela para acompanhar.",
+    o_tmuxHereD:"Uma janela na sessão tmux em que este painel roda.",
+    o_terminal:"Janela de terminal", o_terminalD:"Uma nova janela do {x}, na pasta do projeto.",
+    o_iterm:"Janela do iTerm2", o_itermD:"Uma nova janela do iTerm2, na pasta do projeto.",
+    o_external:"Terminal externo", o_externalD:"{x}, declarado em .claude/lanes/dashboard.json.",
+    o_headless:"Headless", o_headlessD:"O modo não interativo do agente, em segundo plano, sob um supervisor: tempo limite, botão de parar e log com teto.",
+    unavailable:"indisponível aqui", notOnPath:"(fora do PATH)", sameFamily:"(mesma família de quem construiu)",
+    needsModel:"(declare o modelo dele em .claude/lanes/dashboard.json)",
+    fixTitle:"Encaminhar correção", fixLead:"Uma revisora registrou NEEDS-FIX em {item}. A direção dela vai para a executora como kickoff.",
+    fixNew:"Lançar nova executora", fixLive:"Entregar a uma executora viva", fixAgent:"Agente executor", fixLane:"Lane executora",
+    fixSubmit:"Liberar correção", reviewTitle:"Iniciar revisão",
+    reviewLead:"{item} espera um conferente. O veredito precisa vir de outra lane e outra família de modelo que as de quem construiu: {builders}.",
+    reviewNew:"Lançar nova revisora", reviewLive:"Entregar a uma revisora viva", reviewAgent:"Agente revisor", reviewLane:"Lane revisora",
+    reviewSubmit:"Abrir revisão", noLive:"Nenhuma lane viva com este papel agora.", liveHint:"O writer confere se a lane está registrada e viva.",
+    approveTitle:"Aprovar o merge",
+    approveLead:"{item} é red: o merge precisa de você. Sua aprovação vai para o quadro como APPROVED — ela não faz merge de nada. Faça o merge no git você mesmo (o relatório de integração diz o que ele envolve) e depois use “Registrar merge”: o MERGED só é gravado quando o git mostra a branch integrada.",
+    approveSubmit:"Registrar minha aprovação",
+    reportTitle:"Relatório de integração", reportLead:"Uma pergunta que se responde, não um botão que age: nada aqui faz merge, e o relatório diz o que não verificou.",
+    branch:"Branch", target:"Destino", reportSubmit:"Gerar relatório",
+    measure:"Medir a junção (roda {env} numa worktree descartável)", measureOff:"Defina {env} antes de iniciar o painel para medir a junção.",
+    r_recommendation:"Recomendação", r_commits:"Commits", r_files:"Arquivos tocados", r_stacked:"Vem junto", r_collides:"Colide com a árvore viva",
+    r_junction:"Junção", r_notCovered:"O que este relatório NÃO verifica", none:"nenhum",
+    working:"Processando…", started:"Iniciado.", retry:"Iniciar a sessão de novo", attach:"acompanhe com", log:"Log",
+    orcaOpened:"Terminal aberto no Orca ({x}).", tmuxOpened:"Janela aberta no tmux ({x}).",
+    terminalOpened:"Janela aberta no {x}.", headlessStarted:"Rodando em segundo plano, sob o supervisor ({x}).",
+    itermOpened:"Janela aberta no iTerm2.", externalOpened:"Aberto no {x}.",
+    mailbox:"Caixa de correio", deliveries:"Entregues", sessions:"Sessões",
+    mailLead:"{path} — só leitura aqui: cada lane lê as próprias mensagens e as move para _read/.",
+    noMail:"A caixa de correio está vazia.", noDeliveries:"Nenhuma decisão entregue ainda.", noSessions:"Nenhuma sessão iniciada por este painel.",
+    mail_unread:"não lida", mail_announced:"anunciada", mail_archived:"lida", mailTo:"para", mailFrom:"de",
+    noRoute:"sem linha de roteamento", doorbell:"campainha", evidenceFile:"mensagem",
+    ss_running:"rodando", ss_exited:"encerrada", ss_timeout:"tempo esgotado", ss_cancelled:"parada", ss_failed:"não iniciou",
+    ss_prepared:"preparada", ss_started:"iniciada", exitCode:"saída {n}", logCapped:"log no teto",
+    mergedTitle:"Registrar o merge", mergedApproved:" e aprovado por você",
+    mergedLead:"{item} foi revisado{approved}. O MERGED só é gravado quando o git mostra a branch de quem construiu no destino — medido agora, e a medição vira a evidência do evento. Faça o merge primeiro e registre aqui depois.",
+    mergedSubmit:"Medir e registrar",
+    briefConfirmTitle:"Pedir um briefing de decisão", briefSubmit:"Iniciar o briefing",
+    briefConfirmLead:"Uma sessão headless de uma família de modelo que nenhum dos construtores é ({builders}) lê {item} e responde uma vez, em segundo plano, com tempo limite. Ela nunca escreve no quadro, faz merge ou abre revisão.",
+    sessionTitle:"Iniciar a sessão de novo",
+    sessionLead:"{lane} mantém o prompt e o hand-off: a sessão recomeça no lançador que você escolher. Nada é escrito no quadro.",
+    cancelTitle:"Parar a sessão", cancelSubmit:"Parar", stopped:"Parada.",
+    cancelLead:"{lane} roda headless sob o supervisor. Parar encerra o agente e tudo o que ele iniciou; a lane e o hand-off dela continuam no quadro.",
+    sameAs:"O mesmo pelo terminal:",
+    promptFile:"Prompt", laneLabel:"Lane", signature:"Opere agentes de código sob evidência, não confiança."
+  }
+};
+const GLYPH = {"CLAIMED":"○","BUILDING":"◐","CHECKPOINT-READY":"◉","UNDER-REVIEW":"◎","NEEDS-FIX":"✕","FIX-QUEUED":"↻",
+  "DEFERRED":"‖","VERIFIED":"✓","APPROVED":"◈","MERGED":"◆","NOT-SELECTED":"–","WITHDRAWN":"⊘","DECLARED":"○","SELECTED":"◆"};
+const SESSION_GLYPH = {running:"◐", exited:"✓", timeout:"⧗", cancelled:"⊘", "failed-to-start":"✕", prepared:"○", started:"●"};
+const COLUMNS = ["active","ready","review","decision","queued","result"];
+const COLUMN_GLYPH = {active:"◐",ready:"◉",review:"◎",decision:"●",queued:"↻",result:"◆"};
+const RESULT_LIMIT = 12;
+
+const store = {
+  get(key){ try { return localStorage.getItem(key); } catch (_e) { return null; } },
+  set(key, value){ try { localStorage.setItem(key, value); } catch (_e) { /* private mode */ } }
+};
+let lang = store.get("hpp-lane-lang") || ((navigator.language || "en").toLowerCase().startsWith("pt") ? "pt-BR" : "en");
+let theme = store.get("hpp-lane-theme") || "auto";
+let all = null, snap = null, navHtml = "";
+let project = store.get("hpp-lane-project") || "all", worktree = store.get("hpp-lane-worktree") || "all";
+let filter = "open", selected = new Set(), expanded = new Set();
+const $ = (s, root = document) => root.querySelector(s);
+const $$ = (s, root = document) => [...root.querySelectorAll(s)];
+const esc = v => String(v ?? "").replace(/[&<>'"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c]));
+const t = (key, vars = {}) => String((T[lang] && T[lang][key]) ?? T.en[key] ?? key).replace(/\{(\w+)\}/g, (_m, k) => vars[k] ?? "");
+const en = text => lang === "en" ? esc(text) : `<span lang="en">${esc(text)}</span>`;
+
+/* ---------- scope: every project, one project, or one worktree ---------- */
+// A project is a repository and each of its worktrees keeps its own board; the page shows the boards in scope together.
+const boards = () => all.projects.flatMap(p => p.worktrees.map(w => ({...w, projectId: p.id, projectName: p.name, siblings: p.worktrees.length})));
+const B = id => boards().find(b => b.id === id) || boards()[0];
+const tn = (key, n) => t(n === 1 ? key + "1" : key, {n});
+function tagged(b, where){
+  const mark = x => ({...x, board: b.id, where});
+  const mail = b.mailbox || {messages: [], lanes: {}, dir: ""};
+  return {...b, columns: Object.fromEntries(COLUMNS.map(k => [k, (b.columns[k] || []).map(mark)])),
+    lanes: b.lanes.map(mark), competitions: (b.competitions || []).map(mark), effects: (b.effects || []).map(mark),
+    recent: (b.recent || []).map(mark), waves: (b.waves || []).map(mark),
+    deliveries: (b.deliveries || []).map(mark), sessions: (b.sessions || []).map(mark),
+    mailbox: {...mail, messages: (mail.messages || []).map(mark)},
+    mailLanes: Object.entries(mail.lanes || {}).map(([lane, counts]) => mark({lane, ...counts})),
+    backlog: {...b.backlog, specs: b.backlog.specs.map(mark)}};
+}
+function merged(list, whereOf){
+  const bs = list.map(b => tagged(b, whereOf(b)));
+  const newest = (a, b) => String(b.timestamp || b.ts || "").localeCompare(String(a.timestamp || a.ts || ""));
+  return {updated_at: all.updated_at,
+    warnings: bs.flatMap(b => (b.warnings || []).map(w => `${whereOf(b)}: ${w}`)),
+    metrics: Object.fromEntries(Object.keys(bs[0].metrics).map(k => [k, bs.reduce((n, b) => n + (b.metrics[k] || 0), 0)])),
+    columns: Object.fromEntries(COLUMNS.map(k => [k, bs.flatMap(b => b.columns[k]).sort(newest)])),
+    lanes: bs.flatMap(b => b.lanes), competitions: bs.flatMap(b => b.competitions), effects: bs.flatMap(b => b.effects),
+    recent: bs.flatMap(b => b.recent).sort(newest).slice(0, 15), waves: bs.flatMap(b => b.waves),
+    deliveries: bs.flatMap(b => b.deliveries).sort((a, b) => String(b.delivered_at || "").localeCompare(String(a.delivered_at || ""))),
+    sessions: bs.flatMap(b => b.sessions), mailLanes: bs.flatMap(b => b.mailLanes),
+    mailbox: {dir: bs[0].mailbox.dir, messages: bs.flatMap(b => b.mailbox.messages).sort((a, b) => (b.mtime || 0) - (a.mtime || 0))},
+    backlog: {path: bs[0].backlog.path, exists: bs.some(b => b.backlog.exists), specs: bs.flatMap(b => b.backlog.specs), waves: []}};
+}
+const scopeBoards = () => { const p = all.projects.find(x => x.id === project); return p ? boards().filter(b => b.projectId === p.id) : boards(); };
+function view(){
+  const p = all.projects.find(x => x.id === project);
+  const inScope = scopeBoards();
+  const one = inScope.length === 1 ? inScope[0] : p && inScope.find(b => b.id === worktree);
+  if (one) return {...tagged(one, ""), level: "worktree", title: one.siblings > 1 ? `${one.projectName} › ⎇ ${one.worktree}` : one.projectName};
+  if (p) return {...merged(inScope, b => `⎇ ${b.worktree}`), id: p.id, level: "project", title: t("projectWorktrees", {name: p.name, n: inScope.length})};
+  return {...merged(inScope, b => b.siblings > 1 ? `${b.projectName} › ⎇ ${b.worktree}` : b.projectName), id: "all", level: "all",
+    title: t("allProjects", {n: all.projects.length})};
+}
+// On a wider scope every row says whose it is: the project, and the worktree when the project has several.
+const where = x => x.where ? `<span class="chip where">${esc(x.where)}</span>` : "";
+function boardChoice(select, chosen){
+  select.innerHTML = all.projects.map(p => p.worktrees.length === 1 ? `<option value="${esc(p.worktrees[0].id)}">${esc(p.name)}</option>`
+    : `<optgroup label="${esc(p.name)}">${p.worktrees.map(w => `<option value="${esc(w.id)}">⎇ ${esc(w.worktree)}${w.main ? " · " + esc(t("mainWorktree")) : ""}</option>`).join("")}</optgroup>`).join("");
+  select.value = chosen;
+  select.closest(".field").hidden = boards().length < 2;
+}
+
+function age(seconds){
+  if (seconds === null || seconds === undefined) return "—";
+  if (seconds < 60) return t("now");
+  if (seconds < 3600) return t("agoMin", {n: Math.floor(seconds / 60)});
+  if (seconds < 86400) return t("agoH", {n: Math.floor(seconds / 3600)});
+  return t("agoD", {n: Math.floor(seconds / 86400)});
+}
+function applyTheme(){
+  if (theme === "auto") document.documentElement.removeAttribute("data-theme");
+  else document.documentElement.setAttribute("data-theme", theme);
+  $("#theme").textContent = t(theme === "auto" ? "themeAuto" : theme === "dark" ? "themeDark" : "themeLight");
+}
+function applyLang(){
+  document.documentElement.lang = lang;
+  $$("[data-t]").forEach(el => { el.textContent = t(el.dataset.t); });
+  $$("[data-lang]").forEach(b => { if (b.dataset.lang === lang) b.setAttribute("aria-current", "true"); else b.removeAttribute("aria-current"); });
+  applyTheme();
+  setLive($("#live").classList.contains("on") ? "live" : "connecting");
+  if (all) render(view());
+}
+
+/* ---------- rendering ---------- */
+function metric(key, value, extra = ""){
+  return `<div class="metric ${extra}"><span>${esc(t(key))}</span><strong>${esc(value ?? "—")}</strong></div>`;
+}
+function renderMetrics(m){
+  $("#metrics").innerHTML = [
+    metric("m_lanes", m.lanes), metric("m_items", m.items), metric("m_active", m.active), metric("m_ready", m.ready),
+    metric("m_review", m.review), metric("m_attention", m.attention, "attention" + (m.attention ? " on" : "")),
+    metric("m_awaiting", m.awaiting_integration), metric("m_backlog", m.backlog_ready),
+    metric("m_mail", m.unread_mail), metric("m_sessions", m.sessions_running)
+  ].join("");
+}
+function renderNav(){
+  const scope = $("#scope"), list = all.projects, without = all.orca_without_lanes || [];
+  const bs = boards();
+  const active = list.some(p => p.id === project) ? project : "all";
+  const sum = (ws, k) => ws.reduce((n, w) => n + (w.metrics[k] || 0), 0);
+  const needs = n => n ? `<span class="n need" title="${esc(t("m_attention"))}">▲ ${esc(n)}</span>` : "";
+  const chip = (id, label, extra, title) => `<button type="button" class="scope-chip" data-project-filter="${esc(id)}" aria-pressed="${String(active === id)}"${title ? ` title="${esc(title)}"` : ""}><span>${esc(label)}</span>${extra}</button>`;
+  const projects = bs.length < 2 ? "" : `<div class="scope-row" role="group" aria-label="${esc(t("projectsLabel"))}"><span class="scope-label">${esc(t("projectsLabel"))}</span>`
+    + chip("all", t("allProjectsShort"), `<span class="n">${esc(list.length)}</span>` + needs(sum(bs, "attention")), "")
+    + list.map(p => chip(p.id, p.name, (p.worktrees.length > 1 ? `<span class="n">⎇ ${esc(p.worktrees.length)}</span>` : "") + needs(sum(p.worktrees, "attention")),
+        p.worktrees.length > 1 ? t("worktreesN", {n: p.worktrees.length}) : p.worktrees[0].display_path)).join("") + `</div>`;
+  const p = list.find(x => x.id === active);
+  let worktrees = "";
+  if (p && p.worktrees.length > 1) {
+    const current = p.worktrees.some(w => w.id === worktree) ? worktree : "all";
+    const stat = (glyph, key, n, cls) => `<span class="${n ? cls : ""}"><i aria-hidden="true">${glyph}</i>${esc(tn(key, n))}</span>`;
+    const stats = m => `<span class="wt-stats">${stat("●", "wtLanes", m.lanes, "on")}${stat("◐", "wtActive", m.active, "on")}${
+      m.attention ? stat("▲", "wtAttention", m.attention, "need") : ""}${m.backlog_ready ? stat("◉", "wtReady", m.backlog_ready, "on") : ""}</span>`;
+    const total = {lanes: sum(p.worktrees, "lanes"), active: sum(p.worktrees, "active"), attention: sum(p.worktrees, "attention"), backlog_ready: sum(p.worktrees, "backlog_ready")};
+    worktrees = `<div class="scope-row stack" id="worktrees"><span class="scope-label">${esc(t("worktreesOf", {name: p.name}))}</span>
+      <div class="wt-grid" role="group" aria-label="${esc(t("worktreesOf", {name: p.name}))}">
+        <button type="button" class="wt all" data-worktree-filter="all" aria-pressed="${String(current === "all")}">
+          <span class="wt-top"><span class="wt-name"><i aria-hidden="true">◇</i>${esc(t("allWorktrees"))}</span><span class="wt-badge">${esc(p.worktrees.length)}</span></span>
+          <span class="wt-path">${esc(t("allWorktreesD"))}</span>${stats(total)}</button>
+        ${p.worktrees.map(w => `<button type="button" class="wt" data-worktree-filter="${esc(w.id)}" aria-pressed="${String(current === w.id)}" title="${esc(w.path)}">
+          <span class="wt-top"><span class="wt-name"><i aria-hidden="true">⎇</i>${esc(w.worktree)}</span>${w.main ? `<span class="wt-badge">${esc(t("mainWorktree"))}</span>` : ""}</span>
+          <span class="wt-path">${w.branch && w.branch !== w.worktree ? `<b>${esc(w.branch)}</b> · ` : ""}${esc(w.display_path)}</span>${stats(w.metrics)}</button>`).join("")}
+      </div></div>`;
+  }
+  const html = projects + worktrees + (without.length ? `<p class="scope-hint">${esc(t("orcaWithout", {x: without.join(", ")}))}</p>` : "");
+  scope.hidden = !html;
+  // Redrawn only when it changed: a live board refreshes often, and a button replaced mid-click loses the click.
+  if (html !== navHtml) { scope.innerHTML = html; navHtml = html; }
+}
+function renderWarnings(list){
+  const box = $("#warnings");
+  box.hidden = !list.length;
+  box.innerHTML = list.length ? `<strong>⚠ ${esc(t("warnings"))}</strong><ul>${list.map(w => `<li>${en(w)}</li>`).join("")}</ul>` : "";
+}
+function specCard(s){
+  const info = s.blocked_by.length ? t("dependsOn", {x: s.blocked_by.join(", ")})
+    : s.runtime_state ? t("onBoard", {x: s.runtime_state})
+    : s.phases.length ? t("phases", {x: s.phases.join(", ")})
+    : s.wave ? t("inWave", {x: s.wave})
+    : s.board_state === "done" ? t("closed") : t("readyToPlan");
+  const key = `${s.board}::${s.id}`;
+  const pick = s.launchable ? `<input type="checkbox" data-select="${esc(key)}" ${selected.has(key) ? "checked" : ""} aria-label="${esc(s.id)}">` : "";
+  const glyph = {ready:"◉", blocked:"⧗", planning:"◌", started:"◐", done:"✓"}[s.board_state] || "○";
+  return `<article class="spec" data-state="${esc(s.board_state)}">
+    <div class="spec-top">${pick}<div><div class="spec-id">${esc(s.id)}</div><h3>${esc(s.title)}</h3></div></div>
+    <p>${esc(info)}</p>
+    <div class="tagline">${where(s)}<code>${esc(s.tier)}</code><code>${esc(s.suggested_mode)}</code>${s.priority ? `<code>P${esc(s.priority)}</code>` : ""}<code title="${esc(s.plan)}">${esc(s.plan)}</code></div>
+    <div class="foot"><span class="pill"><span aria-hidden="true">${glyph}</span>${esc(t("s_" + s.board_state))}</span>
+      ${s.launchable ? `<button class="btn small" type="button" data-action="wave" data-id="${esc(s.id)}" data-worktree="${esc(s.board)}">▶ ${esc(t("start"))}</button>`
+        : s.board_state === "blocked" ? `<button class="btn small" type="button" disabled>${esc(t("waiting"))}</button>` : ""}</div>
+  </article>`;
+}
+function renderBacklog(b){
+  $("#backlog-lead").innerHTML = esc(t("backlogLead", {path: "§"})).replace("§", `<code>${esc(b.path)}</code>`);
+  const specs = b.specs.filter(s => filter === "all" || s.board_state !== "done");
+  $("#backlog-count").textContent = b.specs.filter(s => s.board_state !== "done").length;
+  $$("[data-filter]").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.filter === filter)));
+  if (!b.exists) {
+    $("#backlog").innerHTML = `<div class="empty"><h3>${esc(t("backlogEmptyTitle"))}</h3>
+      <p>${esc(t("backlogEmpty", {path: "§", cmd: "¤"})).replace("§", `<code>${esc(b.path)}</code>`).replace("¤", `<code>python -m hpp work plan ${esc(b.path)}</code>`)}</p>
+      <button class="btn primary" type="button" data-action="new-spec">+ ${esc(t("newSpec"))}</button></div>`;
+  } else if (!specs.length) {
+    $("#backlog").innerHTML = `<div class="empty"><p>${esc(t("backlogAllDone"))}</p></div>`;
+  } else {
+    $("#backlog").innerHTML = `<div class="specs">${specs.map(specCard).join("")}</div>`;
+  }
+  $("#dep-waves").innerHTML = b.waves.length > 1 || (b.waves.length === 1 && b.waves[0].length > 1)
+    ? `<span class="label">${esc(t("depWaves"))}</span>` + b.waves.map((w, i) =>
+        `${i ? '<span class="arrow" aria-hidden="true">→</span>' : ""}<span class="w"><b>${esc(t("waveN", {n: i + 1}))}</b>${w.map(esc).join(", ")}</span>`).join("")
+    : "";
+  const waves = snap.waves || [];
+  $("#waves").innerHTML = waves.length ? waves.slice(0, 6).map(w => `<div class="wave-row"><b>${esc(w.wave_id)}</b>${where(w)}
+      <span>${esc(w.mode)} · ${esc(w.spec_ids.join(", "))}</span>
+      <span>${w.manifest_ready ? "✓ " + esc(t("manifestReady")) : "◌ " + esc(t("manifestPending"))} · ${esc(w.status)}</span></div>`).join("")
+    : (b.exists ? `<p class="muted" style="margin:0;font-size:.85rem">${esc(t("noWaves"))}</p>` : "");
+}
+function facts(c){
+  const out = [];
+  if (c.target_lane) out.push(`<li><b>${esc(t("forLane"))}</b><code>${esc(c.target_lane)}</code></li>`);
+  if (c.reroute && c.reroute.from) out.push(`<li><b>${esc(t("rerouted"))}</b><code>${esc(c.reroute.from)}</code></li>`);
+  if (c.verdict_by && c.verdict_by.lane) out.push(`<li><b>${esc(t("verdictBy"))}</b><code>${esc(c.verdict_by.lane)} · ${esc(c.verdict_by.model)}</code></li>`);
+  if (c.competition) out.push(`<li><b>${esc(t("competition"))}</b><code>${esc(c.competition)}</code></li>`);
+  if (c.evidence_record) out.push(`<li><b>${esc(t("record"))}</b><code>${esc(c.evidence_record)}</code></li>`);
+  const g = c.integration || {};
+  if (g.status === "pending") out.push(`<li><b>${esc(t("git"))}</b><span>⧗ ${esc(t("gitPending", {n: g.pending_commits.length}))}</span></li>`);
+  else if (g.status === "contained" || g.status === "equivalent") out.push(`<li><b>${esc(t("git"))}</b><span>✓ ${esc(t(g.status === "contained" ? "gitIntegrated" : "gitEquivalent"))}</span></li>`);
+  return out.length ? `<ul class="facts">${out.join("")}</ul>` : "";
+}
+function brief(c){
+  if (!c.decision_kind) return "";
+  const b = c.brief;
+  if (!b) return "";
+  if (b.status === "ready") return `<div class="brief"><div class="brief-head"><span>${esc(t("briefTitle"))}</span><span>${esc(b.provider || "")}</span></div>
+    <p>${esc(b.summary)}</p><ol>${(b.options || []).map(o => `<li><b>${esc(o.title)}</b> — ${esc(o.description)}</li>`).join("")}</ol>
+    <p class="rec"><b>${esc(t("recommendation"))}:</b> ${esc(b.recommendation)}</p></div>`;
+  if (b.status === "failed") return `<div class="brief"><div class="brief-head"><span>${esc(t("briefTitle"))}</span><span>✕ ${esc(t("briefFailed"))}</span></div>
+    <p>${en(b.error || "")}</p><button class="btn small ghost" type="button" data-action="brief" data-id="${esc(c.item_id)}" data-worktree="${esc(c.board)}">${esc(t("a_briefRetry"))}</button></div>`;
+  return `<div class="brief"><div class="brief-head"><span>${esc(t("briefTitle"))}</span><span>◌</span></div><p>${esc(t("briefPending"))}</p></div>`;
+}
+function actions(c){
+  const out = [];
+  if (c.state === "CHECKPOINT-READY" || c.decision_kind === "review") out.push(`<button class="btn small" type="button" data-action="review" data-id="${esc(c.item_id)}" data-worktree="${esc(c.board)}">◎ ${esc(t("a_review"))}</button>`);
+  if (c.decision_kind === "fix" || (c.state === "FIX-QUEUED" && c.reroute_ok)) out.push(`<button class="btn small" type="button" data-action="fix" data-id="${esc(c.item_id)}" data-worktree="${esc(c.board)}">↻ ${esc(t("a_fix"))}</button>`);
+  if (c.decision_kind === "approve") out.push(`<button class="btn small primary" type="button" data-action="approve" data-id="${esc(c.item_id)}" data-worktree="${esc(c.board)}">◆ ${esc(t("a_approve"))}</button>`);
+  if (c.decision_kind && !c.brief) out.push(`<button class="btn small ghost" type="button" data-action="brief" data-id="${esc(c.item_id)}" data-worktree="${esc(c.board)}">✦ ${esc(t("a_brief"))}</button>`);
+  // MERGED is recorded by measuring git, and only once the item is reviewed (and, when red, approved).
+  if (c.state === "APPROVED" || (c.state === "VERIFIED" && c.tag !== "red")) out.push(`<button class="btn small" type="button" data-action="merged" data-id="${esc(c.item_id)}" data-worktree="${esc(c.board)}">◆ ${esc(t("a_merged"))}</button>`);
+  if (c.state === "VERIFIED" || c.state === "APPROVED" || c.state === "MERGED" || (c.integration && c.integration.branch)) out.push(`<button class="btn small ghost" type="button" data-action="report" data-id="${esc(c.item_id)}" data-worktree="${esc(c.board)}">${esc(t("a_report"))}</button>`);
+  return out.length ? `<div class="card-actions">${out.join("")}</div>` : "";
+}
+function card(c){
+  const chips = c.role === "operator" ? [`<span class="chip" title="role">operator</span>`]
+    : [`<span class="chip" title="lane">${esc(c.lane_id)}</span>`, `<span class="chip" title="model">${esc(c.model)}</span>`];
+  if (where(c)) chips.unshift(where(c));
+  if (c.tag === "red") chips.push(`<span class="chip red">▲ red</span>`);
+  return `<article class="card" data-group="${esc(c.group)}">
+    <div class="card-top"><span class="id">${esc(c.item_id)}</span><span class="state"><i aria-hidden="true">${GLYPH[c.state] || "·"}</i>${esc(c.state)}</span></div>
+    <div class="chips-row">${chips.join("")}</div>
+    ${c.evidence ? `<pre class="evidence">${esc(c.evidence)}</pre>` : ""}
+    ${facts(c)}${brief(c)}
+    <div class="card-foot"><time datetime="${esc(c.timestamp)}">${esc(age(c.age_seconds))}</time>${actions(c)}</div>
+  </article>`;
+}
+function renderBoard(s){
+  const total = COLUMNS.reduce((n, k) => n + s.columns[k].length, 0);
+  $("#board-count").textContent = total;
+  $("#board-empty").innerHTML = total ? "" : `<div class="empty" style="margin-bottom:14px"><h3>${esc(t("boardEmptyTitle"))}</h3>
+    <ol><li>${esc(t("boardEmpty1"))}</li><li>${esc(t("boardEmpty2"))}</li><li>${esc(t("boardEmpty3"))}</li></ol></div>`;
+  $("#board").classList.toggle("is-empty", !total);
+  $("#board").innerHTML = COLUMNS.map(key => {
+    const count = s.columns[key].length;
+    let items = s.columns[key];
+    const hidden = key === "result" && !expanded.has(key) ? Math.max(0, items.length - RESULT_LIMIT) : 0;
+    if (hidden) items = items.slice(0, RESULT_LIMIT);
+    return `<section class="column${key === "decision" && count ? " on" : ""}" data-group="${key}" aria-label="${esc(t("c_" + key))}">
+      <header class="column-head"><h3><span aria-hidden="true">${COLUMN_GLYPH[key]}</span>${esc(t("c_" + key))}</h3><span class="count${key === "decision" && count ? " on" : ""}">${count}</span></header>
+      <div class="cards">${items.length ? items.map(card).join("") : `<p class="column-empty">${esc(t("columnEmpty"))}</p>`}
+      ${hidden ? `<button class="btn small ghost more" type="button" data-action="expand" data-id="${key}">${esc(t("showMore", {n: hidden}))}</button>` : ""}</div>
+    </section>`;
+  }).join("");
+}
+function renderLower(s){
+  const recent = s.recent || [];
+  $("#activity-count").textContent = recent.length || "";
+  $("#activity").innerHTML = recent.length ? recent.map(e => `<div class="row"><span class="glyph" aria-hidden="true">${GLYPH[e.state] || "·"}</span>
+      <div class="what"><b>${esc(e.item_id || e.task_id || "—")}</b> ${where(e)}<span>${esc(e.state)} · ${esc(e.lane_id)}${e.model ? " · " + esc(e.model) : ""}</span></div>
+      <time class="meta">${esc((e.ts || "").replace("T", " "))}</time></div>`).join("")
+    : `<p class="none">${esc(t("noActivity"))}</p>`;
+  $("#lanes-count").textContent = s.lanes.length || "";
+  $("#lanes").innerHTML = s.lanes.length ? s.lanes.map(l => `<div class="row"><span class="glyph" aria-hidden="true">${l.status === "alive" ? "●" : l.status === "suspect" ? "◌" : "○"}</span>
+      <div class="what"><b>${esc(l.lane_id)}</b> ${where(l)}<span>${esc(l.role)}${l.model ? " · " + esc(l.model) : ""}${l.branch ? " · " + esc(l.branch) : ""}</span><div class="meta">${esc(t("heartbeat", {x: age(l.heartbeat_seconds)}))}</div></div>
+      <span class="lane-state" data-s="${esc(l.status)}">${esc(t("l_" + l.status))}</span></div>`).join("")
+    : `<p class="none">${esc(t("noLanes"))}</p>`;
+  const comps = s.competitions || [];
+  $("#competitions-count").textContent = comps.length || "";
+  $("#competitions").innerHTML = comps.length ? comps.map(c => `<div class="row"><span class="glyph" aria-hidden="true">${GLYPH[c.standing] || "○"}</span>
+      <div class="what"><b>${esc(c.task_id)}</b> ${where(c)}<span>${esc(c.standing)}</span><div class="meta">${esc(t("candidates"))}: ${esc(c.candidates.join(", "))}${c.winner ? " · " + esc(t("winner")) + ": " + esc(c.winner) : ""}${c.withdrawn.length ? " · " + esc(t("withdrawn")) + ": " + esc(c.withdrawn.join(", ")) : ""}</div></div><span></span></div>`).join("")
+    : `<p class="none">${esc(t("noCompetitions"))}</p>`;
+  const effects = s.effects || [];
+  $("#effects-count").textContent = effects.length || "";
+  $("#effects").innerHTML = effects.length ? effects.map(r => `<div class="row"><span class="glyph" aria-hidden="true">✉</span>
+      <div class="what"><b>${esc(r.item_id)}</b> ${where(r)}<span>${esc(r.decision)} → ${esc(r.target)}</span><div class="meta">${esc(r.reservation_id)} · ${esc(r.state)}/${esc(r.effect_state)}</div></div><span></span></div>`).join("")
+    : `<p class="none">${esc(t("noEffects"))}</p>`;
+  renderMail(s);
+}
+// The mailbox, read-only: what each lane was sent, whether it was told, and whether it read it.
+function renderMail(s){
+  const mail = s.mailbox || {messages: []}, messages = mail.messages || [], lanes = s.mailLanes || [];
+  const unread = messages.filter(m => m.status === "unread").length;
+  $("#mailbox-count").textContent = messages.length ? `${unread} / ${messages.length}` : "";
+  $("#mailbox-lead").innerHTML = esc(t("mailLead", {path: "§"})).replace("§", `<code>${esc(mail.dir || ".claude/lanes/mailbox")}</code>`);
+  const count = (n, key) => n ? `${esc(n)} ${esc(t(key))}` : "";
+  $("#mailbox-lanes").innerHTML = lanes.map(l => `<div class="row"><span class="glyph" aria-hidden="true">${l.unread ? "✉" : "·"}</span>
+      <div class="what"><b>${esc(l.lane)}</b> ${where(l)}<span>${[count(l.unread, "mail_unread"), count(l.announced, "mail_announced"), count(l.archived, "mail_archived")].filter(Boolean).join(" · ")}</span></div><span></span></div>`).join("");
+  $("#mailbox").innerHTML = messages.length ? messages.slice(0, 20).map(m => `<div class="row"><span class="glyph" aria-hidden="true">${m.status === "unread" ? "✉" : m.status === "announced" ? "◌" : "✓"}</span>
+      <div class="what"><b>${esc(m.title)}</b> ${where(m)}<span>${esc(t("mailTo"))} ${m.to.length ? esc(m.to.join(", ")) : esc(t("noRoute"))}${m.from ? ` · ${esc(t("mailFrom"))} ${esc(m.from)}` : ""}</span>
+      <div class="meta">${esc(m.file)}${m.when ? " · " + esc(m.when) : ""}</div></div>
+      <span class="lane-state" data-s="${m.status === "unread" ? "alive" : m.status === "archived" ? "dead" : ""}">${esc(t("mail_" + m.status))}</span></div>`).join("")
+    : `<p class="none">${esc(t("noMail"))}</p>`;
+  const deliveries = s.deliveries || [];
+  $("#deliveries-count").textContent = deliveries.length || "";
+  $("#deliveries").innerHTML = deliveries.length ? deliveries.map(r => `<div class="row"><span class="glyph" aria-hidden="true">✓</span>
+      <div class="what"><b>${esc(r.item_id)}</b> ${where(r)}<span>${esc(r.decision)} → ${esc(r.target)}</span>
+      <div class="meta">${r.evidence ? esc(t("evidenceFile")) + ": " + esc(r.evidence) : ""}${r.doorbell ? " · " + esc(t("doorbell")) + ": " + en(r.doorbell) : ""}</div></div>
+      <time class="meta">${esc(String(r.delivered_at || "").replace("T", " "))}</time></div>`).join("")
+    : `<p class="none">${esc(t("noDeliveries"))}</p>`;
+  const sessions = s.sessions || [];
+  $("#sessions-count").textContent = sessions.length || "";
+  $("#sessions").innerHTML = sessions.length ? sessions.map(x => {
+    const key = x.status === "failed-to-start" ? "failed" : x.status;
+    const detail = [x.agent, x.role, x.launcher, x.model].filter(Boolean).map(esc).join(" · ");
+    const extra = [x.exit_code !== null && x.exit_code !== undefined && x.status !== "running" ? esc(t("exitCode", {n: x.exit_code})) : "",
+      x.log ? `${esc(t("log"))}: <code>${esc(x.log)}</code>` : "", x.log_capped ? esc(t("logCapped")) : ""].filter(Boolean).join(" · ");
+    const button = x.live
+      ? `<button class="btn small ghost" type="button" data-action="session-stop" data-id="${esc(x.lane_id)}" data-worktree="${esc(x.board)}">⊘ ${esc(t("a_stop"))}</button>`
+      : `<button class="btn small ghost" type="button" data-action="session-restart" data-id="${esc(x.lane_id)}" data-worktree="${esc(x.board)}">↻ ${esc(t("a_restart"))}</button>`;
+    return `<div class="row"><span class="glyph" aria-hidden="true">${SESSION_GLYPH[x.status] || "·"}</span>
+      <div class="what"><b>${esc(x.lane_id)}</b> ${where(x)}<span>${esc(t("ss_" + key))} · ${detail}</span>${extra ? `<div class="meta">${extra}</div>` : ""}</div>${button}</div>`;
+  }).join("") : `<p class="none">${esc(t("noSessions"))}</p>`;
+}
+function render(s){
+  snap = s;
+  const stamp = new Date(s.updated_at);
+  const time = Number.isNaN(stamp.getTime()) ? "—" : stamp.toLocaleTimeString(lang, {hour: "2-digit", minute: "2-digit", second: "2-digit"});
+  $("#eyebrow").textContent = `Lane Board · ${s.title}`;
+  $("#updated").innerHTML = `${esc(t("updated", {time}))} · ${esc(t("watching", {path: ""}))}<code>.claude/lanes</code>`;
+  document.title = `Lane Board · ${s.title}`;
+  renderNav();
+  renderMetrics(s.metrics);
+  $("#wave-button").classList.toggle("primary", s.metrics.backlog_ready > 0 && !s.metrics.attention);
+  renderWarnings(s.warnings || []);
+  renderBacklog(s.backlog);
+  renderBoard(s);
+  renderLower(s);
+}
+
+/* ---------- data ---------- */
+function setLive(state){
+  const live = $("#live");
+  live.classList.toggle("on", state === "live");
+  $("#live-text").textContent = t(state === "live" ? "live" : state === "reconnecting" ? "reconnecting" : "connecting");
+}
+async function refresh(){
+  const response = await fetch("api/snapshot", {cache: "no-store"});
+  if (!response.ok) throw new Error(t("loadError"));
+  all = await response.json();
+  render(view());
+}
+function connect(){
+  const stream = new EventSource("events");
+  stream.onopen = () => setLive("live");
+  stream.addEventListener("snapshot", () => refresh().catch(() => {}));
+  stream.onerror = () => { setLive("reconnecting"); stream.close(); setTimeout(connect, 1500); };
+}
+async function post(path, body){
+  if (TOKEN.startsWith("__")) throw new Error(t("noServer"));
+  const response = await fetch(path, {method: "POST", headers: {"Content-Type": "application/json", "X-HPP-Token": TOKEN}, body: JSON.stringify(body)});
+  let value = {};
+  try { value = await response.json(); } catch (_e) { value = {error: response.statusText}; }
+  if (!response.ok) { const e = new Error(value.error || response.statusText); e.problems = value.problems || []; throw e; }
+  return value;
+}
+
+/* ---------- dialogs ---------- */
+function status(form, text, error = false, problems = []){
+  const line = $(".status-line", form);
+  line.className = "status-line" + (error ? " error" : "");
+  line.innerHTML = error ? en(text) : esc(text);
+  const old = $(".problems", form); if (old) old.remove();
+  if (problems.length) line.insertAdjacentHTML("afterend", `<ul class="problems">${problems.map(p => `<li>${en(p)}</li>`).join("")}</ul>`);
+}
+function launcherChoices(form, p){
+  const box = $("[data-launchers]", form);
+  const preferred = (p.launchers.find(l => l.preferred && l.available) || p.launchers.find(l => l.available)).id;
+  box.innerHTML = p.launchers.map(l => `<label class="choice"><input type="radio" name="launcher" value="${esc(l.id)}" ${l.available ? "" : "disabled"} ${l.id === preferred ? "checked" : ""}>
+    <span><b>${esc(t("o_" + l.id))}${l.available ? "" : " — " + esc(t("unavailable"))}</b><span>${esc(t("o_" + l.id + (l.here ? "HereD" : "D"), {x: l.detail || ""}))}</span></span></label>`).join("");
+}
+// The model shown is the one the session runs (declared, or the CLI's own vendor): maker ≠ checker compares
+// its family. An agent whose family nobody can name (a multi-vendor CLI with no declared model) is not offered.
+function agentOptions(select, agents, compatibleOnly = false){
+  const blocked = a => Boolean(a.problem) || (compatibleOnly && a.compatible === false);
+  select.innerHTML = agents.map(a => {
+    const why = a.problem ? t("needsModel") : (compatibleOnly && a.compatible === false) ? t("sameFamily") : "";
+    return `<option value="${esc(a.id)}" ${blocked(a) ? "disabled" : ""}>${esc(a.label)}${a.model ? " · " + esc(a.model) : ""}${a.available ? "" : " " + esc(t("notOnPath"))}${why ? " " + esc(why) : ""}</option>`;
+  }).join("");
+  const first = agents.find(a => a.available && !blocked(a)) || agents.find(a => !blocked(a));
+  if (first) select.value = first.id;
+}
+// Every dialog says which terminal command does the same thing: the page only calls those commands.
+function cli(form, command){
+  const line = $("[data-cli]", form);
+  if (line) line.innerHTML = `${esc(t("sameAs"))} <code>${esc(command)}</code>`;
+}
+function showResult(form, value){
+  const box = $(".result", form);
+  const l = value.launch || {};
+  const parts = [];
+  if (value.warning) parts.push(`<p class="status-line error">${en(value.warning)}</p>`);
+  else if (l.launcher === "orca") parts.push(`<p>✓ ${esc(t("orcaOpened", {x: l.session}))}</p>`);
+  else if (l.launcher === "tmux") parts.push(`<p>✓ ${esc(t("tmuxOpened", {x: l.session}))}${l.attach ? ` · ${esc(t("attach"))} <code>${esc(l.attach)}</code>` : ""}</p>`);
+  else if (l.launcher === "terminal") parts.push(`<p>✓ ${esc(t("terminalOpened", {x: String(l.session).split(":")[1] || l.session}))}</p>`);
+  else if (l.launcher === "iterm") parts.push(`<p>✓ ${esc(t("itermOpened"))}</p>`);
+  else if (l.launcher === "external") parts.push(`<p>✓ ${esc(t("externalOpened", {x: String(l.session).split(":")[1] || l.session}))}</p>`);
+  else if (l.launcher === "headless") parts.push(`<p>✓ ${esc(t("headlessStarted", {x: l.session}))} · ${esc(t("log"))}: <code>${esc(l.log)}</code></p>`);
+  if (value.lane_id) parts.push(`<p class="hint">${esc(t("laneLabel"))}: <code>${esc(value.lane_id)}</code>${l.prompt_file ? ` · ${esc(t("promptFile"))}: <code>${esc(l.prompt_file)}</code>` : ""}</p>`);
+  box.innerHTML = parts.join("");
+  box.hidden = false;
+  // A session that did not start starts again from here: the same lane, on the launcher selected above.
+  const button = $("[type=submit]", form);
+  if (value.retry) { form.dataset.retry = value.lane_id; button.textContent = t("retry"); button.disabled = false; }
+  else delete form.dataset.retry;
+}
+function openDialog(id){
+  const dialog = $(id);
+  const form = $("form", dialog);
+  $$(".status-line", form).forEach(x => { x.textContent = ""; x.className = "status-line"; });
+  $$(".problems", form).forEach(x => x.remove());
+  $$(".result", form).forEach(x => { x.hidden = true; x.innerHTML = ""; });
+  $$("[type=submit]", form).forEach(b => { b.disabled = false; if (b.dataset.t) b.textContent = t(b.dataset.t); });
+  delete form.dataset.retry;
+  dialog.showModal();
+  return form;
+}
+const findCard = (bid, id) => COLUMNS.flatMap(k => B(bid).columns[k]).find(c => c.item_id === id);
+// A dialog opened on a wider scope starts on the worktree in view, or the first of the scope.
+const defaultBoard = () => snap.level === "worktree" ? snap.id : scopeBoards()[0].id;
+
+function openSpec(){
+  const form = openDialog("#spec-dialog");
+  form.reset();
+  boardChoice($("#spec-worktree"), defaultBoard());
+  specBoard();
+  cli(form, "lane_dashboard.py spec add --id ID --title TITLE --acceptance CRITERION [--depends-on ID]");
+  $("#spec-id").focus();
+}
+function specBoard(){
+  const b = B($("#spec-worktree").value);
+  $("#spec-lead").innerHTML = esc(t("specLead", {path: "§"})).replace("§", `<code>${esc(b.backlog.path)}</code>`);
+  const specs = b.backlog.specs;
+  $("#spec-depends").innerHTML = specs.length ? specs.map(s => `<label><input type="checkbox" value="${esc(s.id)}"> <b>${esc(s.id)}</b> <span class="muted">${esc(s.title)}</span></label>`).join("")
+    : `<span class="none">${esc(t("noOtherSpecs"))}</span>`;
+}
+function openWave(ids, bid){
+  const form = openDialog("#wave-dialog");
+  const ready = scopeBoards().find(b => b.backlog.specs.some(s => s.launchable));
+  const chosen = bid || (snap.level === "worktree" ? snap.id : (ready || scopeBoards()[0]).id);
+  if (ids) selected = new Set(ids.map(id => `${chosen}::${id}`));
+  boardChoice($("#wave-worktree"), chosen);
+  waveBoard(form);
+}
+function waveBoard(form){
+  const b = B($("#wave-worktree").value);
+  form.dataset.worktree = b.id;
+  const picked = s => selected.has(`${b.id}::${s.id}`);
+  const ready = b.backlog.specs.filter(s => s.launchable);
+  const first = b.backlog.specs.find(picked);
+  const mode = (first && first.suggested_mode) || "solo";
+  $("#wave-modes").innerHTML = ["solo", "overnight", "parallel"].map(m => `<label class="choice"><input type="radio" name="mode" value="${m}" ${m === mode ? "checked" : ""}><span><b>${esc(t(m))}</b><span>${esc(t(m + "D"))}</span></span></label>`).join("");
+  $("#wave-specs").innerHTML = ready.length ? ready.map(s => `<label><input type="checkbox" value="${esc(s.id)}" ${picked(s) ? "checked" : ""}> <b>${esc(s.id)}</b> <span class="muted">${esc(s.title)}</span></label>`).join("")
+    : `<span class="none">${esc(t("waveNone"))}</span>`;
+  agentOptions($("#wave-agent"), b.agents);
+  launcherChoices(form, b);
+  cli(form, "lane_dashboard.py wave start --spec ID --mode solo|overnight|parallel --agent AGENT [--launcher L]");
+}
+let handoff = {kind: "", id: "", worktree: "", tab: "new"};
+function openHandoff(kind, id, bid){
+  const c = findCard(bid, id);
+  const p = B(bid);
+  handoff = {kind, id, worktree: p.id, tab: "new"};
+  const form = openDialog("#handoff-dialog");
+  form.dataset.worktree = p.id;
+  const isFix = kind === "fix";
+  $("#handoff-title").textContent = t(isFix ? "fixTitle" : "reviewTitle");
+  $("#handoff-lead").textContent = isFix ? t("fixLead", {item: id}) : t("reviewLead", {item: id, builders: (c.builders || []).join(", ")});
+  const ev = $("#handoff-evidence"); ev.hidden = !c.evidence; ev.textContent = c.evidence || "";
+  $("#tab-new").textContent = t(isFix ? "fixNew" : "reviewNew");
+  $("#tab-live").textContent = t(isFix ? "fixLive" : "reviewLive");
+  $("#handoff-agent-label").textContent = t(isFix ? "fixAgent" : "reviewAgent");
+  $("#handoff-lane-label").textContent = t(isFix ? "fixLane" : "reviewLane");
+  $("#handoff-submit").textContent = t(isFix ? "fixSubmit" : "reviewSubmit");
+  agentOptions($("#handoff-agent"), isFix ? p.agents : (c.review_agents || p.agents), !isFix);
+  launcherChoices(form, p);
+  const lanes = (p.live_lanes[isFix ? "executor" : "reviewer"] || []);
+  $("#handoff-lane").innerHTML = lanes.map(l => `<option value="${esc(l)}">${esc(l)}</option>`).join("");
+  $("#handoff-lane-hint").textContent = lanes.length ? t("liveHint") : t("noLive");
+  setTab("new");
+}
+function setTab(tab){
+  handoff.tab = tab;
+  $$("#handoff-dialog [data-tab]").forEach(b => b.setAttribute("aria-selected", String(b.dataset.tab === tab)));
+  $$("#handoff-dialog [data-pane]").forEach(p => { p.hidden = p.dataset.pane !== tab; });
+  const fix = handoff.kind === "fix";
+  cli($("#handoff-dialog form"), tab === "live"
+    ? `lane_board.py ${fix ? "release-fix" : "start-review"} ${handoff.id} --target-lane LANE`
+    : `lane_dashboard.py ${fix ? "fix" : "review"} launch ${handoff.id} --agent AGENT [--launcher L]`);
+}
+function openApprove(id, bid){
+  const c = findCard(bid, id);
+  const form = openDialog("#approve-dialog");
+  form.dataset.id = id;
+  form.dataset.worktree = B(bid).id;
+  $("#approve-lead").textContent = t("approveLead", {item: id});
+  const box = $("#approve-brief");
+  box.hidden = !(c.brief && c.brief.status === "ready");
+  box.innerHTML = box.hidden ? "" : `<div class="brief-head"><span>${esc(t("recommendation"))}</span><span>${esc(c.brief.provider || "")}</span></div><p>${esc(c.brief.recommendation)}</p>`;
+  cli(form, `lane_board.py approve ${id}`);
+}
+function openMerged(id, bid){
+  const c = findCard(bid, id);
+  const form = openDialog("#merged-dialog");
+  form.dataset.id = id;
+  form.dataset.worktree = B(bid).id;
+  $("#merged-lead").textContent = t("mergedLead", {item: id, approved: c.state === "APPROVED" ? t("mergedApproved") : ""});
+  $("#merged-branch").value = (c.integration && c.integration.branch) || "";
+  $("#merged-target").value = "HEAD";
+  cli(form, `lane_dashboard.py merged ${id} --branch BRANCH [--target REF]`);
+}
+function openBrief(id, bid){
+  const c = findCard(bid, id);
+  const form = openDialog("#brief-dialog");
+  form.dataset.id = id;
+  form.dataset.worktree = B(bid).id;
+  $("#brief-lead").textContent = t("briefConfirmLead", {item: id, builders: (c.builders || []).join(", ") || "—"});
+  cli(form, `lane_dashboard.py brief request ${id}`);
+}
+function openSession(kind, lane, bid){
+  const p = B(bid);
+  const form = openDialog("#session-dialog");
+  form.dataset.kind = kind;
+  form.dataset.lane = lane;
+  form.dataset.worktree = p.id;
+  const stop = kind === "stop";
+  $("#session-title").textContent = t(stop ? "cancelTitle" : "sessionTitle");
+  $("#session-lead").textContent = t(stop ? "cancelLead" : "sessionLead", {lane});
+  $("#session-submit").textContent = t(stop ? "cancelSubmit" : "retry");
+  $("#session-launchers").hidden = stop;
+  if (!stop) launcherChoices(form, p);
+  cli(form, stop ? `lane_dashboard.py session cancel ${lane}` : `lane_dashboard.py session relaunch ${lane} [--launcher L]`);
+}
+function openReport(id, bid){
+  const c = findCard(bid, id);
+  const p = B(bid);
+  const form = openDialog("#report-dialog");
+  form.dataset.id = id;
+  form.dataset.worktree = p.id;
+  $("#report-branch").value = (c.integration && c.integration.branch) || "";
+  $("#report-out").innerHTML = "";
+  const measure = $("#report-measure");
+  measure.checked = false; measure.disabled = !p.suite_runner;
+  $("#report-measure-label").textContent = t(p.suite_runner ? "measure" : "measureOff", {env: "LANE_BOARD_SUITE_COMMAND"});
+  cli(form, `lane_dashboard.py integration report ${id} --branch BRANCH [--target REF] [--measure-junction]`);
+}
+function list(items){ return items && items.length ? items.map(esc).join(", ") : esc(t("none")); }
+function renderReport(r){
+  const j = r.junction || {};
+  $("#report-out").innerHTML = `<table><tbody>
+      <tr><th>${esc(t("r_recommendation"))}</th><td><b>${esc(r.recommendation.kind)}</b> — ${en(r.recommendation.text)}</td></tr>
+      <tr><th>${esc(t("r_commits"))}</th><td class="n">${esc(r.commits)}</td></tr>
+      <tr><th>${esc(t("r_files"))}</th><td>${esc(r.files)}</td></tr>
+      <tr><th>${esc(t("r_stacked"))}</th><td>${list(r.stacked)}</td></tr>
+      <tr><th>${esc(t("r_collides"))}</th><td>${list([...(r.collides_modified || []), ...(r.collides_untracked || [])])}</td></tr>
+      <tr><th>${esc(t("r_junction"))}</th><td><b>${esc(j.status)}</b>${j.reason ? " — " + en(j.reason) : ""}${j.result ? ` · exit ${esc(j.result.exit)}` : ""}${j.files ? " · " + list(j.files) : ""}</td></tr>
+    </tbody></table>
+    <div class="label">${esc(t("r_notCovered"))}</div><ul>${r.not_covered.map(x => `<li>${en(x)}</li>`).join("")}</ul>`;
+}
+
+/* ---------- submit ---------- */
+async function submit(form){
+  const kind = form.dataset.form;
+  const button = $("[type=submit]", form);
+  const checked = sel => $$(sel + " input:checked", form).map(i => i.value);
+  const launcher = () => ($("input[name=launcher]:checked", form) || {}).value;
+  button.disabled = true;
+  status(form, t("working"));
+  try {
+    if (kind === "spec") {
+      const id = $("#spec-id").value.trim();
+      await post("api/backlog/specs", {worktree: $("#spec-worktree").value, id, title: $("#spec-name").value.trim(), plan: $("#spec-plan").value.trim(),
+        acceptance: $("#spec-acceptance").value.split("\n"), depends_on: checked("#spec-depends"), tier: $("#spec-tier").value,
+        suggested_mode: $("#spec-mode").value, priority: parseInt($("#spec-priority").value || "0", 10) || 0, create_plan: $("#spec-stub").checked});
+      status(form, t("added", {id}));
+      await refresh();
+      setTimeout(() => form.closest("dialog").close(), 700);
+      return;
+    }
+    if (form.dataset.retry) {
+      const value = await post("api/sessions/relaunch", {worktree: form.dataset.worktree, lane_id: form.dataset.retry, launcher: launcher()});
+      status(form, value.warning ? "" : t("started"));
+      showResult(form, value);
+    } else if (kind === "wave") {
+      const ids = checked("#wave-specs");
+      const mode = ($("input[name=mode]:checked", form) || {}).value;
+      if (!ids.length) throw new Error(t("pickOne"));
+      if (mode === "solo" && ids.length > 1) throw new Error(t("soloOne"));
+      if (mode === "parallel" && ids.length > 3) throw new Error(t("parallelMax"));
+      const value = await post("api/backlog/launch", {worktree: form.dataset.worktree, item_ids: ids, mode, agent: $("#wave-agent").value, launcher: launcher()});
+      status(form, value.warning ? value.wave_id : `${t("started")} ${value.wave_id}`);
+      showResult(form, value);
+      selected.clear();
+    } else if (kind === "handoff") {
+      const fix = handoff.kind === "fix";
+      let value;
+      if (handoff.tab === "live") {
+        value = await post(fix ? "api/fixes/release" : "api/reviews/start", {worktree: handoff.worktree, item_id: handoff.id, target_lane: $("#handoff-lane").value});
+        status(form, `✓ ${value.event.state} → ${value.event.target_lane}`);
+      } else {
+        value = await post(fix ? "api/fixes/launch" : "api/reviews/launch", {worktree: handoff.worktree, item_id: handoff.id, agent: $("#handoff-agent").value, launcher: launcher()});
+        status(form, `✓ ${(value.event || {}).state || ""} → ${value.lane_id}`);
+        showResult(form, value);
+      }
+    } else if (kind === "approve") {
+      await post("api/merge/approve", {worktree: form.dataset.worktree, item_id: form.dataset.id});
+      await refresh();
+      form.closest("dialog").close();
+      return;
+    } else if (kind === "merged") {
+      const value = await post("api/merge/record", {worktree: form.dataset.worktree, item_id: form.dataset.id,
+        branch: $("#merged-branch").value.trim(), target: $("#merged-target").value.trim() || "HEAD"});
+      status(form, `✓ ${value.event.state} · ${value.integration.reason}`);
+      await refresh();
+      setTimeout(() => form.closest("dialog").close(), 900);
+      return;
+    } else if (kind === "brief") {
+      await post("api/briefs/request", {worktree: form.dataset.worktree, item_id: form.dataset.id});
+      await refresh();
+      form.closest("dialog").close();
+      return;
+    } else if (kind === "session") {
+      if (form.dataset.kind === "stop") {
+        const value = await post("api/sessions/cancel", {worktree: form.dataset.worktree, lane_id: form.dataset.lane});
+        status(form, value.warning || t("stopped"));
+      } else {
+        const value = await post("api/sessions/relaunch", {worktree: form.dataset.worktree, lane_id: form.dataset.lane, launcher: launcher()});
+        status(form, value.warning ? "" : t("started"));
+        showResult(form, value);
+      }
+    } else if (kind === "report") {
+      const value = await post("api/integration/report", {worktree: form.dataset.worktree, item_id: form.dataset.id, branch: $("#report-branch").value.trim(),
+        target: $("#report-target").value.trim() || "HEAD", measure_junction: $("#report-measure").checked});
+      status(form, "");
+      renderReport(value.report);
+      button.disabled = false;
+      return;
+    }
+    await refresh();
+  } catch (error) {
+    status(form, error.message, true, error.problems || []);
+    button.disabled = false;
+  }
+}
+
+/* ---------- events ---------- */
+document.addEventListener("click", async event => {
+  const el = event.target.closest("[data-action],[data-lang],[data-filter],[data-project-filter],[data-worktree-filter],[data-close],[data-tab],#theme");
+  if (!el) return;
+  if (el.id === "theme") { theme = {auto: "dark", dark: "light", light: "auto"}[theme]; store.set("hpp-lane-theme", theme); applyTheme(); return; }
+  if (el.dataset.lang) { lang = el.dataset.lang; store.set("hpp-lane-lang", lang); applyLang(); return; }
+  if (el.dataset.filter) { filter = el.dataset.filter; render(snap); return; }
+  if (el.dataset.projectFilter) {
+    project = el.dataset.projectFilter; worktree = "all";
+    store.set("hpp-lane-project", project); store.set("hpp-lane-worktree", worktree); render(view()); return;
+  }
+  if (el.dataset.worktreeFilter) { worktree = el.dataset.worktreeFilter; store.set("hpp-lane-worktree", worktree); render(view()); return; }
+  if (el.hasAttribute("data-close")) { el.closest("dialog").close(); return; }
+  if (el.dataset.tab) { setTab(el.dataset.tab); return; }
+  if (!snap) return;
+  const id = el.dataset.id, bid = el.dataset.worktree;
+  switch (el.dataset.action) {
+    case "new-spec": openSpec(); break;
+    case "wave": openWave(id ? [id] : null, bid); break;
+    case "review": openHandoff("review", id, bid); break;
+    case "fix": openHandoff("fix", id, bid); break;
+    case "approve": openApprove(id, bid); break;
+    case "merged": openMerged(id, bid); break;
+    case "report": openReport(id, bid); break;
+    case "expand": expanded.add(id); render(snap); break;
+    // An agent runs only when the operator confirms it in a dialog: never from a GET, never on a timer.
+    case "brief": openBrief(id, bid); break;
+    case "session-restart": openSession("restart", id, bid); break;
+    case "session-stop": openSession("stop", id, bid); break;
+  }
+});
+document.addEventListener("change", event => {
+  const el = event.target;
+  if (el.dataset && el.dataset.select) { if (el.checked) selected.add(el.dataset.select); else selected.delete(el.dataset.select); }
+  if (el.closest && el.closest("#spec-dialog") && el.id === "spec-id" && !$("#spec-plan").value) $("#spec-plan").placeholder = `specs/${el.value.trim() || "SPEC-1"}.md`;
+  if (el.id === "spec-worktree") specBoard();
+  if (el.id === "wave-worktree") waveBoard(el.closest("form"));
+});
+document.addEventListener("submit", event => {
+  const form = event.target.closest("form[data-form]");
+  if (!form) return;
+  event.preventDefault();
+  submit(form);
+});
+$$("dialog").forEach(d => d.addEventListener("close", () => { if (snap) refresh().catch(() => {}); }));
+
+$("link[rel=icon]").href = $("#badge").src;
+applyLang();
+refresh().catch(error => { $("#updated").textContent = TOKEN.startsWith("__") ? t("noServer") : error.message; });
+connect();
+setInterval(() => { refresh().catch(() => {}); }, 15000);
+setInterval(() => { if (snap) renderBoard(snap); }, 60000);
+</script>
+</body>
+</html>

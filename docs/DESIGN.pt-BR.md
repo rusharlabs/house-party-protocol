@@ -58,7 +58,7 @@ invisível para uma varredura de hex.
 
 ## Os componentes que já existem
 
-Use estes antes de inventar. Cada um está no `docs/hpp.css` e já é renderizado pelas cinco páginas
+Use estes antes de inventar. Cada um está no `docs/hpp.css` e já é renderizado pelas páginas
 publicadas, então o que o senhor construir com eles fica parecido com o resto do projeto de graça.
 
 | seletor | o que é |
@@ -104,10 +104,17 @@ Depois: `python -m pytest tests/test_design_system.py tests/test_docs_index.py -
 
 ## Se for morar em `docs/`, gere
 
-As cinco páginas de `docs/` são **artefatos emitidos**. Editá-las à mão funciona até o próximo
-`catalog_md.py --write`, que sobrescreve a edição sem avisar. Se o senhor quer uma página morando
-ali, acrescente-a ao `render_all()` do `tools/catalog_md.py` e ao `OWN_FILES`, como o
-`index.html` e o `hpp.css` já estão — aí ela é gerada, é listada uma vez, e não apodrece.
+As páginas de `docs/` são **artefatos emitidos**. O `index.html`, o `hpp.css` e o par do catálogo
+são escritos pelo `catalog_md.py --write`, que sobrescreve a edição à mão sem avisar. Se o senhor
+quer uma página desse tipo morando ali, acrescente-a ao `render_all()` do `tools/catalog_md.py` e
+ao `OWN_FILES`, como o `index.html` e o `hpp.css` já estão — aí ela é gerada, é listada uma vez, e
+não apodrece.
+
+As páginas de documento — o `X.html` ao lado de cada `X.md`, e as páginas dos documentos de
+contrato da raiz — são renderizadas a partir do Markdown na release e listadas no
+`docs/site-pages.json`, que o `catalog_md.py` transforma na navegação da página inicial. Edite o
+Markdown, nunca a página: o `tests/test_docs_html_pages.py` reprova quando uma página deixa de
+carregar os títulos do seu Markdown.
 
 Página que mora em qualquer outro lugar (template, exemplo, relatório) é sua para escrever à mão.
 O `multi-session/lane-kit-*/templates/status-stakeholder.template.html` é a referência desse caso:

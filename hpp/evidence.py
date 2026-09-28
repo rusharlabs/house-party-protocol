@@ -9,7 +9,10 @@ written, or one left over from an earlier run, is not evidence.
 `verify` re-derives a bundle from the files on disk. It exits 0 only for an intact record of a run
 that passed. The record's self-hash makes an edited record visible, but it is not a signature:
 anyone who can write the file can rewrite the hash. A checker that must not trust the maker
-re-runs `command` instead of relying on `verify` alone.
+re-runs `command` instead of relying on `verify` alone -- or asks for a signature: `run` can sign
+the record with an SSH key (`ssh-keygen -Y sign`, namespace `hpp`), and `verify` with an
+allowed-signers file refuses a record that is unsigned, signed by someone else, or changed after
+signing, however consistently its self-hash was recomputed.
 
 The record holds hashes and byte counts, never the command's output text or an absolute path, and
 a command line that looks like it carries a secret is refused before it runs.
@@ -31,6 +34,7 @@ from typing import Any, Optional
 
 from hpp._process import MAX_TIMEOUT, run_bounded, valid_timeout
 from hpp.context import _SECRET_PATTERN
+from hpp.signing import SigningError, check_signer, sign as sign_bytes, signature_report, ssh_keygen
 from hpp.state import StateError, append_event, event_path
 
 SCHEMA = "hpp.evidence/v1"
@@ -53,7 +57,8 @@ _SECRET_VALUE = re.compile(
     r"|\bxox[abprs]-[A-Za-z0-9-]{10,}|\bAKIA[0-9A-Z]{16}\b",
     re.IGNORECASE,
 )
-_UNHASHED = ("record_sha256", "event", "event_error")
+# Why: the signature covers the same canonical bytes the self-hash covers, so it sits outside both.
+_UNHASHED = ("record_sha256", "event", "event_error", "signature")
 
 
 class EvidenceError(ValueError):
@@ -175,10 +180,12 @@ def _collect(root: Path, pattern: str, before: dict[str, tuple[int, int]]) -> di
 
 def run_evidence(record_id: str, command: list[str], artifacts: list[str], *, root: Path,
                  timeout: float = 600.0, out_dir: Optional[Path] = None,
-                 manifest: Optional[dict[str, Any]] = None) -> dict[str, Any]:
+                 manifest: Optional[dict[str, Any]] = None, sign_key: Optional[Path] = None,
+                 signer: Optional[str] = None) -> dict[str, Any]:
     """Run `command` in `root`, hash the declared artifacts, write the record and return it.
 
-    With `manifest`, a passed bundle also appends `evidence_recorded` to the event log.
+    With `manifest`, a passed bundle also appends `evidence_recorded` to the event log. With
+    `sign_key` and `signer`, the record is signed with that SSH key as that principal.
     Everything that can be refused is refused before the command runs.
     """
     if not isinstance(record_id, str) or not _ID.match(record_id):
@@ -193,6 +200,18 @@ def run_evidence(record_id: str, command: list[str], artifacts: list[str], *, ro
     if manifest is not None and not patterns:
         raise EvidenceError("recording an event needs at least one artifact: an exit code alone leaves "
                             "nothing for a later verify to re-derive")
+    principal: Optional[str] = None
+    if sign_key is not None:
+        if signer is None:
+            raise EvidenceError("signing needs a signer: pass --signer with the principal your allowed-signers file lists")
+        try:
+            principal = check_signer(signer)
+        except SigningError as exc:
+            raise EvidenceError(str(exc)) from exc
+        if not Path(sign_key).is_file():
+            raise EvidenceError(f"sign key not found: {sign_key}")
+        if ssh_keygen() is None:
+            raise EvidenceError("ssh-keygen not found on PATH: cannot sign (OpenSSH is needed)")
     root = Path(root)
     target_dir = root / out
     if root.resolve() != target_dir.resolve() and root.resolve() not in target_dir.resolve().parents:
@@ -229,6 +248,11 @@ def run_evidence(record_id: str, command: list[str], artifacts: list[str], *, ro
         target = target_dir / f"{record_id}-{stamp}{suffix}.json"
         record["record_path"] = target.relative_to(root).as_posix()
         record["record_sha256"] = _sha256(_canonical(record))
+        if sign_key is not None and principal is not None:
+            try:
+                record["signature"] = sign_bytes(_canonical(record), Path(sign_key), principal)
+            except SigningError as exc:
+                raise EvidenceError(str(exc)) from exc
         try:
             with target.open("x", encoding="utf-8", newline="\n") as handle:
                 handle.write(json.dumps(record, indent=2, sort_keys=True, ensure_ascii=False) + "\n")
@@ -282,17 +306,21 @@ def _contradictions(record: dict[str, Any]) -> list[str]:
 
 
 def _report(record: dict[str, Any], status: str, problems: list[str], changed: list[str],
-            missing: list[str]) -> dict[str, Any]:
+            missing: list[str], signature: dict[str, Any]) -> dict[str, Any]:
     return {"status": status, "id": record.get("id"), "verdict": record.get("verdict"),
-            "base_commit": record.get("base_commit"), "problems": problems, "changed": changed, "missing": missing}
+            "base_commit": record.get("base_commit"), "problems": problems, "changed": changed, "missing": missing,
+            "signature": signature}
 
 
-def verify_evidence(record_path: Path, *, root: Path) -> dict[str, Any]:
+def verify_evidence(record_path: Path, *, root: Path, allowed_signers: Optional[Path] = None) -> dict[str, Any]:
     """Re-derive a bundle: the record's own hash, its internal consistency, then every artifact.
 
     Status is `valid` for an intact record of a passed run, `not-evidence` for an intact record
     of a run that did not pass, and `blocked` when the record or its artifacts changed. A record
-    whose own hash does not match is blocked before any path it names is read.
+    whose own hash does not match is blocked before any path it names is read. With
+    `allowed_signers`, a record is also blocked unless it carries a signature that
+    `ssh-keygen -Y verify` accepts for the signer it names; without the file the signature is
+    reported and never claimed.
     """
     path = Path(record_path)
     if not path.is_file():
@@ -303,11 +331,13 @@ def verify_evidence(record_path: Path, *, root: Path) -> dict[str, Any]:
         raise EvidenceError(f"evidence record is not JSON: {exc.msg}") from exc
     if not isinstance(record, dict) or record.get("schema") != SCHEMA:
         raise EvidenceError(f"evidence record schema must be {SCHEMA}")
+    signature = signature_report(_canonical(record), record.get("signature"),
+                                 Path(allowed_signers) if allowed_signers is not None else None)
     if record.get("record_sha256") != _sha256(_canonical(record)):
-        return _report(record, "blocked", ["the record was edited after it was written"], [], [])
+        return _report(record, "blocked", ["the record was edited after it was written"], [], [], signature)
     contradictions = _contradictions(record)
     if contradictions:
-        return _report(record, "blocked", contradictions, [], [])
+        return _report(record, "blocked", contradictions, [], [], signature)
     root = Path(root)
     resolved_root = root.resolve()
     changed: list[str] = []
@@ -320,15 +350,17 @@ def verify_evidence(record_path: Path, *, root: Path) -> dict[str, Any]:
             elif _file_digest(file_path) != item["sha256"]:
                 changed.append(item["path"])
     problems: list[str] = []
+    if allowed_signers is not None and signature["status"] != "verified":
+        problems.append(f"signature: {signature['detail']}")
     if changed:
         problems.append(f"{len(changed)} artifact(s) changed since the run")
     if missing:
         problems.append(f"{len(missing)} artifact(s) missing since the run")
     if problems:
-        return _report(record, "blocked", problems, changed, missing)
+        return _report(record, "blocked", problems, changed, missing, signature)
     if record["verdict"] != "passed":
-        return _report(record, "not-evidence", [f"the run did not pass (verdict: {record['verdict']})"], [], [])
-    return _report(record, "valid", [], [], [])
+        return _report(record, "not-evidence", [f"the run did not pass (verdict: {record['verdict']})"], [], [], signature)
+    return _report(record, "valid", [], [], [], signature)
 
 
 def exit_for_run(record: dict[str, Any]) -> int:

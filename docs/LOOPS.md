@@ -15,7 +15,7 @@ An HPP loop has:
 7. human escalation;
 8. persisted feedback.
 
-`ralph_gate.py` implements the stop gate: a textual completion mark does not release the loop
+`loop_gate.py` implements the stop gate: a textual completion mark does not release the loop
 unless the corresponding `done_gate` passes. `autoprompt_resume.py` produces resumption; it does
 not change the verdict.
 

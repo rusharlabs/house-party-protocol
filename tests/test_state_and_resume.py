@@ -6,12 +6,13 @@ none depends on the real cwd nor on execution order between them.
 """
 from __future__ import annotations
 
+import hashlib
 import json
 
 import pytest
 
 from hpp.manifest import load_manifest
-from hpp.state import StateError, append_event, event_path, project, read_events
+from hpp.state import GENESIS_SHA256, StateError, append_event, event_path, project, read_events
 
 
 @pytest.fixture()
@@ -53,8 +54,12 @@ def test_event_log_is_append_only_old_records_are_never_rewritten(manifest, tmp_
     assert len(lines_after_two) == 2
     first_record = json.loads(lines_after_two[0])
     second_record = json.loads(lines_after_two[1])
-    assert first_record == {"seq": 1, "id": "event:1", "type": "work_started", "data": {}}
+    # Why: since the hash chain, every appended line also carries `prev_sha256`, the hash of the
+    # line before it (the first links to the hash of nothing); tests/test_event_chain.py pins it.
+    assert first_record == {"seq": 1, "id": "event:1", "type": "work_started", "data": {},
+                            "prev_sha256": GENESIS_SHA256}
     assert second_record["seq"] == 2 and second_record["id"] == "event:2"
+    assert second_record["prev_sha256"] == hashlib.sha256(lines_after_two[0].encode("utf-8")).hexdigest()
 
     append_event(path, "check_passed", manifest)
     lines_after_three = path.read_text(encoding="utf-8").splitlines()

@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>House Party Protocol — Arquitetura</title>
+  <meta name="description" content="Como as peças se encaixam, onde o estado mora e o que deliberadamente não existe.">
+  <link rel="alternate" hreflang="en" href="ARCHITECTURE.html">
+  <link rel="alternate" hreflang="pt-BR" href="ARCHITECTURE.pt-BR.html">
+  <style>
+    :root{--hpp-black: #000000;--hpp-ink: #0F1113;--hpp-paper: #F4F1EB;--hpp-signal: #FF6A00;--line:rgba(15,17,19,.18);--surface:rgba(15,17,19,.04);--muted:rgba(15,17,19,.72);--max:1120px}
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;background:var(--hpp-paper);color:var(--hpp-ink);font:16px/1.65 Inter,"Segoe UI",Arial,sans-serif}
+    a{color:var(--hpp-ink);text-decoration:underline;text-decoration-color:var(--hpp-signal);text-decoration-thickness:2px;text-underline-offset:3px}
+    a:hover{color:var(--hpp-signal)}
+    a:focus-visible{outline:4px solid var(--hpp-signal);outline-offset:3px}
+    .wrap{width:min(var(--max),calc(100% - 40px));margin:auto}
+    .lang{background:var(--hpp-black);color:var(--hpp-paper);font-size:.9rem;padding:10px 0}
+    .lang a{color:var(--hpp-paper)}
+    .lang a[aria-current]{text-decoration:none;font-weight:700}
+    .hero{background:var(--hpp-ink);color:var(--hpp-paper);padding:44px 0 50px}
+    .hero img{width:min(720px,100%);display:block}
+    .hero h1{font:800 clamp(2.2rem,6vw,5rem)/.95 Sora,Inter,"Segoe UI",sans-serif;letter-spacing:-.02em;margin:.35em 0}
+    .hero p{max-width:760px;font-size:1.15rem;color:rgba(244,241,235,.82)}
+    .hero .eyebrow{color:var(--hpp-paper);border-color:var(--hpp-signal)}
+    .signal{color:var(--hpp-signal)}
+    .eyebrow,.mono,code,pre,.gate,.label{font-family:"JetBrains Mono","Cascadia Code",Consolas,monospace}
+    .eyebrow{display:inline-block;letter-spacing:.13em;text-transform:uppercase;font-size:.78rem;border-left:4px solid var(--hpp-signal);padding-left:.6em;margin:0 0 .6em}
+    nav{position:sticky;top:0;z-index:2;background:rgba(244,241,235,.96);border-bottom:1px solid var(--line);backdrop-filter:blur(8px)}
+    nav .wrap{display:flex;gap:20px;overflow:auto;padding:12px 0}
+    nav a{white-space:nowrap;text-decoration:none;font-weight:700}
+    nav a:hover{text-decoration:underline;text-decoration-color:var(--hpp-signal)}
+    section{padding:64px 0;border-bottom:1px solid var(--line)}
+    h2{font:800 clamp(1.7rem,3vw,2.6rem)/1.1 Sora,Inter,"Segoe UI",sans-serif;letter-spacing:-.01em;margin:0 0 .6em}
+    h3{margin:0 0 .4em;font-size:1.1rem}
+    .lead{max-width:780px;color:var(--muted)}
+    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:20px}
+    .card{grid-column:span 4;border:1px solid var(--line);border-radius:16px;padding:22px;background:var(--surface)}
+    .card.wide{grid-column:span 6}
+    .card.full{grid-column:1/-1}
+    pre{background:var(--hpp-ink);color:var(--hpp-paper);padding:20px;border-radius:12px;overflow:auto;border-left:6px solid var(--hpp-signal);font-size:.92rem;line-height:1.5}
+    code{font-size:.94em}
+    p code,li code,td code{background:var(--surface);padding:.08em .35em;border-radius:5px}
+    pre code{background:none;padding:0}
+    table{width:100%;border-collapse:collapse;background:var(--surface);margin:1em 0}
+    th,td{text-align:left;padding:12px;border-bottom:1px solid var(--line);vertical-align:top}
+    th{background:rgba(15,17,19,.08);font-weight:700}
+    .gate{display:inline-block;border-radius:999px;padding:.15rem .7rem;font-weight:700;font-size:.8rem;margin-bottom:.6em}
+    .gate.allow{background:var(--hpp-signal);color:var(--hpp-ink)}
+    .gate.manual{border:2px solid var(--hpp-ink);color:var(--hpp-ink)}
+    .gate.block{background:var(--hpp-ink);color:var(--hpp-paper)}
+    .label{font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+    .measured{border-left:4px solid var(--hpp-signal);padding-left:1em;color:var(--muted);font-size:.95rem}
+    ul,ol{padding-left:1.3em}
+    li{margin:.25em 0}
+    footer{padding:48px 0;background:var(--hpp-black);color:var(--hpp-paper)}
+    footer a{color:var(--hpp-paper)}
+    footer .five{letter-spacing:.2em;font-size:.8rem;color:rgba(244,241,235,.72)}
+    @media(max-width:760px){.card,.card.wide{grid-column:1/-1}.wrap{width:min(100% - 32px,var(--max))}th,td{font-size:.88rem;padding:8px}.hero{padding-top:28px}section{padding:44px 0}}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+    h3[id],h4[id],h5[id]{scroll-margin-top:64px}
+    ul.tasks{list-style:none;padding-left:.2em}
+    blockquote{margin:1em 0}
+  </style>
+</head>
+<body>
+  <div class="lang"><div class="wrap"><a href="ARCHITECTURE.html" hreflang="en" lang="en">English</a> · <a href="ARCHITECTURE.pt-BR.html" aria-current="page" hreflang="pt-BR">Português</a></div></div>
+  <header class="hero">
+    <div class="wrap">
+      <img src="assets/hpp-logo-header.png" alt="House Party Protocol">
+      <p class="eyebrow">Arquitetura · ARCHITECTURE.pt-BR.md</p>
+      <h1>Arquitetura</h1>
+    </div>
+  </header>
+  <nav aria-label="Capítulos"><div class="wrap"><a href="#quatro-camadas">Quatro camadas</a><a href="#o-pacote-hpp">O pacote <code>hpp/</code></a><a href="#o-fluxo">O fluxo</a><a href="#onde-o-estado-mora">Onde o estado mora</a><a href="#o-manifesto-como-contrato-executável">O manifesto como contrato executável</a><a href="#mapas">Mapas</a><a href="#dois-hosts">Dois hosts</a><a href="#distribuição">Distribuição</a><a href="#contrato-de-saída">Contrato de saída</a><a href="#testes-e-ci">Testes e CI</a><a href="#o-que-deliberadamente-não-existe">O que deliberadamente não existe</a></div></nav>
+  <main>
+
+    <section><div class="wrap">
+<p>Como as peças do House Party Protocol se encaixam, onde o estado mora e o que deliberadamente não
+existe.</p>
+    </div></section>
+
+    <section id="quatro-camadas"><div class="wrap">
+      <p class="eyebrow">01</p>
+      <h2>Quatro camadas</h2>
+<pre><code class="language-text">┌──────────────────────────────────────────────────────────────────────────┐
+│ HARNESS       python -m hpp                                              │
+│               doctor · init · event · status · resume · attest · policy  │
+│               work · route · context · map · graph · eval · benchmark    │
+│               decide · evidence · retrieval · cite (new in 2.6.0)        │
+│               deliberate (new in 2.7.0)                                  │
+├──────────────────────────────────────────────────────────────────────────┤
+│ PROTOCOL      hpp.manifest.json                                          │
+│               roles · loop transitions and gates · exit codes            │
+│               host coverage · monitors · bundles · invariants            │
+├──────────────────────────────────────────────────────────────────────────┤
+│ MODULES       ten versioned directories, each installable on its own     │
+│               skills · hooks · commands · agents · rules · scripts       │
+├──────────────────────────────────────────────────────────────────────────┤
+│ DISTRIBUTION  Claude Code: marketplace.json + plugin per module          │
+│               Codex CLI:   verified copy into .agents/ by the installer  │
+└──────────────────────────────────────────────────────────────────────────┘</code></pre>
+<p>O harness é stdlib-only e não executa modelo algum. Ele lê arquivos, roda os comandos que você
+nomeia e escreve num pequeno número de caminhos declarados. <code>decide</code>, <code>evidence</code>, <code>retrieval</code> e
+<code>cite</code> são novos na 2.6.0; <code>deliberate</code> é novo na 2.7.0.</p>
+    </div></section>
+
+    <section id="o-pacote-hpp"><div class="wrap">
+      <p class="eyebrow">02</p>
+      <h2>O pacote <code>hpp/</code></h2>
+<table>
+<thead><tr><th>arquivo</th><th>responsabilidade</th><th>superfície</th></tr></thead>
+<tbody>
+<tr><td><code>cli.py</code></td><td>parsing de argumentos, despacho, o contrato de saída (<code>2</code> para entrada recusada, <code>3</code> para erro interno)</td><td>todo subcomando, <code>--self-test</code></td></tr>
+<tr><td><code>manifest.py</code></td><td>localizar, carregar e validar o manifesto; cruzar com <code>marketplace.json</code> e com o <code>plugin.json</code> de cada módulo quando presentes, e com o marketplace do Codex (<code>.agents/plugins/marketplace.json</code>) e o <code>.codex-plugin/plugin.json</code> de cada módulo que ele lista</td><td><code>doctor</code></td></tr>
+<tr><td><code>state.py</code></td><td>event log append-only e encadeado por hash (cada linha aponta para o sha256 da anterior; um elo quebrado nomeia o primeiro passo divergente, um log anterior à cadeia lê como <code>legacy</code>); projeção dos eventos sobre o loop; recusa de transições inválidas antes da escrita</td><td><code>event append</code>, <code>event verify</code>, <code>status</code>, <code>resume</code></td></tr>
+<tr><td><code>workgraph.py</code></td><td>validar uma spec, rejeitar ciclos com o caminho nomeado, ordenar unidades em waves; ligar cada critério de aceite aos testes que o citam e, com um relatório JUnit XML, aos testes que o rodaram</td><td><code>work plan</code>, <code>work waves</code>, <code>work coverage</code></td></tr>
+<tr><td><code>findings.py</code></td><td>conferir o documento <code>hpp.findings/v1</code> com que uma lente de revisão responde (código estável, severidade, arquivo e linha, evidência, o universo inspecionado), recusar uma chave que o contrato não define e derivar o veredito</td><td><code>findings check</code> (novo na 2.8.0)</td></tr>
+<tr><td><code>policy.py</code></td><td>classificar um comando como <code>ALLOW</code>, <code>MANUAL</code> ou <code>BLOCK</code>; aplicar o <code>.hpp/policy.json</code> de um projeto, que só pode acrescentar regras ou subir uma classe, nunca baixar; mapear para código de saída por modo</td><td><code>policy check</code></td></tr>
+<tr><td><code>attest.py</code></td><td>vincular um veredito à identidade do repositório, ao commit base, ao hash da spec e a um snapshot completo de arquivos; verificar depois; assinar o registro com uma chave SSH quando pedido (<code>--sign-key</code>) e exigir essa assinatura no verify (<code>--allowed-signers</code>)</td><td><code>attest create</code>, <code>attest verify</code></td></tr>
+<tr><td><code>signing.py</code></td><td>assinar os bytes canônicos de um registro com <code>ssh-keygen -Y sign</code> (namespace <code>hpp</code>) e conferi-los com <code>ssh-keygen -Y verify</code> contra um arquivo de allowed-signers; sem o binário nada é assinado e nada é reportado <code>verified</code></td><td>usado por <code>attest</code>, <code>evidence</code></td></tr>
+<tr><td><code>hosts.py</code></td><td>a matriz host x módulo x canal derivada de <code>hosts</code> e <code>components</code> no manifesto, renderizada para os documentos</td><td><code>doctor --matrix</code></td></tr>
+<tr><td><code>context.py</code></td><td>encaixar blocos inteiros sob um orçamento de caracteres com hashes de proveniência; recusar entrada que se pareça com segredo</td><td><code>context compile</code>, <code>map context</code></td></tr>
+<tr><td><code>routing.py</code></td><td>escolher um tier e um id de provedor a partir de risco, complexidade, tamanho de contexto e estágio declarados; fazer fallback só para cima</td><td><code>route</code></td></tr>
+<tr><td><code>maps.py</code></td><td>Lane Map, Agent Map, Context Map e Monitor Map como projeções ordenadas, só de dados</td><td><code>map lane</code>, <code>map agent</code>, <code>map context</code>, <code>map monitor</code></td></tr>
+<tr><td><code>graph.py</code></td><td>visões de capability, operacional, agente, evidência e código a partir do manifesto; JSON ou Mermaid</td><td><code>graph</code></td></tr>
+<tr><td><code>evals.py</code></td><td>runner de <code>pass@k</code> / <code>pass^k</code> sobre uma suíte de casos com três tipos de runner</td><td><code>eval run</code>, <code>benchmark</code></td></tr>
+<tr><td><code>decision.py</code></td><td>valida um registro <code>hpp.decision/v1</code> feito fora do harness (consultivo, raise-only, abstenção e falha de instrumento como desfechos); mede um decisor declarado com métricas seletivas. Não chama modelo</td><td><code>decide validate</code>, <code>decide eval</code> (novo na 2.6.0)</td></tr>
+<tr><td><code>evidence.py</code></td><td>roda um comando de critério declarado (argv, sem shell, no próprio grupo de processos), mede o código de saída, faz hash dos artefatos declarados e escreve um registro com hash de si mesmo; re-deriva um registro depois. Recusa uma linha de comando que se pareça com segredo. O hash próprio torna uma edição visível; não é uma assinatura — <code>--sign-key</code> acrescenta uma, e <code>verify --allowed-signers</code> a exige. Não dirige navegador</td><td><code>evidence run</code>, <code>evidence verify</code> (novo na 2.6.0); <code>evidence mutate</code> roda o critério numa cópia do workspace, limpa e uma vez por mutante, e nomeia os mutantes que ele deixou passar (novo na 2.7.0)</td></tr>
+<tr><td><code>retrieval.py</code></td><td>pontua um retriever que você declara como comando contra os ids que uma suíte rotula como relevantes: hit@k, recall@k, precision@k, MRR, nDCG@k, com falhas de instrumento contadas à parte. Não roda índice</td><td><code>retrieval eval</code> (novo na 2.6.0)</td></tr>
+<tr><td><code>citations.py</code></td><td>confere que todo marcador de citação num texto resolve para um id do contexto a partir do qual ele foi escrito, e sinaliza uma frase quantitativa sem marcador. Não julga se a fonte sustenta a frase</td><td><code>cite check</code> (novo na 2.6.0)</td></tr>
+<tr><td><code>deliberation.py</code></td><td>House Session: valida um painel de decisores pinados (duas famílias de modelo, um juiz fora das lanes dos participantes, os papéis que o tipo de sessão exige, um orçamento declarado), conta os turnos (votos fundamentados e não fundamentados, abstenções, assentos não julgados, mudanças sem evidência nova; com evidência declarada, só referências que resolvem fundamentam um fact), para a sessão por regra e a sela com a decisão do juiz e, sobre dissidência fundamentada, o steelman do juiz num registro com hash de si mesmo que se re-deriva dos próprios turnos; projeta o painel como um <code>hpp.decision/v1</code>. Não chama modelo</td><td><code>deliberate plan</code>, <code>validate</code>, <code>tally</code>, <code>stop</code>, <code>record</code>, <code>verify</code> (novo na 2.7.0)</td></tr>
+<tr><td><code>controls.py</code></td><td>os dez controles executáveis que o benchmark roda, cada um com um caso positivo e um negativo</td><td><code>benchmark</code>, <code>--self-test</code></td></tr>
+<tr><td><code>install.py</code></td><td>recibo de instalação só de plano para um bundle num host; recusa cobertura não suportada</td><td><code>install</code></td></tr>
+<tr><td><code>wizard.py</code></td><td><code>hpp init</code>: seis estágios, readiness, plano versus aplicação, bloco de wiring</td><td><code>init</code></td></tr>
+<tr><td><code>term.py</code></td><td>detecção de tier de cor, saída ANSI, fallback de glifo ASCII, comportamento sem TTY</td><td>usado por <code>init</code></td></tr>
+<tr><td><code>brand.py</code></td><td>paleta, wordmark em blocos e linhas de fechamento para o terminal</td><td>usado por <code>init</code></td></tr>
+</tbody>
+</table>
+<p><code>policy.py</code> tem oito regras fixas; a primeira que casa vence e toda regra <code>BLOCK</code> é testada antes
+de qualquer regra <code>MANUAL</code>. <code>BLOCK</code>: <code>recursive-delete</code>, <code>force-push</code>, <code>main-push</code>,
+<code>pipe-to-shell</code>, <code>destructive-sql</code>. <code>MANUAL</code>: <code>external-push</code>, <code>external-send</code>, <code>decision-advisor</code>
+(nova na 2.6.0). Qualquer outra
+coisa é <code>ALLOW</code>. O modo muda só o código de saída: <code>audit</code> sai com 0 para todo veredito, <code>enforce</code>
+sai com 2 em <code>BLOCK</code> e 1 em <code>MANUAL</code>. O que cada regra casa está em
+<a href="CONCEPTS.pt-BR.html#política-de-comandos">CONCEPTS.pt-BR.md</a>; confira uma com
+<code>python -m hpp policy check --mode enforce --command "rm -rf src"</code> (saída 2).</p>
+<p>Um projeto endurece o classificador com <code>.hpp/policy.json</code> (<code>hpp.policy/v1</code>, lido pelo
+<code>policy check</code> a partir do diretório atual, ou nomeado com <code>--policy ARQUIVO</code>): regras próprias com
+um padrão, uma classe (<code>BLOCK</code> ou <code>MANUAL</code>) e um motivo, e regras <code>MANUAL</code> embutidas elevadas a
+<code>BLOCK</code>. Um arquivo que isentaria qualquer coisa — uma regra com ação <code>ALLOW</code>, uma elevação que
+mantém ou baixa a classe, uma regra que reutiliza um id embutido — é recusado por inteiro, e uma
+política recusada recusa a checagem (saída 2, sem veredito impresso) em vez de recair nas regras
+embutidas. Todo veredito diz a sua <code>source</code> (<code>built-in</code> ou <code>policy</code>).</p>
+<p>Os tamanhos são pequenos por desenho; o pacote inteiro é legível de uma sentada. Nada importa
+fora da biblioteca padrão.</p>
+    </div></section>
+
+    <section id="o-fluxo"><div class="wrap">
+      <p class="eyebrow">03</p>
+      <h2>O fluxo</h2>
+<pre><code class="language-text">  spec (JSON)
+     │  hpp work plan
+     ▼
+  WorkGraph ──── waves ───▶ wave 1 ──▶ wave 2 ──▶ ... (barrier between waves)
+     │                        │
+     │  hpp route             │  per unit: tier → provider id (never a model call)
+     │                        ▼
+     │                     lane claim ◀── hpp map lane (liveness from heartbeat)
+     │                        │
+     │                        ▼
+     │                     work_started ─▶ evidence_recorded ─▶ check_passed
+     │                        │                 ▲                    │
+     │                        │      hpp context compile             │
+     │                        │      (what the maker saw, hashed)    ▼
+     │                        │                              hpp attest create
+     │                        │                              (verdict bound to bytes)
+     ▼                        ▼                                      │
+  hpp map monitor        .hpp/events.jsonl  ◀── human_approved ◀─────┘
+  (up · fresh · skew)         │
+                              ▼
+                          verified  ── hpp status / hpp resume derive the next step</code></pre>
+<p>Toda seta que muda estado é um evento acrescentado. Toda caixa que decide algo lê arquivos e
+escreve no máximo um arquivo declarado.</p>
+    </div></section>
+
+    <section id="onde-o-estado-mora"><div class="wrap">
+      <p class="eyebrow">04</p>
+      <h2>Onde o estado mora</h2>
+<table>
+<thead><tr><th>caminho</th><th>escrito por</th><th>conteúdo</th><th>tempo de vida</th></tr></thead>
+<tbody>
+<tr><td><code>.hpp/events.jsonl</code></td><td><code>hpp event append</code></td><td>um objeto JSON por linha: <code>seq</code>, <code>id</code>, <code>type</code>, <code>data</code> e <code>prev_sha256</code>, o sha256 da linha anterior (a primeira aponta para o hash do vazio); append-only e encadeado por hash — <code>hpp event verify</code> nomeia o primeiro passo divergente, e linhas anteriores à cadeia leem como <code>legacy</code></td><td>o histórico do loop do workspace</td></tr>
+<tr><td><code>.hpp/policy.json</code></td><td>o operador, à mão</td><td><code>hpp.policy/v1</code>: regras que acrescentam <code>BLOCK</code> ou <code>MANUAL</code>, e regras <code>MANUAL</code> embutidas elevadas a <code>BLOCK</code>; lido pelo <code>hpp policy check</code>, recusado por inteiro se isentar qualquer coisa</td><td>até o operador mudá-lo</td></tr>
+<tr><td><code>.hpp/profile.json</code></td><td><code>hpp init --apply</code></td><td>host, bundle, módulos, modo de política, versão do protocol e do produto; <code>decision_advisor</code> só quando um foi declarado</td><td>até o operador removê-lo</td></tr>
+<tr><td><code>.hpp/attestation.json</code></td><td><code>hpp attest create --output</code></td><td>o veredito vinculado; o caminho é escolha sua</td><td>até os bytes que ele descreve mudarem</td></tr>
+<tr><td><code>.hpp/evidence/&lt;id&gt;-&lt;UTC&gt;.json</code></td><td><code>hpp evidence run</code> (novo na 2.6.0)</td><td>um registro por execução, criado em modo exclusivo: o comando, o commit base, o código de saída, o veredito, a contagem de bytes e o sha256 de stdout e stderr (nunca o texto), o sha256 de cada artefato declarado e o hash do próprio registro; <code>--out</code> escolhe outro diretório dentro do workspace</td><td>até o operador removê-lo; o <code>evidence verify</code> o bloqueia assim que um artefato que ele nomeia muda</td></tr>
+<tr><td><code>hpp.manifest.json</code></td><td>o projeto</td><td>o protocol; encontrado subindo a partir do diretório atual, depois ao lado do pacote-fonte, depois na cópia embarcada no pacote instalado</td><td>versionado com o produto</td></tr>
+<tr><td><code>CHECKSUMS.txt</code> do módulo</td><td>a forja</td><td>sha256 por arquivo distribuído</td><td>versionado com cada módulo emitido</td></tr>
+</tbody>
+</table>
+<p>Todo o resto que o harness consome é uma entrada que você passa na linha de comando: specs, lanes,
+monitores, provedores, pedidos de roteamento, blocos de contexto, suítes de avaliação. Não há cache
+oculto, diretório de estado no nível do usuário nem variável de ambiente que mude um veredito; o
+único ambiente que o harness lê é <code>NO_COLOR</code>, <code>FORCE_COLOR</code>, <code>TERM</code>, <code>COLORTERM</code>, <code>CI</code> e a flag de
+sessão do terminal do Windows, e esses afetam apenas a renderização.</p>
+<p>O event log é a fronteira de recuperação. Lê-lo valida que <code>seq</code> é contíguo e que <code>id</code> é igual a
+<code>event:&lt;seq&gt;</code>; uma linha corrompida para a projeção com o número da linha em vez de pulá-la.
+Acrescentar valida a transição contra o manifesto antes de abrir o arquivo, de modo que um evento
+recusado não deixa rastro e não consegue criar o log.</p>
+    </div></section>
+
+    <section id="o-manifesto-como-contrato-executável"><div class="wrap">
+      <p class="eyebrow">05</p>
+      <h2>O manifesto como contrato executável</h2>
+<p><code>hpp.manifest.json</code> declara a versão do protocol, os hosts, os módulos com os próprios caminhos,
+versões, capacidades, relações e cobertura por host, os bundles, os papéis, os códigos de saída, os
+tiers e a regra de roteamento, os nomes dos mapas, o caminho do instalador, os monitores e o loop.</p>
+<p><code>hpp doctor</code> rejeita um manifesto que viole qualquer um destes: hosts, módulos, capacidades,
+caminhos e ids de monitor únicos; caminhos de módulo relativos; valores de cobertura fora de
+<code>native</code> / <code>explicit-command</code> / <code>unsupported</code>; relações desconhecidas; ciclos em <code>requires</code>;
+bundles nomeando módulos ou capacidades desconhecidos; códigos de saída diferentes de <code>0/1/2/3</code>;
+tiers de roteamento diferentes de <code>economy/balanced/frontier</code>; monitores com cadência ou frescor
+não positivos.</p>
+<p>Quando <code>marketplace.json</code> fica ao lado do manifesto, o doctor também confere que a versão do
+produto bate, que o conjunto de módulos bate, que o <code>source</code> e a <code>version</code> de cada módulo batem,
+que o diretório do módulo existe dentro da raiz do produto e que o <code>.claude-plugin/plugin.json</code>
+dele concorda em nome e versão. Num checkout de fonte sem marketplace o doctor diz isso
+(<code>distribution: source-contract</code>) em vez de reportar uma checagem que não conseguiu rodar.</p>
+    </div></section>
+
+    <section id="mapas"><div class="wrap">
+      <p class="eyebrow">06</p>
+      <h2>Mapas</h2>
+<p>Os mapas não têm estado próprio. Cada um é uma projeção de uma ou duas entradas, ordenada de modo
+que a mesma entrada produza a mesma saída byte a byte.</p>
+<table>
+<thead><tr><th>mapa</th><th>entrada</th><th>pergunta que responde</th></tr></thead>
+<tbody>
+<tr><td>capability</td><td>manifesto</td><td>qual módulo fornece qual capacidade, em qual host, em qual bundle</td></tr>
+<tr><td>operational</td><td><code>loop</code> do manifesto</td><td>qual evento move qual estado por qual gate</td></tr>
+<tr><td>agent</td><td>papéis e módulos do manifesto, eventos opcionais</td><td>quem pode fazer, checar e aprovar; o que aconteceu, em ordem</td></tr>
+<tr><td>evidence</td><td>fixa</td><td>como um critério, um registro e um veredito se relacionam</td></tr>
+<tr><td>code</td><td>componentes do manifesto</td><td>quais superfícies cada módulo declara (não é uma AST)</td></tr>
+<tr><td>lane</td><td>JSON de lanes, <code>--now</code>, limiares</td><td>quem possui o quê, quem está vivo, onde reivindicações vivas se sobrepõem</td></tr>
+<tr><td>context</td><td>JSON de contexto, <code>--budget</code></td><td>o que entrou no contexto compilado, o que foi omitido, com hashes</td></tr>
+<tr><td>monitor</td><td>JSON de monitores, <code>--now</code>, <code>--skew-tolerance</code></td><td>o que é observado, quão fresco, e qual gate o consome</td></tr>
+<tr><td>work</td><td>JSON da spec</td><td>quais unidades podem rodar juntas e em que ordem</td></tr>
+</tbody>
+</table>
+<p>O Context Map é proveniência de uma compilação; não é recuperação e não é uma base de
+conhecimento. O Code Map inventaria componentes declarados; não é um grafo de chamadas.</p>
+    </div></section>
+
+    <section id="dois-hosts"><div class="wrap">
+      <p class="eyebrow">07</p>
+      <h2>Dois hosts</h2>
+<table>
+<thead><tr><th>capacidade</th><th>Claude Code</th><th>Codex CLI</th></tr></thead>
+<tbody>
+<tr><td>skills e instruções</td><td>plugin, nativo</td><td>copiadas para <code>.agents/skills</code>, com namespace</td></tr>
+<tr><td>hooks de lifecycle (<code>Stop</code>, <code>PreToolUse</code>, <code>SessionStart</code>, ...)</td><td>nativos depois que uma pessoa faz o wiring</td><td>nenhum; os mesmos scripts rodam como comandos explícitos</td></tr>
+<tr><td>política de comandos</td><td>hook mais CLI</td><td>CLI ou preflight</td></tr>
+<tr><td>event log, attestation, mapas, WorkGraph, eval</td><td>CLI</td><td>CLI</td></tr>
+<tr><td>instalação</td><td>plugin do marketplace, ou cópia pelo instalador para módulos <code>explicit-command</code></td><td>cópia pelo instalador para <code>.agents/hpp/&lt;module&gt;</code></td></tr>
+</tbody>
+</table>
+<p>A costura de host é uma tabela pequena: caminho de settings e gates manuais para o Claude Code;
+<code>AGENTS.md</code>, caminho de skills e caminho de runtime para o Codex CLI. <code>hpp init</code> a usa para nomear
+os mesmos caminhos que o instalador de módulos vai tocar, e não toca em nenhum deles. Acrescentar
+um host significa acrescentar uma linha e um valor de cobertura por módulo, não mudar os seis
+estágios.</p>
+<h3 id="hosts-e-canais">Hosts e canais</h3>
+<p>Uma linha por módulo, renderizada a partir de <code>hosts</code> e <code>components</code> no manifesto por
+<code>hpp doctor --matrix</code> (<code>hpp/hosts.py</code>); o <code>tests/test_host_matrix.py</code> mantém esta tabela igual a
+essa renderização.</p>
+<table>
+<thead><tr><th>módulo</th><th>Claude Code</th><th>Codex CLI</th></tr></thead>
+<tbody>
+<tr><td><code>operator-kit</code> 1.8.0</td><td><code>native</code> · plugin + hooks depois de colar o wiring</td><td><code>explicit-command</code> · plugin (só skills) + cópia verificada</td></tr>
+<tr><td><code>kit-forge</code> 1.5.0</td><td><code>explicit-command</code> · plugin</td><td><code>explicit-command</code> · cópia verificada</td></tr>
+<tr><td><code>lane-kit</code> 1.7.0</td><td><code>native</code> · plugin + hooks depois de colar o wiring</td><td><code>explicit-command</code> · cópia verificada</td></tr>
+<tr><td><code>continuity-kit</code> 1.5.0</td><td><code>native</code> · plugin + hooks depois de colar o wiring</td><td><code>explicit-command</code> · plugin (só skills) + cópia verificada</td></tr>
+<tr><td><code>health-kit</code> 1.4.0</td><td><code>explicit-command</code> · plugin</td><td><code>explicit-command</code> · plugin (só skills) + cópia verificada</td></tr>
+<tr><td><code>claude-dev-kit</code> 1.3.4</td><td><code>native</code> · plugin</td><td><code>unsupported</code> · —</td></tr>
+<tr><td><code>supabase-pack</code> 1.2.0</td><td><code>explicit-command</code> · plugin</td><td><code>explicit-command</code> · plugin (só skills) + cópia verificada</td></tr>
+<tr><td><code>agent-framework-wizard</code> 1.2.2</td><td><code>explicit-command</code> · plugin</td><td><code>explicit-command</code> · cópia verificada</td></tr>
+<tr><td><code>dev-squad-kit</code> 1.2.0</td><td><code>native</code> · plugin</td><td><code>explicit-command</code> · plugin (só skills) + cópia verificada</td></tr>
+<tr><td><code>gotcha-memory</code> 1.1.0</td><td><code>native</code> · plugin + hooks depois de colar o wiring</td><td><code>explicit-command</code> · plugin (só skills) + cópia verificada</td></tr>
+</tbody>
+</table>
+<p>No Claude Code todo módulo é um plugin do marketplace, e um módulo que declara hooks os arma depois
+que o wiring é colado. No Codex CLI o canal de plugin é o marketplace do próprio produto,
+<code>.agents/plugins/marketplace.json</code> (<code>codex plugin marketplace add rusharlabs/house-party-protocol</code>,
+depois <code>codex plugin add &lt;módulo&gt;@house-party-protocol</code>): ele lista os módulos que carregam skills e
+são suportados ali, e instala só skills — os hooks são do Claude Code, e a cópia verificada
+(<code>kit_doctor.py install --host codex</code>) é o que instala runtime, scripts e templates. O
+<code>.codex-plugin/plugin.json</code> de cada módulo carrega um objeto <code>hooks</code> vazio de propósito: sem a chave
+<code>hooks</code>, o Codex carrega por padrão o <code>hooks/hooks.json</code> do módulo.</p>
+    </div></section>
+
+    <section id="distribuição"><div class="wrap">
+      <p class="eyebrow">08</p>
+      <h2>Distribuição</h2>
+<p>A árvore publicada é emitida pela forja a partir das fontes dos módulos. Cada diretório de módulo
+carrega <code>CHECKSUMS.txt</code> (sha256 por arquivo) e um <code>.zip</code> com os mesmos bytes; <code>marketplace.json</code>
+lista os módulos com <code>source</code> e <code>version</code>; <code>.agents/plugins/marketplace.json</code> lista, na forma que o
+Codex CLI lê, os módulos do canal de plugin do Codex, cada um carregando um
+<code>.codex-plugin/plugin.json</code> renderizado a partir do seu par do Claude, e o <code>hpp doctor</code> cruza os
+dois canais com o manifesto (<code>distribution.codex_marketplace</code>); o instalador
+(<code>installers/kit-forge-&lt;version&gt;/kit_doctor.py</code>) roda os seis estágios de instalação, verifica
+checksums e executa os smokes declarados do módulo.</p>
+<pre><code class="language-text">sources ──forge──▶ module dir + CHECKSUMS.txt + .zip ──▶ marketplace.json
+                        │                                     │
+                        └── kit_doctor.py verify ◀────────────┘── hpp doctor (cross-check)</code></pre>
+<p>Este repositório é essa árvore publicada: os diretórios de módulo com seus <code>CHECKSUMS.txt</code>, o
+instalador e o <code>marketplace.json</code> ficam ao lado do harness, então o <code>hpp init</code> verifica aqui a
+integridade da distribuição e os checksums dos módulos (9 de 11 itens de prontidão). Dois outros
+layouts carregam menos e dizem isso: o wheel do pip traz o harness, o manifesto e a suíte de
+benchmark, mas nenhum diretório de módulo, e a árvore-fonte do harness não traz nenhum dos
+artefatos emitidos; nos dois, o doctor, o benchmark e a suíte rodam, e a integridade da
+distribuição e os checksums dos módulos são reportados como não verificados em vez de presumidos.</p>
+    </div></section>
+
+    <section id="contrato-de-saída"><div class="wrap">
+      <p class="eyebrow">09</p>
+      <h2>Contrato de saída</h2>
+<table>
+<thead><tr><th>código</th><th>significado</th><th>onde</th></tr></thead>
+<tbody>
+<tr><td><code>0</code></td><td>ok; no modo <code>audit</code>, sempre</td><td>todo comando</td></tr>
+<tr><td><code>1</code></td><td>warn ou gate manual; um gate de eval que falhou</td><td><code>policy check</code> (<code>MANUAL</code> em <code>enforce</code>), <code>eval run</code>, <code>benchmark</code>, <code>init</code> com avisos, <code>decide eval</code> quando o gate dele falha (novo na 2.6.0), <code>evidence run</code> quando o bundle não passou, <code>evidence verify</code> sobre um registro íntegro de uma execução que não passou, <code>retrieval eval</code> quando o gate dele falha, <code>cite check</code> com um aviso (<code>TOO_MANY</code>, <code>UNCITED_CLAIM</code>) (novo na 2.6.0), <code>deliberate record</code> quando o veredito está bloqueado ou o juiz falhou, <code>evidence mutate</code> com ponto cego, execução incompleta ou nenhum mutante aplicado (novo na 2.7.0), <code>work coverage</code> quando um critério não está coberto ou, com <code>--junit</code>, não foi executado, <code>findings check</code> quando uma lente achou algo (novo na 2.8.0)</td></tr>
+<tr><td><code>2</code></td><td>block; uma entrada recusada (manifesto ruim, spec ruim, log corrompido, attestation inválida)</td><td><code>policy check</code> (<code>BLOCK</code>), <code>attest</code>, <code>decide validate</code> e <code>decide eval</code> sobre um registro ou suíte que quebra o contrato (novo na 2.6.0), <code>evidence run</code> sobre um pedido recusado ou um evento que ele não conseguiu acrescentar, <code>evidence verify</code> sobre um registro editado ou que se contradiz, ou cujo artefato mudou ou sumiu, <code>retrieval eval</code> sobre uma suíte ou um argumento recusados, <code>cite check</code> sobre <code>UNKNOWN_ID</code>, <code>RANGE</code> ou <code>EMPTY_MARKER</code> ou uma entrada recusada (novo na 2.6.0), <code>deliberate</code> sobre painel, turno ou juiz recusado, sessão que não parou ou registro que não verifica, <code>evidence mutate</code> quando o critério não passa na cópia limpa (<code>no-control</code>) ou um mutante é recusado (novo na 2.7.0), <code>work coverage</code> sobre um relatório recusado ou um caminho de testes sem fonte Python, <code>findings check</code> sobre um documento que quebra o contrato (novo na 2.8.0), <code>event verify</code> e <code>status</code> sobre uma cadeia de hash quebrada, <code>policy check</code> sobre um arquivo de política recusado, <code>attest verify</code> e <code>evidence verify</code> com <code>--allowed-signers</code> sobre um registro cuja assinatura falta, não é aceita ou cobre bytes alterados, todo erro de validação</td></tr>
+<tr><td><code>3</code></td><td>erro de uso ou interno</td><td>erros de uso do <code>init</code>, exceções inesperadas</td></tr>
+</tbody>
+</table>
+<p><code>hpp init</code> reporta o código que vai devolver dentro do próprio relatório JSON (<code>exit_code</code>) e
+interrompe os estágios restantes quando um estágio falha com uma dica bloqueante.</p>
+    </div></section>
+
+    <section id="testes-e-ci"><div class="wrap">
+      <p class="eyebrow">10</p>
+      <h2>Testes e CI</h2>
+<p>A suíte em <code>tests/</code> é stdlib-only e roda sem rede. Cada arquivo de teste carrega ao menos um teste
+chamado <code>CONTROLE</code> que prova que o arquivo consegue falhar. Neste repositório um teste pula de propósito
+(a cópia emitida é coberta pelo teste seguinte); a árvore-fonte do harness, que não tem
+<code>marketplace.json</code>, pula os dois testes que precisam dele. A CI roda a suíte,
+<code>hpp doctor</code> e <code>hpp benchmark -k 3</code> em Linux, macOS e Windows, de Python 3.10 a 3.13, com
+permissões somente de leitura e nenhum passo autorizado a falhar em silêncio.</p>
+<pre><code class="language-bash">python -m pytest tests -q
+python -m hpp doctor
+python -m hpp benchmark -k 3</code></pre>
+    </div></section>
+
+    <section id="o-que-deliberadamente-não-existe"><div class="wrap">
+      <p class="eyebrow">11</p>
+      <h2>O que deliberadamente não existe</h2>
+<table>
+<thead><tr><th>ausente</th><th>por que é uma escolha</th></tr></thead>
+<tbody>
+<tr><td>daemon ou serviço em segundo plano</td><td>uma checagem que não rodou não foi rodada; um processo residente seria uma segunda coisa a verificar e guardaria estado que o log não vê</td></tr>
+<tr><td>servidor, API ou control plane</td><td>o harness é operado a partir do repositório que protege; um plano remoto afastaria o veredito dos bytes sobre os quais ele fala</td></tr>
+<tr><td>scheduler ou fila</td><td>a cadência no Monitor Map é declarada para o consumidor honrar; o harness não acorda sozinho</td></tr>
+<tr><td>banco de grafo</td><td>todo mapa é re-derivável de arquivos; um grafo armazenado derivaria das fontes e exigiria o próprio doctor</td></tr>
+<tr><td>execução de modelo</td><td>o roteamento devolve um tier e um id de provedor; chamar um modelo faria os vereditos dependerem de algo que o harness não consegue reproduzir nem se permitir guardar credenciais para</td></tr>
+<tr><td>armazenamento de credenciais</td><td>não há nenhuma para vazar; entrada que se pareça com segredo no compilador de contexto é recusada, e a memória de falhas redige por forma</td></tr>
+<tr><td>telemetria</td><td>nada sai da máquina; <code>git push</code>, <code>curl</code>/<code>wget</code> para uma URL e o adaptador de decisão de exemplo são classificados como <code>MANUAL</code> (uma transferência por outra ferramenta, como <code>scp</code>, não casa regra nenhuma)</td></tr>
+<tr><td>wiring automático de settings ou hooks</td><td>ligar um hook muda o que roda em toda chamada de ferramenta futura; isso é ação humana, impressa para colar</td></tr>
+<tr><td>contagem de tokens</td><td>o orçamento é em caracteres, que todo host mede do mesmo jeito; uma contagem de tokens amarraria o harness a um tokenizador</td></tr>
+</tbody>
+</table>
+<p>Uma camada só é acrescentada quando há um consumidor para ela e um benchmark que mostre quanto ela
+custa. Até lá, a ausência é a feature.</p>
+    </div></section>
+
+  </main>
+  <footer><div class="wrap">
+    <p class="five">AGENTS · EVIDENCE · MEMORY · PROTOCOL · CONTINUITY</p>
+    <strong>House Party Protocol</strong>
+    <p>Opere agentes de código sob evidência, não confiança.</p>
+    <p><a href="index.html">Documentação</a> · <a href="MANUAL.pt-BR.html">Manual do harness</a> · <a href="CATALOG.pt-BR.html">Catálogo de módulos</a> · <a href="https://github.com/rusharlabs/house-party-protocol/blob/main/docs/ARCHITECTURE.pt-BR.md">Fonte em Markdown</a> · <a href="ARCHITECTURE.html" hreflang="en" lang="en">English</a></p>
+  </div></footer>
+</body>
+</html>

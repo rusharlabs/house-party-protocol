@@ -98,12 +98,25 @@ does.
 
 - **No daemon, no server, no scheduler.** A check that did not run was not run. A background
   process would make "is it running?" a second question to verify, and would carry state that the
-  event log does not see.
+  event log does not see. The `hpp` package runs none. *A bounded exception, for modules only:* a
+  module may serve a local page that the operator starts and stops (lane-kit's Lane Dashboard is
+  the one that does), under all of these conditions: it binds loopback only and answers only its
+  own page; every action carries a token issued for that run; the page refuses to be framed; a
+  request that only reads writes nothing and starts nothing; every write goes through the module's
+  own command-line tools, and every action is also a terminal command that does exactly the same;
+  nothing schedules it, and what it runs stays within the bounds of the next item. The page itself
+  sends nothing off the machine.
 - **No model calls.** The harness routes work to a tier and a provider id you declared. It does
   not pick a vendor, a model name or a price, and it holds no credential. The moment it called a
   model, its verdicts would depend on something it cannot reproduce. A decision you obtain
   elsewhere can be recorded and measured (`hpp decide`); the example adapter that asks a hosted
   model lives in `examples/`, runs only when a person runs it, and the policy classifies it `MANUAL`.
+  *A bounded exception, for modules only:* such a page may start an agent session, and only as an
+  action the operator confirms, never from a request that only reads, never on a timer and never by
+  itself, with the model the operator declared for it. A session that runs in the background runs
+  under a supervisor with a timeout, a stop and a capped log. The session is the operator's agent,
+  on the operator's own account; the `hpp` package still calls no model, picks none and holds no
+  credential.
 - **No graph database.** Every map is a projection of manifests, events and JSON you supply. The
   same input yields the same nodes and edges, in the same order, and you can hash the result. A
   stored graph would be a second source of truth that drifts from the first.
@@ -150,6 +163,17 @@ The doctor shows the difference. Missing coverage is `unsupported`, never "proba
 HPP does not call itself reliable for having many components. Reliability comes from negative
 controls, repeated execution, independent review and a verifiable release chain. A critical
 release must demonstrate its floor, `pass^k`, not the best result it ever obtained.
+
+## More agents, more claims
+
+A team of agents multiplies what one agent already does: it claims. Each session reports its own
+"done", a reviewer from the author's model family can share the author's blind spots, and a panel
+drawn from one family can agree for the same reason it is wrong. Adding agents adds output; it adds
+nothing to proof. The harness does not make a team more capable and does not decide how many agents
+to run. It holds every member to the same contracts: work splits only where the spec has no edge, a
+verdict comes from another lane and another model family, a deliberation keeps the dissent that
+lost, and nothing reaches `verified` without a criterion, a command, its output and its freshness.
+More agents is a reason for more evidence, not less.
 
 ## The commitment
 

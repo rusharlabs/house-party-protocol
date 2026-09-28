@@ -183,6 +183,6 @@ python -m hpp decide eval examples/typed-decisions/gotcha-family-suite.json --de
 ### 30. Best-of-N é pass@N: escolha um e ainda verifique (novo na 2.6.0)
 
 ```bash
-python multi-session/lane-kit-*/scripts/lane_board.py compete --task T-1 --items T-1a,T-1b --lane lead --model claude-opus
-python multi-session/lane-kit-*/scripts/lane_board.py select --task T-1 --winner T-1a --lane review --model gpt-5 --reason "smaller diff, same tests"
+python multi-session/lane-kit-*/scripts/lane_board.py compete --task T-1 --items T-1a,T-1b --lane lead --model claude-opus-5-5
+python multi-session/lane-kit-*/scripts/lane_board.py select --task T-1 --winner T-1a --lane review --model gpt-5.6-sol --reason "smaller diff, same tests"
 ```
