@@ -106,6 +106,7 @@ import webbrowser
 from datetime import datetime, timezone
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+import socketserver
 from pathlib import Path
 from typing import Any, Callable
 
@@ -3461,6 +3462,20 @@ def open_page(url: str, project_dir: Path) -> str:
 _FRAME_SOURCE = re.compile(r"^(?:'self'|[A-Za-z][A-Za-z0-9+.-]*:(?://[A-Za-z0-9.*:\[\]-]+)?)$")
 
 
+class _DashboardServer(ThreadingHTTPServer):
+    """The page's server, without http.server's reverse lookup of the address it binds.
+
+    Why (MAC-SERVE-FQDN): HTTPServer.server_bind names the server with socket.getfqdn(host), a
+    reverse DNS lookup. On the macOS CI runner it took 15-30 s per server (the self-test ran 38 s
+    there against 3 s on Linux), and a Mac without a fast resolver pays it on every `serve`. The
+    page binds loopback and never reads server_name, so the bound address is its name."""
+
+    def server_bind(self) -> None:
+        socketserver.TCPServer.server_bind(self)
+        host, port = self.server_address[:2]
+        self.server_name, self.server_port = str(host), port
+
+
 def make_server(projects: Projects | Path, host: str, port: int,
                 frame_ancestors: tuple[str, ...] | list[str] = ()) -> ThreadingHTTPServer:
     if isinstance(projects, Path):
@@ -3470,10 +3485,10 @@ def make_server(projects: Projects | Path, host: str, port: int,
         raise ValueError(f"not a frame-ancestors source: {', '.join(bad)}")
     handler = type("BoundDashboardHandler", (DashboardHandler,),
                    {"projects": projects, "token": secrets.token_urlsafe(24), "frame_ancestors": tuple(frame_ancestors)})
-    server_class = ThreadingHTTPServer
+    server_class: type[ThreadingHTTPServer] = _DashboardServer
     if ":" in host:
         import socket
-        server_class = type("IPv6DashboardServer", (ThreadingHTTPServer,), {"address_family": socket.AF_INET6})
+        server_class = type("IPv6DashboardServer", (_DashboardServer,), {"address_family": socket.AF_INET6})
     server = server_class((host, port), handler)
     server.daemon_threads = True
     return server
