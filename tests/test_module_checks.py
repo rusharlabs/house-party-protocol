@@ -114,12 +114,33 @@ def test_zero_self_tests_run_is_not_a_pass(tmp_path, capsys):
     assert "ran none" in capsys.readouterr().out
 
 
+def test_without_python_keeps_every_other_tool_on_the_path(tmp_path, monkeypatch):
+    """-- Why: the first version removed every PATH entry that held a `python`. On a Linux runner that
+    is /usr/bin, and with it grep, rm, seq, dirname and git: the first CI run of the modules job failed
+    every eval and half the self-tests on the tools, never reaching the Python question it asks."""
+    system = tmp_path / "usr-bin"
+    system.mkdir()
+    for tool in ("python", "grep", "rm"):
+        (system / tool).write_text("#!/bin/sh\n", encoding="utf-8")
+    monkeypatch.setenv("PATH", str(system))
+    shim = tmp_path / "shim"
+    shim.mkdir()
+    dirs = mc._without_python_env(shim)["PATH"].split(os.pathsep)
+    assert dirs[0] == str(shim), "the shim comes first, so its `python` shadows every other one"
+    assert str(system) in dirs, "a directory that also holds a `python` keeps its other tools reachable"
+    assert {p.name for p in shim.iterdir()} == {"python", "python3"}
+
+
 @pytest.mark.skipif(os.name == "nt", reason="--without-python is for macOS and Linux")
-def test_without_python_leaves_only_this_interpreter_as_python3(tmp_path):
+def test_without_python_a_bare_python_fails_and_python3_is_this_interpreter(tmp_path):
+    import subprocess
     shim = tmp_path / "shim"
     shim.mkdir()
     env = mc._without_python_env(shim)
-    dirs = env["PATH"].split(os.pathsep)
-    assert dirs[0] == str(shim)
-    assert (shim / "python3").resolve() == Path(sys.executable).resolve()
-    assert not any((Path(d) / "python").exists() for d in dirs)
+    bare = subprocess.run(["sh", "-c", "python -c 'print(1)'"], env=env, capture_output=True, text=True)
+    assert bare.returncode == 127 and "command not found" in bare.stderr, (bare.returncode, bare.stderr)
+    three = subprocess.run(["sh", "-c", "python3 -c 'import sys; print(sys.executable)'"], env=env,
+                           capture_output=True, text=True)
+    assert three.returncode == 0 and Path(three.stdout.strip()).resolve() == Path(sys.executable).resolve()
+    tools = subprocess.run(["sh", "-c", "command -v grep && command -v rm"], env=env, capture_output=True, text=True)
+    assert tools.returncode == 0, "CONTROLE: the ordinary tools are still found"

@@ -162,8 +162,9 @@ keeps its own version in `plugin.json` and in `marketplace.json`.
   `scripts/module_checks.py`: every self-test of every shipped module (through the kit doctor's
   smoke stage, in plan mode, so nothing is installed) and every module eval, on Ubuntu, macOS and
   Windows with the oldest and the newest supported Python. macOS uses the stock `/bin/bash` (3.2)
-  and its BSD tools, and macOS and Linux run with no `python` on `PATH`, the way a Mac comes out of
-  the box. On the current modules that is 76 self-tests and 7 evals. A module that
+  and its BSD tools, and on macOS and Linux a bare `python` is "command not found", the way a Mac
+  comes out of the box (a shim shadows it and leaves every other tool on `PATH`). PyYAML is installed
+  first, hash-pinned, because the modules that need it say so in their READMEs. On the current modules that is 76 self-tests and 7 evals. A module that
   `marketplace.json` declares and the copy lacks is an error that names it, never a pass on
   nothing; with no `marketplace.json` (the source tree) the job says so and skips.
 - **A shell portability lint.** `scripts/shell_portability.py` rejects what breaks on a stock Mac:
@@ -334,6 +335,10 @@ keeps its own version in `plugin.json` and in `marketplace.json`.
   through the module's `hooks/pyrun.sh`, as the hooks do, and its `allowed-tools` names the shim
   and the script. The shim runs them with `--strict`: with no interpreter the command stops with an
   error instead of reading as done (a hook keeps exit 0, so it never takes the tool down).
+- **`skill_lint --run-proofs` ran a skill's Proof with whatever `python` was on `PATH`** (kit-forge,
+  claude-dev-kit). A Proof whose first word is `python` or `python3` now runs on the interpreter that
+  runs the linter: a stock Mac has no `python`, and there the linter's own self-test failed on its
+  fixture. A `python` later in the line is left to the `PATH`, as the skill wrote it.
 - **The continuity kit's C3 check timed the machine, not the hook.** Its "under 5 s" bound
   included two Python start-ups, so on a loaded host it failed with the right behaviour (5 s and
   7 s measured). C3 now times the two guard calls themselves with a monotonic clock and bounds

@@ -9,9 +9,10 @@ house contract), in plan mode: nothing is installed and nothing is registered. E
     python scripts/module_checks.py --bash /bin/bash --without-python   # a stock Mac: bash 3.2,
                                                                          # BSD tools, no `python`
 
-`--without-python` (macOS and Linux) removes every PATH entry that holds a `python` and puts a
-`python3` that is this interpreter first, so a module that still calls a bare `python` fails
-here instead of on the first Mac that runs it.
+`--without-python` (macOS and Linux) puts a shim directory first on PATH: `python3` runs this
+interpreter and a bare `python` fails with "command not found" (exit 127), so a module that still
+calls a bare `python` fails here instead of on the first Mac that runs it. Every other tool stays
+where it was.
 
 In the source tree there are no modules (they exist only in the emitted copy); the script says
 so and exits 0. A module `marketplace.json` declares and the copy does not carry is an error, never
@@ -40,12 +41,22 @@ EVAL_TIMEOUT_S = 900
 
 
 def _without_python_env(shim_dir: Path) -> dict[str, str]:
-    """PATH with no `python` anywhere and this interpreter as `python3`, first."""
-    (shim_dir / "python3").symlink_to(sys.executable)
-    kept = [d for d in os.environ.get("PATH", "").split(os.pathsep)
-            if d and not (Path(d) / "python").exists()]
+    """PATH as it was, with a shim directory first: `python3` runs this interpreter, and a bare `python`
+    fails the way it does on a host that has none (command not found, exit 127).
+
+    Why: the first version removed every PATH entry that held a `python`. On a Linux runner that is
+    /usr/bin, and with it grep, rm, seq, dirname and git, so every eval and half the self-tests failed
+    on the tools before reaching the question this option asks. Shadowing leaves every other tool where
+    it was."""
+    python3 = shim_dir / "python3"
+    python3.write_text(f'#!/bin/sh\nexec "{sys.executable}" "$@"\n', encoding="utf-8")
+    missing = shim_dir / "python"
+    missing.write_text('#!/bin/sh\necho "python: command not found (module_checks --without-python: this host '
+                       'has only python3)" >&2\nexit 127\n', encoding="utf-8")
+    for script in (python3, missing):
+        script.chmod(0o755)
     env = dict(os.environ)
-    env["PATH"] = os.pathsep.join([str(shim_dir), *kept])
+    env["PATH"] = os.pathsep.join([str(shim_dir), os.environ.get("PATH", "")])
     return env
 
 

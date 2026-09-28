@@ -166,8 +166,10 @@ cada módulo mantém sua própria versão no `plugin.json` e no `marketplace.jso
   o `scripts/module_checks.py`: todo self-test de todo módulo distribuído (pela etapa de smoke do
   kit doctor, em modo de plano, então nada é instalado) e toda eval de módulo, em Ubuntu, macOS e
   Windows, com o Python suportado mais antigo e o mais novo. O macOS usa o `/bin/bash` de fábrica
-  (3.2) e as ferramentas BSD dele, e macOS e Linux rodam sem `python` no `PATH`, do jeito que um
-  Mac sai da caixa. Nos módulos atuais são 76 self-tests e 7 evals. Um módulo que o
+  (3.2) e as ferramentas BSD dele, e no macOS e no Linux um `python` solto dá "command not found",
+  do jeito que um Mac sai da caixa (um shim o encobre e deixa todas as outras ferramentas no `PATH`).
+  O PyYAML é instalado antes, com hash fixo, porque os módulos que precisam dele dizem isso no README.
+  Nos módulos atuais são 76 self-tests e 7 evals. Um módulo que o
   `marketplace.json` declara e a cópia não tem é erro com o nome dele, nunca aprovação sobre nada;
   sem `marketplace.json` (a árvore-fonte) o job diz isso e pula.
 - **Um lint de portabilidade de shell.** O `scripts/shell_portability.py` recusa o que quebra num
@@ -343,6 +345,11 @@ cada módulo mantém sua própria versão no `plugin.json` e no `marketplace.jso
   script pelo `hooks/pyrun.sh` do módulo, como os hooks fazem, e o `allowed-tools` nomeia o shim e o
   script. O shim os roda com `--strict`: sem interpretador, o comando para com erro em vez de parecer
   concluído (um hook continua saindo com 0, para nunca derrubar a ferramenta).
+- **O `skill_lint --run-proofs` rodava a Proof de uma skill com qualquer `python` que estivesse no
+  `PATH`** (kit-forge, claude-dev-kit). Uma Proof cuja primeira palavra é `python` ou `python3` agora
+  roda no interpretador que roda o linter: um Mac de fábrica não tem `python`, e lá o próprio
+  self-test do linter falhava no fixture. Um `python` mais adiante na linha fica com o `PATH`, como a
+  skill escreveu.
 - **A checagem C3 do continuity kit media a máquina, não o hook.** O limite de "menos de 5 s"
   incluía duas partidas do Python, então numa máquina carregada falhava com o comportamento certo
   (5 s e 7 s medidos). O C3 agora mede as duas chamadas do guard com relógio monotônico e as limita

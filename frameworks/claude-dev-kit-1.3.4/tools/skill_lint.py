@@ -41,6 +41,7 @@ import datetime
 import json
 import os
 import re
+import shlex
 import subprocess
 import sys
 from pathlib import Path
@@ -273,6 +274,21 @@ def module_root_of(skill_dir: Path) -> Path:
     return skill_dir.parent.parent if skill_dir.parent.name == "skills" else skill_dir
 
 
+_LEADING_PYTHON = re.compile(r"^python3?(?=\s)")
+
+
+def with_this_interpreter(command: str) -> str:
+    """A Proof whose first word is `python` or `python3` runs on the interpreter that runs this linter.
+
+    Why: a stock Mac has no `python`, and on Windows `python3` may be the Store stub; the interpreter
+    running the linter is the one Python known to exist here. A `python` later in the line is left to
+    the PATH, as the skill wrote it."""
+    if not _LEADING_PYTHON.match(command):
+        return command
+    this = subprocess.list2cmdline([sys.executable]) if os.name == "nt" else shlex.quote(sys.executable)
+    return _LEADING_PYTHON.sub(lambda _match: this, command, count=1)
+
+
 def run_proof(path: Path, timeout: int = 30) -> dict:
     skill_md = path / "SKILL.md" if path.is_dir() else path
     text = skill_md.read_text(encoding="utf-8", errors="replace")
@@ -284,7 +300,7 @@ def run_proof(path: Path, timeout: int = 30) -> dict:
         return {"ran": False, "reason": "no code block in the Proof section"}
     cmd = m.group(1).strip().splitlines()[0]
     module_root = module_root_of(skill_md.parent)
-    executed = expand_plugin_root(strip_trailing_comment(cmd), module_root)
+    executed = with_this_interpreter(expand_plugin_root(strip_trailing_comment(cmd), module_root))
     env = dict(os.environ, CLAUDE_PLUGIN_ROOT=str(module_root.resolve()))
     try:
         proc = subprocess.run(executed, shell=True, cwd=str(skill_md.parent), capture_output=True, text=True, timeout=timeout, env=env)

@@ -43,7 +43,7 @@ _TITLE = re.compile(r"<title>(.*) — measured output, (\d{4}-\d{2}-\d{2})</titl
 _HEIGHT = re.compile(r'<svg [^>]*\bheight="(\d+)"')
 _TSPAN = re.compile(r"<tspan[^>]*>(.*?)</tspan>")
 _CUT = re.compile(r"^⋯ (.*) follow — run the command for the full output$")
-_PYTHON_VERSION = re.compile(r"(python version\s+)\d+\.\d+\.\d+")
+_PYTHON_VERSION = re.compile(r"(python(?: version)?\s+)\d+\.\d+\.\d+")
 
 
 def shown(text: str) -> tuple[str, list[str], list[str]]:
@@ -93,6 +93,18 @@ def test_CONTROLE_a_stale_line_is_told_apart_from_the_real_one():
     after = ["house-party init · v2.9.0 · plan · target your-repo", "    ✓ python version          3.10.12"]
     assert comparable(before) != comparable(after)
     assert comparable(before[1:]) == comparable(after[1:]), "the Python version alone must not fail a capture"
+
+
+def test_the_prerequisites_line_names_each_machines_python_too():
+    """-- Why: the first CI run of this comparison failed on every Linux and Windows job. The capture was
+    taken on Python 3.14.3, the runner had 3.10.21, and the version is printed on TWO lines: the readiness
+    row ("python version  3.14.3"), which was normalized, and the prerequisites line of the boot sequence
+    ("python 3.14.3 · protocol 2.1"), which was not."""
+    ours = "> checking prerequisites...   ✓ python 3.14.3 · protocol 2.1"
+    runner = "> checking prerequisites...   ✓ python 3.10.21 · protocol 2.1"
+    assert comparable([ours]) == comparable([runner])
+    assert comparable([ours]) != comparable([ours.replace("protocol 2.1", "protocol 2.2")]), \
+        "only the Python version is written away, never what follows it"
 
 
 def test_the_interpreter_is_written_one_way():
