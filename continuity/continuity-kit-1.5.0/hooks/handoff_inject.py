@@ -14,6 +14,7 @@ stdlib only. v1.0.0 -- 2026-07-10 (continuity-kit - Tier 1)
 from __future__ import annotations
 
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -22,7 +23,7 @@ import _handoff_io  # noqa: E402
 
 
 def build_context(payload: dict) -> str | None:
-    lane_id = payload.get("lane_id") or "solo"
+    lane_id = os.environ.get("CLAUDE_LANE_ID") or payload.get("lane_id") or "solo"
     h = _handoff_io.newest_handoff(lane_id) or _handoff_io.newest_handoff(None)
     if h:
         text = _handoff_io.render(h, cap_bytes=4096)
@@ -65,7 +66,23 @@ def _self_test() -> int:
         ledger_lines = _handoff_io.LEDGER_PATH.read_text(encoding="utf-8").splitlines()
         assert any(json.loads(l)["event"] == "consumed" for l in ledger_lines), "consumed event not recorded"
 
-        print("self-test OK — no handoff+no legacy=None, legacy RESUME-NEXT.md=pointer+LC-4, real handoff=injects+consumed")
+        ok, _ = _handoff_io.write(_handoff_io._demo_handoff("exec-a"))
+        assert ok
+        prev_lane = os.environ.get("CLAUDE_LANE_ID")
+        try:
+            os.environ["CLAUDE_LANE_ID"] = "exec-a"
+            ctx_lane = build_context({"session_id": "s-exec"})
+        finally:
+            if prev_lane is None:
+                os.environ.pop("CLAUDE_LANE_ID", None)
+            else:
+                os.environ["CLAUDE_LANE_ID"] = prev_lane
+        assert ctx_lane and "lane=exec-a" in ctx_lane and "HO-" in ctx_lane and "exec-a" in ctx_lane, (
+            "CLAUDE_LANE_ID must select the exec-a handoff when the payload has no lane_id"
+        )
+        assert "lane=solo" not in ctx_lane, "must not fall back to the solo handoff when CLAUDE_LANE_ID is set"
+
+        print("self-test OK — no handoff+no legacy=None, legacy RESUME-NEXT.md=pointer+LC-4, real handoff=injects+consumed, CLAUDE_LANE_ID selects lane")
         return 0
     finally:
         _handoff_io._PROJECT_ROOT, _handoff_io._HANDOFF_DIR, _handoff_io.LEDGER_PATH = orig_root, orig_dir, orig_ledger
