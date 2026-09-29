@@ -98,7 +98,7 @@ reivindicação por tempo, não porque alguém apagou um lock.</p>
 <p>Então o primeiro evento é registrado, e o loop sai de <code>planned</code>.</p>
 <pre><code class="language-bash">python -m hpp work plan SPEC.json
 python -m hpp work waves SPEC.json
-python multi-session/lane-kit-1.7.0/scripts/lane_board.py claim --help
+python multi-session/lane-kit-1.7.1/scripts/lane_board.py claim --help
 python -m hpp event append --type work_started --data '{"work":"ITEM-1","actor":"maker-a"}'</code></pre>
     </div></section>
 
@@ -178,7 +178,7 @@ estável em vez de por um adjetivo, e nunca pergunta ao maker algo que ele mesmo
 rodando um comando. Quando não há checker de outro provedor disponível, a revisão é registrada como
 não feita, não como feita pelo maker.</p>
 <p>A aprovação do checker é um evento. O loop passa de <code>evidenced</code> a <code>checked</code>.</p>
-<pre><code class="language-bash">python multi-session/lane-kit-1.7.0/scripts/checker_router.py --maker claude --require
+<pre><code class="language-bash">python multi-session/lane-kit-1.7.1/scripts/checker_router.py --maker claude --require
 python -m hpp event append --type check_passed --data '{"work":"ITEM-1","checker":"checker-b"}'</code></pre>
     </div></section>
 
@@ -247,8 +247,8 @@ nome dela.</p>
 uma pessoa colar, e o doctor é rodado depois para confirmar o resultado.</p>
 <pre><code class="language-bash">python -m hpp init --target ../your-repo
 python -m hpp init --target ../your-repo --apply
-python installers/kit-forge-1.5.0/kit_doctor.py install --kit &lt;module-dir&gt; --host codex --target ../your-repo
-python installers/kit-forge-1.5.0/kit_doctor.py install --kit &lt;module-dir&gt; --host codex --target ../your-repo --apply
+python installers/kit-forge-1.5.1/kit_doctor.py install --kit &lt;module-dir&gt; --host codex --target ../your-repo
+python installers/kit-forge-1.5.1/kit_doctor.py install --kit &lt;module-dir&gt; --host codex --target ../your-repo --apply
 python -m hpp doctor</code></pre>
     </div></section>
 

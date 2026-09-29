@@ -4,7 +4,7 @@
 
 > **Versão:** 2.0.0 — camada de apresentação sobre dois contratos congelados.
 > **Caminho 1** é o `hpp init`, o instalador do harness (`hpp/wizard.py`, seis estágios, plano e
-> depois `--apply`). **Caminho 2** é o instalador de módulos, `installers/kit-forge-1.5.0/kit_doctor.py`,
+> depois `--apply`). **Caminho 2** é o instalador de módulos, `installers/kit-forge-1.5.1/kit_doctor.py`,
 > cuja mecânica vive em `INSTALL-CONTRACT.md` e cujo README por módulo segue o
 > `INSTALL-GUIDE-TEMPLATE.md`; os dois viajam na raiz deste repositório. Este documento descreve
 > a EXPERIÊNCIA: como um AGENTE (Claude Code ou Codex CLI) guia um HUMANO pela instalação, numa
@@ -191,7 +191,7 @@ explícita.
 
 ### A jornada em 5 passos (igual nos 4 cenários)
 
-1. **Plano.** O agente roda `python installers/kit-forge-1.5.0/kit_doctor.py install --kit <dir-do-módulo> --host <host> --target <projeto> --human`
+1. **Plano.** O agente roda `python installers/kit-forge-1.5.1/kit_doctor.py install --kit <dir-do-módulo> --host <host> --target <projeto> --human`
    (`--human` escolhe o relatório legível). Modo plano é o default: nenhuma escrita acontece,
    exit 0.
 2. **Tradução.** O agente cola na conversa o bloco de confirmação (molde na seção "Bloco de

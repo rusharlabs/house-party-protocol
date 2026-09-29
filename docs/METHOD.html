@@ -97,7 +97,7 @@ territory. A lane that stops heartbeating loses its claim by time, not by someon
 <p>Then the first event is recorded, and the loop leaves <code>planned</code>.</p>
 <pre><code class="language-bash">python -m hpp work plan SPEC.json
 python -m hpp work waves SPEC.json
-python multi-session/lane-kit-1.7.0/scripts/lane_board.py claim --help
+python multi-session/lane-kit-1.7.1/scripts/lane_board.py claim --help
 python -m hpp event append --type work_started --data '{"work":"ITEM-1","actor":"maker-a"}'</code></pre>
     </div></section>
 
@@ -175,7 +175,7 @@ rather than an adjective, and never asks the maker something it could verify its
 command. When no checker from a different provider is available, the review is recorded as not
 done, not as done by the maker.</p>
 <p>The checker's pass is an event. The loop moves from <code>evidenced</code> to <code>checked</code>.</p>
-<pre><code class="language-bash">python multi-session/lane-kit-1.7.0/scripts/checker_router.py --maker claude --require
+<pre><code class="language-bash">python multi-session/lane-kit-1.7.1/scripts/checker_router.py --maker claude --require
 python -m hpp event append --type check_passed --data '{"work":"ITEM-1","checker":"checker-b"}'</code></pre>
     </div></section>
 
@@ -245,8 +245,8 @@ on their behalf.</p>
 person to paste, and the doctor is run afterwards to confirm the result.</p>
 <pre><code class="language-bash">python -m hpp init --target ../your-repo
 python -m hpp init --target ../your-repo --apply
-python installers/kit-forge-1.5.0/kit_doctor.py install --kit &lt;module-dir&gt; --host codex --target ../your-repo
-python installers/kit-forge-1.5.0/kit_doctor.py install --kit &lt;module-dir&gt; --host codex --target ../your-repo --apply
+python installers/kit-forge-1.5.1/kit_doctor.py install --kit &lt;module-dir&gt; --host codex --target ../your-repo
+python installers/kit-forge-1.5.1/kit_doctor.py install --kit &lt;module-dir&gt; --host codex --target ../your-repo --apply
 python -m hpp doctor</code></pre>
     </div></section>
 

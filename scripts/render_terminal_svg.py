@@ -34,7 +34,7 @@ screen after the command's output, and every status is recorded in the desc.
 
 `assets/terminal/lane-board.svg` is the third capture and the only one this script cannot
 re-capture on its own, because the board is not a command of `hpp`: it is
-`multi-session/lane-kit-1.7.0/scripts/lane_board.py`, and a board worth showing has to be
+`multi-session/lane-kit-1.7.1/scripts/lane_board.py`, and a board worth showing has to be
 DRIVEN first. To redo it, point `CLAUDE_PROJECT_DIR` at a throwaway directory (unset, the board
 lands wherever the cwd happens to be), drive four items with `claim` and `set` until they sit in
 different states -- MERGED, a red one held at VERIFIED, one DEFERRED with `--checker-unavailable`,

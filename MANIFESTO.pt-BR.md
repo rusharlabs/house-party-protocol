@@ -118,6 +118,17 @@ mudar.
   operador declarou para ela. Uma sessão que roda em segundo plano roda sob um supervisor com tempo
   limite, botão de parar e log com teto. A sessão é o agente do operador, na conta do próprio
   operador; o pacote `hpp` continua sem chamar modelo, sem escolher nenhum e sem guardar credencial.
+  A mesma exceção cobre o `/deliberate` do lane-kit e a skill `house-session` dele: quando o
+  operador os invoca, o `house_session.py seat` roda o CLI de agente que o operador dá a cada
+  assento de um painel, e nada o agenda. Antes de rodar qualquer coisa, ele recusa um painel que o
+  núcleo não aceita e um assento ou uma rodada fora desse painel; roda o comando na worktree do
+  assento (`--root`) pelo executor delimitado do núcleo, cujo tempo limite (600 segundos, salvo se o
+  operador definir outro) encerra a árvore inteira de processos do comando; e tira uma impressão
+  digital da visão do git sobre essa worktree antes e depois (status, o diff contra o HEAD, o
+  conteúdo dos arquivos não rastreados, o HEAD e toda ref, a lista de worktrees, a config, os hooks
+  e o `info/exclude`). Um assento que moveu qualquer parte disso não ganha turno, e um assento que
+  falha ou estoura o tempo não é julgado. A impressão digital não vê uma escrita num caminho que o
+  repositório ignora, nem o que um assento faz fora da worktree dele com as permissões do operador.
 - **Sem banco de grafo.** Todo mapa é uma projeção de manifestos, eventos e JSON que você fornece.
   A mesma entrada produz os mesmos nós e arestas, na mesma ordem, e você pode fazer hash do
   resultado. Um grafo armazenado seria uma segunda fonte de verdade que deriva da primeira.
@@ -127,8 +138,9 @@ mudar.
 - **Nenhuma promessa aceita como evidência.** Uma marca de conclusão num transcript não para um
   loop; o done gate reexecuta os comandos do critério fora do alcance do modelo. Uma saída vazia,
   um maker e um checker idênticos, ou um veredito diferente de `approved` nunca viram prova.
-- **Sem paridade de host por afirmação.** O Claude Code executa hooks de lifecycle; o Codex CLI
-  não. A cobertura é declarada por módulo como `native`, `explicit-command` ou `unsupported`, e um
+- **Sem paridade de host por afirmação.** O Claude Code executa os hooks de um módulo depois que
+  eles são wirados; o Codex CLI tem hooks próprios, e o HPP não carrega os seus lá. A cobertura é
+  declarada por módulo como `native`, `explicit-command` ou `unsupported`, e um
   módulo não suportado interrompe o plano em vez de ser instalado como se funcionasse.
 - **Sem número de manchete.** A contagem de módulos não é uma afirmação de qualidade. Um número
   aparece ao lado do comando que o produziu, ou não aparece.

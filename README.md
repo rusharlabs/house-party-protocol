@@ -177,7 +177,7 @@ from another lane **and** another model family,
 <p align="center">
   <img alt="python lane_board.py render: four example items on one board — EXAMPLE-1 MERGED, EXAMPLE-2 VERIFIED and waiting on the human gate, EXAMPLE-3 DEFERRED for want of a checker, EXAMPLE-4 back to BUILDING after NEEDS-FIX — then the verdicts whose lane has not been told" src="assets/terminal/lane-board.svg" width="940">
 </p>
-<p align="center"><sub>The board those rows produce, as <code>multi-session/lane-kit-1.7.0/scripts/lane_board.py</code> prints it: four example items driven through the machine, every event naming the lane that wrote it, the evidence pasted at checkpoint, and — for a verdict — the lane and the model that gave it. Two attempts were refused on the way there, both <code>exit 1</code>: a verdict from the builder's own lane (<em>maker≠checker violated: reviewer (exec-b) is the SAME lane as the builder</em>) and merging a 🔴 item without <code>--human-approved</code>. The last block is the one nobody thinks to ask for — verdicts already decided whose lane has not been told. Text rendered from the command's real stdout by <code>scripts/render_terminal_svg.py</code>, like the two captures above.</sub></p>
+<p align="center"><sub>The board those rows produce, as <code>multi-session/lane-kit-1.7.1/scripts/lane_board.py</code> prints it: four example items driven through the machine, every event naming the lane that wrote it, the evidence pasted at checkpoint, and — for a verdict — the lane and the model that gave it. Two attempts were refused on the way there, both <code>exit 1</code>: a verdict from the builder's own lane (<em>maker≠checker violated: reviewer (exec-b) is the SAME lane as the builder</em>) and merging a 🔴 item without <code>--human-approved</code>. The last block is the one nobody thinks to ask for — verdicts already decided whose lane has not been told. Text rendered from the command's real stdout by <code>scripts/render_terminal_svg.py</code>, like the two captures above.</sub></p>
 
 ## Quickstart
 
@@ -193,7 +193,7 @@ third-party packages. CI exercises Python 3.10 to 3.13 on Linux, macOS and Windo
 (`.github/workflows/ci.yml`); older interpreters are not promised because nothing measures them.
 
 ```bash
-pip install git+https://github.com/rusharlabs/house-party-protocol@v2.10.0
+pip install git+https://github.com/rusharlabs/house-party-protocol@v2.10.1
 hpp doctor
 hpp init --target ../your-repo
 ```
@@ -301,13 +301,13 @@ detects, wires and verifies it. Either way it plans first and applies only on a 
 invocation:
 
 ```bash
-python installers/kit-forge-1.5.0/kit_doctor.py install \
+python installers/kit-forge-1.5.1/kit_doctor.py install \
   --kit frameworks/operator-kit-1.8.0 --host codex --target ../your-repo
-python installers/kit-forge-1.5.0/kit_doctor.py install \
+python installers/kit-forge-1.5.1/kit_doctor.py install \
   --kit frameworks/operator-kit-1.8.0 --host codex --target ../your-repo --apply
 ```
 
-The installer is part of this repository, at `installers/kit-forge-1.5.0/kit_doctor.py`, next
+The installer is part of this repository, at `installers/kit-forge-1.5.1/kit_doctor.py`, next
 to the module directories it installs from. A pip install carries neither, and `hpp init` says
 so in its wire block when it cannot find the installer beside the manifest.
 `hpp install --bundle reliable-coding --host codex --target ../your-repo` is a different
@@ -358,11 +358,11 @@ returns the same answer as JSON. Neither asks a model to remember anything.
 | module | version | one line |
 |---|---|---|
 | `operator-kit` | 1.8.0 | done gate with real exit codes, command policy in `audit` or `enforce`, governed loops with charter and stop conditions, standalone `pass@k` / `pass^k` runner, preflight, two checker agents shipped without `Write` or `Edit` |
-| `lane-kit` | 1.7.0 | a lane board for concurrent sessions: claim, territory, liveness, maker ≠ checker, and a router that picks a checker from a different provider |
+| `lane-kit` | 1.7.1 | a lane board for concurrent sessions: claim, territory, liveness, maker ≠ checker, and a router that picks a checker from a different provider |
 | `continuity-kit` | 1.5.0 | handoff written before a stop or compaction, re-derivation commands instead of remembered state, guards against replaying finished steps |
 | `health-kit` | 1.4.0 | config-driven service probes that write a cache a statusline reads without touching the network; service health kept apart from data health |
 | `gotcha-memory` | 1.1.0 | records failed commands by error family, detects recurrence, injects the lesson before the next run; warn-only, secrets redacted by shape |
-| `kit-forge` | 1.5.0 | assembles modules from source, lints for IP and PII, installs in six stages, writes and verifies `CHECKSUMS.txt`, checks the marketplace |
+| `kit-forge` | 1.5.1 | assembles modules from source, lints for IP and PII, installs in six stages, writes and verifies `CHECKSUMS.txt`, checks the marketplace |
 | `claude-dev-kit` | 1.3.4 | authoring of skills, hooks and plugins for Claude Code, reversible settings wiring, secret scan on write |
 | `dev-squad-kit` | 1.2.0 | twelve development roles as commands and subagents with explicit tools, plus parallel read-and-consolidate skills |
 | `agent-framework-wizard` | 1.2.2 | six-step scaffold for a new agent or skill project, answerable from a file for non-interactive runs |
@@ -395,9 +395,9 @@ attestation. `pass^k = 1.00` is required for the gate to pass. The suite file an
 in the JSON report (`hpp benchmark -k 3 --json`). See [PROOF.md](docs/PROOF.md) for the claim
 matrix and [BENCHMARK.md](docs/BENCHMARK.md) for the scenarios.
 
-In this repository, `python installers/kit-forge-1.5.0/kit_doctor.py verify <module-dir>`
+In this repository, `python installers/kit-forge-1.5.1/kit_doctor.py verify <module-dir>`
 compares every file of a module against its `CHECKSUMS.txt`, and
-`python installers/kit-forge-1.5.0/kit_doctor.py marketplace .` checks the whole tree.
+`python installers/kit-forge-1.5.1/kit_doctor.py marketplace .` checks the whole tree.
 
 Something confusing, slower than it should be, or a piece you stopped using?
 `python -m hpp doctor --report` prints the link to the feedback form with the title filled in, and
@@ -424,10 +424,11 @@ call; nothing is sent until you open the link.
   destructive form.
 - Attestation requires `git`. It hashes the remote identity and stores the hash, not the URL.
   It binds a verdict to bytes; it does not judge whether the verdict was right.
-- On Claude Code, lifecycle hooks are native once you paste the wiring. On Codex CLI there are no
-  lifecycle hooks; the same capabilities are explicit commands. `hpp doctor` and the manifest
-  report this as `native`, `explicit-command` or `unsupported`, and no adapter pretends
-  otherwise.
+- On Claude Code, lifecycle hooks are native once you paste the wiring. Codex CLI has lifecycle
+  hooks of its own, but HPP's hooks are written for Claude Code: each Codex plugin manifest
+  carries an empty hooks object so that Codex does not load them, and on Codex the same
+  capabilities are explicit commands. `hpp doctor` and the manifest report this as `native`,
+  `explicit-command` or `unsupported`, and no adapter pretends otherwise.
 - `hpp init` writes one file with `--apply` and never edits `settings.json`, hooks or
   `AGENTS.md`. Enabling hooks remains a human action.
 - The benchmark proves the harness on the checkout and platform where it ran. It says nothing

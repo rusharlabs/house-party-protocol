@@ -80,7 +80,7 @@
 <blockquote class="measured">
 <p><strong>Version:</strong> 2.0.0 — a presentation layer over two frozen contracts.
 <strong>Path 1</strong> is <code>hpp init</code>, the harness installer (<code>hpp/wizard.py</code>, six stages, plan then
-<code>--apply</code>). <strong>Path 2</strong> is the module installer, <code>installers/kit-forge-1.5.0/kit_doctor.py</code>,
+<code>--apply</code>). <strong>Path 2</strong> is the module installer, <code>installers/kit-forge-1.5.1/kit_doctor.py</code>,
 whose mechanics live in <code>INSTALL-CONTRACT.md</code> and whose per-module README follows
 <code>INSTALL-GUIDE-TEMPLATE.md</code>; both ship at the root of this repository. This document describes
 the EXPERIENCE: how an AGENT (Claude Code or Codex CLI) guides a HUMAN through the installation,
@@ -255,7 +255,7 @@ Claude Code, are this installer. It copies one module at a time into the target 
 module's declared smokes; it plans first and applies only on a second, explicit invocation.</p>
 <h3 id="the-journey-in-5-steps-the-same-in-the-4-scenarios">The journey in 5 steps (the same in the 4 scenarios)</h3>
 <ol>
-<li><strong>Plan.</strong> The agent runs <code>python installers/kit-forge-1.5.0/kit_doctor.py install --kit &lt;module-dir&gt; --host &lt;host&gt; --target &lt;project&gt; --human</code>
+<li><strong>Plan.</strong> The agent runs <code>python installers/kit-forge-1.5.1/kit_doctor.py install --kit &lt;module-dir&gt; --host &lt;host&gt; --target &lt;project&gt; --human</code>
 (<code>--human</code> selects the human-readable report). Plan mode is the default: nothing is written,
 exit 0.</li>
 <li><strong>Translation.</strong> The agent pastes the confirmation block into the conversation (template in

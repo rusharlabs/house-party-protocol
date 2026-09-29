@@ -37,5 +37,5 @@ includes version, platform, suite hash, attempts and individual results. ZIP int
 separate release gate.
 
 The benchmark proves only the checkout, the platform and the scenarios that ran. It does not
-measure the general quality of a model and does not turn a host without lifecycle hooks into
+measure the general quality of a model and does not turn an `explicit-command` capability into
 automatic enforcement.

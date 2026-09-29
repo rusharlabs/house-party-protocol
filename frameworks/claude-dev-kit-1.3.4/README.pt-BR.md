@@ -48,15 +48,15 @@ O `.claude-plugin/plugin.json` declara `hooks/hooks.json`, que arma
 
 Na distribuição emitida este módulo vive em
 `frameworks/claude-dev-kit-1.3.4/` (o diretório carrega a versão — declare-a
-uma vez, em `KIT`). O instalador é `installers/kit-forge-1.5.0/kit_doctor.py`; rode-o da
+uma vez, em `KIT`). O instalador é `installers/kit-forge-1.5.1/kit_doctor.py`; rode-o da
 raiz da distribuição. Ele planeja primeiro e só escreve numa segunda invocação explícita
 com `--apply`:
 
 ```bash
 KIT=frameworks/claude-dev-kit-1.3.4
 cp -r "$KIT" ../your-repo/claude-dev-kit      # the copy itself (kit_doctor does not copy on claude-code)
-python installers/kit-forge-1.5.0/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo
-python installers/kit-forge-1.5.0/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo --apply
+python installers/kit-forge-1.5.1/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo
+python installers/kit-forge-1.5.1/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo --apply
 # Codex CLI: --host codex — the installer copies the module into .agents/hpp/claude-dev-kit
 #            and each skill into .agents/skills/hpp-claude-dev-kit-<skill>; no cp -r needed
 ```

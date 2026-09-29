@@ -7,6 +7,57 @@ Todas as mudanças relevantes do harness são registradas aqui. O formato segue
 [SemVer](https://semver.org/lang/pt-BR/). A versão do produto descreve o contrato do harness;
 cada módulo mantém sua própria versão no `plugin.json` e no `marketplace.json`.
 
+## [2.10.1] — 2026-09-29
+
+### Alterado
+
+- **A exceção delimitada do MANIFESTO cita o `/deliberate`.** A House Session do lane-kit roda a CLI
+  de agente que o operador dá a cada assento, só quando invocada, recusando um painel que o core não
+  aceita, no worktree do assento pelo runner limitado do core, e tirando a impressão digital da
+  visão do git daquele worktree antes e depois; um assento que moveu algo não ganha vez. A exceção
+  agora diz isso, ao lado do Lane Dashboard.
+- **O `SECURITY.md` cita o canal de plugins do Codex CLI** entre as superfícies oficiais:
+  `.agents/plugins/marketplace.json` e o `.codex-plugin/plugin.json` de cada módulo listado.
+
+### Corrigido
+
+- **O Codex CLI tem hooks de lifecycle, e os documentos diziam que não.** O README, o MANIFESTO, a
+  tabela de hosts do `docs/ARCHITECTURE.md`, o `docs/BENCHMARK.md`, o cartão do Codex no manual e os
+  documentos do lane-kit diziam que o Codex CLI não tem hooks de lifecycle. O `docs/CONCEPTS.md` já
+  registrava a medição que refuta isso (Codex CLI 0.153.4: `hooks  stable  true`, e um plugin sem a
+  chave `hooks` tem o seu `hooks/hooks.json` carregado). Agora eles dizem o que o produto faz: os
+  hooks do HPP são escritos para o Claude Code, cada manifesto de plugin do Codex carrega um objeto
+  de hooks vazio para que o Codex não os carregue, e no Codex as mesmas capacidades são comandos
+  explícitos. Um teste do produto reprova qualquer documento que negue ao Codex os seus hooks
+  (`tests/test_codex_hook_claims_match_the_measurement.py`).
+
+- **A árvore de processos de um comando que estourou o tempo, no Windows, é encerrada um processo
+  verificado por vez.** No timeout o runner (`hpp/_process.py`) usava `taskkill /PID <pid> /T /F`,
+  e o `/T` percorre a tabela de processos só pelo id do pai: um processo cujo pai registrado era um
+  processo anterior com o mesmo pid também era encerrado. Agora ele tira um retrato, só mantém um
+  descendente quando segura um handle dele e o horário de criação cai entre o do pai verificado e o
+  do retrato, mata cada um pelo pid sem `/T` e percorre de novo até nada novo aparecer (no máximo
+  quatro passadas), o conserto que o Lane Dashboard já tinha. No POSIX nada muda.
+- **lane-kit 1.7.1 — os cinco diretórios de lock esperam o lock que outro escritor está
+  soltando.** No Windows, o `mkdir` de um diretório de lock cuja remoção ainda está pendente
+  responde acesso negado, não "existe", e todo lock do lane-kit deixava isso escapar como crash: a
+  placa (`lane_board.py`, 5 a 11 de 2000 aquisições com 10 escritores simultâneos, e um claim
+  perdido no eval de colisão), o ledger de efeitos (18 de 2000), o registro que todo heartbeat toma
+  (17), o conjunto de mensagens anunciadas (18) e o lock de projeto do dashboard (34). Cada um agora
+  trata isso como lock ocupado, no mesmo prazo, e um lock que nunca é concedido continua recusado
+  pela recusa do próprio lock, agora dizendo a última resposta.
+- **lane-kit 1.7.1 — lock da placa ocupado sai com código 2, como documentado.** O `lane_board.py`
+  e a skill lane-coordinator prometem saída 2 para "lock not acquired"; o CLI saía 1, o código de
+  uma transição recusada, e um script não distinguia "tente de novo" de "recusado".
+- **kit-forge 1.5.1 — o linter de dados pessoais e segredos não imprime mais o valor que achou.** Um
+  achado mostrava os 4 primeiros e os 4 últimos caracteres (6 dos 11 dígitos de um CPF, os 4 finais
+  de um token), e o relatório vai para o terminal, para o `--json` e para log de CI. Um segredo agora
+  mostra o prefixo de tipo de 4 caracteres e o tamanho; toda outra categoria mostra só a categoria e
+  o tamanho. O `arquivo:linha` continua apontando o achado, e os baselines seguem valendo (a chave
+  deles nunca usou o match).
+- **`tests/test_shell_portability.py` é coletado no Python 3.14.** O módulo que ele carrega pelo
+  caminho define uma dataclass, e o 3.14 procura o módulo em `sys.modules` enquanto a monta.
+
 ## [2.10.0] — 2026-09-28
 
 ### Adicionado
@@ -1804,6 +1855,7 @@ publicar.
 [2.6.5]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.5
 [2.6.6]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.6
 [2.6.7]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.7
+[2.10.1]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.10.1
 [2.10.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.10.0
 [2.9.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.9.0
 [2.8.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.8.0

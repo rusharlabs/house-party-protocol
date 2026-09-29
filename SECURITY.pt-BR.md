@@ -66,6 +66,10 @@ um fork que mantém o nome — não é este projeto e não recebe suporte de seg
 
 - Fonte, issues, releases: `https://github.com/rusharlabs/house-party-protocol`
 - Canal de plugin do Claude Code: `/plugin marketplace add rusharlabs/house-party-protocol`
+- Canal de plugin do Codex CLI, a partir da 2.10.0:
+  `codex plugin marketplace add rusharlabs/house-party-protocol`, que lê o
+  `.agents/plugins/marketplace.json` desse repositório e, para cada módulo que ele lista, o
+  `.codex-plugin/plugin.json` do módulo
 - pip: `pip install git+https://github.com/rusharlabs/house-party-protocol@<tag>`, ou a partir da 2.6.5
   `pip install house-party-protocol` pelo PyPI (projeto `house-party-protocol`, publicado só pelo
   workflow de release deste repositório)

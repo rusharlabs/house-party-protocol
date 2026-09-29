@@ -32,13 +32,13 @@ the module, and the checksums are regenerated on emission.
 
 ```bash
 # 1. verify the module you are about to touch -- expect "status": "ok", exit 0
-python installers/kit-forge-1.5.0/kit_doctor.py verify frameworks/operator-kit-1.8.0
+python installers/kit-forge-1.5.1/kit_doctor.py verify frameworks/operator-kit-1.8.0
 
 # 2. edit the files INSIDE the emitted module (open an issue first if the change is large)
 
 # 3. prove it with what ships in this tree
-python installers/kit-forge-1.5.0/kit_doctor.py verify frameworks/operator-kit-1.8.0
-python installers/kit-forge-1.5.0/tools/skill_lint.py --all frameworks/operator-kit-1.8.0/skills --run-proofs --json skill-lint.json
+python installers/kit-forge-1.5.1/kit_doctor.py verify frameworks/operator-kit-1.8.0
+python installers/kit-forge-1.5.1/tools/skill_lint.py --all frameworks/operator-kit-1.8.0/skills --run-proofs --json skill-lint.json
 python -m hpp doctor
 python -m hpp benchmark -k 3
 python -m pytest tests -q

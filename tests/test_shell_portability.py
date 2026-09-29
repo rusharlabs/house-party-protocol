@@ -11,6 +11,7 @@ shipped `.sh` at zero findings; in the source tree there are no modules and it s
 from __future__ import annotations
 
 import importlib.util
+import sys
 import json
 import os
 from pathlib import Path
@@ -25,6 +26,9 @@ def _load(name: str):
     spec = importlib.util.spec_from_file_location(name, ROOT / "scripts" / f"{name}.py")
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
+    # Why: on Python 3.14 a dataclass looks its module up in sys.modules while the class is built;
+    # a module loaded by path and not registered there fails collection with an AttributeError.
+    sys.modules[name] = module
     spec.loader.exec_module(module)
     return module
 

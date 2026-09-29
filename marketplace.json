@@ -3,7 +3,7 @@
   "name": "house-party-protocol",
   "description": "House Party Protocol is a modular, cross-host harness for Claude Code and Codex CLI: executable gates, governed loops, cross-model review, provider-neutral routing by tier, continuity, deterministic evaluation and verifiable distribution.",
   "description_pt": "House Party Protocol é um harness modular e cross-host para Claude Code e Codex CLI: gates executáveis, loops governados, revisão cross-model, roteamento provider-neutral por tier, continuidade, avaliação determinística e distribuição verificável.",
-  "version": "2.10.0",
+  "version": "2.10.1",
   "owner": {
     "name": "Max Parisi",
     "url": "https://rusharlabs.com"
@@ -14,10 +14,10 @@
     {
       "name": "kit-forge",
       "displayName": "Kit Forge",
-      "source": "./installers/kit-forge-1.5.0",
+      "source": "./installers/kit-forge-1.5.1",
       "description": "The IP/PII gate plus the kit assembler. ip_pii_linter + kit_assembler (with guard_origins built in) + kit_doctor (verify/install/registry, 6 stages: detect/prereqs/profile/configure/wire-suggest/smoke) + guard_origins + wire_settings + install_git_hook + skill_lint + tools/browse.py (interactive marketplace menu), single exit contract (0 ok/no-op, 1 warn, 2 block, 3 error). No --skip-lint.",
       "description_pt": "O gate de IP/PII + o montador de kits. ip_pii_linter + kit_assembler (com guard_origins integrado) + kit_doctor (verify/install/registry, 6 estagios: detect/prereqs/profile/configure/wire-suggest/smoke) + guard_origins + wire_settings + install_git_hook + skill_lint + tools/browse.py (menu interativo do marketplace), contrato unico de exit (0 ok/no-op, 1 warn, 2 block, 3 erro). Sem --skip-lint.",
-      "version": "1.5.0",
+      "version": "1.5.1",
       "category": "installers",
       "keywords": [
         "ip-scanner",
@@ -67,10 +67,10 @@
     {
       "name": "lane-kit",
       "displayName": "Lane Kit",
-      "source": "./multi-session/lane-kit-1.7.0",
+      "source": "./multi-session/lane-kit-1.7.1",
       "description": "N sessions without collisions. Lane board, cross-model maker!=checker, per-directory lock, git-guard and territory-guard. The checker_router detects Codex, Cursor and Gemini and picks a provider different from the maker's. Best-of-N: compete/select record which of N competing attempts won. House Session: /deliberate and house_session.py seat a panel of two model families, refusing the turn of a seat that wrote; select --deliberation decides a competition with a sealed session. Lane Dashboard: a local page over the board, the lanes and the mailbox where every action is also a terminal command; release-fix, start-review and approve are the operator's hand-offs.",
       "description_pt": "N sessoes sem colisao. Lane board, maker!=checker cross-model, lock por diretorio, git-guard e territory-guard. O checker_router detecta Codex, Cursor e Gemini e escolhe um provider diferente do maker. Best-of-N: compete/select registram qual de N tentativas concorrentes venceu. House Session: /deliberate e house_session.py sentam um painel de duas familias de modelo e recusam o turno de um assento que escreveu; select --deliberation decide uma competicao com uma sessao selada. Lane Dashboard: uma pagina local sobre o quadro, as lanes e o mailbox em que toda acao tambem e um comando de terminal; release-fix, start-review e approve sao os hand-offs do operador.",
-      "version": "1.7.0",
+      "version": "1.7.1",
       "category": "productivity",
       "keywords": [
         "multi-session",

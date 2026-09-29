@@ -76,8 +76,8 @@ first and writes only on a second, explicit `--apply`; its `profile` stage copie
 ```bash
 KIT=continuity/gotcha-memory-1.1.0
 cp -r "$KIT" ../your-repo/gotcha-memory       # the copy itself (kit_doctor does not copy on claude-code)
-python installers/kit-forge-1.5.0/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo
-python installers/kit-forge-1.5.0/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo --apply
+python installers/kit-forge-1.5.1/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo
+python installers/kit-forge-1.5.1/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo --apply
 # Codex CLI: --host codex — the installer copies the module into .agents/hpp/gotcha-memory
 #            and the skill into .agents/skills/hpp-gotcha-memory-<skill>; no cp -r needed
 ```

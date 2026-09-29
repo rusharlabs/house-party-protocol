@@ -67,6 +67,10 @@ keeps the name — is not this project and receives no security support.
 
 - Source, issues, releases: `https://github.com/rusharlabs/house-party-protocol`
 - Claude Code plugin channel: `/plugin marketplace add rusharlabs/house-party-protocol`
+- Codex CLI plugin channel, from 2.10.0 on:
+  `codex plugin marketplace add rusharlabs/house-party-protocol`, which reads
+  `.agents/plugins/marketplace.json` from that repository and, for each module it lists, the
+  module's `.codex-plugin/plugin.json`
 - pip: `pip install git+https://github.com/rusharlabs/house-party-protocol@<tag>`, or from 2.6.5 on
   `pip install house-party-protocol` from PyPI (project `house-party-protocol`, published only by
   this repository's release workflow)

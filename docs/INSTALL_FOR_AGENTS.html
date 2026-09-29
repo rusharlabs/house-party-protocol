@@ -116,7 +116,7 @@ person's interpreter, do not work around a missing <code>git</code>.</p>
     <section id="step-2--install-the-cli"><div class="wrap">
       <p class="eyebrow">03</p>
       <h2>Step 2 — install the CLI</h2>
-<pre><code class="language-bash">pip install git+https://github.com/rusharlabs/house-party-protocol@v2.10.0</code></pre>
+<pre><code class="language-bash">pip install git+https://github.com/rusharlabs/house-party-protocol@v2.10.1</code></pre>
 <p><code>pipx install git+…</code> works the same way. The package ships its own manifest and benchmark
 suite, so the CLI answers from any directory once installed.</p>
     </div></section>
@@ -158,7 +158,7 @@ carry skills (skills only; hooks stay off):</p>
 codex plugin add &lt;module&gt;@house-party-protocol</code></pre>
 <p>Everything else — runtime, scripts, templates, and any module without skills — needs one more
 command per module:</p>
-<pre><code class="language-bash">installers/kit-forge-1.5.0/kit_doctor.py install --kit &lt;kit&gt; --host codex --target &lt;repo&gt; --apply</code></pre>
+<pre><code class="language-bash">installers/kit-forge-1.5.1/kit_doctor.py install --kit &lt;kit&gt; --host codex --target &lt;repo&gt; --apply</code></pre>
 <p>Skills land in <code>.agents/skills</code>; the full runtime lands in <code>.agents/hpp</code>. Hooks declared in
 <code>hooks.json</code> belong to Claude Code and are <strong>not</strong> activated on Codex. <code>hpp init --host codex</code>
 still prints the HOOK CAPABILITIES table; read it aloud as what those hooks would do on Claude

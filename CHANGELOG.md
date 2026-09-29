@@ -7,6 +7,56 @@ All relevant changes to the harness are recorded here. The format follows
 [SemVer](https://semver.org/). The product version describes the harness contract; each module
 keeps its own version in `plugin.json` and in `marketplace.json`.
 
+## [2.10.1] — 2026-09-29
+
+### Changed
+
+- **The MANIFESTO's bounded exception names `/deliberate`.** The lane-kit's House Session runs the
+  agent CLI the operator gives each seat, only when invoked, refusing a panel the core does not
+  accept, in the seat's worktree through the core's bounded runner, and fingerprinting git's view of
+  that worktree before and after; a seat that moved anything gets no turn. The exception now says
+  so, next to the Lane Dashboard.
+- **`SECURITY.md` names the Codex CLI plugin channel** among the official surfaces:
+  `.agents/plugins/marketplace.json` and each listed module's `.codex-plugin/plugin.json`.
+
+### Fixed
+
+- **Codex CLI has lifecycle hooks, and the documents said it did not.** The README, the
+  MANIFESTO, the host table in `docs/ARCHITECTURE.md`, `docs/BENCHMARK.md`, the Codex card of the
+  manual and the lane-kit documents said Codex CLI has no lifecycle hooks. `docs/CONCEPTS.md` had
+  already recorded the measurement that refutes it (Codex CLI 0.153.4: `hooks  stable  true`, and a
+  plugin with no `hooks` key gets its `hooks/hooks.json` loaded). They now say what the product
+  does: HPP's hooks are written for Claude Code, each Codex plugin manifest carries an empty hooks
+  object so that Codex does not load them, and on Codex the same capabilities are explicit
+  commands. A product test fails on any document that denies Codex its hooks
+  (`tests/test_codex_hook_claims_match_the_measurement.py`).
+
+- **A timed-out command's Windows process tree is ended one verified process at a time.** On
+  timeout the runner (`hpp/_process.py`) used `taskkill /PID <pid> /T /F`, and `/T` walks the
+  process table by parent id alone: a process whose recorded parent id named an earlier process
+  that had the same pid was ended too. It now takes one snapshot, keeps a descendant only when a
+  handle on it is held and its creation time falls between its verified parent's and the snapshot,
+  kills each by pid without `/T`, and walks again until nothing new appears (at most four passes),
+  the fix the Lane Dashboard already had. POSIX is unchanged.
+- **lane-kit 1.7.1 — the five lock directories wait out a lock another writer is releasing.** On
+  Windows, `mkdir` of a lock directory whose removal is still pending answers access denied, not
+  "exists", and every lane-kit lock let that escape as a crash: the board (`lane_board.py`, 5 to 11
+  of 2000 acquisitions under 10 concurrent writers, and a lost claim in the collision eval), the
+  effects ledger (18 of 2000), the registry every heartbeat takes (17), the announced-mail set (18)
+  and the dashboard's project lock (34). Each now treats it as a busy lock within the same budget,
+  and a lock that is never granted is still refused as that lock's refusal, now naming the last
+  answer.
+- **lane-kit 1.7.1 — a busy board lock exits 2, as documented.** `lane_board.py` and the
+  lane-coordinator skill promise exit 2 for "lock not acquired"; the CLI exited 1, the code of a
+  refused transition, so a script could not tell "retry" from "refused".
+- **kit-forge 1.5.1 — the PII and secret linter no longer prints the value it found.** A finding
+  showed its first and last 4 characters (6 of a CPF's 11 digits, a token's last 4), and the
+  report goes to a terminal, to `--json` and to CI logs. A secret now shows its 4-character type
+  prefix and its length; every other category shows only the category and the length. `file:line`
+  still points at the finding, and baselines keep working (their key never used the match).
+- **`tests/test_shell_portability.py` collects on Python 3.14.** The module it loads by path
+  defines a dataclass, and 3.14 looks the module up in `sys.modules` while building it.
+
 ## [2.10.0] — 2026-09-28
 
 ### Added
@@ -1766,6 +1816,7 @@ publishing.
 [2.6.5]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.5
 [2.6.6]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.6
 [2.6.7]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.7
+[2.10.1]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.10.1
 [2.10.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.10.0
 [2.9.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.9.0
 [2.8.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.8.0

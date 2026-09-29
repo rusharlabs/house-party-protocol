@@ -31,14 +31,14 @@ O plugin não tem hooks; a skill `agent-framework-scaffold` é auto-descoberta e
 
 Na distribuição emitida este módulo vive em `wizards/agent-framework-wizard-1.2.2/` (o
 diretório carrega a versão — declare-a uma vez, em `KIT`). O instalador é
-`installers/kit-forge-1.5.0/kit_doctor.py`; rode-o da raiz da distribuição. Ele planeja
+`installers/kit-forge-1.5.1/kit_doctor.py`; rode-o da raiz da distribuição. Ele planeja
 primeiro e só escreve numa segunda invocação explícita com `--apply`:
 
 ```bash
 KIT=wizards/agent-framework-wizard-1.2.2
 cp -r "$KIT" ../your-repo/agent-framework-wizard   # the copy itself (kit_doctor does not copy on claude-code)
-python installers/kit-forge-1.5.0/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo
-python installers/kit-forge-1.5.0/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo --apply
+python installers/kit-forge-1.5.1/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo
+python installers/kit-forge-1.5.1/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo --apply
 # Codex CLI: --host codex — the installer copies the module into .agents/hpp/agent-framework-wizard
 #            and the skill into .agents/skills/hpp-agent-framework-wizard-<skill>; no cp -r needed
 ```

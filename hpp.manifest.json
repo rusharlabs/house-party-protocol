@@ -1,6 +1,6 @@
 {
   "protocol_version": "2.1",
-  "product_version": "2.10.0",
+  "product_version": "2.10.1",
   "name": "house-party-protocol",
   "hosts": [
     "claude-code",
@@ -52,7 +52,7 @@
     "rule": "Risk and context define a floor; fallback may only move upward."
   },
   "installer": {
-    "path": "installers/kit-forge-1.5.0/kit_doctor.py"
+    "path": "installers/kit-forge-1.5.1/kit_doctor.py"
   },
   "loop": {
     "initial": "planned",
@@ -120,8 +120,8 @@
     },
     {
       "id": "kit-forge",
-      "version": "1.5.0",
-      "path": "installers/kit-forge-1.5.0",
+      "version": "1.5.1",
+      "path": "installers/kit-forge-1.5.1",
       "requires": [],
       "integrates_with": [
         "claude-dev-kit"
@@ -141,8 +141,8 @@
     },
     {
       "id": "lane-kit",
-      "version": "1.7.0",
-      "path": "multi-session/lane-kit-1.7.0",
+      "version": "1.7.1",
+      "path": "multi-session/lane-kit-1.7.1",
       "requires": [],
       "integrates_with": [
         "continuity-kit",

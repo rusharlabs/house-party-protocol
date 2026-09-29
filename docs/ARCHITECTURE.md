@@ -174,7 +174,7 @@ The Code Map inventories declared components; it is not a call graph.
 | capability | Claude Code | Codex CLI |
 |---|---|---|
 | skills and instructions | plugin, native | copied into `.agents/skills`, namespaced |
-| lifecycle hooks (`Stop`, `PreToolUse`, `SessionStart`, ...) | native once wired by a person | none; the same scripts run as explicit commands |
+| lifecycle hooks (`Stop`, `PreToolUse`, `SessionStart`, ...) | native once wired by a person | the host has its own; HPP's are not loaded there, and the same scripts run as explicit commands |
 | command policy | hook plus CLI | CLI or preflight |
 | event log, attestation, maps, WorkGraph, eval | CLI | CLI |
 | install | marketplace plugin, or installer copy for `explicit-command` modules | installer copy into `.agents/hpp/<module>` |
@@ -192,8 +192,8 @@ One row per module, rendered from `hosts` and `components` in the manifest by `h
 | module | Claude Code | Codex CLI |
 |---|---|---|
 | `operator-kit` 1.8.0 | `native` · plugin + hooks after the wiring is pasted | `explicit-command` · plugin (skills only) + verified copy |
-| `kit-forge` 1.5.0 | `explicit-command` · plugin | `explicit-command` · verified copy |
-| `lane-kit` 1.7.0 | `native` · plugin + hooks after the wiring is pasted | `explicit-command` · verified copy |
+| `kit-forge` 1.5.1 | `explicit-command` · plugin | `explicit-command` · verified copy |
+| `lane-kit` 1.7.1 | `native` · plugin + hooks after the wiring is pasted | `explicit-command` · verified copy |
 | `continuity-kit` 1.5.0 | `native` · plugin + hooks after the wiring is pasted | `explicit-command` · plugin (skills only) + verified copy |
 | `health-kit` 1.4.0 | `explicit-command` · plugin | `explicit-command` · plugin (skills only) + verified copy |
 | `claude-dev-kit` 1.3.4 | `native` · plugin | `unsupported` · — |

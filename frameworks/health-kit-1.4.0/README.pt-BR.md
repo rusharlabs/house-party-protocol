@@ -64,14 +64,14 @@ Instala o hook `SessionStart` (refresh automático do cache a cada sessão nova)
 
 Na distribuição emitida este módulo vive em `frameworks/health-kit-1.4.0/`
 (o diretório carrega a versão — declare-a uma vez, em `KIT`). O instalador é
-`installers/kit-forge-1.5.0/kit_doctor.py`; rode-o da raiz da distribuição. Ele planeja
+`installers/kit-forge-1.5.1/kit_doctor.py`; rode-o da raiz da distribuição. Ele planeja
 primeiro e só escreve numa segunda invocação explícita com `--apply`:
 
 ```bash
 KIT=frameworks/health-kit-1.4.0
 cp -r "$KIT" ../your-repo/health-kit          # the copy itself (kit_doctor does not copy on claude-code)
-python installers/kit-forge-1.5.0/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo
-python installers/kit-forge-1.5.0/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo --apply
+python installers/kit-forge-1.5.1/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo
+python installers/kit-forge-1.5.1/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo --apply
 # Codex CLI: --host codex — the installer copies the module into .agents/hpp/health-kit
 #            and each skill into .agents/skills/hpp-health-kit-<skill>; no cp -r needed
 ```

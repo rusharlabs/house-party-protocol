@@ -181,7 +181,7 @@ veredito só de outra lane **e** de outra família de modelo,
 <p align="center">
   <img alt="python lane_board.py render: quatro itens de exemplo num board — EXAMPLE-1 MERGED, EXAMPLE-2 VERIFIED esperando o gate humano, EXAMPLE-3 DEFERRED por falta de checker, EXAMPLE-4 de volta a BUILDING depois de NEEDS-FIX — e então os vereditos cuja lane ainda não foi avisada" src="assets/terminal/lane-board.svg" width="940">
 </p>
-<p align="center"><sub>O board que aquelas linhas produzem, como o <code>multi-session/lane-kit-1.7.0/scripts/lane_board.py</code> o imprime: quatro itens de exemplo conduzidos pela máquina, cada evento nomeando a lane que o escreveu, a evidência colada no checkpoint e — no caso de veredito — a lane e o modelo que o deram. Duas tentativas foram recusadas no caminho, as duas com <code>exit 1</code>: um veredito vindo da própria lane que construiu (<em>maker≠checker violated: reviewer (exec-b) is the SAME lane as the builder</em>) e o merge de um item 🔴 sem <code>--human-approved</code>. O último bloco é o que ninguém pensa em pedir — vereditos já decididos cuja lane ainda não foi avisada. Texto renderizado da saída real do comando pelo <code>scripts/render_terminal_svg.py</code>, como as duas capturas acima.</sub></p>
+<p align="center"><sub>O board que aquelas linhas produzem, como o <code>multi-session/lane-kit-1.7.1/scripts/lane_board.py</code> o imprime: quatro itens de exemplo conduzidos pela máquina, cada evento nomeando a lane que o escreveu, a evidência colada no checkpoint e — no caso de veredito — a lane e o modelo que o deram. Duas tentativas foram recusadas no caminho, as duas com <code>exit 1</code>: um veredito vindo da própria lane que construiu (<em>maker≠checker violated: reviewer (exec-b) is the SAME lane as the builder</em>) e o merge de um item 🔴 sem <code>--human-approved</code>. O último bloco é o que ninguém pensa em pedir — vereditos já decididos cuja lane ainda não foi avisada. Texto renderizado da saída real do comando pelo <code>scripts/render_terminal_svg.py</code>, como as duas capturas acima.</sub></p>
 
 ## Quickstart
 
@@ -197,7 +197,7 @@ nenhum pacote de terceiro. A CI exercita Python 3.10 a 3.13 em Linux, macOS e Wi
 (`.github/workflows/ci.yml`); interpretadores mais antigos não são prometidos porque nada os mede.
 
 ```bash
-pip install git+https://github.com/rusharlabs/house-party-protocol@v2.10.0
+pip install git+https://github.com/rusharlabs/house-party-protocol@v2.10.1
 hpp doctor
 hpp init --target ../your-repo
 ```
@@ -305,13 +305,13 @@ instalador detecta, liga e verifica. Nos dois casos ele planeja primeiro e aplic
 invocação explícita:
 
 ```bash
-python installers/kit-forge-1.5.0/kit_doctor.py install \
+python installers/kit-forge-1.5.1/kit_doctor.py install \
   --kit frameworks/operator-kit-1.8.0 --host codex --target ../your-repo
-python installers/kit-forge-1.5.0/kit_doctor.py install \
+python installers/kit-forge-1.5.1/kit_doctor.py install \
   --kit frameworks/operator-kit-1.8.0 --host codex --target ../your-repo --apply
 ```
 
-O instalador faz parte deste repositório, em `installers/kit-forge-1.5.0/kit_doctor.py`, ao
+O instalador faz parte deste repositório, em `installers/kit-forge-1.5.1/kit_doctor.py`, ao
 lado dos diretórios de módulo a partir dos quais ele instala. Uma instalação por pip não carrega
 nem um nem outro, e o `hpp init` avisa isso no bloco de wiring quando não encontra o instalador
 ao lado do manifesto.
@@ -363,11 +363,11 @@ mesma resposta em JSON. Nenhum dos dois pede a um modelo que lembre de alguma co
 | módulo | versão | uma linha |
 |---|---|---|
 | `operator-kit` | 1.8.0 | done gate com exit code real, política de comando em `audit` ou `enforce`, loops governados com charter e condições de parada, runner standalone de `pass@k` / `pass^k`, preflight, dois agentes checkers entregues sem `Write` nem `Edit` |
-| `lane-kit` | 1.7.0 | um quadro de lanes para sessões concorrentes: claim, território, liveness, maker ≠ checker, e um roteador que escolhe checker de outro provedor |
+| `lane-kit` | 1.7.1 | um quadro de lanes para sessões concorrentes: claim, território, liveness, maker ≠ checker, e um roteador que escolhe checker de outro provedor |
 | `continuity-kit` | 1.5.0 | handoff escrito antes de parada ou compactação, comandos de re-derivação em vez de estado lembrado, guardas contra replay de passo concluído |
 | `health-kit` | 1.4.0 | sondas de serviço config-driven que gravam um cache que a statusline lê sem tocar a rede; saúde de serviço separada de saúde de dado |
 | `gotcha-memory` | 1.1.0 | registra comandos que falharam por família de erro, detecta recorrência, injeta a lição antes da próxima execução; warn-only, segredo redigido por forma |
-| `kit-forge` | 1.5.0 | monta módulos a partir das fontes, faz lint de IP e PII, instala em seis estágios, escreve e verifica `CHECKSUMS.txt`, confere o marketplace |
+| `kit-forge` | 1.5.1 | monta módulos a partir das fontes, faz lint de IP e PII, instala em seis estágios, escreve e verifica `CHECKSUMS.txt`, confere o marketplace |
 | `claude-dev-kit` | 1.3.4 | autoria de skills, hooks e plugins para Claude Code, wiring reversível de settings, secret scan na escrita |
 | `dev-squad-kit` | 1.2.0 | doze papéis de desenvolvimento como comandos e subagents com tools explícitos, mais skills de leitura e consolidação paralelas |
 | `agent-framework-wizard` | 1.2.2 | scaffold em seis passos para um projeto novo de agente ou skill, respondível por arquivo em execução não interativa |
@@ -400,9 +400,9 @@ grafo e attestation de evidência. `pass^k = 1.00` é exigido para o gate passar
 e o hash dele estão no relatório JSON (`hpp benchmark -k 3 --json`). Veja [PROOF.pt-BR.md](docs/PROOF.pt-BR.md)
 para a matriz de claims e [BENCHMARK.pt-BR.md](docs/BENCHMARK.pt-BR.md) para os cenários.
 
-Neste repositório, `python installers/kit-forge-1.5.0/kit_doctor.py verify <dir-do-módulo>`
+Neste repositório, `python installers/kit-forge-1.5.1/kit_doctor.py verify <dir-do-módulo>`
 compara cada arquivo de um módulo com o seu `CHECKSUMS.txt`, e
-`python installers/kit-forge-1.5.0/kit_doctor.py marketplace .` confere a árvore inteira.
+`python installers/kit-forge-1.5.1/kit_doctor.py marketplace .` confere a árvore inteira.
 
 Algo confuso, mais lento do que devia, ou uma peça que você deixou de usar?
 `python -m hpp doctor --report` imprime o link do formulário de feedback com o título preenchido e,
@@ -429,10 +429,11 @@ faz chamada de rede; nada é enviado até você abrir o link.
   pegar toda forma destrutiva.
 - A attestation exige `git`. Ela faz hash da identidade do remoto e guarda o hash, não a URL. Ela
   amarra um veredito a bytes; não julga se o veredito estava certo.
-- No Claude Code, hooks de lifecycle são nativos depois que você cola o wiring. No Codex CLI não
-  há hooks de lifecycle; as mesmas capacidades são comandos explícitos. `hpp doctor` e o
-  manifesto reportam isso como `native`, `explicit-command` ou `unsupported`, e nenhum adaptador
-  finge o contrário.
+- No Claude Code, hooks de lifecycle são nativos depois que você cola o wiring. O Codex CLI tem
+  hooks de lifecycle próprios, mas os hooks do HPP são escritos para o Claude Code: cada
+  manifesto de plugin do Codex carrega um objeto de hooks vazio para que o Codex não os carregue,
+  e no Codex as mesmas capacidades são comandos explícitos. `hpp doctor` e o manifesto reportam
+  isso como `native`, `explicit-command` ou `unsupported`, e nenhum adaptador finge o contrário.
 - `hpp init` escreve um arquivo com `--apply` e nunca edita `settings.json`, hooks ou
   `AGENTS.md`. Ligar hooks continua sendo ação humana.
 - O benchmark prova o harness no checkout e na plataforma em que rodou. Não diz nada sobre a

@@ -59,14 +59,14 @@ auto-discovered. No hooks.
 
 In the emitted distribution this module lives in
 `frameworks/dev-squad-kit-1.2.0/` (the directory carries the version — state it
-once, in `KIT`). The installer is `installers/kit-forge-1.5.0/kit_doctor.py`; run it from
+once, in `KIT`). The installer is `installers/kit-forge-1.5.1/kit_doctor.py`; run it from
 the distribution root. It plans first and writes only on a second, explicit `--apply`:
 
 ```bash
 KIT=frameworks/dev-squad-kit-1.2.0
 cp -r "$KIT" ../your-repo/dev-squad-kit       # the copy itself (kit_doctor does not copy on claude-code)
-python installers/kit-forge-1.5.0/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo
-python installers/kit-forge-1.5.0/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo --apply
+python installers/kit-forge-1.5.1/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo
+python installers/kit-forge-1.5.1/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo --apply
 # Codex CLI: --host codex — the installer copies the module into .agents/hpp/dev-squad-kit
 #            and each skill into .agents/skills/hpp-dev-squad-kit-<skill>; no cp -r needed
 ```
@@ -98,13 +98,13 @@ The kit ships no linter of its own — the linter is the installer's. From the d
 root:
 
 ```bash
-python installers/kit-forge-1.5.0/tools/skill_lint.py --all frameworks/dev-squad-kit-1.2.0/skills --run-proofs
+python installers/kit-forge-1.5.1/tools/skill_lint.py --all frameworks/dev-squad-kit-1.2.0/skills --run-proofs
 ```
 Last line of the output (the 3 `[PASS]` lines above it carry OS-specific path separators):
 ```
 skill_lint: 3 pass · 0 warn · 0 fail (of 3)
 ```
-<!-- executado: 2026-09-21 · exit=0 -->
+<!-- executado: 2026-09-29 · exit=0 -->
 
 **Product honesty:** the 3 `pp-*` skills are investigation methodology (prose guiding how
 to inventory/read a repo before diving in), not scripts with deterministic output. They now

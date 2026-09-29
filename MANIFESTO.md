@@ -116,7 +116,17 @@ does.
   itself, with the model the operator declared for it. A session that runs in the background runs
   under a supervisor with a timeout, a stop and a capped log. The session is the operator's agent,
   on the operator's own account; the `hpp` package still calls no model, picks none and holds no
-  credential.
+  credential. The same exception covers lane-kit's `/deliberate` and its `house-session` skill:
+  when the operator invokes them, `house_session.py seat` runs the agent CLI the operator gives
+  each seat of a panel, and nothing schedules it. Before running anything it refuses a panel the
+  core does not accept and a seat or a round outside that panel; it runs the command in the seat's
+  worktree (`--root`) through the core's bounded runner, whose timeout (600 seconds unless the
+  operator sets another) stops the command's whole process tree; and it fingerprints git's view of
+  that worktree before and after (status, the diff against HEAD, untracked contents, HEAD and
+  every ref, the worktree list, the config, the hooks and `info/exclude`). A seat that moved any of
+  it gets no turn, and a seat that fails or times out is not judged. The fingerprint does not see
+  a write into a path the repository ignores, nor what a seat does outside its worktree with the
+  operator's permissions.
 - **No graph database.** Every map is a projection of manifests, events and JSON you supply. The
   same input yields the same nodes and edges, in the same order, and you can hash the result. A
   stored graph would be a second source of truth that drifts from the first.
@@ -126,8 +136,9 @@ does.
 - **No promise accepted as evidence.** A completion tag in a transcript does not stop a loop; the
   done gate re-runs the criterion commands outside the model's reach. An empty output, an
   identical maker and checker, or a verdict other than `approved` never becomes proof.
-- **No host parity by assertion.** Claude Code runs lifecycle hooks; Codex CLI does not. Coverage
-  is declared per module as `native`, `explicit-command` or `unsupported`, and an unsupported
+- **No host parity by assertion.** Claude Code runs a module's hooks once they are wired; Codex CLI
+  has hooks of its own, and HPP does not load its hooks there. Coverage is declared per module as
+  `native`, `explicit-command` or `unsupported`, and an unsupported
   module halts the plan instead of being installed as if it worked.
 - **No headline numbers.** The count of modules is not a quality claim. A number appears next to
   the command that produced it or it does not appear.

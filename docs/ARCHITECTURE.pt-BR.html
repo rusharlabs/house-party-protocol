@@ -260,7 +260,7 @@ conhecimento. O Code Map inventaria componentes declarados; não é um grafo de 
 <thead><tr><th>capacidade</th><th>Claude Code</th><th>Codex CLI</th></tr></thead>
 <tbody>
 <tr><td>skills e instruções</td><td>plugin, nativo</td><td>copiadas para <code>.agents/skills</code>, com namespace</td></tr>
-<tr><td>hooks de lifecycle (<code>Stop</code>, <code>PreToolUse</code>, <code>SessionStart</code>, ...)</td><td>nativos depois que uma pessoa faz o wiring</td><td>nenhum; os mesmos scripts rodam como comandos explícitos</td></tr>
+<tr><td>hooks de lifecycle (<code>Stop</code>, <code>PreToolUse</code>, <code>SessionStart</code>, ...)</td><td>nativos depois que uma pessoa faz o wiring</td><td>o host tem os seus; os do HPP não são carregados lá, e os mesmos scripts rodam como comandos explícitos</td></tr>
 <tr><td>política de comandos</td><td>hook mais CLI</td><td>CLI ou preflight</td></tr>
 <tr><td>event log, attestation, mapas, WorkGraph, eval</td><td>CLI</td><td>CLI</td></tr>
 <tr><td>instalação</td><td>plugin do marketplace, ou cópia pelo instalador para módulos <code>explicit-command</code></td><td>cópia pelo instalador para <code>.agents/hpp/&lt;module&gt;</code></td></tr>
@@ -279,8 +279,8 @@ essa renderização.</p>
 <thead><tr><th>módulo</th><th>Claude Code</th><th>Codex CLI</th></tr></thead>
 <tbody>
 <tr><td><code>operator-kit</code> 1.8.0</td><td><code>native</code> · plugin + hooks depois de colar o wiring</td><td><code>explicit-command</code> · plugin (só skills) + cópia verificada</td></tr>
-<tr><td><code>kit-forge</code> 1.5.0</td><td><code>explicit-command</code> · plugin</td><td><code>explicit-command</code> · cópia verificada</td></tr>
-<tr><td><code>lane-kit</code> 1.7.0</td><td><code>native</code> · plugin + hooks depois de colar o wiring</td><td><code>explicit-command</code> · cópia verificada</td></tr>
+<tr><td><code>kit-forge</code> 1.5.1</td><td><code>explicit-command</code> · plugin</td><td><code>explicit-command</code> · cópia verificada</td></tr>
+<tr><td><code>lane-kit</code> 1.7.1</td><td><code>native</code> · plugin + hooks depois de colar o wiring</td><td><code>explicit-command</code> · cópia verificada</td></tr>
 <tr><td><code>continuity-kit</code> 1.5.0</td><td><code>native</code> · plugin + hooks depois de colar o wiring</td><td><code>explicit-command</code> · plugin (só skills) + cópia verificada</td></tr>
 <tr><td><code>health-kit</code> 1.4.0</td><td><code>explicit-command</code> · plugin</td><td><code>explicit-command</code> · plugin (só skills) + cópia verificada</td></tr>
 <tr><td><code>claude-dev-kit</code> 1.3.4</td><td><code>native</code> · plugin</td><td><code>unsupported</code> · —</td></tr>

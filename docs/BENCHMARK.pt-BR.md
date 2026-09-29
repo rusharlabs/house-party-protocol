@@ -37,4 +37,4 @@ inclui versão, plataforma, hash da suite, tentativas e resultado individual. In
 ZIPs é um gate separado da release.
 
 O benchmark prova somente o checkout, a plataforma e os cenários executados. Não mede qualidade
-geral de um modelo e não transforma um host sem lifecycle hook em enforcement automático.
+geral de um modelo e não transforma uma capacidade `explicit-command` em enforcement automático.

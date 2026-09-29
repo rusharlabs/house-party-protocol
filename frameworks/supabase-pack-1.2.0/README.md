@@ -46,14 +46,14 @@ The plugin has no hooks; the two skills are auto-discovered.
 
 In the emitted distribution this module lives in
 `frameworks/supabase-pack-1.2.0/` (the directory carries the version — state it
-once, in `KIT`). The installer is `installers/kit-forge-1.5.0/kit_doctor.py`; run it from
+once, in `KIT`). The installer is `installers/kit-forge-1.5.1/kit_doctor.py`; run it from
 the distribution root. It plans first and writes only on a second, explicit `--apply`:
 
 ```bash
 KIT=frameworks/supabase-pack-1.2.0
 cp -r "$KIT" ../your-repo/supabase-pack       # the copy itself (kit_doctor does not copy on claude-code)
-python installers/kit-forge-1.5.0/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo
-python installers/kit-forge-1.5.0/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo --apply
+python installers/kit-forge-1.5.1/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo
+python installers/kit-forge-1.5.1/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo --apply
 # Codex CLI: --host codex — the installer copies the module into .agents/hpp/supabase-pack
 #            and each skill into .agents/skills/hpp-supabase-pack-<skill>; no cp -r needed
 ```
@@ -87,13 +87,13 @@ The kit ships no `tools/` of its own — the linter is the installer's. From the
 root:
 
 ```bash
-python installers/kit-forge-1.5.0/tools/skill_lint.py --all frameworks/supabase-pack-1.2.0/skills --run-proofs
+python installers/kit-forge-1.5.1/tools/skill_lint.py --all frameworks/supabase-pack-1.2.0/skills --run-proofs
 ```
 Last line of the output (the 2 `[PASS]` lines above it carry OS-specific path separators):
 ```
 skill_lint: 2 pass · 0 warn · 0 fail (of 2)
 ```
-<!-- executado: 2026-09-21 · exit=0 -->
+<!-- executado: 2026-09-29 · exit=0 -->
 
 ## Undo
 

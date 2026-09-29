@@ -24,7 +24,7 @@ Then the first event is recorded, and the loop leaves `planned`.
 ```bash
 python -m hpp work plan SPEC.json
 python -m hpp work waves SPEC.json
-python multi-session/lane-kit-1.7.0/scripts/lane_board.py claim --help
+python multi-session/lane-kit-1.7.1/scripts/lane_board.py claim --help
 python -m hpp event append --type work_started --data '{"work":"ITEM-1","actor":"maker-a"}'
 ```
 
@@ -111,7 +111,7 @@ done, not as done by the maker.
 The checker's pass is an event. The loop moves from `evidenced` to `checked`.
 
 ```bash
-python multi-session/lane-kit-1.7.0/scripts/checker_router.py --maker claude --require
+python multi-session/lane-kit-1.7.1/scripts/checker_router.py --maker claude --require
 python -m hpp event append --type check_passed --data '{"work":"ITEM-1","checker":"checker-b"}'
 ```
 
@@ -190,8 +190,8 @@ person to paste, and the doctor is run afterwards to confirm the result.
 ```bash
 python -m hpp init --target ../your-repo
 python -m hpp init --target ../your-repo --apply
-python installers/kit-forge-1.5.0/kit_doctor.py install --kit <module-dir> --host codex --target ../your-repo
-python installers/kit-forge-1.5.0/kit_doctor.py install --kit <module-dir> --host codex --target ../your-repo --apply
+python installers/kit-forge-1.5.1/kit_doctor.py install --kit <module-dir> --host codex --target ../your-repo
+python installers/kit-forge-1.5.1/kit_doctor.py install --kit <module-dir> --host codex --target ../your-repo --apply
 python -m hpp doctor
 ```
 

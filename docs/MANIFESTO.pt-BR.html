@@ -194,7 +194,18 @@ essa página pode iniciar uma sessão de agente, e só como uma ação que o ope
 partir de uma requisição que só lê, nunca por temporizador e nunca sozinha, com o modelo que o
 operador declarou para ela. Uma sessão que roda em segundo plano roda sob um supervisor com tempo
 limite, botão de parar e log com teto. A sessão é o agente do operador, na conta do próprio
-operador; o pacote <code>hpp</code> continua sem chamar modelo, sem escolher nenhum e sem guardar credencial.</li>
+operador; o pacote <code>hpp</code> continua sem chamar modelo, sem escolher nenhum e sem guardar credencial.
+A mesma exceção cobre o <code>/deliberate</code> do lane-kit e a skill <code>house-session</code> dele: quando o
+operador os invoca, o <code>house_session.py seat</code> roda o CLI de agente que o operador dá a cada
+assento de um painel, e nada o agenda. Antes de rodar qualquer coisa, ele recusa um painel que o
+núcleo não aceita e um assento ou uma rodada fora desse painel; roda o comando na worktree do
+assento (<code>--root</code>) pelo executor delimitado do núcleo, cujo tempo limite (600 segundos, salvo se o
+operador definir outro) encerra a árvore inteira de processos do comando; e tira uma impressão
+digital da visão do git sobre essa worktree antes e depois (status, o diff contra o HEAD, o
+conteúdo dos arquivos não rastreados, o HEAD e toda ref, a lista de worktrees, a config, os hooks
+e o <code>info/exclude</code>). Um assento que moveu qualquer parte disso não ganha turno, e um assento que
+falha ou estoura o tempo não é julgado. A impressão digital não vê uma escrita num caminho que o
+repositório ignora, nem o que um assento faz fora da worktree dele com as permissões do operador.</li>
 <li><strong>Sem banco de grafo.</strong> Todo mapa é uma projeção de manifestos, eventos e JSON que você fornece.
 A mesma entrada produz os mesmos nós e arestas, na mesma ordem, e você pode fazer hash do
 resultado. Um grafo armazenado seria uma segunda fonte de verdade que deriva da primeira.</li>
@@ -204,8 +215,9 @@ toca <code>settings.json</code>, hooks ou <code>AGENTS.md</code>; esse wiring é
 <li><strong>Nenhuma promessa aceita como evidência.</strong> Uma marca de conclusão num transcript não para um
 loop; o done gate reexecuta os comandos do critério fora do alcance do modelo. Uma saída vazia,
 um maker e um checker idênticos, ou um veredito diferente de <code>approved</code> nunca viram prova.</li>
-<li><strong>Sem paridade de host por afirmação.</strong> O Claude Code executa hooks de lifecycle; o Codex CLI
-não. A cobertura é declarada por módulo como <code>native</code>, <code>explicit-command</code> ou <code>unsupported</code>, e um
+<li><strong>Sem paridade de host por afirmação.</strong> O Claude Code executa os hooks de um módulo depois que
+eles são wirados; o Codex CLI tem hooks próprios, e o HPP não carrega os seus lá. A cobertura é
+declarada por módulo como <code>native</code>, <code>explicit-command</code> ou <code>unsupported</code>, e um
 módulo não suportado interrompe o plano em vez de ser instalado como se funcionasse.</li>
 <li><strong>Sem número de manchete.</strong> A contagem de módulos não é uma afirmação de qualidade. Um número
 aparece ao lado do comando que o produziu, ou não aparece.</li>

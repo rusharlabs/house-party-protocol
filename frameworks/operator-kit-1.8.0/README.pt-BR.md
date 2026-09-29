@@ -95,14 +95,14 @@ Code: plugin não embute `statusLine`) — ver `SETTINGS-WIRE.md` §3.
 
 Na distribuição emitida este módulo vive em `frameworks/operator-kit-1.8.0/`
 (o diretório carrega a versão — declare-a uma vez, em `KIT`). O instalador é
-`installers/kit-forge-1.5.0/kit_doctor.py`; rode-o da raiz da distribuição. Ele planeja
+`installers/kit-forge-1.5.1/kit_doctor.py`; rode-o da raiz da distribuição. Ele planeja
 primeiro e só escreve numa segunda invocação explícita com `--apply`:
 
 ```bash
 KIT=frameworks/operator-kit-1.8.0
 cp -r "$KIT" ../your-repo/operator-kit        # the copy itself (kit_doctor does not copy on claude-code)
-python installers/kit-forge-1.5.0/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo
-python installers/kit-forge-1.5.0/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo --apply
+python installers/kit-forge-1.5.1/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo
+python installers/kit-forge-1.5.1/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo --apply
 # Codex CLI: --host codex — the installer copies the module into .agents/hpp/operator-kit
 #            and each skill into .agents/skills/hpp-operator-kit-<skill>; no cp -r needed
 ```

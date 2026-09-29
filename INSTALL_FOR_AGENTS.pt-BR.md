@@ -34,7 +34,7 @@ da pessoa, não contorne a ausência do `git`.
 ## Passo 2 — instale a CLI
 
 ```bash
-pip install git+https://github.com/rusharlabs/house-party-protocol@v2.10.0
+pip install git+https://github.com/rusharlabs/house-party-protocol@v2.10.1
 ```
 
 `pipx install git+…` funciona igual. O pacote traz o próprio manifesto e a própria suíte de
@@ -95,7 +95,7 @@ Todo o resto — runtime, scripts, templates, e qualquer módulo sem skills — 
 mais por módulo:
 
 ```bash
-installers/kit-forge-1.5.0/kit_doctor.py install --kit <kit> --host codex --target <repo> --apply
+installers/kit-forge-1.5.1/kit_doctor.py install --kit <kit> --host codex --target <repo> --apply
 ```
 
 As skills vão para `.agents/skills`; o runtime completo vai para `.agents/hpp`. Os hooks

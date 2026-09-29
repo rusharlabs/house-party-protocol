@@ -48,14 +48,14 @@ External services: **none — stdlib + PyYAML, touches only the local filesystem
 
 In the emitted distribution this module lives in
 `frameworks/claude-dev-kit-1.3.4/` (the directory carries the version — state it
-once, in `KIT`). The installer is `installers/kit-forge-1.5.0/kit_doctor.py`; run it from
+once, in `KIT`). The installer is `installers/kit-forge-1.5.1/kit_doctor.py`; run it from
 the distribution root. It plans first and writes only on a second, explicit `--apply`:
 
 ```bash
 KIT=frameworks/claude-dev-kit-1.3.4
 cp -r "$KIT" ../your-repo/claude-dev-kit      # the copy itself (kit_doctor does not copy on claude-code)
-python installers/kit-forge-1.5.0/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo
-python installers/kit-forge-1.5.0/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo --apply
+python installers/kit-forge-1.5.1/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo
+python installers/kit-forge-1.5.1/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo --apply
 # Codex CLI: --host codex — the installer copies the module into .agents/hpp/claude-dev-kit
 #            and each skill into .agents/skills/hpp-claude-dev-kit-<skill>; no cp -r needed
 ```
