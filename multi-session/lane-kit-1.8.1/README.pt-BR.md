@@ -1,0 +1,482 @@
+[English](README.md) · [Português](README.pt-BR.md)
+
+# Lane Kit
+
+N sessões de agente (lanes) trabalhando no mesmo repo ao mesmo tempo, sem colisão.
+Quadro-branco de estados (`CLAIMED → BUILDING → CHECKPOINT-READY → UNDER-REVIEW →
+VERIFIED/NEEDS-FIX → MERGED`) com maker≠checker cross-model **enforçado em código**
+(não apenas convenção), registry de lanes vivas com heartbeat/liveness, guard de git
+(bloqueia `commit -a`/`add -A`/`reset --hard` enquanto outra lane está viva) e guard de
+território (zonas vermelhas + território exclusivo por lane). Não faz o handoff de sessão
+em si — isso é o `continuity-kit`, que complementa este kit: os dois são recomendados juntos,
+e nenhum exige o outro. Os hooks do continuity-kit resolvem a lane de uma sessão na ordem que
+o register deste kit usa (`CLAUDE_LANE_ID`, depois o payload do hook, depois `solo`). O quadro também pode ser
+acompanhado e operado por uma página local, o [Lane Dashboard](#lane-dashboard--o-quadro-numa-página-local-toda-ação-também-um-comando-de-terminal),
+onde toda ação também é um comando de terminal.
+
+## Pré-requisitos + APIs externas
+
+| Requisito | Versão mínima | Obrigatório? |
+|---|---|---|
+| Python | 3.9 | sim |
+| PyYAML | qualquer | sim |
+| `continuity-kit` | qualquer | não — recomendado: guarda o handoff de cada sessão; nenhum código do lane-kit lê os arquivos dele |
+| Núcleo HPP (`python -m hpp`) | 2.6.0 ou mais nova (a primeira versão com `hpp evidence`) | não — só para `--evidence-record` |
+
+Serviços externos: **nenhum — stdlib + PyYAML, só toca filesystem local + git do projeto-alvo.**
+
+Opcional: `lane_board.py set <item> CHECKPOINT-READY --evidence-record .hpp/evidence/<id>-<UTC>.json`
+anexa uma execução registrada por `hpp evidence run` no lugar de texto colado. O board pede ao núcleo
+HPP que verifique o registro e só o aceita como `valid` (registro íntegro de uma execução que passou),
+guardando `{path, record_sha256, id}` no evento; o `render` mostra o id e um prefixo do hash. Sem o
+núcleo importável a flag sai com exit 2 e não escreve nada — o `--evidence` em texto livre não
+precisa de nada a mais.
+
+## Instalar via plugin
+
+```bash
+/plugin marketplace add rusharlabs/house-party-protocol
+/plugin install lane-kit@house-party-protocol
+```
+O Claude Code carrega sozinho o `hooks/hooks.json` do plugin, então o plugin arma quatro
+entradas via `${CLAUDE_PLUGIN_ROOT}` (cada uma lançada por `hooks/pyrun.sh`, que resolve o
+Python do projeto; WARN-only, `timeout: 30`): `lane_register.py` no `SessionStart`
+(registra esta sessão como lane viva e anuncia as mensagens não lidas) e de novo no `PostToolUse`
+com `--heartbeat` (liveness, mais o anúncio de mensagem que chegou no meio da sessão);
+`lane_git_guard.py` no `PreToolUse` para `Bash` (sinaliza `add -A`/`commit -a`/`reset
+--hard` e afins enquanto outra lane está viva); `lane_territory_guard.py` no `PreToolUse`
+para `Edit|Write` (zonas vermelhas + colisões de território). Skills são auto-descobertas.
+
+No Codex CLI o mesmo repositório é um marketplace de plugins próprio, e o lane-kit é um dos
+plugins dele:
+
+```bash
+codex plugin marketplace add rusharlabs/house-party-protocol
+codex plugin add lane-kit@house-party-protocol
+```
+Lá o plugin registra as duas skills, `lane-coordinator` e `house-session`, e nada mais: o
+`.codex-plugin/plugin.json` dele carrega um objeto `hooks` vazio, então os quatro hooks acima
+continuam sendo do Claude Code, e o runtime (scripts e hooks) continua vindo pela cópia
+verificada abaixo (`--host codex`).
+
+## Instalar por cópia
+
+Na distribuição emitida este módulo vive em `multi-session/lane-kit-1.8.1/` (o diretório
+carrega a versão — declare-a uma vez, em `KIT`). O instalador é
+`installers/kit-forge-1.5.2/kit_doctor.py`; rode-o da raiz da distribuição. Ele planeja
+primeiro e só escreve numa segunda invocação explícita com `--apply`:
+
+```bash
+KIT=multi-session/lane-kit-1.8.1
+cp -r "$KIT" ../your-repo/lane-kit            # the copy itself (kit_doctor does not copy on claude-code)
+python installers/kit-forge-1.5.2/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo
+python installers/kit-forge-1.5.2/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo --apply
+# Codex CLI: --host codex — the installer copies the module into .agents/hpp/lane-kit
+#            and each skill into .agents/skills/hpp-lane-kit-<skill>; no cp -r needed
+```
+O arquivo de config é você quem cria — o estágio `profile` só copia arquivos `*.example.*`
+encontrados na **raiz** do módulo, e o `lanes.example.yaml` vive em `templates/`:
+```bash
+mkdir -p .claude/lanes && cp lane-kit/templates/lanes.example.yaml .claude/lanes/lanes.yaml
+```
+
+## O que o instalador detecta
+
+O estágio `detect` classifica o alvo (só leitura) com exatamente estes três rótulos:
+
+```
+greenfield    -> no prior config in the target; nothing to copy (lanes.yaml is created by you, see above)
+in-progress   -> .claude/ exists, or settings(.local).json already has hooks/statusLine, or the repo has
+                 more than 3 commits: reported, never overwritten
+re-run        -> this kit+target pair is already in the registry (~/.claude-kits/registry.json)
+```
+
+## O que é seguro rodar de novo
+
+`lanes.yaml` (config real, git-tracked por design — diferente do state runtime abaixo)
+nunca é tocado pelo instalador. Estado runtime é o que o kit escreve enquanto roda, e NUNCA
+deve ser versionado:
+```
+.claude/lanes/registry.json       # regenerated by every lane_register.py
+.claude/lanes/board.jsonl         # append-only, grows per event
+.claude/lanes/effects.json        # the effect ledger: which verdict was decided, which was delivered
+.claude/lanes/mailbox/            # messages between lanes + .announced/ (what each lane was already told, one .lock per lane)
+.claude/lanes/rescue/             # rescue patches of evicted lanes: full copies of work nobody committed
+.claude/lanes/sessions/           # prompts, launch and run records and logs of the sessions the dashboard started
+.claude/lanes/waves/              # the wave requests the dashboard recorded
+.claude/lanes/decision-briefs/    # the briefs the dashboard asked for
+.claude/lanes/.lock/              # ephemeral locks: the board's,
+.claude/lanes/.registry.lock/     # the registry's,
+.claude/lanes/.effects.lock/      # the effect ledger's,
+.claude/lanes/.dashboard-*.lock/  # and the dashboard's (backlog, waves, one per session)
+```
+Os logs de sessão (`sessions/<lane>.log`, e o `<lane>.stderr.log` de um briefing) guardam o que um
+agente imprimiu, e um patch de resgate guarda trabalho não commitado ao pé da letra: nunca
+commite nenhum dos dois.
+
+**Rollout do git-guard:** comece SEMPRE com `git_guard.mode: warn` por ≥1 semana e zero
+falso-positivo real antes de considerar `mode: block` em `lanes.yaml` (nunca via
+wiring/settings de novo — só o config). Validar com `bash evals/collision-git-guard.sh`
+(3 rodadas verdes).
+
+## Identidade da lane — como uma sessão diz qual lane ela é
+
+Todo hook deste kit age por uma lane, e uma sessão nomeia a lane dela no ambiente com que é
+iniciada — os hooks o herdam. Não no `lanes.yaml`, não no board:
+
+| Variável | Lida por | Quando está ausente |
+|---|---|---|
+| `CLAUDE_LANE_ID` | `lane_register.py` (register e heartbeat), `lane_git_guard.py`, `lane_territory_guard.py` | o register pega o `lane_id` do payload do hook, depois `solo`; os dois guards vão direto para `solo` |
+| `CLAUDE_LANE_ID` | continuity-kit, quando instalado: `handoff_inject.py` (qual handoff o `SessionStart` injeta; sem nenhum dessa lane, o mais novo de qualquer lane) e `handoff_guard.py` (de qual lane é o handoff que o `Stop` e o `PreCompact` procuram e gravam) | os dois pegam o `lane_id` do payload do hook, depois `solo` |
+| `CLAUDE_LANE_ROLE` | `lane_register.py` | o `role` do payload, depois `adhoc` |
+| `CLAUDE_LANE_MODEL` | `lane_register.py` | o `model` do payload, depois `unknown` |
+
+```bash
+CLAUDE_LANE_ID=exec-a CLAUDE_LANE_ROLE=executor CLAUDE_LANE_MODEL=claude-opus-5-5 claude
+```
+
+**Duas sessões iniciadas sem `CLAUDE_LANE_ID` são uma lane só, `solo`.** O registry guarda uma
+entrada por id de lane, então o segundo register toma a entrada do primeiro, e cada guard pula o
+próprio id de lane quando procura outras lanes vivas — nenhuma das duas sessões é avisada sobre a
+outra. Dê a cada sessão concorrente o seu id. As sessões que o Lane Dashboard inicia recebem as
+três dele. O board não lê essas variáveis: o `lane_board.py` recebe `--lane`, `--role` e `--model`
+em toda chamada.
+
+## Patch de resgate + efeitos entregues — as duas coisas que uma lane perdia
+
+| Script | O que escreve | Quando roda | Exit |
+|---|---|---|---|
+| `scripts/lane_rescue.py` | `.claude/lanes/rescue/lane-<id>-<ts>.patch` + `.meta.json` com o commit-base | no `SessionStart`, para cada lane morta que o `lane_register.py` despeja; à mão antes de `git worktree remove` | 0 ok (nada a resgatar incluído) · 1 recusado · 2 uso |
+| `scripts/lane_effects.py` | `.claude/lanes/effects.json` — `state{pending,accepted}` + `effect_state{pending,delivered}` por `reservation_id`, mais o desfecho `doorbell` quando uma campainha foi tocada | a partir do `lane_board.py`, em todo VERIFIED / NEEDS-FIX / DEFERRED / NOT-SELECTED / WITHDRAWN | 0 ok · 1 recusado · 2 uso |
+
+Uma lane é um worktree, e despejar uma lane morta é o instante em que o worktree dela fica sem
+dono: o próximo `worktree remove --force` ou o cron de limpeza leva junto o trabalho não commitado
+e nada diz o que se perdeu. O `lane_rescue.py` captura um `git diff --binary` — arquivos untracked
+incluídos, por um `GIT_INDEX_FILE` próprio para que um índice compartilhado não possa falsificá-lo
+— e grava o commit-base ao lado. Reaplicar recusa **inteiro** quando a base andou ou quando o
+patch não aplica, porque um resgate pela metade parece que o trabalho voltou. O segundo script
+separa dois fatos que o quadro colapsava: o veredito ter sido *decidido* e a lane construtora ter
+sido *avisada*. Colapsados, um restart nunca avisa (parece resolvido) e um retry avisa duas vezes
+(nada diz que já foi). O `reservation_id` é determinístico sobre
+`(item, decision, target, effect, round)`, então um retry reconcilia contra a mesma reserva e uma
+rodada realmente nova ganha a sua; `python lane-kit/scripts/lane_effects.py pending` é a lista
+durável que um restart percorre, e o `lane_board.py render` a imprime sob **UNDELIVERED**.
+
+**Mudança de comportamento nesta versão: o próprio board entrega a mensagem** (`mailbox.notify_on_verdict`,
+**ligado por padrão**). Todo veredito dirigido a uma lane construtora — VERIFIED, NEEDS-FIX, DEFERRED,
+NOT-SELECTED, WITHDRAWN — escreve `.claude/lanes/mailbox/<item>-<veredito>-<reserva>.md`, roteado com
+`## To: <lane>` e carregando o item, o veredito, o motivo, a evidência e a rodada, e depois marca a reserva
+como `delivered` com esse caminho como evidência: `pending` fica vazio e o **UNDELIVERED** some. Idempotente
+por `reservation_id` — um retry não escreve uma segunda mensagem, uma rodada nova escreve a sua. Uma mailbox
+que não pode ser escrita deixa o veredito no board e a reserva em `pending`, com aviso no stderr. Coloque
+`notify_on_verdict: false` no `lanes.yaml` para voltar à entrega manual: nada é escrito, a reserva fica em
+`pending` de propósito — um veredito não entregue que parece entregue é a falha que este ledger existe para
+tornar visível — e quem avisa a lane fecha o ciclo com
+`python lane-kit/scripts/lane_effects.py deliver <reservation_id> --evidence <onde>`.
+
+## Mailbox — mensagens entre lanes, e como uma lane as ouve
+
+`.claude/lanes/mailbox/*.md` é a caixa postal assíncrona entre lanes (`templates/REORIENT-MAILBOX.template.md`
+é a forma escrita à mão; o board escreve a forma de veredito acima). Uma mensagem é endereçada por uma
+**linha** de roteamento, casada inteira, com o id da lane delimitado — `## To: exec-b` nunca chega à
+`exec-bb`, e uma linha citada no meio da prosa não roteia nada. A linha legada `## Para:` continua roteando,
+para mailboxes escritas antes desta versão.
+
+```
+## To: exec-b                       <- the routing line: one lane id, alone on the line
+## From: coord (planner)
+## When: 2026-01-01T00:00:00
+## Affected item(s): ITEM-1
+```
+
+Como uma lane a ouve, por host:
+
+| Host | Register (SessionStart) | Mensagem que chega com a lane rodando | Campainha nativa |
+|---|---|---|---|
+| Claude Code | o `lane_register.py` lista toda mensagem não lida como `additionalContext` | o `--heartbeat` no `PostToolUse` a anuncia **uma vez**, como `hookSpecificOutput.additionalContext` (`hookEventName: PostToolUse`), no primeiro heartbeat que cai depois de o arquivo aparecer — um heartbeat estrangulado (`liveness.heartbeat_throttle_seconds`, 60s por padrão) espera o próximo | nenhuma — o host não tem CLI que alcance uma sessão em andamento |
+| Codex CLI | o HPP não wira hook neste host: a lane fica sabendo da mensagem quando ela mesma roda o `lane_register.py` (register, ou `--heartbeat`; o JSON no stdout é o anúncio) | o mesmo comando, rodado explicitamente — uma lane Codex nunca é interrompida por um hook | `codex queue --thread <id de sessão da lane> --message "<caminho + item + veredito>"` depois que uma mensagem de veredito é escrita para ela (`mailbox.native_doorbell`, ligado por padrão) |
+
+O que foi anunciado fica guardado por lane em `mailbox/.announced/<lane_id>.json` (estado runtime, ao lado
+da mailbox), então o register e os heartbeats nunca se repetem; um arquivo corrompido é reconstruído, e
+qualquer falha dentro da varredura falha aberta — o heartbeat ainda cai, o hook imprime `{}`, a lane é
+avisada no próximo batimento. Mensagens movidas para `mailbox/_read/` nunca são anunciadas: a mailbox é
+escreve-uma-vez, leia-e-arquive. `mailbox.check_on_register` e `mailbox.check_on_heartbeat` desligam cada
+metade.
+
+A campainha é só para lanes Codex (`host: codex` no registry, ou uma família de modelo da OpenAI), só com
+`codex` no PATH, limitada (5s), sem retry e falha-aberta: o desfecho — `sent (...)`, `failed (exit N)`,
+`failed (timeout after 5s)`, `skipped (codex not on PATH)`, `none (claude-code lane ...)` — é gravado como
+`doorbell` ao lado da evidência de entrega no `effects.json` e nunca muda a entrega. O arquivo é a
+entrega; a campainha só encurta a espera por ele.
+
+## Hand-offs do operador — release-fix, start-review, approve
+
+Três comandos do board pertencem ao operador, não a uma lane (contribuídos junto com o Lane Dashboard
+por @kleinelizeu). Cada um escreve um evento, e cada um é o que um botão do dashboard chama:
+
+```bash
+python lane-kit/scripts/lane_board.py release-fix ITEM-1 --target-lane exec-b
+python lane-kit/scripts/lane_board.py start-review ITEM-1 --target-lane rev-x
+python lane-kit/scripts/lane_board.py approve ITEM-1
+```
+
+| Comando | De → para | Recusado (exit 1) a menos que |
+|---|---|---|
+| `release-fix <item> --target-lane <executora>` | NEEDS-FIX → FIX-QUEUED | o alvo seja uma executora registrada e viva que o board deixaria construir o item (nunca quem construiu um candidato rival); uma correção na fila cuja lane parou de bater pode ser roteada de novo, e o evento diz de onde |
+| `start-review <item> --target-lane <revisora>` | CHECKPOINT-READY ou DEFERRED → UNDER-REVIEW | o alvo seja uma revisora registrada e viva que não construiu nenhuma tentativa do item |
+| `approve <item>` | VERIFIED → APPROVED | o item seja red e verificado, e a competição dele, se houver, esteja decidida; o evento é o gate humano |
+
+`release-fix` e `start-review` escrevem um kickoff na mailbox do alvo (`## To: <lane>`, com a direção do
+NEEDS-FIX ou a evidência a conferir) e tocam a campainha do Codex como um veredito toca. Só a lane
+nomeada pode pegar uma correção na fila; a executora que construiu o item ainda pode retomar um
+NEEDS-FIX direto. **APPROVED não é MERGED:** o MERGED é escrito depois do merge, e um item red precisa
+da aprovação antes — APPROVED, ou `--human-approved` no próprio MERGED. `claim` e `set` aceitam
+`--branch <branch>` nos estados de construção, e o board registra a branch de quem construiu.
+
+Duas regras do veredito ficaram mais estritas com esses comandos. A família de modelo de quem confere é
+comparada com toda lane que construiu o item, não só com quem fez o claim, e os apelidos da OpenAI
+(`codex-*`, `openai-*`, `chatgpt-*`, `o<dígito>…`) contam como a família `gpt`. E a tag pertence ao
+item: uma vez red, todo evento seguinte dele é red, qualquer que seja o `--tag` que o chamador passou.
+
+## Lane Dashboard — o quadro numa página local, toda ação também um comando de terminal
+
+`scripts/lane_dashboard.py` (contribuído por @kleinelizeu) serve o board como uma página em
+`127.0.0.1`: as colunas do board, as lanes vivas, as competições, a mailbox, as entregas com o desfecho
+da campainha, as sessões que ele iniciou, o backlog de specs com as waves e — perguntado ao git, não ao
+board — se cada item revisado está integrado. É opcional. Toda ação nela é um comando de terminal que
+faz exatamente a mesma coisa, e a página só chama esse comando.
+
+```bash
+python lane-kit/scripts/lane_dashboard.py --project-dir . --open
+python lane-kit/scripts/lane_dashboard.py snapshot --project-dir .
+python lane-kit/scripts/lane_dashboard.py --self-test
+```
+
+A primeira linha é a mesma no macOS, no Linux e no Windows (com `py` ou `python3` onde esse for o nome
+do interpretador); ela imprime a URL, e Ctrl+C a encerra. `--project-dir` se repete para vários
+projetos numa página só, e as outras worktrees de cada repositório que usam o lane-kit entram junto.
+
+| Ação na página | Comando de terminal |
+|---|---|
+| Nova spec | `lane_dashboard.py spec add` |
+| Iniciar wave | `lane_dashboard.py wave start` |
+| Encaminhar correção, a uma executora viva | `lane_board.py release-fix` |
+| Encaminhar correção, a uma sessão nova | `lane_dashboard.py fix launch` |
+| Iniciar revisão, com uma revisora viva | `lane_board.py start-review` |
+| Iniciar revisão, com uma sessão nova | `lane_dashboard.py review launch` |
+| Aprovar merge | `lane_board.py approve` |
+| Registrar merge | `lane_dashboard.py merged` |
+| Pedir briefing | `lane_dashboard.py brief request` |
+| Relatório de integração | `lane_dashboard.py integration report` |
+| Iniciar a sessão de novo | `lane_dashboard.py session relaunch` |
+| Parar uma sessão | `lane_dashboard.py session cancel` |
+
+Todo comando do `lane_dashboard.py` aceita `--project-dir DIR`, e todos menos o `serve` imprimem um
+objeto JSON; `lane_dashboard.py <comando> --help` lista as opções de um comando. Saída: 0 feito ·
+1 recusado · 2 uso inválido, ou no `serve` a porta em uso · 3 o hand-off está registrado e a sessão
+dele não iniciou (rode `session relaunch`), ou um erro. O `merged` escreve MERGED só quando o git
+mostra a branch de quem construiu no destino, medido agora: primeiro por ancestralidade
+(`git merge-base --is-ancestor`, que também vê commits de merge), e só para uma branch que não é
+ancestral, por patch-id (`git cherry`), sem nenhum commit de merge da branch fora do destino. A
+medição é a evidência do evento.
+
+**Modelo de segurança.** Você inicia o servidor e Ctrl+C o encerra; nada o inicia sozinho. Ele escuta só
+em loopback e responde só a um `Host` de loopback, então um nome de DNS rebinding é recusado. Toda ação é
+um POST que carrega um token emitido para esta execução, como `application/json`, que uma página de outro
+site não consegue enviar. A página se recusa a ser emoldurada (`frame-ancestors 'none'` e
+`X-Frame-Options: DENY`; `--frame-ancestor SOURCE`, repetível, permite os ancestrais que você nomear). Um GET só lê:
+nunca escreve e nunca inicia um agente. Toda escrita no board passa pelo `lane_board.py` e toda lane pelo
+`_lane_io.py`, então a página é recusada exatamente no que uma lane seria. Uma sessão de agente só
+começa quando você confirma uma ação, nunca por temporizador. Nada sai da máquina.
+
+**Onde uma sessão roda.** Todo lançador inicia a sessão ele mesmo; a página nunca entrega um comando para
+colar. O prompt é escrito em `.claude/lanes/sessions/<lane>.prompt.md` e lido de lá, então nenhum shell o
+interpreta. No Windows, um agente que é um arquivo batch (um shim do npm) recebe em vez disso uma linha
+que aponta para esse arquivo, porque o `cmd.exe` re-interpreta os argumentos de um batch.
+
+| Lançador | macOS | Linux | Windows |
+|---|---|---|---|
+| `orca` | um terminal na worktree do projeto no Orca | o mesmo | o mesmo |
+| `tmux` | uma janela na sessão tmux em que o dashboard roda, ou em `hpp-lanes` | o mesmo | — |
+| `terminal` | Terminal.app (`open -a Terminal <script>`) | `$TERMINAL`, depois `x-terminal-emulator`, `gnome-terminal`, `konsole`, `xfce4-terminal`, `kitty`, `alacritty`, `wezterm`, `xterm` | um console PowerShell |
+| `iterm` | iTerm2 (`osascript`, com o script passado como argumento) | — | — |
+| `external` | o terminal que você declarar no `dashboard.json` | o mesmo | o mesmo, com um `.ps1` no `{script}` |
+| `headless` | o modo não interativo do agente, sob um supervisor | o mesmo | o mesmo |
+
+Uma sessão headless roda sob `lane_dashboard.py session supervise`: tempo limite (3600 s por padrão), um
+parar (`session cancel`), log com teto de 5 MB, e `.claude/lanes/sessions/<lane>.run.json` dizendo
+`running`, `exited` com o código, `timeout`, `cancelled` ou `failed-to-start`. Uma sessão cujo
+supervisor ainda bate nunca é iniciada duas vezes: um supervisor por lane, sob um lock exclusivo que o
+supervisor segura durante toda a execução. Parar uma sessão para tudo o que ela iniciou, esteja ou não
+o processo principal do agente ainda lá.
+
+**Identidade do modelo.** Maker ≠ checker compara a família do modelo que uma sessão de fato roda.
+Declare esse modelo em `.claude/lanes/dashboard.json`: ele é passado à CLI com a flag de modelo dela e
+registrado no board. Uma CLI de um fornecedor só, sem modelo declarado, é registrada com a família do
+fornecedor (`gpt (Codex default model)`); o Cursor Agent serve vários fornecedores e é recusado até você
+declarar o modelo dele, e um modelo declarado que a CLI não roda é recusado.
+
+```json
+{
+  "agents": {
+    "codex": {"model": "gpt-5.6-sol"},
+    "cursor": {"model": "claude-opus-5-5", "roles": {"reviewer": {"model": "gpt-5.6-sol"}}}
+  },
+  "launcher": "iterm",
+  "external": {"argv": ["wezterm", "start", "--", "sh", "{script}"], "label": "WezTerm"},
+  "headless": {"timeout_seconds": 3600, "log_cap_bytes": 5242880}
+}
+```
+
+`launcher` escolhe o padrão; `terminal` (um argv com `{script}`) substitui o terminal detectado no macOS
+e no Linux, por exemplo `["open", "-a", "Warp", "{script}"]`.
+
+**Briefings.** *Pedir briefing* roda, depois que você confirma, um agente headless de uma família de
+modelo que nenhum dos construtores é, e ele responde com opções, uma recomendação e os riscos. Ele nunca
+escreve no board. Com só a família dos construtores à mão, é recusado: uma segunda opinião da família de
+quem fez é a mesma opinião duas vezes. O agente roda como uma sessão supervisionada igual às outras
+(`brief-<item>-…` em *Sessões*: tempo limite de 180 s, um parar, log com teto), e o briefing nomeia a
+sessão que o escreveu.
+
+**A mailbox, só leitura.** O painel *Caixa de correio* lista as mensagens de cada lane como o register as
+lê — não lidas, anunciadas (o register ou um heartbeat avisou a lane) ou lidas (movidas para `_read/`) —
+e *Entregues* lista os vereditos entregues do `effects.json`, cada um com a mensagem e o desfecho da
+campainha. A página nunca escreve na mailbox.
+
+Limites: a página mostra arquivos, e está tão atual quanto o `board.jsonl`, o `registry.json`, o
+`effects.json` e a mailbox no disco. Ela não faz merge de nada: o relatório de integração diz o que um
+merge traria, e o `merged` registra um que já aconteceu.
+
+## Best-of-N — N lanes, uma tarefa, um vencedor
+
+Às vezes o caminho mais barato para um bom resultado é deixar duas ou três lanes tentarem a mesma
+tarefa de forma independente e ficar com a melhor tentativa. Cada tentativa é um item comum do
+board, com claim da própria lane; o `compete` declara que esses itens são candidatos de uma tarefa,
+e o `select` registra qual venceu. A escolha é um evento append-only no board, com o revisor, o
+motivo e a evidência que foi comparada.
+
+```bash
+python lane-kit/scripts/lane_board.py compete --task TASK-1 --items ITEM-A,ITEM-B --lane coord --model claude-opus-5-5
+python lane-kit/scripts/lane_board.py select --task TASK-1 --winner ITEM-A --lane rev-x --model gpt-5.6-sol --reason "same tests, half the diff"
+python lane-kit/scripts/lane_board.py select --task TASK-1 --checker-unavailable --lane rev-x --model gpt-5.6-sol
+python lane-kit/scripts/lane_board.py withdraw --task TASK-1 --item ITEM-C --lane coord --model claude-opus-5-5 --reason "lane exec-c died mid-build"
+```
+
+| Regra (senão recusado, exit 1) | Por quê |
+|---|---|
+| o `compete` recebe 2+ itens distintos, todos já com claim, e nenhuma lane construtora é compartilhada entre dois candidatos | dois candidatos da mesma lane são uma tentativa feita duas vezes |
+| um item concorre em uma tarefa só; uma tarefa é declarada uma vez | o board é append-only — uma segunda declaração deixaria o histórico ambíguo |
+| o `select` exige todo candidato restante em CHECKPOINT-READY com evidência, ou VERIFIED | comparar contra uma tentativa inacabada não é comparação |
+| o `withdraw` exige um motivo, uma tarefa sem vencedor, um candidato restante, uma coordenadora que não construiu candidato rival, e deixa pelo menos 1 candidato | um candidato cuja lane morreu deixaria a tarefa indecidível para sempre; retirá-lo é uma decisão registrada, não silenciosa |
+| a lane do revisor difere de todas as lanes construtoras dos candidatos, e a família de modelo dele de todas as famílias construtoras | a regra maker≠checker do veredito, aplicada a todos os candidatos de uma vez |
+| o vencedor é um dos candidatos, e uma tarefa decidida não é decidida de novo | uma segunda decisão sobrescreveria a primeira em silêncio |
+| um candidato não pode ir a MERGED enquanto a tarefa dele não tem vencedor | senão quem termina primeiro vence sem comparação |
+| `--checker-unavailable` registra DEFERRED para a competição, nunca um vencedor | o mesmo sentido que DEFERRED tem num item |
+
+Os perdedores viram `NOT-SELECTED`, um estado terminal que só o `select` escreve, então uma
+tentativa perdedora não escorrega até MERGED; cada lane perdedora fica devendo o aviso no
+`effects.json` — entregue na mailbox dela por padrão, ou exibido sob **UNDELIVERED** até alguém
+avisá-la quando `notify_on_verdict` é `false`. O vencedor mantém o próprio estado
+e ainda passa pela revisão comum — uma seleção compara tentativas, não verifica uma. Um candidato
+retirado vira `WITHDRAWN` (terminal, escrito só pelo `withdraw`), deixa de contar para a prontidão e
+para a seleção, e a lane dele fica devendo o aviso do mesmo jeito; com exatamente 1 candidato
+restante, o `select` dele é permitido. O `render` imprime uma seção **COMPETITIONS** com o desfecho
+de cada tarefa e as retiradas, e o `status <task>` lista os eventos da competição.
+
+`select --task TASK-1 --deliberation RECORD` decide uma competição com uma House Session selada
+(`design`, com as opções iguais aos candidatos restantes, e uma recomendação). O juiz do painel vira o
+revisor de registro, então as regras de lane e de família acima valem para ele; exige o núcleo do HPP.
+
+## House Session — assentos de um painel neste host, somente-leitura com prova
+
+O `scripts/house_session.py` roda os assentos de uma House Session (o `hpp deliberate` do núcleo);
+o núcleo em si não chama modelo. `families` responde se este host consegue sentar duas famílias de
+modelo — a do maker mais toda outra CLI que o `checker_router.py` detecta; uma família só é
+`DEFERRED` (exit 1), nunca um painel de uma família. `seat` roda o comando de um assento no
+worktree desse assento e tira a impressão digital do repositório antes e depois (status, o diff contra
+o HEAD, o conteúdo dos não rastreados, o HEAD, todo ref e o stash, a lista de worktrees, a config, os
+hooks e o `info/exclude`): se algo mudou, o assento escreveu, o turno é
+inválido e nada é gravado (exit 2). Um assento que falha ou estoura o tempo não é julgado (exit 1).
+Uma resposta boa vira um `hpp.turn/v1` com o texto verbatim ao lado. O `/deliberate` (Claude Code)
+e a skill `house-session` (Claude Code e Codex) percorrem a sessão inteira.
+
+```bash
+python lane-kit/scripts/house_session.py families --maker claude
+python lane-kit/scripts/house_session.py seat --panel panel.json --seat a --round 1 --out turns --root ../seat-a -- codex exec --sandbox read-only "$(cat prompt-a.md)"
+python lane-kit/scripts/house_session.py --self-test
+```
+
+Limites: uma escrita num caminho que o repositório ignora fica fora da visão do git e não é vista;
+dê a cada assento o seu worktree, senão dois assentos levam a culpa pela escrita um do outro.
+
+## Wiring manual (gate humano — nunca automático)
+
+> Editar `.claude/settings.local.json` é gate humano nesta doutrina. No caminho por cópia
+> não existe `${CLAUDE_PLUGIN_ROOT}`: cole você mesmo o bloco abaixo, com a pasta para onde
+> copiou o kit — WARN-only + `timeout: 30`. Todo comando passa pelo `hooks/pyrun.sh`, o mesmo
+> shim que o plugin usa: ele roda o Python do `.venv` do projeto quando existe, senão `python3`
+> ou `python`, como o sistema os nomeia — um Mac de fábrica só tem `python3`.
+
+```jsonc
+// Paste block (HUMAN GATE). ADDITIVE: merge into the "hooks" arrays that already exist —
+// NEVER replace the whole file. Paths assume the kit was copied to lane-kit/ at the project root.
+{
+  "hooks": {
+    "SessionStart": [
+      { "hooks": [{ "type": "command", "command": "bash \"lane-kit/hooks/pyrun.sh\" \"lane-kit/hooks/lane_register.py\"", "timeout": 30 }] }
+    ],
+    "PreToolUse": [
+      { "matcher": "Bash", "hooks": [{ "type": "command", "command": "bash \"lane-kit/hooks/pyrun.sh\" \"lane-kit/hooks/lane_git_guard.py\"", "timeout": 30 }] },
+      { "matcher": "Edit|Write", "hooks": [{ "type": "command", "command": "bash \"lane-kit/hooks/pyrun.sh\" \"lane-kit/hooks/lane_territory_guard.py\"", "timeout": 30 }] }
+    ],
+    "PostToolUse": [
+      { "hooks": [{ "type": "command", "command": "bash \"lane-kit/hooks/pyrun.sh\" \"lane-kit/hooks/lane_register.py\" --heartbeat", "timeout": 30 }] }
+    ]
+  }
+}
+```
+
+Checklist pós-wiring:
+```bash
+python lane-kit/hooks/_lane_io.py --self-test
+python lane-kit/hooks/lane_register.py --self-test
+python lane-kit/hooks/lane_git_guard.py --self-test
+python lane-kit/hooks/lane_territory_guard.py --self-test
+```
+
+Prova round-trip (registra uma lane e confirma no registry):
+```bash
+echo '{"hook_event_name":"SessionStart","session_id":"proof"}' \
+  | CLAUDE_LANE_ID=exec-a python lane-kit/hooks/lane_register.py
+python lane-kit/hooks/_lane_io.py status   # must list exec-a
+```
+
+## Prova / aceite (saída real, executada)
+
+```bash
+python hooks/_lane_io.py --self-test
+```
+```
+self-test OK — register creates/evicts dead lanes/keeps started_at, heartbeat throttle+advance, liveness alive/suspect/dead, who_owns exclusive+glob**+ignores dead, alive_others excludes self, lock contention fails fast without hanging, corrupt registry degrades cleanly
+```
+<!-- executado: 2026-09-21 · exit=0 -->
+
+## Desfazer
+
+```
+- Plugin:  /plugin uninstall lane-kit@house-party-protocol
+- Copy:    remove the lane-kit/ folder + revert the block pasted into settings.local.json
+           by hand (removal is a human gate too)
+- Runtime state: rm -rf .claude/lanes/registry.json .claude/lanes/board.jsonl
+           .claude/lanes/effects.json .claude/lanes/mailbox/ .claude/lanes/sessions/
+           .claude/lanes/waves/ .claude/lanes/decision-briefs/ .claude/lanes/.lock/
+           .claude/lanes/.registry.lock/ .claude/lanes/.effects.lock/ .claude/lanes/.dashboard-*.lock/
+           (ephemeral, safe to delete; mailbox/ takes mailbox/.announced/ and its locks with it)
+- Rescue:  .claude/lanes/rescue/ holds the only copy of work an evicted lane never committed —
+           reapply it (lane_rescue.py reapply <patch>) or keep what you need, then remove it
+- lanes.yaml (real config, git-tracked): remove it by hand if you no longer want the kit
+```
+
+---
+
+*Ver `LANE-KIT.md` para a doutrina completa (estados do board, maker≠checker, territórios).*

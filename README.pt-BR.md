@@ -75,7 +75,7 @@ como portões.
 
 O Lane Dashboard é o lane board, a máquina de estados por onde passa todo item (mostrada em
 [Cross-model by construction](#cross-model-by-construction)), como página:
-`multi-session/lane-kit-1.8.0/scripts/lane_dashboard.py`
+`multi-session/lane-kit-1.8.1/scripts/lane_dashboard.py`
 o serve em `127.0.0.1` e o redesenha sozinho quando o board muda. Toda ação na página é um comando de
 terminal que faz a mesma coisa, e o diálogo dela nomeia esse comando antes de qualquer coisa rodar.
 
@@ -200,7 +200,7 @@ veredito só de outra lane **e** de outra família de modelo,
 <p align="center">
   <img alt="python lane_board.py render: quatro itens de exemplo num board — EXAMPLE-1 MERGED, EXAMPLE-2 VERIFIED esperando o gate humano, EXAMPLE-3 DEFERRED por falta de checker, EXAMPLE-4 de volta a BUILDING depois de NEEDS-FIX — e então os vereditos cuja lane ainda não foi avisada" src="assets/terminal/lane-board.svg" width="940">
 </p>
-<p align="center"><sub>O board que aquelas linhas produzem, como o <code>multi-session/lane-kit-1.8.0/scripts/lane_board.py</code> o imprime: quatro itens de exemplo conduzidos pela máquina, cada evento nomeando a lane que o escreveu, a evidência colada no checkpoint e — no caso de veredito — a lane e o modelo que o deram. Duas tentativas foram recusadas no caminho, as duas com <code>exit 1</code>: um veredito vindo da própria lane que construiu (<em>maker≠checker violated: reviewer (exec-b) is the SAME lane as the builder</em>) e o merge de um item 🔴 sem <code>--human-approved</code>. O último bloco é o que ninguém pensa em pedir — vereditos já decididos cuja lane ainda não foi avisada. Texto renderizado da saída real do comando pelo <code>scripts/render_terminal_svg.py</code>, como as capturas de terminal acima.</sub></p>
+<p align="center"><sub>O board que aquelas linhas produzem, como o <code>multi-session/lane-kit-1.8.1/scripts/lane_board.py</code> o imprime: quatro itens de exemplo conduzidos pela máquina, cada evento nomeando a lane que o escreveu, a evidência colada no checkpoint e — no caso de veredito — a lane e o modelo que o deram. Duas tentativas foram recusadas no caminho, as duas com <code>exit 1</code>: um veredito vindo da própria lane que construiu (<em>maker≠checker violated: reviewer (exec-b) is the SAME lane as the builder</em>) e o merge de um item 🔴 sem <code>--human-approved</code>. O último bloco é o que ninguém pensa em pedir — vereditos já decididos cuja lane ainda não foi avisada. Texto renderizado da saída real do comando pelo <code>scripts/render_terminal_svg.py</code>, como as capturas de terminal acima.</sub></p>
 
 ## Quickstart
 
@@ -216,7 +216,7 @@ nenhum pacote de terceiro. A CI exercita Python 3.10 a 3.13 em Linux, macOS e Wi
 (`.github/workflows/ci.yml`); interpretadores mais antigos não são prometidos porque nada os mede.
 
 ```bash
-pip install git+https://github.com/rusharlabs/house-party-protocol@v2.11.0
+pip install git+https://github.com/rusharlabs/house-party-protocol@v2.11.1
 hpp doctor
 hpp init --target ../your-repo
 ```
@@ -325,9 +325,9 @@ invocação explícita:
 
 ```bash
 python installers/kit-forge-1.5.2/kit_doctor.py install \
-  --kit frameworks/operator-kit-1.8.1 --host codex --target ../your-repo
+  --kit frameworks/operator-kit-1.8.2 --host codex --target ../your-repo
 python installers/kit-forge-1.5.2/kit_doctor.py install \
-  --kit frameworks/operator-kit-1.8.1 --host codex --target ../your-repo --apply
+  --kit frameworks/operator-kit-1.8.2 --host codex --target ../your-repo --apply
 ```
 
 O instalador faz parte deste repositório, em `installers/kit-forge-1.5.2/kit_doctor.py`, ao
@@ -381,13 +381,13 @@ mesma resposta em JSON. Nenhum dos dois pede a um modelo que lembre de alguma co
 
 | módulo | versão | uma linha |
 |---|---|---|
-| `operator-kit` | 1.8.1 | done gate com exit code real, política de comando em `audit` ou `enforce`, loops governados com charter e condições de parada, runner standalone de `pass@k` / `pass^k`, preflight, dois agentes checkers entregues sem `Write` nem `Edit` |
-| `lane-kit` | 1.8.0 | um quadro de lanes para sessões concorrentes: claim, território, liveness, maker ≠ checker, e um roteador que escolhe checker de outro provedor |
-| `continuity-kit` | 1.5.1 | handoff escrito antes de parada ou compactação, comandos de re-derivação em vez de estado lembrado, guardas contra replay de passo concluído |
-| `health-kit` | 1.4.1 | sondas de serviço config-driven que gravam um cache que a statusline lê sem tocar a rede; saúde de serviço separada de saúde de dado |
-| `gotcha-memory` | 1.1.1 | registra comandos que falharam por família de erro, detecta recorrência, injeta a lição antes da próxima execução; warn-only, segredo redigido por forma |
+| `operator-kit` | 1.8.2 | done gate com exit code real, política de comando em `audit` ou `enforce`, loops governados com charter e condições de parada, runner standalone de `pass@k` / `pass^k`, preflight, dois agentes checkers entregues sem `Write` nem `Edit` |
+| `lane-kit` | 1.8.1 | um quadro de lanes para sessões concorrentes: claim, território, liveness, maker ≠ checker, e um roteador que escolhe checker de outro provedor |
+| `continuity-kit` | 1.5.2 | handoff escrito antes de parada ou compactação, comandos de re-derivação em vez de estado lembrado, guardas contra replay de passo concluído |
+| `health-kit` | 1.4.2 | sondas de serviço config-driven que gravam um cache que a statusline lê sem tocar a rede; saúde de serviço separada de saúde de dado |
+| `gotcha-memory` | 1.1.2 | registra comandos que falharam por família de erro, detecta recorrência, injeta a lição antes da próxima execução; warn-only, segredo redigido por forma |
 | `kit-forge` | 1.5.2 | monta módulos a partir das fontes, faz lint de IP e PII, instala em seis estágios, escreve e verifica `CHECKSUMS.txt`, confere o marketplace |
-| `claude-dev-kit` | 1.3.5 | autoria de skills, hooks e plugins para Claude Code, wiring reversível de settings, secret scan na escrita |
+| `claude-dev-kit` | 1.3.6 | autoria de skills, hooks e plugins para Claude Code, wiring reversível de settings, secret scan na escrita |
 | `dev-squad-kit` | 1.2.1 | doze papéis de desenvolvimento como comandos e subagents com tools explícitos, mais skills de leitura e consolidação paralelas |
 | `agent-framework-wizard` | 1.2.3 | scaffold em seis passos para um projeto novo de agente ou skill, respondível por arquivo em execução não interativa |
 | `supabase-pack` | 1.2.1 | auditoria de RLS por `pg_policies` e advisors em vez de flag de tabela; scaffold de Edge Function |

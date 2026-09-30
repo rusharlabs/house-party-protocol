@@ -326,7 +326,7 @@ I ran the {kit} installer in plan mode -- nothing has been written yet. Summary:
 
 Módulo: `operator-kit-1.5.0`. Comando que o agente rodou (saída real abaixo). Esta captura é
 datada: ela é anterior ao caminho versionado do instalador. Na distribuição atual o módulo é o
-`operator-kit-1.8.1` e o instalador vive em `installers/kit-forge-1.5.2/kit_doctor.py`; os
+`operator-kit-1.8.2` e o instalador vive em `installers/kit-forge-1.5.2/kit_doctor.py`; os
 estágios, as flags (`--target`, `--host`, `--answers`, `--apply`, `--human`) e a forma da saída
 são os mesmos.
 

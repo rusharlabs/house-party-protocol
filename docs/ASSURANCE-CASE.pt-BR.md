@@ -100,7 +100,7 @@ roda quando uma pessoa o roda, e a política o classifica como `MANUAL`. Dentro 
 
 ### O dashboard em loopback
 
-O Lane Dashboard do lane-kit (`multi-session/lane-kit-1.8.0/scripts/lane_dashboard.py`) é uma
+O Lane Dashboard do lane-kit (`multi-session/lane-kit-1.8.1/scripts/lane_dashboard.py`) é uma
 página que o operador liga e desliga. É a exceção delimitada que o MANIFESTO permite a um módulo:
 
 - ele escuta só em loopback: `--host` aceita apenas `127.0.0.1`, `::1` ou `localhost`
@@ -195,7 +195,7 @@ A partir da raiz do repositório:
 
 ```bash
 python -m pytest tests/test_lane_dashboard.py tests/test_decision.py tests/test_evidence.py tests/test_process.py tests/test_stdlib_only.py -q
-python installers/kit-forge-1.5.2/kit_doctor.py verify multi-session/lane-kit-1.8.0
+python installers/kit-forge-1.5.2/kit_doctor.py verify multi-session/lane-kit-1.8.1
 gh attestation verify <file> --repo rusharlabs/house-party-protocol
 ```
 

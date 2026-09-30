@@ -327,7 +327,7 @@ I ran the {kit} installer in plan mode -- nothing has been written yet. Summary:
 
 Module: `operator-kit-1.5.0`. Command the agent ran (real output below). This capture is dated:
 it predates the versioned installer path. In the current distribution the module is
-`operator-kit-1.8.1` and the installer lives at `installers/kit-forge-1.5.2/kit_doctor.py`;
+`operator-kit-1.8.2` and the installer lives at `installers/kit-forge-1.5.2/kit_doctor.py`;
 the stages, the flags (`--target`, `--host`, `--answers`, `--apply`, `--human`) and the shape of
 the output are the same.
 

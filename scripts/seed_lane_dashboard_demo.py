@@ -26,7 +26,7 @@ only the standard library, `git`, and a lane-kit directory (`multi-session/lane-
 this repository, or `--lane-kit`). `scripts/record_lane_dashboard.py` runs it before recording.
 
     python scripts/seed_lane_dashboard_demo.py --out demo-project
-    python scripts/seed_lane_dashboard_demo.py --out demo-project --lane-kit multi-session/lane-kit-1.8.0
+    python scripts/seed_lane_dashboard_demo.py --out demo-project --lane-kit multi-session/lane-kit-1.8.1
 
 Exit: 0 built · 1 a writer returned a status the story does not declare · 2 invalid usage, or --out
 is a directory that is not empty (nothing in it is touched).

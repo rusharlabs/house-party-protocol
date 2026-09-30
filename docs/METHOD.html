@@ -97,7 +97,7 @@ territory. A lane that stops heartbeating loses its claim by time, not by someon
 <p>Then the first event is recorded, and the loop leaves <code>planned</code>.</p>
 <pre><code class="language-bash">python -m hpp work plan SPEC.json
 python -m hpp work waves SPEC.json
-python multi-session/lane-kit-1.8.0/scripts/lane_board.py claim --help
+python multi-session/lane-kit-1.8.1/scripts/lane_board.py claim --help
 python -m hpp event append --type work_started --data '{"work":"ITEM-1","actor":"maker-a"}'</code></pre>
     </div></section>
 
@@ -119,8 +119,8 @@ appends <code>evidence_recorded</code> only when that bundle passed. It needs at
 because an exit code alone leaves nothing to re-derive later. On a release without it, the same
 event is appended by hand with <code>hpp event append</code>, and it then carries only what the person wrote.
 The loop moves to <code>evidenced</code>. It cannot move to <code>verified</code> without at least one such record.</p>
-<pre><code class="language-bash">python frameworks/operator-kit-1.8.1/scripts/done_gate.py "python -m pytest -q" "python -m py_compile app.py"
-python frameworks/operator-kit-1.8.1/scripts/done_gate.py "python -m pytest -q" --declare-partial "external target not yet validated"
+<pre><code class="language-bash">python frameworks/operator-kit-1.8.2/scripts/done_gate.py "python -m pytest -q" "python -m py_compile app.py"
+python frameworks/operator-kit-1.8.2/scripts/done_gate.py "python -m pytest -q" --declare-partial "external target not yet validated"
 python -m hpp evidence run --id ITEM-1 --artifact artifacts/pytest.xml --record-event -- python -m pytest -q --junitxml=artifacts/pytest.xml
 python -m hpp event append --type evidence_recorded --data '{"work":"ITEM-1","ref":"artifacts/pytest.txt"}'</code></pre>
     </div></section>
@@ -175,7 +175,7 @@ rather than an adjective, and never asks the maker something it could verify its
 command. When no checker from a different provider is available, the review is recorded as not
 done, not as done by the maker.</p>
 <p>The checker's pass is an event. The loop moves from <code>evidenced</code> to <code>checked</code>.</p>
-<pre><code class="language-bash">python multi-session/lane-kit-1.8.0/scripts/checker_router.py --maker claude --require
+<pre><code class="language-bash">python multi-session/lane-kit-1.8.1/scripts/checker_router.py --maker claude --require
 python -m hpp event append --type check_passed --data '{"work":"ITEM-1","checker":"checker-b"}'</code></pre>
     </div></section>
 
@@ -192,10 +192,10 @@ re-run by the hook, outside the model's reach, and only its exit code counts. Wh
 reached, the driver stops, reports where it stopped and what remains, and waits for a person to
 extend the budget or close the work. Extending the budget is a human decision, never something
 the loop grants itself.</p>
-<pre><code class="language-bash">python frameworks/operator-kit-1.8.1/hooks/loop_gate.py start \
+<pre><code class="language-bash">python frameworks/operator-kit-1.8.2/hooks/loop_gate.py start \
   --charter "&lt;objective&gt;" --criteria "python -m pytest -q" --max-iterations 10
-python frameworks/operator-kit-1.8.1/hooks/loop_gate.py status
-python frameworks/operator-kit-1.8.1/hooks/loop_gate.py cancel</code></pre>
+python frameworks/operator-kit-1.8.2/hooks/loop_gate.py status
+python frameworks/operator-kit-1.8.2/hooks/loop_gate.py cancel</code></pre>
     </div></section>
 
     <section id="6-resume-after-an-interruption"><div class="wrap">

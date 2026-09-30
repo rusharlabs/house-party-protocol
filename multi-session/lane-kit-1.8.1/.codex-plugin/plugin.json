@@ -1,0 +1,33 @@
+{
+  "name": "lane-kit",
+  "version": "1.8.1",
+  "description": "Lane Kit on Codex: 2 skills (house-session, lane-coordinator). This plugin registers skills only; it does not register the module's commands and hooks.",
+  "author": {
+    "name": "Max Parisi"
+  },
+  "homepage": "https://rusharlabs.github.io/house-party-protocol/",
+  "repository": "https://github.com/rusharlabs/house-party-protocol",
+  "license": "MIT",
+  "keywords": [
+    "lane",
+    "lanes",
+    "multi-session",
+    "concurrency",
+    "maker-checker",
+    "git-guard",
+    "territory-guard",
+    "board",
+    "coordination"
+  ],
+  "skills": "./skills/",
+  "hooks": {
+    "hooks": {}
+  },
+  "interface": {
+    "displayName": "Lane Kit",
+    "shortDescription": "Lane Kit on Codex: 2 skills (house-session, lane-coordinator).",
+    "longDescription": "Lane Kit on Codex: 2 skills (house-session, lane-coordinator). This plugin registers skills only; it does not register the module's commands and hooks. On Claude Code the same module installs whole, from the same repository.",
+    "developerName": "Max Parisi",
+    "category": "Developer Tools"
+  }
+}

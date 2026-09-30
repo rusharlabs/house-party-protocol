@@ -8,7 +8,7 @@
       "name": "operator-kit",
       "source": {
         "source": "local",
-        "path": "./frameworks/operator-kit-1.8.1"
+        "path": "./frameworks/operator-kit-1.8.2"
       },
       "policy": {
         "installation": "AVAILABLE",
@@ -20,7 +20,7 @@
       "name": "continuity-kit",
       "source": {
         "source": "local",
-        "path": "./continuity/continuity-kit-1.5.1"
+        "path": "./continuity/continuity-kit-1.5.2"
       },
       "policy": {
         "installation": "AVAILABLE",
@@ -32,7 +32,7 @@
       "name": "lane-kit",
       "source": {
         "source": "local",
-        "path": "./multi-session/lane-kit-1.8.0"
+        "path": "./multi-session/lane-kit-1.8.1"
       },
       "policy": {
         "installation": "AVAILABLE",
@@ -44,7 +44,7 @@
       "name": "health-kit",
       "source": {
         "source": "local",
-        "path": "./frameworks/health-kit-1.4.1"
+        "path": "./frameworks/health-kit-1.4.2"
       },
       "policy": {
         "installation": "AVAILABLE",
@@ -80,7 +80,7 @@
       "name": "gotcha-memory",
       "source": {
         "source": "local",
-        "path": "./continuity/gotcha-memory-1.1.1"
+        "path": "./continuity/gotcha-memory-1.1.2"
       },
       "policy": {
         "installation": "AVAILABLE",
