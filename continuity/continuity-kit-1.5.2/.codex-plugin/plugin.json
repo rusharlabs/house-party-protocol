@@ -1,0 +1,31 @@
+{
+  "name": "continuity-kit",
+  "version": "1.5.2",
+  "description": "Continuity Kit on Codex: 2 skills (doc-rollup, pre-clear). This plugin registers skills only; it does not register the module's hooks.",
+  "author": {
+    "name": "Max Parisi"
+  },
+  "homepage": "https://rusharlabs.github.io/house-party-protocol/",
+  "repository": "https://github.com/rusharlabs/house-party-protocol",
+  "license": "MIT",
+  "keywords": [
+    "handoff",
+    "continuity",
+    "session",
+    "resume",
+    "stop-hook",
+    "doc-rollup",
+    "changelog"
+  ],
+  "skills": "./skills/",
+  "hooks": {
+    "hooks": {}
+  },
+  "interface": {
+    "displayName": "Continuity Kit",
+    "shortDescription": "Continuity Kit on Codex: 2 skills (doc-rollup, pre-clear).",
+    "longDescription": "Continuity Kit on Codex: 2 skills (doc-rollup, pre-clear). This plugin registers skills only; it does not register the module's hooks. On Claude Code the same module installs whole, from the same repository.",
+    "developerName": "Max Parisi",
+    "category": "Developer Tools"
+  }
+}

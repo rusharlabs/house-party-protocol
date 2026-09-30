@@ -100,7 +100,7 @@
 <tr><td>review lenses, control</td><td>the same on a copy of <code>partial-set.json</code> with a <code>confidence</code> key added to its finding</td><td>exit 2, the whole document refused</td></tr>
 <tr><td>House Session</td><td><code>python -m hpp decide eval examples/typed-decisions/gotcha-family-suite.json --decider-command '["python", "examples/house-session/panel_decider.py"]'</code></td><td>15 recorded sessions sealed and verified, 12 decided, 3 abstained, 0 instrument failures, exit 0 (synthetic sessions: they prove the contract, not that a panel is better)</td></tr>
 <tr><td>House Session, control</td><td><code>python -m hpp deliberate verify</code> on a copy of a sealed record with the verdict edited</td><td>exit 2, <code>record_sha256 does not match</code></td></tr>
-<tr><td>best-of-N selection</td><td><code>python multi-session/lane-kit-1.8.0/scripts/lane_board.py --self-test</code></td><td>exit 0; the competitions block passes every check</td></tr>
+<tr><td>best-of-N selection</td><td><code>python multi-session/lane-kit-1.8.1/scripts/lane_board.py --self-test</code></td><td>exit 0; the competitions block passes every check</td></tr>
 <tr><td>best-of-N selection, control</td><td><code>lane_board.py select</code> on a declared competition, by a reviewer of the same model family as one builder</td><td>exit 1, <code>SAME model family</code>; no winner recorded</td></tr>
 <tr><td>intact artifacts</td><td><code>python installers/kit-forge-1.5.2/kit_doctor.py marketplace .</code></td><td>status ok</td></tr>
 </tbody>

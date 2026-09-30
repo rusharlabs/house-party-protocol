@@ -94,7 +94,7 @@ when a person runs it, and the policy classifies it `MANUAL`. Inside that purpos
 
 ### The loopback dashboard
 
-The lane-kit's Lane Dashboard (`multi-session/lane-kit-1.8.0/scripts/lane_dashboard.py`) is a page
+The lane-kit's Lane Dashboard (`multi-session/lane-kit-1.8.1/scripts/lane_dashboard.py`) is a page
 the operator starts and stops. It is the bounded exception the MANIFESTO allows a module:
 
 - it binds loopback only: `--host` accepts only `127.0.0.1`, `::1` or `localhost` (`LOOPBACK`),
@@ -189,7 +189,7 @@ From the root of the repository:
 
 ```bash
 python -m pytest tests/test_lane_dashboard.py tests/test_decision.py tests/test_evidence.py tests/test_process.py tests/test_stdlib_only.py -q
-python installers/kit-forge-1.5.2/kit_doctor.py verify multi-session/lane-kit-1.8.0
+python installers/kit-forge-1.5.2/kit_doctor.py verify multi-session/lane-kit-1.8.1
 gh attestation verify <file> --repo rusharlabs/house-party-protocol
 ```
 

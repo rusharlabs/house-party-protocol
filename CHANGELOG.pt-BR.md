@@ -7,6 +7,19 @@ Todas as mudanças relevantes do harness são registradas aqui. O formato segue
 [SemVer](https://semver.org/lang/pt-BR/). A versão do produto descreve o contrato do harness;
 cada módulo mantém sua própria versão no `plugin.json` e no `marketplace.json`.
 
+## [2.11.1] — 2026-09-30
+
+### Corrigido
+
+- **Seis plugins carregam em qualquer versão do Claude Code.** continuity-kit 1.5.2, gotcha-memory
+  1.1.2, claude-dev-kit 1.3.6, health-kit 1.4.2, lane-kit 1.8.1 e operator-kit 1.8.2 listavam
+  `hooks/hooks.json` no `.claude-plugin/plugin.json`, um arquivo que o Claude Code já carrega sozinho.
+  Versões anteriores do Claude Code recusam um plugin que nomeia o arquivo de hooks duas vezes
+  ("Duplicate hooks file detected"); as atuais o carregam uma vez e imprimem um aviso. Os manifestos
+  não o listam mais, as skills `plugin-dev` e `hookify` não ensinam mais isso, e um teste reprova
+  qualquer manifesto distribuído que nomeie o arquivo de hooks padrão. Relatado por um usuário cujos
+  quatro plugins não carregavam.
+
 ## [2.11.0] — 2026-09-30
 
 ### Adicionado
@@ -1971,6 +1984,7 @@ publicar.
 [2.6.5]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.5
 [2.6.6]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.6
 [2.6.7]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.7
+[2.11.1]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.11.1
 [2.11.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.11.0
 [2.10.1]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.10.1
 [2.10.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.10.0

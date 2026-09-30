@@ -3,7 +3,7 @@
   "name": "house-party-protocol",
   "description": "House Party Protocol is a modular, cross-host harness for Claude Code and Codex CLI: executable gates, governed loops, cross-model review, provider-neutral routing by tier, continuity, deterministic evaluation and verifiable distribution.",
   "description_pt": "House Party Protocol é um harness modular e cross-host para Claude Code e Codex CLI: gates executáveis, loops governados, revisão cross-model, roteamento provider-neutral por tier, continuidade, avaliação determinística e distribuição verificável.",
-  "version": "2.11.0",
+  "version": "2.11.1",
   "owner": {
     "name": "Max Parisi",
     "url": "https://rusharlabs.com"
@@ -31,10 +31,10 @@
     {
       "name": "operator-kit",
       "displayName": "Operator Kit",
-      "source": "./frameworks/operator-kit-1.8.1",
+      "source": "./frameworks/operator-kit-1.8.2",
       "description": "The harness's operational module: executable gates, governed loops, standalone pass@k/pass^k, audit/enforce policy, preflight, spec-driven planning, two read-only checkers and four review lenses answering in hpp.findings/v1.",
       "description_pt": "Módulo operacional do harness: gates executáveis, loops governados, pass@k/pass^k standalone, política audit/enforce, preflight, planejamento spec-driven, dois checkers read-only e quatro lentes de revisão que respondem em hpp.findings/v1.",
-      "version": "1.8.1",
+      "version": "1.8.2",
       "category": "productivity",
       "keywords": [
         "operator",
@@ -50,10 +50,10 @@
     {
       "name": "continuity-kit",
       "displayName": "Continuity Kit",
-      "source": "./continuity/continuity-kit-1.5.1",
+      "source": "./continuity/continuity-kit-1.5.2",
       "description": "Handoff-v1.1: a session survives a stop/clear/crash without losing its next step. Schema with git-block + re_derive_cmd (every number carries the command that re-derives it live) + verify_first_cmd (check live before replaying any action the handoff describes), Stop/PreCompact/SessionStart hooks. Includes doc-rollup (history/evolution with built-in degradation) + pre-clear (long-term + short-term).",
       "description_pt": "Handoff-v1.1: uma sessao sobrevive a parada/clear/crash sem perder o proximo passo. Schema com git-block + re_derive_cmd (todo numero carrega o comando que o re-deriva ao vivo) + verify_first_cmd (conferir ao vivo antes de repetir qualquer acao que o handoff descreve), hooks Stop/PreCompact/SessionStart. Inclui doc-rollup (historico/evolucao com degradacao embutida) + pre-clear (longo-prazo + curto-prazo).",
-      "version": "1.5.1",
+      "version": "1.5.2",
       "category": "productivity",
       "keywords": [
         "handoff",
@@ -67,10 +67,10 @@
     {
       "name": "lane-kit",
       "displayName": "Lane Kit",
-      "source": "./multi-session/lane-kit-1.8.0",
+      "source": "./multi-session/lane-kit-1.8.1",
       "description": "N sessions without collisions. Lane board, cross-model maker!=checker, per-directory lock, git-guard and territory-guard. The checker_router detects Codex, Cursor and Gemini and picks a provider different from the maker's. Best-of-N: compete/select record which of N competing attempts won. House Session: /deliberate and house_session.py seat a panel of two model families, refusing the turn of a seat that wrote; select --deliberation decides a competition with a sealed session. Lane Dashboard: a local page over the board, the lanes and the mailbox where every action is also a terminal command; release-fix, start-review and approve are the operator's hand-offs.",
       "description_pt": "N sessoes sem colisao. Lane board, maker!=checker cross-model, lock por diretorio, git-guard e territory-guard. O checker_router detecta Codex, Cursor e Gemini e escolhe um provider diferente do maker. Best-of-N: compete/select registram qual de N tentativas concorrentes venceu. House Session: /deliberate e house_session.py sentam um painel de duas familias de modelo e recusam o turno de um assento que escreveu; select --deliberation decide uma competicao com uma sessao selada. Lane Dashboard: uma pagina local sobre o quadro, as lanes e o mailbox em que toda acao tambem e um comando de terminal; release-fix, start-review e approve sao os hand-offs do operador.",
-      "version": "1.8.0",
+      "version": "1.8.1",
       "category": "productivity",
       "keywords": [
         "multi-session",
@@ -82,10 +82,10 @@
     {
       "name": "health-kit",
       "displayName": "Health Kit",
-      "source": "./frameworks/health-kit-1.4.1",
+      "source": "./frameworks/health-kit-1.4.2",
       "description": "Service health probe (http/cmd) driven by profile.yaml + a statusline segment with per-service detail (api:OK db:DOWN), cache-first (the statusline never touches the network). Embedded doctrine: SERVICE health != DATA health. +dashboard-builder (Grafana/SigNoz).",
       "description_pt": "Sonda de saude de servicos (http/cmd) config-driven por profile.yaml + segmento de statusline com detalhe por-servico (api:OK db:DOWN), cache-first (statusline nunca toca rede). Doutrina embarcada: health de SERVICO != health de DADO. +dashboard-builder (Grafana/SigNoz).",
-      "version": "1.4.1",
+      "version": "1.4.2",
       "category": "monitoring",
       "keywords": [
         "health-check",
@@ -97,10 +97,10 @@
     {
       "name": "claude-dev-kit",
       "displayName": "Claude Dev Kit",
-      "source": "./frameworks/claude-dev-kit-1.3.5",
+      "source": "./frameworks/claude-dev-kit-1.3.6",
       "description": "Tools for building tools: skill-writer, hookify, plugin-dev, teaching, reversible wiring, secret scan, architecture-decision-records, search-first and skill-scout.",
       "description_pt": "Ferramentas de construir ferramentas: skill-writer, hookify, plugin-dev, teaching, wiring reversivel, secret scan, architecture-decision-records, search-first e skill-scout.",
-      "version": "1.3.5",
+      "version": "1.3.6",
       "category": "installers",
       "keywords": [
         "settings",
@@ -163,10 +163,10 @@
     {
       "name": "gotcha-memory",
       "displayName": "Gotcha Memory",
-      "source": "./continuity/gotcha-memory-1.1.1",
+      "source": "./continuity/gotcha-memory-1.1.2",
       "description": "Standalone operational learning loop: a failure becomes knowledge. After every Bash command that fails, the postflight records the event classified by error family; when the same type recurs N times within a window it becomes a GOTCHA -- an actionable lesson the preflight injects BEFORE the next run of the same task. Curated gotchas (your rules) are always-on. Conservative detection: only a clear error signal counts, ambiguous is not a failure. Two WARN-only hooks (always exit 0) -- the learning loop never blocks the flow. stdlib only.",
       "description_pt": "Loop de aprendizado operacional standalone: a falha vira conhecimento. Depois de cada comando Bash que falha, o postflight registra o evento classificado por familia de erro; quando o mesmo tipo recorre N vezes numa janela, vira um GOTCHA -- uma licao acionavel que o preflight injeta ANTES da proxima execucao da mesma tarefa. Gotchas curated (suas regras) sao always-on. Deteccao conservadora: so sinal claro de erro conta, ambiguo nao e falha. Dois hooks WARN-only (exit 0 sempre) -- o loop de aprendizado jamais bloqueia o fluxo. stdlib only.",
-      "version": "1.1.1",
+      "version": "1.1.2",
       "category": "productivity",
       "keywords": [
         "learning-loop",
