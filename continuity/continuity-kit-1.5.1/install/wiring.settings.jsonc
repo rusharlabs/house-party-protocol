@@ -1,0 +1,40 @@
+// wiring.settings.jsonc — paste block (HUMAN GATE — the classifier blocks auto-edits of
+// settings/hooks). ADDITIVE: merge into the "hooks" arrays that already exist in
+// settings.json/settings.local.json — NEVER replace the whole file.
+//
+// This is the COPY-install path: there is no ${CLAUDE_PLUGIN_ROOT} here, so the paths assume the
+// kit was copied to continuity-kit/ at the project root — change the folder if you copied it
+// elsewhere. Launcher: NEVER a bare "python" or "py" — a stock Mac has only python3. Every
+// command goes through hooks/pyrun.sh (the shim the plugin uses too), which runs the project's
+// .venv Python when there is one, otherwise python3 or python as the system names it.
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          { "type": "command", "command": "bash \"continuity-kit/hooks/pyrun.sh\" \"continuity-kit/hooks/handoff_inject.py\"", "timeout": 30 }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          { "type": "command", "command": "bash \"continuity-kit/hooks/pyrun.sh\" \"continuity-kit/hooks/handoff_guard.py\"", "timeout": 30 }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          { "type": "command", "command": "bash \"continuity-kit/hooks/pyrun.sh\" \"continuity-kit/hooks/handoff_guard.py\"", "timeout": 30 }
+        ]
+      }
+    ]
+  }
+}
+
+// Post-wiring checklist (run the real round-trip, do not assume — LC-1):
+//   python continuity-kit/hooks/_handoff_io.py --self-test
+//   python continuity-kit/hooks/_handoff_io.py write --demo --lane solo
+//   echo '{"hook_event_name":"SessionStart","session_id":"proof"}' | python continuity-kit/hooks/handoff_inject.py
+//   tail -1 .claude/handoff/HANDOFF-LEDGER.jsonl   # confirm "event": "consumed"

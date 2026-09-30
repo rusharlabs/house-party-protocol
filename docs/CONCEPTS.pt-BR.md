@@ -39,7 +39,10 @@ componentes declarados (skills, hooks, commands, agents, rules, templates, scrip
 declarada por host.
 
 **Não é:** um plugin só no sentido do Claude Code. O mesmo módulo é um plugin no Claude Code e uma
-cópia verificada no Codex CLI. Um módulo também não é dependência de outro por padrão: hoje toda
+cópia verificada no Codex CLI; sete módulos são também plugins do Codex CLI
+(`codex plugin marketplace add rusharlabs/house-party-protocol`, depois
+`codex plugin add <module>@house-party-protocol`), e um plugin desses registra só as skills do
+módulo. Um módulo também não é dependência de outro por padrão: hoje toda
 lista `requires` do manifesto está vazia; `integrates_with` é composição opcional.
 
 **Verifique:** `python -m hpp graph --view capability --format json` mostra as arestas
@@ -653,8 +656,8 @@ os mesmos três com `--mode audit` imprimem os mesmos vereditos e saem com 0.
 módulo: `0` ok, `1` warn ou gate manual, `2` block, `3` erro de uso ou interno.
 
 **Não é:** uma sugestão. O manifesto é rejeitado se declarar qualquer outra coisa. No modo
-`enforce`, `BLOCK` sai com 2 e `MANUAL` sai com 1; no modo `audit` o veredito é impresso e a saída
-é sempre 0.
+`enforce`, `BLOCK` sai com 2 e `MANUAL` sai com 1; no modo `audit` o veredito é impresso e sai com 0.
+Um arquivo de política do projeto recusado sai com 2 nos dois modos, sem veredito impresso.
 
 **Verifique:** `python -m hpp policy check --mode enforce --command "rm -rf src"` sai com 2;
 `--command "git push origin feature"` sai com 1; `--mode audit` com qualquer um dos dois sai com 0.

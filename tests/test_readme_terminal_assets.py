@@ -15,6 +15,11 @@ The first two checks are also this file's CONTROL: they pass over the captures t
 shipped, so a failure of the lane-board checks below means the lane board is missing, not
 that the scan is broken. Both READMEs live beside this `tests/` directory in the source tree
 and in the emitted copy alike, so nothing here skips.
+
+The first image a reader meets, right after the logo and the badges, is the install journey
+(`hpp-install.svg`: `pip install`, then `hpp init` to its welcome line). The session that held
+that place before (`hpp-demo.svg`) is still shown, further down, and both languages show every
+local image in the same order.
 """
 from __future__ import annotations
 
@@ -28,6 +33,11 @@ READMES = ("README.md", "README.pt-BR.md")
 _IMG_SRC = re.compile(r'<img\b[^>]*?\bsrc="([^"]+)"', re.IGNORECASE | re.DOTALL)
 
 LANE_BOARD = "assets/terminal/lane-board.svg"
+LOGO = "assets/hpp-logo.png"
+INSTALL = "assets/terminal/hpp-install.svg"
+DEMO = "assets/terminal/hpp-demo.svg"
+_IMG = re.compile(r"<img\b[^>]*>", re.IGNORECASE | re.DOTALL)
+_ALT = re.compile(r'\balt="([^"]*)"', re.IGNORECASE)
 
 # The sentence `render()` writes into every SVG it paints. A capture without it was not
 # produced by the generator — which is exactly what "drawn by hand" looks like from here.
@@ -69,6 +79,35 @@ def test_CONTROLE_both_languages_show_the_same_terminal_captures() -> None:
         f"  only in README.md:       {sorted(set(english) - set(portuguese))}\n"
         f"  only in README.pt-BR.md: {sorted(set(portuguese) - set(english))}"
     )
+
+
+def _local_images(name: str) -> list[str]:
+    """The README's own images, in page order (the badges are the http ones)."""
+    return [src for src in _image_sources(name) if not src.startswith(("http://", "https://"))]
+
+
+def test_the_first_image_after_the_logo_and_badges_is_the_install_journey() -> None:
+    for name in READMES:
+        local = _local_images(name)
+        assert local[:2] == [LOGO, INSTALL], f"{name}: the page opens on {local[:2]}"
+        text = (PRODUCT_ROOT / name).read_text(encoding="utf-8")
+        tag = next(tag for tag in _IMG.findall(text) if f'src="{INSTALL}"' in tag)
+        alt = _ALT.search(tag).group(1)
+        assert len(alt) >= 60, f"{name}: the alt text of {INSTALL} is {alt!r}"
+        for command in ("pip install house-party-protocol", "hpp init --target your-repo"):
+            assert command in alt, f"{name}: the alt text of {INSTALL} does not name {command!r}"
+
+
+def test_the_session_that_led_the_page_is_still_shown_further_down() -> None:
+    for name in READMES:
+        local = _local_images(name)
+        assert local.count(DEMO) == 1 and local.index(DEMO) > local.index(INSTALL), (name, local)
+
+
+def test_both_languages_show_their_images_in_the_same_order() -> None:
+    english, portuguese = (_local_images(name) for name in READMES)
+    assert len(english) >= 6, f"the scan found {english}; it would find nothing below either"
+    assert english == portuguese, f"README.md: {english}\nREADME.pt-BR.md: {portuguese}"
 
 
 def test_readmes_show_the_lane_board_capture() -> None:

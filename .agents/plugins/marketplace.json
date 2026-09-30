@@ -8,7 +8,7 @@
       "name": "operator-kit",
       "source": {
         "source": "local",
-        "path": "./frameworks/operator-kit-1.8.0"
+        "path": "./frameworks/operator-kit-1.8.1"
       },
       "policy": {
         "installation": "AVAILABLE",
@@ -20,7 +20,19 @@
       "name": "continuity-kit",
       "source": {
         "source": "local",
-        "path": "./continuity/continuity-kit-1.5.0"
+        "path": "./continuity/continuity-kit-1.5.1"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    },
+    {
+      "name": "lane-kit",
+      "source": {
+        "source": "local",
+        "path": "./multi-session/lane-kit-1.8.0"
       },
       "policy": {
         "installation": "AVAILABLE",
@@ -32,7 +44,7 @@
       "name": "health-kit",
       "source": {
         "source": "local",
-        "path": "./frameworks/health-kit-1.4.0"
+        "path": "./frameworks/health-kit-1.4.1"
       },
       "policy": {
         "installation": "AVAILABLE",
@@ -44,7 +56,7 @@
       "name": "supabase-pack",
       "source": {
         "source": "local",
-        "path": "./frameworks/supabase-pack-1.2.0"
+        "path": "./frameworks/supabase-pack-1.2.1"
       },
       "policy": {
         "installation": "AVAILABLE",
@@ -56,7 +68,7 @@
       "name": "dev-squad-kit",
       "source": {
         "source": "local",
-        "path": "./frameworks/dev-squad-kit-1.2.0"
+        "path": "./frameworks/dev-squad-kit-1.2.1"
       },
       "policy": {
         "installation": "AVAILABLE",
@@ -68,7 +80,7 @@
       "name": "gotcha-memory",
       "source": {
         "source": "local",
-        "path": "./continuity/gotcha-memory-1.1.0"
+        "path": "./continuity/gotcha-memory-1.1.1"
       },
       "policy": {
         "installation": "AVAILABLE",

@@ -18,7 +18,7 @@ from hpp.install import InstallError, installation_plan
 from hpp.manifest import ManifestError, hooks_for_modules, validate_distribution, PROTOCOL_VERSION
 from hpp.policy import assess, exit_for as policy_exit_for
 from hpp.state import StateError, event_path, project, read_events
-from hpp.term import Console
+from hpp.term import Console, write_stdout
 
 STAGES = ("detect", "prereqs", "profile", "configure", "wire-suggest", "smoke")
 BOOT_LINES = {
@@ -698,7 +698,6 @@ def build_readiness(stages: list[dict[str, Any]], ctx: _Context) -> dict[str, An
     def ran(name: str) -> bool:
         return by_name.get(name, {}).get("status") not in {None, "skipped"}
 
-    detect = by_name.get("detect", {})
     if ran("detect"):
         add("host", "host detected", "verified", f"{ctx.classification} · {ctx.answers.get('host', 'host not chosen yet')}",
             f"python -m hpp init --target {ctx.options.target_label}")
@@ -1043,7 +1042,7 @@ def run_init_command(options: InitOptions, manifest: dict[str, Any], manifest_pa
     if json_output:
         report = run_init(options, manifest, manifest_path)
         # Why: the machine report must survive an ASCII-only pipe, so non-ASCII is escaped in JSON.
-        print(json.dumps(report, ensure_ascii=True, indent=2, sort_keys=True))
+        write_stdout(json.dumps(report, ensure_ascii=True, indent=2, sort_keys=True) + "\n")
         return report["exit_code"]
     if console is None:
         console = Console(animate=not no_animation)

@@ -34,6 +34,20 @@ GLYPHS_ASCII = {
 }
 
 
+def write_stdout(text: str) -> None:
+    """Write `text` to standard output as UTF-8 bytes, line endings untouched, on every system."""
+    # Why: through the text layer, Windows turned every "\n" into "\r\n" (the same output hashed
+    # differently per system) and a stream in the locale code page (cp1252) refused any character
+    # outside it, so a label like `lane-ğ` ended the command with exit 2.
+    buffer = getattr(sys.stdout, "buffer", None)
+    if buffer is None:
+        print(text, end="")
+        return
+    sys.stdout.flush()
+    buffer.write(text.encode("utf-8"))
+    buffer.flush()
+
+
 def enable_windows_vt(stream: Optional[IO[str]] = None) -> bool:
     """Turn on virtual-terminal processing for a Windows console; True when escapes will render."""
     if os.name != "nt":

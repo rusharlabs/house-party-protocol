@@ -9,8 +9,8 @@ patch com a nota no `CHANGELOG.md`. Confira a sua com `hpp --version`.
 
 | versão | suportada |
 |---|---|
-| 2.10.x | sim — linha atual |
-| 2.0 – 2.9 | não — atualize para 2.10.x |
+| 2.11.x | sim — linha atual |
+| 2.0 – 2.10 | não — atualize para 2.11.x |
 | 1.x | não |
 
 Os módulos têm versão própria (`plugin.json`, `marketplace.json`); a correção de um módulo sai
@@ -30,7 +30,9 @@ funcionar para você:
 
 Inclua: o módulo e a versão (`.claude-plugin/plugin.json`), como reproduzir, e o impacto que você
 mediu. Resposta inicial em até 5 dias úteis por qualquer dos dois canais; correção publicada como
-nova versão do módulo, com a nota no `CHANGELOG.md`.
+nova versão do módulo, com a nota no `CHANGELOG.md`. Quem responde a um relato, e o plano de
+continuidade para quando o mantenedor não estiver disponível, estão no
+[GOVERNANCE.pt-BR.md](GOVERNANCE.pt-BR.md).
 
 ## O que este projeto considera falha de segurança
 
@@ -57,6 +59,9 @@ nova versão do módulo, com a nota no `CHANGELOG.md`.
 - Hooks são **WARN-only por padrão** — um hook nunca derruba a ferramenta.
 - Nenhum módulo contém credencial. O ruleset real do linter de IP/PII nunca é publicado; só o
   `ip-ruleset.example.yaml` viaja.
+
+O modelo de ameaças, as fronteiras de confiança e o código que contém cada fraqueza comum estão no
+[docs/ASSURANCE-CASE.pt-BR.md](docs/ASSURANCE-CASE.pt-BR.md).
 
 ## Superfícies oficiais
 

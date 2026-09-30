@@ -7,6 +7,121 @@ All relevant changes to the harness are recorded here. The format follows
 [SemVer](https://semver.org/). The product version describes the harness contract; each module
 keeps its own version in `plugin.json` and in `marketplace.json`.
 
+## [2.11.0] — 2026-09-30
+
+### Added
+
+- **`--format mermaid` for the maps and the WorkGraph.** `hpp map lane|agent|monitor|context`,
+  `hpp work plan` and `hpp work waves` print Mermaid as well as JSON (the default). Lane collisions
+  become one `collides:<paths>` edge between the two lanes; the monitor map draws monitors, targets and
+  gates; the WorkGraph draws one node per item inside one subgraph per wave. Labels escape `"`, `|`,
+  `<` and `>`, and the five `hpp graph` views print the same bytes as before. Every new output is
+  pinned by a determinism test (two runs, permuted input, a fixed sha256).
+- **lane-kit 1.8.0 joins the Codex CLI plugin channel.** `codex plugin add lane-kit@house-party-protocol`
+  registers its two skills (`lane-coordinator`, `house-session`) and nothing else: its
+  `.codex-plugin/plugin.json` carries the empty hooks object, so the lane hooks stay Claude Code's, and
+  the runtime still comes by verified copy. The manifest lists lane-kit's components as hooks, commands
+  and skills (it declared an `agents` component the module does not carry). The channel now has seven
+  modules.
+- **An animated demo of the Lane Dashboard, recorded from a live run.** `assets/ui/lane-dashboard.gif`
+  (in the README and in the manual's lanes chapter) shows the board following a terminal command by
+  itself, an action dialog naming its terminal command, and the English/Português switch.
+  `assets/ui/lane-dashboard.gif.txt` records the command, the seed and the real output, since a GIF
+  cannot carry its command inside it. The Lane Dashboard was contributed by @kleinelizeu.
+- **`GOVERNANCE.md`, `ROADMAP.md` and `docs/ASSURANCE-CASE.md`**, each in both languages: the
+  single-maintainer model and its roles, where decisions are recorded, and a continuity plan that says
+  what is still pending; the next twelve months as a direction, not a promise, beside what the project
+  will not do; the threat model, trust boundaries and the weaknesses countered, each with the file that
+  counters it.
+- **Python is linted in CI.** `pyproject.toml` gains a `[tool.ruff]` rule set (`E4`, `E7`, `E9`, `F`;
+  target 3.10), and a `lint` job runs ruff installed from a hash-pinned requirements file. The ten
+  findings were fixed by hand; none changed behaviour. `tests/test_coding_standards.py` fails if the rule
+  set, the job or the pin goes away, and CONTRIBUTING has a coding-style section.
+- **The README opens on the install journey.** `assets/terminal/hpp-install.svg`, rendered from a real
+  run by `scripts/render_terminal_svg.py --animate --session install`, types
+  `pip install house-party-protocol` and `hpp init --target your-repo` and shows how init ends: the
+  wordmark, `BY RUSHAR LABS` and `> Welcome to the party.`. pip reads a wheel of the release from a local
+  index named by `PIP_INDEX_URL`, because the recording is made before the upload; the image says so.
+  `hpp-demo.svg` moves to "How the harness responds". The renderer can now show several runs of one
+  command's output, each gap counted on screen and in the image's description.
+- **GOVERNANCE and ROADMAP are pages of the site**, in both languages, under a Project group of the
+  landing page. SECURITY links the assurance case and GOVERNANCE; CONTRIBUTING and SUPPORT link the
+  roadmap.
+
+### Changed
+
+- **The manual caught up with 2.10**, in both languages: the hash-chained event log and
+  `hpp event verify`, optional SSH signatures, the project policy file, `hpp doctor --report`, the Codex
+  plugin channel, `hpp.deliberation/v2` as the sealed form, the ancestry-first proof of `MERGED`, and
+  `stale_sources`. The exit table gained the new cases.
+- **The lane-kit and continuity-kit documents say what the code does.** Every copy-install wiring
+  command runs through `hooks/pyrun.sh` instead of a bare `python` (a stock Mac has only `python3`); the
+  round-trip proof gives `CLAUDE_LANE_ID` to `python`, not to `echo`; a new *Lane identity* section
+  documents `CLAUDE_LANE_ID`, `CLAUDE_LANE_ROLE` and `CLAUDE_LANE_MODEL`; the runtime-state list and the
+  Undo are complete; the current continuity handoff is named correctly.
+- **operator-kit, kit-forge and the contracts match the installer.** operator-kit's manual wiring goes
+  through `hooks/pyrun.sh`, the Edit matcher adds `NotebookEdit`, and SETTINGS-WIRE states the real
+  timeouts and which hooks act through their JSON output. The install guide template gives the install
+  command the module READMEs use; SKILL-CONTRACT says which interpreter runs a Proof.
+- **A record is self-hashed, and signed only with `--sign-key`.** The documents that said a record is
+  never signed now say when it is.
+- **CONTRIBUTING says which tests a module edit fails.** It asked for a module change without touching
+  `CHECKSUMS.txt` and, on the same page, for the whole test suite to pass; the tests that check the
+  module's checksums fail by design until a maintainer re-emits it. It now describes them, and says the
+  CI's pytest jobs are red for that reason while the module self-test jobs must be green.
+- **The ROADMAP says what 2.11.0 ships.** Mermaid for the maps and the WorkGraph shipped; the feed map,
+  the static HTML atlas and the Lane Dashboard views move to 2.12, and the code graph to 2.13.
+- **The documents describe 2.11 as it runs.** ARCHITECTURE names the Mermaid output of the maps and the
+  WorkGraph, the CI `lint` job and the Codex CLI plugin channel. CONCEPTS and UX-INSTALL-JOURNEY describe
+  the Codex wire block as `hpp init` prints it: the plugin lines first, then one installer line per
+  module. LOOPS says an evidence record can be signed with `--sign-key` and checked with
+  `--allowed-signers`, and the assurance case counts 30 of 30 `uses:` lines pinned to a SHA.
+- **lane-kit and continuity-kit complement each other; neither requires the other.** The READMEs,
+  lane-kit's plugin description and its prerequisites row said lane-kit depends on continuity-kit;
+  the manifest says `requires: []`, and no lane-kit code reads a handoff. continuity-kit's README also
+  states its fallback: a lane with no handoff of its own is given the newest handoff of any lane.
+- **The module documents match the runtime.** Legacy spellings are accepted until 3.0 in the READMEs
+  and the comments, as the notices say; the install guide's undo command carries the `--target` it
+  needs; lane-kit's AGENTS.md and identity table say what the self-test and continuity-kit's two hooks
+  do; every module in the Codex channel shows its `codex plugin add` line and what that plugin
+  registers.
+
+- **Module versions:** agent-framework-wizard 1.2.3, claude-dev-kit 1.3.5, continuity-kit 1.5.1,
+  dev-squad-kit 1.2.1, gotcha-memory 1.1.1, health-kit 1.4.1, kit-forge 1.5.2, lane-kit 1.8.0,
+  operator-kit 1.8.1, supabase-pack 1.2.1.
+
+### Fixed
+
+- **house_session.py writes UTF-8 to a redirected stdout and stderr on Windows** (issue #15): the em
+  dash no longer reaches a file or a pipe as the cp1252 byte `0x97`.
+- **The lane board's self-test runs all 41 checks from a checkout** (issue #16). Inside the product's
+  layout it takes the core from the checkout for the self-test only, and says so; an installed or copied
+  kit, and every other command, still need the core installed.
+- **A lane session gets its own handoff** (issue #33). continuity-kit's `handoff_inject.py` picks the
+  handoff by `CLAUDE_LANE_ID`, then the hook payload, then `solo`, the order lane-kit uses; it read the
+  payload only, and Claude Code sends no lane there, so every session got `solo` first. Contributed by
+  @HarshRajSinghania (#34). `handoff_guard.py`, the Stop hook, had the same line: a lane that had just
+  written its handoff was told at Stop that it had none, and the degraded handoff went to `solo`. It
+  now uses the same order, and its self-test passes inside a lane session, where `kit_doctor` runs it.
+- **Standard output is UTF-8 with `\n` line endings on every system.** On Windows every command wrote
+  CRLF, so the same output hashed differently per system, and a character outside the console code page
+  ended the command with exit 2.
+- **"In audit the exit code is always 0" was wrong**: a refused project policy file exits 2 in either
+  mode. Corrected in the manual, CONCEPTS and ARCHITECTURE.
+- **kit-forge 1.5.2: the wiring suggestion prints `--target`**, an option `wire_settings.py` accepts,
+  instead of `--settings`, which it refused. `tools/browse.py` imports on Python 3.8 and 3.9 as the
+  module declares, and `tools/codex_marketplace.py` exits 2 on an input it cannot read.
+- **Legacy spellings say until when they are read.** Removal notices that named 2.7.0, a release
+  already past, and seven that promised "one version only" without naming one, now name 3.0; the
+  fallbacks still run.
+- **The Pages workflow's checkout sets `persist-credentials: false`**, like every other checkout.
+- **The Lane Dashboard demo scripts run without `--lane-kit`**, as their usage lines say: the finder
+  took the `lane-kit-<version>.zip` beside the kit for a second kit and refused.
+- **The Lane Dashboard's sidecar reaches the site.** `docs/assets/ui/lane-dashboard.gif.txt` sits beside
+  the GIF the manual shows, and `scripts/record_lane_dashboard.py` writes it into every `--copy-to`
+  directory. `hpp init --help` says `--marketplace` is used by both the Claude Code and the Codex CLI
+  wire blocks.
+
 ## [2.10.1] — 2026-09-29
 
 ### Changed
@@ -1816,6 +1931,7 @@ publishing.
 [2.6.5]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.5
 [2.6.6]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.6
 [2.6.7]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.7
+[2.11.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.11.0
 [2.10.1]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.10.1
 [2.10.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.10.0
 [2.9.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.9.0

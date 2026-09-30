@@ -160,8 +160,10 @@ re-verification).</p>
 without network, that demonstrates the contract and ends with the expected exit 0. It inherits the
 <code>--self-test</code> pattern of a well-behaved script. <code>--run-proofs</code> executes the first line of the
 block from the skill directory: a trailing <code># comment</code> is stripped before running (on Windows the
-shell is cmd.exe, where <code>#</code> is not a comment and <code>&gt;</code> is a redirect) and <code>${CLAUDE_PLUGIN_ROOT}</code>
-is expanded to the skill's module root.</p>
+shell is cmd.exe, where <code>#</code> is not a comment and <code>&gt;</code> is a redirect), <code>${CLAUDE_PLUGIN_ROOT}</code>
+is expanded to the skill's module root, and a first word <code>python</code> or <code>python3</code> is replaced by the
+interpreter that runs the linter (a stock macOS has no <code>python</code>); a <code>python</code> later in the line is
+left to the PATH, as the skill wrote it.</p>
 <h3 id="c5--portability">C5 · PORTABILITY</h3>
 <ul>
 <li>Launcher: always <code>python</code>. <strong><code>py</code> is FORBIDDEN</strong> (Windows-only — real bug in

@@ -1,0 +1,67 @@
+lane-dashboard.gif -- the Lane Dashboard of lane-kit 1.7.1, recorded from a live run.
+
+Produced by (from the root of this repository):
+    python scripts/record_lane_dashboard.py --out-dir assets/ui --copy-to docs/assets/ui --lane-kit '<lane-kit 1.7.1>' --mp4 '<outside this repository>/lane-dashboard.mp4'
+Recorded 2026-09-29 with Chromium 145.0.7632.6 headless, a 1280x800 viewport, the dark colour scheme and the en-US locale.
+Encoded 960x600, 10 fps, 195 frames = 19.5 s, one 128-colour palette, no dithering, looping forever: 505,317 bytes.
+
+The project: a new temporary directory, made a git repository of its own, built by
+scripts/seed_lane_dashboard_demo.py through lane-kit's own writers, each command with the exit
+status the story declares:
+    python _lane_io.py register --lane exec-a --role executor --model claude-opus-5-5 --session demo-exec-a
+    python _lane_io.py register --lane exec-b --role executor --model claude-opus-5-5 --session demo-exec-b
+    python _lane_io.py register --lane rev-a --role reviewer --model gpt-5.6 --session demo-rev-a
+    python lane_board.py claim EXAMPLE-5 --lane exec-a --role executor --model claude-opus-5-5 --tag green
+    python lane_board.py set EXAMPLE-5 BUILDING --lane exec-a --role executor --model claude-opus-5-5
+    python lane_board.py set EXAMPLE-5 CHECKPOINT-READY --lane exec-a --role executor --model claude-opus-5-5 --evidence 'exit=0 sha=1f4c2ab'
+    python lane_board.py set EXAMPLE-5 UNDER-REVIEW --lane rev-a --role reviewer --model gpt-5.6
+    python lane_board.py set EXAMPLE-5 VERIFIED --lane rev-a --role reviewer --model gpt-5.6 --verdict-by-lane rev-a --verdict-by-model gpt-5.6
+    python lane_board.py set EXAMPLE-5 MERGED --lane rev-a --role reviewer --model gpt-5.6
+    python lane_board.py claim EXAMPLE-2 --lane exec-a --role executor --model claude-opus-5-5 --tag red
+    python lane_board.py set EXAMPLE-2 BUILDING --lane exec-a --role executor --model claude-opus-5-5
+    python lane_board.py set EXAMPLE-2 CHECKPOINT-READY --lane exec-a --role executor --model claude-opus-5-5 --evidence 'exit=0 sha=9b7e014'
+    python lane_board.py set EXAMPLE-2 UNDER-REVIEW --lane rev-a --role reviewer --model gpt-5.6
+    python lane_board.py set EXAMPLE-2 VERIFIED --lane rev-a --role reviewer --model gpt-5.6 --verdict-by-lane rev-a --verdict-by-model gpt-5.6
+    python lane_board.py claim EXAMPLE-4 --lane exec-b --role executor --model claude-opus-5-5 --tag green
+    python lane_board.py set EXAMPLE-4 BUILDING --lane exec-b --role executor --model claude-opus-5-5
+    python lane_board.py set EXAMPLE-4 CHECKPOINT-READY --lane exec-b --role executor --model claude-opus-5-5 --evidence 'exit=1 sha=7a30ce5'
+    python lane_board.py set EXAMPLE-4 UNDER-REVIEW --lane rev-a --role reviewer --model gpt-5.6
+    python lane_board.py set EXAMPLE-4 NEEDS-FIX --lane rev-a --role reviewer --model gpt-5.6 --verdict-by-lane rev-a --verdict-by-model gpt-5.6 --evidence '2 of 14 tests fail'
+    python lane_board.py claim EXAMPLE-6 --lane exec-b --role executor --model claude-opus-5-5 --tag green
+    python lane_board.py set EXAMPLE-6 BUILDING --lane exec-b --role executor --model claude-opus-5-5
+    python lane_board.py set EXAMPLE-6 CHECKPOINT-READY --lane exec-b --role executor --model claude-opus-5-5 --evidence 'exit=0 sha=5d02e41'
+    python lane_board.py set EXAMPLE-6 UNDER-REVIEW --lane rev-a --role reviewer --model gpt-5.6
+    python lane_board.py claim EXAMPLE-3 --lane exec-b --role executor --model claude-opus-5-5 --tag green
+    python lane_board.py set EXAMPLE-3 BUILDING --lane exec-b --role executor --model claude-opus-5-5
+    python lane_board.py set EXAMPLE-3 CHECKPOINT-READY --lane exec-b --role executor --model claude-opus-5-5 --evidence 'exit=0 sha=4c1d88f'
+    python lane_board.py claim EXAMPLE-1 --lane exec-a --role executor --model claude-opus-5-5 --tag green
+    python lane_board.py set EXAMPLE-1 BUILDING --lane exec-a --role executor --model claude-opus-5-5
+    python lane_dashboard.py spec add --id EXAMPLE-7 --title 'Export the board as CSV' --acceptance 'the export lists every item with its last state' --priority 3 --create-plan
+    python lane_dashboard.py spec add --id EXAMPLE-8 --title 'Filter the export by lane' --acceptance 'a filtered export holds only the items of that lane' --depends-on EXAMPLE-7 --priority 2 --create-plan
+    python lane_dashboard.py spec add --id EXAMPLE-9 --title 'Show the heartbeat age of each lane' --acceptance 'the age matches the heartbeat in the registry' --priority 1 --create-plan
+
+The server, on a free loopback port:
+    python lane_dashboard.py serve --project-dir '<the seeded project>' --no-orca --port 0
+
+The story, as measured (seconds from the first frame):
+      0.0  the page as it opens: the metrics, the backlog and its two dependency waves
+      3.0  the board
+      3.8  the recorder types and runs `python lane_board.py set EXAMPLE-1 CHECKPOINT-READY --lane exec-a --role executor --model claude-opus-5-5 --evidence 'exit=0 sha=3e5a1c9'`
+      6.0  EXAMPLE-1 is in Ready for review, 0.24 s after the command exited
+     10.0  the strip is removed
+     10.4  Approve merge on EXAMPLE-2 opens its dialog
+     13.4  Cancel closes the dialog; nothing is submitted
+     13.8  the top of the page, where the language switch is
+     14.6  Português
+     17.0  the board in Portuguese
+     19.5  the end of the loop
+
+The terminal command's stdout, as printed:
+    {"ts": "2026-09-29T00:03:05", "item_id": "EXAMPLE-1", "state": "CHECKPOINT-READY", "lane_id": "exec-a", "role": "executor", "model": "claude-opus-5-5", "evidence": "exit=0 sha=3e5a1c9", "tag": "green"}
+The dialog's line: The same from a terminal: lane_board.py approve EXAMPLE-2
+
+What on screen is not the dashboard: the terminal strip at the bottom is an overlay the recorder
+draws over the page while its command runs; it holds the command the recorder ran and the stdout
+that command printed, unedited. The recorder counts every POST the page sends and aborts the
+ones to the server's actions (api/...) before they leave; the page sent 0: nothing
+was submitted.

@@ -4,7 +4,7 @@
 
 > **Version:** 2.0.0 — a presentation layer over two frozen contracts.
 > **Path 1** is `hpp init`, the harness installer (`hpp/wizard.py`, six stages, plan then
-> `--apply`). **Path 2** is the module installer, `installers/kit-forge-1.5.1/kit_doctor.py`,
+> `--apply`). **Path 2** is the module installer, `installers/kit-forge-1.5.2/kit_doctor.py`,
 > whose mechanics live in `INSTALL-CONTRACT.md` and whose per-module README follows
 > `INSTALL-GUIDE-TEMPLATE.md`; both ship at the root of this repository. This document describes
 > the EXPERIENCE: how an AGENT (Claude Code or Codex CLI) guides a HUMAN through the installation,
@@ -48,7 +48,7 @@ finished.
 | `prereqs` | `checking prerequisites...` | Python at or above 3.10; the manifest contract; the distribution when `marketplace.json` sits beside the manifest; `git` on `PATH` | Python below the floor or a manifest/marketplace divergence halts (exit 2) |
 | `profile` | `mounting profile...` | four answers — host, bundle, policy mode and an optional decision advisor (new in 2.6.0; default `off`, never counted as a pending default) — from flags, `--profile`, the prompt (TTY only) or the default, with the source of each recorded | a recorded profile with different answers is a `conflict`; nothing is overwritten |
 | `configure` | `loading modules...` | the module plan for the host, `native` or `explicit-command` per module, and `CHECKSUMS.txt` for every module directory present | a module unsupported on the host, or a checksum mismatch, halts (exit 2) |
-| `wire-suggest` | `wiring suggestions...` | the block to paste: plugin lines for Claude Code, module-installer lines for Codex CLI and for explicit-command modules, the policy command as configured; before the block, a HOOK CAPABILITIES table — each hook the chosen modules declare, with its events, its exit policy (`observe`, `warn`, `block`) and its capability groups — counted on the boot line (`17 hooks declaring capabilities` for `reliable-coding`) | nothing; it never writes |
+| `wire-suggest` | `wiring suggestions...` | the block to paste: on Claude Code, plugin lines, plus module-installer lines for its explicit-command modules; on Codex CLI, `codex plugin marketplace add` and one `codex plugin add` per module that carries skills (skills only), then one module-installer line per module; the policy command as configured; before the block, a HOOK CAPABILITIES table — each hook the chosen modules declare, with its events, its exit policy (`observe`, `warn`, `block`) and its capability groups — counted on the boot line (`17 hooks declaring capabilities` for `reliable-coding`) | nothing; it never writes |
 | `smoke` | `verifying evidence...` | four controls: policy classifier, capability graph, event log, benchmark at `k=1` | a failed control sets exit 1 and names itself |
 
 ### Plan, then `--apply`
@@ -82,9 +82,12 @@ finished.
 ```
 
 5. **Wiring, by the human.** The agent shows the wire block as printed and **the human pastes
-   it**: `/plugin marketplace add` and `/plugin install` lines on Claude Code, module-installer
-   lines on Codex CLI and for explicit-command modules. `hpp init` never edits `settings.json`,
-   hooks or `AGENTS.md`; host wiring stays `not verified` until the human has done it.
+   it**: on Claude Code, `/plugin marketplace add` and `/plugin install` lines, plus
+   module-installer lines for its explicit-command modules; on Codex CLI,
+   `codex plugin marketplace add` and one `codex plugin add` per module that carries skills
+   (skills only), then one module-installer line per module. `hpp init` never edits
+   `settings.json`, hooks or `AGENTS.md`; host wiring stays `not verified` until the human has
+   done it.
 
 Running the same command again is safe: `detect` reports `re-run · 1 existing item(s) preserved`
 and `profile` reports `unchanged`. Different answers against a recorded profile are a `conflict`:
@@ -144,7 +147,7 @@ there. The agent passes on the paths it was given and invents none.
 | `--yes`, `--non-interactive`, `--json`, or `CI` in the environment | no prompt is reached; unanswered questions take their defaults and the report says so |
 | `--no-animation` | plain output; `NO_COLOR` is honoured; without a TTY the output is complete and uncoloured |
 | `--no-benchmark` | skip the benchmark control in smoke; it is reported as not verified, not silently dropped |
-| `--marketplace <slug>` | the slug used in the Claude Code wire block, for forks |
+| `--marketplace <slug>` | the slug used in the wire block's `/plugin marketplace add` (Claude Code) and `codex plugin marketplace add` (Codex CLI) lines, for forks |
 | `--json` | the same report as JSON (`schema: hpp.init-report/v1`), with `exit_code`, `readiness` and every stage's detail — for CI and for agents |
 
 ### Exit codes
@@ -183,13 +186,14 @@ If this is fine, say "apply it" and I run the same command with --apply.
 
 ## Path 2 — the module installer (`kit_doctor.py`)
 
-The lines `hpp init` prints in its wire block for Codex CLI, and for explicit-command modules on
-Claude Code, are this installer. It copies one module at a time into the target and runs the
-module's declared smokes; it plans first and applies only on a second, explicit invocation.
+The module-installer lines `hpp init` prints in its wire block — one per module on Codex CLI,
+after the plugin lines, and one per explicit-command module on Claude Code — are this installer.
+It copies one module at a time into the target and runs the module's declared smokes; it plans
+first and applies only on a second, explicit invocation.
 
 ### The journey in 5 steps (the same in the 4 scenarios)
 
-1. **Plan.** The agent runs `python installers/kit-forge-1.5.1/kit_doctor.py install --kit <module-dir> --host <host> --target <project> --human`
+1. **Plan.** The agent runs `python installers/kit-forge-1.5.2/kit_doctor.py install --kit <module-dir> --host <host> --target <project> --human`
    (`--human` selects the human-readable report). Plan mode is the default: nothing is written,
    exit 0.
 2. **Translation.** The agent pastes the confirmation block into the conversation (template in
@@ -323,7 +327,7 @@ I ran the {kit} installer in plan mode -- nothing has been written yet. Summary:
 
 Module: `operator-kit-1.5.0`. Command the agent ran (real output below). This capture is dated:
 it predates the versioned installer path. In the current distribution the module is
-`operator-kit-1.5.0` and the installer lives at `installers/kit-forge-1.4.1/kit_doctor.py`;
+`operator-kit-1.8.1` and the installer lives at `installers/kit-forge-1.5.2/kit_doctor.py`;
 the stages, the flags (`--target`, `--host`, `--answers`, `--apply`, `--human`) and the shape of
 the output are the same.
 

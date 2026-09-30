@@ -1,0 +1,34 @@
+{
+  "name": "dev-squad-kit",
+  "version": "1.2.1",
+  "description": "Dev Squad Kit on Codex: 3 skills (pp-consolidate, pp-discovery, pp-xray). This plugin registers skills only; it does not register the module's commands and agents.",
+  "author": {
+    "name": "Max Parisi"
+  },
+  "homepage": "https://rusharlabs.github.io/house-party-protocol/",
+  "repository": "https://github.com/rusharlabs/house-party-protocol",
+  "license": "MIT",
+  "keywords": [
+    "agents",
+    "squad",
+    "roles",
+    "persona",
+    "orchestration",
+    "discovery",
+    "consolidation",
+    "pm",
+    "architect",
+    "qa"
+  ],
+  "skills": "./skills/",
+  "hooks": {
+    "hooks": {}
+  },
+  "interface": {
+    "displayName": "Dev Squad Kit",
+    "shortDescription": "Dev Squad Kit on Codex: 3 skills (pp-consolidate, pp-discovery, pp-xray).",
+    "longDescription": "Dev Squad Kit on Codex: 3 skills (pp-consolidate, pp-discovery, pp-xray). This plugin registers skills only; it does not register the module's commands and agents. On Claude Code the same module installs whole, from the same repository.",
+    "developerName": "Max Parisi",
+    "category": "Developer Tools"
+  }
+}

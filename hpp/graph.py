@@ -1,7 +1,7 @@
 """Deterministic, inspectable graph projections from the HPP manifest."""
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Optional
 
 
 def _node(node_id: str, kind: str, label: str) -> dict[str, str]:
@@ -71,12 +71,41 @@ def build_graph(manifest: dict[str, Any], view: str) -> dict[str, Any]:
             "edges": sorted(edges, key=lambda item: (item["from"], item["to"], item["relation"]))}
 
 
-def to_mermaid(graph: dict[str, Any]) -> str:
-    lines = ["flowchart LR"]
-    labels = {node["id"]: node["label"] for node in graph["nodes"]}
-    for index, node_id in enumerate(sorted(labels)):
-        lines.append(f"  n{index}[\"{labels[node_id]}\"]")
+def _mermaid_text(text: str) -> str:
+    """A label or an edge text as Mermaid reads it: the characters that would end it become entity codes."""
+    # Why: a `"` closes a node label, a `|` closes an edge text and `<`/`>` are read as HTML, so a
+    # label carrying one produced a diagram that no longer parses; a line break splits the statement.
+    for raw, code in (('"', "#quot;"), ("|", "#124;"), ("<", "#lt;"), (">", "#gt;"),
+                      ("\r\n", " "), ("\r", " "), ("\n", " ")):
+        text = text.replace(raw, code)
+    return text
+
+
+def to_mermaid(graph: dict[str, Any], clusters: Optional[list[dict[str, Any]]] = None) -> str:
+    """A flowchart of `nodes` and `edges`: nodes numbered in id order, edges sorted by source, target
+    and relation, so the same graph gives the same bytes whatever the order it was listed in.
+
+    `clusters` groups nodes into `subgraph` blocks, in the order given, each `{"label", "nodes"}`.
+    """
+    labels = {node["id"]: _mermaid_text(node["label"]) for node in graph["nodes"]}
     index_for = {node_id: index for index, node_id in enumerate(sorted(labels))}
-    for edge in graph["edges"]:
-        lines.append(f"  n{index_for[edge['from']]} -->|{edge['relation']}| n{index_for[edge['to']]}")
+    grouped: set[str] = set()
+    for cluster in clusters or []:
+        for node_id in cluster["nodes"]:
+            if node_id not in index_for:
+                raise ValueError(f"cluster {cluster['label']!r} names an unknown node: {node_id}")
+            if node_id in grouped:
+                raise ValueError(f"node {node_id} is in more than one cluster")
+            grouped.add(node_id)
+    lines = ["flowchart LR"]
+    for node_id in sorted(labels):
+        if node_id not in grouped:
+            lines.append(f"  n{index_for[node_id]}[\"{labels[node_id]}\"]")
+    for number, cluster in enumerate(clusters or []):
+        lines.append(f"  subgraph c{number}[\"{_mermaid_text(cluster['label'])}\"]")
+        for node_id in sorted(cluster["nodes"], key=index_for.__getitem__):
+            lines.append(f"    n{index_for[node_id]}[\"{labels[node_id]}\"]")
+        lines.append("  end")
+    for edge in sorted(graph["edges"], key=lambda item: (item["from"], item["to"], item["relation"])):
+        lines.append(f"  n{index_for[edge['from']]} -->|{_mermaid_text(edge['relation'])}| n{index_for[edge['to']]}")
     return "\n".join(lines) + "\n"

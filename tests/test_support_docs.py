@@ -194,6 +194,6 @@ def test_the_questions_section_sends_questions_to_q_and_a_and_early_ideas_to_ide
 def test_each_readme_links_discussions_beside_the_support_page():
     for readme, page in READMES.items():
         top = _read(readme).split("\n# ", 1)[0]
-        line = next((l for l in top.splitlines() if f'href="{page}"' in l), None)
+        line = next((candidate for candidate in top.splitlines() if f'href="{page}"' in candidate), None)
         assert line is not None, f"{readme} does not link {page} above its title"
         assert f'href="{DISCUSSIONS}"' in line, f"{readme}: the line that lists Support does not link Discussions"

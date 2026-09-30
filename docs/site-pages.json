@@ -101,6 +101,18 @@
             "title": "Benchmark reproduzível",
             "summary": "O benchmark público: mede o harness local sem chamar APIs de modelo."
           }
+        },
+        {
+          "en": {
+            "href": "ASSURANCE-CASE.html",
+            "title": "Assurance case",
+            "summary": "Why the security requirements are met: the threat model, the trust boundaries, the design principles applied and the code that counters each common weakness."
+          },
+          "pt-BR": {
+            "href": "ASSURANCE-CASE.pt-BR.html",
+            "title": "Caso de garantia",
+            "summary": "Por que os requisitos de segurança são atendidos: o modelo de ameaças, as fronteiras de confiança, os princípios de desenho aplicados e o código que contém cada fraqueza comum."
+          }
         }
       ]
     },
@@ -223,6 +235,39 @@
             "href": "DESIGN.pt-BR.html",
             "title": "DESIGN.pt-BR.md — como construir uma interface para este projeto",
             "summary": "Como construir uma interface com a marca: os tokens como existem no código, os componentes que já existem e o que um pull request precisa cumprir."
+          }
+        }
+      ]
+    },
+    {
+      "id": "project",
+      "label": {
+        "en": "Project",
+        "pt-BR": "Projeto"
+      },
+      "pages": [
+        {
+          "en": {
+            "href": "ROADMAP.html",
+            "title": "Roadmap",
+            "summary": "Where the work is headed over the next twelve months, as a direction and not a promise, and what the project will not do."
+          },
+          "pt-BR": {
+            "href": "ROADMAP.pt-BR.html",
+            "title": "Roadmap",
+            "summary": "Para onde o trabalho vai nos próximos doze meses, como direção e não promessa, e o que o projeto não vai fazer."
+          }
+        },
+        {
+          "en": {
+            "href": "GOVERNANCE.html",
+            "title": "Governance",
+            "summary": "Who decides, where each decision is recorded, how a disagreement ends, how a release is made, and the continuity plan for when the maintainer is gone."
+          },
+          "pt-BR": {
+            "href": "GOVERNANCE.pt-BR.html",
+            "title": "Governança",
+            "summary": "Quem decide, onde cada decisão fica registrada, como um desacordo termina, como uma release é feita e o plano de continuidade para quando o mantenedor sair de cena."
           }
         }
       ]

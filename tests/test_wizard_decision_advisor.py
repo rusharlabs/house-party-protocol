@@ -93,7 +93,8 @@ def test_the_apply_writes_the_declared_advisor_and_never_the_key_in_the_shell(ta
 def test_the_advisor_block_is_not_counted_as_commands_to_paste(target, capsys):
     _, plain = _report(target, capsys)
     _, advised = _report(target, capsys, "--decision-advisor", "compatible")
-    summary = lambda report: next(stage for stage in report["stages"] if stage["stage"] == "wire-suggest")["summary"]
+    def summary(report):
+        return next(stage for stage in report["stages"] if stage["stage"] == "wire-suggest")["summary"]
     assert summary(plain) == summary(advised)
     assert len(_stage(advised, "wire-suggest")["lines"]) > len(_stage(plain, "wire-suggest")["lines"])
 

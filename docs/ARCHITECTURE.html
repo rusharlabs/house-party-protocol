@@ -100,6 +100,7 @@ does not exist.</p>
 ├──────────────────────────────────────────────────────────────────────────┤
 │ DISTRIBUTION  Claude Code: marketplace.json + plugin per module          │
 │               Codex CLI:   verified copy into .agents/ by the installer  │
+│                            + plugin channel (skills only) for 7 modules  │
 └──────────────────────────────────────────────────────────────────────────┘</code></pre>
 <p>The harness is stdlib-only and executes no model. It reads files, runs the commands you name,
 and writes to a small number of declared paths. <code>decide</code>, <code>evidence</code>, <code>retrieval</code> and <code>cite</code> are
@@ -115,7 +116,7 @@ new in 2.6.0; <code>deliberate</code> is new in 2.7.0.</p>
 <tr><td><code>cli.py</code></td><td>argument parsing, dispatch, the exit contract (<code>2</code> for a refused input, <code>3</code> for an internal error)</td><td>every subcommand, <code>--self-test</code></td></tr>
 <tr><td><code>manifest.py</code></td><td>locate, load and validate the manifest; cross-check <code>marketplace.json</code> and each module's <code>plugin.json</code> when present, and the Codex marketplace (<code>.agents/plugins/marketplace.json</code>) with each listed module's <code>.codex-plugin/plugin.json</code></td><td><code>doctor</code></td></tr>
 <tr><td><code>state.py</code></td><td>append-only, hash-chained event log (each line links to the sha256 of the one before it; a broken link names its first divergent step, a log written before the chain reads as <code>legacy</code>); projection of events onto the loop; refusal of invalid transitions before the write</td><td><code>event append</code>, <code>event verify</code>, <code>status</code>, <code>resume</code></td></tr>
-<tr><td><code>workgraph.py</code></td><td>validate a spec, reject cycles with the path named, order units into waves; link each acceptance criterion to the tests that cite it and, with a JUnit XML report, to the tests that ran it</td><td><code>work plan</code>, <code>work waves</code>, <code>work coverage</code></td></tr>
+<tr><td><code>workgraph.py</code></td><td>validate a spec, reject cycles with the path named, order units into waves; link each acceptance criterion to the tests that cite it and, with a JUnit XML report, to the tests that ran it; the plan and the waves as JSON or Mermaid, the coverage as JSON</td><td><code>work plan</code>, <code>work waves</code>, <code>work coverage</code></td></tr>
 <tr><td><code>findings.py</code></td><td>check the <code>hpp.findings/v1</code> document a review lens answers with (stable code, severity, file and line, evidence, the universe inspected), refuse a key the contract does not define, and derive the verdict</td><td><code>findings check</code> (new in 2.8.0)</td></tr>
 <tr><td><code>policy.py</code></td><td>classify a command as <code>ALLOW</code>, <code>MANUAL</code> or <code>BLOCK</code>; apply a project's <code>.hpp/policy.json</code>, which can only add rules or raise a class, never lower one; map to exit code by mode</td><td><code>policy check</code></td></tr>
 <tr><td><code>attest.py</code></td><td>bind a verdict to repo identity, base commit, spec hash and a full file snapshot; verify later; sign the record with an SSH key on request (<code>--sign-key</code>) and demand that signature on verify (<code>--allowed-signers</code>)</td><td><code>attest create</code>, <code>attest verify</code></td></tr>
@@ -123,7 +124,7 @@ new in 2.6.0; <code>deliberate</code> is new in 2.7.0.</p>
 <tr><td><code>hosts.py</code></td><td>the host x module x channel matrix derived from <code>hosts</code> and <code>components</code> in the manifest, rendered for the documents</td><td><code>doctor --matrix</code></td></tr>
 <tr><td><code>context.py</code></td><td>fit whole blocks under a character budget with provenance hashes; refuse secret-like input</td><td><code>context compile</code>, <code>map context</code></td></tr>
 <tr><td><code>routing.py</code></td><td>choose a tier and a provider id from declared risk, complexity, context size and stage; fall back only upward</td><td><code>route</code></td></tr>
-<tr><td><code>maps.py</code></td><td>Lane Map, Agent Map, Context Map and Monitor Map as sorted, data-only projections</td><td><code>map lane</code>, <code>map agent</code>, <code>map context</code>, <code>map monitor</code></td></tr>
+<tr><td><code>maps.py</code></td><td>Lane Map, Agent Map, Context Map and Monitor Map as sorted, data-only projections; JSON or Mermaid</td><td><code>map lane</code>, <code>map agent</code>, <code>map context</code>, <code>map monitor</code></td></tr>
 <tr><td><code>graph.py</code></td><td>capability, operational, agent, evidence and code views from the manifest; JSON or Mermaid</td><td><code>graph</code></td></tr>
 <tr><td><code>evals.py</code></td><td><code>pass@k</code> / <code>pass^k</code> runner over a suite of cases with three runner kinds</td><td><code>eval run</code>, <code>benchmark</code></td></tr>
 <tr><td><code>decision.py</code></td><td>validate an <code>hpp.decision/v1</code> record made outside the harness (advisory, raise-only, abstention and instrument failure as outcomes); measure a declared decider with selective metrics. Calls no model</td><td><code>decide validate</code>, <code>decide eval</code> (new in 2.6.0)</td></tr>
@@ -274,16 +275,16 @@ value per module, not changing the six stages.</p>
 <table>
 <thead><tr><th>module</th><th>Claude Code</th><th>Codex CLI</th></tr></thead>
 <tbody>
-<tr><td><code>operator-kit</code> 1.8.0</td><td><code>native</code> · plugin + hooks after the wiring is pasted</td><td><code>explicit-command</code> · plugin (skills only) + verified copy</td></tr>
-<tr><td><code>kit-forge</code> 1.5.1</td><td><code>explicit-command</code> · plugin</td><td><code>explicit-command</code> · verified copy</td></tr>
-<tr><td><code>lane-kit</code> 1.7.1</td><td><code>native</code> · plugin + hooks after the wiring is pasted</td><td><code>explicit-command</code> · verified copy</td></tr>
-<tr><td><code>continuity-kit</code> 1.5.0</td><td><code>native</code> · plugin + hooks after the wiring is pasted</td><td><code>explicit-command</code> · plugin (skills only) + verified copy</td></tr>
-<tr><td><code>health-kit</code> 1.4.0</td><td><code>explicit-command</code> · plugin</td><td><code>explicit-command</code> · plugin (skills only) + verified copy</td></tr>
-<tr><td><code>claude-dev-kit</code> 1.3.4</td><td><code>native</code> · plugin</td><td><code>unsupported</code> · —</td></tr>
-<tr><td><code>supabase-pack</code> 1.2.0</td><td><code>explicit-command</code> · plugin</td><td><code>explicit-command</code> · plugin (skills only) + verified copy</td></tr>
-<tr><td><code>agent-framework-wizard</code> 1.2.2</td><td><code>explicit-command</code> · plugin</td><td><code>explicit-command</code> · verified copy</td></tr>
-<tr><td><code>dev-squad-kit</code> 1.2.0</td><td><code>native</code> · plugin</td><td><code>explicit-command</code> · plugin (skills only) + verified copy</td></tr>
-<tr><td><code>gotcha-memory</code> 1.1.0</td><td><code>native</code> · plugin + hooks after the wiring is pasted</td><td><code>explicit-command</code> · plugin (skills only) + verified copy</td></tr>
+<tr><td><code>operator-kit</code> 1.8.1</td><td><code>native</code> · plugin + hooks after the wiring is pasted</td><td><code>explicit-command</code> · plugin (skills only) + verified copy</td></tr>
+<tr><td><code>kit-forge</code> 1.5.2</td><td><code>explicit-command</code> · plugin</td><td><code>explicit-command</code> · verified copy</td></tr>
+<tr><td><code>lane-kit</code> 1.8.0</td><td><code>native</code> · plugin + hooks after the wiring is pasted</td><td><code>explicit-command</code> · plugin (skills only) + verified copy</td></tr>
+<tr><td><code>continuity-kit</code> 1.5.1</td><td><code>native</code> · plugin + hooks after the wiring is pasted</td><td><code>explicit-command</code> · plugin (skills only) + verified copy</td></tr>
+<tr><td><code>health-kit</code> 1.4.1</td><td><code>explicit-command</code> · plugin</td><td><code>explicit-command</code> · plugin (skills only) + verified copy</td></tr>
+<tr><td><code>claude-dev-kit</code> 1.3.5</td><td><code>native</code> · plugin</td><td><code>unsupported</code> · —</td></tr>
+<tr><td><code>supabase-pack</code> 1.2.1</td><td><code>explicit-command</code> · plugin</td><td><code>explicit-command</code> · plugin (skills only) + verified copy</td></tr>
+<tr><td><code>agent-framework-wizard</code> 1.2.3</td><td><code>explicit-command</code> · plugin</td><td><code>explicit-command</code> · verified copy</td></tr>
+<tr><td><code>dev-squad-kit</code> 1.2.1</td><td><code>native</code> · plugin</td><td><code>explicit-command</code> · plugin (skills only) + verified copy</td></tr>
+<tr><td><code>gotcha-memory</code> 1.1.1</td><td><code>native</code> · plugin + hooks after the wiring is pasted</td><td><code>explicit-command</code> · plugin (skills only) + verified copy</td></tr>
 </tbody>
 </table>
 <p>On Claude Code every module is a plugin of the marketplace, and a module that declares hooks arms
@@ -324,7 +325,7 @@ not verified rather than assumed.</p>
 <table>
 <thead><tr><th>code</th><th>meaning</th><th>where</th></tr></thead>
 <tbody>
-<tr><td><code>0</code></td><td>ok; in <code>audit</code> mode, always</td><td>every command</td></tr>
+<tr><td><code>0</code></td><td>ok; in <code>audit</code> mode, every verdict (a refused policy file still exits 2)</td><td>every command</td></tr>
 <tr><td><code>1</code></td><td>warn or manual gate; an eval gate that failed</td><td><code>policy check</code> (<code>MANUAL</code> in <code>enforce</code>), <code>eval run</code>, <code>benchmark</code>, <code>init</code> with warnings, <code>decide eval</code> when its gate fails (new in 2.6.0), <code>evidence run</code> when the bundle did not pass, <code>evidence verify</code> on an intact record of a run that did not pass, <code>retrieval eval</code> when its gate fails, <code>cite check</code> with a warning (<code>TOO_MANY</code>, <code>UNCITED_CLAIM</code>) (new in 2.6.0), <code>deliberate record</code> when the verdict is blocked or the judge failed, <code>evidence mutate</code> with a blind spot, an incomplete run or no mutant applied (new in 2.7.0), <code>work coverage</code> when a criterion is not covered or, with <code>--junit</code>, not executed, <code>findings check</code> when a lens found something (new in 2.8.0)</td></tr>
 <tr><td><code>2</code></td><td>block; a refused input (bad manifest, bad spec, corrupt log, invalid attestation)</td><td><code>policy check</code> (<code>BLOCK</code>), <code>attest</code>, <code>decide validate</code> and <code>decide eval</code> on a record or suite that breaks the contract (new in 2.6.0), <code>evidence run</code> on a refused request or an event it could not append, <code>evidence verify</code> on a record that was edited or contradicts itself or whose artifact changed or went missing, <code>retrieval eval</code> on a refused suite or argument, <code>cite check</code> on <code>UNKNOWN_ID</code>, <code>RANGE</code> or <code>EMPTY_MARKER</code> or a refused input (new in 2.6.0), <code>deliberate</code> on a refused panel, turn or judge, a session that has not stopped, or a record that does not verify, <code>evidence mutate</code> when the criterion does not pass on the clean copy (<code>no-control</code>) or a mutant is refused (new in 2.7.0), <code>work coverage</code> on a refused report or a test path with no Python source, <code>findings check</code> on a document that breaks the contract (new in 2.8.0), <code>event verify</code> and <code>status</code> on a broken hash chain, <code>policy check</code> on a refused policy file, <code>attest verify</code> and <code>evidence verify</code> with <code>--allowed-signers</code> on a record whose signature is missing, not accepted or over changed bytes, every validation error</td></tr>
 <tr><td><code>3</code></td><td>usage or internal error</td><td><code>init</code> usage errors, unexpected exceptions</td></tr>
@@ -341,8 +342,10 @@ remaining stages when a stage fails with a blocking hint.</p>
 one test named <code>CONTROLE</code> that proves the file can fail. In this repository one test skips by
 design (the emitted copy is covered by the next test); the harness source tree, which has no
 <code>marketplace.json</code>, skips the two tests that need it. CI runs the suite,
-<code>hpp doctor</code> and <code>hpp benchmark -k 3</code> on Linux, macOS and Windows across Python 3.10 to 3.13,
-with read-only permissions and no step allowed to fail silently.</p>
+<code>hpp doctor</code> and <code>hpp benchmark -k 3</code> on Linux, macOS and Windows across Python 3.10 to 3.13, and
+a <code>lint</code> job runs <code>ruff check hpp tests scripts</code> against the rule set in <code>pyproject.toml</code>, with
+ruff installed from a hash-pinned requirements file; every job has read-only permissions and no
+step is allowed to fail silently.</p>
 <pre><code class="language-bash">python -m pytest tests -q
 python -m hpp doctor
 python -m hpp benchmark -k 3</code></pre>

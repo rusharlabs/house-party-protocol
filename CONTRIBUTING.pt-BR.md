@@ -9,6 +9,10 @@ Isso define o jeito de contribuir: você edita o módulo emitido nesta árvore e
 as ferramentas que viajam ao lado dele; os mantenedores incorporam a mudança na fonte, re-emitem
 o módulo, e os checksums são regenerados na emissão.
 
+Quem revisa e faz merge de um pull request, como um desacordo se resolve e como uma release é
+feita estão no [GOVERNANCE.pt-BR.md](GOVERNANCE.pt-BR.md). Para onde o trabalho vai, e o que o
+projeto não vai fazer, está no [ROADMAP.pt-BR.md](ROADMAP.pt-BR.md).
+
 ## Regras que não têm exceção
 
 1. **Nenhum nome de cliente, e-mail pessoal, caminho de máquina, porta interna ou credencial.**
@@ -31,13 +35,13 @@ o módulo, e os checksums são regenerados na emissão.
 
 ```bash
 # 1. verify the module you are about to touch -- expect "status": "ok", exit 0
-python installers/kit-forge-1.5.1/kit_doctor.py verify frameworks/operator-kit-1.8.0
+python installers/kit-forge-1.5.2/kit_doctor.py verify frameworks/operator-kit-1.8.1
 
 # 2. edit the files INSIDE the emitted module (open an issue first if the change is large)
 
 # 3. prove it with what ships in this tree
-python installers/kit-forge-1.5.1/kit_doctor.py verify frameworks/operator-kit-1.8.0
-python installers/kit-forge-1.5.1/tools/skill_lint.py --all frameworks/operator-kit-1.8.0/skills --run-proofs --json skill-lint.json
+python installers/kit-forge-1.5.2/kit_doctor.py verify frameworks/operator-kit-1.8.1
+python installers/kit-forge-1.5.2/tools/skill_lint.py --all frameworks/operator-kit-1.8.1/skills --run-proofs --json skill-lint.json
 python -m hpp doctor
 python -m hpp benchmark -k 3
 python -m pytest tests -q
@@ -50,7 +54,7 @@ Em ordem: verifique o módulo que vai tocar (espere `"status": "ok"`, exit 0); e
 **dentro** do módulo emitido (abra uma issue antes se a mudança for grande); prove com o que viaja
 nesta árvore; abra o pull request contra `main` sem tocar `CHECKSUMS.txt`, o `.zip` do módulo nem
 a versão dele — os três são regenerados pela forja quando a mudança é emitida. Troque
-`frameworks/operator-kit-1.8.0` pelo módulo que você mudou; o layout é
+`frameworks/operator-kit-1.8.1` pelo módulo que você mudou; o layout é
 `<area>/<módulo>-<versão>/`, e o `marketplace.json` lista todos.
 
 O que cada comando do passo 3 diz:
@@ -69,7 +73,11 @@ O que cada comando do passo 3 diz:
   relatório JSON é evidência para o texto do pull request; não o commite.
 - **`python -m hpp doctor`** tem de imprimir `HPP doctor: ok`, e **`python -m hpp benchmark -k 3`**
   tem de terminar em `gate=PASS`. **`python -m pytest tests -q`** roda a suíte do harness (cerca de
-  um minuto); tudo tem de passar.
+  um minuto). Com um arquivo de dentro de um módulo alterado, os testes que conferem o
+  `CHECKSUMS.txt` desse módulo falham — direto, ou pelo `hpp init`, que recusa um módulo cujos
+  arquivos não batem — e cada falha nomeia o seu arquivo (`mismatch: <caminho>`); todo o resto tem
+  de passar. Os jobs de pytest do CI ficam vermelhos pelo mesmo motivo até um mantenedor reemitir o
+  módulo; os jobs de self-test dos módulos têm de ficar verdes.
 
 ## O que o pull request carrega
 
@@ -137,6 +145,28 @@ os mesmos títulos, na mesma ordem — tradução muda palavras, não estrutura)
 diferentes (comando é comando em qualquer língua) e qualquer `.pt-BR.md` dentro da camada de
 agente. `NOTICE`, `CITATION.cff` e `LICENSE` são instrumentos legais e de citação e ficam só em
 inglês: traduzir criaria ambiguidade sobre qual versão vale.
+
+## Estilo de código
+
+- **O Python é checado pelo ruff com o conjunto de regras do `pyproject.toml`, no CI.** A tabela
+  `[tool.ruff]` mira o Python 3.10 e seleciona o pyflakes (`F`) e os `E4`, `E7` e `E9` do
+  pycodestyle; o job `lint` do `.github/workflows/ci.yml` roda `ruff check hpp tests scripts` com o
+  ruff fixado por hash em `.github/requirements/lint.txt`, e qualquer achado reprova esse job. O
+  conjunto é pequeno de propósito, para ficar em zero: fora dele, siga a PEP 8 e o estilo do arquivo
+  que você está editando. O CI também compila todo arquivo com avisos tratados como erro
+  (`python -X dev -W error -m compileall -q -f hpp tests scripts`).
+- **Shell segue as regras do `scripts/shell_portability.py`:** todo `.sh` distribuído tem de rodar
+  num Mac de fábrica, sob bash 3.2 com as ferramentas BSD — sem arrays associativos, `mapfile`,
+  `${var,,}`, `sed -i` sem sufixo, `timeout`, `sha256sum` nem `python` a seco, entre as regras
+  listadas naquele arquivo com a forma portável de cada uma. Uma linha que precisa furar uma regra
+  carrega `# portable: <motivo>`; uma dispensa sem motivo não conta. Esta é imposta: o
+  `tests/test_shell_portability.py` mantém todo script distribuído com zero achados, e o CI roda os
+  scripts dos módulos sob `/bin/bash` 3.2 num runner macOS.
+
+```bash
+ruff check hpp tests scripts
+python scripts/shell_portability.py
+```
 
 ## Commits e licença
 

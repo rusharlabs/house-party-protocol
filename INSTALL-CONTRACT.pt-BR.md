@@ -8,12 +8,17 @@
 ## Princípio
 
 ```
-INSTALAR UM KIT NUNCA É UMA SURPRESA.
-O operador vê o PLANO antes de qualquer escrita acontecer, sabe se o projeto-alvo
-é NOVO ou JÁ TEM CONFIG, e só uma segunda invocação explícita (--apply) age.
-Nenhum instalador deste marketplace bloqueia esperando input() de terminal —
-o "sim" do humano é a re-invocação com --apply, não um prompt.
+INSTALLING A KIT IS NEVER A SURPRISE.
+The operator sees the PLAN before any write happens, knows whether the target project
+is NEW or ALREADY HAS CONFIG, and only a second, explicit invocation (--apply) acts.
+No installer in this marketplace blocks waiting for terminal input() —
+the human's "yes" is the re-invocation with --apply, not a prompt.
 ```
+
+(Instalar um kit nunca é uma surpresa. O operador vê o PLANO antes de qualquer escrita
+acontecer, sabe se o projeto-alvo é NOVO ou JÁ TEM CONFIG, e só uma segunda invocação explícita
+(`--apply`) age. Nenhum instalador deste marketplace bloqueia esperando `input()` de terminal —
+o "sim" do humano é a re-invocação com `--apply`, não um prompt.)
 
 Todo kit deste marketplace que tem passos de instalação (cópia de arquivo, profile,
 wiring de hooks/statusLine) é instalado pelo MESMO motor (`kit_doctor.py install`),
@@ -53,14 +58,20 @@ Lê `questions:` do `kit.install.yaml`. Sem `--answers`: usa os `default` de cad
 
 ```
 $ python kit_doctor.py install <kit_dir> --target <project_dir>
-   → roda os 6 estágios em MODO PLANO (nenhuma escrita real acontece)
-   → imprime o plano completo (JSON) e SAI COM EXIT 0
-   → o humano lê o plano (na conversa, se for um agente operando)
+   → runs the 6 stages in PLAN MODE (no real write happens)
+   → prints the full plan (JSON) and EXITS 0 (1 if the smoke or the profile stage failed)
+   → the human reads the plan (in the conversation, if an agent is operating)
 
 $ python kit_doctor.py install <kit_dir> --target <project_dir> --apply
-   → roda os 6 estágios de verdade, aplicando profile/registrando install
-   → wire-suggest continua NUNCA escrevendo (gate humano é sempre manual)
+   → runs the 6 stages for real, applying the profile and registering the install
+   → wire-suggest still NEVER writes (the human gate is always manual)
 ```
+
+(Primeira invocação: roda os 6 estágios em MODO PLANO — nenhuma escrita real acontece —,
+imprime o plano completo em JSON e SAI COM EXIT 0 (1 se o estágio `smoke` ou o `profile`
+falhou); o humano lê o plano, na conversa se for um agente operando. Segunda invocação, com
+`--apply`: roda os 6 estágios de verdade, aplicando o profile e registrando o install; o
+`wire-suggest` continua NUNCA escrevendo — o gate humano é sempre manual.)
 
 Não existe (e não deve existir) um `input()` bloqueante em lugar nenhum deste
 mecanismo — o operador real deste ecossistema é frequentemente um agente atuando
@@ -70,33 +81,45 @@ O "Confirm" é a dupla invocação (plano, depois `--apply`), auditável e repro
 ## Schema de `install/kit.install.yaml`
 
 ```yaml
-kit: <nome-do-kit>
+kit: <kit-name>
 requires:
-  python: ">=3.9"          # opcional, default ">=3.8"
-  pyyaml: true              # opcional, default false
-  external_services: []     # ex.: supabase-pack declara [{name: Supabase, via: MCP, credenciais: "URL + anon key"}]
-                             # REGRA DURA: nunca declarar ANTHROPIC_API_KEY aqui — a autenticação do modelo é do host, nunca do kit
-questions:                  # opcional — consumido pelo estágio `configure` E pelo modo --interview de wizards
-  - id: <identificador>
-    prompt: "<pergunta em pt-BR>"
+  python: ">=3.9"          # optional, default ">=3.8"
+  pyyaml: true              # optional, default false
+  external_services: []     # e.g. the supabase-pack declares [{name: Supabase, via: MCP, credenciais: "URL + anon key"}]
+                             # HARD RULE: never declare ANTHROPIC_API_KEY here — model authentication belongs to the host, never to the kit
+questions:                  # optional — consumed by the `configure` stage AND by the --interview mode of wizards
+  - id: <identifier>
+    prompt: "<the question>"
     type: choice|bool|string
-    options: [...]           # se type: choice
-    default: <valor>
-verification:               # comandos de aceite pós-install (cada um deve ser executável e sair 0)
-  - "python scripts/algo.py --self-test"
+    options: [...]           # if type: choice
+    default: <value>
+verification:               # post-install acceptance commands (each must be executable and exit 0)
+  - "python scripts/<script>.py --self-test"
 hosts:
-  claude-code:               # host nativo de plugin — ver seção "Seam de host" abaixo
-    plugin: true|false        # tem .claude-plugin/plugin.json?
-    wiring_spec: install/wiring-spec.yaml   # se houver wiring de hooks/statusLine
-    manual_gates: [statusLine]              # o que NUNCA pode ser auto-armado (sempre gate humano)
-  codex:                     # host por cópia explícita, sem ativação automática de hooks
+  claude-code:               # native plugin host — see the "Host seam" section below
+    plugin: true|false        # does .claude-plugin/plugin.json exist?
+    wiring_spec: install/wiring-spec.yaml   # if there is hooks/statusLine wiring
+    manual_gates: [statusLine]              # what must NEVER be auto-armed (always a human gate)
+  codex:                     # host installed by explicit copy, with no automatic activation of hooks
     plugin: false
     agents: AGENTS.md
     skills_path: .agents/skills
-    runtime_path: .agents/hpp/<nome-do-kit>
+    runtime_path: .agents/hpp/<kit-name>
     manual_gates: [hooks]
 docs: README.md
 ```
+
+Lendo o bloco: `requires.python` é opcional (default `">=3.8"`); `requires.pyyaml` é opcional
+(default `false`); `requires.external_services` nomeia cada serviço externo (ex.: o supabase-pack
+declara `[{name: Supabase, via: MCP, credenciais: "URL + anon key"}]` — `credenciais` é a chave
+que o manifesto dele usa de fato) — REGRA DURA: nunca declarar `ANTHROPIC_API_KEY` aqui, a
+autenticação do modelo é do host, nunca do kit; `questions` é opcional e é consumido pelo
+estágio `configure` E pelo modo `--interview` de wizards, com `options` valendo quando
+`type: choice`; `verification` lista comandos de aceite pós-install, cada um executável e
+saindo 0; em `hosts`, `claude-code` é o host nativo de plugin (ver "Seam de host" abaixo) —
+`plugin` diz se existe `.claude-plugin/plugin.json`, `wiring_spec` aponta o wiring de
+hooks/statusLine se houver, e `manual_gates` lista o que NUNCA pode ser auto-armado (sempre gate
+humano); `codex` é o host por cópia explícita, sem ativação automática de hooks.
 
 ## Schema de perguntas (`questions:`)
 
@@ -105,7 +128,7 @@ e pelo modo `--interview` de wizards standalone (ex. `agent-framework-wizard/wiz
 Isso garante que "responder perguntas" tem UM formato só, não dois.
 
 ```json
-{"id": "lane_mode", "prompt": "Projeto roda multi-sessão (lanes) ou solo?", "type": "choice", "options": ["solo", "lanes"], "default": "solo"}
+{"id": "lane_mode", "prompt": "Does the project run multi-session (lanes) or solo?", "type": "choice", "options": ["solo", "lanes"], "default": "solo"}
 ```
 
 ## Seam de host (Claude Code + Codex CLI)
@@ -145,7 +168,7 @@ Claude Code e ficam declarados sob `hosts.claude-code`, honestamente.
 | Exit | Significado |
 |---|---|
 | 0 | plano impresso (modo padrão) OU aplicado com sucesso (`--apply`) |
-| 1 | algum estágio `smoke` falhou |
+| 1 | o estágio `smoke` falhou, ou o estágio `profile` falhou (a cópia do host Codex) |
 | 3 | erro de uso (kit_dir/target ausente) |
 
 ## Checklist antes de considerar um kit "instalável de verdade"

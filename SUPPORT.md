@@ -22,7 +22,7 @@ It prints the link to the form with the title filled in and, below it, the repor
 
 ## Propose an idea
 
-For a capability, module or contract the harness should have, open the [idea form](https://github.com/rusharlabs/house-party-protocol/issues/new?template=idea.yml). It asks for the failure the idea removes, what the harness would do differently, and the command or test that would prove it, with the negative case that would show it refusing. An idea also has to fit the [honest limits](README.md#honest-limits), or say which one it would change and why.
+For a capability, module or contract the harness should have, open the [idea form](https://github.com/rusharlabs/house-party-protocol/issues/new?template=idea.yml). It asks for the failure the idea removes, what the harness would do differently, and the command or test that would prove it, with the negative case that would show it refusing. An idea also has to fit the [honest limits](README.md#honest-limits), or say which one it would change and why. What is already planned, and what the project will not do, is in the [roadmap](ROADMAP.md).
 
 ## Report a vulnerability
 

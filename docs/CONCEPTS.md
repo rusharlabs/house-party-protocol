@@ -38,7 +38,10 @@ components (skills, hooks, commands, agents, rules, templates, scripts) and decl
 host.
 
 **Is not:** a plugin in the Claude Code sense only. The same module is a plugin on Claude Code
-and a verified copy on Codex CLI. A module is also not a dependency of another by default: today
+and a verified copy on Codex CLI; seven modules are also Codex CLI plugins
+(`codex plugin marketplace add rusharlabs/house-party-protocol`, then
+`codex plugin add <module>@house-party-protocol`), and such a plugin registers the module's skills
+only. A module is also not a dependency of another by default: today
 every `requires` list in the manifest is empty; `integrates_with` is optional composition.
 
 **Verify:** `python -m hpp graph --view capability --format json` shows `provides`,
@@ -643,8 +646,8 @@ same three with `--mode audit` print the same verdicts and exit 0.
 `0` ok, `1` warn or manual gate, `2` block, `3` usage or internal error.
 
 **Is not:** a suggestion. The manifest is rejected if it declares anything else. In `enforce`
-mode, `BLOCK` exits 2 and `MANUAL` exits 1; in `audit` mode the verdict is printed and the exit
-is always 0.
+mode, `BLOCK` exits 2 and `MANUAL` exits 1; in `audit` mode the verdict is printed and exits 0.
+A refused project policy file exits 2 in either mode, with no verdict printed.
 
 **Verify:** `python -m hpp policy check --mode enforce --command "rm -rf src"` exits 2;
 `--command "git push origin feature"` exits 1; `--mode audit` with either exits 0.

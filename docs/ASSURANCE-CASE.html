@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>House Party Protocol — Assurance case</title>
+  <meta name="description" content="Why the security requirements are met: the threat model, the trust boundaries, the design principles applied and the code that counters each common weakness.">
+  <link rel="alternate" hreflang="en" href="ASSURANCE-CASE.html">
+  <link rel="alternate" hreflang="pt-BR" href="ASSURANCE-CASE.pt-BR.html">
+  <style>
+    :root{--hpp-black: #000000;--hpp-ink: #0F1113;--hpp-paper: #F4F1EB;--hpp-signal: #FF6A00;--line:rgba(15,17,19,.18);--surface:rgba(15,17,19,.04);--muted:rgba(15,17,19,.72);--max:1120px}
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;background:var(--hpp-paper);color:var(--hpp-ink);font:16px/1.65 Inter,"Segoe UI",Arial,sans-serif}
+    a{color:var(--hpp-ink);text-decoration:underline;text-decoration-color:var(--hpp-signal);text-decoration-thickness:2px;text-underline-offset:3px}
+    a:hover{color:var(--hpp-signal)}
+    a:focus-visible{outline:4px solid var(--hpp-signal);outline-offset:3px}
+    .wrap{width:min(var(--max),calc(100% - 40px));margin:auto}
+    .lang{background:var(--hpp-black);color:var(--hpp-paper);font-size:.9rem;padding:10px 0}
+    .lang a{color:var(--hpp-paper)}
+    .lang a[aria-current]{text-decoration:none;font-weight:700}
+    .hero{background:var(--hpp-ink);color:var(--hpp-paper);padding:44px 0 50px}
+    .hero img{width:min(720px,100%);display:block}
+    .hero h1{font:800 clamp(2.2rem,6vw,5rem)/.95 Sora,Inter,"Segoe UI",sans-serif;letter-spacing:-.02em;margin:.35em 0}
+    .hero p{max-width:760px;font-size:1.15rem;color:rgba(244,241,235,.82)}
+    .hero .eyebrow{color:var(--hpp-paper);border-color:var(--hpp-signal)}
+    .signal{color:var(--hpp-signal)}
+    .eyebrow,.mono,code,pre,.gate,.label{font-family:"JetBrains Mono","Cascadia Code",Consolas,monospace}
+    .eyebrow{display:inline-block;letter-spacing:.13em;text-transform:uppercase;font-size:.78rem;border-left:4px solid var(--hpp-signal);padding-left:.6em;margin:0 0 .6em}
+    nav{position:sticky;top:0;z-index:2;background:rgba(244,241,235,.96);border-bottom:1px solid var(--line);backdrop-filter:blur(8px)}
+    nav .wrap{display:flex;gap:20px;overflow:auto;padding:12px 0}
+    nav a{white-space:nowrap;text-decoration:none;font-weight:700}
+    nav a:hover{text-decoration:underline;text-decoration-color:var(--hpp-signal)}
+    section{padding:64px 0;border-bottom:1px solid var(--line)}
+    h2{font:800 clamp(1.7rem,3vw,2.6rem)/1.1 Sora,Inter,"Segoe UI",sans-serif;letter-spacing:-.01em;margin:0 0 .6em}
+    h3{margin:0 0 .4em;font-size:1.1rem}
+    .lead{max-width:780px;color:var(--muted)}
+    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:20px}
+    .card{grid-column:span 4;border:1px solid var(--line);border-radius:16px;padding:22px;background:var(--surface)}
+    .card.wide{grid-column:span 6}
+    .card.full{grid-column:1/-1}
+    pre{background:var(--hpp-ink);color:var(--hpp-paper);padding:20px;border-radius:12px;overflow:auto;border-left:6px solid var(--hpp-signal);font-size:.92rem;line-height:1.5}
+    code{font-size:.94em}
+    p code,li code,td code{background:var(--surface);padding:.08em .35em;border-radius:5px}
+    pre code{background:none;padding:0}
+    table{width:100%;border-collapse:collapse;background:var(--surface);margin:1em 0}
+    th,td{text-align:left;padding:12px;border-bottom:1px solid var(--line);vertical-align:top}
+    th{background:rgba(15,17,19,.08);font-weight:700}
+    .gate{display:inline-block;border-radius:999px;padding:.15rem .7rem;font-weight:700;font-size:.8rem;margin-bottom:.6em}
+    .gate.allow{background:var(--hpp-signal);color:var(--hpp-ink)}
+    .gate.manual{border:2px solid var(--hpp-ink);color:var(--hpp-ink)}
+    .gate.block{background:var(--hpp-ink);color:var(--hpp-paper)}
+    .label{font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+    .measured{border-left:4px solid var(--hpp-signal);padding-left:1em;color:var(--muted);font-size:.95rem}
+    ul,ol{padding-left:1.3em}
+    li{margin:.25em 0}
+    footer{padding:48px 0;background:var(--hpp-black);color:var(--hpp-paper)}
+    footer a{color:var(--hpp-paper)}
+    footer .five{letter-spacing:.2em;font-size:.8rem;color:rgba(244,241,235,.72)}
+    @media(max-width:760px){.card,.card.wide{grid-column:1/-1}.wrap{width:min(100% - 32px,var(--max))}th,td{font-size:.88rem;padding:8px}.hero{padding-top:28px}section{padding:44px 0}}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+    h3[id],h4[id],h5[id]{scroll-margin-top:64px}
+    ul.tasks{list-style:none;padding-left:.2em}
+    blockquote{margin:1em 0}
+  </style>
+</head>
+<body>
+  <div class="lang"><div class="wrap"><a href="ASSURANCE-CASE.html" aria-current="page" hreflang="en">English</a> · <a href="ASSURANCE-CASE.pt-BR.html" hreflang="pt-BR" lang="pt-BR">Português</a></div></div>
+  <header class="hero">
+    <div class="wrap">
+      <img src="assets/hpp-logo-header.png" alt="House Party Protocol">
+      <p class="eyebrow">Architecture · ASSURANCE-CASE.md</p>
+      <h1>Assurance case</h1>
+    </div>
+  </header>
+  <nav aria-label="Chapters"><div class="wrap"><a href="#the-claim">The claim</a><a href="#threat-model">Threat model</a><a href="#trust-boundaries">Trust boundaries</a><a href="#secure-design-principles-applied">Secure design principles applied</a><a href="#common-weaknesses-and-what-counters-them">Common weaknesses and what counters them</a><a href="#what-this-case-does-not-claim">What this case does not claim</a><a href="#how-to-check-this-case">How to check this case</a></div></nav>
+  <main>
+
+    <section><div class="wrap">
+<p>This page argues why the project's security requirements are met: what is being protected, from
+whom, where the trust boundaries are, which design principles are applied, which common weaknesses
+are countered and by which code. Every counter names the file that implements it. What the design
+does not claim is listed at the end, next to the commands that check the rest. Security reports go
+through <a href="https://github.com/rusharlabs/house-party-protocol/blob/main/SECURITY.md">SECURITY.md</a>.</p>
+<p>Module files are cited at their path in the distribution, <code>&lt;area&gt;/&lt;module&gt;-&lt;version&gt;/</code>, as
+<code>marketplace.json</code> lists them.</p>
+    </div></section>
+
+    <section id="the-claim"><div class="wrap">
+      <p class="eyebrow">01</p>
+      <h2>The claim</h2>
+<p>Used as documented, House Party Protocol runs nothing its operator did not ask for, sends nothing
+off the machine unless a person runs a command that sends it, stores no credential, and delivers
+the bytes its release workflow built.</p>
+    </div></section>
+
+    <section id="threat-model"><div class="wrap">
+      <p class="eyebrow">02</p>
+      <h2>Threat model</h2>
+<p><strong>What is protected</strong></p>
+<ul>
+<li>the operator's repository and working tree, which the agent and the modules act on;</li>
+<li>credentials in the operator's environment (model keys, tokens);</li>
+<li>the integrity of evidence records, attestations and verdicts, which decide what counts as done;</li>
+<li>the release artifacts: the wheel, the sdist and the module directories.</li>
+</ul>
+<p><strong>Who the threats come from</strong></p>
+<ul>
+<li>a model or an agent that proposes a destructive command, or claims work is done when it is not;</li>
+<li>a web page open in the operator's browser that tries to reach a local server;</li>
+<li>a network attacker between the example adapter and its endpoint, or an endpoint that redirects;</li>
+<li>a tampered download, or a module changed after it was emitted;</li>
+<li>a compromised third-party action or package in CI;</li>
+<li>a contribution that carries malicious content.</li>
+</ul>
+<p><strong>Out of scope</strong></p>
+<ul>
+<li>an attacker who already runs code under the operator's own account;</li>
+<li>the agent host itself (Claude Code, Codex CLI) and the model provider behind it;</li>
+<li>what a person decides to run by hand.</li>
+</ul>
+    </div></section>
+
+    <section id="trust-boundaries"><div class="wrap">
+      <p class="eyebrow">03</p>
+      <h2>Trust boundaries</h2>
+<h3 id="the-users-machine">The user's machine</h3>
+<p>HPP is a command-line tool that runs as the operator, on demand. The <code>hpp</code> package starts no
+daemon, server or scheduler and has no remote telemetry (<a href="MANIFESTO.html">MANIFESTO.md</a>, "What the
+project refuses to do"). It imports only the Python standard library (<code>pyproject.toml</code>:
+<code>dependencies = []</code>; enforced by <code>tests/test_stdlib_only.py</code>). Every verdict is re-derived from
+files on disk.</p>
+<h3 id="the-agent-host">The agent host</h3>
+<p>The host runs the model and its tools; HPP provides hooks and commands around it, and treats
+whatever the model says as a claim to check, not as a fact:</p>
+<ul>
+<li><code>hpp init --apply</code> writes one file, <code>.hpp/profile.json</code>, and only reads the host's
+<code>settings.json</code> (<code>hpp/wizard.py</code>). Wiring hooks into a host stays a human action.</li>
+<li>The policy classifier (<code>hpp/policy.py</code>) returns <code>ALLOW</code>, <code>MANUAL</code> or <code>BLOCK</code>; it never executes
+the command, and a user policy can only harden a built-in verdict, never soften it.</li>
+<li>A verdict from the builder's own lane or model family is refused, and the done gate re-runs the
+criterion commands instead of trusting a completion message (<a href="MANIFESTO.html">MANIFESTO.md</a>).</li>
+<li>Module hooks are WARN-only by default (<a href="https://github.com/rusharlabs/house-party-protocol/blob/main/SECURITY.md">SECURITY.md</a>); a hook never brings the
+host down.</li>
+</ul>
+<h3 id="the-modules">The modules</h3>
+<p>A module is code the operator installs. Its integrity is checked before it runs:</p>
+<ul>
+<li>every module directory ships <code>CHECKSUMS.txt</code> (sha256 per file), and
+<code>installers/kit-forge-1.5.2/kit_doctor.py verify &lt;module&gt;</code> compares every file against it;</li>
+<li><code>kit_doctor.py install</code> plans first: a plan run executes every module self-test and writes
+nothing to the target project, and the install applies only on a second, explicit invocation
+(<code>--apply</code>), which copies the module's <code>*.example.*</code> files into the target before its own
+self-test stage (<code>run_install</code> in <code>kit_doctor.py</code>);</li>
+<li>before a module is emitted, an IP/PII linter refuses credentials, personal data and machine paths
+(<a href="https://github.com/rusharlabs/house-party-protocol/blob/main/CONTRIBUTING.md">CONTRIBUTING.md</a>).</li>
+</ul>
+<h3 id="the-example-decidepy-endpoint">The example <code>decide.py</code> endpoint</h3>
+<p><code>examples/typed-decisions/decide.py</code> is the one component whose purpose is to send data off the
+machine: it sends the text a person gives it to the endpoint that person declared. It runs only
+when a person runs it, and the policy classifies it <code>MANUAL</code>. Inside that purpose:</p>
+<ul>
+<li>the key is read from the environment at call time and never written anywhere; an error message
+that would contain it has it replaced by <code>&lt;redacted&gt;</code>;</li>
+<li>a key is sent only over <code>https</code>, or to a loopback address;</li>
+<li>a redirect is refused (<code>_NoRedirect</code>), so the <code>Authorization</code> header reaches one host only;</li>
+<li>state that looks like it carries a secret is refused before anything leaves the machine
+(<code>digest</code> in <code>hpp/decision.py</code>);</li>
+<li>one attempt, a timeout on each socket wait, and a response capped at 1 MiB.</li>
+</ul>
+<h3 id="the-loopback-dashboard">The loopback dashboard</h3>
+<p>The lane-kit's Lane Dashboard (<code>multi-session/lane-kit-1.8.0/scripts/lane_dashboard.py</code>) is a page
+the operator starts and stops. It is the bounded exception the MANIFESTO allows a module:</p>
+<ul>
+<li>it binds loopback only: <code>--host</code> accepts only <code>127.0.0.1</code>, <code>::1</code> or <code>localhost</code> (<code>LOOPBACK</code>),
+and a write is refused unless the server's own address is one of them;</li>
+<li>reads and actions are refused unless the <code>Host</code> header names one of the three loopback names
+with the server's port (<code>_allowed_hosts</code>), which defeats DNS rebinding;</li>
+<li>each run issues its own token (<code>secrets.token_urlsafe(24)</code> in <code>make_server</code>); a write must carry
+it in the <code>X-HPP-Token</code> header, compared with <code>secrets.compare_digest</code>, with an
+<code>application/json</code> body of at most 65,536 bytes;</li>
+<li>the page is served with a Content-Security-Policy of <code>default-src 'none'</code>, <code>connect-src 'self'</code>,
+<code>form-action 'none'</code>, <code>base-uri 'none'</code> and <code>frame-ancestors 'none'</code>, plus
+<code>X-Frame-Options: DENY</code> and <code>Referrer-Policy: no-referrer</code>;</li>
+<li>a <code>GET</code> only reads; every action is the argv of a terminal command listed in <code>ROUTE_COMMANDS</code>,
+and the terminal command does the same thing.</li>
+</ul>
+<h3 id="the-ci-supply-chain">The CI supply chain</h3>
+<p>The workflows under <code>.github/workflows/</code> build and publish what users install:</p>
+<ul>
+<li>every third-party action is pinned to a full commit SHA, with its version as a comment (30 of the
+30 <code>uses:</code> lines across the four workflows on 2026-09-29, counted with
+<code>grep -hE 'uses: [^@]+@[0-9a-f]{40} # v' .github/workflows/*.yml</code> against
+<code>grep -h 'uses:' .github/workflows/*.yml</code>); Dependabot proposes the updates
+(<code>.github/dependabot.yml</code>);</li>
+<li>every <code>pip install</code> uses <code>--require-hashes</code> against the files in <code>.github/requirements/</code>;</li>
+<li>the default token is read-only (<code>permissions: contents: read</code>), and each job that needs more asks
+for it on its own; every checkout sets <code>persist-credentials: false</code>;</li>
+<li>the release attests build provenance for the wheel and the sdist in a job of its own
+(<code>actions/attest-build-provenance</code>), attaches <code>SHA256SUMS</code> and the provenance bundle to the
+release, and publishes to PyPI through trusted publishing — no workflow reads a stored token
+secret.</li>
+</ul>
+    </div></section>
+
+    <section id="secure-design-principles-applied"><div class="wrap">
+      <p class="eyebrow">04</p>
+      <h2>Secure design principles applied</h2>
+<table>
+<thead><tr><th>principle</th><th>where it is applied</th><th>code</th></tr></thead>
+<tbody>
+<tr><td>economy of mechanism</td><td>no runtime dependency, no daemon, no database; every map is a projection of files</td><td><code>pyproject.toml</code>, <code>tests/test_stdlib_only.py</code></td></tr>
+<tr><td>fail-safe defaults</td><td>the dashboard binds loopback by default; a key is refused over plain <code>http</code>; a redirect is refused; <code>hpp init</code> writes nothing without <code>--apply</code></td><td><code>lane_dashboard.py</code>, <code>decide.py</code>, <code>hpp/wizard.py</code></td></tr>
+<tr><td>complete mediation</td><td>every dashboard write passes the loopback, <code>Host</code>, token, content-type and size checks before it runs</td><td><code>DashboardHandler.do_POST</code> in <code>lane_dashboard.py</code></td></tr>
+<tr><td>least privilege</td><td>workflow tokens are read-only by default; the release job asks for <code>contents: write</code> and <code>discussions: write</code>, the attest job for <code>id-token: write</code> and <code>attestations: write</code></td><td><code>.github/workflows/release.yml</code></td></tr>
+<tr><td>separation of privilege</td><td>a maker cannot be its own checker; provenance is signed in a job apart from the build</td><td><code>hpp/attest.py</code>, <code>release.yml</code></td></tr>
+<tr><td>least common mechanism</td><td>each dashboard run issues its own token, never shared with another run</td><td><code>make_server</code> in <code>lane_dashboard.py</code></td></tr>
+<tr><td>open design</td><td>the controls are in the published source; the only secret the harness generates is the dashboard's per-run token</td><td>this page</td></tr>
+<tr><td>psychological acceptability</td><td>every dashboard action is also a terminal command that does exactly the same</td><td><code>ROUTE_COMMANDS</code>, <code>tests/test_lane_dashboard.py</code></td></tr>
+</tbody>
+</table>
+    </div></section>
+
+    <section id="common-weaknesses-and-what-counters-them"><div class="wrap">
+      <p class="eyebrow">05</p>
+      <h2>Common weaknesses and what counters them</h2>
+<table>
+<thead><tr><th>weakness</th><th>counter</th><th>code</th></tr></thead>
+<tbody>
+<tr><td>OS command injection</td><td>commands run as an argv list with <code>shell=False</code>, never through a shell</td><td><code>run_bounded</code> in <code>hpp/_process.py</code>; <code>hpp/evals.py</code></td></tr>
+<tr><td>a secret on a command line or in a record</td><td>a command line that looks like it carries a secret is refused before it runs; secret-like context and state are refused</td><td><code>_carries_secret</code> in <code>hpp/evidence.py</code>; <code>_SECRET_PATTERN</code> in <code>hpp/context.py</code>; <code>digest</code> in <code>hpp/decision.py</code></td></tr>
+<tr><td>DNS rebinding</td><td><code>Host</code> allowlist on every read and action</td><td><code>_host_ok</code> in <code>lane_dashboard.py</code></td></tr>
+<tr><td>cross-site request forgery</td><td>per-run token in a custom header, JSON body only; the handler implements no <code>OPTIONS</code>, so a CORS preflight is never answered</td><td><code>do_POST</code> in <code>lane_dashboard.py</code></td></tr>
+<tr><td>clickjacking</td><td><code>frame-ancestors 'none'</code> and <code>X-Frame-Options: DENY</code></td><td><code>serve_page</code> in <code>lane_dashboard.py</code></td></tr>
+<tr><td>exposure of a local service to the network</td><td>loopback bind; <code>--host</code> limited to loopback names</td><td><code>LOOPBACK</code> in <code>lane_dashboard.py</code></td></tr>
+<tr><td>timing attack on the token</td><td>constant-time comparison</td><td><code>secrets.compare_digest</code> in <code>lane_dashboard.py</code></td></tr>
+<tr><td>credential forwarded on a redirect</td><td>redirects refused</td><td><code>_NoRedirect</code> in <code>decide.py</code></td></tr>
+<tr><td>cleartext transmission of a key</td><td>a key only over <code>https</code> or to loopback</td><td><code>ask</code> in <code>decide.py</code></td></tr>
+<tr><td>improper certificate validation</td><td>HTTPS goes through <code>urllib</code> with Python's default context, which verifies the certificate and the host name; no code turns it off</td><td><code>decide.py</code>; the probes of the health-kit and the operator-kit</td></tr>
+<tr><td>stored credentials</td><td>keys come from the environment at call time; no module contains a credential; PyPI accepts the workflow's identity instead of a token</td><td><code>decide.py</code>, <a href="https://github.com/rusharlabs/house-party-protocol/blob/main/SECURITY.md">SECURITY.md</a>, <code>release.yml</code></td></tr>
+<tr><td>uncontrolled resource consumption</td><td>timeouts that stop the whole process tree; capped response and request bodies</td><td><code>hpp/_process.py</code>, <code>decide.py</code>, <code>lane_dashboard.py</code></td></tr>
+<tr><td>a tampered artifact or module</td><td><code>CHECKSUMS.txt</code> per module, <code>SHA256SUMS</code> and signed build provenance per release</td><td><code>kit_doctor.py</code>, <code>release.yml</code></td></tr>
+<tr><td>an edited evidence record</td><td>the record hashes what it holds and <code>hpp evidence verify</code> re-derives it; given an allowed-signers file, <code>verify</code> refuses a record that is unsigned, signed by someone else or changed after signing</td><td><code>hpp/evidence.py</code>, <code>hpp/signing.py</code></td></tr>
+<tr><td>a compromised CI dependency</td><td>SHA-pinned actions, hash-pinned requirements, read-only default token</td><td><code>.github/workflows/</code>, <code>.github/requirements/</code></td></tr>
+</tbody>
+</table>
+<p>"No code turns it off" was measured when this page was written: no <code>.py</code> file under <code>hpp/</code>,
+<code>examples/</code>, <code>scripts/</code> or the modules contains <code>CERT_NONE</code>, <code>_create_unverified_context</code>,
+<code>check_hostname</code> or <code>verify=False</code>.</p>
+    </div></section>
+
+    <section id="what-this-case-does-not-claim"><div class="wrap">
+      <p class="eyebrow">06</p>
+      <h2>What this case does not claim</h2>
+<ul>
+<li><strong>Hooks warn; they do not stop.</strong> A module hook is WARN-only by default, so a warning does not
+stop an agent. A verdict stops something only when a hook, a CI job or a person calls it.</li>
+<li><strong>The policy classifier is small.</strong> It is an explicit rule set, and it does not catch every
+destructive form of a command.</li>
+<li><strong>Loopback is not isolation from the operator's own account.</strong> Any process running as the same
+user can reach the dashboard and read its page, token included.</li>
+<li><strong>The dashboard allows inline script.</strong> Its CSP carries <code>script-src 'unsafe-inline'</code>, so escaping
+is the defence against markup in repository text: the page escapes that text with its <code>esc</code>
+function before inserting it. This case does not claim that every insertion point was audited.</li>
+<li><strong>A House Session seat is fingerprinted, not sandboxed.</strong> The fingerprint does not see a write
+into a path the repository ignores, nor what a seat does outside its worktree
+(<a href="MANIFESTO.html">MANIFESTO.md</a>).</li>
+<li><strong>Code-owner review is a repository setting.</strong> <code>.github/CODEOWNERS</code> names the maintainer for
+every path; it binds only while branch protection requires a code-owner review.</li>
+<li><strong>The example adapter sends what it is given.</strong> <code>decide.py</code> sends the state text to the endpoint
+the person declared — that is its purpose.</li>
+</ul>
+    </div></section>
+
+    <section id="how-to-check-this-case"><div class="wrap">
+      <p class="eyebrow">07</p>
+      <h2>How to check this case</h2>
+<p>From the root of the repository:</p>
+<pre><code class="language-bash">python -m pytest tests/test_lane_dashboard.py tests/test_decision.py tests/test_evidence.py tests/test_process.py tests/test_stdlib_only.py -q
+python installers/kit-forge-1.5.2/kit_doctor.py verify multi-session/lane-kit-1.8.0
+gh attestation verify &lt;file&gt; --repo rusharlabs/house-party-protocol</code></pre>
+<p>The first command runs the tests that guard the controls above (among them
+<code>test_a_page_on_another_origin_cannot_act</code>, <code>test_the_page_cannot_be_framed</code>,
+<code>test_adapter_refuses_a_redirect_and_the_key_never_reaches_the_second_host</code> and
+<code>test_a_secret_like_command_line_is_refused_before_it_runs</code>); the second proves a module's bytes;
+the third proves where a release file came from. Who maintains this case and how it changes is in
+<a href="GOVERNANCE.html">GOVERNANCE.md</a>.</p>
+    </div></section>
+
+  </main>
+  <footer><div class="wrap">
+    <p class="five">AGENTS · EVIDENCE · MEMORY · PROTOCOL · CONTINUITY</p>
+    <strong>House Party Protocol</strong>
+    <p>Operate coding agents under evidence, not trust.</p>
+    <p><a href="index.html">Documentation</a> · <a href="MANUAL.html">Harness manual</a> · <a href="CATALOG.html">Module catalogue</a> · <a href="https://github.com/rusharlabs/house-party-protocol/blob/main/docs/ASSURANCE-CASE.md">Markdown source</a> · <a href="ASSURANCE-CASE.pt-BR.html" hreflang="pt-BR" lang="pt-BR">Português</a></p>
+  </div></footer>
+</body>
+</html>

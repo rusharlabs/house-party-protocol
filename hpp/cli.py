@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import io
 import json
 import platform
 import sys
@@ -30,18 +31,18 @@ from hpp.graph import build_graph, to_mermaid
 from hpp.hosts import render_host_matrix
 from hpp.install import InstallError, installation_plan
 from hpp.manifest import ManifestError, hook_capability_census, load_manifest, validate_distribution
-from hpp.maps import build_agent_map, build_context_map, build_lane_map, build_monitor_map
+from hpp.maps import build_agent_map, build_context_map, build_lane_map, build_monitor_map, map_graph
 from hpp.policy import assess, exit_for as policy_exit_for, policy_for_workspace
 from hpp.retrieval import exit_for as retrieval_exit_for, run_retrieval_suite
 from hpp.routing import route
 from hpp.state import StateError, append_event, event_path, project, read_events, verify_chain
-from hpp.term import Console
+from hpp.term import Console, write_stdout
 from hpp.wizard import DECISION_ADVISORS, InitUsageError, prepare_options, run_init_command
-from hpp.workgraph import cited_tests, citation_coverage, compile_workgraph, read_junit, spec_execution
+from hpp.workgraph import cited_tests, citation_coverage, compile_workgraph, read_junit, spec_execution, workgraph_graph
 
 
 def _json(value: Any) -> None:
-    print(json.dumps(value, ensure_ascii=False, indent=2, sort_keys=True))
+    write_stdout(json.dumps(value, ensure_ascii=False, indent=2, sort_keys=True) + "\n")
 
 
 def _line(text: str) -> None:
@@ -50,7 +51,14 @@ def _line(text: str) -> None:
     # cp1252 stream (hpp.exe without -X utf8, output piped) the byte was not UTF-8 and read as
     # `�` downstream. Console picks ASCII glyphs from the stream's encoding and rewrites `·` and
     # `—` to `-`, exactly as `hpp init` already degrades.
-    Console(animate=False).write(text)
+    # Why: the line is rendered first and then written by `write_stdout`, so it ends in "\n" on
+    # Windows too; the glyph choice still reads the encoding of the real stdout.
+    class Rendered(io.StringIO):
+        encoding = getattr(sys.stdout, "encoding", None)
+
+    rendered = Rendered()
+    Console(stream=rendered, tier="none", animate=False).write(text)
+    write_stdout(rendered.getvalue())
 
 
 def _manifest(args: argparse.Namespace) -> tuple[dict[str, Any], Path]:
@@ -105,7 +113,7 @@ def _feedback_url(report: dict[str, Any]) -> str:
 def command_doctor(args: argparse.Namespace) -> int:
     manifest, path = _manifest(args)
     if args.matrix:
-        print(render_host_matrix(manifest, "en"), end="")
+        write_stdout(render_host_matrix(manifest, "en"))
         return 0
     distribution = validate_distribution(manifest, path.parent)
     # Why (hook capability census, 2026-09-22): load_manifest already refuses a hook without a declaration, so
@@ -126,13 +134,9 @@ def command_doctor(args: argparse.Namespace) -> int:
             _json({"feedback_url": url, "report": report, "support_url": SUPPORT_PAGE})
         else:
             _line(summary)
-            print()
-            print("Feedback: no network call was made; nothing is sent until you open this link yourself.")
-            print(url)
-            print("Questions, problem reports, ideas and private vulnerability reports:")
-            print(SUPPORT_PAGE)
-            print()
-            print("Paste this report into the form:")
+            write_stdout("\n".join(("", "Feedback: no network call was made; nothing is sent until you open this link yourself.",
+                                    url, "Questions, problem reports, ideas and private vulnerability reports:",
+                                    SUPPORT_PAGE, "", "Paste this report into the form:")) + "\n")
             _json(report)
         return 0
     if args.json:
@@ -146,7 +150,7 @@ def command_graph(args: argparse.Namespace) -> int:
     manifest, _ = _manifest(args)
     graph = build_graph(manifest, args.view)
     if args.format == "mermaid":
-        print(to_mermaid(graph), end="")
+        write_stdout(to_mermaid(graph))
     else:
         _json(graph)
     return 0
@@ -320,6 +324,10 @@ def command_work(args: argparse.Namespace) -> int:
     compiled = compile_workgraph(_read_json(args.spec, dict))
     if args.work_command == "coverage":
         return _work_coverage(args, compiled)
+    if args.format == "mermaid":
+        graph = workgraph_graph(compiled)
+        write_stdout(to_mermaid(graph, graph["clusters"]))
+        return 0
     if args.work_command == "waves":
         _json({
             "schema": "hpp.workgraph-waves/v1",
@@ -538,7 +546,10 @@ def command_map(args: argparse.Namespace) -> int:
         manifest, _ = _manifest(args)
         events = _read_json(args.events, list) if args.events else None
         projection = build_agent_map(manifest, events)
-    _json(projection)
+    if args.format == "mermaid":
+        write_stdout(to_mermaid(map_graph(projection)))
+    else:
+        _json(projection)
     return 0
 
 
@@ -551,8 +562,13 @@ def self_test() -> int:
     report = run_suite(packaged_suite(), 3, "both")
     if not report["gate"]["passed"]:
         raise ValueError("self-test benchmark gate failed")
-    print("hpp self-test OK")
+    write_stdout("hpp self-test OK\n")
     return 0
+
+
+def _format_option(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--format", default="json", choices=["json", "mermaid"],
+                        help="json (default) or a Mermaid flowchart of the same nodes and edges")
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -606,7 +622,7 @@ def build_parser() -> argparse.ArgumentParser:
     init.add_argument("--no-animation", dest="no_animation", action="store_true", help="plain output, no cursor tricks")
     init.add_argument("--no-benchmark", dest="no_benchmark", action="store_true",
                       help="skip the benchmark control in smoke (reported as not verified)")
-    init.add_argument("--marketplace", help="marketplace slug used in the Claude Code wire block")
+    init.add_argument("--marketplace", help="marketplace slug used in the Claude Code and Codex CLI wire blocks")
     init.add_argument("--json", action="store_true", help="machine-readable report, no animation, no colour")
     init.set_defaults(func=command_init)
 
@@ -681,9 +697,11 @@ def build_parser() -> argparse.ArgumentParser:
     work_sub = work.add_subparsers(dest="work_command", required=True)
     plan = work_sub.add_parser("plan")
     plan.add_argument("spec")
+    _format_option(plan)
     plan.set_defaults(func=command_work)
     waves = work_sub.add_parser("waves")
     waves.add_argument("spec")
+    _format_option(waves)
     waves.set_defaults(func=command_work)
     coverage = work_sub.add_parser(
         "coverage", help="which acceptance criteria a test cites and, with --junit, which a test actually ran")
@@ -851,10 +869,12 @@ def build_parser() -> argparse.ArgumentParser:
                       help="explicit Unix timestamp used to derive liveness")
     lane.add_argument("--suspect-after", type=int, default=300)
     lane.add_argument("--dead-after", type=int, default=900)
+    _format_option(lane)
     lane.set_defaults(func=command_map)
     agent = map_sub.add_parser("agent")
     agent.add_argument("--manifest")
     agent.add_argument("--events")
+    _format_option(agent)
     agent.set_defaults(func=command_map)
     monitor = map_sub.add_parser("monitor")
     monitor.add_argument("source")
@@ -862,10 +882,12 @@ def build_parser() -> argparse.ArgumentParser:
                          help="explicit Unix timestamp; avoids ambient-clock projections")
     monitor.add_argument("--skew-tolerance", type=int, default=5,
                          help="seconds a signal may sit after --now before it is reported as skew")
+    _format_option(monitor)
     monitor.set_defaults(func=command_map)
     context_map = map_sub.add_parser("context")
     context_map.add_argument("source")
     context_map.add_argument("--budget", required=True, type=int)
+    _format_option(context_map)
     context_map.set_defaults(func=command_map)
     return parser
 

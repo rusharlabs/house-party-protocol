@@ -1,0 +1,77 @@
+// wiring.settings.jsonc — paste block (HUMAN GATE — the classifier blocks auto-edits of
+// settings/hooks). ADDITIVE: merge into the "hooks" arrays that already exist in
+// settings.json/settings.local.json — NEVER replace the whole file.
+//
+// This is the COPY-install path: there is no ${CLAUDE_PLUGIN_ROOT} here, so the paths assume the
+// kit was copied to lane-kit/ at the project root — change the folder if you copied it elsewhere.
+// Launcher: NEVER a bare "python" or "py" — a stock Mac has only python3. Every command goes
+// through hooks/pyrun.sh (the shim the plugin uses too), which runs the project's .venv Python
+// when there is one, otherwise python3 or python as the system names it.
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          { "type": "command", "command": "bash \"lane-kit/hooks/pyrun.sh\" \"lane-kit/hooks/lane_register.py\"", "timeout": 30 }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          { "type": "command", "command": "bash \"lane-kit/hooks/pyrun.sh\" \"lane-kit/hooks/lane_git_guard.py\"", "timeout": 30 }
+        ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          { "type": "command", "command": "bash \"lane-kit/hooks/pyrun.sh\" \"lane-kit/hooks/lane_territory_guard.py\"", "timeout": 30 }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "hooks": [
+          { "type": "command", "command": "bash \"lane-kit/hooks/pyrun.sh\" \"lane-kit/hooks/lane_register.py\" --heartbeat", "timeout": 30 }
+        ]
+      }
+    ]
+  }
+}
+
+// Post-wiring checklist (actually run it, do not assume it works):
+//   python lane-kit/hooks/_lane_io.py --self-test
+//   python lane-kit/hooks/lane_register.py --self-test
+//   python lane-kit/hooks/lane_git_guard.py --self-test
+//   python lane-kit/hooks/lane_territory_guard.py --self-test
+//
+// Config: copy templates/lanes.example.yaml -> .claude/lanes/lanes.yaml (THAT file IS
+// tracked in git — it is configuration, unlike what comes below).
+//
+// Recommended .gitignore (runtime state, never versioned):
+//   .claude/lanes/registry.json
+//   .claude/lanes/board.jsonl
+//   .claude/lanes/.lock/
+//   .claude/lanes/.registry.lock/
+//   .claude/lanes/mailbox/         <- messages between lanes, verdict messages, and .announced/ (per lane)
+//   .claude/lanes/rescue/          <- rescue patches: FULL copies of uncommitted work, untracked included
+//   .claude/lanes/effects.json     <- effect ledger (1.3.0)
+//   .claude/lanes/.effects.lock/
+//   .claude/lanes/sessions/        <- prompts, run records and LOGS of the sessions the dashboard started
+//   .claude/lanes/waves/
+//   .claude/lanes/decision-briefs/
+//   .claude/lanes/.dashboard-*.lock/
+//
+// Lane identity: each session names its lane in the environment it is started with —
+// CLAUDE_LANE_ID (and CLAUDE_LANE_ROLE, CLAUDE_LANE_MODEL). Two sessions without it are one
+// lane, "solo", and the guards cannot see each other.
+//
+// Round-trip proof (registers a lane and confirms it in the registry):
+//   echo '{"hook_event_name":"SessionStart","session_id":"proof"}' \
+//     | CLAUDE_LANE_ID=exec-a python lane-kit/hooks/lane_register.py
+//   python lane-kit/hooks/_lane_io.py status   # must list exec-a
+//
+// git-guard rollout: ALWAYS start with git_guard.mode: warn for >= 1 week and zero real
+// false positives before considering mode: block in lanes.yaml (never through wiring/settings
+// again — only the config). Validate with: bash evals/collision-git-guard.sh (3 green rounds).

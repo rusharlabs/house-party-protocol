@@ -185,7 +185,6 @@ def build_monitor_map(monitors: list[dict[str, Any]], now: int, skew_tolerance: 
         raise MapError("now must be a non-negative integer")
     if not isinstance(skew_tolerance, int) or skew_tolerance < 0:
         raise MapError("skew_tolerance must be a non-negative integer")
-    required = ("id", "target", "type", "cadence", "freshness", "severity", "cost", "consumer_gate")
     projected: list[dict[str, Any]] = []
     seen: set[str] = set()
     for monitor in monitors:
@@ -221,3 +220,38 @@ def build_monitor_map(monitors: list[dict[str, Any]], now: int, skew_tolerance: 
         })
     return {"schema": "hpp.monitor-map/v1", "now": now, "skew_tolerance": skew_tolerance,
             "monitors": sorted(projected, key=lambda item: item["id"])}
+
+
+def monitor_graph(projection: dict[str, Any]) -> dict[str, Any]:
+    """The monitor map as nodes and edges, for drawing: a monitor node labelled `<id> · <status>`
+    `observes` its target and `gates` its consumer gate. The monitor map itself has no graph."""
+    nodes: list[dict[str, str]] = []
+    edges: list[dict[str, str]] = []
+    for monitor in projection["monitors"]:
+        monitor_node = f"monitor:{monitor['id']}"
+        target_node = f"target:{monitor['target']}"
+        gate_node = f"gate:{monitor['consumer_gate']}"
+        nodes.extend((_node(monitor_node, "monitor", f"{monitor['id']} · {monitor['status']}"),
+                      _node(target_node, "target", monitor["target"]),
+                      _node(gate_node, "gate", monitor["consumer_gate"])))
+        edges.extend((_edge(monitor_node, target_node, "observes"), _edge(monitor_node, gate_node, "gates")))
+    unique = {node["id"]: node for node in nodes}
+    return {"nodes": [unique[node_id] for node_id in sorted(unique)],
+            "edges": sorted(edges, key=lambda edge: (edge["from"], edge["to"], edge["relation"]))}
+
+
+def map_graph(projection: dict[str, Any]) -> dict[str, Any]:
+    """The nodes and edges `hpp map --format mermaid` draws; the JSON projection is left as it is.
+
+    A lane collision is drawn as one `collides:<paths>` edge between the two lanes (in the order of
+    the collision's `lanes`); in the JSON it stays in the `collisions` field. The monitor map is
+    drawn through `monitor_graph`.
+    """
+    if projection.get("schema") == "hpp.monitor-map/v1":
+        return monitor_graph(projection)
+    edges = list(projection["edges"])
+    for collision in projection.get("collisions", []):
+        left, right = collision["lanes"]
+        edges.append(_edge(f"lane:{left}", f"lane:{right}", "collides:" + ", ".join(collision["territory"])))
+    return {"nodes": projection["nodes"],
+            "edges": sorted(edges, key=lambda edge: (edge["from"], edge["to"], edge["relation"]))}

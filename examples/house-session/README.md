@@ -157,7 +157,7 @@ kind of session and the options it asked about, and refuses a judge of the maker
 ```bash
 python -m hpp route --request request.json --providers providers.json --deliberation plan-record.json --maker-family anthropic
 python -m hpp attest create --spec spec.md --output att.json --maker exec-a --checker rev-b --session s1 --verdict approved --deliberation gate-record.json --maker-family anthropic
-python multi-session/lane-kit-1.7.1/scripts/lane_board.py select --task TASK-1 --deliberation design-record.json
+python multi-session/lane-kit-1.8.0/scripts/lane_board.py select --task TASK-1 --deliberation design-record.json
 ```
 
 - **`route`** reads a `plan` session over `low`/`medium`/`high`: its verdict can raise the request's

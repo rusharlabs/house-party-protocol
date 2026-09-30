@@ -105,7 +105,8 @@ def _judge(panel, value="high", status="recommendation", model="delta-model-2026
 
 def _rationale(panel, positions):
     """The judge seat's answer to grounded dissent (F2): a steelman per position and a condition."""
-    text = lambda value: hashlib.sha256(value.encode()).hexdigest()
+    def text(value):
+        return hashlib.sha256(value.encode()).hexdigest()
     return {"schema": "hpp.rationale/v1", "panel_sha256": normalise_panel(panel)["sha256"], "author": "j",
             "steelman": [{"position": position, "text_sha256": text(position), "chars": 90} for position in positions],
             "would_change_if": [{"text_sha256": text("a restore test that passes"), "chars": 60}]}

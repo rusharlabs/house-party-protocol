@@ -115,7 +115,10 @@ não acréscimo.</p>
 componentes declarados (skills, hooks, commands, agents, rules, templates, scripts) e cobertura
 declarada por host.</p>
 <p><strong>Não é:</strong> um plugin só no sentido do Claude Code. O mesmo módulo é um plugin no Claude Code e uma
-cópia verificada no Codex CLI. Um módulo também não é dependência de outro por padrão: hoje toda
+cópia verificada no Codex CLI; sete módulos são também plugins do Codex CLI
+(<code>codex plugin marketplace add rusharlabs/house-party-protocol</code>, depois
+<code>codex plugin add &lt;module&gt;@house-party-protocol</code>), e um plugin desses registra só as skills do
+módulo. Um módulo também não é dependência de outro por padrão: hoje toda
 lista <code>requires</code> do manifesto está vazia; <code>integrates_with</code> é composição opcional.</p>
 <p><strong>Verifique:</strong> <code>python -m hpp graph --view capability --format json</code> mostra as arestas
 <code>provides</code>, <code>supports:&lt;coverage&gt;</code>, <code>requires</code> e <code>integrates-with</code> por módulo.</p>
@@ -727,8 +730,8 @@ os mesmos três com <code>--mode audit</code> imprimem os mesmos vereditos e sae
 <p><strong>É:</strong> quatro códigos de saída de processo com significado fixo em todo o harness e em todo
 módulo: <code>0</code> ok, <code>1</code> warn ou gate manual, <code>2</code> block, <code>3</code> erro de uso ou interno.</p>
 <p><strong>Não é:</strong> uma sugestão. O manifesto é rejeitado se declarar qualquer outra coisa. No modo
-<code>enforce</code>, <code>BLOCK</code> sai com 2 e <code>MANUAL</code> sai com 1; no modo <code>audit</code> o veredito é impresso e a saída
-é sempre 0.</p>
+<code>enforce</code>, <code>BLOCK</code> sai com 2 e <code>MANUAL</code> sai com 1; no modo <code>audit</code> o veredito é impresso e sai com 0.
+Um arquivo de política do projeto recusado sai com 2 nos dois modos, sem veredito impresso.</p>
 <p><strong>Verifique:</strong> <code>python -m hpp policy check --mode enforce --command "rm -rf src"</code> sai com 2;
 <code>--command "git push origin feature"</code> sai com 1; <code>--mode audit</code> com qualquer um dos dois sai com 0.</p>
     </div></section>

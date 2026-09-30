@@ -7,20 +7,20 @@ Derived from the emitted tree: what each kit installs, resource by resource. Reg
 
 ## Shared resources
 
-Documents that apply to every kit: [`ARCHITECTURE.md`](ARCHITECTURE.md) · [`ARCHITECTURE.pt-BR.md`](ARCHITECTURE.pt-BR.md) · [`BENCHMARK.md`](BENCHMARK.md) · [`BENCHMARK.pt-BR.md`](BENCHMARK.pt-BR.md) · [`BRAND.md`](BRAND.md) · [`BRAND.pt-BR.md`](BRAND.pt-BR.md) · [`CONCEPTS.md`](CONCEPTS.md) · [`CONCEPTS.pt-BR.md`](CONCEPTS.pt-BR.md) · [`DESIGN.md`](DESIGN.md) · [`DESIGN.pt-BR.md`](DESIGN.pt-BR.md) · [`GITHUB-DESCRIPTION.txt`](GITHUB-DESCRIPTION.txt) · [`GRAPH-MODEL.md`](GRAPH-MODEL.md) · [`GRAPH-MODEL.pt-BR.md`](GRAPH-MODEL.pt-BR.md) · [`LOOPS.md`](LOOPS.md) · [`LOOPS.pt-BR.md`](LOOPS.pt-BR.md) · [`MANUAL.html`](MANUAL.html) · [`MANUAL.pt-BR.html`](MANUAL.pt-BR.html) · [`METHOD.md`](METHOD.md) · [`METHOD.pt-BR.md`](METHOD.pt-BR.md) · [`PROOF.md`](PROOF.md) · [`PROOF.pt-BR.md`](PROOF.pt-BR.md) · [`TIPS.md`](TIPS.md) · [`TIPS.pt-BR.md`](TIPS.pt-BR.md) · [`UX-INSTALL-JOURNEY.md`](UX-INSTALL-JOURNEY.md) · [`UX-INSTALL-JOURNEY.pt-BR.md`](UX-INSTALL-JOURNEY.pt-BR.md)
+Documents that apply to every kit: [`ARCHITECTURE.md`](ARCHITECTURE.md) · [`ARCHITECTURE.pt-BR.md`](ARCHITECTURE.pt-BR.md) · [`ASSURANCE-CASE.md`](ASSURANCE-CASE.md) · [`ASSURANCE-CASE.pt-BR.md`](ASSURANCE-CASE.pt-BR.md) · [`BENCHMARK.md`](BENCHMARK.md) · [`BENCHMARK.pt-BR.md`](BENCHMARK.pt-BR.md) · [`BRAND.md`](BRAND.md) · [`BRAND.pt-BR.md`](BRAND.pt-BR.md) · [`CONCEPTS.md`](CONCEPTS.md) · [`CONCEPTS.pt-BR.md`](CONCEPTS.pt-BR.md) · [`DESIGN.md`](DESIGN.md) · [`DESIGN.pt-BR.md`](DESIGN.pt-BR.md) · [`GITHUB-DESCRIPTION.txt`](GITHUB-DESCRIPTION.txt) · [`GRAPH-MODEL.md`](GRAPH-MODEL.md) · [`GRAPH-MODEL.pt-BR.md`](GRAPH-MODEL.pt-BR.md) · [`LOOPS.md`](LOOPS.md) · [`LOOPS.pt-BR.md`](LOOPS.pt-BR.md) · [`MANUAL.html`](MANUAL.html) · [`MANUAL.pt-BR.html`](MANUAL.pt-BR.html) · [`METHOD.md`](METHOD.md) · [`METHOD.pt-BR.md`](METHOD.pt-BR.md) · [`PROOF.md`](PROOF.md) · [`PROOF.pt-BR.md`](PROOF.pt-BR.md) · [`TIPS.md`](TIPS.md) · [`TIPS.pt-BR.md`](TIPS.pt-BR.md) · [`UX-INSTALL-JOURNEY.md`](UX-INSTALL-JOURNEY.md) · [`UX-INSTALL-JOURNEY.pt-BR.md`](UX-INSTALL-JOURNEY.pt-BR.md)
 
 | kit | version | skills | commands | agents | hooks | rules | templates | scripts |
 |---|---|---:|---:|---:|---:|---:|---:|---:|
-| [kit-forge](#kit-forge) | 1.5.1 | 0 | 0 | 0 | 1 | 0 | 0 | 0 |
-| [operator-kit](#operator-kit) | 1.8.0 | 13 | 4 | 6 | 10 | 13 | 1 | 17 |
-| [continuity-kit](#continuity-kit) | 1.5.0 | 2 | 0 | 0 | 3 | 0 | 12 | 2 |
-| [lane-kit](#lane-kit) | 1.7.1 | 2 | 1 | 0 | 4 | 0 | 4 | 6 |
-| [health-kit](#health-kit) | 1.4.0 | 2 | 0 | 0 | 1 | 0 | 0 | 3 |
-| [claude-dev-kit](#claude-dev-kit) | 1.3.4 | 8 | 0 | 0 | 1 | 0 | 0 | 2 |
-| [supabase-pack](#supabase-pack) | 1.2.0 | 2 | 0 | 0 | 0 | 0 | 0 | 0 |
-| [agent-framework-wizard](#agent-framework-wizard) | 1.2.2 | 1 | 0 | 0 | 0 | 0 | 5 | 0 |
-| [dev-squad-kit](#dev-squad-kit) | 1.2.0 | 3 | 12 | 12 | 0 | 0 | 0 | 0 |
-| [gotcha-memory](#gotcha-memory) | 1.1.0 | 1 | 0 | 0 | 3 | 0 | 0 | 0 |
+| [kit-forge](#kit-forge) | 1.5.2 | 0 | 0 | 0 | 1 | 0 | 0 | 0 |
+| [operator-kit](#operator-kit) | 1.8.1 | 13 | 4 | 6 | 10 | 13 | 1 | 17 |
+| [continuity-kit](#continuity-kit) | 1.5.1 | 2 | 0 | 0 | 3 | 0 | 12 | 2 |
+| [lane-kit](#lane-kit) | 1.8.0 | 2 | 1 | 0 | 4 | 0 | 4 | 6 |
+| [health-kit](#health-kit) | 1.4.1 | 2 | 0 | 0 | 1 | 0 | 0 | 3 |
+| [claude-dev-kit](#claude-dev-kit) | 1.3.5 | 8 | 0 | 0 | 1 | 0 | 0 | 2 |
+| [supabase-pack](#supabase-pack) | 1.2.1 | 2 | 0 | 0 | 0 | 0 | 0 | 0 |
+| [agent-framework-wizard](#agent-framework-wizard) | 1.2.3 | 1 | 0 | 0 | 0 | 0 | 5 | 0 |
+| [dev-squad-kit](#dev-squad-kit) | 1.2.1 | 3 | 12 | 12 | 0 | 0 | 0 | 0 |
+| [gotcha-memory](#gotcha-memory) | 1.1.1 | 1 | 0 | 0 | 3 | 0 | 0 | 0 |
 | **total** | | **34** | **17** | **18** | **23** | **13** | **22** | **30** |
 
 ## kit-forge

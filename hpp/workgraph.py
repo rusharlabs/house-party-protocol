@@ -576,3 +576,14 @@ def compile_workgraph(spec: dict[str, Any]) -> dict[str, Any]:
         "waves": _waves(work),
         "tier_counts": tier_counts,
     }
+
+
+def workgraph_graph(compiled: dict[str, Any]) -> dict[str, Any]:
+    """A compiled WorkGraph as nodes and edges, for drawing: one node per item labelled `id · tier`,
+    the `depends-on` edges (dependency -> dependent) and one cluster per wave, labelled `wave <n>`."""
+    return {
+        "nodes": [{"id": item["id"], "kind": "work", "label": f"{item['id']} · {item['tier']}"}
+                  for item in compiled["work"]],
+        "edges": list(compiled["edges"]),
+        "clusters": [{"label": f"wave {wave['index']}", "nodes": list(wave["work"])} for wave in compiled["waves"]],
+    }

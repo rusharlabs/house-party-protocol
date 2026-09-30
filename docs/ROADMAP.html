@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>House Party Protocol — Roadmap</title>
+  <meta name="description" content="Where the work is headed over the next twelve months, as a direction and not a promise, and what the project will not do.">
+  <link rel="alternate" hreflang="en" href="ROADMAP.html">
+  <link rel="alternate" hreflang="pt-BR" href="ROADMAP.pt-BR.html">
+  <style>
+    :root{--hpp-black: #000000;--hpp-ink: #0F1113;--hpp-paper: #F4F1EB;--hpp-signal: #FF6A00;--line:rgba(15,17,19,.18);--surface:rgba(15,17,19,.04);--muted:rgba(15,17,19,.72);--max:1120px}
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;background:var(--hpp-paper);color:var(--hpp-ink);font:16px/1.65 Inter,"Segoe UI",Arial,sans-serif}
+    a{color:var(--hpp-ink);text-decoration:underline;text-decoration-color:var(--hpp-signal);text-decoration-thickness:2px;text-underline-offset:3px}
+    a:hover{color:var(--hpp-signal)}
+    a:focus-visible{outline:4px solid var(--hpp-signal);outline-offset:3px}
+    .wrap{width:min(var(--max),calc(100% - 40px));margin:auto}
+    .lang{background:var(--hpp-black);color:var(--hpp-paper);font-size:.9rem;padding:10px 0}
+    .lang a{color:var(--hpp-paper)}
+    .lang a[aria-current]{text-decoration:none;font-weight:700}
+    .hero{background:var(--hpp-ink);color:var(--hpp-paper);padding:44px 0 50px}
+    .hero img{width:min(720px,100%);display:block}
+    .hero h1{font:800 clamp(2.2rem,6vw,5rem)/.95 Sora,Inter,"Segoe UI",sans-serif;letter-spacing:-.02em;margin:.35em 0}
+    .hero p{max-width:760px;font-size:1.15rem;color:rgba(244,241,235,.82)}
+    .hero .eyebrow{color:var(--hpp-paper);border-color:var(--hpp-signal)}
+    .signal{color:var(--hpp-signal)}
+    .eyebrow,.mono,code,pre,.gate,.label{font-family:"JetBrains Mono","Cascadia Code",Consolas,monospace}
+    .eyebrow{display:inline-block;letter-spacing:.13em;text-transform:uppercase;font-size:.78rem;border-left:4px solid var(--hpp-signal);padding-left:.6em;margin:0 0 .6em}
+    nav{position:sticky;top:0;z-index:2;background:rgba(244,241,235,.96);border-bottom:1px solid var(--line);backdrop-filter:blur(8px)}
+    nav .wrap{display:flex;gap:20px;overflow:auto;padding:12px 0}
+    nav a{white-space:nowrap;text-decoration:none;font-weight:700}
+    nav a:hover{text-decoration:underline;text-decoration-color:var(--hpp-signal)}
+    section{padding:64px 0;border-bottom:1px solid var(--line)}
+    h2{font:800 clamp(1.7rem,3vw,2.6rem)/1.1 Sora,Inter,"Segoe UI",sans-serif;letter-spacing:-.01em;margin:0 0 .6em}
+    h3{margin:0 0 .4em;font-size:1.1rem}
+    .lead{max-width:780px;color:var(--muted)}
+    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:20px}
+    .card{grid-column:span 4;border:1px solid var(--line);border-radius:16px;padding:22px;background:var(--surface)}
+    .card.wide{grid-column:span 6}
+    .card.full{grid-column:1/-1}
+    pre{background:var(--hpp-ink);color:var(--hpp-paper);padding:20px;border-radius:12px;overflow:auto;border-left:6px solid var(--hpp-signal);font-size:.92rem;line-height:1.5}
+    code{font-size:.94em}
+    p code,li code,td code{background:var(--surface);padding:.08em .35em;border-radius:5px}
+    pre code{background:none;padding:0}
+    table{width:100%;border-collapse:collapse;background:var(--surface);margin:1em 0}
+    th,td{text-align:left;padding:12px;border-bottom:1px solid var(--line);vertical-align:top}
+    th{background:rgba(15,17,19,.08);font-weight:700}
+    .gate{display:inline-block;border-radius:999px;padding:.15rem .7rem;font-weight:700;font-size:.8rem;margin-bottom:.6em}
+    .gate.allow{background:var(--hpp-signal);color:var(--hpp-ink)}
+    .gate.manual{border:2px solid var(--hpp-ink);color:var(--hpp-ink)}
+    .gate.block{background:var(--hpp-ink);color:var(--hpp-paper)}
+    .label{font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+    .measured{border-left:4px solid var(--hpp-signal);padding-left:1em;color:var(--muted);font-size:.95rem}
+    ul,ol{padding-left:1.3em}
+    li{margin:.25em 0}
+    footer{padding:48px 0;background:var(--hpp-black);color:var(--hpp-paper)}
+    footer a{color:var(--hpp-paper)}
+    footer .five{letter-spacing:.2em;font-size:.8rem;color:rgba(244,241,235,.72)}
+    @media(max-width:760px){.card,.card.wide{grid-column:1/-1}.wrap{width:min(100% - 32px,var(--max))}th,td{font-size:.88rem;padding:8px}.hero{padding-top:28px}section{padding:44px 0}}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+    h3[id],h4[id],h5[id]{scroll-margin-top:64px}
+    ul.tasks{list-style:none;padding-left:.2em}
+    blockquote{margin:1em 0}
+  </style>
+</head>
+<body>
+  <div class="lang"><div class="wrap"><a href="ROADMAP.html" aria-current="page" hreflang="en">English</a> · <a href="ROADMAP.pt-BR.html" hreflang="pt-BR" lang="pt-BR">Português</a></div></div>
+  <header class="hero">
+    <div class="wrap">
+      <img src="assets/hpp-logo-header.png" alt="House Party Protocol">
+      <p class="eyebrow">Project · ROADMAP.md</p>
+      <h1>Roadmap</h1>
+    </div>
+  </header>
+  <nav aria-label="Chapters"><div class="wrap"><a href="#where-the-maps-are-on-211">Where the maps are on 2.11</a><a href="#212-see-the-state">2.12: see the state</a><a href="#213-a-code-graph-of-your-project">2.13: a code graph of your project</a><a href="#after-213">After 2.13</a><a href="#what-the-project-will-not-do">What the project will not do</a><a href="#how-to-take-part">How to take part</a></div></nav>
+  <main>
+
+    <section><div class="wrap">
+<p>Where the work is headed over the next twelve months, and what the project will not do. This is a
+direction, not a promise: what shipped is recorded in <a href="https://github.com/rusharlabs/house-party-protocol/blob/main/CHANGELOG.md">CHANGELOG.md</a> and in the
+release notes, and only there. The plan is discussed in public in the
+<a href="https://github.com/rusharlabs/house-party-protocol/discussions/28">roadmap discussion</a>, in the
+Announcements category; how decisions are taken is in <a href="GOVERNANCE.html">GOVERNANCE.md</a>.</p>
+    </div></section>
+
+    <section id="where-the-maps-are-on-211"><div class="wrap">
+      <p class="eyebrow">01</p>
+      <h2>Where the maps are on 2.11</h2>
+<p>Every map in HPP is a projection of files you already have — manifests, event logs, JSON you
+supply — and the same input prints the same output.</p>
+<table>
+<thead><tr><th>command</th><th>formats</th></tr></thead>
+<tbody>
+<tr><td><code>hpp graph --view capability|operational|agent|evidence|code</code></td><td>JSON or Mermaid</td></tr>
+<tr><td><code>hpp map lane|agent|monitor|context</code></td><td>JSON or Mermaid</td></tr>
+<tr><td><code>hpp work plan|waves</code></td><td>JSON or Mermaid</td></tr>
+<tr><td><code>hpp doctor --matrix</code></td><td>Markdown: host × module × channel</td></tr>
+</tbody>
+</table>
+<p>The <code>code</code> view shows which surfaces each module declares; it is not a graph of your code. The
+lane-kit's Lane Dashboard, since 2.10.0, is a page on the loopback address that you start and stop,
+showing the lane board, the live lanes, each lane's mailbox and the backlog with its waves; every
+action it offers is also a terminal command.</p>
+    </div></section>
+
+    <section id="212-see-the-state"><div class="wrap">
+      <p class="eyebrow">02</p>
+      <h2>2.12: see the state</h2>
+<p>Mermaid for the maps and the WorkGraph, the first item planned for this step, shipped in 2.11.0
+(the table above). The other three are next:</p>
+<ol>
+<li><strong>A feed map.</strong> One timeline of what happened across lanes — claims, verdicts, messages sent and
+read, deliveries, handoffs, heartbeats — derived from records the harness already writes.</li>
+<li><strong>A static HTML atlas.</strong> <code>hpp atlas --html</code> would write one self-contained page with every view
+of a project, drawn from the same JSON. Each view shows the command that reproduces it and the
+hash of its source. It opens as a file; there is no server.</li>
+<li><strong>The Lane Dashboard views.</strong> The dashboard shows the same views, drawn from the same JSON, next
+to the actions it already offers.</li>
+</ol>
+    </div></section>
+
+    <section id="213-a-code-graph-of-your-project"><div class="wrap">
+      <p class="eyebrow">03</p>
+      <h2>2.13: a code graph of your project</h2>
+<p>A base built on the Python standard library — modules, imports, definitions and calls read with
+<code>ast</code>; for other languages an import graph only, declared as such — plus a contract,
+<code>hpp.codegraph/v1</code>, for an external indexer you declare. HPP would normalise and measure that input;
+it would not depend on it. The graph is built on demand, stored by commit hash and reported as
+<code>stale</code> when it is old, with no watcher. It would feed lane territory by dependency, the WorkGraph
+checks, the blast radius of an attestation and the atlas's code view.</p>
+    </div></section>
+
+    <section id="after-213"><div class="wrap">
+      <p class="eyebrow">04</p>
+      <h2>After 2.13</h2>
+<p>Nothing is planned yet. What comes next is decided from the answers in the roadmap discussion and
+from the proposals in the Ideas category of Discussions, and this page is updated when it is.</p>
+    </div></section>
+
+    <section id="what-the-project-will-not-do"><div class="wrap">
+      <p class="eyebrow">05</p>
+      <h2>What the project will not do</h2>
+<p>These refusals are the ones in <a href="MANIFESTO.html">MANIFESTO.md</a>, "What the project refuses to do". They
+are decisions, not gaps, and nothing on this roadmap changes them. The manifesto carries the reason
+for each and the bounded exceptions for modules; where this summary and the manifesto differ, the
+manifesto binds.</p>
+<ul>
+<li><strong>No daemon, no server, no scheduler.</strong> A check that did not run was not run. The atlas planned
+above opens as a file for this reason.</li>
+<li><strong>No model calls.</strong> The harness routes work to a tier and a provider id you declared, and holds
+no credential.</li>
+<li><strong>No graph database.</strong> Every map is a projection of files you supply; the code graph planned for
+2.13 is built on demand, keyed by commit hash and reported <code>stale</code> when it is old.</li>
+<li><strong>No silent writes.</strong> Installers plan first and write only on an explicit second step; the
+wiring of settings and hooks is printed for a person to paste.</li>
+<li><strong>No promise accepted as evidence.</strong> The done gate re-runs the criterion commands; a completion
+tag in a transcript stops nothing.</li>
+<li><strong>No host parity by assertion.</strong> Coverage is declared per module as <code>native</code>,
+<code>explicit-command</code> or <code>unsupported</code>.</li>
+<li><strong>No headline numbers.</strong> A number appears next to the command that produced it, or it does not
+appear.</li>
+<li><strong>No remote telemetry.</strong> Nothing leaves the machine unless a person runs a command that sends it.</li>
+</ul>
+    </div></section>
+
+    <section id="how-to-take-part"><div class="wrap">
+      <p class="eyebrow">06</p>
+      <h2>How to take part</h2>
+<p>Answer in the <a href="https://github.com/rusharlabs/house-party-protocol/discussions/28">roadmap discussion</a>
+with your setup — host, bundle and the command you would run — one point per comment; an upvote on
+a comment counts as agreement. A proposal that needs its own design goes to the Ideas category, as
+<a href="SUPPORT.html">SUPPORT.md</a> describes. This page changes through a pull request, and the change is
+recorded in the CHANGELOG.</p>
+    </div></section>
+
+  </main>
+  <footer><div class="wrap">
+    <p class="five">AGENTS · EVIDENCE · MEMORY · PROTOCOL · CONTINUITY</p>
+    <strong>House Party Protocol</strong>
+    <p>Operate coding agents under evidence, not trust.</p>
+    <p><a href="index.html">Documentation</a> · <a href="MANUAL.html">Harness manual</a> · <a href="CATALOG.html">Module catalogue</a> · <a href="https://github.com/rusharlabs/house-party-protocol/blob/main/ROADMAP.md">Markdown source</a> · <a href="ROADMAP.pt-BR.html" hreflang="pt-BR" lang="pt-BR">Português</a></p>
+  </div></footer>
+</body>
+</html>
