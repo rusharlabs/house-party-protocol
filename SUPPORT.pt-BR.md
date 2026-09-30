@@ -22,7 +22,7 @@ Ele imprime o link do formulário com o título preenchido e, abaixo, o relatór
 
 ## Propor uma ideia
 
-Para uma capacidade, um módulo ou um contrato que o harness deveria ter, abra o [formulário de ideia](https://github.com/rusharlabs/house-party-protocol/issues/new?template=idea.yml). Ele pede a falha que a ideia remove, o que o harness faria de diferente e o comando ou teste que a provaria, com o caso negativo que a mostraria recusando. Uma ideia também precisa caber nos [limites honestos](README.pt-BR.md#limites-honestos), ou dizer qual deles mudaria e por quê.
+Para uma capacidade, um módulo ou um contrato que o harness deveria ter, abra o [formulário de ideia](https://github.com/rusharlabs/house-party-protocol/issues/new?template=idea.yml). Ele pede a falha que a ideia remove, o que o harness faria de diferente e o comando ou teste que a provaria, com o caso negativo que a mostraria recusando. Uma ideia também precisa caber nos [limites honestos](README.pt-BR.md#limites-honestos), ou dizer qual deles mudaria e por quê. O que já está planejado, e o que o projeto não vai fazer, está no [roadmap](ROADMAP.pt-BR.md).
 
 ## Relatar uma vulnerabilidade
 

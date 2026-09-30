@@ -22,9 +22,12 @@ Para um critério end-to-end ou visual, a trava é o `hpp evidence run` (novo na
 2.6.0): ele reexecuta o comando declarado, mede
 o código de saída fora do modelo e faz hash dos artefatos que ficaram. O `hpp evidence verify` é
 reconciliação posterior — re-deriva um registro a partir dos arquivos em disco — e nunca a trava: o
-hash próprio do registro torna uma edição visível, não é uma assinatura, então quem não pode
-confiar no maker roda o comando de novo. O hpp não dirige navegador; o navegador roda dentro do
-comando que você declara.
+hash próprio do registro torna uma edição visível e não é uma assinatura. O
+`hpp evidence run --sign-key KEY --signer NAME` acrescenta uma assinatura SSH, e o
+`hpp evidence verify --allowed-signers FILE` recusa um registro que não carrega uma que o arquivo
+aceite; uma assinatura diz quem escreveu o registro, não que o comando ainda passa, então quem não
+pode confiar no maker roda o comando de novo. O hpp não dirige navegador; o navegador roda dentro
+do comando que você declara.
 
 ## Autoloop e LoopGraph
 

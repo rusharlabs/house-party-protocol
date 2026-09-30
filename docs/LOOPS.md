@@ -23,8 +23,12 @@ For an end-to-end or visual criterion the latch is `hpp evidence run` (new in
 2.6.0): it re-executes the declared command, measures its
 exit code outside the model and hashes the artifacts it left. `hpp evidence verify` is later
 reconciliation — it re-derives a record from the files on disk — and never the latch: the record's
-self-hash makes an edit visible, it is not a signature, so whoever must not trust the maker runs
-the command again. hpp drives no browser; the browser runs inside the command you declare.
+self-hash makes an edit visible and is not a signature.
+`hpp evidence run --sign-key KEY --signer NAME` adds an SSH signature, and
+`hpp evidence verify --allowed-signers FILE` refuses a record that does not carry one the file
+accepts; a signature says who wrote the record, not that the command still passes, so whoever must
+not trust the maker runs the command again. hpp drives no browser; the browser runs inside the
+command you declare.
 
 ## Autoloop and LoopGraph
 

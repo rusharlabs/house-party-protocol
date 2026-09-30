@@ -97,8 +97,12 @@ not change the verdict.</p>
 2.6.0): it re-executes the declared command, measures its
 exit code outside the model and hashes the artifacts it left. <code>hpp evidence verify</code> is later
 reconciliation — it re-derives a record from the files on disk — and never the latch: the record's
-self-hash makes an edit visible, it is not a signature, so whoever must not trust the maker runs
-the command again. hpp drives no browser; the browser runs inside the command you declare.</p>
+self-hash makes an edit visible and is not a signature.
+<code>hpp evidence run --sign-key KEY --signer NAME</code> adds an SSH signature, and
+<code>hpp evidence verify --allowed-signers FILE</code> refuses a record that does not carry one the file
+accepts; a signature says who wrote the record, not that the command still passes, so whoever must
+not trust the maker runs the command again. hpp drives no browser; the browser runs inside the
+command you declare.</p>
     </div></section>
 
     <section id="autoloop-and-loopgraph"><div class="wrap">

@@ -147,6 +147,20 @@ def test_codex_block_has_one_installer_line_per_module_and_hooks_off(target, loa
     assert not any(line.startswith("/plugin") for line in lines)
 
 
+def test_codex_block_opens_with_one_plugin_line_per_module_that_carries_skills(target, loaded):
+    manifest, _ = loaded
+    ctx = _context(target, loaded, answers={"host": "codex"}, sources={"host": "flag"})
+    for stage in (wizard.stage_detect, wizard.stage_prereqs, wizard.stage_profile, wizard.stage_configure):
+        stage(ctx)
+    lines = wizard.stage_wire_suggest(ctx)["detail"]["lines"]
+    by_id = {module["id"]: module for module in manifest["modules"]}
+    bundle = manifest["bundles"]["reliable-coding"]["modules"]
+    expected = [f"codex plugin add {module_id}@{manifest['name']}" for module_id in bundle
+                if "skills" in by_id[module_id]["components"]]
+    assert [line for line in lines if line.startswith("codex plugin add ")] == expected
+    assert f"codex plugin add lane-kit@{manifest['name']}" in lines   # lane-kit carries two skills
+
+
 def test_marketplace_is_replaceable_by_flag(target, capsys):
     code = cli.main(["init", "--target", str(target), "--no-benchmark", "--marketplace", "me/fork", "--json"])
     report = json.loads(capsys.readouterr().out)

@@ -174,3 +174,30 @@ jobs:
       - name: Modules on Windows (Git Bash)
         if: runner.os == 'Windows'
         run: python scripts/module_checks.py --bash "C:\Program Files\Git\bin\bash.exe"
+
+  # Why: the coding standard is the `[tool.ruff]` table in pyproject.toml (pyflakes plus the
+  # syntax-level pycodestyle errors), and this job holds hpp/, tests/ and scripts/ at zero findings
+  # against it. One runner is enough: ruff reads the source without running it, and
+  # `target-version` fixes the Python syntax it checks for. It inherits the workflow's read-only
+  # `contents: read` token and uploads nothing.
+  lint:
+    name: ruff check (hpp, tests, scripts)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.13"
+
+      # Why: hash-pinned like the test runner, one hash per published ruff wheel -- regenerate with
+      # `uv pip compile --universal --generate-hashes --no-header --no-annotate`.
+      - name: Install ruff (hash-pinned)
+        run: python -m pip install --disable-pip-version-check --require-hashes -r .github/requirements/lint.txt
+
+      - name: ruff check
+        run: ruff check hpp tests scripts

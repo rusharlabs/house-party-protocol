@@ -7,6 +7,122 @@ Todas as mudanças relevantes do harness são registradas aqui. O formato segue
 [SemVer](https://semver.org/lang/pt-BR/). A versão do produto descreve o contrato do harness;
 cada módulo mantém sua própria versão no `plugin.json` e no `marketplace.json`.
 
+## [2.11.0] — 2026-09-30
+
+### Adicionado
+
+- **`--format mermaid` para os mapas e o WorkGraph.** `hpp map lane|agent|monitor|context`,
+  `hpp work plan` e `hpp work waves` imprimem Mermaid além de JSON (o padrão). Colisões de lane viram uma
+  aresta `collides:<caminhos>` entre as duas lanes; o mapa de monitores desenha monitores, alvos e gates;
+  o WorkGraph desenha um nó por item dentro de um subgrafo por wave. Os rótulos escapam `"`, `|`, `<` e
+  `>`, e as cinco visões do `hpp graph` imprimem os mesmos bytes de antes. Toda saída nova é fixada por um
+  teste de determinismo (duas execuções, entrada permutada, sha256 fixo).
+- **lane-kit 1.8.0 entra no canal de plugins do Codex CLI.** `codex plugin add lane-kit@house-party-protocol`
+  registra as duas skills dele (`lane-coordinator`, `house-session`) e nada mais: o `.codex-plugin/plugin.json`
+  carrega o objeto de hooks vazio, então os hooks de lane seguem do Claude Code, e o runtime continua
+  pela cópia verificada. O manifesto lista os componentes do lane-kit como hooks, commands e skills (ele
+  declarava um componente `agents` que o módulo não tem). O canal passa a ter sete módulos.
+- **Uma demonstração animada do Lane Dashboard, gravada de uma execução real.** `assets/ui/lane-dashboard.gif`
+  (no README e no capítulo de lanes do manual) mostra o quadro seguindo sozinho um comando de terminal, um
+  diálogo de ação dizendo o comando de terminal dele e a troca English/Português.
+  `assets/ui/lane-dashboard.gif.txt` registra o comando, a semente e a saída real, já que um GIF não
+  carrega o comando dentro dele. O Lane Dashboard foi contribuído por @kleinelizeu.
+- **`GOVERNANCE.md`, `ROADMAP.md` e `docs/ASSURANCE-CASE.md`**, cada um nas duas línguas: o modelo de
+  mantenedor único e seus papéis, onde as decisões ficam registradas e um plano de continuidade que diz o
+  que ainda está pendente; os próximos doze meses como direção, não promessa, ao lado do que o projeto não
+  fará; o modelo de ameaça, as fronteiras de confiança e as fraquezas neutralizadas, cada uma com o arquivo
+  que a neutraliza.
+- **Python passa por lint no CI.** O `pyproject.toml` ganha um conjunto de regras `[tool.ruff]` (`E4`, `E7`,
+  `E9`, `F`; alvo 3.10), e um job `lint` roda o ruff instalado de um arquivo de requisitos fixado por hash.
+  Os dez achados foram corrigidos à mão; nenhum mudou comportamento. O `tests/test_coding_standards.py`
+  reprova se o conjunto de regras, o job ou a fixação sumirem, e o CONTRIBUTING tem uma seção de estilo.
+- **O README abre na jornada de instalação.** O `assets/terminal/hpp-install.svg`, renderizado de uma
+  execução real pelo `scripts/render_terminal_svg.py --animate --session install`, digita
+  `pip install house-party-protocol` e `hpp init --target your-repo` e mostra como o init termina: o
+  wordmark, `BY RUSHAR LABS` e `> Welcome to the party.`. O pip lê uma wheel da release de um índice local
+  indicado por `PIP_INDEX_URL`, porque a gravação é feita antes do upload; a imagem diz isso. O
+  `hpp-demo.svg` vai para "Como o harness responde". O renderizador agora mostra vários trechos da saída
+  de um comando, com cada lacuna contada na tela e na descrição da imagem.
+- **GOVERNANCE e ROADMAP são páginas do site**, nas duas línguas, num grupo Projeto da página inicial. O
+  SECURITY aponta para o caso de garantia e para o GOVERNANCE; o CONTRIBUTING e o SUPPORT apontam para o
+  roadmap.
+
+### Alterado
+
+- **O manual alcançou a 2.10**, nas duas línguas: o log de eventos encadeado por hash e o
+  `hpp event verify`, as assinaturas SSH opcionais, o arquivo de política do projeto, o
+  `hpp doctor --report`, o canal de plugins do Codex, `hpp.deliberation/v2` como forma selada, a prova de
+  `MERGED` primeiro por ancestralidade e o `stale_sources`. A tabela de saídas ganhou os casos novos.
+- **Os documentos do lane-kit e do continuity-kit dizem o que o código faz.** Todo comando de wiring da
+  instalação por cópia passa pelo `hooks/pyrun.sh` em vez de um `python` puro (um Mac de fábrica só tem
+  `python3`); a prova de ida e volta dá o `CLAUDE_LANE_ID` ao `python`, não ao `echo`; uma seção nova
+  *Identidade da lane* documenta `CLAUDE_LANE_ID`, `CLAUDE_LANE_ROLE` e `CLAUDE_LANE_MODEL`; a lista de
+  estado de runtime e o Desfazer estão completos; o handoff atual do continuity tem o nome certo.
+- **operator-kit, kit-forge e os contratos batem com o instalador.** O wiring manual do operator-kit passa
+  pelo `hooks/pyrun.sh`, o matcher de Edit inclui `NotebookEdit`, e o SETTINGS-WIRE diz os timeouts reais e
+  quais hooks agem pela saída JSON. O template do guia de instalação dá o comando de instalação que os
+  READMEs dos módulos usam; o SKILL-CONTRACT diz qual interpretador roda uma Prova.
+- **Um registro tem auto-hash, e só é assinado com `--sign-key`.** Os documentos que diziam que um
+  registro nunca é assinado agora dizem quando é.
+- **O CONTRIBUTING diz quais testes uma edição de módulo reprova.** Ele pedia uma mudança de módulo sem
+  tocar o `CHECKSUMS.txt` e, na mesma página, a suíte inteira passando; os testes que conferem os
+  checksums do módulo falham por desenho até um mantenedor reemiti-lo. Agora ele os descreve, e diz que os
+  jobs de pytest do CI ficam vermelhos por isso enquanto os de self-test dos módulos têm de ficar verdes.
+- **O ROADMAP diz o que a 2.11.0 entrega.** O Mermaid para os mapas e o WorkGraph saiu; o mapa de feed, o
+  atlas HTML estático e as views no Lane Dashboard passam para a 2.12, e o grafo de código para a 2.13.
+- **Os documentos descrevem a 2.11 como ela roda.** O ARCHITECTURE nomeia a saída Mermaid dos mapas e do
+  WorkGraph, o job `lint` da CI e o canal de plugins do Codex CLI. O CONCEPTS e o UX-INSTALL-JOURNEY
+  descrevem o bloco de wiring do Codex como o `hpp init` o imprime: primeiro as linhas de plugin, depois
+  uma linha do instalador por módulo. O LOOPS diz que um registro de evidência pode ser assinado com
+  `--sign-key` e conferido com `--allowed-signers`, e o caso de garantia conta 30 de 30 linhas `uses:`
+  fixadas num SHA.
+- **lane-kit e continuity-kit se complementam; nenhum exige o outro.** Os READMEs, a descrição do plugin
+  do lane-kit e a linha de pré-requisitos diziam que o lane-kit depende do continuity-kit; o manifesto
+  diz `requires: []`, e nenhum código do lane-kit lê um handoff. O README do continuity-kit também
+  descreve o fallback: uma lane sem handoff próprio recebe o handoff mais novo de qualquer lane.
+- **A documentação dos módulos bate com o runtime.** As grafias antigas são aceitas até a 3.0 nos
+  READMEs e nos comentários, como dizem os avisos; o comando de desfazer do guia de instalação leva o
+  `--target` de que precisa; o AGENTS.md e a tabela de identidade do lane-kit dizem o que o self-test e
+  os dois hooks do continuity-kit fazem; todo módulo do canal do Codex mostra a sua linha
+  `codex plugin add` e o que esse plugin registra.
+
+- **Versões dos módulos:** agent-framework-wizard 1.2.3, claude-dev-kit 1.3.5, continuity-kit 1.5.1,
+  dev-squad-kit 1.2.1, gotcha-memory 1.1.1, health-kit 1.4.1, kit-forge 1.5.2, lane-kit 1.8.0,
+  operator-kit 1.8.1, supabase-pack 1.2.1.
+
+### Corrigido
+
+- **O house_session.py escreve UTF-8 num stdout e num stderr redirecionados no Windows** (issue #15): o
+  travessão não chega mais a um arquivo ou pipe como o byte cp1252 `0x97`.
+- **O self-test do quadro de lanes roda os 41 checks a partir de um checkout** (issue #16). Dentro do layout
+  do produto ele pega o core do checkout só para o self-test, e diz isso; um kit instalado ou copiado, e
+  todo outro comando, continuam precisando do core instalado.
+- **Uma sessão de lane recebe o próprio handoff** (issue #33). O `handoff_inject.py` do continuity-kit
+  escolhe o handoff por `CLAUDE_LANE_ID`, depois o payload do hook, depois `solo`, a ordem do lane-kit;
+  ele lia só o payload, e o Claude Code não manda lane ali, então toda sessão recebia `solo` primeiro.
+  Contribuído por @HarshRajSinghania (#34). O `handoff_guard.py`, o hook do Stop, tinha a mesma linha:
+  uma lane que acabara de gravar o handoff ouvia no Stop que não tinha nenhum, e o handoff degradado ia
+  para `solo`. Ele agora usa a mesma ordem, e o self-test dele passa dentro de uma sessão de lane, onde
+  o `kit_doctor` o roda.
+- **A saída padrão é UTF-8 com fim de linha `\n` em todo sistema.** No Windows todo comando escrevia CRLF,
+  então a mesma saída tinha hash diferente por sistema, e um caractere fora da página de código do console
+  encerrava o comando com saída 2.
+- **"Em audit o código de saída é sempre 0" estava errado**: um arquivo de política de projeto recusado sai
+  2 em qualquer modo. Corrigido no manual, no CONCEPTS e no ARCHITECTURE.
+- **kit-forge 1.5.2: a sugestão de wiring imprime `--target`**, uma opção que o `wire_settings.py` aceita,
+  em vez de `--settings`, que ele recusava. O `tools/browse.py` importa no Python 3.8 e 3.9 como o módulo
+  declara, e o `tools/codex_marketplace.py` sai 2 com uma entrada que não consegue ler.
+- **Grafias legadas dizem até quando são lidas.** Avisos de remoção que citavam a 2.7.0, uma versão já
+  passada, e sete que prometiam "uma versão só" sem nomear nenhuma, agora citam a 3.0; os fallbacks seguem
+  rodando.
+- **O checkout do workflow do Pages usa `persist-credentials: false`**, como todo outro checkout.
+- **Os scripts de demo do Lane Dashboard rodam sem `--lane-kit`**, como dizem as linhas de uso: a busca
+  tomava o `lane-kit-<versão>.zip` ao lado do kit por um segundo kit e recusava.
+- **O sidecar do Lane Dashboard chega ao site.** O `docs/assets/ui/lane-dashboard.gif.txt` fica ao lado do
+  GIF que o manual mostra, e o `scripts/record_lane_dashboard.py` o escreve em todo diretório de
+  `--copy-to`. O `hpp init --help` diz que o `--marketplace` vale para os blocos de wiring do Claude Code e
+  do Codex CLI.
+
 ## [2.10.1] — 2026-09-29
 
 ### Alterado
@@ -1855,6 +1971,7 @@ publicar.
 [2.6.5]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.5
 [2.6.6]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.6
 [2.6.7]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.7
+[2.11.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.11.0
 [2.10.1]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.10.1
 [2.10.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.10.0
 [2.9.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.9.0

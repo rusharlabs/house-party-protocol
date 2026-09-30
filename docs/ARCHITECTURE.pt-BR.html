@@ -100,6 +100,7 @@ existe.</p>
 ├──────────────────────────────────────────────────────────────────────────┤
 │ DISTRIBUTION  Claude Code: marketplace.json + plugin per module          │
 │               Codex CLI:   verified copy into .agents/ by the installer  │
+│                            + plugin channel (skills only) for 7 modules  │
 └──────────────────────────────────────────────────────────────────────────┘</code></pre>
 <p>O harness é stdlib-only e não executa modelo algum. Ele lê arquivos, roda os comandos que você
 nomeia e escreve num pequeno número de caminhos declarados. <code>decide</code>, <code>evidence</code>, <code>retrieval</code> e
@@ -115,7 +116,7 @@ nomeia e escreve num pequeno número de caminhos declarados. <code>decide</code>
 <tr><td><code>cli.py</code></td><td>parsing de argumentos, despacho, o contrato de saída (<code>2</code> para entrada recusada, <code>3</code> para erro interno)</td><td>todo subcomando, <code>--self-test</code></td></tr>
 <tr><td><code>manifest.py</code></td><td>localizar, carregar e validar o manifesto; cruzar com <code>marketplace.json</code> e com o <code>plugin.json</code> de cada módulo quando presentes, e com o marketplace do Codex (<code>.agents/plugins/marketplace.json</code>) e o <code>.codex-plugin/plugin.json</code> de cada módulo que ele lista</td><td><code>doctor</code></td></tr>
 <tr><td><code>state.py</code></td><td>event log append-only e encadeado por hash (cada linha aponta para o sha256 da anterior; um elo quebrado nomeia o primeiro passo divergente, um log anterior à cadeia lê como <code>legacy</code>); projeção dos eventos sobre o loop; recusa de transições inválidas antes da escrita</td><td><code>event append</code>, <code>event verify</code>, <code>status</code>, <code>resume</code></td></tr>
-<tr><td><code>workgraph.py</code></td><td>validar uma spec, rejeitar ciclos com o caminho nomeado, ordenar unidades em waves; ligar cada critério de aceite aos testes que o citam e, com um relatório JUnit XML, aos testes que o rodaram</td><td><code>work plan</code>, <code>work waves</code>, <code>work coverage</code></td></tr>
+<tr><td><code>workgraph.py</code></td><td>validar uma spec, rejeitar ciclos com o caminho nomeado, ordenar unidades em waves; ligar cada critério de aceite aos testes que o citam e, com um relatório JUnit XML, aos testes que o rodaram; o plano e as waves em JSON ou Mermaid, a cobertura em JSON</td><td><code>work plan</code>, <code>work waves</code>, <code>work coverage</code></td></tr>
 <tr><td><code>findings.py</code></td><td>conferir o documento <code>hpp.findings/v1</code> com que uma lente de revisão responde (código estável, severidade, arquivo e linha, evidência, o universo inspecionado), recusar uma chave que o contrato não define e derivar o veredito</td><td><code>findings check</code> (novo na 2.8.0)</td></tr>
 <tr><td><code>policy.py</code></td><td>classificar um comando como <code>ALLOW</code>, <code>MANUAL</code> ou <code>BLOCK</code>; aplicar o <code>.hpp/policy.json</code> de um projeto, que só pode acrescentar regras ou subir uma classe, nunca baixar; mapear para código de saída por modo</td><td><code>policy check</code></td></tr>
 <tr><td><code>attest.py</code></td><td>vincular um veredito à identidade do repositório, ao commit base, ao hash da spec e a um snapshot completo de arquivos; verificar depois; assinar o registro com uma chave SSH quando pedido (<code>--sign-key</code>) e exigir essa assinatura no verify (<code>--allowed-signers</code>)</td><td><code>attest create</code>, <code>attest verify</code></td></tr>
@@ -123,7 +124,7 @@ nomeia e escreve num pequeno número de caminhos declarados. <code>decide</code>
 <tr><td><code>hosts.py</code></td><td>a matriz host x módulo x canal derivada de <code>hosts</code> e <code>components</code> no manifesto, renderizada para os documentos</td><td><code>doctor --matrix</code></td></tr>
 <tr><td><code>context.py</code></td><td>encaixar blocos inteiros sob um orçamento de caracteres com hashes de proveniência; recusar entrada que se pareça com segredo</td><td><code>context compile</code>, <code>map context</code></td></tr>
 <tr><td><code>routing.py</code></td><td>escolher um tier e um id de provedor a partir de risco, complexidade, tamanho de contexto e estágio declarados; fazer fallback só para cima</td><td><code>route</code></td></tr>
-<tr><td><code>maps.py</code></td><td>Lane Map, Agent Map, Context Map e Monitor Map como projeções ordenadas, só de dados</td><td><code>map lane</code>, <code>map agent</code>, <code>map context</code>, <code>map monitor</code></td></tr>
+<tr><td><code>maps.py</code></td><td>Lane Map, Agent Map, Context Map e Monitor Map como projeções ordenadas, só de dados; JSON ou Mermaid</td><td><code>map lane</code>, <code>map agent</code>, <code>map context</code>, <code>map monitor</code></td></tr>
 <tr><td><code>graph.py</code></td><td>visões de capability, operacional, agente, evidência e código a partir do manifesto; JSON ou Mermaid</td><td><code>graph</code></td></tr>
 <tr><td><code>evals.py</code></td><td>runner de <code>pass@k</code> / <code>pass^k</code> sobre uma suíte de casos com três tipos de runner</td><td><code>eval run</code>, <code>benchmark</code></td></tr>
 <tr><td><code>decision.py</code></td><td>valida um registro <code>hpp.decision/v1</code> feito fora do harness (consultivo, raise-only, abstenção e falha de instrumento como desfechos); mede um decisor declarado com métricas seletivas. Não chama modelo</td><td><code>decide validate</code>, <code>decide eval</code> (novo na 2.6.0)</td></tr>
@@ -278,16 +279,16 @@ essa renderização.</p>
 <table>
 <thead><tr><th>módulo</th><th>Claude Code</th><th>Codex CLI</th></tr></thead>
 <tbody>
-<tr><td><code>operator-kit</code> 1.8.0</td><td><code>native</code> · plugin + hooks depois de colar o wiring</td><td><code>explicit-command</code> · plugin (só skills) + cópia verificada</td></tr>
-<tr><td><code>kit-forge</code> 1.5.1</td><td><code>explicit-command</code> · plugin</td><td><code>explicit-command</code> · cópia verificada</td></tr>
-<tr><td><code>lane-kit</code> 1.7.1</td><td><code>native</code> · plugin + hooks depois de colar o wiring</td><td><code>explicit-command</code> · cópia verificada</td></tr>
-<tr><td><code>continuity-kit</code> 1.5.0</td><td><code>native</code> · plugin + hooks depois de colar o wiring</td><td><code>explicit-command</code> · plugin (só skills) + cópia verificada</td></tr>
-<tr><td><code>health-kit</code> 1.4.0</td><td><code>explicit-command</code> · plugin</td><td><code>explicit-command</code> · plugin (só skills) + cópia verificada</td></tr>
-<tr><td><code>claude-dev-kit</code> 1.3.4</td><td><code>native</code> · plugin</td><td><code>unsupported</code> · —</td></tr>
-<tr><td><code>supabase-pack</code> 1.2.0</td><td><code>explicit-command</code> · plugin</td><td><code>explicit-command</code> · plugin (só skills) + cópia verificada</td></tr>
-<tr><td><code>agent-framework-wizard</code> 1.2.2</td><td><code>explicit-command</code> · plugin</td><td><code>explicit-command</code> · cópia verificada</td></tr>
-<tr><td><code>dev-squad-kit</code> 1.2.0</td><td><code>native</code> · plugin</td><td><code>explicit-command</code> · plugin (só skills) + cópia verificada</td></tr>
-<tr><td><code>gotcha-memory</code> 1.1.0</td><td><code>native</code> · plugin + hooks depois de colar o wiring</td><td><code>explicit-command</code> · plugin (só skills) + cópia verificada</td></tr>
+<tr><td><code>operator-kit</code> 1.8.1</td><td><code>native</code> · plugin + hooks depois de colar o wiring</td><td><code>explicit-command</code> · plugin (só skills) + cópia verificada</td></tr>
+<tr><td><code>kit-forge</code> 1.5.2</td><td><code>explicit-command</code> · plugin</td><td><code>explicit-command</code> · cópia verificada</td></tr>
+<tr><td><code>lane-kit</code> 1.8.0</td><td><code>native</code> · plugin + hooks depois de colar o wiring</td><td><code>explicit-command</code> · plugin (só skills) + cópia verificada</td></tr>
+<tr><td><code>continuity-kit</code> 1.5.1</td><td><code>native</code> · plugin + hooks depois de colar o wiring</td><td><code>explicit-command</code> · plugin (só skills) + cópia verificada</td></tr>
+<tr><td><code>health-kit</code> 1.4.1</td><td><code>explicit-command</code> · plugin</td><td><code>explicit-command</code> · plugin (só skills) + cópia verificada</td></tr>
+<tr><td><code>claude-dev-kit</code> 1.3.5</td><td><code>native</code> · plugin</td><td><code>unsupported</code> · —</td></tr>
+<tr><td><code>supabase-pack</code> 1.2.1</td><td><code>explicit-command</code> · plugin</td><td><code>explicit-command</code> · plugin (só skills) + cópia verificada</td></tr>
+<tr><td><code>agent-framework-wizard</code> 1.2.3</td><td><code>explicit-command</code> · plugin</td><td><code>explicit-command</code> · cópia verificada</td></tr>
+<tr><td><code>dev-squad-kit</code> 1.2.1</td><td><code>native</code> · plugin</td><td><code>explicit-command</code> · plugin (só skills) + cópia verificada</td></tr>
+<tr><td><code>gotcha-memory</code> 1.1.1</td><td><code>native</code> · plugin + hooks depois de colar o wiring</td><td><code>explicit-command</code> · plugin (só skills) + cópia verificada</td></tr>
 </tbody>
 </table>
 <p>No Claude Code todo módulo é um plugin do marketplace, e um módulo que declara hooks os arma depois
@@ -329,7 +330,7 @@ distribuição e os checksums dos módulos são reportados como não verificados
 <table>
 <thead><tr><th>código</th><th>significado</th><th>onde</th></tr></thead>
 <tbody>
-<tr><td><code>0</code></td><td>ok; no modo <code>audit</code>, sempre</td><td>todo comando</td></tr>
+<tr><td><code>0</code></td><td>ok; no modo <code>audit</code>, todo veredito (um arquivo de política recusado ainda sai com 2)</td><td>todo comando</td></tr>
 <tr><td><code>1</code></td><td>warn ou gate manual; um gate de eval que falhou</td><td><code>policy check</code> (<code>MANUAL</code> em <code>enforce</code>), <code>eval run</code>, <code>benchmark</code>, <code>init</code> com avisos, <code>decide eval</code> quando o gate dele falha (novo na 2.6.0), <code>evidence run</code> quando o bundle não passou, <code>evidence verify</code> sobre um registro íntegro de uma execução que não passou, <code>retrieval eval</code> quando o gate dele falha, <code>cite check</code> com um aviso (<code>TOO_MANY</code>, <code>UNCITED_CLAIM</code>) (novo na 2.6.0), <code>deliberate record</code> quando o veredito está bloqueado ou o juiz falhou, <code>evidence mutate</code> com ponto cego, execução incompleta ou nenhum mutante aplicado (novo na 2.7.0), <code>work coverage</code> quando um critério não está coberto ou, com <code>--junit</code>, não foi executado, <code>findings check</code> quando uma lente achou algo (novo na 2.8.0)</td></tr>
 <tr><td><code>2</code></td><td>block; uma entrada recusada (manifesto ruim, spec ruim, log corrompido, attestation inválida)</td><td><code>policy check</code> (<code>BLOCK</code>), <code>attest</code>, <code>decide validate</code> e <code>decide eval</code> sobre um registro ou suíte que quebra o contrato (novo na 2.6.0), <code>evidence run</code> sobre um pedido recusado ou um evento que ele não conseguiu acrescentar, <code>evidence verify</code> sobre um registro editado ou que se contradiz, ou cujo artefato mudou ou sumiu, <code>retrieval eval</code> sobre uma suíte ou um argumento recusados, <code>cite check</code> sobre <code>UNKNOWN_ID</code>, <code>RANGE</code> ou <code>EMPTY_MARKER</code> ou uma entrada recusada (novo na 2.6.0), <code>deliberate</code> sobre painel, turno ou juiz recusado, sessão que não parou ou registro que não verifica, <code>evidence mutate</code> quando o critério não passa na cópia limpa (<code>no-control</code>) ou um mutante é recusado (novo na 2.7.0), <code>work coverage</code> sobre um relatório recusado ou um caminho de testes sem fonte Python, <code>findings check</code> sobre um documento que quebra o contrato (novo na 2.8.0), <code>event verify</code> e <code>status</code> sobre uma cadeia de hash quebrada, <code>policy check</code> sobre um arquivo de política recusado, <code>attest verify</code> e <code>evidence verify</code> com <code>--allowed-signers</code> sobre um registro cuja assinatura falta, não é aceita ou cobre bytes alterados, todo erro de validação</td></tr>
 <tr><td><code>3</code></td><td>erro de uso ou interno</td><td>erros de uso do <code>init</code>, exceções inesperadas</td></tr>
@@ -346,8 +347,10 @@ interrompe os estágios restantes quando um estágio falha com uma dica bloquean
 chamado <code>CONTROLE</code> que prova que o arquivo consegue falhar. Neste repositório um teste pula de propósito
 (a cópia emitida é coberta pelo teste seguinte); a árvore-fonte do harness, que não tem
 <code>marketplace.json</code>, pula os dois testes que precisam dele. A CI roda a suíte,
-<code>hpp doctor</code> e <code>hpp benchmark -k 3</code> em Linux, macOS e Windows, de Python 3.10 a 3.13, com
-permissões somente de leitura e nenhum passo autorizado a falhar em silêncio.</p>
+<code>hpp doctor</code> e <code>hpp benchmark -k 3</code> em Linux, macOS e Windows, de Python 3.10 a 3.13, e um job
+<code>lint</code> roda <code>ruff check hpp tests scripts</code> contra o conjunto de regras do <code>pyproject.toml</code>, com o
+ruff instalado a partir de um arquivo de requirements fixado por hash; todo job tem permissões
+somente de leitura e nenhum passo é autorizado a falhar em silêncio.</p>
 <pre><code class="language-bash">python -m pytest tests -q
 python -m hpp doctor
 python -m hpp benchmark -k 3</code></pre>

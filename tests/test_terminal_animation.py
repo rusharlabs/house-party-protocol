@@ -23,7 +23,12 @@ What can break without anybody noticing, and what the tests below pin:
    the command did not return. Its beats declare the exit status they must return and the run
    stops on any other; a status other than 0 is shown on screen, every status is recorded in
    the desc, and a line read from stderr is named as such. Adding it must not move the README
-   demo by one byte (the CONTROL tests on `hpp-demo.svg` and on `--animate` without a session).
+   demo by one byte (the CONTROL tests on `hpp-demo.svg` and on `--animate` without a session);
+7. the install journey (`--animate --session install`, the README's first image) shows a command
+   other than the one that ran, or a line of `hpp init` that is not a whole line of its output. It
+   shows two runs of one command's output, so a shot may carry runs with the lines between them
+   counted on screen; a shot of one run renders byte for byte as before (the CONTROL tests re-render
+   every shipped session from the rows it shows).
 
 The reveal time of a row is read from the CSS itself. A looping stagger cannot be written with
 `animation-delay` alone (it shifts only the first iteration, so from the second loop on every
@@ -50,6 +55,7 @@ MEDIA_SCRIPT = PRODUCT_ROOT / "scripts" / "render_demo_media.py"
 TERMINAL = PRODUCT_ROOT / "assets" / "terminal"
 DEMO_SVG = TERMINAL / "hpp-demo.svg"
 ATTEST_SVG = TERMINAL / "hpp-attest-demo.svg"
+INSTALL_SVG = TERMINAL / "hpp-install.svg"
 STATIC_CAPTURES = ("hpp-doctor.svg", "hpp-init.svg", "lane-board.svg")
 SVG = "{http://www.w3.org/2000/svg}"
 
@@ -127,6 +133,62 @@ def _demo_inputs(rts, raw: bytes) -> tuple[list, str, str]:
         else:
             shots[-1]["lines"].append(text)
     return [rts.Shot(s["command"], tuple(s["lines"]), s["before"], s["after"]) for s in shots], caption, stamp
+
+
+_EXITED = re.compile(r"⋯ exit (\d+)")
+
+
+def _read_back(rts, raw: bytes) -> tuple[list, str]:
+    """(shots, stamp) any animated capture shows, read back from its rows and its desc.
+
+    Every kind of row is understood: a `⋯ N lines not shown` row before a shot's first line counts
+    the lines above them, one after its last line the lines below, and one between two of its lines
+    the lines left out there; a `⋯ exit N` row is a status. The stream and a status of 0, which add
+    no row, are read from the desc, where each shot's record ends with them.
+    """
+    root = ET.fromstring(raw)
+    text = raw.decode("utf-8")
+    stamp = unescape(_TITLE.search(text).group(2))
+    desc = root.find(f"{SVG}desc").text
+    shots: list[dict] = []
+    seen = -1
+    for group in root.iter(f"{SVG}g"):
+        if group.get("class") != "r":
+            continue
+        index = int(re.fullmatch(r"animation-name:r(\d+)", group.get("style", "")).group(1))
+        if shots:
+            shots[-1]["events"] += [("line", "")] * (index - seen - 1)
+        seen = index
+        texts = group.findall(f"{SVG}text")
+        if any(child.tag == f"{SVG}g" and child.get("class") == "t" for child in group):
+            shots.append({"command": "".join(texts[1].itertext()), "events": []})
+            continue
+        if group.find(f"{SVG}rect[@class='b']") is not None:
+            break
+        row = "".join("".join(node.itertext()) for node in texts)
+        gap = _NOT_SHOWN.fullmatch(row)
+        if gap:
+            shots[-1]["events"].append(("gap", int(gap.group(1))))
+        elif not _EXITED.fullmatch(row):
+            shots[-1]["events"].append(("line", row))
+    read = []
+    for number, shot in enumerate(shots, 1):
+        events = shot["events"]
+        before = events.pop(0)[1] if events and events[0][0] == "gap" else 0
+        after = events.pop()[1] if events and events[-1][0] == "gap" else 0
+        lines, between = [], []
+        for kind, value in events:
+            if kind == "gap":
+                between.append((len(lines), value))
+            else:
+                lines.append(value)
+        record = re.search(rf"{number}\) {re.escape(shot['command'])} — .+?(?: on (\w+))?(?:, exit (\d+))?(?:; \d+\) |\.(?: |$))",
+                           desc)
+        stream, code = record.group(1) or "stdout", record.group(2)
+        extra = {"between": tuple(between)} if between else {}  # a shot of one run is built as it always was
+        read.append(rts.Shot(shot["command"], tuple(lines), before, after, stream,
+                             None if code is None else int(code), **extra))
+    return read, stamp
 
 
 def _keyframes(style: str) -> dict[str, list[tuple[list[float], dict[str, str]]]]:
@@ -283,6 +345,87 @@ def test_CONTROLE_animate_without_a_session_still_writes_the_readme_demo(rts, tm
     expected = rts.render_animated(rts.session_shots(rts.DEMO, CANNED_DEMO), "2026-09-27",
                                    rts.DEMO_CAPTION, rts.DEMO_SETTING)
     assert (tmp_path / rts.DEMO_FILE).read_bytes() == expected.encode("utf-8")
+
+
+def test_CONTROLE_the_shipped_attest_story_is_still_exactly_what_render_animated_produces(rts) -> None:
+    """CONTROL — a shot of one run renders as it did before a shot could show several: the shipped
+    `hpp-attest-demo.svg`, with its stderr line, its statuses and its command that prints nothing,
+    re-rendered from what it shows with ATTEST's caption and setting, comes back byte for byte."""
+    raw = ATTEST_SVG.read_bytes()
+    shots, stamp = _read_back(rts, raw)
+    assert [shot.exit_code for shot in shots] == [code for _, _, code in rts.ATTEST], shots
+    assert shots[0].stream == "stderr" and shots[3].lines == (), shots
+    assert rts.render_animated(shots, stamp, rts.ATTEST_CAPTION, rts.ATTEST_SETTING).encode("utf-8") == raw, (
+        "hpp-attest-demo.svg is no longer what render_animated() produces from the rows it shows"
+    )
+    edited = shots[1]._replace(lines=(shots[1].lines[0] + "x", *shots[1].lines[1:]))
+    assert rts.render_animated([shots[0], edited, *shots[2:]], stamp, rts.ATTEST_CAPTION,
+                               rts.ATTEST_SETTING).encode("utf-8") != raw
+
+
+def test_CONTROLE_the_two_readers_agree_on_the_readme_demo(rts) -> None:
+    """CONTROL of the reader above: on the demo, which has no status, no stderr and one run per
+    shot, it reads exactly what the demo's own reader reads."""
+    raw = DEMO_SVG.read_bytes()
+    demo_shots, _, stamp = _demo_inputs(rts, raw)
+    assert _read_back(rts, raw) == (demo_shots, stamp)
+
+
+# --------------------------------------------------------------------------- one shot, several runs of its output
+
+def test_a_shot_shows_two_runs_of_its_output_and_counts_the_lines_between(rts) -> None:
+    """GATE 1e — the install journey shows the start of `hpp init` and its end. A shot carries the
+    whole lines of each run in order, and the rows between two runs state how many lines were left
+    out there; no line is edited and none is invented to join them."""
+    shot = rts.Shot("python -m hpp init", ("head", "", "bar", "mark", "> welcome"), before=0, after=1,
+                    between=((2, 78),))
+    svg = rts.render_animated([shot], SAMPLE_STAMP, "runs sample")
+    session = _session(svg)
+    rows = session["rows"]
+    texts = [row["text"] for row in rows]
+    assert texts == ["$ python -m hpp init", "head", "⋯ 78 lines not shown", "bar", "mark", "> welcome",
+                     "⋯ 1 line not shown", "$ "], texts
+    times = [row["at"] for row in rows]
+    assert all(later > earlier for earlier, later in zip(times, times[1:])), times
+    ys = [next(iter(row["ys"])) for row in rows]
+    assert ys[1] - ys[0] == rts.LINE_H and ys[2] - ys[1] == 2 * rts.LINE_H, "the blank line keeps its row"
+    desc = session["root"].find(f"{SVG}desc").text
+    assert "1) python -m hpp init — lines 1-2 and 81-83 of 84." in desc, desc
+    _assert_self_contained(svg)
+    assert _read_back(rts, svg.encode("utf-8"))[0] == [shot], "the file must say which lines it shows"
+
+
+def test_select_segments_finds_each_run_below_the_one_before(rts) -> None:
+    lines = ["> done.", "head", "> one", "> done.", "middle", "> one", "tail", "> done."]
+    assert rts.select_segments(lines, [("head", "> one")]) == [(1, 2)]
+    # the second run's anchors are searched only below the first run, never above it
+    assert rts.select_segments(lines, [("head", "> one"), ("> one", "> done.")]) == [(1, 2), (5, 7)]
+    shot = rts.segmented_shot("c", lines, [(1, 2), (5, 7)])
+    assert shot == rts.Shot("c", ("head", "> one", "> one", "tail", "> done."), 1, 0, between=((2, 2),))
+
+
+def test_select_segments_refuses_a_run_it_cannot_find_or_that_leaves_nothing_out(rts) -> None:
+    """GATE 1e — two runs are shown because lines lie between them; anchors that find no line, or
+    runs that touch, no longer describe the output they were written for, so the render refuses."""
+    lines = ["head", "bar", "mark", "> welcome"]
+    with pytest.raises(ValueError, match="no line starts with"):
+        rts.select_segments(lines, [("head", "bar"), ("zzz", "> welcome")])
+    with pytest.raises(ValueError, match="no line starts with"):
+        rts.select_segments(lines, [("mark", "> welcome"), ("head", "bar")])  # a run above the one before
+    with pytest.raises(ValueError, match="nothing is left out"):
+        rts.select_segments(lines, [("head", "bar"), ("mark", "> welcome")])
+
+
+def test_CONTROLE_a_single_run_builds_the_shot_a_shot_always_was(rts) -> None:
+    """CONTROL — one run is the shot `session_shots` has always built: same lines, same counts, and
+    no run boundary, so it renders byte for byte as before."""
+    lines = ["banner", "house-party init · plan", "", "> protocol online.", "more", "more"]
+    ranges = rts.select_segments(lines, [("house-party init", "> protocol online.")])
+    built = rts.segmented_shot("python -m hpp init", lines, ranges)
+    assert built == rts.Shot("python -m hpp init", tuple(lines[1:4]), 1, 2)
+    assert built.between == ()
+    assert rts.render_animated([built], SAMPLE_STAMP, "c") == rts.render_animated(
+        [rts.Shot("python -m hpp init", tuple(lines[1:4]), 1, 2)], SAMPLE_STAMP, "c")
 
 
 # --------------------------------------------------------------------------- the animated render
@@ -541,9 +684,10 @@ def test_the_desc_records_every_status_and_names_a_line_read_from_stderr(refusal
 
 
 def test_animate_session_names_the_story_and_the_readme_demo_is_the_default(rts, tmp_path: Path, monkeypatch) -> None:
-    assert sorted(rts.SESSIONS) == ["attest", "demo"]
+    assert sorted(rts.SESSIONS) == ["attest", "demo", "install"]
     assert rts.SESSIONS["demo"].file == rts.DEMO_FILE
     assert rts.SESSIONS["attest"].file == ATTEST_SVG.name
+    assert rts.SESSIONS["install"].file == INSTALL_SVG.name
     monkeypatch.setattr(rts, "run_session", lambda argvs, root: list(CANNED_DEMO))
     monkeypatch.setattr(rts, "date", _Day)
     default, named = tmp_path / "default", tmp_path / "named"
@@ -645,9 +789,133 @@ def test_the_media_tool_reads_the_cycle_and_size_every_animated_capture_declares
     assert spec is not None and spec.loader is not None
     media = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(media)
-    for path in (DEMO_SVG, ATTEST_SVG):
+    for path in (INSTALL_SVG, DEMO_SVG, ATTEST_SVG):
         session = _session(path.read_text(encoding="utf-8"))
         size = (int(session["root"].get("width")), int(session["root"].get("height")))
         assert media.read_capture(path) == (session["cycle"], *size), path.name
     with pytest.raises(SystemExit, match="not an animated capture"):
         media.read_capture(TERMINAL / "hpp-doctor.svg")
+
+
+# --------------------------------------------------------------------------- the install journey: the README's first image
+
+INSTALL_COMMANDS = ["pip install house-party-protocol", "hpp init --target your-repo"]
+# Why: the README's first image loads before anything else on the page, and a text capture has no
+# reason to weigh more than the logo above it.
+INSTALL_BUDGET = 60_000
+# Why: the first image should fit one laptop screen below the page header; 34 rows is 756 px at 20 px
+# a row. Measured when it was written: 32 rows (3 for pip, 28 for init, the idle prompt).
+INSTALL_ROWS = 34
+_MACHINE_PATH = re.compile(r"(?<![A-Za-z])[A-Za-z]:[\\/]|/Users/|/home/|AppData|hpp-svg-")
+
+
+def _version() -> str:
+    """The version this checkout builds, as pyproject.toml declares it."""
+    text = (PRODUCT_ROOT / "pyproject.toml").read_text(encoding="utf-8")
+    return re.search(r'^version = "([^"]+)"', text, re.MULTILINE).group(1)
+
+
+def test_the_install_story_runs_here_and_shows_what_it_installed(rts) -> None:
+    """The story is regenerated from a live run: a wheel of this checkout, served by a local index to
+    a throwaway virtual environment, installed by the plain command, then `hpp init` run from that
+    environment. Measured here, not at release: if pip or init changed shape, the anchors that pick
+    the lines would no longer match and regeneration would refuse."""
+    shots = rts.SESSIONS["install"].shoot(PRODUCT_ROOT)
+    assert [shot.command for shot in shots] == INSTALL_COMMANDS == [shlex.join(argv) for argv, _ in rts.INSTALL]
+    pip, init = shots
+    assert pip.lines == (f"Successfully installed house-party-protocol-{_version()}",) and pip.before > 0, pip
+    assert init.lines[0].startswith(f"house-party init · v{_version()} · "), init.lines[0]
+    assert "> protocol online." in init.lines
+    readiness = next(index for index, line in enumerate(init.lines) if line.startswith("  READINESS"))
+    assert re.search(r"\d+/\d+ verified", init.lines[readiness + 1]), init.lines[readiness + 1]
+    assert len(init.between) == 1 and init.between[0][0] == readiness + 2 and init.between[0][1] > 0, init.between
+    assert "  BY RUSHAR LABS" in init.lines and init.lines[-1].startswith("> Welcome to the party.")
+    assert init.after == 0
+    assert not any(_MACHINE_PATH.search(line) for shot in shots for line in shot.lines), shots
+    rows = sum(1 + len(shot.lines) + bool(shot.before) + bool(shot.after) + len(shot.between) for shot in shots)
+    assert rows + 1 <= INSTALL_ROWS, f"the story would need {rows + 1} rows"
+
+
+def test_the_install_story_refuses_a_pip_line_that_names_another_package(rts, monkeypatch) -> None:
+    """GATE 1e — the first beat must show pip installing THIS checkout's version and nothing else; a
+    run that installed another version, or something more, stops the render. The CONTROL is the same
+    check passing the line it expects."""
+    expected = f"Successfully installed house-party-protocol-{_version()}"
+    init = rts.Shot("hpp init --target your-repo", ("house-party init",))
+
+    def canned(line):
+        return lambda steps, root: [rts.Shot("pip install house-party-protocol", (line,), 3), init]
+
+    for wrong in ("Successfully installed house-party-protocol-0.0.1",
+                  f"Successfully installed house-party-protocol-{_version()} other-1.0"):
+        monkeypatch.setattr(rts, "run_install_session", canned(wrong))
+        with pytest.raises(SystemExit, match="not the version of"):
+            rts.SESSIONS["install"].shoot(PRODUCT_ROOT)
+    monkeypatch.setattr(rts, "run_install_session", canned(expected))
+    assert rts.SESSIONS["install"].shoot(PRODUCT_ROOT)[0].lines == (expected,)
+
+
+def test_the_readme_first_image_is_the_install_journey_rendered_from_a_real_run(rts) -> None:
+    """The shipped `hpp-install.svg`: generator output of the two commands exactly as typed, the pip
+    line naming this checkout's version, the start of `hpp init` up to its READINESS bar, the lines
+    left out counted, and its end from the wordmark to the welcome line."""
+    assert INSTALL_SVG.is_file(), "assets/terminal/hpp-install.svg does not exist"
+    raw = INSTALL_SVG.read_bytes()
+    assert len(raw) < INSTALL_BUDGET, f"{INSTALL_SVG.name} is {len(raw):,} bytes, over {INSTALL_BUDGET:,}"
+    svg = raw.decode("utf-8")
+    _assert_self_contained(svg)
+    # the detector discriminates: it finds a drive, a home and a temporary name, and not the namespace URL
+    # Why: the home is spelled in two pieces so that tests/test_no_personal_paths.py reads no account here.
+    assert all(_MACHINE_PATH.search(path) for path in ("C:\\Temp\\x", "c:/tmp", "/home" + "/ci", "hpp-svg-1x"))
+    assert not _MACHINE_PATH.search("http://www.w3.org/2000/svg")
+    assert not _MACHINE_PATH.search(svg), _MACHINE_PATH.search(svg)
+    session = _session(svg)
+    rows = session["rows"]
+    assert [row["text"][2:] for row in rows if row["kind"] == "cmd"] == INSTALL_COMMANDS
+    desc = session["root"].find(f"{SVG}desc").text
+    assert "scripts/render_terminal_svg.py; no image was edited by hand" in desc
+    assert desc.endswith(rts.INSTALL_SETTING), "the desc must carry the setting the story ran in"
+    for needle in ("local index", "PIP_INDEX_URL", "before the upload", "the same command installs the same package from PyPI"):
+        assert needle in rts.INSTALL_SETTING, needle
+    lines = [row["text"] for row in rows if row["kind"] == "line"]
+    assert re.fullmatch(r"⋯ \d+ lines? not shown", lines[0]), lines[0]
+    assert lines[1] == f"Successfully installed house-party-protocol-{_version()}", "render it again from this checkout"
+    assert lines[2].startswith(f"house-party init · v{_version()} · "), lines[2]
+    bar = next(index for index, line in enumerate(lines) if re.search(r"\d+/\d+ verified", line))
+    assert "> protocol online." in lines[:bar]
+    assert re.fullmatch(r"⋯ \d+ lines not shown", lines[bar + 1]), lines[bar + 1]
+    assert "  BY RUSHAR LABS" in lines[bar + 2:] and lines[-1].startswith("> Welcome to the party."), lines[-4:]
+    assert rows[-1]["kind"] == "idle", "the loop ends on an idle prompt"
+    times = [row["at"] for row in rows]
+    assert all(later > earlier for earlier, later in zip(times, times[1:])), times
+    assert "@media (prefers-reduced-motion:reduce)" in session["style"]
+    assert 10 <= session["cycle"] <= 30, f"one loop lasts {session['cycle']} s"
+    assert len(rows) <= INSTALL_ROWS, f"{len(rows)} rows"
+
+
+def test_CONTROLE_the_shipped_install_journey_is_exactly_what_render_animated_produces(rts) -> None:
+    """CONTROL — the shipped `hpp-install.svg`, re-rendered from what it shows with INSTALL's caption
+    and setting, comes back byte for byte: its two runs of `hpp init` are the lines it records."""
+    raw = INSTALL_SVG.read_bytes()
+    shots, stamp = _read_back(rts, raw)
+    assert [shot.command for shot in shots] == INSTALL_COMMANDS and len(shots[1].between) == 1, shots
+    assert rts.render_animated(shots, stamp, rts.INSTALL_CAPTION, rts.INSTALL_SETTING).encode("utf-8") == raw, (
+        "hpp-install.svg is no longer what render_animated() produces from the rows it shows"
+    )
+    moved = shots[1]._replace(between=((shots[1].between[0][0], shots[1].between[0][1] + 1),))
+    assert rts.render_animated([shots[0], moved], stamp, rts.INSTALL_CAPTION,
+                               rts.INSTALL_SETTING).encode("utf-8") != raw, "one more line left out is a different file"
+
+
+def test_animate_session_install_writes_the_readme_first_image(rts, tmp_path: Path, monkeypatch) -> None:
+    """`--animate --session install` writes `hpp-install.svg` with INSTALL's caption and setting from
+    what the run returned, and nothing else."""
+    shots = [rts.Shot("pip install house-party-protocol", (f"Successfully installed house-party-protocol-{_version()}",), 3),
+             rts.Shot("hpp init --target your-repo", ("house-party init", "bar", "mark", "> welcome"), 0, 0,
+                      between=((2, 90),))]
+    monkeypatch.setattr(rts, "run_install_session", lambda steps, root: list(shots))
+    monkeypatch.setattr(rts, "date", _Day)
+    assert rts.main(["--animate", "--session", "install", "--out-dir", str(tmp_path)]) == 0
+    assert [path.name for path in tmp_path.iterdir()] == [INSTALL_SVG.name]
+    expected = rts.render_animated(shots, "2026-09-27", rts.INSTALL_CAPTION, rts.INSTALL_SETTING)
+    assert (tmp_path / INSTALL_SVG.name).read_bytes() == expected.encode("utf-8")

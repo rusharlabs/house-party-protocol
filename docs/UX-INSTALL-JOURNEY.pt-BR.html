@@ -80,7 +80,7 @@
 <blockquote class="measured">
 <p><strong>Versão:</strong> 2.0.0 — camada de apresentação sobre dois contratos congelados.
 <strong>Caminho 1</strong> é o <code>hpp init</code>, o instalador do harness (<code>hpp/wizard.py</code>, seis estágios, plano e
-depois <code>--apply</code>). <strong>Caminho 2</strong> é o instalador de módulos, <code>installers/kit-forge-1.5.1/kit_doctor.py</code>,
+depois <code>--apply</code>). <strong>Caminho 2</strong> é o instalador de módulos, <code>installers/kit-forge-1.5.2/kit_doctor.py</code>,
 cuja mecânica vive em <code>INSTALL-CONTRACT.md</code> e cujo README por módulo segue o
 <code>INSTALL-GUIDE-TEMPLATE.md</code>; os dois viajam na raiz deste repositório. Este documento descreve
 a EXPERIÊNCIA: como um AGENTE (Claude Code ou Codex CLI) guia um HUMANO pela instalação, numa
@@ -128,7 +128,7 @@ terminou.</p>
 <tr><td><code>prereqs</code></td><td><code>checking prerequisites...</code></td><td>Python igual ou acima de 3.10; o contrato do manifesto; a distribuição quando o <code>marketplace.json</code> está ao lado do manifesto; <code>git</code> no <code>PATH</code></td><td>Python abaixo do piso ou divergência manifesto/marketplace interrompe (exit 2)</td></tr>
 <tr><td><code>profile</code></td><td><code>mounting profile...</code></td><td>quatro respostas — host, bundle, modo de política e um conselheiro de decisão opcional (novo na 2.6.0; padrão <code>off</code>, nunca contado como default pendente) — vindas de flags, de <code>--profile</code>, do prompt (só em TTY) ou do default, com a origem de cada uma registrada</td><td>um profile gravado com respostas diferentes é um <code>conflict</code>; nada é sobrescrito</td></tr>
 <tr><td><code>configure</code></td><td><code>loading modules...</code></td><td>o plano de módulos para o host, <code>native</code> ou <code>explicit-command</code> por módulo, e o <code>CHECKSUMS.txt</code> de cada diretório de módulo presente</td><td>um módulo sem suporte no host, ou um checksum divergente, interrompe (exit 2)</td></tr>
-<tr><td><code>wire-suggest</code></td><td><code>wiring suggestions...</code></td><td>o bloco a colar: linhas de plugin para Claude Code, linhas do instalador de módulos para Codex CLI e para módulos explicit-command, o comando de política como configurado; antes do bloco, uma tabela HOOK CAPABILITIES — cada hook que os módulos escolhidos declaram, com seus eventos, sua política de saída (<code>observe</code>, <code>warn</code>, <code>block</code>) e seus grupos de capacidade — contada na linha de abertura (<code>17 hooks declaring capabilities</code> para <code>reliable-coding</code>)</td><td>nada; ele nunca escreve</td></tr>
+<tr><td><code>wire-suggest</code></td><td><code>wiring suggestions...</code></td><td>o bloco a colar: no Claude Code, linhas de plugin, mais linhas do instalador de módulos para os módulos explicit-command dele; no Codex CLI, <code>codex plugin marketplace add</code> e um <code>codex plugin add</code> por módulo que carrega skills (só skills), depois uma linha do instalador de módulos por módulo; o comando de política como configurado; antes do bloco, uma tabela HOOK CAPABILITIES — cada hook que os módulos escolhidos declaram, com seus eventos, sua política de saída (<code>observe</code>, <code>warn</code>, <code>block</code>) e seus grupos de capacidade — contada na linha de abertura (<code>17 hooks declaring capabilities</code> para <code>reliable-coding</code>)</td><td>nada; ele nunca escreve</td></tr>
 <tr><td><code>smoke</code></td><td><code>verifying evidence...</code></td><td>quatro controles: classificador de política, grafo de capacidades, log de eventos, benchmark em <code>k=1</code></td><td>um controle reprovado põe exit 1 e se nomeia</td></tr>
 </tbody>
 </table>
@@ -161,9 +161,11 @@ ganha um item verificado:</li>
     .hpp/profile.json    written      host=claude-code · bundle=reliable-coding · policy=audit</code></pre>
 <ol start="5">
 <li><strong>Wiring, pelo humano.</strong> O agente mostra o bloco de wiring como impresso e <strong>o humano cola</strong>:
-linhas <code>/plugin marketplace add</code> e <code>/plugin install</code> no Claude Code, linhas do instalador de
-módulos no Codex CLI e para módulos explicit-command. O <code>hpp init</code> nunca edita <code>settings.json</code>,
-hooks ou <code>AGENTS.md</code>; o wiring do host continua <code>not verified</code> até o humano tê-lo feito.</li>
+no Claude Code, linhas <code>/plugin marketplace add</code> e <code>/plugin install</code>, mais linhas do instalador
+de módulos para os módulos explicit-command dele; no Codex CLI, <code>codex plugin marketplace add</code>
+e um <code>codex plugin add</code> por módulo que carrega skills (só skills), depois uma linha do
+instalador de módulos por módulo. O <code>hpp init</code> nunca edita <code>settings.json</code>, hooks ou
+<code>AGENTS.md</code>; o wiring do host continua <code>not verified</code> até o humano tê-lo feito.</li>
 </ol>
 <p>Rodar o mesmo comando de novo é seguro: o <code>detect</code> reporta <code>re-run · 1 existing item(s) preserved</code>
 e o <code>profile</code> reporta <code>unchanged</code>. Respostas diferentes contra um profile gravado são um
@@ -213,7 +215,7 @@ recebeu e não inventa nenhum.</p>
 <tr><td><code>--yes</code>, <code>--non-interactive</code>, <code>--json</code>, ou <code>CI</code> no ambiente</td><td>nenhum prompt é alcançado; perguntas sem resposta tomam o default e o relatório diz isso</td></tr>
 <tr><td><code>--no-animation</code></td><td>saída simples; <code>NO_COLOR</code> é respeitado; sem TTY a saída é completa e sem cor</td></tr>
 <tr><td><code>--no-benchmark</code></td><td>pula o controle de benchmark no smoke; ele é reportado como não verificado, não descartado em silêncio</td></tr>
-<tr><td><code>--marketplace &lt;slug&gt;</code></td><td>o slug usado no bloco de wiring do Claude Code, para forks</td></tr>
+<tr><td><code>--marketplace &lt;slug&gt;</code></td><td>o slug usado nas linhas <code>/plugin marketplace add</code> (Claude Code) e <code>codex plugin marketplace add</code> (Codex CLI) do bloco de wiring, para forks</td></tr>
 <tr><td><code>--json</code></td><td>o mesmo relatório em JSON (<code>schema: hpp.init-report/v1</code>), com <code>exit_code</code>, <code>readiness</code> e o detalhe de cada estágio — para CI e para agentes</td></tr>
 </tbody>
 </table>
@@ -251,13 +253,13 @@ If this is fine, say "apply it" and I run the same command with --apply.</code><
     <section id="caminho-2--o-instalador-de-módulos-kit_doctorpy"><div class="wrap">
       <p class="eyebrow">03</p>
       <h2>Caminho 2 — o instalador de módulos (<code>kit_doctor.py</code>)</h2>
-<p>As linhas que o <code>hpp init</code> imprime no bloco de wiring para o Codex CLI, e para módulos
-explicit-command no Claude Code, são este instalador. Ele copia um módulo por vez para dentro do
-alvo e roda os smokes declarados do módulo; planeja primeiro e aplica só numa segunda invocação
-explícita.</p>
+<p>As linhas do instalador de módulos que o <code>hpp init</code> imprime no bloco de wiring — uma por módulo no
+Codex CLI, depois das linhas de plugin, e uma por módulo explicit-command no Claude Code — são este
+instalador. Ele copia um módulo por vez para dentro do alvo e roda os smokes declarados do módulo;
+planeja primeiro e aplica só numa segunda invocação explícita.</p>
 <h3 id="a-jornada-em-5-passos-igual-nos-4-cenários">A jornada em 5 passos (igual nos 4 cenários)</h3>
 <ol>
-<li><strong>Plano.</strong> O agente roda <code>python installers/kit-forge-1.5.1/kit_doctor.py install --kit &lt;dir-do-módulo&gt; --host &lt;host&gt; --target &lt;projeto&gt; --human</code>
+<li><strong>Plano.</strong> O agente roda <code>python installers/kit-forge-1.5.2/kit_doctor.py install --kit &lt;dir-do-módulo&gt; --host &lt;host&gt; --target &lt;projeto&gt; --human</code>
 (<code>--human</code> escolhe o relatório legível). Modo plano é o default: nenhuma escrita acontece,
 exit 0.</li>
 <li><strong>Tradução.</strong> O agente cola na conversa o bloco de confirmação (molde na seção "Bloco de
@@ -356,7 +358,7 @@ o agente fala na língua do humano e adapta as palavras, não a estrutura.</p>
 <h3 id="exemplo-end-to-end-greenfield-execução-real">Exemplo end-to-end (greenfield, execução real)</h3>
 <p>Módulo: <code>operator-kit-1.5.0</code>. Comando que o agente rodou (saída real abaixo). Esta captura é
 datada: ela é anterior ao caminho versionado do instalador. Na distribuição atual o módulo é o
-<code>operator-kit-1.5.0</code> e o instalador vive em <code>installers/kit-forge-1.4.1/kit_doctor.py</code>; os
+<code>operator-kit-1.8.1</code> e o instalador vive em <code>installers/kit-forge-1.5.2/kit_doctor.py</code>; os
 estágios, as flags (<code>--target</code>, <code>--host</code>, <code>--answers</code>, <code>--apply</code>, <code>--human</code>) e a forma da saída
 são os mesmos.</p>
 <pre><code>$ python installers/kit-forge-1.4.1/kit_doctor.py install frameworks/operator-kit-1.5.0 \

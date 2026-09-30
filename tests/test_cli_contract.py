@@ -17,8 +17,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-import pytest
-
 from hpp import __version__, cli
 from hpp.manifest import load_manifest
 

@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "house-party-protocol"
-version = "2.10.1"
+version = "2.11.0"
 description = "Local-first harness for coding-agent teams: cross-model review and evidence before done."
 readme = "README.md"
 license = "MIT"
@@ -58,3 +58,16 @@ packages = ["hpp"]
 # byte-identical copy under hpp/examples/; the root directory stays the source of truth and
 # the same test file rejects drift.
 hpp = ["hpp.manifest.json", "examples/reliable-coding/*"]
+
+[tool.ruff]
+# Why: without this table ruff applies the default rule set of whichever version runs, and that
+# default changes between versions, so two contributors could get different findings from the
+# same file. The CI "lint" job runs `ruff check hpp tests scripts` against this table.
+target-version = "py310"
+
+[tool.ruff.lint]
+# Why: a deliberately small set that can be kept at zero -- pyflakes (F: unused imports and
+# variables, undefined names, redefinitions) and pycodestyle's E4 (import placement), E7
+# (statements: comparisons to None/True, bare except, assigned lambdas, ambiguous names) and E9
+# (a file that cannot be read). No formatting rules: they would reformat, not find defects.
+select = ["E4", "E7", "E9", "F"]

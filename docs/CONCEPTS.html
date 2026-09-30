@@ -114,7 +114,10 @@ declares no hook is refused, which is a contract change and not an addition.</p>
 components (skills, hooks, commands, agents, rules, templates, scripts) and declared coverage per
 host.</p>
 <p><strong>Is not:</strong> a plugin in the Claude Code sense only. The same module is a plugin on Claude Code
-and a verified copy on Codex CLI. A module is also not a dependency of another by default: today
+and a verified copy on Codex CLI; seven modules are also Codex CLI plugins
+(<code>codex plugin marketplace add rusharlabs/house-party-protocol</code>, then
+<code>codex plugin add &lt;module&gt;@house-party-protocol</code>), and such a plugin registers the module's skills
+only. A module is also not a dependency of another by default: today
 every <code>requires</code> list in the manifest is empty; <code>integrates_with</code> is optional composition.</p>
 <p><strong>Verify:</strong> <code>python -m hpp graph --view capability --format json</code> shows <code>provides</code>,
 <code>supports:&lt;coverage&gt;</code>, <code>requires</code> and <code>integrates-with</code> edges per module.</p>
@@ -722,8 +725,8 @@ same three with <code>--mode audit</code> print the same verdicts and exit 0.</p
 <p><strong>Is:</strong> four process exit codes with fixed meaning across the harness and every module:
 <code>0</code> ok, <code>1</code> warn or manual gate, <code>2</code> block, <code>3</code> usage or internal error.</p>
 <p><strong>Is not:</strong> a suggestion. The manifest is rejected if it declares anything else. In <code>enforce</code>
-mode, <code>BLOCK</code> exits 2 and <code>MANUAL</code> exits 1; in <code>audit</code> mode the verdict is printed and the exit
-is always 0.</p>
+mode, <code>BLOCK</code> exits 2 and <code>MANUAL</code> exits 1; in <code>audit</code> mode the verdict is printed and exits 0.
+A refused project policy file exits 2 in either mode, with no verdict printed.</p>
 <p><strong>Verify:</strong> <code>python -m hpp policy check --mode enforce --command "rm -rf src"</code> exits 2;
 <code>--command "git push origin feature"</code> exits 1; <code>--mode audit</code> with either exits 0.</p>
     </div></section>

@@ -72,7 +72,7 @@ def _outcome(case: dict[str, Any], run_index: int) -> bool:
             raise EvalError(f"command case {case.get('id')} needs a non-empty argv array")
         try:
             result = subprocess.run(command, shell=False, capture_output=True, text=True, timeout=case.get("timeout", 20))
-        except (OSError, subprocess.TimeoutExpired) as exc:
+        except (OSError, subprocess.TimeoutExpired):
             return False
         return result.returncode == 0
     raise EvalError(f"case {case.get('id')} has unsupported runner: {runner}")

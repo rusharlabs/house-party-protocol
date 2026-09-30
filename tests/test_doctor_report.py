@@ -14,8 +14,6 @@ import urllib.parse
 import urllib.request
 from pathlib import Path
 
-import pytest
-
 from hpp import __version__, cli
 
 PRODUCT_ROOT = Path(__file__).resolve().parent.parent

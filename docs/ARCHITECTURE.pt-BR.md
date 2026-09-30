@@ -24,6 +24,7 @@ existe.
 ├──────────────────────────────────────────────────────────────────────────┤
 │ DISTRIBUTION  Claude Code: marketplace.json + plugin per module          │
 │               Codex CLI:   verified copy into .agents/ by the installer  │
+│                            + plugin channel (skills only) for 7 modules  │
 └──────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -38,7 +39,7 @@ nomeia e escreve num pequeno número de caminhos declarados. `decide`, `evidence
 | `cli.py` | parsing de argumentos, despacho, o contrato de saída (`2` para entrada recusada, `3` para erro interno) | todo subcomando, `--self-test` |
 | `manifest.py` | localizar, carregar e validar o manifesto; cruzar com `marketplace.json` e com o `plugin.json` de cada módulo quando presentes, e com o marketplace do Codex (`.agents/plugins/marketplace.json`) e o `.codex-plugin/plugin.json` de cada módulo que ele lista | `doctor` |
 | `state.py` | event log append-only e encadeado por hash (cada linha aponta para o sha256 da anterior; um elo quebrado nomeia o primeiro passo divergente, um log anterior à cadeia lê como `legacy`); projeção dos eventos sobre o loop; recusa de transições inválidas antes da escrita | `event append`, `event verify`, `status`, `resume` |
-| `workgraph.py` | validar uma spec, rejeitar ciclos com o caminho nomeado, ordenar unidades em waves; ligar cada critério de aceite aos testes que o citam e, com um relatório JUnit XML, aos testes que o rodaram | `work plan`, `work waves`, `work coverage` |
+| `workgraph.py` | validar uma spec, rejeitar ciclos com o caminho nomeado, ordenar unidades em waves; ligar cada critério de aceite aos testes que o citam e, com um relatório JUnit XML, aos testes que o rodaram; o plano e as waves em JSON ou Mermaid, a cobertura em JSON | `work plan`, `work waves`, `work coverage` |
 | `findings.py` | conferir o documento `hpp.findings/v1` com que uma lente de revisão responde (código estável, severidade, arquivo e linha, evidência, o universo inspecionado), recusar uma chave que o contrato não define e derivar o veredito | `findings check` (novo na 2.8.0) |
 | `policy.py` | classificar um comando como `ALLOW`, `MANUAL` ou `BLOCK`; aplicar o `.hpp/policy.json` de um projeto, que só pode acrescentar regras ou subir uma classe, nunca baixar; mapear para código de saída por modo | `policy check` |
 | `attest.py` | vincular um veredito à identidade do repositório, ao commit base, ao hash da spec e a um snapshot completo de arquivos; verificar depois; assinar o registro com uma chave SSH quando pedido (`--sign-key`) e exigir essa assinatura no verify (`--allowed-signers`) | `attest create`, `attest verify` |
@@ -46,7 +47,7 @@ nomeia e escreve num pequeno número de caminhos declarados. `decide`, `evidence
 | `hosts.py` | a matriz host x módulo x canal derivada de `hosts` e `components` no manifesto, renderizada para os documentos | `doctor --matrix` |
 | `context.py` | encaixar blocos inteiros sob um orçamento de caracteres com hashes de proveniência; recusar entrada que se pareça com segredo | `context compile`, `map context` |
 | `routing.py` | escolher um tier e um id de provedor a partir de risco, complexidade, tamanho de contexto e estágio declarados; fazer fallback só para cima | `route` |
-| `maps.py` | Lane Map, Agent Map, Context Map e Monitor Map como projeções ordenadas, só de dados | `map lane`, `map agent`, `map context`, `map monitor` |
+| `maps.py` | Lane Map, Agent Map, Context Map e Monitor Map como projeções ordenadas, só de dados; JSON ou Mermaid | `map lane`, `map agent`, `map context`, `map monitor` |
 | `graph.py` | visões de capability, operacional, agente, evidência e código a partir do manifesto; JSON ou Mermaid | `graph` |
 | `evals.py` | runner de `pass@k` / `pass^k` sobre uma suíte de casos com três tipos de runner | `eval run`, `benchmark` |
 | `decision.py` | valida um registro `hpp.decision/v1` feito fora do harness (consultivo, raise-only, abstenção e falha de instrumento como desfechos); mede um decisor declarado com métricas seletivas. Não chama modelo | `decide validate`, `decide eval` (novo na 2.6.0) |
@@ -195,16 +196,16 @@ essa renderização.
 
 | módulo | Claude Code | Codex CLI |
 |---|---|---|
-| `operator-kit` 1.8.0 | `native` · plugin + hooks depois de colar o wiring | `explicit-command` · plugin (só skills) + cópia verificada |
-| `kit-forge` 1.5.1 | `explicit-command` · plugin | `explicit-command` · cópia verificada |
-| `lane-kit` 1.7.1 | `native` · plugin + hooks depois de colar o wiring | `explicit-command` · cópia verificada |
-| `continuity-kit` 1.5.0 | `native` · plugin + hooks depois de colar o wiring | `explicit-command` · plugin (só skills) + cópia verificada |
-| `health-kit` 1.4.0 | `explicit-command` · plugin | `explicit-command` · plugin (só skills) + cópia verificada |
-| `claude-dev-kit` 1.3.4 | `native` · plugin | `unsupported` · — |
-| `supabase-pack` 1.2.0 | `explicit-command` · plugin | `explicit-command` · plugin (só skills) + cópia verificada |
-| `agent-framework-wizard` 1.2.2 | `explicit-command` · plugin | `explicit-command` · cópia verificada |
-| `dev-squad-kit` 1.2.0 | `native` · plugin | `explicit-command` · plugin (só skills) + cópia verificada |
-| `gotcha-memory` 1.1.0 | `native` · plugin + hooks depois de colar o wiring | `explicit-command` · plugin (só skills) + cópia verificada |
+| `operator-kit` 1.8.1 | `native` · plugin + hooks depois de colar o wiring | `explicit-command` · plugin (só skills) + cópia verificada |
+| `kit-forge` 1.5.2 | `explicit-command` · plugin | `explicit-command` · cópia verificada |
+| `lane-kit` 1.8.0 | `native` · plugin + hooks depois de colar o wiring | `explicit-command` · plugin (só skills) + cópia verificada |
+| `continuity-kit` 1.5.1 | `native` · plugin + hooks depois de colar o wiring | `explicit-command` · plugin (só skills) + cópia verificada |
+| `health-kit` 1.4.1 | `explicit-command` · plugin | `explicit-command` · plugin (só skills) + cópia verificada |
+| `claude-dev-kit` 1.3.5 | `native` · plugin | `unsupported` · — |
+| `supabase-pack` 1.2.1 | `explicit-command` · plugin | `explicit-command` · plugin (só skills) + cópia verificada |
+| `agent-framework-wizard` 1.2.3 | `explicit-command` · plugin | `explicit-command` · cópia verificada |
+| `dev-squad-kit` 1.2.1 | `native` · plugin | `explicit-command` · plugin (só skills) + cópia verificada |
+| `gotcha-memory` 1.1.1 | `native` · plugin + hooks depois de colar o wiring | `explicit-command` · plugin (só skills) + cópia verificada |
 
 No Claude Code todo módulo é um plugin do marketplace, e um módulo que declara hooks os arma depois
 que o wiring é colado. No Codex CLI o canal de plugin é o marketplace do próprio produto,
@@ -244,7 +245,7 @@ distribuição e os checksums dos módulos são reportados como não verificados
 
 | código | significado | onde |
 |---|---|---|
-| `0` | ok; no modo `audit`, sempre | todo comando |
+| `0` | ok; no modo `audit`, todo veredito (um arquivo de política recusado ainda sai com 2) | todo comando |
 | `1` | warn ou gate manual; um gate de eval que falhou | `policy check` (`MANUAL` em `enforce`), `eval run`, `benchmark`, `init` com avisos, `decide eval` quando o gate dele falha (novo na 2.6.0), `evidence run` quando o bundle não passou, `evidence verify` sobre um registro íntegro de uma execução que não passou, `retrieval eval` quando o gate dele falha, `cite check` com um aviso (`TOO_MANY`, `UNCITED_CLAIM`) (novo na 2.6.0), `deliberate record` quando o veredito está bloqueado ou o juiz falhou, `evidence mutate` com ponto cego, execução incompleta ou nenhum mutante aplicado (novo na 2.7.0), `work coverage` quando um critério não está coberto ou, com `--junit`, não foi executado, `findings check` quando uma lente achou algo (novo na 2.8.0) |
 | `2` | block; uma entrada recusada (manifesto ruim, spec ruim, log corrompido, attestation inválida) | `policy check` (`BLOCK`), `attest`, `decide validate` e `decide eval` sobre um registro ou suíte que quebra o contrato (novo na 2.6.0), `evidence run` sobre um pedido recusado ou um evento que ele não conseguiu acrescentar, `evidence verify` sobre um registro editado ou que se contradiz, ou cujo artefato mudou ou sumiu, `retrieval eval` sobre uma suíte ou um argumento recusados, `cite check` sobre `UNKNOWN_ID`, `RANGE` ou `EMPTY_MARKER` ou uma entrada recusada (novo na 2.6.0), `deliberate` sobre painel, turno ou juiz recusado, sessão que não parou ou registro que não verifica, `evidence mutate` quando o critério não passa na cópia limpa (`no-control`) ou um mutante é recusado (novo na 2.7.0), `work coverage` sobre um relatório recusado ou um caminho de testes sem fonte Python, `findings check` sobre um documento que quebra o contrato (novo na 2.8.0), `event verify` e `status` sobre uma cadeia de hash quebrada, `policy check` sobre um arquivo de política recusado, `attest verify` e `evidence verify` com `--allowed-signers` sobre um registro cuja assinatura falta, não é aceita ou cobre bytes alterados, todo erro de validação |
 | `3` | erro de uso ou interno | erros de uso do `init`, exceções inesperadas |
@@ -258,8 +259,10 @@ A suíte em `tests/` é stdlib-only e roda sem rede. Cada arquivo de teste carre
 chamado `CONTROLE` que prova que o arquivo consegue falhar. Neste repositório um teste pula de propósito
 (a cópia emitida é coberta pelo teste seguinte); a árvore-fonte do harness, que não tem
 `marketplace.json`, pula os dois testes que precisam dele. A CI roda a suíte,
-`hpp doctor` e `hpp benchmark -k 3` em Linux, macOS e Windows, de Python 3.10 a 3.13, com
-permissões somente de leitura e nenhum passo autorizado a falhar em silêncio.
+`hpp doctor` e `hpp benchmark -k 3` em Linux, macOS e Windows, de Python 3.10 a 3.13, e um job
+`lint` roda `ruff check hpp tests scripts` contra o conjunto de regras do `pyproject.toml`, com o
+ruff instalado a partir de um arquivo de requirements fixado por hash; todo job tem permissões
+somente de leitura e nenhum passo é autorizado a falhar em silêncio.
 
 ```bash
 python -m pytest tests -q

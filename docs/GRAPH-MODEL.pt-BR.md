@@ -18,10 +18,10 @@ literais de `kind` e `relation` na saída (`hpp/graph.py`, `hpp/maps.py`, `hpp/w
 | Evidence | `hpp graph --view evidence` | um nó fixo de cada: criterion, evidence, verdict | `requires` (criterion → evidence) · `supports` (evidence → verdict) |
 | Code Map | `hpp graph --view code` | module, component | `declares` (module → component) |
 | Agent Map | `hpp map agent [--events <arquivo>]` | role (os `roles` do manifesto), module, capability, execution (um por evento registrado) | `provides` (module → capability) · `then` (execution → execution seguinte) |
-| Lane Map | `hpp map lane <arquivo> [--now <ts>]` | lane, territory | `owns:<liveness>` (lane → territory). Colisões e liveness são campos separados, não arestas |
+| Lane Map | `hpp map lane <arquivo> [--now <ts>]` | lane, territory | `owns:<liveness>` (lane → territory). No JSON, colisões e liveness são campos separados, não arestas; `--format mermaid` desenha cada colisão como uma aresta `collides:<caminhos>` entre as duas lanes |
 | Context/Knowledge Map | `hpp map context <arquivo> --budget <n>` | context (o contexto compilado), source | `included` ou `omitted` (source → context). Hash, prioridade e contagem de caracteres ficam no campo `provenance` |
-| Monitor Map | `hpp map monitor <arquivo> --now <ts>` | nenhum: uma lista plana `monitors`, um registro por probe com os campos listados em Monitor Map abaixo | nenhuma |
-| WorkGraph | `hpp work plan <spec>` | os itens da lista `work` | `depends-on` (dependência → dependente). Waves, critérios e contagem por tier são campos |
+| Monitor Map | `hpp map monitor <arquivo> --now <ts>` | nenhum no JSON: uma lista plana `monitors`, um registro por probe com os campos listados em Monitor Map abaixo. `--format mermaid` desenha nós monitor (rotulados `<id> · <status>`), target e gate | nenhuma no JSON; no Mermaid `observes` (monitor → target) · `gates` (monitor → gate consumidor) |
+| WorkGraph | `hpp work plan <spec>` · `hpp work waves <spec>` | os itens da lista `work` | `depends-on` (dependência → dependente). Waves, critérios e contagem por tier são campos; no Mermaid cada wave é um `subgraph` |
 | Execution | nenhum | Nenhuma projeção dedicada, embora a lista `maps` do manifesto nomeie `execution`. O mais próximo são os nós execution ligados por `then` em `hpp map agent --events` | — |
 | Memory | nenhum em `hpp/` | O módulo gotcha-memory registra falhas classificadas em `failures.jsonl` e deriva gotchas da recorrência por chave de tarefa e família de erro; ele não exporta grafo | — |
 
@@ -107,6 +107,13 @@ obrigatória do harness.
 
 ## Export
 
-`hpp graph` exporta JSON (padrão) ou Mermaid (`--format mermaid`); `hpp map` e `hpp work`
-exportam só JSON. Ordem de nós e arestas é canônica; timestamp só aparece quando pertence à
-fonte. O mesmo input produz o mesmo grafo.
+`hpp graph`, as quatro visões de `hpp map`, `hpp work plan` e `hpp work waves` exportam JSON
+(padrão) ou um flowchart Mermaid dos mesmos nós e arestas (`--format mermaid`); `hpp work coverage`
+exporta só JSON. O flowchart numera os nós na ordem dos ids e ordena as arestas por origem, destino
+e relação. Um `"`, `|`, `<` ou `>` num rótulo ou num texto de aresta é escrito como `#quot;`,
+`#124;`, `#lt;` ou `#gt;`, e uma quebra de linha como espaço. `hpp work plan` e `hpp work waves`
+desenham o mesmo diagrama: um nó por item, rotulado `id · tier`, dentro de um `subgraph` por wave.
+
+Ordem de nós e arestas é canônica; timestamp só aparece quando pertence à fonte. O mesmo input
+produz o mesmo grafo, e os mesmos bytes em todo sistema: esses exports são escritos na saída padrão
+em UTF-8 com fim de linha `\n`, no Windows também.

@@ -18,10 +18,10 @@ Each row names the command that produces it. Node kinds and edge relations are t
 | Evidence | `hpp graph --view evidence` | one fixed node each: criterion, evidence, verdict | `requires` (criterion → evidence) · `supports` (evidence → verdict) |
 | Code Map | `hpp graph --view code` | module, component | `declares` (module → component) |
 | Agent Map | `hpp map agent [--events <file>]` | role (the manifest's `roles`), module, capability, execution (one per recorded event) | `provides` (module → capability) · `then` (execution → next execution) |
-| Lane Map | `hpp map lane <file> [--now <ts>]` | lane, territory | `owns:<liveness>` (lane → territory). Collisions and liveness are separate fields, not edges |
+| Lane Map | `hpp map lane <file> [--now <ts>]` | lane, territory | `owns:<liveness>` (lane → territory). In the JSON, collisions and liveness are separate fields, not edges; `--format mermaid` draws each collision as one `collides:<paths>` edge between the two lanes |
 | Context/Knowledge Map | `hpp map context <file> --budget <n>` | context (the compiled context), source | `included` or `omitted` (source → context). Hash, priority and character count are in the `provenance` field |
-| Monitor Map | `hpp map monitor <file> --now <ts>` | none: a flat `monitors` list, one record per probe with the fields listed under Monitor Map below | none |
-| WorkGraph | `hpp work plan <spec>` | the items of the `work` list | `depends-on` (dependency → dependent). Waves, criteria and tier counts are fields |
+| Monitor Map | `hpp map monitor <file> --now <ts>` | none in the JSON: a flat `monitors` list, one record per probe with the fields listed under Monitor Map below. `--format mermaid` draws monitor (labelled `<id> · <status>`), target and gate nodes | none in the JSON; in Mermaid `observes` (monitor → target) · `gates` (monitor → consumer gate) |
+| WorkGraph | `hpp work plan <spec>` · `hpp work waves <spec>` | the items of the `work` list | `depends-on` (dependency → dependent). Waves, criteria and tier counts are fields; in Mermaid each wave is a `subgraph` |
 | Execution | none | No dedicated projection, although the manifest's `maps` list names `execution`. The closest is the execution nodes joined by `then` in `hpp map agent --events` | — |
 | Memory | none in `hpp/` | The gotcha-memory module records classified failures in `failures.jsonl` and derives gotchas from recurrence per task key and error family; it exports no graph | — |
 
@@ -108,6 +108,13 @@ mandatory dependency of the harness.
 
 ## Export
 
-`hpp graph` exports JSON (default) or Mermaid (`--format mermaid`); `hpp map` and `hpp work`
-export JSON only. Node and edge order is canonical; a timestamp only appears when it belongs to
-the source. The same input produces the same graph.
+`hpp graph`, the four `hpp map` views, `hpp work plan` and `hpp work waves` export JSON (default)
+or a Mermaid flowchart of the same nodes and edges (`--format mermaid`); `hpp work coverage`
+exports JSON only. The flowchart numbers the nodes in id order and sorts the edges by source,
+target and relation. A `"`, `|`, `<` or `>` in a label or an edge text is written as `#quot;`,
+`#124;`, `#lt;` or `#gt;`, and a line break as a space. `hpp work plan` and `hpp work waves` draw
+the same diagram: one node per item, labelled `id · tier`, inside one `subgraph` per wave.
+
+Node and edge order is canonical; a timestamp only appears when it belongs to the source. The same
+input produces the same graph, and the same bytes on every system: these exports are written to
+standard output as UTF-8 with `\n` line endings, on Windows too.

@@ -96,9 +96,12 @@ o <code>done_gate</code> correspondente passe. <code>autoprompt_resume.py</code>
 2.6.0): ele reexecuta o comando declarado, mede
 o código de saída fora do modelo e faz hash dos artefatos que ficaram. O <code>hpp evidence verify</code> é
 reconciliação posterior — re-deriva um registro a partir dos arquivos em disco — e nunca a trava: o
-hash próprio do registro torna uma edição visível, não é uma assinatura, então quem não pode
-confiar no maker roda o comando de novo. O hpp não dirige navegador; o navegador roda dentro do
-comando que você declara.</p>
+hash próprio do registro torna uma edição visível e não é uma assinatura. O
+<code>hpp evidence run --sign-key KEY --signer NAME</code> acrescenta uma assinatura SSH, e o
+<code>hpp evidence verify --allowed-signers FILE</code> recusa um registro que não carrega uma que o arquivo
+aceite; uma assinatura diz quem escreveu o registro, não que o comando ainda passa, então quem não
+pode confiar no maker roda o comando de novo. O hpp não dirige navegador; o navegador roda dentro
+do comando que você declara.</p>
     </div></section>
 
     <section id="autoloop-e-loopgraph"><div class="wrap">

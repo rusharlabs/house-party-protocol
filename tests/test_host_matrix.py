@@ -49,6 +49,7 @@ def test_channels_follow_the_components_and_the_coverage(manifest):
 def test_CONTROLE_eligibility_discriminates_in_both_directions(manifest):
     by_id = {module["id"]: module for module in manifest["modules"]}
     assert codex_plugin_eligible(by_id["operator-kit"])            # skills, explicit-command on Codex
+    assert codex_plugin_eligible(by_id["lane-kit"])                # skills (lane-coordinator, house-session)
     assert not codex_plugin_eligible(by_id["claude-dev-kit"])      # skills, but unsupported on Codex
     assert not codex_plugin_eligible(by_id["kit-forge"])           # supported, but carries no skills
 

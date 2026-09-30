@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>House Party Protocol — Governança</title>
+  <meta name="description" content="Quem decide, onde cada decisão fica registrada, como um desacordo termina, como uma release é feita e o plano de continuidade para quando o mantenedor sair de cena.">
+  <link rel="alternate" hreflang="en" href="GOVERNANCE.html">
+  <link rel="alternate" hreflang="pt-BR" href="GOVERNANCE.pt-BR.html">
+  <style>
+    :root{--hpp-black: #000000;--hpp-ink: #0F1113;--hpp-paper: #F4F1EB;--hpp-signal: #FF6A00;--line:rgba(15,17,19,.18);--surface:rgba(15,17,19,.04);--muted:rgba(15,17,19,.72);--max:1120px}
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;background:var(--hpp-paper);color:var(--hpp-ink);font:16px/1.65 Inter,"Segoe UI",Arial,sans-serif}
+    a{color:var(--hpp-ink);text-decoration:underline;text-decoration-color:var(--hpp-signal);text-decoration-thickness:2px;text-underline-offset:3px}
+    a:hover{color:var(--hpp-signal)}
+    a:focus-visible{outline:4px solid var(--hpp-signal);outline-offset:3px}
+    .wrap{width:min(var(--max),calc(100% - 40px));margin:auto}
+    .lang{background:var(--hpp-black);color:var(--hpp-paper);font-size:.9rem;padding:10px 0}
+    .lang a{color:var(--hpp-paper)}
+    .lang a[aria-current]{text-decoration:none;font-weight:700}
+    .hero{background:var(--hpp-ink);color:var(--hpp-paper);padding:44px 0 50px}
+    .hero img{width:min(720px,100%);display:block}
+    .hero h1{font:800 clamp(2.2rem,6vw,5rem)/.95 Sora,Inter,"Segoe UI",sans-serif;letter-spacing:-.02em;margin:.35em 0}
+    .hero p{max-width:760px;font-size:1.15rem;color:rgba(244,241,235,.82)}
+    .hero .eyebrow{color:var(--hpp-paper);border-color:var(--hpp-signal)}
+    .signal{color:var(--hpp-signal)}
+    .eyebrow,.mono,code,pre,.gate,.label{font-family:"JetBrains Mono","Cascadia Code",Consolas,monospace}
+    .eyebrow{display:inline-block;letter-spacing:.13em;text-transform:uppercase;font-size:.78rem;border-left:4px solid var(--hpp-signal);padding-left:.6em;margin:0 0 .6em}
+    nav{position:sticky;top:0;z-index:2;background:rgba(244,241,235,.96);border-bottom:1px solid var(--line);backdrop-filter:blur(8px)}
+    nav .wrap{display:flex;gap:20px;overflow:auto;padding:12px 0}
+    nav a{white-space:nowrap;text-decoration:none;font-weight:700}
+    nav a:hover{text-decoration:underline;text-decoration-color:var(--hpp-signal)}
+    section{padding:64px 0;border-bottom:1px solid var(--line)}
+    h2{font:800 clamp(1.7rem,3vw,2.6rem)/1.1 Sora,Inter,"Segoe UI",sans-serif;letter-spacing:-.01em;margin:0 0 .6em}
+    h3{margin:0 0 .4em;font-size:1.1rem}
+    .lead{max-width:780px;color:var(--muted)}
+    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:20px}
+    .card{grid-column:span 4;border:1px solid var(--line);border-radius:16px;padding:22px;background:var(--surface)}
+    .card.wide{grid-column:span 6}
+    .card.full{grid-column:1/-1}
+    pre{background:var(--hpp-ink);color:var(--hpp-paper);padding:20px;border-radius:12px;overflow:auto;border-left:6px solid var(--hpp-signal);font-size:.92rem;line-height:1.5}
+    code{font-size:.94em}
+    p code,li code,td code{background:var(--surface);padding:.08em .35em;border-radius:5px}
+    pre code{background:none;padding:0}
+    table{width:100%;border-collapse:collapse;background:var(--surface);margin:1em 0}
+    th,td{text-align:left;padding:12px;border-bottom:1px solid var(--line);vertical-align:top}
+    th{background:rgba(15,17,19,.08);font-weight:700}
+    .gate{display:inline-block;border-radius:999px;padding:.15rem .7rem;font-weight:700;font-size:.8rem;margin-bottom:.6em}
+    .gate.allow{background:var(--hpp-signal);color:var(--hpp-ink)}
+    .gate.manual{border:2px solid var(--hpp-ink);color:var(--hpp-ink)}
+    .gate.block{background:var(--hpp-ink);color:var(--hpp-paper)}
+    .label{font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+    .measured{border-left:4px solid var(--hpp-signal);padding-left:1em;color:var(--muted);font-size:.95rem}
+    ul,ol{padding-left:1.3em}
+    li{margin:.25em 0}
+    footer{padding:48px 0;background:var(--hpp-black);color:var(--hpp-paper)}
+    footer a{color:var(--hpp-paper)}
+    footer .five{letter-spacing:.2em;font-size:.8rem;color:rgba(244,241,235,.72)}
+    @media(max-width:760px){.card,.card.wide{grid-column:1/-1}.wrap{width:min(100% - 32px,var(--max))}th,td{font-size:.88rem;padding:8px}.hero{padding-top:28px}section{padding:44px 0}}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+    h3[id],h4[id],h5[id]{scroll-margin-top:64px}
+    ul.tasks{list-style:none;padding-left:.2em}
+    blockquote{margin:1em 0}
+  </style>
+</head>
+<body>
+  <div class="lang"><div class="wrap"><a href="GOVERNANCE.html" hreflang="en" lang="en">English</a> · <a href="GOVERNANCE.pt-BR.html" aria-current="page" hreflang="pt-BR">Português</a></div></div>
+  <header class="hero">
+    <div class="wrap">
+      <img src="assets/hpp-logo-header.png" alt="House Party Protocol">
+      <p class="eyebrow">Projeto · GOVERNANCE.pt-BR.md</p>
+      <h1>Governança</h1>
+    </div>
+  </header>
+  <nav aria-label="Capítulos"><div class="wrap"><a href="#quem-decide">Quem decide</a><a href="#papéis">Papéis</a><a href="#onde-as-decisões-ficam-registradas">Onde as decisões ficam registradas</a><a href="#como-um-desacordo-é-resolvido">Como um desacordo é resolvido</a><a href="#como-uma-release-é-feita">Como uma release é feita</a><a href="#continuidade">Continuidade</a><a href="#mudando-este-documento">Mudando este documento</a></div></nav>
+  <main>
+
+    <section><div class="wrap">
+<p>O House Party Protocol tem um mantenedor. Esta página diz quem decide, onde cada decisão fica
+registrada, como um desacordo termina, como uma release é feita e o que acontece se o mantenedor
+sair de cena. Ela descreve como o projeto funciona hoje; onde uma parte do plano ainda não está de
+pé, ela diz isso.</p>
+    </div></section>
+
+    <section id="quem-decide"><div class="wrap">
+      <p class="eyebrow">01</p>
+      <h2>Quem decide</h2>
+<p>O projeto segue um modelo de mantenedor único. O mantenedor é Max Parisi, que age no GitHub pela
+conta de mantenedor que o <code>.github/CODEOWNERS</code> nomeia para todo caminho do repositório.</p>
+<p>O mantenedor decide o que entra por merge, o que é lançado e quando, o que o roadmap diz e o que o
+projeto recusa. Qualquer pessoa pode propor qualquer uma dessas coisas. A decisão é tomada em
+público, na thread em que foi pedida, com o motivo ao lado.</p>
+    </div></section>
+
+    <section id="papéis"><div class="wrap">
+      <p class="eyebrow">02</p>
+      <h2>Papéis</h2>
+<table>
+<thead><tr><th>responsabilidade</th><th>papel</th><th>quem exerce</th></tr></thead>
+<tbody>
+<tr><td>triagem de issues e discussões</td><td>mantenedor</td><td>Max Parisi</td></tr>
+<tr><td>revisão e merge de pull requests</td><td>mantenedor</td><td>Max Parisi</td></tr>
+<tr><td>releases</td><td>mantenedor</td><td>Max Parisi</td></tr>
+<tr><td>resposta de segurança (<a href="https://github.com/rusharlabs/house-party-protocol/blob/main/SECURITY.pt-BR.md">SECURITY.pt-BR.md</a>)</td><td>mantenedor</td><td>Max Parisi</td></tr>
+<tr><td>aplicação do código de conduta (<a href="https://github.com/rusharlabs/house-party-protocol/blob/main/CODE_OF_CONDUCT.pt-BR.md">CODE_OF_CONDUCT.pt-BR.md</a>)</td><td>mantenedor</td><td>Max Parisi</td></tr>
+<tr><td>issues, discussões, pull requests e revisões sob o <a href="https://github.com/rusharlabs/house-party-protocol/blob/main/CONTRIBUTING.pt-BR.md">CONTRIBUTING.pt-BR.md</a></td><td>contribuidor</td><td>qualquer pessoa</td></tr>
+</tbody>
+</table>
+<p>Hoje não há um segundo mantenedor. Veja <a href="#continuidade">Continuidade</a>.</p>
+    </div></section>
+
+    <section id="onde-as-decisões-ficam-registradas"><div class="wrap">
+      <p class="eyebrow">03</p>
+      <h2>Onde as decisões ficam registradas</h2>
+<ul>
+<li><strong><code>CHANGELOG.md</code> e <code>CHANGELOG.pt-BR.md</code></strong> registram toda mudança que é lançada, por versão. O
+workflow de release recusa uma tag cuja versão não tenha seção não vazia nos dois arquivos.</li>
+<li><strong>As notas de release.</strong> O corpo de cada GitHub Release é a seção do CHANGELOG daquela versão,
+primeiro em inglês e o português abaixo; quem escreve é o workflow, ninguém redigita.</li>
+<li><strong>Discussões, categoria Announcements.</strong> Cada release abre a sua própria discussão ali, e o
+roadmap é discutido ali. O mantenedor publica; qualquer pessoa comenta.</li>
+<li><strong>A própria issue ou o próprio pull request</strong> carrega o raciocínio de uma mudança isolada.</li>
+<li><strong><a href="MANIFESTO.pt-BR.html">MANIFESTO.pt-BR.md</a>, "O que o projeto se recusa a fazer"</strong>, guarda as
+recusas permanentes. Mudar uma delas é mudar esse arquivo, com registro no CHANGELOG como qualquer
+outra mudança.</li>
+</ul>
+    </div></section>
+
+    <section id="como-um-desacordo-é-resolvido"><div class="wrap">
+      <p class="eyebrow">04</p>
+      <h2>Como um desacordo é resolvido</h2>
+<ol>
+<li>Diga onde a pergunta mora: na issue, no pull request, ou na categoria Ideas das Discussões
+quando não estiver ligada a uma mudança. Nomeie a falha, a mudança que você propõe e a
+evidência — o comando que você rodou e a saída.</li>
+<li>O mantenedor responde na mesma thread com uma decisão e o motivo. Evidência pesa mais que
+preferência: uma reprodução vale mais que um argumento, dos dois lados.</li>
+<li>Evidência nova reabre uma decisão; repetir o argumento não. Uma enquete na categoria Polls
+informa uma decisão; não a toma.</li>
+<li>O código é licenciado sob MIT. Quem continuar discordando pode fazer um fork; o fork é outro
+projeto, e uma cópia que mantém o nome não é este (<a href="https://github.com/rusharlabs/house-party-protocol/blob/main/SECURITY.pt-BR.md">SECURITY.pt-BR.md</a>,
+"Superfícies oficiais").</li>
+</ol>
+<p>Uma questão de conduta segue a seção de aplicação do
+<a href="https://github.com/rusharlabs/house-party-protocol/blob/main/CODE_OF_CONDUCT.pt-BR.md">CODE_OF_CONDUCT.pt-BR.md</a>, e uma vulnerabilidade vai pelos canais
+privados do <a href="https://github.com/rusharlabs/house-party-protocol/blob/main/SECURITY.pt-BR.md">SECURITY.pt-BR.md</a> — nenhuma das duas se discute em thread pública.</p>
+    </div></section>
+
+    <section id="como-uma-release-é-feita"><div class="wrap">
+      <p class="eyebrow">05</p>
+      <h2>Como uma release é feita</h2>
+<p>Uma release é uma tag <code>vX.Y.Z</code>. Empurrá-la roda o <code>.github/workflows/release.yml</code>, que:</p>
+<ol>
+<li>se recusa a seguir a menos que as quatro fontes de versão (<code>pyproject.toml</code>, <code>hpp/__init__.py</code>,
+<code>hpp.manifest.json</code>, <code>CITATION.cff</code>) sejam iguais à tag e os dois arquivos de CHANGELOG tenham
+uma seção não vazia para ela;</li>
+<li>constrói o wheel e o sdist uma vez e escreve o <code>SHA256SUMS</code>;</li>
+<li>instala esse wheel, sem checkout, no Ubuntu, no macOS e no Windows, e roda <code>hpp --version</code>,
+<code>hpp doctor</code>, <code>hpp benchmark -k 3</code> e <code>hpp init</code> a partir de um diretório vazio;</li>
+<li>assina a proveniência de build do wheel e do sdist num job só dela;</li>
+<li>cria a GitHub Release com o wheel, o sdist, o <code>SHA256SUMS</code> e o bundle de proveniência, a seção
+do CHANGELOG como notas, e abre a discussão da release em Announcements;</li>
+<li>publica no PyPI por trusted publishing, sem token guardado, quando a variável de repositório
+<code>PYPI_PUBLISH</code> é <code>true</code>.</li>
+</ol>
+<p>Uma execução manual existe só para recuperar uma tag cujo push não disparou o workflow; ela exige
+uma tag existente, e essa tag passa pelos mesmos passos. Qualquer pessoa confere de onde um arquivo
+veio:</p>
+<pre><code class="language-bash">gh attestation verify &lt;file&gt; --repo rusharlabs/house-party-protocol</code></pre>
+<p>Quais versões recebem correção está no <a href="https://github.com/rusharlabs/house-party-protocol/blob/main/SECURITY.pt-BR.md">SECURITY.pt-BR.md</a>, "Versões
+suportadas".</p>
+    </div></section>
+
+    <section id="continuidade"><div class="wrap">
+      <p class="eyebrow">06</p>
+      <h2>Continuidade</h2>
+<p>Esta seção é um plano, não um relatório. Ela diz do que o projeto precisa para que alguém além do
+mantenedor consiga mantê-lo de pé, e quais partes ainda não estão de pé.</p>
+<p>Do que um sucessor precisa:</p>
+<ul>
+<li>o papel de <strong>owner</strong> na organização <code>rusharlabs</code> do GitHub — as configurações do repositório, a
+proteção de branch, as Discussões, o ambiente <code>pypi</code>, a variável <code>PYPI_PUBLISH</code> e o relato
+privado de vulnerabilidade moram ali;</li>
+<li>o papel de <strong>owner</strong> no projeto <code>house-party-protocol</code> do PyPI, cujo único publicador é o
+workflow de release deste repositório;</li>
+<li>o controle do domínio do site que o <a href="https://github.com/rusharlabs/house-party-protocol/blob/main/SECURITY.pt-BR.md">SECURITY.pt-BR.md</a> e o
+<a href="https://github.com/rusharlabs/house-party-protocol/blob/main/CODE_OF_CONDUCT.pt-BR.md">CODE_OF_CONDUCT.pt-BR.md</a> indicam como canal de contato para relatos
+de segurança e de conduta.</li>
+</ul>
+<p>Os códigos de recuperação das contas que detêm esses três devem ficar guardados num cofre que a
+segunda pessoa consiga abrir.</p>
+<table>
+<thead><tr><th>parte do plano</th><th>estado</th></tr></thead>
+<tbody>
+<tr><td>do que um sucessor precisa, listado acima</td><td>escrito aqui</td></tr>
+<tr><td>códigos de recuperação guardados num cofre</td><td>plano — esta página não o atesta</td></tr>
+<tr><td>uma segunda pessoa nomeada, com os acessos acima</td><td><strong>pendente — ninguém foi nomeado ainda</strong></td></tr>
+<tr><td>fazer triagem, aceitar mudanças e lançar uma release em até uma semana depois de o mantenedor ficar indisponível</td><td>o compromisso quando a segunda pessoa for nomeada; não vale antes disso</td></tr>
+</tbody>
+</table>
+<p>Até uma segunda pessoa ser nomeada, o projeto depende de uma pessoa. A licença já garante o resto:
+qualquer pessoa pode fazer um fork do código e continuá-lo com outro nome.</p>
+    </div></section>
+
+    <section id="mudando-este-documento"><div class="wrap">
+      <p class="eyebrow">07</p>
+      <h2>Mudando este documento</h2>
+<p>Esta página muda por pull request como qualquer outro arquivo, e a mudança fica registrada no
+CHANGELOG.</p>
+    </div></section>
+
+  </main>
+  <footer><div class="wrap">
+    <p class="five">AGENTS · EVIDENCE · MEMORY · PROTOCOL · CONTINUITY</p>
+    <strong>House Party Protocol</strong>
+    <p>Opere agentes de código sob evidência, não confiança.</p>
+    <p><a href="index.html">Documentação</a> · <a href="MANUAL.pt-BR.html">Manual do harness</a> · <a href="CATALOG.pt-BR.html">Catálogo de módulos</a> · <a href="https://github.com/rusharlabs/house-party-protocol/blob/main/GOVERNANCE.pt-BR.md">Fonte em Markdown</a> · <a href="GOVERNANCE.html" hreflang="en" lang="en">English</a></p>
+  </div></footer>
+</body>
+</html>

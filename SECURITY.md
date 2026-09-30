@@ -9,8 +9,8 @@ its note in `CHANGELOG.md`. Check yours with `hpp --version`.
 
 | version | supported |
 |---|---|
-| 2.10.x | yes — current line |
-| 2.0 – 2.9 | no — upgrade to 2.10.x |
+| 2.11.x | yes — current line |
+| 2.0 – 2.10 | no — upgrade to 2.11.x |
 | 1.x | no |
 
 Modules carry their own version (`plugin.json`, `marketplace.json`); a module fix ships as a new
@@ -30,7 +30,9 @@ works for you:
 
 Include: the module and its version (`.claude-plugin/plugin.json`), how to reproduce it, and the
 impact you measured. First response within 5 business days on either channel; the fix is
-published as a new version of the module, with the note in `CHANGELOG.md`.
+published as a new version of the module, with the note in `CHANGELOG.md`. Who responds to a
+report, and the continuity plan for when the maintainer is unavailable, are in
+[GOVERNANCE.md](GOVERNANCE.md).
 
 ## What this project treats as a security flaw
 
@@ -58,6 +60,9 @@ published as a new version of the module, with the note in `CHANGELOG.md`.
 - Hooks are **WARN-only by default** — a hook never brings the tool down.
 - No module contains a credential. The real IP/PII linter ruleset is never published; only
   `ip-ruleset.example.yaml` travels.
+
+The threat model, the trust boundaries and the code that counters each common weakness are in
+[docs/ASSURANCE-CASE.md](docs/ASSURANCE-CASE.md).
 
 ## Official surfaces
 

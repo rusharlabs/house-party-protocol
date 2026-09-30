@@ -38,16 +38,13 @@ kit>`").
 
 ### 2. Prerequisites + external APIs
 ```
-| Requisito | Versão mínima | Obrigatório? |
+| Requirement | Minimum version | Required? |
 |---|---|---|
-| Python | 3.9 | sim |
-| PyYAML | qualquer | sim/não |
+| Python | 3.9 | yes |
+| PyYAML | any | yes/no |
 
-Serviços externos: <NENHUM — stdlib only> OU <lista: nome, via (MCP/API direta), credencial>
+External services: <NONE — stdlib only> OR <list: name, via (MCP/direct API), credential>
 ```
-(Table columns: requirement · minimum version · mandatory? — `sim` = yes, `não` = no,
-`qualquer` = any. Last line: external services: `<NENHUM — stdlib only>` (none) OR the list —
-name, via (MCP/direct API), credential.)
 
 **Hard rule:** the default is **"none — stdlib only"**. If the kit needs something external, name
 it exactly (e.g. Supabase via MCP, URL + anon key). **NEVER** `ANTHROPIC_API_KEY` — this
@@ -57,35 +54,34 @@ kit family runs on the host's subscription/quota, not on pay-per-use API billing
 ### 3. Install via plugin (the recommended path when `.claude-plugin/plugin.json` exists)
 ```bash
 /plugin marketplace add .
-/plugin install <nome-do-kit>@house-party-protocol
+/plugin install <kit-name>@house-party-protocol
 ```
 If the kit does not have a `plugin.json` yet, this section says so explicitly and points at
 section 4 as the only path.
 
 ### 4. Install by copy (always works, even without plugin support)
 ```bash
-cp -r <kit-dir> <seu-projeto>/<nome-do-kit>
-cd <seu-projeto>
-python <nome-do-kit>/installers/kit-forge/kit_doctor.py install <nome-do-kit> --target . --human
-#                                                                                   ^ mostra o PLANO, zero escrita
-python <nome-do-kit>/installers/kit-forge/kit_doctor.py install <nome-do-kit> --target . --apply
-#                                                                                   ^ aplica de verdade
+KIT=<category>/<kit-name>-<kit-version>        # the module's directory in the distribution
+cp -r "$KIT" ../your-repo/<kit-name>           # the copy itself (kit_doctor does not copy on claude-code)
+python installers/kit-forge-<version>/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo
+#   ^ shows the PLAN, zero writes (add --human for readable text instead of JSON)
+python installers/kit-forge-<version>/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo --apply
+#   ^ applies for real
+# Codex CLI: --host codex — the installer copies the module into .agents/hpp/<kit-name>; no cp -r needed
 ```
-(`<seu-projeto>` = your project, `<nome-do-kit>` = the kit name; the first `install` shows the
-PLAN with zero writes, the second, with `--apply`, applies for real.) Adjust the path of
-`kit_doctor.py` to wherever the kit-forge was copied/installed — it is the single installation
-engine of the whole marketplace, see `INSTALL-CONTRACT.md`.
+Run it from the root of the distribution: `KIT` is the module's directory there (the directory
+carries the version), and `installers/kit-forge-<version>/kit_doctor.py` is the single installation
+engine of the whole marketplace, see `INSTALL-CONTRACT.md`. The first `install` shows the PLAN with
+zero writes; the second, with `--apply`, applies for real.
 
 ### 5. What the installer detects (greenfield / in-progress / re-run)
 One sentence per classification, specific to this kit:
 ```
-greenfield    → <o que acontece: gera tudo do zero>
-em-andamento  → <o que é detectado: ex. "settings.local.json já tem hooks — reportado, não sobrescrito">
-re-run        → <o que é idempotente: ex. "profile já existe — skip-exists">
+greenfield    → <what happens: e.g. "generates everything from scratch">
+in-progress   → <what is detected: e.g. "settings.local.json already has hooks — reported, not overwritten">
+re-run        → <what is idempotent: e.g. "profile already exists — skip-exists">
 ```
-(`greenfield` → what happens: generates everything from scratch; `em-andamento` (in-progress) →
-what is detected, e.g. "settings.local.json already has hooks — reported, not overwritten";
-`re-run` → what is idempotent, e.g. "profile already exists — skip-exists".)
+The three labels are the ones `kit_doctor.py install` prints.
 
 ### 6. What is safe to run again
 An explicit list of what the installer NEVER overwrites without `--force`/a human gate, and of
@@ -108,26 +104,22 @@ summarise; paste the whole block exactly as it is in the source file.
 
 ### 8. Proof / acceptance (real output, executed — never invented)
 ```bash
-python <kit>/scripts/<algo>.py --self-test
+python <kit>/scripts/<script>.py --self-test
 ```
 ```
-<colar a saída REAL, literal, do comando acima — com marcador de data se o kit seguir o
-padrão SKILL-CONTRACT C3>
+<paste the REAL, literal output of the command above — with a date marker if the kit follows
+the SKILL-CONTRACT C3 pattern>
 ```
-(Paste the REAL, literal output of the command above — with a date marker if the kit follows the
-SKILL-CONTRACT C3 pattern.) At least 1 proof command per README. Invented output violates
+At least 1 proof command per README. Invented output violates
 `agent-integrity.md`.
 
 ### 9. Undo
 ```
-- Plugin: /plugin uninstall <nome>@house-party-protocol
-- Cópia: remover a pasta <nome-do-kit>/ do projeto + reverter o bloco colado em
-  settings.local.json manualmente (gate humano também na remoção)
-- wire_settings.py (se aplicável): python scripts/wire_settings.py --spec ... --undo
+- Plugin: /plugin uninstall <kit-name>@house-party-protocol
+- Copy: remove the <kit-name>/ folder from the project + revert the block pasted into
+  settings.local.json by hand (a human gate on removal too)
+- wire_settings.py (if applicable): python scripts/wire_settings.py --spec ... --target <settings file> --undo
 ```
-(Plugin: `/plugin uninstall <nome>@house-party-protocol`. Copy: remove the `<nome-do-kit>/`
-folder from the project + revert the block pasted into `settings.local.json` by hand — a human
-gate on removal too. `wire_settings.py` (if applicable): `python scripts/wire_settings.py --spec ... --undo`.)
 
 ## Checklist before considering a README "compliant"
 

@@ -26,10 +26,11 @@ DOCS = PRODUCT_ROOT / "docs"
 INDEX = DOCS / "index.html"
 BRAND = DOCS / "BRAND.md"
 
-# Why: the four contract documents and the support page live at the ROOT of the product, where the
-# site does not reach (Pages serves `docs/` as the root and `../` leaves it). Their pages therefore
-# live in `docs/`.
-ROOT_DOCS = ("MANIFESTO", "INSTALL-CONTRACT", "SKILL-CONTRACT", "INSTALL_FOR_AGENTS", "SUPPORT")
+# Why: the four contract documents, the roadmap, the governance page and the support page live at
+# the ROOT of the product, where the site does not reach (Pages serves `docs/` as the root and `../`
+# leaves it). Their pages therefore live in `docs/`.
+ROOT_DOCS = ("MANIFESTO", "INSTALL-CONTRACT", "SKILL-CONTRACT", "INSTALL_FOR_AGENTS", "ROADMAP", "GOVERNANCE",
+             "SUPPORT")
 # Why: the catalogue Markdown is itself generated next to its own HTML pair; it is not a document
 # to render, and it only exists in the emitted tree.
 GENERATED_MD = {"CATALOG"}

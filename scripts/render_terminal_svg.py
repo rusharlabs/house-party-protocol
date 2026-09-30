@@ -10,6 +10,7 @@ fetched). Regenerate after any change to the wizard's output:
     python scripts/render_terminal_svg.py --from-text out.txt --command "hpp status" --out x.svg
     python scripts/render_terminal_svg.py --animate       # writes assets/terminal/hpp-demo.svg
     python scripts/render_terminal_svg.py --animate --session attest   # writes assets/terminal/hpp-attest-demo.svg
+    python scripts/render_terminal_svg.py --animate --session install  # writes assets/terminal/hpp-install.svg
 
 The commands run with the repository root on PYTHONPATH from a temporary directory whose only
 content is an empty `your-repo/`, so the captured text carries no machine path: every command
@@ -32,9 +33,20 @@ commit on screen reproduces. A refusal is the point of that story, so each of it
 the exit status it must return and any other one stops the run; a status other than 0 is shown on
 screen after the command's output, and every status is recorded in the desc.
 
+`--animate --session install` renders the README's first image, the install journey: `pip install
+house-party-protocol`, then `hpp init --target your-repo`, typed as a reader types them. A wheel is
+built from --root (the version being released is not on PyPI while its README is rendered) and served
+by a local index that PIP_INDEX_URL names in pip's environment, never on the command line; both
+commands run in a throwaway virtual environment, from a temporary directory holding an empty
+`your-repo/`, so this story needs no network for the package and the setting says so on the image.
+pip shows only its `Successfully installed` line, which must name the version of --root alone; `hpp
+init` shows two runs of its output, its start up to the READINESS bar and its end from the wordmark to
+the welcome line, with the lines between them counted on screen (`Shot.between`). A beat that exits
+non-zero, writes to stderr, or would show a path of the machine stops the run.
+
 `assets/terminal/lane-board.svg` is the third capture and the only one this script cannot
 re-capture on its own, because the board is not a command of `hpp`: it is
-`multi-session/lane-kit-1.7.1/scripts/lane_board.py`, and a board worth showing has to be
+`multi-session/lane-kit-1.8.0/scripts/lane_board.py`, and a board worth showing has to be
 DRIVEN first. To redo it, point `CLAUDE_PROJECT_DIR` at a throwaway directory (unset, the board
 lands wherever the cwd happens to be), drive four items with `claim` and `set` until they sit in
 different states -- MERGED, a red one held at VERIFIED, one DEFERRED with `--checker-unavailable`,
@@ -166,7 +178,7 @@ def render(command: str, lines: list[str], cut: list[str], stamp: str) -> str:
     body = [f"$ {command}", *lines]
     if cut:
         body += ["", f"⋯ {' · '.join(cut)} follow — run the command for the full output"]
-    width = int(max(len(l) for l in body) * CHAR_W + 2 * PAD)
+    width = int(max(len(text) for text in body) * CHAR_W + 2 * PAD)
     height = HEADER_H + PAD + len(body) * LINE_H + PAD // 2
     rows = []
     for index, line in enumerate(body):
@@ -232,11 +244,14 @@ class Shot(NamedTuple):
     """One command of a session and the whole lines of its output that it shows."""
 
     command: str            # the command line exactly as it ran
-    lines: tuple[str, ...]  # consecutive whole lines of its output (see `stream`), unedited
+    lines: tuple[str, ...]  # whole lines of its output (see `stream`), unedited, consecutive within each run
     before: int = 0         # lines of that output above them, left out
     after: int = 0          # lines of that output below them, left out
     stream: str = "stdout"  # where the lines were read; any other stream is named in the desc
     exit_code: int | None = None  # the status it returned, when the story depends on it; None = not recorded
+    # Where `lines` is more than one run of the output: (how many of `lines` come before the cut,
+    # how many lines of the output were left out there), in order. Empty for a shot of one run.
+    between: tuple[tuple[int, int], ...] = ()
 
 
 def select(lines: list[str], keep: tuple[str, str] | None) -> tuple[int, int]:
@@ -255,6 +270,38 @@ def select(lines: list[str], keep: tuple[str, str] | None) -> tuple[int, int]:
     if last is None:
         raise ValueError(f"no line at or after {opening!r} starts with {closing!r}")
     return first, last
+
+
+def select_segments(lines: list[str], keeps: tuple[tuple[str, str], ...]) -> list[tuple[int, int]]:
+    """Index of the first and the last line of each run to show, each found as `select` finds one.
+
+    A run is searched only below the run before it. Two runs are shown because lines lie between
+    them, so a run that starts right below the previous one is refused as well: its anchors no
+    longer describe the output they were written for.
+    """
+    ranges: list[tuple[int, int]] = []
+    start = 0
+    for keep in keeps:
+        first, last = select(lines[start:], keep)
+        first, last = first + start, last + start
+        if ranges and first == ranges[-1][1] + 1:
+            raise ValueError(f"nothing is left out between {lines[ranges[-1][1]]!r} and {lines[first]!r}")
+        ranges.append((first, last))
+        start = last + 1
+    return ranges
+
+
+def segmented_shot(command: str, lines: list[str], ranges: list[tuple[int, int]], stream: str = "stdout",
+                   exit_code: int | None = None) -> Shot:
+    """The shot of the runs `ranges` picks from `lines`, every line left out counted where it was."""
+    shown: list[str] = []
+    between = []
+    for index, (first, last) in enumerate(ranges):
+        if index:
+            between.append((len(shown), first - ranges[index - 1][1] - 1))
+        shown.extend(lines[first:last + 1])
+    return Shot(command, tuple(shown), ranges[0][0], len(lines) - 1 - ranges[-1][1], stream, exit_code,
+                tuple(between))
 
 
 def session_shots(steps: tuple[tuple[tuple[str, ...], tuple[str, str] | None], ...],
@@ -316,11 +363,24 @@ def _ending(shot: Shot) -> str:
 
 def _shown_range(shot: Shot) -> str:
     """Which lines of its output a shot shows, as the desc records it, e.g. `lines 5-7 of 8`."""
+    if shot.between:
+        return _shown_runs(shot)
     total = shot.before + len(shot.lines) + shot.after
     first, last = shot.before + 1, shot.before + len(shot.lines)
     if not shot.lines:
         return "no output" if not total else f"none of {total} lines"
     return f"line {first} of {total}" if first == last else f"lines {first}-{last} of {total}"
+
+
+def _shown_runs(shot: Shot) -> str:
+    """The desc's record of a shot of several runs, e.g. `lines 1-12 and 107-120 of 120`."""
+    spans, start, taken = [], shot.before + 1, 0
+    for position, count in (*shot.between, (len(shot.lines), 0)):
+        last = start + position - taken - 1
+        spans.append(f"{start}" if start == last else f"{start}-{last}")
+        start, taken = last + 1 + count, position
+    total = shot.before + len(shot.lines) + sum(count for _, count in shot.between) + shot.after
+    return f"lines {', '.join(spans[:-1])} and {spans[-1]} of {total}"
 
 
 def _timeline(shots: list[Shot]) -> tuple[list[tuple[str, str, float, tuple[float, float, float] | None]], float, float]:
@@ -336,7 +396,10 @@ def _timeline(shots: list[Shot]) -> tuple[list[tuple[str, str, float, tuple[floa
         enter = end + ENTER_S
         rows.append(("cmd", shot.command, at, (start, end, enter)))
         body = [("gap", _not_shown(shot.before))] if shot.before else []
-        body += [("out", line) for line in shot.lines]
+        cuts = dict(shot.between)
+        for position, line in enumerate(shot.lines):
+            body += [("gap", _not_shown(cuts[position]))] if position in cuts else []
+            body.append(("out", line))
         body += [("gap", _not_shown(shot.after))] if shot.after else []
         body += [("exit", _exited(shot.exit_code))] if shot.exit_code else []
         for offset, (kind, text) in enumerate(body):
@@ -522,6 +585,139 @@ def run_attest_session(steps: tuple[tuple[tuple[str, ...], tuple[str, str] | Non
     return shots
 
 
+# --------------------------------------------------------------------------- the install journey
+#
+# Why: the README's first image is what a reader does first, install and then init, and no image
+# showed how `hpp init` ends (the wordmark, the signature and the welcome line): the static capture
+# stops at the plan. This story runs both commands as a reader types them. The version being
+# released is not on PyPI while its README is rendered, so pip reads a wheel built from --root from
+# a local index named by PIP_INDEX_URL in its environment: the command on screen is the one that ran.
+
+INSTALL_FILE = "hpp-install.svg"
+INSTALL_CAPTION = "pip install house-party-protocol · hpp init · from install to the party"
+INSTALL_SETTING = ("Both commands ran in a throwaway virtual environment, from a temporary directory whose only "
+                   "content is an empty your-repo/. pip read this version's wheel, built from the checkout being "
+                   "released, from a local index named by PIP_INDEX_URL in its environment, because the recording "
+                   "is made before the upload; the same command installs the same package from PyPI. hpp init ran "
+                   "with its output captured rather than on a terminal, so it asked nothing and took the defaults it "
+                   "names; a line left out is counted on screen, and no line was edited.")
+# Each beat: the command exactly as typed, and the runs of whole lines it shows, each a (first, last)
+# pair of line prefixes as in DEMO, found in order. `hpp init` shows its start up to the READINESS bar
+# (the first line after it to start with a filled cell) and its end from the wordmark on.
+INSTALL: tuple[tuple[tuple[str, ...], tuple[tuple[str, str], ...]], ...] = (
+    (("pip", "install", "house-party-protocol"),
+     (("Successfully installed house-party-protocol-", "Successfully installed house-party-protocol-"),)),
+    (("hpp", "init", "--target", "your-repo"),
+     (("house-party init", "  █"), ("  █  █ ████", "> Welcome to the party."))),
+)
+# Why: the files a wheel is built from, as tests/test_installed_package.py builds it: pyproject.toml
+# names README.md as `readme` and LICENSE as a license file, and the backend refuses to build without them.
+_WHEEL_INPUTS = ("pyproject.toml", "hpp.manifest.json", "README.md", "LICENSE")
+# Why: pyproject.toml's `[build-system] requires` floor; below it the in-process backend cannot read the
+# SPDX `license` string, so the build goes through pip's isolated one instead.
+_SETUPTOOLS_FLOOR = 77
+
+
+def project_version(root: Path) -> str:
+    """The version `root` builds, as its pyproject.toml declares it (tomllib is 3.11+ only)."""
+    found = re.search(r'^version = "([^"]+)"', (root / "pyproject.toml").read_text(encoding="utf-8"), re.MULTILINE)
+    if found is None:
+        raise SystemExit(f"{root / 'pyproject.toml'} declares no version")
+    return found.group(1)
+
+
+def build_wheel(root: Path, work: Path) -> Path:
+    """A real wheel of `root`, built from a copy so that no build/ or *.egg-info lands in the checkout."""
+    source, out = work / "source", work / "wheel"
+    shutil.copytree(root / "hpp", source / "hpp", ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
+    for name in _WHEEL_INPUTS:
+        shutil.copyfile(root / name, source / name)
+    command = [sys.executable, "-m", "pip", "wheel", str(source), "--no-deps", "-w", str(out), "-q",
+               "--disable-pip-version-check"]
+    from importlib.metadata import PackageNotFoundError, version
+    try:
+        local = int(version("setuptools").split(".")[0])
+    except (PackageNotFoundError, ValueError):
+        local = 0
+    if local >= _SETUPTOOLS_FLOOR:
+        command.append("--no-build-isolation")  # Why: builds offline, from the backend already installed
+    result = subprocess.run(command, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=600)
+    wheels = sorted(out.glob("*.whl"))
+    if result.returncode != 0 or len(wheels) != 1:
+        raise SystemExit(f"pip wheel exited {result.returncode}:\n{result.stdout}{result.stderr}")
+    return wheels[0]
+
+
+def run_install_session(steps: tuple[tuple[tuple[str, ...], tuple[tuple[str, str], ...]], ...],
+                        root: Path) -> list[Shot]:
+    """Serve a wheel of `root` from a local index, then run each beat in a throwaway virtual environment.
+
+    The index is a directory in the simple-repository layout, read through a file: URL, so pip needs no
+    network for the package; PIP_INDEX_URL names it in the environment, every other PIP_ variable is
+    left out, and PIP_CONFIG_FILE points at the null device, which skips the user's pip configuration
+    file (a global or site pip configuration file would still be read). Each beat runs its program
+    from the environment's scripts directory, from a directory whose only content is an empty
+    `your-repo/`, with stdin closed and without PYTHONPATH, so `hpp` is the installed package. A beat that
+    exits non-zero or writes to stderr stops the run, and so does a shown line naming the machine.
+    """
+    with tempfile.TemporaryDirectory(prefix="hpp-svg-") as tmp:
+        base = Path(tmp)
+        wheel = build_wheel(root, base)
+        project = base / "index" / "house-party-protocol"
+        project.mkdir(parents=True)
+        shutil.copyfile(wheel, project / wheel.name)
+        (project / "index.html").write_text(
+            f'<!DOCTYPE html>\n<html><body><a href="{wheel.name}">{wheel.name}</a></body></html>\n', encoding="utf-8")
+        venv = base / "venv"
+        made = subprocess.run([sys.executable, "-m", "venv", str(venv)], capture_output=True, text=True,
+                              encoding="utf-8", errors="replace", timeout=600)
+        if made.returncode != 0:
+            raise SystemExit(f"python -m venv exited {made.returncode}:\n{made.stdout}{made.stderr}")
+        scripts = venv / ("Scripts" if os.name == "nt" else "bin")
+        stage = base / "work"
+        (stage / "your-repo").mkdir(parents=True)
+        env = {key: value for key, value in os.environ.items()
+               if not key.startswith("PIP_") and key not in ("PYTHONPATH", "PYTHONHOME")}
+        env.update(PATH=str(scripts) + os.pathsep + os.environ.get("PATH", ""), VIRTUAL_ENV=str(venv),
+                   PIP_INDEX_URL=(base / "index").as_uri() + "/", PIP_CONFIG_FILE=os.devnull,
+                   PIP_DISABLE_PIP_VERSION_CHECK="1", PIP_NO_INPUT="1", PYTHONIOENCODING="utf-8", PYTHONUTF8="1",
+                   PYTHONDONTWRITEBYTECODE="1")
+        home = Path.home()
+        # Why: a home that is the filesystem root (some containers) would mark every line holding a slash.
+        machine = [base.name.lower(), *((str(home).lower(), home.as_posix().lower()) if len(home.parts) > 1 else ())]
+        shots = []
+        for argv, keeps in steps:
+            command = shlex.join(argv)
+            program = shutil.which(argv[0], path=str(scripts))
+            if program is None:
+                raise SystemExit(f"{argv[0]} is not in the virtual environment's {scripts.name}/")
+            result = subprocess.run([program, *argv[1:]], cwd=stage, env=env, stdin=subprocess.DEVNULL,
+                                    capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=600)
+            if result.returncode != 0:
+                raise SystemExit(f"{command} exited {result.returncode}:\n{result.stdout}{result.stderr}")
+            if result.stderr:
+                raise SystemExit(f"{command} wrote to stderr, where a line would sit among the ones shown and be "
+                                 f"counted nowhere:\n{result.stderr}")
+            lines = result.stdout.splitlines()
+            try:
+                shot = segmented_shot(command, lines, select_segments(lines, keeps))
+            except ValueError as exc:
+                raise ValueError(f"{command}: {exc}") from exc
+            leaked = [line for line in shot.lines if any(mark in line.lower() for mark in machine)]
+            if leaked:
+                raise SystemExit(f"{command} would show a path of this machine: {leaked[0]!r}")
+            shots.append(shot)
+    return shots
+
+
+def _install_shots(root: Path) -> list[Shot]:
+    shots = run_install_session(INSTALL, root)
+    expected = f"Successfully installed house-party-protocol-{project_version(root)}"
+    if shots[0].lines != (expected,):
+        raise SystemExit(f"pip showed {shots[0].lines!r}, not the version of {root} alone ({expected!r})")
+    return shots
+
+
 class Story(NamedTuple):
     """A session `--animate --session NAME` renders: its file, caption and setting, and its run."""
 
@@ -542,6 +738,7 @@ def _attest_shots(root: Path) -> list[Shot]:
 SESSIONS = {
     "demo": Story(DEMO_FILE, DEMO_CAPTION, DEMO_SETTING, _demo_shots),
     "attest": Story(ATTEST_FILE, ATTEST_CAPTION, ATTEST_SETTING, _attest_shots),
+    "install": Story(INSTALL_FILE, INSTALL_CAPTION, INSTALL_SETTING, _install_shots),
 }
 
 
@@ -560,8 +757,9 @@ def main(argv: list[str] | None = None) -> int:
                         help=f"write the README's animated session instead ({DEMO_FILE}: the DEMO commands run "
                              "in turn from --root); with --from-text, animate that one capture")
     parser.add_argument("--session", choices=sorted(SESSIONS),
-                        help=f"with --animate, the story to render: demo (the default, {DEMO_FILE}) or attest "
-                             f"(a stale approval is refused, {ATTEST_FILE}; needs git)")
+                        help=f"with --animate, the story to render: demo (the default, {DEMO_FILE}), attest "
+                             f"(a stale approval is refused, {ATTEST_FILE}; needs git) or install (pip install, "
+                             f"then hpp init, from a wheel of --root, {INSTALL_FILE}; the README's first image)")
     args = parser.parse_args(argv)
     if args.session and not args.animate:
         parser.error("--session needs --animate")

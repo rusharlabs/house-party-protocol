@@ -24,6 +24,7 @@ does not exist.
 ├──────────────────────────────────────────────────────────────────────────┤
 │ DISTRIBUTION  Claude Code: marketplace.json + plugin per module          │
 │               Codex CLI:   verified copy into .agents/ by the installer  │
+│                            + plugin channel (skills only) for 7 modules  │
 └──────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -38,7 +39,7 @@ new in 2.6.0; `deliberate` is new in 2.7.0.
 | `cli.py` | argument parsing, dispatch, the exit contract (`2` for a refused input, `3` for an internal error) | every subcommand, `--self-test` |
 | `manifest.py` | locate, load and validate the manifest; cross-check `marketplace.json` and each module's `plugin.json` when present, and the Codex marketplace (`.agents/plugins/marketplace.json`) with each listed module's `.codex-plugin/plugin.json` | `doctor` |
 | `state.py` | append-only, hash-chained event log (each line links to the sha256 of the one before it; a broken link names its first divergent step, a log written before the chain reads as `legacy`); projection of events onto the loop; refusal of invalid transitions before the write | `event append`, `event verify`, `status`, `resume` |
-| `workgraph.py` | validate a spec, reject cycles with the path named, order units into waves; link each acceptance criterion to the tests that cite it and, with a JUnit XML report, to the tests that ran it | `work plan`, `work waves`, `work coverage` |
+| `workgraph.py` | validate a spec, reject cycles with the path named, order units into waves; link each acceptance criterion to the tests that cite it and, with a JUnit XML report, to the tests that ran it; the plan and the waves as JSON or Mermaid, the coverage as JSON | `work plan`, `work waves`, `work coverage` |
 | `findings.py` | check the `hpp.findings/v1` document a review lens answers with (stable code, severity, file and line, evidence, the universe inspected), refuse a key the contract does not define, and derive the verdict | `findings check` (new in 2.8.0) |
 | `policy.py` | classify a command as `ALLOW`, `MANUAL` or `BLOCK`; apply a project's `.hpp/policy.json`, which can only add rules or raise a class, never lower one; map to exit code by mode | `policy check` |
 | `attest.py` | bind a verdict to repo identity, base commit, spec hash and a full file snapshot; verify later; sign the record with an SSH key on request (`--sign-key`) and demand that signature on verify (`--allowed-signers`) | `attest create`, `attest verify` |
@@ -46,7 +47,7 @@ new in 2.6.0; `deliberate` is new in 2.7.0.
 | `hosts.py` | the host x module x channel matrix derived from `hosts` and `components` in the manifest, rendered for the documents | `doctor --matrix` |
 | `context.py` | fit whole blocks under a character budget with provenance hashes; refuse secret-like input | `context compile`, `map context` |
 | `routing.py` | choose a tier and a provider id from declared risk, complexity, context size and stage; fall back only upward | `route` |
-| `maps.py` | Lane Map, Agent Map, Context Map and Monitor Map as sorted, data-only projections | `map lane`, `map agent`, `map context`, `map monitor` |
+| `maps.py` | Lane Map, Agent Map, Context Map and Monitor Map as sorted, data-only projections; JSON or Mermaid | `map lane`, `map agent`, `map context`, `map monitor` |
 | `graph.py` | capability, operational, agent, evidence and code views from the manifest; JSON or Mermaid | `graph` |
 | `evals.py` | `pass@k` / `pass^k` runner over a suite of cases with three runner kinds | `eval run`, `benchmark` |
 | `decision.py` | validate an `hpp.decision/v1` record made outside the harness (advisory, raise-only, abstention and instrument failure as outcomes); measure a declared decider with selective metrics. Calls no model | `decide validate`, `decide eval` (new in 2.6.0) |
@@ -191,16 +192,16 @@ One row per module, rendered from `hosts` and `components` in the manifest by `h
 
 | module | Claude Code | Codex CLI |
 |---|---|---|
-| `operator-kit` 1.8.0 | `native` · plugin + hooks after the wiring is pasted | `explicit-command` · plugin (skills only) + verified copy |
-| `kit-forge` 1.5.1 | `explicit-command` · plugin | `explicit-command` · verified copy |
-| `lane-kit` 1.7.1 | `native` · plugin + hooks after the wiring is pasted | `explicit-command` · verified copy |
-| `continuity-kit` 1.5.0 | `native` · plugin + hooks after the wiring is pasted | `explicit-command` · plugin (skills only) + verified copy |
-| `health-kit` 1.4.0 | `explicit-command` · plugin | `explicit-command` · plugin (skills only) + verified copy |
-| `claude-dev-kit` 1.3.4 | `native` · plugin | `unsupported` · — |
-| `supabase-pack` 1.2.0 | `explicit-command` · plugin | `explicit-command` · plugin (skills only) + verified copy |
-| `agent-framework-wizard` 1.2.2 | `explicit-command` · plugin | `explicit-command` · verified copy |
-| `dev-squad-kit` 1.2.0 | `native` · plugin | `explicit-command` · plugin (skills only) + verified copy |
-| `gotcha-memory` 1.1.0 | `native` · plugin + hooks after the wiring is pasted | `explicit-command` · plugin (skills only) + verified copy |
+| `operator-kit` 1.8.1 | `native` · plugin + hooks after the wiring is pasted | `explicit-command` · plugin (skills only) + verified copy |
+| `kit-forge` 1.5.2 | `explicit-command` · plugin | `explicit-command` · verified copy |
+| `lane-kit` 1.8.0 | `native` · plugin + hooks after the wiring is pasted | `explicit-command` · plugin (skills only) + verified copy |
+| `continuity-kit` 1.5.1 | `native` · plugin + hooks after the wiring is pasted | `explicit-command` · plugin (skills only) + verified copy |
+| `health-kit` 1.4.1 | `explicit-command` · plugin | `explicit-command` · plugin (skills only) + verified copy |
+| `claude-dev-kit` 1.3.5 | `native` · plugin | `unsupported` · — |
+| `supabase-pack` 1.2.1 | `explicit-command` · plugin | `explicit-command` · plugin (skills only) + verified copy |
+| `agent-framework-wizard` 1.2.3 | `explicit-command` · plugin | `explicit-command` · verified copy |
+| `dev-squad-kit` 1.2.1 | `native` · plugin | `explicit-command` · plugin (skills only) + verified copy |
+| `gotcha-memory` 1.1.1 | `native` · plugin + hooks after the wiring is pasted | `explicit-command` · plugin (skills only) + verified copy |
 
 On Claude Code every module is a plugin of the marketplace, and a module that declares hooks arms
 them once the wiring is pasted. On Codex CLI the plugin channel is the product's own marketplace,
@@ -239,7 +240,7 @@ not verified rather than assumed.
 
 | code | meaning | where |
 |---|---|---|
-| `0` | ok; in `audit` mode, always | every command |
+| `0` | ok; in `audit` mode, every verdict (a refused policy file still exits 2) | every command |
 | `1` | warn or manual gate; an eval gate that failed | `policy check` (`MANUAL` in `enforce`), `eval run`, `benchmark`, `init` with warnings, `decide eval` when its gate fails (new in 2.6.0), `evidence run` when the bundle did not pass, `evidence verify` on an intact record of a run that did not pass, `retrieval eval` when its gate fails, `cite check` with a warning (`TOO_MANY`, `UNCITED_CLAIM`) (new in 2.6.0), `deliberate record` when the verdict is blocked or the judge failed, `evidence mutate` with a blind spot, an incomplete run or no mutant applied (new in 2.7.0), `work coverage` when a criterion is not covered or, with `--junit`, not executed, `findings check` when a lens found something (new in 2.8.0) |
 | `2` | block; a refused input (bad manifest, bad spec, corrupt log, invalid attestation) | `policy check` (`BLOCK`), `attest`, `decide validate` and `decide eval` on a record or suite that breaks the contract (new in 2.6.0), `evidence run` on a refused request or an event it could not append, `evidence verify` on a record that was edited or contradicts itself or whose artifact changed or went missing, `retrieval eval` on a refused suite or argument, `cite check` on `UNKNOWN_ID`, `RANGE` or `EMPTY_MARKER` or a refused input (new in 2.6.0), `deliberate` on a refused panel, turn or judge, a session that has not stopped, or a record that does not verify, `evidence mutate` when the criterion does not pass on the clean copy (`no-control`) or a mutant is refused (new in 2.7.0), `work coverage` on a refused report or a test path with no Python source, `findings check` on a document that breaks the contract (new in 2.8.0), `event verify` and `status` on a broken hash chain, `policy check` on a refused policy file, `attest verify` and `evidence verify` with `--allowed-signers` on a record whose signature is missing, not accepted or over changed bytes, every validation error |
 | `3` | usage or internal error | `init` usage errors, unexpected exceptions |
@@ -253,8 +254,10 @@ The suite under `tests/` is stdlib-only and runs without network. Each test file
 one test named `CONTROLE` that proves the file can fail. In this repository one test skips by
 design (the emitted copy is covered by the next test); the harness source tree, which has no
 `marketplace.json`, skips the two tests that need it. CI runs the suite,
-`hpp doctor` and `hpp benchmark -k 3` on Linux, macOS and Windows across Python 3.10 to 3.13,
-with read-only permissions and no step allowed to fail silently.
+`hpp doctor` and `hpp benchmark -k 3` on Linux, macOS and Windows across Python 3.10 to 3.13, and
+a `lint` job runs `ruff check hpp tests scripts` against the rule set in `pyproject.toml`, with
+ruff installed from a hash-pinned requirements file; every job has read-only permissions and no
+step is allowed to fail silently.
 
 ```bash
 python -m pytest tests -q
