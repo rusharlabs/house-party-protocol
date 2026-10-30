@@ -7,6 +7,14 @@ All relevant changes to the harness are recorded here. The format follows
 [SemVer](https://semver.org/). The product version describes the harness contract; each module
 keeps its own version in `plugin.json` and in `marketplace.json`.
 
+## [2.11.4] — 2026-10-30
+
+### Fixed
+
+- **The lint job of the CI passes again.** A test added in 2.11.3 (`tests/test_orca_cli.py`) imported
+  `os` without using it, and `ruff check hpp tests scripts` failed on `main`. Nothing a user runs
+  changed: no module has a new version.
+
 ## [2.11.3] — 2026-10-30
 
 ### Fixed
@@ -2012,6 +2020,7 @@ publishing.
 [2.6.5]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.5
 [2.6.6]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.6
 [2.6.7]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.7
+[2.11.4]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.11.4
 [2.11.3]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.11.3
 [2.11.2]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.11.2
 [2.11.1]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.11.1
