@@ -58,7 +58,7 @@ sendo do Claude Code, e o runtime (scripts e hooks) continua vindo pela cópia v
 
 Na distribuição emitida este módulo vive em `continuity/continuity-kit-1.5.2/` (o
 diretório carrega a versão — declare-a uma vez, em `KIT`). O instalador é
-`installers/kit-forge-1.5.2/kit_doctor.py` — o motor único de instalação de todo o
+`installers/kit-forge-1.5.3/kit_doctor.py` — o motor único de instalação de todo o
 marketplace, ver `INSTALL-CONTRACT.md` na raiz da distribuição. Rode-o da raiz da
 distribuição; ele planeja primeiro e só escreve numa segunda invocação explícita com
 `--apply`:
@@ -66,8 +66,8 @@ distribuição; ele planeja primeiro e só escreve numa segunda invocação expl
 ```bash
 KIT=continuity/continuity-kit-1.5.2
 cp -r "$KIT" ../your-repo/continuity-kit      # the copy itself (kit_doctor does not copy on claude-code)
-python installers/kit-forge-1.5.2/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo
-python installers/kit-forge-1.5.2/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo --apply
+python installers/kit-forge-1.5.3/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo
+python installers/kit-forge-1.5.3/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo --apply
 # Codex CLI: --host codex — the installer copies the module into .agents/hpp/continuity-kit
 #            and each skill into .agents/skills/hpp-continuity-kit-<skill>; no cp -r needed
 ```

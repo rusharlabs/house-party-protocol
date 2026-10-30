@@ -71,15 +71,15 @@ pela cópia verificada abaixo (`--host codex`).
 
 Na distribuição emitida este módulo vive em
 `frameworks/dev-squad-kit-1.2.1/` (o diretório carrega a versão — declare-a
-uma vez, em `KIT`). O instalador é `installers/kit-forge-1.5.2/kit_doctor.py`; rode-o da
+uma vez, em `KIT`). O instalador é `installers/kit-forge-1.5.3/kit_doctor.py`; rode-o da
 raiz da distribuição. Ele planeja primeiro e só escreve numa segunda invocação explícita
 com `--apply`:
 
 ```bash
 KIT=frameworks/dev-squad-kit-1.2.1
 cp -r "$KIT" ../your-repo/dev-squad-kit       # the copy itself (kit_doctor does not copy on claude-code)
-python installers/kit-forge-1.5.2/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo
-python installers/kit-forge-1.5.2/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo --apply
+python installers/kit-forge-1.5.3/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo
+python installers/kit-forge-1.5.3/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo --apply
 # Codex CLI: --host codex — the installer copies the module into .agents/hpp/dev-squad-kit
 #            and each skill into .agents/skills/hpp-dev-squad-kit-<skill>; no cp -r needed
 ```

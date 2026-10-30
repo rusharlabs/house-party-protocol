@@ -75,7 +75,7 @@ o modelo diz como uma afirmação a conferir, não como fato:
 Um módulo é código que o operador instala. A integridade dele é conferida antes de ele rodar:
 
 - todo diretório de módulo traz `CHECKSUMS.txt` (sha256 por arquivo), e
-  `installers/kit-forge-1.5.2/kit_doctor.py verify <module>` compara cada arquivo com ele;
+  `installers/kit-forge-1.5.3/kit_doctor.py verify <module>` compara cada arquivo com ele;
 - `kit_doctor.py install` planeja primeiro: uma execução de plano roda todos os self-tests do
   módulo e não escreve nada no projeto de destino, e a instalação só é aplicada numa segunda
   invocação, explícita (`--apply`), que copia os arquivos `*.example.*` do módulo para o destino
@@ -195,7 +195,7 @@ A partir da raiz do repositório:
 
 ```bash
 python -m pytest tests/test_lane_dashboard.py tests/test_decision.py tests/test_evidence.py tests/test_process.py tests/test_stdlib_only.py -q
-python installers/kit-forge-1.5.2/kit_doctor.py verify multi-session/lane-kit-1.8.1
+python installers/kit-forge-1.5.3/kit_doctor.py verify multi-session/lane-kit-1.8.1
 gh attestation verify <file> --repo rusharlabs/house-party-protocol
 ```
 

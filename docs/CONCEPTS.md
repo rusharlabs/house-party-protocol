@@ -363,14 +363,16 @@ panel of four seats from four families with the judge in `lane-judge`; in the la
 
 ## orchestration
 
-**Is:** whatever decides which agent works on what, and when: a lead agent handing out subagents, a
-script that fans the work out to agents, a CI job, or a person with several terminals. HPP sits under
-it: the orchestrator decides who works on what; HPP decides what counts as done.
+**Is:** whatever decides which agent works on what, and when. In HPP that is the lane-kit: it splits
+the work into lanes and waves, hands items out on the lane board, writes each lane its kickoff and
+starts sessions from the Lane Dashboard, each on an action the operator takes (a Lane Dashboard action
+confirmed, or the seats of an invoked `/deliberate`). Outside HPP it can be a lead agent handing out
+subagents, a script that fans the work out to agents, a CI job, or a person with several terminals;
+HPP then sits under it: that orchestrator decides who works on what, HPP decides what counts as done.
 
-**Is not:** something HPP does. The `hpp` package starts no agent, schedules nothing and calls no
-model; it plans an order (a spec compiles into waves) and does not run it. The lane-kit starts a
-session only on an action the operator takes: a Lane Dashboard action confirmed, or the seats of an
-invoked `/deliberate`.
+**Is not:** a scheduler. The `hpp` package starts no agent, schedules nothing and calls no model; it
+plans an order (a spec compiles into waves) and does not run it, and nothing in HPP starts or
+restarts an agent on a timer.
 
 **Verify:** a refusal is a non-zero exit code, so an orchestrator can use it as a gate:
 `python -m hpp attest create ... --maker a --checker a ...` exits 2; `python -m hpp findings check` on a

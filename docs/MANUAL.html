@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>House Party Protocol — Harness manual</title>
-  <meta name="description" content="Operating manual for the House Party Protocol harness 2.11.1: init, maps, loop, policy, proof, hosts and exit codes, each claim with the command that reproduces it.">
+  <meta name="description" content="Operating manual for the House Party Protocol harness 2.11.2: init, maps, loop, policy, proof, hosts and exit codes, each claim with the command that reproduces it.">
   <link rel="alternate" hreflang="en" href="MANUAL.html">
   <link rel="alternate" hreflang="pt-BR" href="MANUAL.pt-BR.html">
   <style>
@@ -66,7 +66,7 @@
   <header class="hero">
     <div class="wrap">
       <img src="assets/hpp-logo-header.png" alt="House Party Protocol — by Rushar Labs">
-      <p class="eyebrow">Harness manual · v2.11.1 · Claude Code and Codex CLI</p>
+      <p class="eyebrow">Harness manual · v2.11.2 · Claude Code and Codex CLI</p>
       <h1>From spec to proof.<br><span class="signal">Without a leap of trust.</span></h1>
       <p>An operating guide to the harness: how <code>hpp init</code> installs, what each map projects, how the loop advances, what the policy blocks, and what counts as proof. Every claim below carries the command that reproduces it. The outputs quoted were measured over several releases, not against one: the first on 2026-09-23 against 2.5.8, from a clone of this repository at the <code>v2.5.8</code> tag and from a pip install of the same version (the <code>hpp init</code> blocks say which), and later ones up to 2.10.1. A measured line taken on a named version or tree names it — <em>Measured on the 2.10.1 source tree</em>, <em>Measured from a checkout of main</em> — and a line that names none sits in a block that carries the command to measure it again on your version. What is marked <em>new in 2.6.0</em> had its outputs measured from a checkout of <code>main</code> before that release.</p>
     </div>
@@ -102,7 +102,7 @@ python -m hpp init --target ../your-repo --apply
 python -m hpp benchmark -k 3</pre>
       <p><code>hpp doctor</code> validates the manifest. In this repository it prints <code>HPP doctor: ok · modules=10 · hosts=claude-code, codex · hooks=18 (permission gates=9 · llm egress=0)</code>, and because <code>marketplace.json</code> sits beside the manifest it also cross-checks every module path, version and plugin manifest; that result is visible only with <code>--json</code>, where <code>distribution</code> reads <code>{"checked": true, "codex_marketplace": {"checked": true, "plugins": 7}, "modules": 10, "status": "ok"}</code> — the seven being the modules of the Codex plugin channel. From a pip install the one-line output is the same and the field reads <code>{"checked": false, "status": "source-contract"}</code> — the command says what it could not verify instead of reporting a check it did not run.</p>
       <p><code>hpp doctor --report</code> (new in 2.10.0) prints the same line, then the link to the feedback form with its title filled in, the link to the support page, and an <code>hpp.doctor-report/v1</code> object to paste into the form: the hpp and protocol versions, Python, the platform, the module count, the hosts, the hook counts by capability and the distribution status — no path from your machine. It makes no network call; nothing is sent until you open the link yourself. With <code>--json</code> it prints one object with <code>feedback_url</code>, <code>report</code> and <code>support_url</code>. Measured on the 2.10.1 source tree: the title reads <code>[feedback] hpp 2.10.1 on Windows AMD64</code>, exit 0.</p>
-      <p><code>hpp install --bundle reliable-coding --host codex --target ../your-repo</code> prints a receipt with <code>"mode": "plan-only"</code> and copies nothing. The copy is done by the module installer, which is part of this repository at <code>installers/kit-forge-1.5.2/kit_doctor.py</code>, next to the module directories it installs from (a pip install carries neither): <code>python installers/kit-forge-1.5.2/kit_doctor.py install --kit &lt;module-path&gt; --host &lt;host&gt; --target ../your-repo</code> prints a plan, and the same command with <code>--apply</code> performs it. <code>hpp init</code> prints these lines for you in its wire block.</p>
+      <p><code>hpp install --bundle reliable-coding --host codex --target ../your-repo</code> prints a receipt with <code>"mode": "plan-only"</code> and copies nothing. The copy is done by the module installer, which is part of this repository at <code>installers/kit-forge-1.5.3/kit_doctor.py</code>, next to the module directories it installs from (a pip install carries neither): <code>python installers/kit-forge-1.5.3/kit_doctor.py install --kit &lt;module-path&gt; --host &lt;host&gt; --target ../your-repo</code> prints a plan, and the same command with <code>--apply</code> performs it. <code>hpp init</code> prints these lines for you in its wire block.</p>
       <p class="measured">Requirements: Python 3.10 or newer (<code>pyproject.toml</code>), <code>git</code> on <code>PATH</code> for attestation and for the commit count in <code>detect</code>; no third-party package.</p>
     </div></section>
 

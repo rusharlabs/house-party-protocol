@@ -63,11 +63,15 @@ verify first, are in the [Quickstart](#quickstart).
 
 An agent team here means two or more coding-agent sessions or subagents working on one repository:
 in parallel, reviewing each other, sometimes competing for the same task. Every one of them reports
-"done". Something orchestrates them: a lead agent handing out subagents, a script that fans the work
-out, a CI job, or you with four terminals. HPP is not that orchestrator and sits under any of them:
-the orchestrator decides who works on what; HPP decides what counts as done. It schedules nothing,
-pays for nothing and calls no model; the lane-kit starts a session only on an action you take: a Lane
-Dashboard action you confirm, or the seats of a `/deliberate` you invoke. Each contract below has a
+"done". HPP orchestrates that team and decides what counts as done. The lane-kit splits the work into
+lanes and waves, hands items out on a board where sessions claim, compete and pass to review, writes
+each lane its kickoff, and starts Claude Code or Codex sessions from the Lane Dashboard (in a
+terminal, in tmux, or headless under a supervisor); `/deliberate` seats a council across model
+families. Each of those starts on an action you take, a Lane Dashboard action you confirm or a
+`/deliberate` you invoke: HPP schedules nothing, pays for nothing, and the `hpp` package calls no
+model. If you already have an orchestrator (a lead agent handing out subagents, a script that fans
+the work out, a CI job), HPP sits under it: that one decides who works on what, and HPP still
+decides what counts as done. Each contract below has a
 command that shows it holding, and its refusals exit non-zero, so a script can use them as gates.
 
 The Lane Dashboard is the lane board, the state machine every item passes through (shown under
@@ -212,7 +216,7 @@ third-party packages. CI exercises Python 3.10 to 3.13 on Linux, macOS and Windo
 (`.github/workflows/ci.yml`); older interpreters are not promised because nothing measures them.
 
 ```bash
-pip install git+https://github.com/rusharlabs/house-party-protocol@v2.11.1
+pip install git+https://github.com/rusharlabs/house-party-protocol@v2.11.2
 hpp doctor
 hpp init --target ../your-repo
 ```
@@ -320,13 +324,13 @@ detects, wires and verifies it. Either way it plans first and applies only on a 
 invocation:
 
 ```bash
-python installers/kit-forge-1.5.2/kit_doctor.py install \
-  --kit frameworks/operator-kit-1.8.2 --host codex --target ../your-repo
-python installers/kit-forge-1.5.2/kit_doctor.py install \
-  --kit frameworks/operator-kit-1.8.2 --host codex --target ../your-repo --apply
+python installers/kit-forge-1.5.3/kit_doctor.py install \
+  --kit frameworks/operator-kit-1.8.3 --host codex --target ../your-repo
+python installers/kit-forge-1.5.3/kit_doctor.py install \
+  --kit frameworks/operator-kit-1.8.3 --host codex --target ../your-repo --apply
 ```
 
-The installer is part of this repository, at `installers/kit-forge-1.5.2/kit_doctor.py`, next
+The installer is part of this repository, at `installers/kit-forge-1.5.3/kit_doctor.py`, next
 to the module directories it installs from. A pip install carries neither, and `hpp init` says
 so in its wire block when it cannot find the installer beside the manifest.
 `hpp install --bundle reliable-coding --host codex --target ../your-repo` is a different
@@ -376,16 +380,16 @@ returns the same answer as JSON. Neither asks a model to remember anything.
 
 | module | version | one line |
 |---|---|---|
-| `operator-kit` | 1.8.2 | done gate with real exit codes, command policy in `audit` or `enforce`, governed loops with charter and stop conditions, standalone `pass@k` / `pass^k` runner, preflight, two checker agents shipped without `Write` or `Edit` |
+| `operator-kit` | 1.8.3 | done gate with real exit codes, command policy in `audit` or `enforce`, governed loops with charter and stop conditions, standalone `pass@k` / `pass^k` runner, preflight, two checker agents shipped without `Write` or `Edit` |
 | `lane-kit` | 1.8.1 | a lane board for concurrent sessions: claim, territory, liveness, maker ≠ checker, and a router that picks a checker from a different provider |
 | `continuity-kit` | 1.5.2 | handoff written before a stop or compaction, re-derivation commands instead of remembered state, guards against replaying finished steps |
-| `health-kit` | 1.4.2 | config-driven service probes that write a cache a statusline reads without touching the network; service health kept apart from data health |
-| `gotcha-memory` | 1.1.2 | records failed commands by error family, detects recurrence, injects the lesson before the next run; warn-only, secrets redacted by shape |
-| `kit-forge` | 1.5.2 | assembles modules from source, lints for IP and PII, installs in six stages, writes and verifies `CHECKSUMS.txt`, checks the marketplace |
-| `claude-dev-kit` | 1.3.6 | authoring of skills, hooks and plugins for Claude Code, reversible settings wiring, secret scan on write |
+| `health-kit` | 1.4.3 | config-driven service probes that write a cache a statusline reads without touching the network; service health kept apart from data health |
+| `gotcha-memory` | 1.1.3 | records failed commands by error family, detects recurrence, injects the lesson before the next run; warn-only, secrets redacted by shape |
+| `kit-forge` | 1.5.3 | assembles modules from source, lints for IP and PII, installs in six stages, writes and verifies `CHECKSUMS.txt`, checks the marketplace |
+| `claude-dev-kit` | 1.3.7 | authoring of skills, hooks and plugins for Claude Code, reversible settings wiring, secret scan on write |
 | `dev-squad-kit` | 1.2.1 | twelve development roles as commands and subagents with explicit tools, plus parallel read-and-consolidate skills |
-| `agent-framework-wizard` | 1.2.3 | six-step scaffold for a new agent or skill project, answerable from a file for non-interactive runs |
-| `supabase-pack` | 1.2.1 | RLS audit through `pg_policies` and advisors instead of a table flag; Edge Function scaffold |
+| `agent-framework-wizard` | 1.2.4 | six-step scaffold for a new agent or skill project, answerable from a file for non-interactive runs |
+| `supabase-pack` | 1.2.2 | RLS audit through `pg_policies` and advisors instead of a table flag; Edge Function scaffold |
 
 The `reliable-coding` bundle is the first six. Each module installs on its own; `integrates_with`
 in the manifest is optional composition, `requires` is a hard dependency, and today no module
@@ -414,9 +418,9 @@ attestation. `pass^k = 1.00` is required for the gate to pass. The suite file an
 in the JSON report (`hpp benchmark -k 3 --json`). See [PROOF.md](docs/PROOF.md) for the claim
 matrix and [BENCHMARK.md](docs/BENCHMARK.md) for the scenarios.
 
-In this repository, `python installers/kit-forge-1.5.2/kit_doctor.py verify <module-dir>`
+In this repository, `python installers/kit-forge-1.5.3/kit_doctor.py verify <module-dir>`
 compares every file of a module against its `CHECKSUMS.txt`, and
-`python installers/kit-forge-1.5.2/kit_doctor.py marketplace .` checks the whole tree.
+`python installers/kit-forge-1.5.3/kit_doctor.py marketplace .` checks the whole tree.
 
 Something confusing, slower than it should be, or a piece you stopped using?
 `python -m hpp doctor --report` prints the link to the feedback form with the title filled in, and
@@ -429,10 +433,11 @@ call; nothing is sent until you open the link.
   check did not run, nothing ran it.
 - HPP never calls a model. Routing returns a tier and a provider id from declarations you pass
   in; it does not pick a vendor, a model name or a price.
-- HPP does not run agent teams. The `hpp` package starts no agent and schedules nothing; the lane-kit
-  starts a session only on an action you take (a Lane Dashboard action you confirm, or the seats of a
-  `/deliberate` you invoke). Lanes, waves and House Sessions are contracts and projections over what
-  your hosts run, and a verdict stops something only when a hook, a CI job or a person calls it.
+- HPP orchestrates agent teams only on actions you take. The `hpp` package starts no agent and
+  schedules nothing; the lane-kit starts a session only on an action you take (a Lane Dashboard action
+  you confirm, or the seats of a `/deliberate` you invoke), and nothing starts or restarts an agent on
+  a timer. Lanes, waves and House Sessions are contracts and projections over what your hosts run,
+  and a verdict stops something only when a hook, a CI job or a person calls it.
 - Maps are projections of manifests, event logs and JSON you provide. The Monitor Map does not
   probe anything; you supply `last_signal`. The Lane Map does not know your sessions; you supply
   heartbeats. `--now` is explicit so that no projection depends on the ambient clock.

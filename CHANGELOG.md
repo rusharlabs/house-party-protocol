@@ -7,6 +7,47 @@ All relevant changes to the harness are recorded here. The format follows
 [SemVer](https://semver.org/). The product version describes the harness contract; each module
 keeps its own version in `plugin.json` and in `marketplace.json`.
 
+## [2.11.2] — 2026-10-30
+
+### Security
+
+- **The release workflow publishes with `pypa/gh-action-pypi-publish` 1.14.3**, which fixes
+  [GHSA-5xjx-3w67-w9x9](https://github.com/pypa/gh-action-pypi-publish/security/advisories/GHSA-5xjx-3w67-w9x9)
+  (critical, published 2026-10-21): a certificate authority in the chain Sigstore uses for Trusted
+  Publishing and PyPI digital attestations was revoked. 2.11.2 is the first release built with it.
+  The same pass moves `ossf/scorecard-action` to 2.5.0, `github/codeql-action/upload-sarif` to 4.39.1,
+  `actions/upload-artifact` to 7.0.2 and `actions/download-artifact` to 8.0.2. Every action stays
+  pinned by commit SHA, and each new SHA was checked against the tag in the action's own repository.
+  The harness itself has no npm or PHP dependency.
+
+### Fixed
+
+- **`skill_lint --self-test` failed by the calendar alone** (kit-forge 1.5.3, claude-dev-kit 1.3.7).
+  Its fixture's examples were dated 2026-07-10 and rule L3c warns once an example is older than 90
+  days, so from 2026-10-08 the self-test, which every module check in CI runs, failed with no code
+  change. The fixture is now dated by the same clock L3c reads, and a test runs the self-test with the
+  clock in 2027. L3c itself still flags an old example.
+- **Every example older than 90 days was executed again** (operator-kit 1.8.3, claude-dev-kit 1.3.7,
+  health-kit 1.4.3, supabase-pack 1.2.2, agent-framework-wizard 1.2.4). Where the output changed since
+  July, the skill now shows the real one: `done_gate.py --json` prints indented JSON with `state`,
+  `partial` and `declared`, and a failing gate adds the "no pending-work declaration" lines; the
+  wizard prints "PyYAML available" and lists `out_dir` and `files_skipped_customized`; `skill_lint`
+  prints `(of N)`; a plain `ls` does not list the `.claude-plugin` directory; the Edge Function
+  scaffold's own check counts 6 matching lines, not 4, and its broken variant reports the one type
+  error the compiler stops at. Exit codes did not change.
+- **The Portuguese READMEs of gotcha-memory 1.1.3 and health-kit 1.4.3 show the same file tree as the
+  English ones.** One line inside the tree, a code block, had been translated in 2.11.1.
+
+### Changed
+
+- **The README and the concepts page say what the lane-kit does: HPP orchestrates agent teams.** They
+  used to say HPP "is not that orchestrator", "does not run agent teams" and that orchestration "is not
+  something HPP does", which undersold the lane-kit: it splits the work
+  into lanes and waves, hands items out on a board, writes each lane its kickoff, starts Claude Code
+  and Codex sessions from the Lane Dashboard, and seats `/deliberate` councils. What holds is
+  unchanged and still written down: each of those starts on an action you take, nothing runs on a
+  timer, and the `hpp` package calls no model.
+
 ## [2.11.1] — 2026-09-30
 
 ### Fixed
@@ -1943,6 +1984,7 @@ publishing.
 [2.6.5]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.5
 [2.6.6]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.6
 [2.6.7]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.7
+[2.11.2]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.11.2
 [2.11.1]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.11.1
 [2.11.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.11.0
 [2.10.1]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.10.1

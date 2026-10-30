@@ -28,6 +28,6 @@ A public claim only enters here with a reproduction.
 | House Session, control | `python -m hpp deliberate verify` on a copy of a sealed record with the verdict edited | exit 2, `record_sha256 does not match` |
 | best-of-N selection | `python multi-session/lane-kit-1.8.1/scripts/lane_board.py --self-test` | exit 0; the competitions block passes every check |
 | best-of-N selection, control | `lane_board.py select` on a declared competition, by a reviewer of the same model family as one builder | exit 1, `SAME model family`; no winner recorded |
-| intact artifacts | `python installers/kit-forge-1.5.2/kit_doctor.py marketplace .` | status ok |
+| intact artifacts | `python installers/kit-forge-1.5.3/kit_doctor.py marketplace .` | status ok |
 
 Dated results belong to the release log, not to this living document.
