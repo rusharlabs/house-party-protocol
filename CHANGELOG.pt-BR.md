@@ -7,6 +7,50 @@ Todas as mudanças relevantes do harness são registradas aqui. O formato segue
 [SemVer](https://semver.org/lang/pt-BR/). A versão do produto descreve o contrato do harness;
 cada módulo mantém sua própria versão no `plugin.json` e no `marketplace.json`.
 
+## [2.11.2] — 2026-10-30
+
+### Segurança
+
+- **O workflow de release publica com o `pypa/gh-action-pypi-publish` 1.14.3**, que corrige o
+  [GHSA-5xjx-3w67-w9x9](https://github.com/pypa/gh-action-pypi-publish/security/advisories/GHSA-5xjx-3w67-w9x9)
+  (crítico, publicado em 2026-10-21): foi revogada uma autoridade certificadora da cadeia que o
+  Sigstore usa no Trusted Publishing e nas atestações digitais do PyPI. A 2.11.2 é a primeira versão
+  publicada com ele. Na mesma passada, `ossf/scorecard-action` vai para 2.5.0,
+  `github/codeql-action/upload-sarif` para 4.39.1, `actions/upload-artifact` para 7.0.2 e
+  `actions/download-artifact` para 8.0.2. Toda action continua fixada por SHA de commit, e cada SHA
+  novo foi conferido contra a tag no repositório da própria action. O harness não tem dependência de
+  npm nem de PHP.
+
+### Corrigido
+
+- **O `skill_lint --self-test` reprovava só por causa do calendário** (kit-forge 1.5.3,
+  claude-dev-kit 1.3.7). Os exemplos do fixture estavam datados de 2026-07-10 e a regra L3c avisa
+  quando um exemplo passa de 90 dias; assim, a partir de 2026-10-08 o autoteste, que toda checagem de
+  módulo da CI roda, reprovava sem nenhuma mudança de código. O fixture agora é datado pelo mesmo
+  relógio que a L3c lê, e um teste roda o autoteste com o relógio em 2027. A L3c continua acusando
+  exemplo antigo.
+- **Todo exemplo com mais de 90 dias foi executado de novo** (operator-kit 1.8.3, claude-dev-kit
+  1.3.7, health-kit 1.4.3, supabase-pack 1.2.2, agent-framework-wizard 1.2.4). Onde a saída mudou
+  desde julho, a skill agora mostra a real: `done_gate.py --json` imprime JSON indentado com `state`,
+  `partial` e `declared`, e um gate reprovado acrescenta as linhas "no pending-work declaration"; o
+  wizard imprime "PyYAML available" e lista `out_dir` e `files_skipped_customized`; o `skill_lint`
+  imprime `(of N)`; um `ls` simples não lista o diretório `.claude-plugin`; a checagem do próprio
+  scaffold de Edge Function conta 6 linhas, não 4, e a variante quebrada mostra o único erro de tipo
+  em que o compilador para. Nenhum código de saída mudou.
+- **Os READMEs em português do gotcha-memory 1.1.3 e do health-kit 1.4.3 mostram a mesma árvore de
+  arquivos que os em inglês.** Uma linha dentro da árvore, um bloco de código, tinha sido traduzida
+  na 2.11.1.
+
+### Alterado
+
+- **O README e a página de conceitos dizem o que o lane-kit faz: o HPP orquestra times de agentes.**
+  Eles diziam que o HPP "não é esse orquestrador", "não roda times de agentes" e que orquestração "não
+  é algo que o HPP faz", o que subestimava o lane-kit: ele divide o
+  trabalho em lanes e waves, distribui os itens num quadro, escreve o kickoff de cada lane, inicia
+  sessões do Claude Code e do Codex pelo Lane Dashboard e monta conselhos com o `/deliberate`. O que
+  vale continua igual e escrito: cada uma dessas coisas começa por uma ação sua, nada roda por
+  relógio, e o pacote `hpp` não chama modelo.
+
 ## [2.11.1] — 2026-09-30
 
 ### Corrigido
@@ -1984,6 +2028,7 @@ publicar.
 [2.6.5]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.5
 [2.6.6]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.6
 [2.6.7]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.7
+[2.11.2]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.11.2
 [2.11.1]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.11.1
 [2.11.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.11.0
 [2.10.1]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.10.1

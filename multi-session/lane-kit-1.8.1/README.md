@@ -62,14 +62,14 @@ below (`--host codex`).
 
 In the emitted distribution this module lives in `multi-session/lane-kit-1.8.1/` (the
 directory carries the version — state it once, in `KIT`). The installer is
-`installers/kit-forge-1.5.2/kit_doctor.py`; run it from the distribution root. It plans
+`installers/kit-forge-1.5.3/kit_doctor.py`; run it from the distribution root. It plans
 first and writes only on a second, explicit `--apply`:
 
 ```bash
 KIT=multi-session/lane-kit-1.8.1
 cp -r "$KIT" ../your-repo/lane-kit            # the copy itself (kit_doctor does not copy on claude-code)
-python installers/kit-forge-1.5.2/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo
-python installers/kit-forge-1.5.2/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo --apply
+python installers/kit-forge-1.5.3/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo
+python installers/kit-forge-1.5.3/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo --apply
 # Codex CLI: --host codex — the installer copies the module into .agents/hpp/lane-kit
 #            and each skill into .agents/skills/hpp-lane-kit-<skill>; no cp -r needed
 ```

@@ -369,14 +369,17 @@ painel de quatro assentos de quatro famílias com o juiz em `lane-judge`; no mó
 
 ## orquestração
 
-**É:** o que decide qual agente trabalha em quê, e quando: um agente líder distribuindo subagents, um
-script que reparte o trabalho entre agentes, um job de CI, ou uma pessoa com vários terminais. O HPP
-fica abaixo disso: o orquestrador decide quem trabalha em quê; o HPP decide o que conta como pronto.
+**É:** o que decide qual agente trabalha em quê, e quando. No HPP é o lane-kit: ele divide o trabalho
+em lanes e waves, distribui os itens no quadro de lanes, escreve o kickoff de cada lane e inicia
+sessões pelo Lane Dashboard, cada uma por ação do operador (uma ação confirmada no Lane Dashboard, ou
+os assentos de um `/deliberate` chamado). Fora do HPP pode ser um agente líder distribuindo subagents,
+um script que reparte o trabalho entre agentes, um job de CI, ou uma pessoa com vários terminais; o
+HPP fica então abaixo dele: esse orquestrador decide quem trabalha em quê, o HPP decide o que conta
+como pronto.
 
-**Não é:** algo que o HPP faz. O pacote `hpp` não inicia agente, não agenda nada e não chama modelo;
-ele planeja uma ordem (uma spec compila em waves) e não a executa. O lane-kit só inicia uma sessão
-por ação do operador: uma ação confirmada no Lane Dashboard, ou os assentos de um `/deliberate`
-chamado.
+**Não é:** um agendador. O pacote `hpp` não inicia agente, não agenda nada e não chama modelo; ele
+planeja uma ordem (uma spec compila em waves) e não a executa, e nada no HPP inicia ou reinicia um
+agente por relógio.
 
 **Verifique:** uma recusa é um código de saída diferente de zero, então um orquestrador pode usá-la
 como portão: `python -m hpp attest create ... --maker a --checker a ...` sai com 2; `python -m hpp

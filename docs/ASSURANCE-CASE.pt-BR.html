@@ -152,7 +152,7 @@ nunca derruba o host.</li>
 <p>Um módulo é código que o operador instala. A integridade dele é conferida antes de ele rodar:</p>
 <ul>
 <li>todo diretório de módulo traz <code>CHECKSUMS.txt</code> (sha256 por arquivo), e
-<code>installers/kit-forge-1.5.2/kit_doctor.py verify &lt;module&gt;</code> compara cada arquivo com ele;</li>
+<code>installers/kit-forge-1.5.3/kit_doctor.py verify &lt;module&gt;</code> compara cada arquivo com ele;</li>
 <li><code>kit_doctor.py install</code> planeja primeiro: uma execução de plano roda todos os self-tests do
 módulo e não escreve nada no projeto de destino, e a instalação só é aplicada numa segunda
 invocação, explícita (<code>--apply</code>), que copia os arquivos <code>*.example.*</code> do módulo para o destino
@@ -283,7 +283,7 @@ que a pessoa declarou — esse é o propósito dele.</li>
       <h2>Como conferir este caso</h2>
 <p>A partir da raiz do repositório:</p>
 <pre><code class="language-bash">python -m pytest tests/test_lane_dashboard.py tests/test_decision.py tests/test_evidence.py tests/test_process.py tests/test_stdlib_only.py -q
-python installers/kit-forge-1.5.2/kit_doctor.py verify multi-session/lane-kit-1.8.1
+python installers/kit-forge-1.5.3/kit_doctor.py verify multi-session/lane-kit-1.8.1
 gh attestation verify &lt;file&gt; --repo rusharlabs/house-party-protocol</code></pre>
 <p>O primeiro comando roda os testes que guardam as contramedidas acima (entre eles
 <code>test_a_page_on_another_origin_cannot_act</code>, <code>test_the_page_cannot_be_framed</code>,

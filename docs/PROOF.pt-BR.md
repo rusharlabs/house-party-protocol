@@ -28,6 +28,6 @@ Uma claim pública só entra aqui com reprodução.
 | House Session, controle | `python -m hpp deliberate verify` numa cópia de um registro selado com o veredito editado | exit 2, `record_sha256 does not match` |
 | seleção best-of-N | `python multi-session/lane-kit-1.8.1/scripts/lane_board.py --self-test` | exit 0; o bloco de competições passa em toda checagem |
 | seleção best-of-N, controle | `lane_board.py select` numa competição declarada, por um revisor da mesma família de modelo de um construtor | exit 1, `SAME model family`; nenhum vencedor registrado |
-| artefatos íntegros | `python installers/kit-forge-1.5.2/kit_doctor.py marketplace .` | status ok |
+| artefatos íntegros | `python installers/kit-forge-1.5.3/kit_doctor.py marketplace .` | status ok |
 
 Resultados datados pertencem ao log da release, não a este documento vivo.

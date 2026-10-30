@@ -57,15 +57,15 @@ Code's, and the runtime (scripts and hooks) still comes through the verified cop
 
 In the emitted distribution this module lives in `continuity/continuity-kit-1.5.2/` (the
 directory carries the version — state it once, in `KIT`). The installer is
-`installers/kit-forge-1.5.2/kit_doctor.py` — the single installation engine of the whole
+`installers/kit-forge-1.5.3/kit_doctor.py` — the single installation engine of the whole
 marketplace, see `INSTALL-CONTRACT.md` at the distribution root. Run it from the
 distribution root; it plans first and writes only on a second, explicit `--apply`:
 
 ```bash
 KIT=continuity/continuity-kit-1.5.2
 cp -r "$KIT" ../your-repo/continuity-kit      # the copy itself (kit_doctor does not copy on claude-code)
-python installers/kit-forge-1.5.2/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo
-python installers/kit-forge-1.5.2/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo --apply
+python installers/kit-forge-1.5.3/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo
+python installers/kit-forge-1.5.3/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo --apply
 # Codex CLI: --host codex — the installer copies the module into .agents/hpp/continuity-kit
 #            and each skill into .agents/skills/hpp-continuity-kit-<skill>; no cp -r needed
 ```

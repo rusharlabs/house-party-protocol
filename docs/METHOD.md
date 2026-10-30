@@ -48,8 +48,8 @@ event is appended by hand with `hpp event append`, and it then carries only what
 The loop moves to `evidenced`. It cannot move to `verified` without at least one such record.
 
 ```bash
-python frameworks/operator-kit-1.8.2/scripts/done_gate.py "python -m pytest -q" "python -m py_compile app.py"
-python frameworks/operator-kit-1.8.2/scripts/done_gate.py "python -m pytest -q" --declare-partial "external target not yet validated"
+python frameworks/operator-kit-1.8.3/scripts/done_gate.py "python -m pytest -q" "python -m py_compile app.py"
+python frameworks/operator-kit-1.8.3/scripts/done_gate.py "python -m pytest -q" --declare-partial "external target not yet validated"
 python -m hpp evidence run --id ITEM-1 --artifact artifacts/pytest.xml --record-event -- python -m pytest -q --junitxml=artifacts/pytest.xml
 python -m hpp event append --type evidence_recorded --data '{"work":"ITEM-1","ref":"artifacts/pytest.txt"}'
 ```
@@ -130,10 +130,10 @@ extend the budget or close the work. Extending the budget is a human decision, n
 the loop grants itself.
 
 ```bash
-python frameworks/operator-kit-1.8.2/hooks/loop_gate.py start \
+python frameworks/operator-kit-1.8.3/hooks/loop_gate.py start \
   --charter "<objective>" --criteria "python -m pytest -q" --max-iterations 10
-python frameworks/operator-kit-1.8.2/hooks/loop_gate.py status
-python frameworks/operator-kit-1.8.2/hooks/loop_gate.py cancel
+python frameworks/operator-kit-1.8.3/hooks/loop_gate.py status
+python frameworks/operator-kit-1.8.3/hooks/loop_gate.py cancel
 ```
 
 ## 6. Resume after an interruption
@@ -190,8 +190,8 @@ person to paste, and the doctor is run afterwards to confirm the result.
 ```bash
 python -m hpp init --target ../your-repo
 python -m hpp init --target ../your-repo --apply
-python installers/kit-forge-1.5.2/kit_doctor.py install --kit <module-dir> --host codex --target ../your-repo
-python installers/kit-forge-1.5.2/kit_doctor.py install --kit <module-dir> --host codex --target ../your-repo --apply
+python installers/kit-forge-1.5.3/kit_doctor.py install --kit <module-dir> --host codex --target ../your-repo
+python installers/kit-forge-1.5.3/kit_doctor.py install --kit <module-dir> --host codex --target ../your-repo --apply
 python -m hpp doctor
 ```
 

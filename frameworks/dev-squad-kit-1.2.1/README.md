@@ -70,14 +70,14 @@ comes through the verified copy below (`--host codex`).
 
 In the emitted distribution this module lives in
 `frameworks/dev-squad-kit-1.2.1/` (the directory carries the version — state it
-once, in `KIT`). The installer is `installers/kit-forge-1.5.2/kit_doctor.py`; run it from
+once, in `KIT`). The installer is `installers/kit-forge-1.5.3/kit_doctor.py`; run it from
 the distribution root. It plans first and writes only on a second, explicit `--apply`:
 
 ```bash
 KIT=frameworks/dev-squad-kit-1.2.1
 cp -r "$KIT" ../your-repo/dev-squad-kit       # the copy itself (kit_doctor does not copy on claude-code)
-python installers/kit-forge-1.5.2/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo
-python installers/kit-forge-1.5.2/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo --apply
+python installers/kit-forge-1.5.3/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo
+python installers/kit-forge-1.5.3/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo --apply
 # Codex CLI: --host codex — the installer copies the module into .agents/hpp/dev-squad-kit
 #            and each skill into .agents/skills/hpp-dev-squad-kit-<skill>; no cp -r needed
 ```

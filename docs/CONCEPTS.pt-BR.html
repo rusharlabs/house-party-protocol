@@ -444,13 +444,16 @@ painel de quatro assentos de quatro famílias com o juiz em <code>lane-judge</co
     <section id="orquestração"><div class="wrap">
       <p class="eyebrow">18</p>
       <h2>orquestração</h2>
-<p><strong>É:</strong> o que decide qual agente trabalha em quê, e quando: um agente líder distribuindo subagents, um
-script que reparte o trabalho entre agentes, um job de CI, ou uma pessoa com vários terminais. O HPP
-fica abaixo disso: o orquestrador decide quem trabalha em quê; o HPP decide o que conta como pronto.</p>
-<p><strong>Não é:</strong> algo que o HPP faz. O pacote <code>hpp</code> não inicia agente, não agenda nada e não chama modelo;
-ele planeja uma ordem (uma spec compila em waves) e não a executa. O lane-kit só inicia uma sessão
-por ação do operador: uma ação confirmada no Lane Dashboard, ou os assentos de um <code>/deliberate</code>
-chamado.</p>
+<p><strong>É:</strong> o que decide qual agente trabalha em quê, e quando. No HPP é o lane-kit: ele divide o trabalho
+em lanes e waves, distribui os itens no quadro de lanes, escreve o kickoff de cada lane e inicia
+sessões pelo Lane Dashboard, cada uma por ação do operador (uma ação confirmada no Lane Dashboard, ou
+os assentos de um <code>/deliberate</code> chamado). Fora do HPP pode ser um agente líder distribuindo subagents,
+um script que reparte o trabalho entre agentes, um job de CI, ou uma pessoa com vários terminais; o
+HPP fica então abaixo dele: esse orquestrador decide quem trabalha em quê, o HPP decide o que conta
+como pronto.</p>
+<p><strong>Não é:</strong> um agendador. O pacote <code>hpp</code> não inicia agente, não agenda nada e não chama modelo; ele
+planeja uma ordem (uma spec compila em waves) e não a executa, e nada no HPP inicia ou reinicia um
+agente por relógio.</p>
 <p><strong>Verifique:</strong> uma recusa é um código de saída diferente de zero, então um orquestrador pode usá-la
 como portão: <code>python -m hpp attest create ... --maker a --checker a ...</code> sai com 2; <code>python -m hpp findings check</code> sobre um registro com uma chave que o contrato não define sai com 2; <code>python -m hpp evidence verify</code> sobre um registro que não existe sai com 2.</p>
     </div></section>
