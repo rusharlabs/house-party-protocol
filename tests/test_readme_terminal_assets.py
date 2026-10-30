@@ -25,6 +25,9 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
+import xml.etree.ElementTree as ET
+
+import pytest
 
 PRODUCT_ROOT = Path(__file__).resolve().parents[1]
 READMES = ("README.md", "README.pt-BR.md")
@@ -114,6 +117,25 @@ def test_readmes_show_the_lane_board_capture() -> None:
     """The lane board is the product's one enforced state machine and had no visual proof."""
     absent = [name for name in READMES if LANE_BOARD not in _image_sources(name)]
     assert not absent, f"{LANE_BOARD} is not shown by: {', '.join(absent)}"
+
+
+@pytest.mark.parametrize("name", READMES)
+def test_lane_board_caption_claims_are_visible_in_the_capture(name: str) -> None:
+    text = (PRODUCT_ROOT / name).read_text(encoding="utf-8")
+    image = next(tag for tag in _IMG.findall(text) if f'src="{LANE_BOARD}"' in tag)
+    caption = text[text.index(image):].split("</sub></p>", 1)[0]
+    tree = ET.fromstring((PRODUCT_ROOT / LANE_BOARD).read_text(encoding="utf-8"))
+    rows = ["".join(row.itertext()) for row in tree.findall("{*}text")]
+    output = "\n".join(rows)
+    if any(claim in caption for claim in ("whose lane has not been told", "cuja lane ainda não foi avisada")):
+        assert "UNDELIVERED effects" in output, f"{name}: caption promises an undelivered block"
+        setting = "mailbox delivery disabled" if name == "README.md" else "entrega ao mailbox desativada"
+        assert setting in caption, f"{name}: explain why this fixture has undelivered verdicts"
+    if "reviewer (exec-b) is the SAME lane as the builder" in caption:
+        assert "CLAIMED · lane=exec-b" in output, f"{name}: the refused reviewer must also be a builder"
+        assert "verdict_by: {'lane': 'rev-a'" in output, f"{name}: accepted verdicts use a separate reviewer"
+    for item, state in ((1, "MERGED"), (2, "VERIFIED"), (3, "DEFERRED"), (4, "BUILDING")):
+        assert f"EXAMPLE-{item} — {state}" in output, (name, item, state)
 
 
 def test_the_lane_board_capture_is_rendered_from_a_real_render_command() -> None:

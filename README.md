@@ -76,7 +76,7 @@ command that shows it holding, and its refusals exit non-zero, so a script can u
 
 The Lane Dashboard is the lane board, the state machine every item passes through (shown under
 [Cross-model by construction](#cross-model-by-construction)), as a page:
-`multi-session/lane-kit-1.8.1/scripts/lane_dashboard.py`
+`multi-session/lane-kit-1.8.2/scripts/lane_dashboard.py`
 serves it on `127.0.0.1` and redraws it by itself when the board changes. Every action on the page is a
 terminal command that does the same thing, and its dialog names that command before anything runs.
 
@@ -91,7 +91,7 @@ terminal command that does the same thing, and its dialog names that command bef
 | plans work for several agents | a spec compiles into a WorkGraph; units with no edge between them share a wave, and a cycle is an error with its path named | `hpp work plan` · `hpp work waves` |
 | runs sessions side by side | each session claims a lane: paths, exclusivity, heartbeat; only two live exclusive lanes on the same paths collide, and a dead lane never does | `hpp map lane --now` |
 | passes messages between agents | a message is a file routed by one `## To: <lane>` line; the heartbeat announces it mid-session, and a verdict delivers itself to the lane it concerns | lane-kit `evals/mailbox-e2e.sh` |
-| staffs development roles | twelve roles as commands and subagents, each with its tool set declared | `hpp graph --view capability --format json` (`agent-roles`) · `ls frameworks/dev-squad-kit-1.2.1/agents` (12) |
+| staffs development roles | twelve roles as commands and subagents, each with its tool set declared | `hpp graph --view capability --format json` (`agent-roles`) · `ls frameworks/dev-squad-kit-1.2.2/agents` (12) |
 | **review independently** | | |
 | reviews another agent's work | a verdict from the builder's own lane or model family is refused; the review lenses ship without `Write` or `Edit`; a routing panel judged by the maker's own model family is refused | `lane_board.py --self-test` · `hpp attest create --maker a --checker a` → exit 2 · `hpp route --deliberation <session> --maker-family <family>` |
 | runs specialist reviewers | four read-only lenses answer in one shape (`hpp.findings/v1`); the core derives the verdict and refuses a key the contract does not define | `hpp findings check` |
@@ -200,7 +200,7 @@ from another lane **and** another model family,
 <p align="center">
   <img alt="python lane_board.py render: four example items on one board — EXAMPLE-1 MERGED, EXAMPLE-2 VERIFIED and waiting on the human gate, EXAMPLE-3 DEFERRED for want of a checker, EXAMPLE-4 back to BUILDING after NEEDS-FIX — then the verdicts whose lane has not been told" src="assets/terminal/lane-board.svg" width="940">
 </p>
-<p align="center"><sub>The board those rows produce, as <code>multi-session/lane-kit-1.8.1/scripts/lane_board.py</code> prints it: four example items driven through the machine, every event naming the lane that wrote it, the evidence pasted at checkpoint, and — for a verdict — the lane and the model that gave it. Two attempts were refused on the way there, both <code>exit 1</code>: a verdict from the builder's own lane (<em>maker≠checker violated: reviewer (exec-b) is the SAME lane as the builder</em>) and merging a 🔴 item without <code>--human-approved</code>. The last block is the one nobody thinks to ask for — verdicts already decided whose lane has not been told. Text rendered from the command's real stdout by <code>scripts/render_terminal_svg.py</code>, like the terminal captures above.</sub></p>
+<p align="center"><sub>The board those rows produce, as <code>multi-session/lane-kit-1.8.2/scripts/lane_board.py</code> prints it: four example items driven through the machine, every event naming the lane that wrote it, the evidence pasted at checkpoint, and — for a verdict — the lane and the model that gave it. Two attempts were refused on the way there, both <code>exit 1</code>: a verdict from the builder's own lane (<em>maker≠checker violated: reviewer (exec-b) is the SAME lane as the builder</em>) and merging a 🔴 item without <code>--human-approved</code>. The last block shows verdicts already decided whose lane has not been told: this fixture has automatic mailbox delivery disabled (<code>mailbox.notify_on_verdict: false</code>) to expose pending effects. Text rendered from the command's real stdout by <code>scripts/render_terminal_svg.py</code>, like the terminal captures above.</sub></p>
 
 ## Quickstart
 
@@ -216,7 +216,7 @@ third-party packages. CI exercises Python 3.10 to 3.13 on Linux, macOS and Windo
 (`.github/workflows/ci.yml`); older interpreters are not promised because nothing measures them.
 
 ```bash
-pip install git+https://github.com/rusharlabs/house-party-protocol@v2.11.2
+pip install git+https://github.com/rusharlabs/house-party-protocol@v2.11.3
 hpp doctor
 hpp init --target ../your-repo
 ```
@@ -324,13 +324,13 @@ detects, wires and verifies it. Either way it plans first and applies only on a 
 invocation:
 
 ```bash
-python installers/kit-forge-1.5.3/kit_doctor.py install \
-  --kit frameworks/operator-kit-1.8.3 --host codex --target ../your-repo
-python installers/kit-forge-1.5.3/kit_doctor.py install \
-  --kit frameworks/operator-kit-1.8.3 --host codex --target ../your-repo --apply
+python installers/kit-forge-1.5.4/kit_doctor.py install \
+  --kit frameworks/operator-kit-1.8.4 --host codex --target ../your-repo
+python installers/kit-forge-1.5.4/kit_doctor.py install \
+  --kit frameworks/operator-kit-1.8.4 --host codex --target ../your-repo --apply
 ```
 
-The installer is part of this repository, at `installers/kit-forge-1.5.3/kit_doctor.py`, next
+The installer is part of this repository, at `installers/kit-forge-1.5.4/kit_doctor.py`, next
 to the module directories it installs from. A pip install carries neither, and `hpp init` says
 so in its wire block when it cannot find the installer beside the manifest.
 `hpp install --bundle reliable-coding --host codex --target ../your-repo` is a different
@@ -380,16 +380,16 @@ returns the same answer as JSON. Neither asks a model to remember anything.
 
 | module | version | one line |
 |---|---|---|
-| `operator-kit` | 1.8.3 | done gate with real exit codes, command policy in `audit` or `enforce`, governed loops with charter and stop conditions, standalone `pass@k` / `pass^k` runner, preflight, two checker agents shipped without `Write` or `Edit` |
-| `lane-kit` | 1.8.1 | a lane board for concurrent sessions: claim, territory, liveness, maker ≠ checker, and a router that picks a checker from a different provider |
-| `continuity-kit` | 1.5.2 | handoff written before a stop or compaction, re-derivation commands instead of remembered state, guards against replaying finished steps |
-| `health-kit` | 1.4.3 | config-driven service probes that write a cache a statusline reads without touching the network; service health kept apart from data health |
-| `gotcha-memory` | 1.1.3 | records failed commands by error family, detects recurrence, injects the lesson before the next run; warn-only, secrets redacted by shape |
-| `kit-forge` | 1.5.3 | assembles modules from source, lints for IP and PII, installs in six stages, writes and verifies `CHECKSUMS.txt`, checks the marketplace |
-| `claude-dev-kit` | 1.3.7 | authoring of skills, hooks and plugins for Claude Code, reversible settings wiring, secret scan on write |
-| `dev-squad-kit` | 1.2.1 | twelve development roles as commands and subagents with explicit tools, plus parallel read-and-consolidate skills |
-| `agent-framework-wizard` | 1.2.4 | six-step scaffold for a new agent or skill project, answerable from a file for non-interactive runs |
-| `supabase-pack` | 1.2.2 | RLS audit through `pg_policies` and advisors instead of a table flag; Edge Function scaffold |
+| `operator-kit` | 1.8.4 | done gate with real exit codes, command policy in `audit` or `enforce`, governed loops with charter and stop conditions, standalone `pass@k` / `pass^k` runner, preflight, two checker agents shipped without `Write` or `Edit` |
+| `lane-kit` | 1.8.2 | a lane board for concurrent sessions: claim, territory, liveness, maker ≠ checker, and a router that picks a checker from a different provider |
+| `continuity-kit` | 1.5.3 | handoff written before a stop or compaction, re-derivation commands instead of remembered state, guards against replaying finished steps |
+| `health-kit` | 1.4.4 | config-driven service probes that write a cache a statusline reads without touching the network; service health kept apart from data health |
+| `gotcha-memory` | 1.1.4 | records failed commands by error family, detects recurrence, injects the lesson before the next run; warn-only, secrets redacted by shape |
+| `kit-forge` | 1.5.4 | assembles modules from source, lints for IP and PII, installs in six stages, writes and verifies `CHECKSUMS.txt`, checks the marketplace |
+| `claude-dev-kit` | 1.3.8 | authoring of skills, hooks and plugins for Claude Code, reversible settings wiring, secret scan on write |
+| `dev-squad-kit` | 1.2.2 | twelve development roles as commands and subagents with explicit tools, plus parallel read-and-consolidate skills |
+| `agent-framework-wizard` | 1.2.5 | six-step scaffold for a new agent or skill project, answerable from a file for non-interactive runs |
+| `supabase-pack` | 1.2.3 | RLS audit through `pg_policies` and advisors instead of a table flag; Edge Function scaffold |
 
 The `reliable-coding` bundle is the first six. Each module installs on its own; `integrates_with`
 in the manifest is optional composition, `requires` is a hard dependency, and today no module
@@ -418,9 +418,9 @@ attestation. `pass^k = 1.00` is required for the gate to pass. The suite file an
 in the JSON report (`hpp benchmark -k 3 --json`). See [PROOF.md](docs/PROOF.md) for the claim
 matrix and [BENCHMARK.md](docs/BENCHMARK.md) for the scenarios.
 
-In this repository, `python installers/kit-forge-1.5.3/kit_doctor.py verify <module-dir>`
+In this repository, `python installers/kit-forge-1.5.4/kit_doctor.py verify <module-dir>`
 compares every file of a module against its `CHECKSUMS.txt`, and
-`python installers/kit-forge-1.5.3/kit_doctor.py marketplace .` checks the whole tree.
+`python installers/kit-forge-1.5.4/kit_doctor.py marketplace .` checks the whole tree.
 
 Something confusing, slower than it should be, or a piece you stopped using?
 `python -m hpp doctor --report` prints the link to the feedback form with the title filled in, and
