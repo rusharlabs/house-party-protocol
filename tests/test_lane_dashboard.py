@@ -681,7 +681,7 @@ def test_the_orca_worktrees_that_use_lane_kit_are_grouped_under_their_repo(dashb
         {"repoId": "r1", "path": str(gone), "displayName": "gone", "isMainWorktree": False},
         {"repoId": "r1", "path": str(archived), "displayName": "old", "isMainWorktree": False, "isArchived": True},
     ]
-    projects = dashboard.Projects([], orca=True, run=_orca(repos, worktrees), which=_which("orca"))
+    projects = dashboard.Projects([], orca=True, run=_orca(repos, worktrees), which=_which("orca", "orca-ide"))
     assert [(b["id"], b["project_id"], b["project"], b["worktree"], b["main"], b["path"], b["source"])
             for b in projects.list()] == [("shop", "shop", "shop", "main", True, shop, "orca"),
                                           ("shop-feature-x", "shop", "shop", "feature-x", False, shop_wt, "orca")]

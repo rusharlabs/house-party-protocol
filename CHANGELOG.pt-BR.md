@@ -7,6 +7,34 @@ Todas as mudanças relevantes do harness são registradas aqui. O formato segue
 [SemVer](https://semver.org/lang/pt-BR/). A versão do produto descreve o contrato do harness;
 cada módulo mantém sua própria versão no `plugin.json` e no `marketplace.json`.
 
+## [2.11.3] — 2026-10-30
+
+### Corrigido
+
+- **O lançador opcional do Orca resolve um CLI para todas as operações** (lane-kit 1.8.2):
+  `ORCA_CLI_COMMAND` vence; Linux usa `orca-ide` sem fallback para o leitor de tela GNOME
+  `orca`; macOS e Windows usam `orca`. Uma lista cortada de worktrees é informada na página
+  e no JSON do snapshot. Sessões Windows passam `--shell powershell` e comando PowerShell;
+  um Orca antigo que recusa a flag recebe uma recusa com alternativa, sem tentar outro shell.
+- **Um scaffold novo de agente é lido pelo operator-kit** (agent-framework-wizard 1.2.5): o
+  perfil grava `project`, mantém `project_name` e aponta `paths.state_ssot` para o `00-STATE.md`
+  gerado, quando selecionado. Perfis personalizados existentes são preservados.
+- **O instalador de módulos reconhece um `hpp init` anterior** (kit-forge 1.5.4): um
+  `.hpp/profile.json` válido significa `re-run`, como no wizard do núcleo. `AGENTS.md` e o
+  log de eventos também sinalizam projeto em andamento. A instalação do módulo é um plano separado.
+- **Fixtures de lane não chamam um CLI Codex herdado sem PyYAML.** O self-test do dashboard
+  e as fixtures da fonte excluem esse executável independentemente da configuração YAML.
+  Os testes de trava restauram os imports para os de mailbox usarem um único registro/config.
+
+### Alterado
+
+- **O guia do lane-kit explica o HPP dentro do Orca**, com várias lanes no mesmo worktree,
+  plugins de projeto, fronteiras de conta, alternativas de terminal e limites explícitos dos
+  testes com CLI simulado. Bloqueio por hooks no modo sem perguntas de permissão não foi verificado.
+- **A dependência de build com hashes fixados é setuptools 84.1.0**; os hashes dos dois
+  artefatos foram conferidos no PyPI. Os dez módulos recebem patch porque suas referências
+  de instalação mudam com kit-forge 1.5.4; capturas do terminal são regeradas para o produto 2.11.3.
+
 ## [2.11.2] — 2026-10-30
 
 ### Segurança
@@ -2028,6 +2056,7 @@ publicar.
 [2.6.5]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.5
 [2.6.6]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.6
 [2.6.7]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.7
+[2.11.3]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.11.3
 [2.11.2]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.11.2
 [2.11.1]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.11.1
 [2.11.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.11.0

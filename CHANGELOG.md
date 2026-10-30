@@ -7,6 +7,34 @@ All relevant changes to the harness are recorded here. The format follows
 [SemVer](https://semver.org/). The product version describes the harness contract; each module
 keeps its own version in `plugin.json` and in `marketplace.json`.
 
+## [2.11.3] — 2026-10-30
+
+### Fixed
+
+- **The optional Orca launcher resolves one CLI for every operation** (lane-kit 1.8.2):
+  `ORCA_CLI_COMMAND` wins; Linux uses `orca-ide` and never falls back to the GNOME `orca`
+  screen reader; macOS and Windows use `orca`. A truncated worktree list is reported in the
+  page and snapshot JSON. Windows sessions pass `--shell powershell` and a PowerShell command;
+  an older Orca that rejects the flag gets an actionable refusal without retrying in another shell.
+- **A fresh agent scaffold is readable by operator-kit** (agent-framework-wizard 1.2.5): the
+  profile writes `project`, keeps `project_name`, and points `paths.state_ssot` at the generated
+  `00-STATE.md` when selected. Customized existing profiles are preserved.
+- **The module installer recognizes a previous `hpp init`** (kit-forge 1.5.4): a valid
+  `.hpp/profile.json` means `re-run`, matching the core wizard. `AGENTS.md` and the event log
+  also signal a project in progress. Module installation remains a separate plan.
+- **Lane test fixtures cannot ring an inherited Codex CLI without PyYAML.** The dashboard
+  self-test and source fixtures exclude that executable independently of YAML configuration.
+  Source lock tests restore their import state so later mailbox tests use one registry/config.
+
+### Changed
+
+- **The lane-kit guide explains HPP inside Orca**, with several lanes sharing one worktree,
+  project-scoped plugins, account boundaries, terminal alternatives and explicit limits of the
+  simulated CLI tests. Hook blocking in Orca's no-permission-prompt mode is not verified.
+- **The hash-pinned build dependency is setuptools 84.1.0**; both artifact hashes were checked
+  against PyPI. All ten modules receive a patch version because their installation references
+  change with kit-forge 1.5.4; terminal captures are regenerated for product 2.11.3.
+
 ## [2.11.2] — 2026-10-30
 
 ### Security
@@ -1984,6 +2012,7 @@ publishing.
 [2.6.5]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.5
 [2.6.6]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.6
 [2.6.7]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.7
+[2.11.3]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.11.3
 [2.11.2]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.11.2
 [2.11.1]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.11.1
 [2.11.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.11.0

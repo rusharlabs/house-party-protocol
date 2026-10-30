@@ -70,7 +70,7 @@ whatever the model says as a claim to check, not as a fact:
 A module is code the operator installs. Its integrity is checked before it runs:
 
 - every module directory ships `CHECKSUMS.txt` (sha256 per file), and
-  `installers/kit-forge-1.5.3/kit_doctor.py verify <module>` compares every file against it;
+  `installers/kit-forge-1.5.4/kit_doctor.py verify <module>` compares every file against it;
 - `kit_doctor.py install` plans first: a plan run executes every module self-test and writes
   nothing to the target project, and the install applies only on a second, explicit invocation
   (`--apply`), which copies the module's `*.example.*` files into the target before its own
@@ -94,7 +94,7 @@ when a person runs it, and the policy classifies it `MANUAL`. Inside that purpos
 
 ### The loopback dashboard
 
-The lane-kit's Lane Dashboard (`multi-session/lane-kit-1.8.1/scripts/lane_dashboard.py`) is a page
+The lane-kit's Lane Dashboard (`multi-session/lane-kit-1.8.2/scripts/lane_dashboard.py`) is a page
 the operator starts and stops. It is the bounded exception the MANIFESTO allows a module:
 
 - it binds loopback only: `--host` accepts only `127.0.0.1`, `::1` or `localhost` (`LOOPBACK`),
@@ -189,7 +189,7 @@ From the root of the repository:
 
 ```bash
 python -m pytest tests/test_lane_dashboard.py tests/test_decision.py tests/test_evidence.py tests/test_process.py tests/test_stdlib_only.py -q
-python installers/kit-forge-1.5.3/kit_doctor.py verify multi-session/lane-kit-1.8.1
+python installers/kit-forge-1.5.4/kit_doctor.py verify multi-session/lane-kit-1.8.2
 gh attestation verify <file> --repo rusharlabs/house-party-protocol
 ```
 
