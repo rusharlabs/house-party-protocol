@@ -7,6 +7,19 @@ Todas as mudanças relevantes do harness são registradas aqui. O formato segue
 [SemVer](https://semver.org/lang/pt-BR/). A versão do produto descreve o contrato do harness;
 cada módulo mantém sua própria versão no `plugin.json` e no `marketplace.json`.
 
+## [2.13.1] — 2026-11-11
+
+### Corrigido
+
+- O startup do Lane Dashboard aponta para `lane_dashboard.py <command> --help` na ajuda das ações;
+  o `--help` legado continua descrevendo o comando padrão `serve`.
+- Leitores de JSON de medições, descoberta de cache e referências de propostas de lanes inspecionam
+  os caminhos ancestrais sem segui-los, recusando junctions do Windows e links simbólicos.
+
+### Alterado
+
+- Lane Kit avança para 1.10.1 com as correções da dica de startup e do guard de caminhos de propostas.
+
 ## [2.13.0] — 2026-11-11
 
 ### Adicionado
@@ -2137,6 +2150,7 @@ publicar.
 [2.6.5]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.5
 [2.6.6]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.6
 [2.6.7]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.7
+[2.13.1]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.13.1
 [2.13.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.13.0
 [2.12.1]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.12.1
 [2.12.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.12.0

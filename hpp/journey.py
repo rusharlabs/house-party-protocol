@@ -11,7 +11,7 @@ from hpp._repository import RepositoryError, artifact_status, snapshot
 def read_document(path: Path) -> dict[str, Any]:
     """Bound JSON input, refusing links and reparse points before opening it."""
     for part in (path, *path.parents):
-        if part.is_symlink() or (part.exists() and getattr(part.stat(), "st_file_attributes", 0) & 0x400):
+        if part.is_symlink() or (part.exists() and getattr(part.lstat(), "st_file_attributes", 0) & 0x400):
             raise ValueError("measurement input must not traverse a link or reparse point")
     try:
         with path.open("rb") as stream:
@@ -36,7 +36,7 @@ def cached_document(target: Path, kind: str) -> dict[str, Any] | None:
         return None
     # Do not enumerate through a linked cache directory.
     for part in (directory, directory.parent):
-        if part.is_symlink() or getattr(part.stat(), "st_file_attributes", 0) & 0x400:
+        if part.is_symlink() or getattr(part.lstat(), "st_file_attributes", 0) & 0x400:
             raise ValueError("measurement cache must not traverse a link or reparse point")
     current = directory / f"{snap.commit}.json"
     if current.exists():

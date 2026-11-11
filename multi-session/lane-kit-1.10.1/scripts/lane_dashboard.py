@@ -2287,7 +2287,7 @@ def _proposal_reference(project_dir: Path, value: Any) -> dict[str, str] | None:
     if not path.resolve().is_relative_to(project_dir.resolve()):
         raise ValueError("lane_proposal must stay inside the project")
     for parent in (path, *path.parents):
-        if parent.is_symlink() or (parent.exists() and getattr(parent.stat(), "st_file_attributes", 0) & 0x400):
+        if parent.is_symlink() or (parent.exists() and getattr(parent.lstat(), "st_file_attributes", 0) & 0x400):
             raise ValueError("lane_proposal must not traverse links or reparse points")
     try:
         with path.open("rb") as stream:
@@ -3654,7 +3654,7 @@ def serve(args: argparse.Namespace) -> int:
     if projects.without_lanes():
         print("In Orca without lane-kit (install it there to orchestrate them): " + ", ".join(projects.without_lanes()),
               flush=True)
-    print("Every action here is also a terminal command (lane_dashboard.py --help). The page refuses to be framed"
+    print("Every action here is also a terminal command (lane_dashboard.py <command> --help). The page refuses to be framed"
           + ("" if args.frame_ancestor else " -- open the URL in a browser") + ". Ctrl+C stops.", flush=True)
     if args.open:
         print(open_page(url, project_dirs[0]), flush=True)

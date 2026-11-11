@@ -60,13 +60,13 @@ below (`--host codex`).
 
 ## Install by copy
 
-In the emitted distribution this module lives in `multi-session/lane-kit-1.10.0/` (the
+In the emitted distribution this module lives in `multi-session/lane-kit-1.10.1/` (the
 directory carries the version — state it once, in `KIT`). The installer is
 `installers/kit-forge-1.5.6/kit_doctor.py`; run it from the distribution root. It plans
 first and writes only on a second, explicit `--apply`:
 
 ```bash
-KIT=multi-session/lane-kit-1.10.0
+KIT=multi-session/lane-kit-1.10.1
 cp -r "$KIT" ../your-repo/lane-kit            # the copy itself (kit_doctor does not copy on claude-code)
 python installers/kit-forge-1.5.6/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo
 python installers/kit-forge-1.5.6/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo --apply

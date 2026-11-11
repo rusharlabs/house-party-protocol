@@ -1,6 +1,6 @@
 {
   "protocol_version": "2.1",
-  "product_version": "2.13.0",
+  "product_version": "2.13.1",
   "name": "house-party-protocol",
   "hosts": [
     "claude-code",
@@ -142,8 +142,8 @@
     },
     {
       "id": "lane-kit",
-      "version": "1.10.0",
-      "path": "multi-session/lane-kit-1.10.0",
+      "version": "1.10.1",
+      "path": "multi-session/lane-kit-1.10.1",
       "requires": [],
       "integrates_with": [
         "continuity-kit",
