@@ -1,3 +1,5 @@
+[English](README.md) · [Português](README.pt-BR.md)
+
 # Policy contract fuzzing
 
 The Fuzzing job builds the Python target with ClusterFuzzLite and runs Atheris/libFuzzer for 120

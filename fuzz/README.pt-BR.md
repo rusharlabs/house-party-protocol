@@ -1,3 +1,5 @@
+[English](README.md) · [Português](README.pt-BR.md)
+
 # Fuzzing do contrato de política
 
 O job Fuzzing compila o alvo Python com ClusterFuzzLite e executa Atheris/libFuzzer por 120
