@@ -1,7 +1,9 @@
 """Committed-byte provenance, freshness and repository-execution refusal controls."""
 import os
+import json
 from pathlib import Path
 import subprocess
+import sys
 import unicodedata
 
 import pytest
@@ -178,11 +180,33 @@ def test_instrument_failure_document_is_not_fresh(repo):
 
 
 def test_line_endings_follow_effective_git_configuration(repo):
-    # Git's own clean control must agree; byte-for-byte worktree comparison is wrong.
-    git(repo, "config", "core.autocrlf", "true")
-    (repo / "app.py").write_bytes(b"committed = True\r\n")
-    assert git(repo, "status", "--porcelain") == ""
-    assert snapshot(repo).dirty_paths == ()
+    # Configure normalization before renormalizing/checkout, independently of host defaults.
+    # HOME is scoped to child processes; the real user's configuration is never edited.
+    config_root = repo.parent / "isolated-global-config"
+    config_root.mkdir()
+    (config_root / ".gitconfig").write_text("[core]\n    autocrlf = true\n", encoding="utf-8")
+    env = {key: value for key, value in os.environ.items() if not key.upper().startswith("GIT_")}
+    env.update(HOME=str(config_root), USERPROFILE=str(config_root), PYTHONDONTWRITEBYTECODE="1")
+    git(repo, "add", "--renormalize", "app.py", env=env)
+    git(repo, "checkout-index", "--force", "--", "app.py", env=env)
+    path = repo / "app.py"
+    assert path.read_bytes() == b"committed = True\r\n"
+    assert git(repo, "status", "--porcelain", env=env) == ""
+    # Force a content comparison so index stat caching cannot make the negative control pass.
+    info = path.stat()
+    os.utime(path, (info.st_atime, info.st_mtime + 2))
+    assert git(repo, "-c", "core.autocrlf=false", "diff", "--name-only", env=env) == "app.py"
+    from hpp import _repository
+    product = Path(_repository.__file__).resolve().parent.parent
+    command = (f"import sys,json; sys.path.insert(0,{str(product)!r}); "
+               f"from hpp._repository import snapshot; print(json.dumps(snapshot({str(repo)!r}).dirty_paths))")
+    def measured():
+        result = subprocess.run([sys.executable, "-c", command], env=env, capture_output=True,
+                                check=True, timeout=30)
+        return json.loads(result.stdout)
+    assert measured() == []
+    path.write_bytes(b"changed = True\r\n")
+    assert measured() == ["app.py"]
 
 
 def test_nfc_collisions_are_input_failures_instead_of_silent_deduplication(repo):
