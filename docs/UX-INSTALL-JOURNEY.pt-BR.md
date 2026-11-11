@@ -4,7 +4,7 @@
 
 > **Versão:** 2.0.0 — camada de apresentação sobre dois contratos congelados.
 > **Caminho 1** é o `hpp init`, o instalador do harness (`hpp/wizard.py`, seis estágios, plano e
-> depois `--apply`). **Caminho 2** é o instalador de módulos, `installers/kit-forge-1.5.4/kit_doctor.py`,
+> depois `--apply`). **Caminho 2** é o instalador de módulos, `installers/kit-forge-1.5.5/kit_doctor.py`,
 > cuja mecânica vive em `INSTALL-CONTRACT.md` e cujo README por módulo segue o
 > `INSTALL-GUIDE-TEMPLATE.md`; os dois viajam na raiz deste repositório. Este documento descreve
 > a EXPERIÊNCIA: como um AGENTE (Claude Code ou Codex CLI) guia um HUMANO pela instalação, numa
@@ -44,12 +44,28 @@ terminou.
 
 | Estágio | Linha de abertura | O que mede | O que pode pará-lo |
 |---|---|---|---|
-| `detect` | `detecting host...` | `greenfield`, `in-progress` ou `re-run`, a partir de `.claude/settings*.json`, `AGENTS.md`, `.agents/`, `.hpp/events.jsonl`, um `.hpp/profile.json` anterior e a contagem de commits do git; lista o que existe e é mantido | um log de eventos ou profile corrompido é um aviso com o arquivo a inspecionar |
+| `detect` | `detecting host...` | `greenfield`, `in-progress` ou `re-run`, a partir de `.claude/settings*.json`, instruções locais do agente, `.agents/`, `.codex/`, `.hpp/events.jsonl`, um `.hpp/profile.json` anterior e a contagem de commits do git; lista o que existe e é mantido | um log de eventos ou profile corrompido é um aviso com o arquivo a inspecionar |
 | `prereqs` | `checking prerequisites...` | Python igual ou acima de 3.10; o contrato do manifesto; a distribuição quando o `marketplace.json` está ao lado do manifesto; `git` no `PATH` | Python abaixo do piso ou divergência manifesto/marketplace interrompe (exit 2) |
 | `profile` | `mounting profile...` | quatro respostas — host, bundle, modo de política e um conselheiro de decisão opcional (novo na 2.6.0; padrão `off`, nunca contado como default pendente) — vindas de flags, de `--profile`, do prompt (só em TTY) ou do default, com a origem de cada uma registrada | um profile gravado com respostas diferentes é um `conflict`; nada é sobrescrito |
 | `configure` | `loading modules...` | o plano de módulos para o host, `native` ou `explicit-command` por módulo, e o `CHECKSUMS.txt` de cada diretório de módulo presente | um módulo sem suporte no host, ou um checksum divergente, interrompe (exit 2) |
 | `wire-suggest` | `wiring suggestions...` | o bloco a colar: no Claude Code, linhas de plugin, mais linhas do instalador de módulos para os módulos explicit-command dele; no Codex CLI, `codex plugin marketplace add` e um `codex plugin add` por módulo que carrega skills (só skills), depois uma linha do instalador de módulos por módulo; o comando de política como configurado; antes do bloco, uma tabela HOOK CAPABILITIES — cada hook que os módulos escolhidos declaram, com seus eventos, sua política de saída (`observe`, `warn`, `block`) e seus grupos de capacidade — contada na linha de abertura (`17 hooks declaring capabilities` para `reliable-coding`) | nada; ele nunca escreve |
 | `smoke` | `verifying evidence...` | quatro controles: classificador de política, grafo de capacidades, log de eventos, benchmark em `k=1` | um controle reprovado põe exit 1 e se nomeia |
+
+### Jornada do projeto e configuração existente
+
+`JOURNEY` indica se o projeto é novo, existente ou já inicializado. `NEXT` aponta para
+a primeira spec em projetos novos, para o registro das verificações atuais como linha
+de base em projetos existentes e para `hpp status` e `hpp resume` em projetos já
+inicializados, se houver log de eventos. No JSON, `journey` contém a classificação e
+o rótulo, e `next` contém os próximos passos.
+
+`AGENT CONFIG` mostra os eventos de hook encontrados nas configurações do Claude Code
+no projeto ou em `.codex/hooks.json`, com os arquivos e hooks do bundle que compartilham
+um evento. Eventos em comum pedem revisão. A comparação abrange os eventos e deixa
+fora os matchers, os comandos, as configurações de usuário e gerenciadas e o conteúdo
+de `.codex/config.toml`. O relatório lista os arquivos locais de instruções e imprime
+um trecho sugerido para revisão manual. O JSON traz os detalhes em
+`wire-suggest.detail.agent_config`. Os hooks do bundle no Codex continuam desativados.
 
 ### Plano, depois `--apply`
 
@@ -193,7 +209,7 @@ planeja primeiro e aplica só numa segunda invocação explícita.
 
 ### A jornada em 5 passos (igual nos 4 cenários)
 
-1. **Plano.** O agente roda `python installers/kit-forge-1.5.4/kit_doctor.py install --kit <dir-do-módulo> --host <host> --target <projeto> --human`
+1. **Plano.** O agente roda `python installers/kit-forge-1.5.5/kit_doctor.py install --kit <dir-do-módulo> --host <host> --target <projeto> --human`
    (`--human` escolhe o relatório legível). Modo plano é o default: nenhuma escrita acontece,
    exit 0.
 2. **Tradução.** O agente cola na conversa o bloco de confirmação (molde na seção "Bloco de

@@ -47,7 +47,7 @@ nomeia e escreve num pequeno número de caminhos declarados. `decide`, `evidence
 | `hosts.py` | a matriz host x módulo x canal derivada de `hosts` e `components` no manifesto, renderizada para os documentos | `doctor --matrix` |
 | `context.py` | encaixar blocos inteiros sob um orçamento de caracteres com hashes de proveniência; recusar entrada que se pareça com segredo | `context compile`, `map context` |
 | `routing.py` | escolher um tier e um id de provedor a partir de risco, complexidade, tamanho de contexto e estágio declarados; fazer fallback só para cima | `route` |
-| `maps.py` | Lane Map, Agent Map, Context Map e Monitor Map como projeções ordenadas, só de dados; JSON ou Mermaid | `map lane`, `map agent`, `map context`, `map monitor` |
+| `maps.py` | mapas de lanes, agentes, contexto e monitoramento em JSON ou Mermaid; linha do tempo do feed em JSON | `map lane`, `map agent`, `map context`, `map monitor`, `map feed` |
 | `graph.py` | visões de capability, operacional, agente, evidência e código a partir do manifesto; JSON ou Mermaid | `graph` |
 | `evals.py` | runner de `pass@k` / `pass^k` sobre uma suíte de casos com três tipos de runner | `eval run`, `benchmark` |
 | `decision.py` | valida um registro `hpp.decision/v1` feito fora do harness (consultivo, raise-only, abstenção e falha de instrumento como desfechos); mede um decisor declarado com métricas seletivas. Não chama modelo | `decide validate`, `decide eval` (novo na 2.6.0) |
@@ -154,8 +154,8 @@ dele concorda em nome e versão. Num checkout de fonte sem marketplace o doctor 
 
 ## Mapas
 
-Os mapas não têm estado próprio. Cada um é uma projeção de uma ou duas entradas, ordenada de modo
-que a mesma entrada produza a mesma saída byte a byte.
+Os mapas não têm estado próprio. Eles ordenam as entradas para que os mesmos registros e
+opções produzam a mesma saída byte a byte.
 
 | mapa | entrada | pergunta que responde |
 |---|---|---|
@@ -167,10 +167,23 @@ que a mesma entrada produza a mesma saída byte a byte.
 | lane | JSON de lanes, `--now`, limiares | quem possui o quê, quem está vivo, onde reivindicações vivas se sobrepõem |
 | context | JSON de contexto, `--budget` | o que entrou no contexto compilado, o que foi omitido, com hashes |
 | monitor | JSON de monitores, `--now`, `--skew-tolerance` | o que é observado, quão fresco, e qual gate o consome |
+| feed | board, efeitos, caixa de mensagens, registro de handoffs e registro de lanes do projeto | quais eventos foram registrados, de onde vieram e quais horários podem ser comparados |
 | work | JSON da spec | quais unidades podem rodar juntas e em que ordem |
 
 O Context Map é proveniência de uma compilação; não é recuperação e não é uma base de
 conhecimento. O Code Map inventaria componentes declarados; não é um grafo de chamadas.
+
+Rode `hpp map feed --target .` para obter uma linha do tempo em JSON, em modo somente
+leitura. Se o projeto usa uma caixa de mensagens personalizada, indique o diretório com
+`--mailbox`. Se todos os horários sem fuso no board e nas mensagens compartilham um
+deslocamento conhecido, informe-o como `--local-offset=-03:00`, por exemplo. Caso
+contrário, esses eventos ficam em um grupo separado, em ordem de origem, seguido pelos
+registros sem horário.
+
+O feed informa a disponibilidade e a impressão digital das fontes e omite corpos de
+mensagem, nomes de arquivos da caixa e resumos de handoff. A presença no arquivo comprova o
+arquivamento da mensagem. A hora da leitura não é registrada. O registro de lanes fornece o
+último heartbeat de cada lane.
 
 ## Dois hosts
 
@@ -196,16 +209,16 @@ essa renderização.
 
 | módulo | Claude Code | Codex CLI |
 |---|---|---|
-| `operator-kit` 1.8.4 | `native` · plugin + hooks depois de colar o wiring | `explicit-command` · plugin (só skills) + cópia verificada |
-| `kit-forge` 1.5.4 | `explicit-command` · plugin | `explicit-command` · cópia verificada |
-| `lane-kit` 1.8.2 | `native` · plugin + hooks depois de colar o wiring | `explicit-command` · plugin (só skills) + cópia verificada |
-| `continuity-kit` 1.5.3 | `native` · plugin + hooks depois de colar o wiring | `explicit-command` · plugin (só skills) + cópia verificada |
-| `health-kit` 1.4.4 | `explicit-command` · plugin | `explicit-command` · plugin (só skills) + cópia verificada |
-| `claude-dev-kit` 1.3.8 | `native` · plugin | `unsupported` · — |
-| `supabase-pack` 1.2.3 | `explicit-command` · plugin | `explicit-command` · plugin (só skills) + cópia verificada |
-| `agent-framework-wizard` 1.2.5 | `explicit-command` · plugin | `explicit-command` · cópia verificada |
-| `dev-squad-kit` 1.2.2 | `native` · plugin | `explicit-command` · plugin (só skills) + cópia verificada |
-| `gotcha-memory` 1.1.4 | `native` · plugin + hooks depois de colar o wiring | `explicit-command` · plugin (só skills) + cópia verificada |
+| `operator-kit` 1.8.5 | `native` · plugin + hooks depois de colar o wiring | `explicit-command` · plugin (só skills) + cópia verificada |
+| `kit-forge` 1.5.5 | `explicit-command` · plugin | `explicit-command` · cópia verificada |
+| `lane-kit` 1.9.0 | `native` · plugin + hooks depois de colar o wiring | `explicit-command` · plugin (só skills) + cópia verificada |
+| `continuity-kit` 1.5.4 | `native` · plugin + hooks depois de colar o wiring | `explicit-command` · plugin (só skills) + cópia verificada |
+| `health-kit` 1.4.5 | `explicit-command` · plugin | `explicit-command` · plugin (só skills) + cópia verificada |
+| `claude-dev-kit` 1.3.9 | `native` · plugin | `unsupported` · — |
+| `supabase-pack` 1.2.4 | `explicit-command` · plugin | `explicit-command` · plugin (só skills) + cópia verificada |
+| `agent-framework-wizard` 1.2.6 | `explicit-command` · plugin | `explicit-command` · cópia verificada |
+| `dev-squad-kit` 1.2.3 | `native` · plugin | `explicit-command` · plugin (só skills) + cópia verificada |
+| `gotcha-memory` 1.1.5 | `native` · plugin + hooks depois de colar o wiring | `explicit-command` · plugin (só skills) + cópia verificada |
 
 No Claude Code todo módulo é um plugin do marketplace, e um módulo que declara hooks os arma depois
 que o wiring é colado. No Codex CLI o canal de plugin é o marketplace do próprio produto,

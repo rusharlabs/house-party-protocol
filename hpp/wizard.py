@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 import shutil
 import subprocess
 import sys
@@ -75,6 +76,23 @@ HOSTS: dict[str, dict[str, Any]] = {
         "manual_gates": ["hooks"],
     },
 }
+
+_JOURNEY_LABELS = {
+    "greenfield": "New project",
+    "in-progress": "Existing project",
+    "re-run": "Already initialised",
+}
+_HOOK_CONFIG_PATHS = {
+    "claude-code": (".claude/settings.json", ".claude/settings.local.json"),
+    "codex": (".codex/hooks.json", ".codex/config.toml"),
+}
+_INSTRUCTION_PATHS = ("AGENTS.md", "AGENTS.override.md", "CLAUDE.md", ".claude/CLAUDE.md")
+_INSTRUCTION_SUGGESTION = (
+    "## House Party Protocol\n"
+    "Start by running `python -m hpp status` from the project root. "
+    "Keep the project's existing checks and review host wiring before enabling hooks."
+)
+_HOOK_EVENT = re.compile(r"[A-Za-z][A-Za-z0-9_]{0,63}")
 
 _STATUS_RANK = {"ok": 0, "skipped": 0, "warn": 1, "fail": 2}
 
@@ -296,8 +314,10 @@ def stage_detect(ctx: _Context) -> dict[str, Any]:
         settings = claude_dir / name
         if settings.is_file():
             try:
-                data = json.loads(settings.read_text(encoding="utf-8"))
-            except (OSError, json.JSONDecodeError):
+                if not settings.resolve().is_relative_to(target.resolve()):
+                    continue
+                data = json.loads(settings.read_text(encoding="utf-8-sig"))
+            except (OSError, ValueError, RuntimeError):
                 data = {}
             if isinstance(data, dict) and (data.get("hooks") or data.get("statusLine")):
                 occupied = True
@@ -305,6 +325,9 @@ def stage_detect(ctx: _Context) -> dict[str, Any]:
     signals["settings_occupied"] = occupied
     signals["agents_md"] = (target / "AGENTS.md").is_file()
     signals["agents_dir"] = (target / ".agents").is_dir()
+    signals["codex_dir"] = (target / ".codex").is_dir()
+    signals["claude_md"] = any((target / name).is_file() for name in ("CLAUDE.md", ".claude/CLAUDE.md"))
+    signals["agents_override_md"] = (target / "AGENTS.override.md").is_file()
     log = event_path(target)
     signals["event_log"] = log.is_file()
     signals["event_count"] = None
@@ -335,7 +358,8 @@ def stage_detect(ctx: _Context) -> dict[str, Any]:
     signals["git_commit_count"] = _git_commit_count(target)
     if ctx.existing_profile is not None:
         classification = "re-run"
-    elif (signals["claude_dir"] or occupied or signals["agents_md"] or signals["event_log"]
+    elif (any(signals[key] for key in ("claude_dir", "claude_md", "agents_md", "agents_override_md",
+                                       "agents_dir", "codex_dir", "event_log"))
           or (signals["git_commit_count"] or 0) > 3):
         classification = "in-progress"
     else:
@@ -536,6 +560,65 @@ def stage_configure(ctx: _Context) -> dict[str, Any]:
                   problems, exit_hint=2 if mismatched else 0)
 
 
+def _existing_hook_config(target: Path, relative_path: str) -> Optional[dict[str, Any]]:
+    path = target / relative_path
+    if not path.is_file():
+        return None
+    result: dict[str, Any] = {"path": relative_path, "status": "inspected", "events": []}
+    try:
+        if not path.resolve().is_relative_to(target.resolve()):
+            result["status"] = "outside-project"
+            return result
+        if path.suffix == ".toml":
+            # The supported Python floor has no standard-library TOML parser.
+            result["status"] = "manual-review"
+            return result
+        data = json.loads(path.read_text(encoding="utf-8-sig"))
+    except (ValueError, RecursionError):
+        result["status"] = "invalid"
+        return result
+    except (OSError, RuntimeError):
+        result["status"] = "unreadable"
+        return result
+    hooks = data.get("hooks", {}) if isinstance(data, dict) else None
+    if not isinstance(hooks, dict):
+        result["status"] = "invalid"
+        return result
+    result["events"] = sorted(
+        event for event, groups in hooks.items()
+        if _HOOK_EVENT.fullmatch(event) and isinstance(groups, list)
+        and any(isinstance(group, dict) and isinstance(group.get("hooks"), list) and group["hooks"]
+                for group in groups)
+    )
+    return result
+
+
+def _compare_agent_config(target: Path, host: str, capabilities: list[dict[str, Any]]) -> dict[str, Any]:
+    files = []
+    files_by_event: dict[str, list[str]] = {}
+    hooks_by_event: dict[str, list[str]] = {}
+    for path in _HOOK_CONFIG_PATHS[host]:
+        config = _existing_hook_config(target, path)
+        if config is not None:
+            files.append(config)
+            for event in config["events"]:
+                files_by_event.setdefault(event, []).append(path)
+    for hook in capabilities:
+        for event in hook["events"]:
+            hooks_by_event.setdefault(event, []).append(hook["id"])
+    instructions = [path for path in _INSTRUCTION_PATHS if (target / path).is_file()]
+    return {
+        "files": files,
+        "bundle_events": {event: sorted(hooks) for event, hooks in sorted(hooks_by_event.items())},
+        "overlaps": [
+            {"event": event, "files": files_by_event[event], "bundle_hooks": sorted(hooks_by_event[event])}
+            for event in sorted(files_by_event.keys() & hooks_by_event.keys())
+        ],
+        "instructions": instructions,
+        "suggested_instructions": _INSTRUCTION_SUGGESTION if instructions else None,
+    }
+
+
 def stage_wire_suggest(ctx: _Context) -> dict[str, Any]:
     host = ctx.answers["host"]
     seam = HOSTS[host]
@@ -594,7 +677,8 @@ def stage_wire_suggest(ctx: _Context) -> dict[str, Any]:
     ]
     detail = {"host": host, "settings_path": seam.get("settings_path"), "manual_gates": list(seam["manual_gates"]),
               "installer": installer_rel, "installer_present": installer_present, "lines": lines, "writes": 0,
-              "hook_capabilities": capabilities}
+              "hook_capabilities": capabilities,
+              "agent_config": _compare_agent_config(ctx.options.target, host, capabilities)}
     summary = f"{to_paste} commands to paste · 0 files written"
     if capabilities:
         summary += f" · {len(capabilities)} hooks declaring capabilities"
@@ -808,6 +892,7 @@ def run_init(options: InitOptions, manifest: dict[str, Any], manifest_path: Path
         "stages": stages,
         "readiness": build_readiness(stages, ctx),
         "writes": sum(stage["detail"].get("writes", 0) for stage in stages),
+        "journey": {"classification": ctx.classification, "label": _JOURNEY_LABELS[ctx.classification]},
         "next": next_steps,
         "documentation": documentation_on_disk(ctx.root),
     }
@@ -826,17 +911,28 @@ def _next_steps(status: str, options: InitOptions, ctx: _Context, stages: list[d
         flags += " --modules " + ",".join(ctx.answers["modules"])
     if ctx.answers.get("decision_advisor", "off") != "off":
         flags += f" --decision-advisor {ctx.answers['decision_advisor']}"
-    if status == "no-op":
-        steps.append("already initialised with these answers — nothing to do")
+    problems = [problem["next_step"] for stage in stages for problem in stage["problems"]]
+    if ctx.profile_action == "conflict":
+        return problems + ["from the project root, inspect the recorded state: python -m hpp status"]
+    if ctx.classification == "in-progress":
+        steps.append("review AGENT CONFIG before applying or wiring; keep existing instructions and hooks")
+    if ctx.profile_action == "unchanged":
+        steps.append("already initialised with these answers — nothing to do to the profile")
     elif not options.apply:
         steps.append(f"python -m hpp init --target {options.target_label}{flags} --apply")
     else:
-        steps.append("paste the wire block above into your host (hpp never edits settings)")
+        steps.append("review and paste the wire block into your host (hpp never edits settings)")
         steps.append("python -m hpp doctor")
-    for stage in stages:
-        for problem in stage["problems"]:
-            steps.append(problem["next_step"])
-    return steps
+    if ctx.classification == "greenfield":
+        steps.append("after installation, write your first spec and check it from the project root: "
+                     "python -m hpp work plan <spec.json>")
+    elif ctx.classification == "in-progress":
+        steps.append("record an existing check before changing the project: "
+                     "python -m hpp evidence run --id baseline -- <existing-check-command>")
+    elif ctx.classification == "re-run":
+        steps.append("from the project root, read the recorded state: python -m hpp status")
+        steps.append("if an event log exists, find the next action: python -m hpp resume")
+    return steps + problems
 
 
 def documentation_on_disk(root: Path) -> list[dict[str, str]]:
@@ -987,7 +1083,24 @@ def render_report(report: dict[str, Any], console: Console) -> None:
         _section(console, "MODULES", configure["summary"])
 
     wire = by_name.get("wire-suggest", {})
-    capabilities = wire.get("detail", {}).get("hook_capabilities") or []
+    wire_detail = wire.get("detail", {})
+    agent_config = wire_detail.get("agent_config")
+    if agent_config and (agent_config["files"] or agent_config["instructions"]):
+        _section(console, "AGENT CONFIG", "project-local files only; bundle events are declarations")
+        for config in agent_config["files"]:
+            events = ", ".join(config["events"]) or "no hook events found"
+            result = events if config["status"] == "inspected" else config["status"]
+            console.write(f"    {config['path']}: {result}")
+        for overlap in agent_config["overlaps"]:
+            files = ", ".join(overlap["files"])
+            hooks = ", ".join(overlap["bundle_hooks"])
+            console.write(f"    review overlap: {overlap['event']} in {files}; bundle: {hooks}")
+        if agent_config["instructions"]:
+            console.write(f"    existing instructions: {', '.join(agent_config['instructions'])}")
+            console.write("    suggested addition for manual review:")
+            for line in agent_config["suggested_instructions"].splitlines():
+                console.write(f"        {line}")
+    capabilities = wire_detail.get("hook_capabilities") or []
     if capabilities:
         _section(console, "HOOK CAPABILITIES",
                  "what each hook you are about to paste is able to do — read it before the block below")
@@ -1012,6 +1125,8 @@ def render_report(report: dict[str, Any], console: Console) -> None:
             console.write(f"        expected: {problem['expected']}")
             console.write(f"        {console.glyph('corner')} {console.paint(problem['next_step'], orange)}")
 
+    journey = report["journey"]
+    _section(console, "JOURNEY", f"{journey['label']} ({journey['classification']})")
     _section(console, "NEXT")
     for step in report["next"]:
         console.write(f"    {console.paint(console.glyph('bullet'), orange)} {step}")

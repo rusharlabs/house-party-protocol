@@ -80,7 +80,7 @@
 <blockquote class="measured">
 <p><strong>Versão:</strong> 2.0.0 — camada de apresentação sobre dois contratos congelados.
 <strong>Caminho 1</strong> é o <code>hpp init</code>, o instalador do harness (<code>hpp/wizard.py</code>, seis estágios, plano e
-depois <code>--apply</code>). <strong>Caminho 2</strong> é o instalador de módulos, <code>installers/kit-forge-1.5.4/kit_doctor.py</code>,
+depois <code>--apply</code>). <strong>Caminho 2</strong> é o instalador de módulos, <code>installers/kit-forge-1.5.5/kit_doctor.py</code>,
 cuja mecânica vive em <code>INSTALL-CONTRACT.md</code> e cujo README por módulo segue o
 <code>INSTALL-GUIDE-TEMPLATE.md</code>; os dois viajam na raiz deste repositório. Este documento descreve
 a EXPERIÊNCIA: como um AGENTE (Claude Code ou Codex CLI) guia um HUMANO pela instalação, numa
@@ -124,7 +124,7 @@ terminou.</p>
 <table>
 <thead><tr><th>Estágio</th><th>Linha de abertura</th><th>O que mede</th><th>O que pode pará-lo</th></tr></thead>
 <tbody>
-<tr><td><code>detect</code></td><td><code>detecting host...</code></td><td><code>greenfield</code>, <code>in-progress</code> ou <code>re-run</code>, a partir de <code>.claude/settings*.json</code>, <code>AGENTS.md</code>, <code>.agents/</code>, <code>.hpp/events.jsonl</code>, um <code>.hpp/profile.json</code> anterior e a contagem de commits do git; lista o que existe e é mantido</td><td>um log de eventos ou profile corrompido é um aviso com o arquivo a inspecionar</td></tr>
+<tr><td><code>detect</code></td><td><code>detecting host...</code></td><td><code>greenfield</code>, <code>in-progress</code> ou <code>re-run</code>, a partir de <code>.claude/settings*.json</code>, instruções locais do agente, <code>.agents/</code>, <code>.codex/</code>, <code>.hpp/events.jsonl</code>, um <code>.hpp/profile.json</code> anterior e a contagem de commits do git; lista o que existe e é mantido</td><td>um log de eventos ou profile corrompido é um aviso com o arquivo a inspecionar</td></tr>
 <tr><td><code>prereqs</code></td><td><code>checking prerequisites...</code></td><td>Python igual ou acima de 3.10; o contrato do manifesto; a distribuição quando o <code>marketplace.json</code> está ao lado do manifesto; <code>git</code> no <code>PATH</code></td><td>Python abaixo do piso ou divergência manifesto/marketplace interrompe (exit 2)</td></tr>
 <tr><td><code>profile</code></td><td><code>mounting profile...</code></td><td>quatro respostas — host, bundle, modo de política e um conselheiro de decisão opcional (novo na 2.6.0; padrão <code>off</code>, nunca contado como default pendente) — vindas de flags, de <code>--profile</code>, do prompt (só em TTY) ou do default, com a origem de cada uma registrada</td><td>um profile gravado com respostas diferentes é um <code>conflict</code>; nada é sobrescrito</td></tr>
 <tr><td><code>configure</code></td><td><code>loading modules...</code></td><td>o plano de módulos para o host, <code>native</code> ou <code>explicit-command</code> por módulo, e o <code>CHECKSUMS.txt</code> de cada diretório de módulo presente</td><td>um módulo sem suporte no host, ou um checksum divergente, interrompe (exit 2)</td></tr>
@@ -132,6 +132,19 @@ terminou.</p>
 <tr><td><code>smoke</code></td><td><code>verifying evidence...</code></td><td>quatro controles: classificador de política, grafo de capacidades, log de eventos, benchmark em <code>k=1</code></td><td>um controle reprovado põe exit 1 e se nomeia</td></tr>
 </tbody>
 </table>
+<h3 id="jornada-do-projeto-e-configuração-existente">Jornada do projeto e configuração existente</h3>
+<p><code>JOURNEY</code> indica se o projeto é novo, existente ou já inicializado. <code>NEXT</code> aponta para
+a primeira spec em projetos novos, para o registro das verificações atuais como linha
+de base em projetos existentes e para <code>hpp status</code> e <code>hpp resume</code> em projetos já
+inicializados, se houver log de eventos. No JSON, <code>journey</code> contém a classificação e
+o rótulo, e <code>next</code> contém os próximos passos.</p>
+<p><code>AGENT CONFIG</code> mostra os eventos de hook encontrados nas configurações do Claude Code
+no projeto ou em <code>.codex/hooks.json</code>, com os arquivos e hooks do bundle que compartilham
+um evento. Eventos em comum pedem revisão. A comparação abrange os eventos e deixa
+fora os matchers, os comandos, as configurações de usuário e gerenciadas e o conteúdo
+de <code>.codex/config.toml</code>. O relatório lista os arquivos locais de instruções e imprime
+um trecho sugerido para revisão manual. O JSON traz os detalhes em
+<code>wire-suggest.detail.agent_config</code>. Os hooks do bundle no Codex continuam desativados.</p>
 <h3 id="plano-depois---apply">Plano, depois <code>--apply</code></h3>
 <ol>
 <li><strong>Plano.</strong> O agente roda <code>python -m hpp init --target &lt;projeto&gt; --non-interactive --no-animation</code>
@@ -259,7 +272,7 @@ instalador. Ele copia um módulo por vez para dentro do alvo e roda os smokes de
 planeja primeiro e aplica só numa segunda invocação explícita.</p>
 <h3 id="a-jornada-em-5-passos-igual-nos-4-cenários">A jornada em 5 passos (igual nos 4 cenários)</h3>
 <ol>
-<li><strong>Plano.</strong> O agente roda <code>python installers/kit-forge-1.5.4/kit_doctor.py install --kit &lt;dir-do-módulo&gt; --host &lt;host&gt; --target &lt;projeto&gt; --human</code>
+<li><strong>Plano.</strong> O agente roda <code>python installers/kit-forge-1.5.5/kit_doctor.py install --kit &lt;dir-do-módulo&gt; --host &lt;host&gt; --target &lt;projeto&gt; --human</code>
 (<code>--human</code> escolhe o relatório legível). Modo plano é o default: nenhuma escrita acontece,
 exit 0.</li>
 <li><strong>Tradução.</strong> O agente cola na conversa o bloco de confirmação (molde na seção "Bloco de

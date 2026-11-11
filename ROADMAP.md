@@ -28,15 +28,17 @@ action it offers is also a terminal command.
 ## 2.12: see the state
 
 Mermaid for the maps and the WorkGraph, the first item planned for this step, shipped in 2.11.0
-(the table above). The other three are next:
+(the table above). Version 2.12.0 adds the following views.
 
-1. **A feed map.** One timeline of what happened across lanes — claims, verdicts, messages sent and
-   read, deliveries, handoffs, heartbeats — derived from records the harness already writes.
-2. **A static HTML atlas.** `hpp atlas --html` would write one self-contained page with every view
-   of a project, drawn from the same JSON. Each view shows the command that reproduces it and the
-   hash of its source. It opens as a file; there is no server.
-3. **The Lane Dashboard views.** The dashboard shows the same views, drawn from the same JSON, next
-   to the actions it already offers.
+1. **A feed map.** A timeline of claims, verdicts, sent and archived messages, deliveries, and
+   handoffs, with the latest heartbeat for each lane. The timeline reports time precision from
+   the records the harness already writes.
+2. **A static HTML atlas.** `hpp atlas --html --target .` renders the project's CLI projections
+   in one self-contained file. Each view shows its command and a projection hash, and marks
+   optional inputs that were not supplied. The atlas opens as a file and runs without a server.
+3. **The Lane Dashboard views.** The dashboard uses the same projections for the feed and for
+   summaries of capabilities, the operational loop, evidence, and agent roles. Views that
+   require additional input files are available in the offline atlas.
 
 ## 2.13: a code graph of your project
 

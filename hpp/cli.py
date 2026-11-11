@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Any, Optional
 
 from hpp import __version__
+from hpp.atlas import render_atlas
 from hpp.attest import AttestationError, create_attestation, verify_attestation
 from hpp.citations import check_files as check_citations, context_ids, exit_for as citations_exit_for
 from hpp.context import compile_context
@@ -31,7 +32,7 @@ from hpp.graph import build_graph, to_mermaid
 from hpp.hosts import render_host_matrix
 from hpp.install import InstallError, installation_plan
 from hpp.manifest import ManifestError, hook_capability_census, load_manifest, validate_distribution
-from hpp.maps import build_agent_map, build_context_map, build_lane_map, build_monitor_map, map_graph
+from hpp.maps import build_agent_map, build_context_map, build_feed_map, build_lane_map, build_monitor_map, map_graph
 from hpp.policy import assess, exit_for as policy_exit_for, policy_for_workspace
 from hpp.retrieval import exit_for as retrieval_exit_for, run_retrieval_suite
 from hpp.routing import route
@@ -143,6 +144,16 @@ def command_doctor(args: argparse.Namespace) -> int:
         _json(result)
     else:
         _line(summary)
+    return 0
+
+
+def command_atlas(args: argparse.Namespace) -> int:
+    write_stdout(render_atlas(
+        Path(args.target), manifest_file=args.manifest, work_spec=args.spec, lanes_file=args.lanes,
+        agent_events=args.agent_events, monitors_file=args.monitors, now=args.now,
+        context_file=args.context, budget=args.budget, mailbox=args.mailbox, local_offset=args.local_offset,
+        deliberation=args.deliberation, attestation=args.attestation,
+    ))
     return 0
 
 
@@ -531,6 +542,9 @@ def command_context(args: argparse.Namespace) -> int:
 
 
 def command_map(args: argparse.Namespace) -> int:
+    if args.map_view == "feed":
+        _json(build_feed_map(Path(args.target), args.mailbox, args.local_offset))
+        return 0
     if args.map_view == "lane":
         projection = build_lane_map(
             _read_json(args.source, list),
@@ -585,6 +599,23 @@ def build_parser() -> argparse.ArgumentParser:
     doctor.add_argument("--matrix", action="store_true",
                         help="print the host x module x channel matrix (Markdown) rendered from the manifest")
     doctor.set_defaults(func=command_doctor)
+
+    atlas = sub.add_parser("atlas", help="render read-only project projections as a standalone HTML page")
+    atlas.add_argument("--html", required=True, action="store_true", help="write an offline HTML document to stdout")
+    atlas.add_argument("--target", default=".", help="project root; explicit source files resolve inside it")
+    atlas.add_argument("--manifest", help="protocol manifest JSON; default is normal HPP manifest discovery")
+    atlas.add_argument("--spec", help="WorkGraph spec JSON")
+    atlas.add_argument("--lanes", help="lane map input JSON array")
+    atlas.add_argument("--agent-events", help="agent map event JSON array")
+    atlas.add_argument("--monitors", help="monitor map input JSON array; requires --now")
+    atlas.add_argument("--now", type=int, help="explicit Unix timestamp for monitor and lane maps")
+    atlas.add_argument("--context", help="context map input JSON array; requires --budget")
+    atlas.add_argument("--budget", type=int, help="context token budget")
+    atlas.add_argument("--mailbox", help="override the feed mailbox directory inside the project")
+    atlas.add_argument("--local-offset", metavar="+HH:MM", help="offset for unzoned feed stamps")
+    atlas.add_argument("--deliberation", help="sealed House Session JSON record")
+    atlas.add_argument("--attestation", help="release attestation JSON to verify against --target")
+    atlas.set_defaults(func=command_atlas)
 
     graph = sub.add_parser("graph")
     graph.add_argument("--manifest")
@@ -863,6 +894,12 @@ def build_parser() -> argparse.ArgumentParser:
 
     map_parser = sub.add_parser("map")
     map_sub = map_parser.add_subparsers(dest="map_view", required=True)
+    feed = map_sub.add_parser("feed", help="project recorded lane activity as a read-only JSON timeline")
+    feed.add_argument("--target", default=".", help="project directory (default: current directory)")
+    feed.add_argument("--mailbox", help="override the mailbox directory inside the project")
+    feed.add_argument("--local-offset", metavar="+HH:MM",
+                      help="offset to apply to unzoned board and mailbox stamps, for example --local-offset=-03:00")
+    feed.set_defaults(func=command_map)
     lane = map_sub.add_parser("lane")
     lane.add_argument("source")
     lane.add_argument("--now", type=int,

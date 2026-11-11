@@ -59,7 +59,8 @@ a biblioteca padrão do Python (`pyproject.toml`: `dependencies = []`; imposto p
 O host roda o modelo e as ferramentas dele; o HPP fornece hooks e comandos em volta, e trata o que
 o modelo diz como uma afirmação a conferir, não como fato:
 
-- `hpp init --apply` escreve um arquivo, `.hpp/profile.json`, e só lê o `settings.json` do host
+- `hpp init --apply` só pode escrever `.hpp/profile.json`. Ele inspeciona a configuração local
+  do host no projeto e aponta possíveis sobreposições de hooks sem editar a configuração
   (`hpp/wizard.py`). Ligar hooks num host continua sendo ação humana.
 - O classificador de política (`hpp/policy.py`) devolve `ALLOW`, `MANUAL` ou `BLOCK`; ele nunca
   executa o comando, e uma política do usuário só consegue endurecer um veredito embutido, nunca
@@ -75,7 +76,7 @@ o modelo diz como uma afirmação a conferir, não como fato:
 Um módulo é código que o operador instala. A integridade dele é conferida antes de ele rodar:
 
 - todo diretório de módulo traz `CHECKSUMS.txt` (sha256 por arquivo), e
-  `installers/kit-forge-1.5.4/kit_doctor.py verify <module>` compara cada arquivo com ele;
+  `installers/kit-forge-1.5.5/kit_doctor.py verify <module>` compara cada arquivo com ele;
 - `kit_doctor.py install` planeja primeiro: uma execução de plano roda todos os self-tests do
   módulo e não escreve nada no projeto de destino, e a instalação só é aplicada numa segunda
   invocação, explícita (`--apply`), que copia os arquivos `*.example.*` do módulo para o destino
@@ -100,7 +101,7 @@ roda quando uma pessoa o roda, e a política o classifica como `MANUAL`. Dentro 
 
 ### O dashboard em loopback
 
-O Lane Dashboard do lane-kit (`multi-session/lane-kit-1.8.2/scripts/lane_dashboard.py`) é uma
+O Lane Dashboard do lane-kit (`multi-session/lane-kit-1.9.0/scripts/lane_dashboard.py`) é uma
 página que o operador liga e desliga. É a exceção delimitada que o MANIFESTO permite a um módulo:
 
 - ele escuta só em loopback: `--host` aceita apenas `127.0.0.1`, `::1` ou `localhost`
@@ -195,7 +196,7 @@ A partir da raiz do repositório:
 
 ```bash
 python -m pytest tests/test_lane_dashboard.py tests/test_decision.py tests/test_evidence.py tests/test_process.py tests/test_stdlib_only.py -q
-python installers/kit-forge-1.5.4/kit_doctor.py verify multi-session/lane-kit-1.8.2
+python installers/kit-forge-1.5.5/kit_doctor.py verify multi-session/lane-kit-1.9.0
 gh attestation verify <file> --repo rusharlabs/house-party-protocol
 ```
 

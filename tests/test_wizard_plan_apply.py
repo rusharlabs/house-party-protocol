@@ -214,3 +214,73 @@ def test_CONTROLE_different_profile_is_detected_as_a_conflict_by_the_stage_itsel
     report = json.loads(capsys.readouterr().out)
     assert next(stage for stage in report["stages"] if stage["stage"] == "profile")["detail"]["action"] == "conflict"
     assert os.path.getsize(path) == len(json.dumps(data).encode("utf-8"))
+
+
+@pytest.mark.parametrize(
+    "classification,label,next_fragment",
+    [
+        ("greenfield", "New project", "python -m hpp work plan"),
+        ("in-progress", "Existing project", "python -m hpp evidence run"),
+        ("re-run", "Already initialised", "python -m hpp resume"),
+    ],
+)
+def test_init_reports_distinct_journeys(target, capsys, classification, label, next_fragment):
+    if classification == "in-progress":
+        (target / "CLAUDE.md").write_text("# Existing project", encoding="utf-8")
+    if classification == "re-run":
+        assert _init(target, "--apply", "--yes") == 0
+        capsys.readouterr()
+    before = _tree_hash(target)
+    assert _init(target, "--yes", "--json") == 0
+    report = json.loads(capsys.readouterr().out)
+    assert report["journey"] == {"classification": classification, "label": label}
+    assert any(next_fragment in step for step in report["next"])
+    assert _init(target, "--yes") == 0
+    out = capsys.readouterr().out
+    assert "JOURNEY" in out and label in out and next_fragment in out
+    assert _tree_hash(target) == before
+
+
+@pytest.mark.parametrize("host", ["claude-code", "codex"])
+def test_wire_compares_project_hook_events_without_reading_commands_into_the_report(target, capsys, host):
+    if host == "claude-code":
+        first = target / ".claude/settings.json"
+        second = target / ".claude/settings.local.json"
+        instruction = target / "CLAUDE.md"
+    else:
+        first = target / ".codex/hooks.json"
+        second = target / ".codex/config.toml"
+        instruction = target / "AGENTS.md"
+    first.parent.mkdir()
+    first.write_text(json.dumps({"hooks": {
+        "PreToolUse": [{"hooks": [{"type": "command", "command": "fixture-command-must-not-be-printed"}]}],
+        "Stop": [],
+    }}), encoding="utf-8")
+    if host == "claude-code":
+        second.write_text("{invalid json", encoding="utf-8")
+    else:
+        second.write_text("[hooks]", encoding="utf-8")
+    instruction.write_text("# fixture-instructions-must-not-be-printed", encoding="utf-8")
+    before = _tree_hash(target)
+    assert _init(target, "--host", host, "--modules", "operator-kit", "--json") == 0
+    raw = capsys.readouterr().out
+    wire = next(stage for stage in json.loads(raw)["stages"] if stage["stage"] == "wire-suggest")
+    config = wire["detail"]["agent_config"]
+    assert config["files"] == [
+        {"path": first.relative_to(target).as_posix(), "status": "inspected", "events": ["PreToolUse"]},
+        {"path": second.relative_to(target).as_posix(),
+         "status": "invalid" if host == "claude-code" else "manual-review", "events": []},
+    ]
+    assert config["overlaps"][0]["event"] == "PreToolUse"
+    assert config["overlaps"][0]["files"] == [first.relative_to(target).as_posix()]
+    assert "operator-kit/operation-guard" in config["overlaps"][0]["bundle_hooks"]
+    assert config["instructions"] == [instruction.name]
+    assert "python -m hpp status" in config["suggested_instructions"]
+    assert "fixture-command-must-not-be-printed" not in raw
+    assert "fixture-instructions-must-not-be-printed" not in raw
+    assert wire["detail"]["writes"] == 0
+    assert _init(target, "--host", host, "--modules", "operator-kit") == 0
+    out = capsys.readouterr().out
+    assert "AGENT CONFIG" in out and "PreToolUse" in out and "review overlap" in out
+    assert "fixture-command-must-not-be-printed" not in out
+    assert _tree_hash(target) == before
