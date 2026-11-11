@@ -1,6 +1,6 @@
 {
   "protocol_version": "2.1",
-  "product_version": "2.12.0",
+  "product_version": "2.12.1",
   "name": "house-party-protocol",
   "hosts": [
     "claude-code",
@@ -53,7 +53,7 @@
     "rule": "Risk and context define a floor; fallback may only move upward."
   },
   "installer": {
-    "path": "installers/kit-forge-1.5.5/kit_doctor.py"
+    "path": "installers/kit-forge-1.5.6/kit_doctor.py"
   },
   "loop": {
     "initial": "planned",
@@ -93,8 +93,8 @@
   "modules": [
     {
       "id": "operator-kit",
-      "version": "1.8.5",
-      "path": "frameworks/operator-kit-1.8.5",
+      "version": "1.8.6",
+      "path": "frameworks/operator-kit-1.8.6",
       "requires": [],
       "integrates_with": [
         "continuity-kit",
@@ -121,8 +121,8 @@
     },
     {
       "id": "kit-forge",
-      "version": "1.5.5",
-      "path": "installers/kit-forge-1.5.5",
+      "version": "1.5.6",
+      "path": "installers/kit-forge-1.5.6",
       "requires": [],
       "integrates_with": [
         "claude-dev-kit"
@@ -142,8 +142,8 @@
     },
     {
       "id": "lane-kit",
-      "version": "1.9.0",
-      "path": "multi-session/lane-kit-1.9.0",
+      "version": "1.9.1",
+      "path": "multi-session/lane-kit-1.9.1",
       "requires": [],
       "integrates_with": [
         "continuity-kit",
@@ -166,8 +166,8 @@
     },
     {
       "id": "continuity-kit",
-      "version": "1.5.4",
-      "path": "continuity/continuity-kit-1.5.4",
+      "version": "1.5.5",
+      "path": "continuity/continuity-kit-1.5.5",
       "requires": [],
       "integrates_with": [
         "lane-kit",
@@ -189,8 +189,8 @@
     },
     {
       "id": "health-kit",
-      "version": "1.4.5",
-      "path": "frameworks/health-kit-1.4.5",
+      "version": "1.4.6",
+      "path": "frameworks/health-kit-1.4.6",
       "requires": [],
       "integrates_with": [
         "operator-kit"
@@ -210,8 +210,8 @@
     },
     {
       "id": "claude-dev-kit",
-      "version": "1.3.9",
-      "path": "frameworks/claude-dev-kit-1.3.9",
+      "version": "1.3.10",
+      "path": "frameworks/claude-dev-kit-1.3.10",
       "requires": [],
       "integrates_with": [
         "kit-forge"
@@ -231,8 +231,8 @@
     },
     {
       "id": "supabase-pack",
-      "version": "1.2.4",
-      "path": "frameworks/supabase-pack-1.2.4",
+      "version": "1.2.5",
+      "path": "frameworks/supabase-pack-1.2.5",
       "requires": [],
       "integrates_with": [
         "operator-kit"
@@ -251,8 +251,8 @@
     },
     {
       "id": "agent-framework-wizard",
-      "version": "1.2.6",
-      "path": "wizards/agent-framework-wizard-1.2.6",
+      "version": "1.2.7",
+      "path": "wizards/agent-framework-wizard-1.2.7",
       "requires": [],
       "integrates_with": [
         "claude-dev-kit",
@@ -272,8 +272,8 @@
     },
     {
       "id": "dev-squad-kit",
-      "version": "1.2.3",
-      "path": "frameworks/dev-squad-kit-1.2.3",
+      "version": "1.2.4",
+      "path": "frameworks/dev-squad-kit-1.2.4",
       "requires": [],
       "integrates_with": [
         "operator-kit",
@@ -297,8 +297,8 @@
     },
     {
       "id": "gotcha-memory",
-      "version": "1.1.5",
-      "path": "continuity/gotcha-memory-1.1.5",
+      "version": "1.1.6",
+      "path": "continuity/gotcha-memory-1.1.6",
       "requires": [],
       "integrates_with": [
         "continuity-kit",

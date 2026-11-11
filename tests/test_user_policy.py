@@ -76,6 +76,8 @@ def test_user_rules_are_matched_case_insensitively_like_the_built_ins():
     (_policy(rules=[{**BLOCK_RULE, "action": "ALLOW"}]), "ALLOW"),           # an exemption rule
     (_policy(rules=[{**BLOCK_RULE, "id": "force-push"}]), "force-push"),     # shadows a built-in id
     (_policy(rules=[{**BLOCK_RULE, "pattern": "("}]), "pattern"),            # invalid regex
+    (_policy(rules=[{**BLOCK_RULE, "pattern": "a{999999999999999999999}"}]), "pattern"),
+    (_policy(rules=[{**BLOCK_RULE, "pattern": "(" * 1200 + "x" + ")" * 1200}]), "pattern"),
     (_policy(rules=[BLOCK_RULE, BLOCK_RULE]), "prod-deploy"),                # duplicate id
     (_policy(rules=[{**BLOCK_RULE, "reason": ""}]), "reason"),               # a rule without a reason
     (_policy(rules=[{**BLOCK_RULE, "extra": 1}]), "extra"),                  # a key outside the contract

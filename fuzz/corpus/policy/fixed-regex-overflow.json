@@ -1,0 +1,2 @@
+{"schema":"hpp.policy/v1","rules":[{"id":"regex-limit","action":"BLOCK","pattern":"a{999999999999999999999}","reason":"oversized repetition is rejected"}]}
+

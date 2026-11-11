@@ -107,16 +107,21 @@ vive no YAML.</p>
       <h2>Os 6 estágios (ordem fixa)</h2>
 <pre><code>detect → prereqs → profile → configure → wire-suggest → smoke</code></pre>
 <h3 id="1-detect-novo--sempre-primeiro-read-only">1. <code>detect</code> (novo — sempre primeiro, read-only)</h3>
-<p>Classifica o projeto-alvo (<code>--target</code>, default cwd) em uma de três categorias:</p>
+<p>Classifica a instalação deste módulo no projeto-alvo (<code>--target</code>, default cwd),
+com <code>classification_scope: "module"</code>, em uma de três categorias:</p>
 <table>
 <thead><tr><th>Classificação</th><th>Sinais</th></tr></thead>
 <tbody>
 <tr><td><code>greenfield</code></td><td>sem <code>.claude/</code>, sem <code>settings.json</code>/<code>settings.local.json</code>, git com poucos/nenhum commit, nenhum profile real presente</td></tr>
-<tr><td><code>in-progress</code></td><td><code>.claude/</code> existe, <code>settings*.json</code> tem hooks/statusLine ocupados, profile real (<code>operator-profile.yaml</code>/<code>rollup.yaml</code>/etc.) presente, histórico git não-trivial</td></tr>
+<tr><td><code>in-progress</code></td><td><code>.claude/</code> existe, <code>settings*.json</code> tem hooks/statusLine ocupados, profile real (<code>operator-profile.yaml</code>/<code>rollup.yaml</code>/etc.) presente, histórico git não-trivial, <code>AGENTS.md</code>, <code>.hpp/events.jsonl</code> ou <code>.hpp/profile.json</code> válido (<code>hpp.init/v1</code>); este par módulo+destino não está registrado</td></tr>
 <tr><td><code>re-run</code></td><td>este <code>kit_dir</code> já tem entrada em <code>~/.claude-kits/registry.json</code> apontando para este <code>--target</code></td></tr>
 </tbody>
 </table>
-<p>Saída: <code>{"stage": "detect", "classification": "...", "signals": {...}, "existing_config": [lista de itens já configurados que serão preservados]}</code>. Nunca escreve nada.</p>
+<p>Saída: <code>{"stage": "detect", "classification": "...", "classification_scope": "module", "signals": {...}, "existing_config": [lista de itens já configurados que serão preservados]}</code>. Nunca escreve nada.</p>
+<p><code>signals.registered_install</code> informa se este par exato módulo+destino está registrado.
+Um perfil válido do init sozinho significa <code>in-progress</code> aqui, enquanto o <code>hpp init</code> o
+chama de <code>re-run</code> no escopo do projeto. O plano legível explicita essa diferença. O registro
+documenta uma instalação, sem atestar sua saúde atual; não substitui smoke nem verificação.</p>
 <h3 id="2-prereqs-existente--pythonpyyamldependências-declaradas-em-requires">2. <code>prereqs</code> (existente — python/PyYAML/dependências declaradas em <code>requires:</code>)</h3>
 <h3 id="3-profile-existente--copia-example--real-nunca-sobrescreve-se-o-alvo-já-existe-com-conteúdo-diferente-do-gerado-skip-exists-reportado-não-silencioso">3. <code>profile</code> (existente — copia <code>*.example.*</code> → real; <strong>nunca sobrescreve</strong> se o alvo já existe com conteúdo diferente do gerado; <code>skip-exists</code> reportado, não silencioso)</h3>
 <h3 id="4-configure-novo">4. <code>configure</code> (novo)</h3>

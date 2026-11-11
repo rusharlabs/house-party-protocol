@@ -1,0 +1,2 @@
+{"command":"git push origin review","policy":{"schema":"hpp.policy/v1","rules":[],"raise":{"external-push":"BLOCK"}}}
+

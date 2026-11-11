@@ -1,0 +1,2 @@
+{"command":"git push origin main","policy":{"schema":"hpp.policy/v1","rules":[{"id":"local-rule","action":"MANUAL","pattern":"git push","reason":"local gate"}]}}
+

@@ -7,6 +7,28 @@ All relevant changes to the harness are recorded here. The format follows
 [SemVer](https://semver.org/). The product version describes the harness contract; each module
 keeps its own version in `plugin.json` and in `marketplace.json`.
 
+## [2.12.1] — 2026-11-11
+
+### Fixed
+
+- Module installation detection distinguishes an initialized HPP project from an installation
+  registered for the exact module and target. Reports expose the module scope and registration
+  signal; an existing project profile alone no longer claims that a module is being reinstalled.
+- Invalid policy expressions with overflowing repetition counts or excessive nesting are refused
+  as policy errors instead of escaping as internal exceptions.
+
+### Added
+
+- Coverage-guided policy fuzzing with ClusterFuzzLite and Atheris, including corpus replay,
+  adversarial JSON validation and checks that project policies cannot soften built-in verdicts.
+  Fuzz tooling runs only in CI or when explicitly invoked; the installed package gains no dependency.
+
+### Changed
+
+- The reviewer account is included in CODEOWNERS so required owner review can cover contributions
+  made by the maintainer account. Existing installation records and project configuration are preserved.
+- Module patch versions follow kit-forge 1.5.6 and its updated installer references.
+
 ## [2.12.0] — 2026-11-11
 
 ### Added
@@ -2049,6 +2071,7 @@ publishing.
 [2.6.5]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.5
 [2.6.6]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.6
 [2.6.7]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.7
+[2.12.1]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.12.1
 [2.12.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.12.0
 [2.11.4]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.11.4
 [2.11.3]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.11.3

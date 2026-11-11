@@ -1,0 +1,53 @@
+name: Fuzzing
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
+  actions: read
+
+concurrency:
+  group: fuzzing-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  fuzz:
+    name: Fuzzing
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Replay corpus and deterministic mutation checks
+        run: python3 fuzz/check_corpus.py
+
+      - name: Build instrumented Python fuzz target
+        uses: google/clusterfuzzlite/actions/build_fuzzers@52ecc61cb587ee99c26825a112a21abf19c7448c
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          language: python
+          sanitizer: address
+          keep-unaffected-fuzz-targets: true
+
+      - name: Run libFuzzer
+        uses: google/clusterfuzzlite/actions/run_fuzzers@52ecc61cb587ee99c26825a112a21abf19c7448c
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          language: python
+          sanitizer: address
+          fuzz-seconds: 120
+          mode: ${{ github.event_name == 'pull_request' && 'code-change' || 'batch' }}
+          report-timeouts: true
+          report-ooms: true
+          output-sarif: true
+
