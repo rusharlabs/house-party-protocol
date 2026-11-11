@@ -124,7 +124,7 @@ nomeia e escreve num pequeno número de caminhos declarados. <code>decide</code>
 <tr><td><code>hosts.py</code></td><td>a matriz host x módulo x canal derivada de <code>hosts</code> e <code>components</code> no manifesto, renderizada para os documentos</td><td><code>doctor --matrix</code></td></tr>
 <tr><td><code>context.py</code></td><td>encaixar blocos inteiros sob um orçamento de caracteres com hashes de proveniência; recusar entrada que se pareça com segredo</td><td><code>context compile</code>, <code>map context</code></td></tr>
 <tr><td><code>routing.py</code></td><td>escolher um tier e um id de provedor a partir de risco, complexidade, tamanho de contexto e estágio declarados; fazer fallback só para cima</td><td><code>route</code></td></tr>
-<tr><td><code>maps.py</code></td><td>Lane Map, Agent Map, Context Map e Monitor Map como projeções ordenadas, só de dados; JSON ou Mermaid</td><td><code>map lane</code>, <code>map agent</code>, <code>map context</code>, <code>map monitor</code></td></tr>
+<tr><td><code>maps.py</code></td><td>mapas de lanes, agentes, contexto e monitoramento em JSON ou Mermaid; linha do tempo do feed em JSON</td><td><code>map lane</code>, <code>map agent</code>, <code>map context</code>, <code>map monitor</code>, <code>map feed</code></td></tr>
 <tr><td><code>graph.py</code></td><td>visões de capability, operacional, agente, evidência e código a partir do manifesto; JSON ou Mermaid</td><td><code>graph</code></td></tr>
 <tr><td><code>evals.py</code></td><td>runner de <code>pass@k</code> / <code>pass^k</code> sobre uma suíte de casos com três tipos de runner</td><td><code>eval run</code>, <code>benchmark</code></td></tr>
 <tr><td><code>decision.py</code></td><td>valida um registro <code>hpp.decision/v1</code> feito fora do harness (consultivo, raise-only, abstenção e falha de instrumento como desfechos); mede um decisor declarado com métricas seletivas. Não chama modelo</td><td><code>decide validate</code>, <code>decide eval</code> (novo na 2.6.0)</td></tr>
@@ -234,8 +234,8 @@ dele concorda em nome e versão. Num checkout de fonte sem marketplace o doctor 
     <section id="mapas"><div class="wrap">
       <p class="eyebrow">06</p>
       <h2>Mapas</h2>
-<p>Os mapas não têm estado próprio. Cada um é uma projeção de uma ou duas entradas, ordenada de modo
-que a mesma entrada produza a mesma saída byte a byte.</p>
+<p>Os mapas não têm estado próprio. Eles ordenam as entradas para que os mesmos registros e
+opções produzam a mesma saída byte a byte.</p>
 <table>
 <thead><tr><th>mapa</th><th>entrada</th><th>pergunta que responde</th></tr></thead>
 <tbody>
@@ -247,11 +247,22 @@ que a mesma entrada produza a mesma saída byte a byte.</p>
 <tr><td>lane</td><td>JSON de lanes, <code>--now</code>, limiares</td><td>quem possui o quê, quem está vivo, onde reivindicações vivas se sobrepõem</td></tr>
 <tr><td>context</td><td>JSON de contexto, <code>--budget</code></td><td>o que entrou no contexto compilado, o que foi omitido, com hashes</td></tr>
 <tr><td>monitor</td><td>JSON de monitores, <code>--now</code>, <code>--skew-tolerance</code></td><td>o que é observado, quão fresco, e qual gate o consome</td></tr>
+<tr><td>feed</td><td>board, efeitos, caixa de mensagens, registro de handoffs e registro de lanes do projeto</td><td>quais eventos foram registrados, de onde vieram e quais horários podem ser comparados</td></tr>
 <tr><td>work</td><td>JSON da spec</td><td>quais unidades podem rodar juntas e em que ordem</td></tr>
 </tbody>
 </table>
 <p>O Context Map é proveniência de uma compilação; não é recuperação e não é uma base de
 conhecimento. O Code Map inventaria componentes declarados; não é um grafo de chamadas.</p>
+<p>Rode <code>hpp map feed --target .</code> para obter uma linha do tempo em JSON, em modo somente
+leitura. Se o projeto usa uma caixa de mensagens personalizada, indique o diretório com
+<code>--mailbox</code>. Se todos os horários sem fuso no board e nas mensagens compartilham um
+deslocamento conhecido, informe-o como <code>--local-offset=-03:00</code>, por exemplo. Caso
+contrário, esses eventos ficam em um grupo separado, em ordem de origem, seguido pelos
+registros sem horário.</p>
+<p>O feed informa a disponibilidade e a impressão digital das fontes e omite corpos de
+mensagem, nomes de arquivos da caixa e resumos de handoff. A presença no arquivo comprova o
+arquivamento da mensagem. A hora da leitura não é registrada. O registro de lanes fornece o
+último heartbeat de cada lane.</p>
     </div></section>
 
     <section id="dois-hosts"><div class="wrap">
@@ -279,16 +290,16 @@ essa renderização.</p>
 <table>
 <thead><tr><th>módulo</th><th>Claude Code</th><th>Codex CLI</th></tr></thead>
 <tbody>
-<tr><td><code>operator-kit</code> 1.8.4</td><td><code>native</code> · plugin + hooks depois de colar o wiring</td><td><code>explicit-command</code> · plugin (só skills) + cópia verificada</td></tr>
-<tr><td><code>kit-forge</code> 1.5.4</td><td><code>explicit-command</code> · plugin</td><td><code>explicit-command</code> · cópia verificada</td></tr>
-<tr><td><code>lane-kit</code> 1.8.2</td><td><code>native</code> · plugin + hooks depois de colar o wiring</td><td><code>explicit-command</code> · plugin (só skills) + cópia verificada</td></tr>
-<tr><td><code>continuity-kit</code> 1.5.3</td><td><code>native</code> · plugin + hooks depois de colar o wiring</td><td><code>explicit-command</code> · plugin (só skills) + cópia verificada</td></tr>
-<tr><td><code>health-kit</code> 1.4.4</td><td><code>explicit-command</code> · plugin</td><td><code>explicit-command</code> · plugin (só skills) + cópia verificada</td></tr>
-<tr><td><code>claude-dev-kit</code> 1.3.8</td><td><code>native</code> · plugin</td><td><code>unsupported</code> · —</td></tr>
-<tr><td><code>supabase-pack</code> 1.2.3</td><td><code>explicit-command</code> · plugin</td><td><code>explicit-command</code> · plugin (só skills) + cópia verificada</td></tr>
-<tr><td><code>agent-framework-wizard</code> 1.2.5</td><td><code>explicit-command</code> · plugin</td><td><code>explicit-command</code> · cópia verificada</td></tr>
-<tr><td><code>dev-squad-kit</code> 1.2.2</td><td><code>native</code> · plugin</td><td><code>explicit-command</code> · plugin (só skills) + cópia verificada</td></tr>
-<tr><td><code>gotcha-memory</code> 1.1.4</td><td><code>native</code> · plugin + hooks depois de colar o wiring</td><td><code>explicit-command</code> · plugin (só skills) + cópia verificada</td></tr>
+<tr><td><code>operator-kit</code> 1.8.5</td><td><code>native</code> · plugin + hooks depois de colar o wiring</td><td><code>explicit-command</code> · plugin (só skills) + cópia verificada</td></tr>
+<tr><td><code>kit-forge</code> 1.5.5</td><td><code>explicit-command</code> · plugin</td><td><code>explicit-command</code> · cópia verificada</td></tr>
+<tr><td><code>lane-kit</code> 1.9.0</td><td><code>native</code> · plugin + hooks depois de colar o wiring</td><td><code>explicit-command</code> · plugin (só skills) + cópia verificada</td></tr>
+<tr><td><code>continuity-kit</code> 1.5.4</td><td><code>native</code> · plugin + hooks depois de colar o wiring</td><td><code>explicit-command</code> · plugin (só skills) + cópia verificada</td></tr>
+<tr><td><code>health-kit</code> 1.4.5</td><td><code>explicit-command</code> · plugin</td><td><code>explicit-command</code> · plugin (só skills) + cópia verificada</td></tr>
+<tr><td><code>claude-dev-kit</code> 1.3.9</td><td><code>native</code> · plugin</td><td><code>unsupported</code> · —</td></tr>
+<tr><td><code>supabase-pack</code> 1.2.4</td><td><code>explicit-command</code> · plugin</td><td><code>explicit-command</code> · plugin (só skills) + cópia verificada</td></tr>
+<tr><td><code>agent-framework-wizard</code> 1.2.6</td><td><code>explicit-command</code> · plugin</td><td><code>explicit-command</code> · cópia verificada</td></tr>
+<tr><td><code>dev-squad-kit</code> 1.2.3</td><td><code>native</code> · plugin</td><td><code>explicit-command</code> · plugin (só skills) + cópia verificada</td></tr>
+<tr><td><code>gotcha-memory</code> 1.1.5</td><td><code>native</code> · plugin + hooks depois de colar o wiring</td><td><code>explicit-command</code> · plugin (só skills) + cópia verificada</td></tr>
 </tbody>
 </table>
 <p>No Claude Code todo módulo é um plugin do marketplace, e um módulo que declara hooks os arma depois

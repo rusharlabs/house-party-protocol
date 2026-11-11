@@ -124,7 +124,7 @@ new in 2.6.0; <code>deliberate</code> is new in 2.7.0.</p>
 <tr><td><code>hosts.py</code></td><td>the host x module x channel matrix derived from <code>hosts</code> and <code>components</code> in the manifest, rendered for the documents</td><td><code>doctor --matrix</code></td></tr>
 <tr><td><code>context.py</code></td><td>fit whole blocks under a character budget with provenance hashes; refuse secret-like input</td><td><code>context compile</code>, <code>map context</code></td></tr>
 <tr><td><code>routing.py</code></td><td>choose a tier and a provider id from declared risk, complexity, context size and stage; fall back only upward</td><td><code>route</code></td></tr>
-<tr><td><code>maps.py</code></td><td>Lane Map, Agent Map, Context Map and Monitor Map as sorted, data-only projections; JSON or Mermaid</td><td><code>map lane</code>, <code>map agent</code>, <code>map context</code>, <code>map monitor</code></td></tr>
+<tr><td><code>maps.py</code></td><td>Lane, agent, context and monitor maps in JSON or Mermaid; feed timeline in JSON</td><td><code>map lane</code>, <code>map agent</code>, <code>map context</code>, <code>map monitor</code>, <code>map feed</code></td></tr>
 <tr><td><code>graph.py</code></td><td>capability, operational, agent, evidence and code views from the manifest; JSON or Mermaid</td><td><code>graph</code></td></tr>
 <tr><td><code>evals.py</code></td><td><code>pass@k</code> / <code>pass^k</code> runner over a suite of cases with three runner kinds</td><td><code>eval run</code>, <code>benchmark</code></td></tr>
 <tr><td><code>decision.py</code></td><td>validate an <code>hpp.decision/v1</code> record made outside the harness (advisory, raise-only, abstention and instrument failure as outcomes); measure a declared decider with selective metrics. Calls no model</td><td><code>decide validate</code>, <code>decide eval</code> (new in 2.6.0)</td></tr>
@@ -232,8 +232,8 @@ on name and version. In a source checkout without a marketplace the doctor says 
     <section id="maps"><div class="wrap">
       <p class="eyebrow">06</p>
       <h2>Maps</h2>
-<p>Maps have no state of their own. Each is a projection of one or two inputs, sorted so that the
-same input yields the same output byte for byte.</p>
+<p>Maps have no state of their own. They sort their inputs so that the same records and options
+yield the same output byte for byte.</p>
 <table>
 <thead><tr><th>map</th><th>input</th><th>question it answers</th></tr></thead>
 <tbody>
@@ -245,11 +245,19 @@ same input yields the same output byte for byte.</p>
 <tr><td>lane</td><td>lanes JSON, <code>--now</code>, thresholds</td><td>who owns what, who is alive, where live claims overlap</td></tr>
 <tr><td>context</td><td>context JSON, <code>--budget</code></td><td>what entered the compiled context, what was omitted, with hashes</td></tr>
 <tr><td>monitor</td><td>monitors JSON, <code>--now</code>, <code>--skew-tolerance</code></td><td>what is observed, how fresh, and which gate consumes it</td></tr>
+<tr><td>feed</td><td>project lane board, effects, mailbox, handoff ledger and registry</td><td>which events are recorded, where they came from, and which times can be compared</td></tr>
 <tr><td>work</td><td>spec JSON</td><td>which units can run together and in which order</td></tr>
 </tbody>
 </table>
 <p>The Context Map is provenance for one compilation; it is not retrieval and not a knowledge base.
 The Code Map inventories declared components; it is not a call graph.</p>
+<p>Run <code>hpp map feed --target .</code> for a read-only JSON timeline. When the project uses a custom
+mailbox, pass its directory with <code>--mailbox</code>. If all timezone-free board and mailbox
+timestamps share a known offset, pass it as <code>--local-offset=-03:00</code>, for example. Otherwise
+those records remain in a separate source-ordered group, followed by untimed entries.</p>
+<p>The feed reports source availability and fingerprints, without message bodies, filenames or
+handoff summaries. Mailbox archive presence records that a file was archived. It supplies no
+read time. The registry supplies the latest heartbeat per lane.</p>
     </div></section>
 
     <section id="two-hosts"><div class="wrap">
@@ -275,16 +283,16 @@ value per module, not changing the six stages.</p>
 <table>
 <thead><tr><th>module</th><th>Claude Code</th><th>Codex CLI</th></tr></thead>
 <tbody>
-<tr><td><code>operator-kit</code> 1.8.4</td><td><code>native</code> · plugin + hooks after the wiring is pasted</td><td><code>explicit-command</code> · plugin (skills only) + verified copy</td></tr>
-<tr><td><code>kit-forge</code> 1.5.4</td><td><code>explicit-command</code> · plugin</td><td><code>explicit-command</code> · verified copy</td></tr>
-<tr><td><code>lane-kit</code> 1.8.2</td><td><code>native</code> · plugin + hooks after the wiring is pasted</td><td><code>explicit-command</code> · plugin (skills only) + verified copy</td></tr>
-<tr><td><code>continuity-kit</code> 1.5.3</td><td><code>native</code> · plugin + hooks after the wiring is pasted</td><td><code>explicit-command</code> · plugin (skills only) + verified copy</td></tr>
-<tr><td><code>health-kit</code> 1.4.4</td><td><code>explicit-command</code> · plugin</td><td><code>explicit-command</code> · plugin (skills only) + verified copy</td></tr>
-<tr><td><code>claude-dev-kit</code> 1.3.8</td><td><code>native</code> · plugin</td><td><code>unsupported</code> · —</td></tr>
-<tr><td><code>supabase-pack</code> 1.2.3</td><td><code>explicit-command</code> · plugin</td><td><code>explicit-command</code> · plugin (skills only) + verified copy</td></tr>
-<tr><td><code>agent-framework-wizard</code> 1.2.5</td><td><code>explicit-command</code> · plugin</td><td><code>explicit-command</code> · verified copy</td></tr>
-<tr><td><code>dev-squad-kit</code> 1.2.2</td><td><code>native</code> · plugin</td><td><code>explicit-command</code> · plugin (skills only) + verified copy</td></tr>
-<tr><td><code>gotcha-memory</code> 1.1.4</td><td><code>native</code> · plugin + hooks after the wiring is pasted</td><td><code>explicit-command</code> · plugin (skills only) + verified copy</td></tr>
+<tr><td><code>operator-kit</code> 1.8.5</td><td><code>native</code> · plugin + hooks after the wiring is pasted</td><td><code>explicit-command</code> · plugin (skills only) + verified copy</td></tr>
+<tr><td><code>kit-forge</code> 1.5.5</td><td><code>explicit-command</code> · plugin</td><td><code>explicit-command</code> · verified copy</td></tr>
+<tr><td><code>lane-kit</code> 1.9.0</td><td><code>native</code> · plugin + hooks after the wiring is pasted</td><td><code>explicit-command</code> · plugin (skills only) + verified copy</td></tr>
+<tr><td><code>continuity-kit</code> 1.5.4</td><td><code>native</code> · plugin + hooks after the wiring is pasted</td><td><code>explicit-command</code> · plugin (skills only) + verified copy</td></tr>
+<tr><td><code>health-kit</code> 1.4.5</td><td><code>explicit-command</code> · plugin</td><td><code>explicit-command</code> · plugin (skills only) + verified copy</td></tr>
+<tr><td><code>claude-dev-kit</code> 1.3.9</td><td><code>native</code> · plugin</td><td><code>unsupported</code> · —</td></tr>
+<tr><td><code>supabase-pack</code> 1.2.4</td><td><code>explicit-command</code> · plugin</td><td><code>explicit-command</code> · plugin (skills only) + verified copy</td></tr>
+<tr><td><code>agent-framework-wizard</code> 1.2.6</td><td><code>explicit-command</code> · plugin</td><td><code>explicit-command</code> · verified copy</td></tr>
+<tr><td><code>dev-squad-kit</code> 1.2.3</td><td><code>native</code> · plugin</td><td><code>explicit-command</code> · plugin (skills only) + verified copy</td></tr>
+<tr><td><code>gotcha-memory</code> 1.1.5</td><td><code>native</code> · plugin + hooks after the wiring is pasted</td><td><code>explicit-command</code> · plugin (skills only) + verified copy</td></tr>
 </tbody>
 </table>
 <p>On Claude Code every module is a plugin of the marketplace, and a module that declares hooks arms

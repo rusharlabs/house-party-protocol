@@ -28,16 +28,17 @@ waves; toda ação que ele oferece também é um comando de terminal.
 ## 2.12: ver o estado
 
 Mermaid para os mapas e para o WorkGraph, o primeiro item planejado para esta etapa, saiu na 2.11.0
-(a tabela acima). Os outros três vêm a seguir:
+(a tabela acima). A versão 2.12.0 acrescenta as visões abaixo.
 
-1. **Um mapa de feed.** Uma linha do tempo do que aconteceu entre as lanes — claims, vereditos,
-   mensagens enviadas e lidas, entregas, handoffs, heartbeats — derivada de registros que o harness
-   já escreve.
-2. **Um atlas HTML estático.** `hpp atlas --html` escreveria uma página autocontida com todas as
-   views de um projeto, desenhadas a partir do mesmo JSON. Cada view mostra o comando que a
-   reproduz e o hash da sua fonte. Ela abre como arquivo; não há servidor.
-3. **As views no Lane Dashboard.** O dashboard mostra as mesmas views, desenhadas a partir do mesmo
-   JSON, ao lado das ações que ele já oferece.
+1. **Um mapa de feed.** Uma linha do tempo de claims, vereditos, mensagens enviadas e arquivadas,
+   entregas e handoffs, com o último heartbeat de cada lane. A linha do tempo informa a precisão
+   dos horários nos registros que o harness já escreve.
+2. **Um atlas HTML estático.** `hpp atlas --html --target .` reúne as projeções do CLI do projeto
+   em um arquivo autocontido. Cada visão mostra seu comando e o hash da projeção, e indica
+   entradas opcionais que não foram fornecidas. O atlas abre como arquivo e roda sem servidor.
+3. **As visões no Lane Dashboard.** O dashboard usa as mesmas projeções para o feed e os resumos
+   de capacidades, ciclo operacional, evidência e papéis dos agentes. As visões que exigem
+   arquivos adicionais ficam no atlas offline.
 
 ## 2.13: um grafo de código do seu projeto
 

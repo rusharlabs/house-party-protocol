@@ -47,7 +47,7 @@ new in 2.6.0; `deliberate` is new in 2.7.0.
 | `hosts.py` | the host x module x channel matrix derived from `hosts` and `components` in the manifest, rendered for the documents | `doctor --matrix` |
 | `context.py` | fit whole blocks under a character budget with provenance hashes; refuse secret-like input | `context compile`, `map context` |
 | `routing.py` | choose a tier and a provider id from declared risk, complexity, context size and stage; fall back only upward | `route` |
-| `maps.py` | Lane Map, Agent Map, Context Map and Monitor Map as sorted, data-only projections; JSON or Mermaid | `map lane`, `map agent`, `map context`, `map monitor` |
+| `maps.py` | Lane, agent, context and monitor maps in JSON or Mermaid; feed timeline in JSON | `map lane`, `map agent`, `map context`, `map monitor`, `map feed` |
 | `graph.py` | capability, operational, agent, evidence and code views from the manifest; JSON or Mermaid | `graph` |
 | `evals.py` | `pass@k` / `pass^k` runner over a suite of cases with three runner kinds | `eval run`, `benchmark` |
 | `decision.py` | validate an `hpp.decision/v1` record made outside the harness (advisory, raise-only, abstention and instrument failure as outcomes); measure a declared decider with selective metrics. Calls no model | `decide validate`, `decide eval` (new in 2.6.0) |
@@ -152,8 +152,8 @@ on name and version. In a source checkout without a marketplace the doctor says 
 
 ## Maps
 
-Maps have no state of their own. Each is a projection of one or two inputs, sorted so that the
-same input yields the same output byte for byte.
+Maps have no state of their own. They sort their inputs so that the same records and options
+yield the same output byte for byte.
 
 | map | input | question it answers |
 |---|---|---|
@@ -165,10 +165,20 @@ same input yields the same output byte for byte.
 | lane | lanes JSON, `--now`, thresholds | who owns what, who is alive, where live claims overlap |
 | context | context JSON, `--budget` | what entered the compiled context, what was omitted, with hashes |
 | monitor | monitors JSON, `--now`, `--skew-tolerance` | what is observed, how fresh, and which gate consumes it |
+| feed | project lane board, effects, mailbox, handoff ledger and registry | which events are recorded, where they came from, and which times can be compared |
 | work | spec JSON | which units can run together and in which order |
 
 The Context Map is provenance for one compilation; it is not retrieval and not a knowledge base.
 The Code Map inventories declared components; it is not a call graph.
+
+Run `hpp map feed --target .` for a read-only JSON timeline. When the project uses a custom
+mailbox, pass its directory with `--mailbox`. If all timezone-free board and mailbox
+timestamps share a known offset, pass it as `--local-offset=-03:00`, for example. Otherwise
+those records remain in a separate source-ordered group, followed by untimed entries.
+
+The feed reports source availability and fingerprints, without message bodies, filenames or
+handoff summaries. Mailbox archive presence records that a file was archived. It supplies no
+read time. The registry supplies the latest heartbeat per lane.
 
 ## Two hosts
 
@@ -192,16 +202,16 @@ One row per module, rendered from `hosts` and `components` in the manifest by `h
 
 | module | Claude Code | Codex CLI |
 |---|---|---|
-| `operator-kit` 1.8.4 | `native` · plugin + hooks after the wiring is pasted | `explicit-command` · plugin (skills only) + verified copy |
-| `kit-forge` 1.5.4 | `explicit-command` · plugin | `explicit-command` · verified copy |
-| `lane-kit` 1.8.2 | `native` · plugin + hooks after the wiring is pasted | `explicit-command` · plugin (skills only) + verified copy |
-| `continuity-kit` 1.5.3 | `native` · plugin + hooks after the wiring is pasted | `explicit-command` · plugin (skills only) + verified copy |
-| `health-kit` 1.4.4 | `explicit-command` · plugin | `explicit-command` · plugin (skills only) + verified copy |
-| `claude-dev-kit` 1.3.8 | `native` · plugin | `unsupported` · — |
-| `supabase-pack` 1.2.3 | `explicit-command` · plugin | `explicit-command` · plugin (skills only) + verified copy |
-| `agent-framework-wizard` 1.2.5 | `explicit-command` · plugin | `explicit-command` · verified copy |
-| `dev-squad-kit` 1.2.2 | `native` · plugin | `explicit-command` · plugin (skills only) + verified copy |
-| `gotcha-memory` 1.1.4 | `native` · plugin + hooks after the wiring is pasted | `explicit-command` · plugin (skills only) + verified copy |
+| `operator-kit` 1.8.5 | `native` · plugin + hooks after the wiring is pasted | `explicit-command` · plugin (skills only) + verified copy |
+| `kit-forge` 1.5.5 | `explicit-command` · plugin | `explicit-command` · verified copy |
+| `lane-kit` 1.9.0 | `native` · plugin + hooks after the wiring is pasted | `explicit-command` · plugin (skills only) + verified copy |
+| `continuity-kit` 1.5.4 | `native` · plugin + hooks after the wiring is pasted | `explicit-command` · plugin (skills only) + verified copy |
+| `health-kit` 1.4.5 | `explicit-command` · plugin | `explicit-command` · plugin (skills only) + verified copy |
+| `claude-dev-kit` 1.3.9 | `native` · plugin | `unsupported` · — |
+| `supabase-pack` 1.2.4 | `explicit-command` · plugin | `explicit-command` · plugin (skills only) + verified copy |
+| `agent-framework-wizard` 1.2.6 | `explicit-command` · plugin | `explicit-command` · verified copy |
+| `dev-squad-kit` 1.2.3 | `native` · plugin | `explicit-command` · plugin (skills only) + verified copy |
+| `gotcha-memory` 1.1.5 | `native` · plugin + hooks after the wiring is pasted | `explicit-command` · plugin (skills only) + verified copy |
 
 On Claude Code every module is a plugin of the marketplace, and a module that declares hooks arms
 them once the wiring is pasted. On Codex CLI the plugin channel is the product's own marketplace,

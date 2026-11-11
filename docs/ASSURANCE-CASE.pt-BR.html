@@ -137,7 +137,8 @@ a biblioteca padrão do Python (<code>pyproject.toml</code>: <code>dependencies 
 <p>O host roda o modelo e as ferramentas dele; o HPP fornece hooks e comandos em volta, e trata o que
 o modelo diz como uma afirmação a conferir, não como fato:</p>
 <ul>
-<li><code>hpp init --apply</code> escreve um arquivo, <code>.hpp/profile.json</code>, e só lê o <code>settings.json</code> do host
+<li><code>hpp init --apply</code> só pode escrever <code>.hpp/profile.json</code>. Ele inspeciona a configuração local
+do host no projeto e aponta possíveis sobreposições de hooks sem editar a configuração
 (<code>hpp/wizard.py</code>). Ligar hooks num host continua sendo ação humana.</li>
 <li>O classificador de política (<code>hpp/policy.py</code>) devolve <code>ALLOW</code>, <code>MANUAL</code> ou <code>BLOCK</code>; ele nunca
 executa o comando, e uma política do usuário só consegue endurecer um veredito embutido, nunca
@@ -152,7 +153,7 @@ nunca derruba o host.</li>
 <p>Um módulo é código que o operador instala. A integridade dele é conferida antes de ele rodar:</p>
 <ul>
 <li>todo diretório de módulo traz <code>CHECKSUMS.txt</code> (sha256 por arquivo), e
-<code>installers/kit-forge-1.5.4/kit_doctor.py verify &lt;module&gt;</code> compara cada arquivo com ele;</li>
+<code>installers/kit-forge-1.5.5/kit_doctor.py verify &lt;module&gt;</code> compara cada arquivo com ele;</li>
 <li><code>kit_doctor.py install</code> planeja primeiro: uma execução de plano roda todos os self-tests do
 módulo e não escreve nada no projeto de destino, e a instalação só é aplicada numa segunda
 invocação, explícita (<code>--apply</code>), que copia os arquivos <code>*.example.*</code> do módulo para o destino
@@ -175,7 +176,7 @@ só;</li>
 <li>uma tentativa, um timeout em cada espera de socket, e uma resposta limitada a 1 MiB.</li>
 </ul>
 <h3 id="o-dashboard-em-loopback">O dashboard em loopback</h3>
-<p>O Lane Dashboard do lane-kit (<code>multi-session/lane-kit-1.8.2/scripts/lane_dashboard.py</code>) é uma
+<p>O Lane Dashboard do lane-kit (<code>multi-session/lane-kit-1.9.0/scripts/lane_dashboard.py</code>) é uma
 página que o operador liga e desliga. É a exceção delimitada que o MANIFESTO permite a um módulo:</p>
 <ul>
 <li>ele escuta só em loopback: <code>--host</code> aceita apenas <code>127.0.0.1</code>, <code>::1</code> ou <code>localhost</code>
@@ -283,7 +284,7 @@ que a pessoa declarou — esse é o propósito dele.</li>
       <h2>Como conferir este caso</h2>
 <p>A partir da raiz do repositório:</p>
 <pre><code class="language-bash">python -m pytest tests/test_lane_dashboard.py tests/test_decision.py tests/test_evidence.py tests/test_process.py tests/test_stdlib_only.py -q
-python installers/kit-forge-1.5.4/kit_doctor.py verify multi-session/lane-kit-1.8.2
+python installers/kit-forge-1.5.5/kit_doctor.py verify multi-session/lane-kit-1.9.0
 gh attestation verify &lt;file&gt; --repo rusharlabs/house-party-protocol</code></pre>
 <p>O primeiro comando roda os testes que guardam as contramedidas acima (entre eles
 <code>test_a_page_on_another_origin_cannot_act</code>, <code>test_the_page_cannot_be_framed</code>,

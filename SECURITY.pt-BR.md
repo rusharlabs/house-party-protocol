@@ -9,8 +9,8 @@ patch com a nota no `CHANGELOG.md`. Confira a sua com `hpp --version`.
 
 | versão | suportada |
 |---|---|
-| 2.11.x | sim — linha atual |
-| 2.0 – 2.10 | não — atualize para 2.11.x |
+| 2.12.x | sim — linha atual |
+| 2.0 – 2.11 | não — atualize para 2.12.x |
 | 1.x | não |
 
 Os módulos têm versão própria (`plugin.json`, `marketplace.json`); a correção de um módulo sai

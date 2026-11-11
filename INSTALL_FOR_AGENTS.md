@@ -34,7 +34,7 @@ person's interpreter, do not work around a missing `git`.
 ## Step 2 — install the CLI
 
 ```bash
-pip install git+https://github.com/rusharlabs/house-party-protocol@v2.11.4
+pip install git+https://github.com/rusharlabs/house-party-protocol@v2.12.0
 ```
 
 `pipx install git+…` works the same way. The package ships its own manifest and benchmark
@@ -94,7 +94,7 @@ Everything else — runtime, scripts, templates, and any module without skills �
 command per module:
 
 ```bash
-installers/kit-forge-1.5.4/kit_doctor.py install --kit <kit> --host codex --target <repo> --apply
+installers/kit-forge-1.5.5/kit_doctor.py install --kit <kit> --host codex --target <repo> --apply
 ```
 
 Skills land in `.agents/skills`; the full runtime lands in `.agents/hpp`. Hooks declared in

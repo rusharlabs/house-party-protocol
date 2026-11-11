@@ -1,6 +1,11 @@
 """Deterministic, data-only projections for lanes and operational topology."""
 from __future__ import annotations
 
+import hashlib
+import json
+import re
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
 from typing import Any
 
 from hpp.context import compile_context
@@ -255,3 +260,242 @@ def map_graph(projection: dict[str, Any]) -> dict[str, Any]:
         edges.append(_edge(f"lane:{left}", f"lane:{right}", "collides:" + ", ".join(collision["territory"])))
     return {"nodes": projection["nodes"],
             "edges": sorted(edges, key=lambda edge: (edge["from"], edge["to"], edge["relation"]))}
+
+
+_FEED_SOURCES = {
+    "board": ".claude/lanes/board.jsonl",
+    "effects": ".claude/lanes/effects.json",
+    "mailbox": ".claude/lanes/mailbox",
+    "handoff": ".claude/handoff/HANDOFF-LEDGER.jsonl",
+    "registry": ".claude/lanes/registry.json",
+}
+_BOARD_VERDICTS = {"VERIFIED", "NEEDS-FIX", "DEFERRED", "NOT-SELECTED", "WITHDRAWN", "SELECTED", "APPROVED"}
+_BOARD_TRANSITIONS = {"BUILDING", "CHECKPOINT-READY", "UNDER-REVIEW", "FIX-QUEUED", "MERGED", "DECLARED"}
+_FEED_ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,79}")
+_PRIVATE_ID = re.compile(r"(?:gh[pousr]_|github_pat_|sk-)[A-Za-z0-9_-]{16,}|(?:AKIA|ASIA)[A-Z0-9]{16}")
+_FEED_TIMESTAMP = re.compile(
+    r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?(?:Z|[+-](?:[01]\d|2[0-3]):[0-5]\d)?"
+)
+_MAIL_TO = re.compile(rb"^##\s*(?:To|Para):\s*(\S+)\s*$")
+_MAIL_WHEN = re.compile(rb"^##\s*When:\s*(\S+)\s*$")
+_MAIL_METADATA = re.compile(rb"^##\s*(?:To|Para|When|From|De|Affected item\(s\)):")
+
+
+def _feed_id(value: Any) -> str | None:
+    if isinstance(value, str) and _FEED_ID.fullmatch(value) and not _PRIVATE_ID.fullmatch(value):
+        return value
+    return None
+
+
+def _feed_offset(value: str | None) -> timezone | None:
+    if value is None:
+        return None
+    match = re.fullmatch(r"([+-])([01][0-9]|2[0-3]):([0-5][0-9])", value)
+    if not match:
+        raise MapError("local offset must be signed HH:MM, such as -03:00")
+    sign, hours, minutes = match.groups()
+    delta = timedelta(hours=int(hours), minutes=int(minutes))
+    return timezone(-delta if sign == "-" else delta)
+
+
+def _feed_time(value: Any, assumed_zone: timezone | None, basis: str) -> tuple[str | None, str]:
+    if isinstance(value, str) and _FEED_TIMESTAMP.fullmatch(value):
+        try:
+            stamp = datetime.fromisoformat(value[:-1] + "+00:00" if value.endswith("Z") else value)
+            if stamp.tzinfo is None and assumed_zone is None:
+                return stamp.isoformat(), "unanchored-local"
+            if stamp.tzinfo is None:
+                stamp = stamp.replace(tzinfo=assumed_zone)
+            else:
+                basis = "recorded-offset"
+            return stamp.astimezone(timezone.utc).isoformat().removesuffix("+00:00") + "Z", basis
+        except (ValueError, OverflowError):
+            pass
+    return None, "unknown"
+
+
+def _read_feed_bytes(workspace: Path, path: Path, info: dict[str, Any]) -> bytes | None:
+    try:
+        if not path.resolve().is_relative_to(workspace):
+            info["status"] = "outside-target"
+            return None
+        return path.read_bytes()
+    except FileNotFoundError:
+        info["status"] = "missing"
+    except (OSError, RuntimeError):
+        info["status"] = "unreadable"
+    return None
+
+
+def _feed_json_records(workspace: Path, path: Path, info: dict[str, Any],
+                       mapping_key: str | None = None) -> list[tuple[int, dict[str, Any]]]:
+    raw = _read_feed_bytes(workspace, path, info)
+    if raw is None:
+        return []
+    info["sha256"] = hashlib.sha256(raw).hexdigest()
+    if mapping_key is None:
+        candidates = []
+        for sequence, line in enumerate(raw.splitlines(), 1):
+            if line.strip():
+                try:
+                    candidates.append((sequence, json.loads(line)))
+                except (ValueError, RecursionError):
+                    info["invalid_records"] += 1
+    else:
+        try:
+            payload = json.loads(raw)
+            mapping = payload.get(mapping_key) if isinstance(payload, dict) else None
+            if not isinstance(mapping, dict):
+                raise ValueError("expected a record mapping")
+        except (ValueError, RecursionError):
+            info.update(status="invalid", invalid_records=1)
+            return []
+        candidates = [(sequence, {**record, "_key": key} if isinstance(record, dict) else None)
+                      for sequence, (key, record) in enumerate(sorted(mapping.items()), 1)]
+    records = [(sequence, record) for sequence, record in candidates if isinstance(record, dict)]
+    info["invalid_records"] += len(candidates) - len(records)
+    return records
+
+
+def _feed_mail(workspace: Path, mailbox: Path, info: dict[str, Any]) -> list[tuple[int, dict[str, Any]]]:
+    records = []
+    fingerprint = hashlib.sha256()
+    try:
+        mailbox.stat()
+        if not mailbox.is_dir():
+            info["status"] = "invalid"
+            return records
+        files = []
+        for directory, archived in ((mailbox, False), (mailbox / "_read", True)):
+            if directory.resolve().is_relative_to(workspace):
+                files.extend((path, archived) for path in sorted(directory.glob("*.md")))
+            else:
+                info["invalid_records"] += 1
+    except FileNotFoundError:
+        info["status"] = "missing"
+        return records
+    except (OSError, RuntimeError):
+        info["status"] = "unreadable"
+        return records
+    for sequence, (path, archived) in enumerate(files, 1):
+        raw = _read_feed_bytes(workspace, path, {})
+        if raw is None:
+            info["invalid_records"] += 1
+            continue
+        digest = hashlib.sha256(raw).hexdigest()
+        fingerprint.update(b"archive:" if archived else b"inbox:")
+        fingerprint.update(digest.encode("ascii"))
+        to = set()
+        when = None
+        in_metadata = False
+        for line in raw.splitlines():
+            if _MAIL_METADATA.match(line):
+                in_metadata = True
+            elif in_metadata and line.strip():
+                break
+            routing = _MAIL_TO.match(line)
+            if routing:
+                lane = _feed_id(routing.group(1).decode("ascii", errors="replace"))
+                if lane is not None:
+                    to.add(lane)
+            stamp = _MAIL_WHEN.match(line)
+            if stamp and when is None:
+                when = stamp.group(1).decode("ascii", errors="replace")
+        records.append((sequence, {"digest": digest, "archived": archived, "to": sorted(to), "ts": when}))
+    info["sha256"] = fingerprint.hexdigest()
+    return records
+
+
+def build_feed_map(target: Path, mailbox_path: str | None = None,
+                   local_offset: str | None = None) -> dict[str, Any]:
+    """Project the metadata of local lane records, without executing a writer or reading ambient time."""
+    workspace = target.resolve()
+    if not workspace.is_dir():
+        raise MapError("feed target must be a directory")
+    mailbox = (workspace / (mailbox_path or _FEED_SOURCES["mailbox"])).resolve()
+    if not mailbox.is_relative_to(workspace):
+        raise MapError("mailbox must resolve inside the target")
+    offset = _feed_offset(local_offset)
+    sources = []
+    events = []
+
+    def emit(source: str, sequence: int, kind: str, ts: Any, zone: timezone | None, basis: str,
+             **metadata: Any) -> None:
+        at, time_basis = _feed_time(ts, zone, basis)
+        events.append({
+            "id": f"{source}:{sequence}:{kind}", "source": source, "sequence": sequence,
+            "kind": kind, "at": at, "time_basis": time_basis,
+            **{key: value for key, value in metadata.items() if value is not None},
+        })
+
+    for source, relative_path in _FEED_SOURCES.items():
+        path = mailbox if source == "mailbox" else workspace / relative_path
+        info = {
+            "id": source, "path": path.relative_to(workspace).as_posix(), "status": "present",
+            "sha256": None, "records": 0, "invalid_records": 0,
+        }
+        sources.append(info)
+        if source == "mailbox":
+            records = _feed_mail(workspace, path, info)
+        else:
+            key = {"effects": "effects", "registry": "lanes"}.get(source)
+            records = _feed_json_records(workspace, path, info, key)
+        for sequence, record in records:
+            lane = _feed_id(record.get("lane_id"))
+            item = _feed_id(record.get("item_id")) or _feed_id(record.get("task_id"))
+            stamp = record.get("ts")
+            if source == "board":
+                state = _feed_id(record.get("state"))
+                if state == "CLAIMED":
+                    kind = "claim"
+                elif state in _BOARD_VERDICTS:
+                    kind = "verdict"
+                elif state in _BOARD_TRANSITIONS:
+                    kind = "transition"
+                else:
+                    info["invalid_records"] += 1
+                    continue
+                emit(source, sequence, kind, stamp, offset, "provided-offset",
+                     lane=lane, item=item, state=state, reservation=_feed_id(record.get("reservation_id")))
+            elif source == "effects" and record.get("effect_state") == "delivered":
+                emit(source, sequence, "delivery", record.get("delivered_at"), None, "recorded-offset",
+                     lane=_feed_id(record.get("target")), item=item, reservation=_feed_id(record.get("reservation_id")))
+            elif source == "handoff":
+                action = record.get("event")
+                if action not in ("written", "consumed"):
+                    info["invalid_records"] += 1
+                    continue
+                emit(source, sequence, f"handoff-{action}", stamp, None, "recorded-offset",
+                     lane=lane, handoff=_feed_id(record.get("handoff_id")))
+            elif source == "registry" and record.get("heartbeat_at"):
+                emit(source, sequence, "heartbeat", record["heartbeat_at"], timezone.utc, "writer-utc",
+                     lane=_feed_id(record["_key"]))
+            elif source == "mailbox":
+                metadata = {"message_sha256": record["digest"], "to": record["to"]}
+                emit(source, sequence, "message-sent", stamp, offset, "provided-offset", **metadata)
+                if record["archived"]:
+                    emit(source, sequence, "message-archived", None, None, "unknown", **metadata)
+            info["records"] += 1
+        if info["status"] == "present":
+            info["status"] = "partial" if info["invalid_records"] else ("present" if records else "empty")
+
+    source_order = {source: index for index, source in enumerate(_FEED_SOURCES)}
+
+    def order(event: dict[str, Any]) -> tuple[int, datetime, int, int, str]:
+        at = event["at"]
+        tier = 2 if at is None else (1 if event["time_basis"] == "unanchored-local" else 0)
+        stamp = datetime.fromisoformat(at.removesuffix("Z")) if tier == 0 else datetime.min
+        return tier, stamp, source_order[event["source"]], event["sequence"], event["kind"]
+
+    return {
+        "schema": "hpp.feed-map/v1", "view": "feed", "local_offset": local_offset,
+        "sources": sources, "events": sorted(events, key=order),
+        "limitations": [
+            "UTC timestamps sort first. Unanchored local and untimed records follow in source order.",
+            "A supplied offset applies to timezone-free board and mailbox stamps only.",
+            "Archive presence is evidence of archiving; reading and its time are not recorded.",
+            "The lane registry retains only the latest heartbeat per lane.",
+            "The mailbox uses the default directory unless one is supplied explicitly.",
+            "Source fingerprints identify the bytes read; they are not a cross-source transaction or an attestation.",
+        ],
+    }

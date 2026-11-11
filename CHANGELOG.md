@@ -7,6 +7,35 @@ All relevant changes to the harness are recorded here. The format follows
 [SemVer](https://semver.org/). The product version describes the harness contract; each module
 keeps its own version in `plugin.json` and in `marketplace.json`.
 
+## [2.12.0] — 2026-11-11
+
+### Added
+
+- `hpp map feed --target .` projects lane events, sent and archived messages, handoffs,
+  deliveries and the latest heartbeat into a deterministic timeline. Each source reports
+  availability and SHA-256. Missing timestamps and timezone offsets remain explicit.
+- `hpp atlas --html --target .` renders the CLI projections in a self-contained file,
+  with reproduction commands, projection hashes and optional input coverage.
+- Lane Dashboard adds the activity feed and read-only summaries of capabilities, the
+  operational loop, evidence and agent roles. Standalone installations report when the
+  HPP core is unavailable.
+
+### Changed
+
+- `hpp init` reports different next steps for new, existing and already initialized projects.
+  Hook wiring suggestions identify shared events in project-local settings and preserve
+  existing instructions and configuration. Inline Codex TOML settings are flagged for manual review.
+- The live Scorecard badge reads the published JSON score through a separate cache key.
+  Workflow actions move to setup-python 7.1.0 and upload-sarif 4.39.3, pinned by commit SHA.
+- lane-kit moves to 1.9.0 for the new views. The other modules receive patch versions
+  because their installation references change with kit-forge 1.5.5.
+
+### Fixed
+
+- Handoff validation rejects sensitive input without repeating its value in rejection messages.
+- The module installer detects Windows junctions on Python 3.10 before copying kit files.
+- Dashboard self-tests verify process timeout and output limits independently of startup speed.
+
 ## [2.11.4] — 2026-10-30
 
 ### Fixed
@@ -2020,6 +2049,7 @@ publishing.
 [2.6.5]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.5
 [2.6.6]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.6
 [2.6.7]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.7
+[2.12.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.12.0
 [2.11.4]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.11.4
 [2.11.3]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.11.3
 [2.11.2]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.11.2
