@@ -7,6 +7,28 @@ All relevant changes to the harness are recorded here. The format follows
 [SemVer](https://semver.org/). The product version describes the harness contract; each module
 keeps its own version in `plugin.json` and in `marketplace.json`.
 
+## [2.13.0] — 2026-11-11
+
+### Added
+
+- `hpp inventory` reads a committed file universe with stack/test/CI signals, documentation,
+  agent configuration counts, private author counts and bounded history hotspots. Commands are
+  candidates, never executed; secret content, links and submodules are excluded explicitly.
+- `hpp codegraph build|import|status|show|compare`: conservative Python AST relationships,
+  lexical JavaScript/TypeScript imports and a normalized `hpp.codegraph/v1` external indexer
+  contract. Explicit indexer execution has time/output bounds and distinct instrument failures.
+- Explicit commit-keyed caches, dirty/stale measurements, `hpp lanes propose`, dependency
+  coupling warnings in WorkGraph and lane maps, and optional attestation reverse-import impact.
+- Project inventory/code atlas views with freshness, coverage and terminal reproduction;
+  status suggests the next project journey command from the profile and measured inputs.
+
+### Changed
+
+- Dev Squad 1.3.0 routes existing-project discovery to its shipped `pp-discovery` and `pp-xray`
+  skills when the optional task tree is absent, starting with inventory instead of invented tasks.
+- Lane Kit 1.10.0 can reference a hashed lane proposal in a wave request. Territory approval
+  remains explicit; proposals never apply configuration or authorize parallel dispatch.
+
 ## [2.12.1] — 2026-11-11
 
 ### Fixed
@@ -2071,6 +2093,7 @@ publishing.
 [2.6.5]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.5
 [2.6.6]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.6
 [2.6.7]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.7
+[2.13.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.13.0
 [2.12.1]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.12.1
 [2.12.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.12.0
 [2.11.4]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.11.4

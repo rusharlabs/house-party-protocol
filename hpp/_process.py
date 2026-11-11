@@ -242,13 +242,35 @@ def _kill_tree(process: subprocess.Popen) -> None:
         pass
 
 
-def _pump(stream: Any, sink: list[bytes]) -> None:
+class _OutputBudget:
+    def __init__(self, maximum: int):
+        self.remaining = maximum
+        self.lock = threading.Lock()
+        self.exceeded = threading.Event()
+
+    def append(self, sink: list[bytes], block: bytes) -> None:
+        with self.lock:
+            keep = min(len(block), self.remaining)
+            if keep:
+                sink.append(block[:keep])
+                self.remaining -= keep
+            if keep < len(block):
+                self.exceeded.set()
+
+
+def _pump(stream: Any, sink: list[bytes], budget: Optional[_OutputBudget] = None) -> None:
     # Why: `read(n)` on a buffered pipe waits for n bytes or EOF, and a descendant holding the pipe
     # means no EOF: output the command already wrote would never be handed back. `read1` returns
     # what is available.
     try:
         for block in iter(lambda: stream.read1(65536), b""):
-            sink.append(block)
+            if budget is None:
+                sink.append(block)
+            else:
+                budget.append(sink, block)
+                # Keep draining without retaining bytes until the supervisor stops the tree.
+                # Closing here can make the parent exit on BrokenPipe before its children
+                # are discovered (especially on Windows), defeating the output-limit kill.
     except (OSError, ValueError):
         pass
     finally:
@@ -268,14 +290,30 @@ def _feed(stream: Any, data: bytes) -> None:
         pass
 
 
+def _stop_for_output(process: subprocess.Popen) -> None:
+    _kill_tree(process)
+    # POSIX kill only sends the signal; explicitly reap before the Popen is released.
+    try:
+        process.wait(timeout=_KILL_WAIT)
+    except subprocess.TimeoutExpired:
+        pass
+
+
 def run_bounded(command: list[str], *, timeout: float, cwd: Optional[str] = None,
-                stdin: Optional[bytes] = None) -> tuple[str, Optional[int], bytes, bytes]:
-    """Return (state, exit_code, stdout, stderr); state is exited, timeout or could-not-start.
+                stdin: Optional[bytes] = None,
+                max_output_bytes: Optional[int] = None) -> tuple[str, Optional[int], bytes, bytes]:
+    """Return (state, exit_code, stdout, stderr), including timeout/output-limit/start failures.
 
     The command runs in its own process group. On timeout the whole tree is stopped. Once the
     command itself has exited, its output is complete: a descendant still holding the pipes is
     given a short grace to let the readers drain, then it is no longer waited for.
+    An optional combined stdout/stderr budget stops the tree when exceeded; readers never
+    retain more than that budget. Omitting it preserves the existing output contract.
     """
+    if max_output_bytes is not None and (isinstance(max_output_bytes, bool)
+            or not isinstance(max_output_bytes, int) or max_output_bytes < 0):
+        raise ValueError("max_output_bytes must be a non-negative integer")
+    budget = _OutputBudget(max_output_bytes) if max_output_bytes is not None else None
     group = ({"creationflags": subprocess.CREATE_NEW_PROCESS_GROUP} if os.name == "nt"
              else {"start_new_session": True})
     try:
@@ -286,15 +324,26 @@ def run_bounded(command: list[str], *, timeout: float, cwd: Optional[str] = None
         return "could-not-start", None, b"", b""
     out: list[bytes] = []
     err: list[bytes] = []
-    workers = [threading.Thread(target=_pump, args=(process.stdout, out), daemon=True),
-               threading.Thread(target=_pump, args=(process.stderr, err), daemon=True)]
+    workers = [threading.Thread(target=_pump, args=(process.stdout, out, budget), daemon=True),
+               threading.Thread(target=_pump, args=(process.stderr, err, budget), daemon=True)]
     if stdin is not None:
         workers.append(threading.Thread(target=_feed, args=(process.stdin, stdin), daemon=True))
     for worker in workers:
         worker.start()
     try:
-        process.wait(timeout=timeout)
-        state, exit_code = "exited", process.returncode
+        if budget is None:
+            process.wait(timeout=timeout)
+        else:
+            deadline = time.monotonic() + timeout
+            while process.poll() is None and not budget.exceeded.is_set():
+                remaining = deadline - time.monotonic()
+                if remaining <= 0:
+                    raise subprocess.TimeoutExpired(command, timeout)
+                budget.exceeded.wait(min(0.05, remaining))
+            if budget.exceeded.is_set():
+                _stop_for_output(process)
+        state = "output-limit" if budget is not None and budget.exceeded.is_set() else "exited"
+        exit_code = None if state == "output-limit" else process.returncode
     except subprocess.TimeoutExpired:
         _kill_tree(process)
         try:
@@ -305,6 +354,9 @@ def run_bounded(command: list[str], *, timeout: float, cwd: Optional[str] = None
     deadline = time.monotonic() + _DRAIN_GRACE
     for worker in workers:
         worker.join(timeout=max(0.0, deadline - time.monotonic()))
+    if budget is not None and budget.exceeded.is_set() and state != "output-limit":
+        _stop_for_output(process)
+        state, exit_code = "output-limit", None
     # Why (2026-09-25, 77 ResourceWarnings under -W error): the pipes were never closed, so every
     # command leaked two descriptors. A stream is closed once the thread that uses it has finished;
     # one still blocked (a descendant holding the pipe) is left alone, because closing a file another

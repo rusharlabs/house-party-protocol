@@ -73,7 +73,7 @@
       <h1>Roadmap</h1>
     </div>
   </header>
-  <nav aria-label="Capítulos"><div class="wrap"><a href="#onde-os-mapas-estão-na-211">Onde os mapas estão na 2.11</a><a href="#212-ver-o-estado">2.12: ver o estado</a><a href="#213-um-grafo-de-código-do-seu-projeto">2.13: um grafo de código do seu projeto</a><a href="#depois-da-213">Depois da 2.13</a><a href="#o-que-o-projeto-não-vai-fazer">O que o projeto não vai fazer</a><a href="#como-participar">Como participar</a></div></nav>
+  <nav aria-label="Capítulos"><div class="wrap"><a href="#onde-os-mapas-estão-na-211">Onde os mapas estão na 2.11</a><a href="#212-ver-o-estado">2.12: ver o estado</a><a href="#213-inspecionar-o-projeto-antes-do-trabalho-paralelo">2.13: inspecionar o projeto antes do trabalho paralelo</a><a href="#depois-da-213">Depois da 2.13</a><a href="#o-que-o-projeto-não-vai-fazer">O que o projeto não vai fazer</a><a href="#como-participar">Como participar</a></div></nav>
   <main>
 
     <section><div class="wrap">
@@ -122,16 +122,17 @@ arquivos adicionais ficam no atlas offline.</li>
 </ol>
     </div></section>
 
-    <section id="213-um-grafo-de-código-do-seu-projeto"><div class="wrap">
+    <section id="213-inspecionar-o-projeto-antes-do-trabalho-paralelo"><div class="wrap">
       <p class="eyebrow">03</p>
-      <h2>2.13: um grafo de código do seu projeto</h2>
-<p>Uma base construída sobre a biblioteca padrão do Python — módulos, imports, definições e chamadas
-lidos com <code>ast</code>; para outras linguagens, só um grafo de imports, declarado como tal — mais um
-contrato, <code>hpp.codegraph/v1</code>, para um indexador externo que você declara. O HPP normalizaria e
-mediria essa entrada; não dependeria dela. O grafo é construído sob demanda, guardado pelo hash do
-commit e reportado como <code>stale</code> quando está velho, sem watcher. Ele alimentaria o território de
-lane por dependência, as checagens do WorkGraph, o raio de impacto de uma attestation e a view de
-código do atlas.</p>
+      <h2>2.13: inspecionar o projeto antes do trabalho paralelo</h2>
+<p><code>hpp inventory</code> começa pelo universo versionado e pelas lacunas explícitas. <code>hpp codegraph build</code>
+acrescenta relações AST Python conservadoras e imports lexicais JavaScript/TypeScript, com
+cobertura e referências não resolvidas. Um indexador declarado usa <code>hpp.codegraph/v1</code> e continua
+opcional. Construa em stdout ou grave explicitamente o cache por commit, com entradas stale indicadas.</p>
+<p>Medições fresh alimentam <code>hpp lanes propose</code>, avisos de acoplamento no WorkGraph e nos mapas de
+lanes, impacto opcional na atestação, visões do atlas e o próximo comando sugerido pelo status.
+Propostas exigem aprovação antes de aplicar territórios. Consulte o <a href="PROJECT-INVENTORY.pt-BR.html">guia de inventário do projeto</a>
+para comandos, privacidade e limites do indexador externo.</p>
     </div></section>
 
     <section id="depois-da-213"><div class="wrap">
@@ -151,11 +152,11 @@ cada uma e as exceções delimitadas para módulos; onde este resumo e o manifes
 manifesto.</p>
 <ul>
 <li><strong>Sem daemon, sem servidor, sem scheduler.</strong> Uma checagem que não rodou não foi rodada. O atlas
-planejado acima abre como arquivo por esse motivo.</li>
+descrito acima abre como arquivo por esse motivo.</li>
 <li><strong>Sem chamada de modelo.</strong> O harness roteia o trabalho para um tier e um id de provedor que você
 declarou, e não guarda credencial.</li>
 <li><strong>Sem banco de grafos.</strong> Todo mapa é uma projeção de arquivos que você fornece; o grafo de código
-planejado para a 2.13 é construído sob demanda, indexado pelo hash do commit e reportado como
+introduzido na 2.13 é construído sob demanda, indexado pelo hash do commit e reportado como
 <code>stale</code> quando está velho.</li>
 <li><strong>Sem escrita silenciosa.</strong> Os instaladores planejam primeiro e só escrevem num segundo passo
 explícito; o wiring de settings e hooks é impresso para uma pessoa colar.</li>

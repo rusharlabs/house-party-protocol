@@ -73,7 +73,7 @@
       <h1>Roadmap</h1>
     </div>
   </header>
-  <nav aria-label="Chapters"><div class="wrap"><a href="#where-the-maps-are-on-211">Where the maps are on 2.11</a><a href="#212-see-the-state">2.12: see the state</a><a href="#213-a-code-graph-of-your-project">2.13: a code graph of your project</a><a href="#after-213">After 2.13</a><a href="#what-the-project-will-not-do">What the project will not do</a><a href="#how-to-take-part">How to take part</a></div></nav>
+  <nav aria-label="Chapters"><div class="wrap"><a href="#where-the-maps-are-on-211">Where the maps are on 2.11</a><a href="#212-see-the-state">2.12: see the state</a><a href="#213-inspect-the-project-before-parallel-work">2.13: inspect the project before parallel work</a><a href="#after-213">After 2.13</a><a href="#what-the-project-will-not-do">What the project will not do</a><a href="#how-to-take-part">How to take part</a></div></nav>
   <main>
 
     <section><div class="wrap">
@@ -122,15 +122,17 @@ require additional input files are available in the offline atlas.</li>
 </ol>
     </div></section>
 
-    <section id="213-a-code-graph-of-your-project"><div class="wrap">
+    <section id="213-inspect-the-project-before-parallel-work"><div class="wrap">
       <p class="eyebrow">03</p>
-      <h2>2.13: a code graph of your project</h2>
-<p>A base built on the Python standard library — modules, imports, definitions and calls read with
-<code>ast</code>; for other languages an import graph only, declared as such — plus a contract,
-<code>hpp.codegraph/v1</code>, for an external indexer you declare. HPP would normalise and measure that input;
-it would not depend on it. The graph is built on demand, stored by commit hash and reported as
-<code>stale</code> when it is old, with no watcher. It would feed lane territory by dependency, the WorkGraph
-checks, the blast radius of an attestation and the atlas's code view.</p>
+      <h2>2.13: inspect the project before parallel work</h2>
+<p><code>hpp inventory</code> starts with the committed file universe and explicit gaps. <code>hpp codegraph build</code>
+adds conservative Python AST relations and lexical JavaScript/TypeScript imports, with coverage
+and unresolved references reported. A declared indexer uses the <code>hpp.codegraph/v1</code> contract;
+it remains optional. Build to stdout or explicitly cache by commit, with stale inputs labelled.</p>
+<p>Fresh measurements feed <code>hpp lanes propose</code>, WorkGraph and lane-map coupling warnings, optional
+attestation blast radius, project atlas views and the next command shown by status. Proposals
+need approval before applying territories. See the <a href="PROJECT-INVENTORY.html">project inventory guide</a>
+for commands, privacy boundaries and external-indexer limitations.</p>
     </div></section>
 
     <section id="after-213"><div class="wrap">
@@ -148,11 +150,11 @@ are decisions, not gaps, and nothing on this roadmap changes them. The manifesto
 for each and the bounded exceptions for modules; where this summary and the manifesto differ, the
 manifesto binds.</p>
 <ul>
-<li><strong>No daemon, no server, no scheduler.</strong> A check that did not run was not run. The atlas planned
+<li><strong>No daemon, no server, no scheduler.</strong> A check that did not run was not run. The atlas described
 above opens as a file for this reason.</li>
 <li><strong>No model calls.</strong> The harness routes work to a tier and a provider id you declared, and holds
 no credential.</li>
-<li><strong>No graph database.</strong> Every map is a projection of files you supply; the code graph planned for
+<li><strong>No graph database.</strong> Every map is a projection of files you supply; the code graph introduced in
 2.13 is built on demand, keyed by commit hash and reported <code>stale</code> when it is old.</li>
 <li><strong>No silent writes.</strong> Installers plan first and write only on an explicit second step; the
 wiring of settings and hooks is printed for a person to paste.</li>

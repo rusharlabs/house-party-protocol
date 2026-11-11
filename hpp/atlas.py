@@ -9,9 +9,12 @@ from html import escape
 from pathlib import Path
 from typing import Any, Iterable
 
+from hpp._repository import RepositoryError, artifact_status, snapshot
 from hpp.attest import _repo_root as attestation_repo_root, verify_attestation
 from hpp.deliberation import verify_record
 from hpp.graph import build_graph
+from hpp.inventory import build_inventory
+from hpp.journey import cached_document, read_document
 from hpp.manifest import find_manifest, validate_manifest
 from hpp.maps import build_agent_map, build_context_map, build_feed_map, build_lane_map, build_monitor_map
 from hpp.workgraph import compile_workgraph, workgraph_graph
@@ -137,6 +140,14 @@ def _topology(key: str, graph: dict[str, Any]) -> str:
 
 
 def _view_content(view: View, data: dict[str, Any]) -> str:
+    if view.key == "project":
+        return _table(("Field", "Value"), sorted(data.items()))
+    if view.key == "project-code":
+        graph = data["graph"]
+        metadata = _table(("Field", "Value"), ((key, value) for key, value in data.items() if key != "graph"))
+        projection = {"nodes": [{**node, "label": node.get("label", node["id"])} for node in graph["nodes"]],
+                      "edges": graph["edges"]}
+        return metadata + _topology(view.key, projection)
     if view.key == "feed":
         events = _table(
             ("Time", "Time basis", "Activity", "Source", "Lane", "Item", "Recipient"),
@@ -190,6 +201,7 @@ def render_atlas(
     agent_events: str | None = None, monitors_file: str | None = None, now: int | None = None,
     context_file: str | None = None, budget: int | None = None, mailbox: str | None = None,
     local_offset: str | None = None, deliberation: str | None = None, attestation: str | None = None,
+    inventory_file: str | None = None, codegraph_file: str | None = None,
 ) -> str:
     """Read the selected project sources and return one deterministic, inert HTML document."""
     target = target.resolve()
@@ -215,6 +227,53 @@ def render_atlas(
             ("capability", "Capabilities"), ("operational", "Operational loop"), ("evidence", "Evidence chain"),
         )
     ]
+
+    # Non-Git targets retain the existing manifest atlas. A project measurement is added only
+    # when Git can identify its committed universe, or the caller explicitly supplies inputs.
+    try:
+        snapshot(target)
+        has_repository = True
+    except RepositoryError:
+        has_repository = False
+    if has_repository or inventory_file is not None or codegraph_file is not None:
+        inventory_sources: tuple[tuple[str, str], ...] = ()
+        if inventory_file is not None:
+            path, label = _project_path(target, inventory_file)
+            inventory = read_document(path)
+            measured, digest = _json_source(path, dict)
+            if measured != inventory:
+                raise ValueError("inventory changed while generating the atlas")
+            inventory_sources = ((label, digest),)
+            inventory_command = ("inventory", "--inspect", "--inventory", label, "--target", ".")
+        else:
+            inventory = build_inventory(target)
+            inventory_command = ("inventory", "--inspect", "--target", ".")
+        if inventory.get("schema") != "hpp.inventory/v1":
+            raise ValueError("atlas --inventory requires hpp.inventory/v1")
+        views.append(View("project", "Project inventory", inventory_command,
+                          {"freshness": artifact_status(target, inventory), "inventory": inventory}, inventory_sources))
+        graph_sources: tuple[tuple[str, str], ...] = ()
+        if codegraph_file is not None:
+            path, label = _project_path(target, codegraph_file)
+            graph = read_document(path)
+            measured, digest = _json_source(path, dict)
+            if measured != graph:
+                raise ValueError("code graph changed while generating the atlas")
+            graph_sources = ((label, digest),)
+            graph_command = ("codegraph", "show", "--target", ".", "--codegraph", label)
+        else:
+            graph = cached_document(target, "codegraph")
+            graph_command = ("codegraph", "show", "--target", ".")
+        if graph is None:
+            views.append(View("project-code", "Project code", ("codegraph", "build", "--target", "."), None,
+                              missing="build a code graph; relations are not measured"))
+        else:
+            if graph.get("schema") != "hpp.codegraph/v1":
+                raise ValueError("atlas --codegraph requires hpp.codegraph/v1")
+            views.append(View("project-code", "Project code", graph_command,
+                              {"freshness": artifact_status(target, graph), "coverage": graph.get("coverage"),
+                               "instrument": graph.get("instrument"), "unresolved": graph.get("unresolved"),
+                               "graph": graph}, graph_sources))
 
     events, event_args, event_sources = None, (), ()
     if agent_events is not None:

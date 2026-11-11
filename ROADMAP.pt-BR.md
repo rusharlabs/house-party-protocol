@@ -40,15 +40,17 @@ Mermaid para os mapas e para o WorkGraph, o primeiro item planejado para esta et
    de capacidades, ciclo operacional, evidência e papéis dos agentes. As visões que exigem
    arquivos adicionais ficam no atlas offline.
 
-## 2.13: um grafo de código do seu projeto
+## 2.13: inspecionar o projeto antes do trabalho paralelo
 
-Uma base construída sobre a biblioteca padrão do Python — módulos, imports, definições e chamadas
-lidos com `ast`; para outras linguagens, só um grafo de imports, declarado como tal — mais um
-contrato, `hpp.codegraph/v1`, para um indexador externo que você declara. O HPP normalizaria e
-mediria essa entrada; não dependeria dela. O grafo é construído sob demanda, guardado pelo hash do
-commit e reportado como `stale` quando está velho, sem watcher. Ele alimentaria o território de
-lane por dependência, as checagens do WorkGraph, o raio de impacto de uma attestation e a view de
-código do atlas.
+`hpp inventory` começa pelo universo versionado e pelas lacunas explícitas. `hpp codegraph build`
+acrescenta relações AST Python conservadoras e imports lexicais JavaScript/TypeScript, com
+cobertura e referências não resolvidas. Um indexador declarado usa `hpp.codegraph/v1` e continua
+opcional. Construa em stdout ou grave explicitamente o cache por commit, com entradas stale indicadas.
+
+Medições fresh alimentam `hpp lanes propose`, avisos de acoplamento no WorkGraph e nos mapas de
+lanes, impacto opcional na atestação, visões do atlas e o próximo comando sugerido pelo status.
+Propostas exigem aprovação antes de aplicar territórios. Consulte o [guia de inventário do projeto](docs/PROJECT-INVENTORY.pt-BR.md)
+para comandos, privacidade e limites do indexador externo.
 
 ## Depois da 2.13
 
@@ -64,11 +66,11 @@ cada uma e as exceções delimitadas para módulos; onde este resumo e o manifes
 manifesto.
 
 - **Sem daemon, sem servidor, sem scheduler.** Uma checagem que não rodou não foi rodada. O atlas
-  planejado acima abre como arquivo por esse motivo.
+  descrito acima abre como arquivo por esse motivo.
 - **Sem chamada de modelo.** O harness roteia o trabalho para um tier e um id de provedor que você
   declarou, e não guarda credencial.
 - **Sem banco de grafos.** Todo mapa é uma projeção de arquivos que você fornece; o grafo de código
-  planejado para a 2.13 é construído sob demanda, indexado pelo hash do commit e reportado como
+  introduzido na 2.13 é construído sob demanda, indexado pelo hash do commit e reportado como
   `stale` quando está velho.
 - **Sem escrita silenciosa.** Os instaladores planejam primeiro e só escrevem num segundo passo
   explícito; o wiring de settings e hooks é impresso para uma pessoa colar.

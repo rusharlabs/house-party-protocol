@@ -66,6 +66,9 @@ def build_lane_map(
     now: int | None = None,
     suspect_after: int = 300,
     dead_after: int = 900,
+    *,
+    codegraph: dict[str, Any] | None = None,
+    target: str | Path | None = None,
 ) -> dict[str, Any]:
     """Project lane ownership, liveness and exclusive path collisions."""
     if not isinstance(lanes, list):
@@ -118,8 +121,14 @@ def build_lane_map(
             if overlaps:
                 collisions.append({"lanes": sorted([left["id"], right["id"]]), "territory": overlaps})
     collisions.sort(key=lambda item: (item["lanes"], item["territory"]))
-    return _sorted_graph("lane", nodes, edges, collisions=collisions,
-                         liveness={key: liveness[key] for key in sorted(liveness)})
+    result = _sorted_graph("lane", nodes, edges, collisions=collisions,
+                           liveness={key: liveness[key] for key in sorted(liveness)})
+    if codegraph is not None:
+        from hpp.territories import territory_coupling
+        result["territory_coupling"] = territory_coupling(
+            target, [{"id": lane["id"], "territory": lane["paths"]} for lane in projected
+                     if lane["exclusive"] and lane["liveness"] != "dead"], codegraph)
+    return result
 
 
 def build_agent_map(manifest: dict[str, Any], events: list[dict[str, Any]] | None = None) -> dict[str, Any]:
