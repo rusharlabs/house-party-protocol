@@ -2,7 +2,7 @@
 
 # SANITIZATION.pt-BR.md
 
-Kit: lane-kit 1.10.0
+Kit: lane-kit 1.10.1
 
 ## Sanitização aplicada
 - 9 padrão(ões) de exclusão de arquivo (ver manifesto interno da build — não distribuído)

@@ -14,7 +14,7 @@ Documents that apply to every kit: [`ARCHITECTURE.md`](ARCHITECTURE.md) · [`ARC
 | [kit-forge](#kit-forge) | 1.5.6 | 0 | 0 | 0 | 1 | 0 | 0 | 0 |
 | [operator-kit](#operator-kit) | 1.8.6 | 13 | 4 | 6 | 10 | 13 | 1 | 17 |
 | [continuity-kit](#continuity-kit) | 1.5.5 | 2 | 0 | 0 | 3 | 0 | 12 | 2 |
-| [lane-kit](#lane-kit) | 1.10.0 | 2 | 1 | 0 | 4 | 0 | 4 | 6 |
+| [lane-kit](#lane-kit) | 1.10.1 | 2 | 1 | 0 | 4 | 0 | 4 | 6 |
 | [health-kit](#health-kit) | 1.4.6 | 2 | 0 | 0 | 1 | 0 | 0 | 3 |
 | [claude-dev-kit](#claude-dev-kit) | 1.3.10 | 8 | 0 | 0 | 1 | 0 | 0 | 2 |
 | [supabase-pack](#supabase-pack) | 1.2.5 | 2 | 0 | 0 | 0 | 0 | 0 | 0 |

@@ -61,13 +61,13 @@ verificada abaixo (`--host codex`).
 
 ## Instalar por cópia
 
-Na distribuição emitida este módulo vive em `multi-session/lane-kit-1.10.0/` (o diretório
+Na distribuição emitida este módulo vive em `multi-session/lane-kit-1.10.1/` (o diretório
 carrega a versão — declare-a uma vez, em `KIT`). O instalador é
 `installers/kit-forge-1.5.6/kit_doctor.py`; rode-o da raiz da distribuição. Ele planeja
 primeiro e só escreve numa segunda invocação explícita com `--apply`:
 
 ```bash
-KIT=multi-session/lane-kit-1.10.0
+KIT=multi-session/lane-kit-1.10.1
 cp -r "$KIT" ../your-repo/lane-kit            # the copy itself (kit_doctor does not copy on claude-code)
 python installers/kit-forge-1.5.6/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo
 python installers/kit-forge-1.5.6/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo --apply

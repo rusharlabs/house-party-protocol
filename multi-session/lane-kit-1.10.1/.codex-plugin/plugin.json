@@ -1,6 +1,6 @@
 {
   "name": "lane-kit",
-  "version": "1.10.0",
+  "version": "1.10.1",
   "description": "Lane Kit on Codex: 2 skills (house-session, lane-coordinator). This plugin registers skills only; it does not register the module's commands and hooks.",
   "author": {
     "name": "Max Parisi"
