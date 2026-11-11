@@ -217,9 +217,26 @@ def test_line_endings_follow_effective_git_configuration(repo):
 
 def test_nfc_collisions_are_input_failures_instead_of_silent_deduplication(repo):
     blob = git(repo, "rev-parse", "HEAD:app.py")
-    for name in ("caf\u0065\u0301.py", "caf\u00e9.py"):
-        git(repo, "update-index", "--add", "--cacheinfo", "100644," + blob + "," + name)
-    git(repo, "commit", "-qm", "colliding paths")
+    old_head = git(repo, "rev-parse", "HEAD")
+    names = (b"app.py", "caf\u0065\u0301.py".encode("utf-8"), "caf\u00e9.py".encode("utf-8"))
+
+    def raw_git(*args, data=None):
+        return subprocess.run(
+            ["git", "--no-optional-locks", "-c", "core.fsmonitor=false", "-c", "core.hooksPath=",
+             "-c", "commit.gpgSign=false", "-C", str(repo), *args],
+            input=data, capture_output=True, check=True,
+        ).stdout
+
+    # Build raw tree entries, never filesystem/index names that macOS may precompose.
+    tree_input = b"".join(b"100644 blob " + blob.encode("ascii") + b"\t" + name + b"\0" for name in names)
+    tree = raw_git("mktree", "-z", data=tree_input).decode("ascii").strip()
+    message = repo.parent / "nfc-collision-commit-message.txt"
+    message.write_bytes(b"colliding paths\n")
+    commit = raw_git("commit-tree", tree, "-p", old_head, "-F", str(message)).decode("ascii").strip()
+    raw_git("update-ref", "HEAD", commit, old_head)
+    raw_paths = raw_git("ls-tree", "--name-only", "-z", "HEAD").split(b"\0")
+    assert set(raw_paths) == {*names, b""}
+    assert names[1] != names[2]  # Positive control: both distinct UTF-8 names really exist.
     with pytest.raises(RepositoryError, match="collide"):
         snapshot(repo)
 
