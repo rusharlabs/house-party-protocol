@@ -125,7 +125,7 @@ def validate_policy(document: Any) -> dict[str, Any]:
         try:
             # Why: the built-in rules match case-insensitively; a user rule follows the same reading.
             expression = re.compile(pattern, re.I)
-        except re.error as exc:
+        except (re.error, OverflowError, RecursionError) as exc:
             raise PolicyError(f"rule {rule_id!r}: invalid pattern: {exc}") from exc
         reason = rule["reason"]
         if not isinstance(reason, str) or not reason.strip():

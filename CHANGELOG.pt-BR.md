@@ -7,6 +7,28 @@ Todas as mudanças relevantes do harness são registradas aqui. O formato segue
 [SemVer](https://semver.org/lang/pt-BR/). A versão do produto descreve o contrato do harness;
 cada módulo mantém sua própria versão no `plugin.json` e no `marketplace.json`.
 
+## [2.12.1] — 2026-11-11
+
+### Corrigido
+
+- A detecção da instalação distingue projeto HPP inicializado de instalação registrada para o
+  módulo e destino exatos. Os relatórios expõem o escopo por módulo e o sinal de registro;
+  um perfil de projeto existente, sozinho, deixa de afirmar que o módulo está sendo reinstalado.
+- Expressões inválidas de política com repetições fora do limite ou aninhamento excessivo são
+  recusadas como erros de política, sem escapar como exceções internas.
+
+### Adicionado
+
+- Fuzzing de política guiado por cobertura com ClusterFuzzLite e Atheris, com execução do corpus,
+  validação de JSON adversarial e verificação de que políticas do projeto não suavizam vereditos nativos.
+  As ferramentas de fuzzing rodam só na CI ou por chamada explícita; o pacote instalado não ganha dependência.
+
+### Alterado
+
+- A conta revisora entra no CODEOWNERS para que a revisão obrigatória de responsável cubra
+  contribuições da conta mantenedora. Registros de instalação e configuração existente são preservados.
+- Os patches de módulo acompanham kit-forge 1.5.6 e suas referências de instalação atualizadas.
+
 ## [2.12.0] — 2026-11-11
 
 ### Adicionado
@@ -2093,6 +2115,7 @@ publicar.
 [2.6.5]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.5
 [2.6.6]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.6
 [2.6.7]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.7
+[2.12.1]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.12.1
 [2.12.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.12.0
 [2.11.4]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.11.4
 [2.11.3]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.11.3

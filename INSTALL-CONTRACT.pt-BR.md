@@ -33,15 +33,21 @@ detect → prereqs → profile → configure → wire-suggest → smoke
 ```
 
 ### 1. `detect` (novo — sempre primeiro, read-only)
-Classifica o projeto-alvo (`--target`, default cwd) em uma de três categorias:
+Classifica a instalação deste módulo no projeto-alvo (`--target`, default cwd),
+com `classification_scope: "module"`, em uma de três categorias:
 
 | Classificação | Sinais |
 |---|---|
 | `greenfield` | sem `.claude/`, sem `settings.json`/`settings.local.json`, git com poucos/nenhum commit, nenhum profile real presente |
-| `in-progress` | `.claude/` existe, `settings*.json` tem hooks/statusLine ocupados, profile real (`operator-profile.yaml`/`rollup.yaml`/etc.) presente, histórico git não-trivial |
+| `in-progress` | `.claude/` existe, `settings*.json` tem hooks/statusLine ocupados, profile real (`operator-profile.yaml`/`rollup.yaml`/etc.) presente, histórico git não-trivial, `AGENTS.md`, `.hpp/events.jsonl` ou `.hpp/profile.json` válido (`hpp.init/v1`); este par módulo+destino não está registrado |
 | `re-run` | este `kit_dir` já tem entrada em `~/.claude-kits/registry.json` apontando para este `--target` |
 
-Saída: `{"stage": "detect", "classification": "...", "signals": {...}, "existing_config": [lista de itens já configurados que serão preservados]}`. Nunca escreve nada.
+Saída: `{"stage": "detect", "classification": "...", "classification_scope": "module", "signals": {...}, "existing_config": [lista de itens já configurados que serão preservados]}`. Nunca escreve nada.
+
+`signals.registered_install` informa se este par exato módulo+destino está registrado.
+Um perfil válido do init sozinho significa `in-progress` aqui, enquanto o `hpp init` o
+chama de `re-run` no escopo do projeto. O plano legível explicita essa diferença. O registro
+documenta uma instalação, sem atestar sua saúde atual; não substitui smoke nem verificação.
 
 ### 2. `prereqs` (existente — python/PyYAML/dependências declaradas em `requires:`)
 

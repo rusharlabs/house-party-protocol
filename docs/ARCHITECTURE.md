@@ -202,16 +202,16 @@ One row per module, rendered from `hosts` and `components` in the manifest by `h
 
 | module | Claude Code | Codex CLI |
 |---|---|---|
-| `operator-kit` 1.8.5 | `native` · plugin + hooks after the wiring is pasted | `explicit-command` · plugin (skills only) + verified copy |
-| `kit-forge` 1.5.5 | `explicit-command` · plugin | `explicit-command` · verified copy |
-| `lane-kit` 1.9.0 | `native` · plugin + hooks after the wiring is pasted | `explicit-command` · plugin (skills only) + verified copy |
-| `continuity-kit` 1.5.4 | `native` · plugin + hooks after the wiring is pasted | `explicit-command` · plugin (skills only) + verified copy |
-| `health-kit` 1.4.5 | `explicit-command` · plugin | `explicit-command` · plugin (skills only) + verified copy |
-| `claude-dev-kit` 1.3.9 | `native` · plugin | `unsupported` · — |
-| `supabase-pack` 1.2.4 | `explicit-command` · plugin | `explicit-command` · plugin (skills only) + verified copy |
-| `agent-framework-wizard` 1.2.6 | `explicit-command` · plugin | `explicit-command` · verified copy |
-| `dev-squad-kit` 1.2.3 | `native` · plugin | `explicit-command` · plugin (skills only) + verified copy |
-| `gotcha-memory` 1.1.5 | `native` · plugin + hooks after the wiring is pasted | `explicit-command` · plugin (skills only) + verified copy |
+| `operator-kit` 1.8.6 | `native` · plugin + hooks after the wiring is pasted | `explicit-command` · plugin (skills only) + verified copy |
+| `kit-forge` 1.5.6 | `explicit-command` · plugin | `explicit-command` · verified copy |
+| `lane-kit` 1.9.1 | `native` · plugin + hooks after the wiring is pasted | `explicit-command` · plugin (skills only) + verified copy |
+| `continuity-kit` 1.5.5 | `native` · plugin + hooks after the wiring is pasted | `explicit-command` · plugin (skills only) + verified copy |
+| `health-kit` 1.4.6 | `explicit-command` · plugin | `explicit-command` · plugin (skills only) + verified copy |
+| `claude-dev-kit` 1.3.10 | `native` · plugin | `unsupported` · — |
+| `supabase-pack` 1.2.5 | `explicit-command` · plugin | `explicit-command` · plugin (skills only) + verified copy |
+| `agent-framework-wizard` 1.2.7 | `explicit-command` · plugin | `explicit-command` · verified copy |
+| `dev-squad-kit` 1.2.4 | `native` · plugin | `explicit-command` · plugin (skills only) + verified copy |
+| `gotcha-memory` 1.1.6 | `native` · plugin + hooks after the wiring is pasted | `explicit-command` · plugin (skills only) + verified copy |
 
 On Claude Code every module is a plugin of the marketplace, and a module that declares hooks arms
 them once the wiring is pasted. On Codex CLI the plugin channel is the product's own marketplace,

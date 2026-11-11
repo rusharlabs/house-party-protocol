@@ -209,16 +209,16 @@ essa renderização.
 
 | módulo | Claude Code | Codex CLI |
 |---|---|---|
-| `operator-kit` 1.8.5 | `native` · plugin + hooks depois de colar o wiring | `explicit-command` · plugin (só skills) + cópia verificada |
-| `kit-forge` 1.5.5 | `explicit-command` · plugin | `explicit-command` · cópia verificada |
-| `lane-kit` 1.9.0 | `native` · plugin + hooks depois de colar o wiring | `explicit-command` · plugin (só skills) + cópia verificada |
-| `continuity-kit` 1.5.4 | `native` · plugin + hooks depois de colar o wiring | `explicit-command` · plugin (só skills) + cópia verificada |
-| `health-kit` 1.4.5 | `explicit-command` · plugin | `explicit-command` · plugin (só skills) + cópia verificada |
-| `claude-dev-kit` 1.3.9 | `native` · plugin | `unsupported` · — |
-| `supabase-pack` 1.2.4 | `explicit-command` · plugin | `explicit-command` · plugin (só skills) + cópia verificada |
-| `agent-framework-wizard` 1.2.6 | `explicit-command` · plugin | `explicit-command` · cópia verificada |
-| `dev-squad-kit` 1.2.3 | `native` · plugin | `explicit-command` · plugin (só skills) + cópia verificada |
-| `gotcha-memory` 1.1.5 | `native` · plugin + hooks depois de colar o wiring | `explicit-command` · plugin (só skills) + cópia verificada |
+| `operator-kit` 1.8.6 | `native` · plugin + hooks depois de colar o wiring | `explicit-command` · plugin (só skills) + cópia verificada |
+| `kit-forge` 1.5.6 | `explicit-command` · plugin | `explicit-command` · cópia verificada |
+| `lane-kit` 1.9.1 | `native` · plugin + hooks depois de colar o wiring | `explicit-command` · plugin (só skills) + cópia verificada |
+| `continuity-kit` 1.5.5 | `native` · plugin + hooks depois de colar o wiring | `explicit-command` · plugin (só skills) + cópia verificada |
+| `health-kit` 1.4.6 | `explicit-command` · plugin | `explicit-command` · plugin (só skills) + cópia verificada |
+| `claude-dev-kit` 1.3.10 | `native` · plugin | `unsupported` · — |
+| `supabase-pack` 1.2.5 | `explicit-command` · plugin | `explicit-command` · plugin (só skills) + cópia verificada |
+| `agent-framework-wizard` 1.2.7 | `explicit-command` · plugin | `explicit-command` · cópia verificada |
+| `dev-squad-kit` 1.2.4 | `native` · plugin | `explicit-command` · plugin (só skills) + cópia verificada |
+| `gotcha-memory` 1.1.6 | `native` · plugin + hooks depois de colar o wiring | `explicit-command` · plugin (só skills) + cópia verificada |
 
 No Claude Code todo módulo é um plugin do marketplace, e um módulo que declara hooks os arma depois
 que o wiring é colado. No Codex CLI o canal de plugin é o marketplace do próprio produto,

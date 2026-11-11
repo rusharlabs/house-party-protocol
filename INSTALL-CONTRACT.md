@@ -27,15 +27,21 @@ detect → prereqs → profile → configure → wire-suggest → smoke
 ```
 
 ### 1. `detect` (new — always first, read-only)
-Classifies the target project (`--target`, default cwd) into one of three categories:
+Classifies installation of this module in the target project (`--target`, default cwd),
+with `classification_scope: "module"`, into one of three categories:
 
 | Classification | Signals |
 |---|---|
 | `greenfield` | no `.claude/`, no `settings.json`/`settings.local.json`, git with few or no commits, no real profile present |
-| `in-progress` | `.claude/` exists, `settings*.json` has hooks/statusLine in use, a real profile (`operator-profile.yaml`/`rollup.yaml`/etc.) present, non-trivial git history |
+| `in-progress` | `.claude/` exists, `settings*.json` has hooks/statusLine in use, a real profile (`operator-profile.yaml`/`rollup.yaml`/etc.) present, non-trivial git history, `AGENTS.md`, `.hpp/events.jsonl`, or valid `.hpp/profile.json` (`hpp.init/v1`); this module+target pair is not registered |
 | `re-run` | this `kit_dir` already has an entry in `~/.claude-kits/registry.json` pointing at this `--target` |
 
-Output: `{"stage": "detect", "classification": "...", "signals": {...}, "existing_config": [list of already-configured items that will be preserved]}`. Never writes anything.
+Output: `{"stage": "detect", "classification": "...", "classification_scope": "module", "signals": {...}, "existing_config": [list of already-configured items that will be preserved]}`. Never writes anything.
+
+`signals.registered_install` reports whether this exact module+target pair is registered.
+A valid init profile alone means `in-progress` here, while `hpp init` calls it `re-run`
+at project scope. The human plan makes that distinction explicit. Registry evidence records
+an installation, not its current health; it does not replace the smoke or verification stages.
 
 ### 2. `prereqs` (existing — python/PyYAML/dependencies declared in `requires:`)
 
