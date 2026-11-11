@@ -187,14 +187,20 @@ def test_line_endings_follow_effective_git_configuration(repo):
     (config_root / ".gitconfig").write_text("[core]\n    autocrlf = true\n", encoding="utf-8")
     env = {key: value for key, value in os.environ.items() if not key.upper().startswith("GIT_")}
     env.update(HOME=str(config_root), USERPROFILE=str(config_root), PYTHONDONTWRITEBYTECODE="1")
-    git(repo, "add", "--renormalize", "app.py", env=env)
-    git(repo, "checkout-index", "--force", "--", "app.py", env=env)
     path = repo / "app.py"
+    path.write_bytes(b"committed = True\n")
+    git(repo, "-c", "core.autocrlf=false", "add", "app.py", env=env)
+    git(repo, "add", "--renormalize", "app.py", env=env)
+    # --force permits replacement, but Git can still reuse an up-to-date LF file.
+    # Remove only this disposable fixture file so checkout must perform conversion.
+    path.unlink()
+    git(repo, "checkout-index", "--force", "--", "app.py", env=env)
     assert path.read_bytes() == b"committed = True\r\n"
-    assert git(repo, "status", "--porcelain", env=env) == ""
     # Force a content comparison so index stat caching cannot make the negative control pass.
     info = path.stat()
-    os.utime(path, (info.st_atime, info.st_mtime + 2))
+    os.utime(path, (info.st_atime, info.st_mtime - 5))
+    assert git(repo, "diff", "--name-only", env=env) == ""
+    assert git(repo, "diff", "--cached", "--name-only", "HEAD", env=env) == ""
     assert git(repo, "-c", "core.autocrlf=false", "diff", "--name-only", env=env) == "app.py"
     from hpp import _repository
     product = Path(_repository.__file__).resolve().parent.parent
