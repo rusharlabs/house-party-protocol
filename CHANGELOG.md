@@ -7,6 +7,15 @@ All relevant changes to the harness are recorded here. The format follows
 [SemVer](https://semver.org/). The product version describes the harness contract; each module
 keeps its own version in `plugin.json` and in `marketplace.json`.
 
+## [2.13.2] — 2026-11-11
+
+### Changed
+
+- Refresh routing guidance for nine declared model IDs, including the native analyst/brief role.
+- Ship three opt-in profile templates: balanced, economy and visual.
+- Update active examples and demo metadata, and re-verify the coordinator's executed examples.
+- Add model-argument and identity regression coverage; Lane Kit advances to 1.10.2.
+
 ## [2.13.1] — 2026-11-11
 
 ### Fixed
@@ -2106,6 +2115,7 @@ publishing.
 [2.6.5]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.5
 [2.6.6]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.6
 [2.6.7]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.7
+[2.13.2]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.13.2
 [2.13.1]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.13.1
 [2.13.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.13.0
 [2.12.1]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.12.1

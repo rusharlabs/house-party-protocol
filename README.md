@@ -76,7 +76,7 @@ command that shows it holding, and its refusals exit non-zero, so a script can u
 
 The Lane Dashboard is the lane board, the state machine every item passes through (shown under
 [Cross-model by construction](#cross-model-by-construction)), as a page:
-`multi-session/lane-kit-1.10.1/scripts/lane_dashboard.py`
+`multi-session/lane-kit-1.10.2/scripts/lane_dashboard.py`
 serves it on `127.0.0.1` and redraws it by itself when the board changes. Every action on the page is a
 terminal command that does the same thing, and its dialog names that command before anything runs.
 
@@ -201,7 +201,7 @@ from another lane **and** another model family,
 <p align="center">
   <img alt="python lane_board.py render: four example items on one board — EXAMPLE-1 MERGED, EXAMPLE-2 VERIFIED and waiting on the human gate, EXAMPLE-3 DEFERRED for want of a checker, EXAMPLE-4 back to BUILDING after NEEDS-FIX — then the verdicts whose lane has not been told" src="assets/terminal/lane-board.svg" width="940">
 </p>
-<p align="center"><sub>The board those rows produce, as <code>multi-session/lane-kit-1.10.1/scripts/lane_board.py</code> prints it: four example items driven through the machine, every event naming the lane that wrote it, the evidence pasted at checkpoint, and — for a verdict — the lane and the model that gave it. Two attempts were refused on the way there, both <code>exit 1</code>: a verdict from the builder's own lane (<em>maker≠checker violated: reviewer (exec-b) is the SAME lane as the builder</em>) and merging a 🔴 item without <code>--human-approved</code>. The last block shows verdicts already decided whose lane has not been told: this fixture has automatic mailbox delivery disabled (<code>mailbox.notify_on_verdict: false</code>) to expose pending effects. Text rendered from the command's real stdout by <code>scripts/render_terminal_svg.py</code>, like the terminal captures above.</sub></p>
+<p align="center"><sub>The board those rows produce, as <code>multi-session/lane-kit-1.10.2/scripts/lane_board.py</code> prints it: four example items driven through the machine, every event naming the lane that wrote it, the evidence pasted at checkpoint, and — for a verdict — the lane and the model that gave it. Two attempts were refused on the way there, both <code>exit 1</code>: a verdict from the builder's own lane (<em>maker≠checker violated: reviewer (exec-b) is the SAME lane as the builder</em>) and merging a 🔴 item without <code>--human-approved</code>. The last block shows verdicts already decided whose lane has not been told: this fixture has automatic mailbox delivery disabled (<code>mailbox.notify_on_verdict: false</code>) to expose pending effects. Text rendered from the command's real stdout by <code>scripts/render_terminal_svg.py</code>, like the terminal captures above.</sub></p>
 
 ## Quickstart
 
@@ -217,7 +217,7 @@ third-party packages. CI exercises Python 3.10 to 3.13 on Linux, macOS and Windo
 (`.github/workflows/ci.yml`); older interpreters are not promised because nothing measures them.
 
 ```bash
-pip install git+https://github.com/rusharlabs/house-party-protocol@v2.13.1
+pip install git+https://github.com/rusharlabs/house-party-protocol@v2.13.2
 hpp doctor
 hpp init --target ../your-repo
 ```
@@ -382,7 +382,7 @@ returns the same answer as JSON. Neither asks a model to remember anything.
 | module | version | one line |
 |---|---|---|
 | `operator-kit` | 1.8.6 | done gate with real exit codes, command policy in `audit` or `enforce`, governed loops with charter and stop conditions, standalone `pass@k` / `pass^k` runner, preflight, two checker agents shipped without `Write` or `Edit` |
-| `lane-kit` | 1.10.1 | a lane board for concurrent sessions: claim, territory, liveness, maker ≠ checker, and a router that picks a checker from a different provider |
+| `lane-kit` | 1.10.2 | a lane board for concurrent sessions: claim, territory, liveness, maker ≠ checker, and a router that picks a checker from a different provider |
 | `continuity-kit` | 1.5.5 | handoff written before a stop or compaction, re-derivation commands instead of remembered state, guards against replaying finished steps |
 | `health-kit` | 1.4.6 | config-driven service probes that write a cache a statusline reads without touching the network; service health kept apart from data health |
 | `gotcha-memory` | 1.1.6 | records failed commands by error family, detects recurrence, injects the lesson before the next run; warn-only, secrets redacted by shape |

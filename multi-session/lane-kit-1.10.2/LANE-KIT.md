@@ -64,7 +64,7 @@ work and — since this version — every verdict. The contract, enforced in `la
 
 ```
 ## To: exec-a
-## From: rev-a (reviewer, gpt-5.6-sol)
+## From: rev-a (reviewer, gpt-6.1-sol)
 ## When: 2026-09-27T14:53:43
 ## Affected item(s): ITEM-1
 ```

@@ -61,13 +61,13 @@ verificada abaixo (`--host codex`).
 
 ## Instalar por cópia
 
-Na distribuição emitida este módulo vive em `multi-session/lane-kit-1.10.1/` (o diretório
+Na distribuição emitida este módulo vive em `multi-session/lane-kit-1.10.2/` (o diretório
 carrega a versão — declare-a uma vez, em `KIT`). O instalador é
 `installers/kit-forge-1.5.6/kit_doctor.py`; rode-o da raiz da distribuição. Ele planeja
 primeiro e só escreve numa segunda invocação explícita com `--apply`:
 
 ```bash
-KIT=multi-session/lane-kit-1.10.1
+KIT=multi-session/lane-kit-1.10.2
 cp -r "$KIT" ../your-repo/lane-kit            # the copy itself (kit_doctor does not copy on claude-code)
 python installers/kit-forge-1.5.6/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo
 python installers/kit-forge-1.5.6/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo --apply
@@ -366,18 +366,72 @@ o processo principal do agente ainda lá.
 Declare esse modelo em `.claude/lanes/dashboard.json`: ele é passado à CLI com a flag de modelo dela e
 registrado no board. Uma CLI de um fornecedor só, sem modelo declarado, é registrada com a família do
 fornecedor (`gpt (Codex default model)`); o Cursor Agent serve vários fornecedores e é recusado até você
-declarar o modelo dele, e um modelo declarado que a CLI não roda é recusado.
+declarar o modelo dele. Modelo de outro fornecedor numa CLI de fornecedor único é recusado.
 
 ```json
 {
   "agents": {
-    "codex": {"model": "gpt-5.6-sol"},
-    "cursor": {"model": "claude-opus-5-5", "roles": {"reviewer": {"model": "gpt-5.6-sol"}}}
+    "codex": {"model": "gpt-6.1-sol"},
+    "cursor": {"model": "claude-opus-5-5", "roles": {"reviewer": {"model": "gpt-6.1-sol"}}}
   },
   "launcher": "iterm",
   "external": {"argv": ["wezterm", "start", "--", "sh", "{script}"], "label": "WezTerm"},
   "headless": {"timeout_seconds": 3600, "log_cap_bytes": 5242880}
 }
+```
+
+### Matriz de roteamento de modelos — conferida em 2026-11-11
+
+Use o ID completo do modelo em `agents.<cli>.model`; a escolha por função fica em
+`agents.<cli>.roles.<role>.model`. São recomendações iniciais do HPP, não rankings de qualidade
+medidos. Escolha o perfil pela tarefa e pela cota atual; a troca de modelo depende da sua escolha.
+
+| ID do modelo | Uso sugerido | CLI / família no board |
+|---|---|---|
+| `gpt-6.1-sol` | Implementação geral e manutenção continuada | Codex / `gpt` |
+| `gpt-6.1-terra` | Interpretação visual, escrita e trabalho entre aplicativos | Codex / `gpt` |
+| `gpt-6-luna` | Extração delimitada, classificação e tarefas focadas | Codex / `gpt` |
+| `gpt-6-astra` | Arquitetura difícil e revisões independentes exigentes | Codex / `gpt` |
+| `gpt-6-sol` | Alternativa explícita para um fluxo GPT-6 existente | Codex / `gpt` |
+| `claude-sonnet-5-5` | Implementação cotidiana e uso de ferramentas | Claude Code / `claude` |
+| `claude-opus-5-5` | Manutenção complexa e revisão | Claude Code / `claude` |
+| `claude-haiku-5-5` | Triagem em volume e extração estruturada | Claude Code / `claude` |
+| `claude-fable-5-2` | Análise exigente e briefings de longo alcance | Claude Code / `claude` |
+
+Os IDs foram conferidos no [catálogo OpenAI](https://developers.openai.com/api/docs/models),
+na [orientação de modelos do Codex](https://learn.chatgpt.com/docs/models) e no
+[catálogo Claude](https://platform.claude.com/docs/en/models/overview).
+GPT-6.1 Terra exige Codex CLI **0.159.0 ou posterior**. Esta tabela não comprova acesso na sua
+conta, cota atual, preço nem disponibilidade em outro host, como o Cursor. O HPP confere a família
+do fornecedor declarado e passa o ID à CLI; não consulta o catálogo do provedor nem faz uma chamada
+paga de modelo para verificar acesso. Um ID indisponível requer atenção do operador, não uma
+substituição automática de modelo.
+
+| Configuração opt-in | Padrão Codex / Claude Code | Funções de revisão | Função de briefing (`analyst`) |
+|---|---|---|---|
+| [Balanced](templates/dashboard.models-balanced.example.json) | GPT-6.1 Sol / Sonnet 5.5 | Astra / Opus 5.5 | Sol / Fable 5.2 |
+| [Economy](templates/dashboard.models-economy.example.json) | GPT-6 Luna / Haiku 5.5 | Sol / Sonnet 5.5 | Sol / Opus 5.5 |
+| [Visual](templates/dashboard.models-visual.example.json) | GPT-6.1 Terra / Sonnet 5.5 | Sol / Opus 5.5 | Sol / Fable 5.2 |
+
+Para uma configuração nova, copie o JSON escolhido para `.claude/lanes/dashboard.json`. Se o
+arquivo já existir, integre apenas as entradas `agents` e `roles` aninhadas escolhidas após
+revisá-las; preserve `launcher`, `external`, `terminal` e `headless`. Nenhum template é aplicado
+automaticamente. `executor` e `planner` herdam o padrão de cada agente; `reviewer` e `analyst`
+usam os overrides explícitos. O briefing usa **`analyst`**, não uma chave de configuração `brief`.
+Os overrides de revisão e análise podem usar modelo mais capaz que o padrão, inclusive no perfil
+economy; considere essa escalada antes de iniciar essas ações.
+
+Escolha revisão e briefing de **outra família no board**. Trocar Sol por Astra ou Luna continua
+sendo `gpt`; trocar Sonnet por Opus, Haiku ou Fable continua sendo `claude`. Essas trocas não
+atendem maker≠checker. Por exemplo, um executor Codex usa revisor Claude Code; um executor Claude
+Code usa revisor Codex. A recusa existente continua em vigor em todos os perfis.
+Os tiers `economy` / `balanced` / `frontier` do core continuam selecionando provedores declarados;
+estes templates configuram as CLIs do Dashboard e não mudam esse contrato.
+
+Para escolher explicitamente a alternativa GPT-6 Sol num terminal interativo:
+
+```bash
+codex --model gpt-6-sol
 ```
 
 `launcher` escolhe o padrão; `terminal` (um argv com `{script}`) substitui o terminal detectado no macOS
@@ -409,8 +463,8 @@ motivo e a evidência que foi comparada.
 
 ```bash
 python lane-kit/scripts/lane_board.py compete --task TASK-1 --items ITEM-A,ITEM-B --lane coord --model claude-opus-5-5
-python lane-kit/scripts/lane_board.py select --task TASK-1 --winner ITEM-A --lane rev-x --model gpt-5.6-sol --reason "same tests, half the diff"
-python lane-kit/scripts/lane_board.py select --task TASK-1 --checker-unavailable --lane rev-x --model gpt-5.6-sol
+python lane-kit/scripts/lane_board.py select --task TASK-1 --winner ITEM-A --lane rev-x --model gpt-6.1-sol --reason "same tests, half the diff"
+python lane-kit/scripts/lane_board.py select --task TASK-1 --checker-unavailable --lane rev-x --model gpt-6.1-sol
 python lane-kit/scripts/lane_board.py withdraw --task TASK-1 --item ITEM-C --lane coord --model claude-opus-5-5 --reason "lane exec-c died mid-build"
 ```
 

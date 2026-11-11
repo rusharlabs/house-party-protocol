@@ -32,7 +32,7 @@
       "name": "lane-kit",
       "source": {
         "source": "local",
-        "path": "./multi-session/lane-kit-1.10.1"
+        "path": "./multi-session/lane-kit-1.10.2"
       },
       "policy": {
         "installation": "AVAILABLE",

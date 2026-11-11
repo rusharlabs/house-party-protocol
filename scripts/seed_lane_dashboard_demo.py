@@ -26,7 +26,7 @@ only the standard library, `git`, and a lane-kit directory (`multi-session/lane-
 this repository, or `--lane-kit`). `scripts/record_lane_dashboard.py` runs it before recording.
 
     python scripts/seed_lane_dashboard_demo.py --out demo-project
-    python scripts/seed_lane_dashboard_demo.py --out demo-project --lane-kit multi-session/lane-kit-1.10.1
+    python scripts/seed_lane_dashboard_demo.py --out demo-project --lane-kit multi-session/lane-kit-1.10.2
 
 Exit: 0 built · 1 a writer returned a status the story does not declare · 2 invalid usage, or --out
 is a directory that is not empty (nothing in it is touched).
@@ -44,7 +44,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 EXECUTOR_MODEL = "claude-opus-5-5"
-REVIEWER_MODEL = "gpt-5.6"
+REVIEWER_MODEL = "gpt-6.1-sol"
 LANES = (("exec-a", "executor", EXECUTOR_MODEL), ("exec-b", "executor", EXECUTOR_MODEL),
          ("rev-a", "reviewer", REVIEWER_MODEL))
 

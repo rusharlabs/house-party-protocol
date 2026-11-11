@@ -204,7 +204,7 @@ One row per module, rendered from `hosts` and `components` in the manifest by `h
 |---|---|---|
 | `operator-kit` 1.8.6 | `native` · plugin + hooks after the wiring is pasted | `explicit-command` · plugin (skills only) + verified copy |
 | `kit-forge` 1.5.6 | `explicit-command` · plugin | `explicit-command` · verified copy |
-| `lane-kit` 1.10.1 | `native` · plugin + hooks after the wiring is pasted | `explicit-command` · plugin (skills only) + verified copy |
+| `lane-kit` 1.10.2 | `native` · plugin + hooks after the wiring is pasted | `explicit-command` · plugin (skills only) + verified copy |
 | `continuity-kit` 1.5.5 | `native` · plugin + hooks after the wiring is pasted | `explicit-command` · plugin (skills only) + verified copy |
 | `health-kit` 1.4.6 | `explicit-command` · plugin | `explicit-command` · plugin (skills only) + verified copy |
 | `claude-dev-kit` 1.3.10 | `native` · plugin | `unsupported` · — |

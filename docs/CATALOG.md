@@ -14,14 +14,14 @@ Documents that apply to every kit: [`ARCHITECTURE.md`](ARCHITECTURE.md) · [`ARC
 | [kit-forge](#kit-forge) | 1.5.6 | 0 | 0 | 0 | 1 | 0 | 0 | 0 |
 | [operator-kit](#operator-kit) | 1.8.6 | 13 | 4 | 6 | 10 | 13 | 1 | 17 |
 | [continuity-kit](#continuity-kit) | 1.5.5 | 2 | 0 | 0 | 3 | 0 | 12 | 2 |
-| [lane-kit](#lane-kit) | 1.10.1 | 2 | 1 | 0 | 4 | 0 | 4 | 6 |
+| [lane-kit](#lane-kit) | 1.10.2 | 2 | 1 | 0 | 4 | 0 | 7 | 6 |
 | [health-kit](#health-kit) | 1.4.6 | 2 | 0 | 0 | 1 | 0 | 0 | 3 |
 | [claude-dev-kit](#claude-dev-kit) | 1.3.10 | 8 | 0 | 0 | 1 | 0 | 0 | 2 |
 | [supabase-pack](#supabase-pack) | 1.2.5 | 2 | 0 | 0 | 0 | 0 | 0 | 0 |
 | [agent-framework-wizard](#agent-framework-wizard) | 1.2.7 | 1 | 0 | 0 | 0 | 0 | 5 | 0 |
 | [dev-squad-kit](#dev-squad-kit) | 1.3.0 | 3 | 12 | 12 | 0 | 0 | 0 | 0 |
 | [gotcha-memory](#gotcha-memory) | 1.1.6 | 1 | 0 | 0 | 3 | 0 | 0 | 0 |
-| **total** | | **34** | **17** | **18** | **23** | **13** | **22** | **30** |
+| **total** | | **34** | **17** | **18** | **23** | **13** | **25** | **30** |
 
 ## kit-forge
 
@@ -127,7 +127,7 @@ N sessions without collisions. Lane board, cross-model maker!=checker, per-direc
 | PreToolUse · `Edit|Write` | `lane_territory_guard.py` |
 | PostToolUse · `*` | `lane_register.py --heartbeat` |
 
-**Templates** — `lane-registry.example.json` · `lanes.example.yaml` · `REORIENT-MAILBOX.template.md` · `status-stakeholder.template.html`
+**Templates** — `dashboard.models-balanced.example.json` · `dashboard.models-economy.example.json` · `dashboard.models-visual.example.json` · `lane-registry.example.json` · `lanes.example.yaml` · `REORIENT-MAILBOX.template.md` · `status-stakeholder.template.html`
 
 **Scripts** — `checker_router.py` · `house_session.py` · `lane_board.py` · `lane_dashboard.py` · `lane_effects.py` · `lane_rescue.py`
 
