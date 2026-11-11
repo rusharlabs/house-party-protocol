@@ -40,14 +40,17 @@ Mermaid for the maps and the WorkGraph, the first item planned for this step, sh
    summaries of capabilities, the operational loop, evidence, and agent roles. Views that
    require additional input files are available in the offline atlas.
 
-## 2.13: a code graph of your project
+## 2.13: inspect the project before parallel work
 
-A base built on the Python standard library — modules, imports, definitions and calls read with
-`ast`; for other languages an import graph only, declared as such — plus a contract,
-`hpp.codegraph/v1`, for an external indexer you declare. HPP would normalise and measure that input;
-it would not depend on it. The graph is built on demand, stored by commit hash and reported as
-`stale` when it is old, with no watcher. It would feed lane territory by dependency, the WorkGraph
-checks, the blast radius of an attestation and the atlas's code view.
+`hpp inventory` starts with the committed file universe and explicit gaps. `hpp codegraph build`
+adds conservative Python AST relations and lexical JavaScript/TypeScript imports, with coverage
+and unresolved references reported. A declared indexer uses the `hpp.codegraph/v1` contract;
+it remains optional. Build to stdout or explicitly cache by commit, with stale inputs labelled.
+
+Fresh measurements feed `hpp lanes propose`, WorkGraph and lane-map coupling warnings, optional
+attestation blast radius, project atlas views and the next command shown by status. Proposals
+need approval before applying territories. See the [project inventory guide](docs/PROJECT-INVENTORY.md)
+for commands, privacy boundaries and external-indexer limitations.
 
 ## After 2.13
 
@@ -61,11 +64,11 @@ are decisions, not gaps, and nothing on this roadmap changes them. The manifesto
 for each and the bounded exceptions for modules; where this summary and the manifesto differ, the
 manifesto binds.
 
-- **No daemon, no server, no scheduler.** A check that did not run was not run. The atlas planned
+- **No daemon, no server, no scheduler.** A check that did not run was not run. The atlas described
   above opens as a file for this reason.
 - **No model calls.** The harness routes work to a tier and a provider id you declared, and holds
   no credential.
-- **No graph database.** Every map is a projection of files you supply; the code graph planned for
+- **No graph database.** Every map is a projection of files you supply; the code graph introduced in
   2.13 is built on demand, keyed by commit hash and reported `stale` when it is old.
 - **No silent writes.** Installers plan first and write only on an explicit second step; the
   wiring of settings and hooks is printed for a person to paste.

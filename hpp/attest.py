@@ -100,6 +100,8 @@ def create_attestation(
     panel: Optional[dict[str, Any]] = None,
     sign_key: Optional[Path] = None,
     signer: Optional[str] = None,
+    codegraph: Optional[dict[str, Any]] = None,
+    base_commit: Optional[str] = None,
 ) -> dict[str, Any]:
     """Record a verdict bound to the repository, the spec and a full snapshot.
 
@@ -112,6 +114,8 @@ def create_attestation(
     (namespace `hpp`) as `signer` -- by default the checker, who signs its own verdict. Without the
     binary nothing is written: a record is signed or it is not, never "signed" by assertion.
     """
+    if base_commit is not None and codegraph is None:
+        raise AttestationError("base_commit requires a code graph")
     root = _repo_root(repo)
     maker_id = maker.strip()
     checker_id = checker.strip()
@@ -149,6 +153,9 @@ def create_attestation(
     }
     if deliberation is not None:
         record["deliberation"] = deliberation
+    if codegraph is not None:
+        from hpp.territories import measure_blast_radius
+        record["blast_radius"] = measure_blast_radius(root, base_commit or record["base_commit"], codegraph)
     if sign_key is not None:
         try:
             record["signature"] = sign_bytes(signable(record), Path(sign_key), signer or checker_id)

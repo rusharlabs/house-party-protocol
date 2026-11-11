@@ -3,14 +3,15 @@
 The WorkGraph is intentionally data-only: it schedules declared work into
 dependency waves, names every acceptance criterion so a test can cite it, and
 answers a declared done gate over facts someone else measured. It never launches
-an agent, a process or a git command.
+an agent. Optional code-graph coupling reads repository freshness through the
+shared read-only Git instrument; scheduling itself remains data-only.
 """
 from __future__ import annotations
 
 import ast
 import re
 import xml.etree.ElementTree as ElementTree
-from pathlib import PurePosixPath
+from pathlib import Path, PurePosixPath
 from typing import Any, Optional
 
 
@@ -109,6 +110,12 @@ def _items(spec: dict[str, Any], default_gate: list[str]) -> dict[str, dict[str,
             "tier": tier,
             "gate": gate,
         }
+        if "territory" in item:
+            from hpp.territories import TerritoryError, normalise_territory
+            try:
+                work[work_id]["territory"] = normalise_territory(item["territory"])
+            except TerritoryError as exc:
+                raise WorkGraphError(str(exc)) from exc
     for item in work.values():
         for dependency in item["depends_on"]:
             if dependency not in work:
@@ -550,7 +557,8 @@ def spec_execution(compiled: dict[str, Any], citations: list[dict[str, Any]],
     }
 
 
-def compile_workgraph(spec: dict[str, Any]) -> dict[str, Any]:
+def compile_workgraph(spec: dict[str, Any], *, codegraph: Optional[dict] = None,
+                      target: Optional[str | Path] = None) -> dict[str, Any]:
     """Validate a declarative work spec and return stable topological waves."""
     if not isinstance(spec, dict):
         raise WorkGraphError("workgraph spec must be an object")
@@ -564,7 +572,7 @@ def compile_workgraph(spec: dict[str, Any]) -> dict[str, Any]:
         for dependency in work[work_id]["depends_on"]
     ]
     tier_counts = {tier: sum(item["tier"] == tier for item in work.values()) for tier in TIERS}
-    return {
+    result = {
         "schema": "hpp.workgraph/v1",
         "work": [work[work_id] for work_id in ordered_ids],
         "criteria": sorted(
@@ -576,6 +584,17 @@ def compile_workgraph(spec: dict[str, Any]) -> dict[str, Any]:
         "waves": _waves(work),
         "tier_counts": tier_counts,
     }
+    if codegraph is not None:
+        from hpp.territories import territory_coupling
+        measurements = []
+        for wave in result["waves"]:
+            territories = [{"id": name, "territory": work[name]["territory"]}
+                           for name in wave["work"] if "territory" in work[name]]
+            measurements.append({"wave": wave["index"],
+                                 **territory_coupling(target, territories, codegraph),
+                                 "undeclared_work": [name for name in wave["work"] if "territory" not in work[name]]})
+        result["territory_coupling"] = measurements
+    return result
 
 
 def workgraph_graph(compiled: dict[str, Any]) -> dict[str, Any]:

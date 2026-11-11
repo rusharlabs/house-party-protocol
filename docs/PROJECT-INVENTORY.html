@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>House Party Protocol — Inspect an existing project</title>
+  <meta name="description" content="Inspect committed project files, code relationships and freshness before proposing parallel territories.">
+  <link rel="alternate" hreflang="en" href="PROJECT-INVENTORY.html">
+  <link rel="alternate" hreflang="pt-BR" href="PROJECT-INVENTORY.pt-BR.html">
+  <style>
+    :root{--hpp-black: #000000;--hpp-ink: #0F1113;--hpp-paper: #F4F1EB;--hpp-signal: #FF6A00;--line:rgba(15,17,19,.18);--surface:rgba(15,17,19,.04);--muted:rgba(15,17,19,.72);--max:1120px}
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;background:var(--hpp-paper);color:var(--hpp-ink);font:16px/1.65 Inter,"Segoe UI",Arial,sans-serif}
+    a{color:var(--hpp-ink);text-decoration:underline;text-decoration-color:var(--hpp-signal);text-decoration-thickness:2px;text-underline-offset:3px}
+    a:hover{color:var(--hpp-signal)}
+    a:focus-visible{outline:4px solid var(--hpp-signal);outline-offset:3px}
+    .wrap{width:min(var(--max),calc(100% - 40px));margin:auto}
+    .lang{background:var(--hpp-black);color:var(--hpp-paper);font-size:.9rem;padding:10px 0}
+    .lang a{color:var(--hpp-paper)}
+    .lang a[aria-current]{text-decoration:none;font-weight:700}
+    .hero{background:var(--hpp-ink);color:var(--hpp-paper);padding:44px 0 50px}
+    .hero img{width:min(720px,100%);display:block}
+    .hero h1{font:800 clamp(2.2rem,6vw,5rem)/.95 Sora,Inter,"Segoe UI",sans-serif;letter-spacing:-.02em;margin:.35em 0}
+    .hero p{max-width:760px;font-size:1.15rem;color:rgba(244,241,235,.82)}
+    .hero .eyebrow{color:var(--hpp-paper);border-color:var(--hpp-signal)}
+    .signal{color:var(--hpp-signal)}
+    .eyebrow,.mono,code,pre,.gate,.label{font-family:"JetBrains Mono","Cascadia Code",Consolas,monospace}
+    .eyebrow{display:inline-block;letter-spacing:.13em;text-transform:uppercase;font-size:.78rem;border-left:4px solid var(--hpp-signal);padding-left:.6em;margin:0 0 .6em}
+    nav{position:sticky;top:0;z-index:2;background:rgba(244,241,235,.96);border-bottom:1px solid var(--line);backdrop-filter:blur(8px)}
+    nav .wrap{display:flex;gap:20px;overflow:auto;padding:12px 0}
+    nav a{white-space:nowrap;text-decoration:none;font-weight:700}
+    nav a:hover{text-decoration:underline;text-decoration-color:var(--hpp-signal)}
+    section{padding:64px 0;border-bottom:1px solid var(--line)}
+    h2{font:800 clamp(1.7rem,3vw,2.6rem)/1.1 Sora,Inter,"Segoe UI",sans-serif;letter-spacing:-.01em;margin:0 0 .6em}
+    h3{margin:0 0 .4em;font-size:1.1rem}
+    .lead{max-width:780px;color:var(--muted)}
+    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:20px}
+    .card{grid-column:span 4;border:1px solid var(--line);border-radius:16px;padding:22px;background:var(--surface)}
+    .card.wide{grid-column:span 6}
+    .card.full{grid-column:1/-1}
+    pre{background:var(--hpp-ink);color:var(--hpp-paper);padding:20px;border-radius:12px;overflow:auto;border-left:6px solid var(--hpp-signal);font-size:.92rem;line-height:1.5}
+    code{font-size:.94em}
+    p code,li code,td code{background:var(--surface);padding:.08em .35em;border-radius:5px}
+    pre code{background:none;padding:0}
+    table{width:100%;border-collapse:collapse;background:var(--surface);margin:1em 0}
+    th,td{text-align:left;padding:12px;border-bottom:1px solid var(--line);vertical-align:top}
+    th{background:rgba(15,17,19,.08);font-weight:700}
+    .gate{display:inline-block;border-radius:999px;padding:.15rem .7rem;font-weight:700;font-size:.8rem;margin-bottom:.6em}
+    .gate.allow{background:var(--hpp-signal);color:var(--hpp-ink)}
+    .gate.manual{border:2px solid var(--hpp-ink);color:var(--hpp-ink)}
+    .gate.block{background:var(--hpp-ink);color:var(--hpp-paper)}
+    .label{font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+    .measured{border-left:4px solid var(--hpp-signal);padding-left:1em;color:var(--muted);font-size:.95rem}
+    ul,ol{padding-left:1.3em}
+    li{margin:.25em 0}
+    footer{padding:48px 0;background:var(--hpp-black);color:var(--hpp-paper)}
+    footer a{color:var(--hpp-paper)}
+    footer .five{letter-spacing:.2em;font-size:.8rem;color:rgba(244,241,235,.72)}
+    @media(max-width:760px){.card,.card.wide{grid-column:1/-1}.wrap{width:min(100% - 32px,var(--max))}th,td{font-size:.88rem;padding:8px}.hero{padding-top:28px}section{padding:44px 0}}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+    h3[id],h4[id],h5[id]{scroll-margin-top:64px}
+    ul.tasks{list-style:none;padding-left:.2em}
+    blockquote{margin:1em 0}
+  </style>
+</head>
+<body>
+  <div class="lang"><div class="wrap"><a href="PROJECT-INVENTORY.html" aria-current="page" hreflang="en">English</a> · <a href="PROJECT-INVENTORY.pt-BR.html" hreflang="pt-BR" lang="pt-BR">Português</a></div></div>
+  <header class="hero">
+    <div class="wrap">
+      <img src="assets/hpp-logo-header.png" alt="House Party Protocol">
+      <p class="eyebrow">Method · PROJECT-INVENTORY.md</p>
+      <h1>Inspect an existing project</h1>
+    </div>
+  </header>
+  <nav aria-label="Chapters"><div class="wrap"><a href="#universe-and-privacy">Universe and privacy</a><a href="#explicit-cache-and-freshness">Explicit cache and freshness</a><a href="#code-graph-coverage">Code graph coverage</a><a href="#from-relationships-to-proposed-work">From relationships to proposed work</a></div></nav>
+  <main>
+
+    <section><div class="wrap">
+<p>HPP 2.13 measures the committed project before proposing parallel work. All commands below
+print to stdout. They do not import your application, run tests, install dependencies or call a model.
+Git and Python 3.10+ are required; no parser package or graph service is required.</p>
+<pre><code class="language-bash">hpp inventory --target .
+hpp codegraph build --target .
+hpp lanes propose --target .</code></pre>
+    </div></section>
+
+    <section id="universe-and-privacy"><div class="wrap">
+      <p class="eyebrow">01</p>
+      <h2>Universe and privacy</h2>
+<p>The universe is the regular files in the HEAD tree, not an unrestricted disk scan. Untracked
+and ignored files are outside it; staged and working-tree changes are reported as dirty tracked
+paths, not mixed into the committed content. Symlinks and Git submodules are metadata only.
+Secret-shaped files, including <code>.env</code> and private keys, are excluded from content reads.</p>
+<p><code>hpp.inventory/v1</code> reports manifest and extension signals, test paths and runner hints, CI command
+candidates, documentation, agent instructions and hook counts, CODEOWNERS presence, author count
+and hotspots in a bounded commit window. Authors are counted without publishing identities.
+CI candidates are never executed. Credential-like commands are withheld. File counts are not test
+results, authorship is not ownership, and a documentation path is not proof that its content is current.
+Unreadable inputs and exclusions are reported separately; an inspection failure is not an empty project.</p>
+    </div></section>
+
+    <section id="explicit-cache-and-freshness"><div class="wrap">
+      <p class="eyebrow">02</p>
+      <h2>Explicit cache and freshness</h2>
+<pre><code class="language-bash">hpp inventory --target . --out
+hpp codegraph build --target . --out
+hpp codegraph status --target .
+hpp status --target . --json</code></pre>
+<p>An explicit <code>--out</code> stores <code>.hpp/inventory/&lt;commit&gt;.json</code> or <code>.hpp/codegraph/&lt;commit&gt;.json</code>.
+<code>--out &lt;path&gt;</code> chooses a destination. Existing different bytes and linked paths are refused;
+the command never updates the Git index. Keep generated measurements outside your tracked
+universe, for example by adding <code>.hpp/</code> to your project's ignore policy yourself.
+Fresh means the artifact commit equals HEAD and tracked files are clean. Older commits or
+tracked edits are stale, with changed paths and commit distance. An absent or invalid artifact
+is labelled accordingly. No watcher updates these files. Status reads the profile and measurements
+to suggest initialization, inventory, code graph or lane proposals; it never applies that suggestion.</p>
+    </div></section>
+
+    <section id="code-graph-coverage"><div class="wrap">
+      <p class="eyebrow">03</p>
+      <h2>Code graph coverage</h2>
+<p><code>hpp.codegraph/v1</code> contains commit, producer, coverage, nodes, edges, unresolved references and
+instrument status. The built-in Python AST reader measures modules, definitions, imports and
+conservatively resolved calls. Dynamic calls remain unresolved. JavaScript and TypeScript use
+lexical import signals only: they do not claim parser, type-checker or runtime coverage. Other
+languages are reported as unmeasured. The graph is static, so reflection and runtime configuration
+can create relationships outside its measured coverage.</p>
+<p>You may supply a declared indexer or an existing document:</p>
+<pre><code class="language-bash">hpp codegraph build --target . --indexer-command '["your-indexer","--json"]' --timeout 30
+hpp codegraph import graph.json --target .
+hpp codegraph compare --declared graph.json --target .</code></pre>
+<p>Only <code>--indexer-command</code> runs an external program. It accepts JSON argv without a shell and sends
+the commit and file universe on stdin. Choose a program you trust: HPP bounds its time and output
+but does not sandbox its filesystem or network access. Invalid JSON, crashes, timeout and output
+overflow are instrument failures, never successful empty graphs. Failed measurements cannot be cached.
+Imported paths are relative POSIX/NFC paths in the committed universe. Duplicate IDs are refused;
+excluded nodes and unresolved edge targets are counted. Comparison reports Python import agreement
+against the built-in reader, not a claim that either graph is complete.</p>
+    </div></section>
+
+    <section id="from-relationships-to-proposed-work"><div class="wrap">
+      <p class="eyebrow">04</p>
+      <h2>From relationships to proposed work</h2>
+<pre><code class="language-bash">hpp lanes propose --target . --max-lanes 4 --depth 2 --out
+hpp work plan work.json --target . --codegraph graph.json
+hpp map lane lanes.json --target . --codegraph graph.json
+hpp attest create --repo . --spec work.json --output attestation.json \
+  --maker maker --checker checker --session review --verdict approved \
+  --codegraph graph.json --base-commit &lt;base-sha&gt;
+hpp atlas --html --target . &gt; atlas.html</code></pre>
+<p>Lane proposals require a fresh inventory. A fresh graph supplies weighted imports; without one,
+the fallback groups directories and explicitly marks relations unmeasured. Shared hubs, remaining
+cross-lane import cost and hotspot red zones stay visible. The output is <code>hpp.lane-proposal/v1</code>,
+not applied lane configuration. A person must approve territories before dispatch.
+WorkGraph units may declare <code>territory</code> as a list of relative path prefixes; optional graph input
+warns about coupling inside a wave. Lane maps also report import coupling between territories.
+Attestation impact follows reverse imports from files changed since the base commit. Stale input
+marks this impact unmeasured; it does not weaken the attestation's existing evidence gate.
+Impact covers resolved imports at HEAD, not all runtime dependencies. In particular, deleting a
+module can leave its former imports unresolved; these paths need review beyond the reported closure.</p>
+<p>The offline atlas adds project inventory and project code views for Git targets, including freshness,
+coverage and unresolved references. <code>--inventory &lt;file&gt;</code> and <code>--codegraph &lt;file&gt;</code> select explicit
+inputs inside the target. The legacy <code>hpp graph --view code</code> remains the protocol module surface
+map; the atlas project code view uses the project's graph.</p>
+<p>Dev Squad's <code>pp-discovery</code> starts with inventory and <code>pp-xray</code> uses its delimited paths. When
+their optional task tree is absent, existing-project discovery routes use these shipped skills
+instead of fabricating a missing workflow. Lane Dashboard terminal <code>wave start --lane-proposal &lt;relative-json&gt;</code> records the proposal path, SHA-256 and commit in the wave request for review;
+it does not approve or apply territories.</p>
+    </div></section>
+
+  </main>
+  <footer><div class="wrap">
+    <p class="five">AGENTS · EVIDENCE · MEMORY · PROTOCOL · CONTINUITY</p>
+    <strong>House Party Protocol</strong>
+    <p>Operate coding agents under evidence, not trust.</p>
+    <p><a href="index.html">Documentation</a> · <a href="MANUAL.html">Harness manual</a> · <a href="CATALOG.html">Module catalogue</a> · <a href="https://github.com/rusharlabs/house-party-protocol/blob/main/docs/PROJECT-INVENTORY.md">Markdown source</a> · <a href="PROJECT-INVENTORY.pt-BR.html" hreflang="pt-BR" lang="pt-BR">Português</a></p>
+  </div></footer>
+</body>
+</html>

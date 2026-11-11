@@ -106,6 +106,10 @@ persistent knowledge graph. The root Code Map is an inventory of declared module
 an AST graph of symbols or calls. External analysers can feed new projections without becoming a
 mandatory dependency of the harness.
 
+The project-level `hpp inventory` and `hpp codegraph` commands are separate from this
+manifest map. Their committed universe, coverage, unresolved references and stale inputs feed
+lane proposals and optional coupling/impact projections. See [project inventory](PROJECT-INVENTORY.md).
+
 ## Export
 
 `hpp graph`, the four `hpp map` views, `hpp work plan` and `hpp work waves` export JSON (default)

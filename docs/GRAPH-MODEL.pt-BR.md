@@ -105,6 +105,10 @@ persistente. O Code Map raiz é inventário de módulos/componentes declarados, 
 símbolos ou chamadas. Analisadores externos podem alimentar novas projeções sem virar dependência
 obrigatória do harness.
 
+Os comandos de projeto `hpp inventory` e `hpp codegraph` são separados desse mapa de
+manifesto. Universo versionado, cobertura, referências não resolvidas e entradas stale alimentam
+propostas de lanes e projeções opcionais de acoplamento/impacto. Veja [inventário do projeto](PROJECT-INVENTORY.pt-BR.md).
+
 ## Export
 
 `hpp graph`, as quatro visões de `hpp map`, `hpp work plan` e `hpp work waves` exportam JSON

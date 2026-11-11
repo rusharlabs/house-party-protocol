@@ -12,9 +12,11 @@ from pathlib import Path
 from typing import Any, Optional
 
 from hpp import __version__
+from hpp._repository import artifact_status, write_artifact
 from hpp.atlas import render_atlas
 from hpp.attest import AttestationError, create_attestation, verify_attestation
 from hpp.citations import check_files as check_citations, context_ids, exit_for as citations_exit_for
+from hpp.codegraph import build_codegraph, compare_codegraphs, import_codegraph
 from hpp.context import compile_context
 from hpp.decision import effective as decision_effective, exit_for as decision_exit_for, run_decision_suite, validate as validate_decision
 from hpp.deliberation import (
@@ -31,6 +33,8 @@ from hpp.findings import check as check_findings, exit_for as findings_exit_for
 from hpp.graph import build_graph, to_mermaid
 from hpp.hosts import render_host_matrix
 from hpp.install import InstallError, installation_plan
+from hpp.inventory import build_inventory
+from hpp.journey import cached_document, project_journey, read_document
 from hpp.manifest import ManifestError, hook_capability_census, load_manifest, validate_distribution
 from hpp.maps import build_agent_map, build_context_map, build_feed_map, build_lane_map, build_monitor_map, map_graph
 from hpp.policy import assess, exit_for as policy_exit_for, policy_for_workspace
@@ -38,6 +42,7 @@ from hpp.retrieval import exit_for as retrieval_exit_for, run_retrieval_suite
 from hpp.routing import route
 from hpp.state import StateError, append_event, event_path, project, read_events, verify_chain
 from hpp.term import Console, write_stdout
+from hpp.territories import propose_lanes
 from hpp.wizard import DECISION_ADVISORS, InitUsageError, prepare_options, run_init_command
 from hpp.workgraph import cited_tests, citation_coverage, compile_workgraph, read_junit, spec_execution, workgraph_graph
 
@@ -153,7 +158,71 @@ def command_atlas(args: argparse.Namespace) -> int:
         agent_events=args.agent_events, monitors_file=args.monitors, now=args.now,
         context_file=args.context, budget=args.budget, mailbox=args.mailbox, local_offset=args.local_offset,
         deliberation=args.deliberation, attestation=args.attestation,
+        inventory_file=args.inventory, codegraph_file=args.codegraph,
     ))
+    return 0
+
+
+def _measurement(args: argparse.Namespace, kind: str) -> dict[str, Any] | None:
+    source = getattr(args, kind, None)
+    value = read_document(Path(source)) if source else cached_document(Path(args.target), kind)
+    if value is not None and value.get("schema") != f"hpp.{kind}/v1":
+        raise ValueError(f"expected hpp.{kind}/v1 measurement")
+    return value
+
+
+def _emit_measurement(args: argparse.Namespace, kind: str, value: dict[str, Any]) -> int:
+    measured = value.get("instrument", {}).get("status", "measured") == "measured"
+    if args.out is not None:
+        if not measured:
+            raise ValueError("an instrument failure cannot be stored as a measurement")
+        write_artifact(Path(args.target), kind, value, out=args.out or None)
+    _json(value)
+    return 0 if measured else 2
+
+
+def command_inventory(args: argparse.Namespace) -> int:
+    if args.inspect:
+        if args.out is not None:
+            raise ValueError("--inspect is read-only; omit --out")
+        inventory = read_document(Path(args.inventory)) if args.inventory else build_inventory(Path(args.target))
+        if inventory.get("schema") != "hpp.inventory/v1":
+            raise ValueError("expected hpp.inventory/v1 measurement")
+        _json({"freshness": artifact_status(Path(args.target), inventory), "inventory": inventory})
+        return 0
+    if args.inventory:
+        raise ValueError("--inventory requires --inspect")
+    return _emit_measurement(args, "inventory", build_inventory(Path(args.target), history_limit=args.history_limit))
+
+
+def command_codegraph(args: argparse.Namespace) -> int:
+    target = Path(args.target)
+    if args.codegraph_command == "status":
+        _json(artifact_status(target, _measurement(args, "codegraph")))
+        return 0
+    if args.codegraph_command == "show":
+        graph = _measurement(args, "codegraph")
+        _json({"freshness": artifact_status(target, graph), "coverage": graph.get("coverage") if graph else None,
+               "instrument": graph.get("instrument") if graph else None,
+               "unresolved": graph.get("unresolved") if graph else None, "graph": graph})
+        return 0
+    if args.codegraph_command == "compare":
+        _json(compare_codegraphs(target, read_document(Path(args.declared))))
+        return 0
+    if args.codegraph_command == "import":
+        graph = import_codegraph(target, read_document(Path(args.source)))
+    else:
+        graph = build_codegraph(target, indexer_command=args.indexer_command, timeout=args.timeout)
+    return _emit_measurement(args, "codegraph", graph)
+
+
+def command_lanes(args: argparse.Namespace) -> int:
+    inventory = _measurement(args, "inventory") or build_inventory(Path(args.target))
+    report = propose_lanes(Path(args.target), inventory, _measurement(args, "codegraph"),
+                           max_lanes=args.max_lanes, depth=args.depth)
+    if args.out is not None:
+        write_artifact(Path(args.target), "lane-proposal", report, out=args.out or None)
+    _json(report)
     return 0
 
 
@@ -222,6 +291,9 @@ def _status(manifest: dict[str, Any]) -> dict[str, Any]:
 def command_status(args: argparse.Namespace) -> int:
     manifest, _ = _manifest(args)
     status = _status(manifest)
+    status["journey"] = project_journey(Path(args.target))
+    if status["journey"]["status"] == "measured":
+        status["next_step"] = status["journey"]["next_command"]
     if args.json:
         _json(status)
     else:
@@ -275,6 +347,8 @@ def command_attest(args: argparse.Namespace) -> int:
             panel=panel,
             sign_key=Path(args.sign_key) if args.sign_key else None,
             signer=args.signer,
+            codegraph=read_document(Path(args.codegraph)) if args.codegraph else None,
+            base_commit=args.base_commit,
         )
         _json({"status": "recorded", **record})
         return 0 if record["verdict"] == "approved" else 2
@@ -332,7 +406,9 @@ def _work_coverage(args: argparse.Namespace, compiled: dict[str, Any]) -> int:
 
 
 def command_work(args: argparse.Namespace) -> int:
-    compiled = compile_workgraph(_read_json(args.spec, dict))
+    compiled = compile_workgraph(_read_json(args.spec, dict),
+                                 codegraph=read_document(Path(args.codegraph)) if getattr(args, "codegraph", None) else None,
+                                 target=Path(args.target) if getattr(args, "codegraph", None) else None)
     if args.work_command == "coverage":
         return _work_coverage(args, compiled)
     if args.format == "mermaid":
@@ -551,6 +627,8 @@ def command_map(args: argparse.Namespace) -> int:
             now=args.now,
             suspect_after=args.suspect_after,
             dead_after=args.dead_after,
+            codegraph=read_document(Path(args.codegraph)) if args.codegraph else None,
+            target=Path(args.target) if args.codegraph else None,
         )
     elif args.map_view == "monitor":
         projection = build_monitor_map(_read_json(args.source, list), args.now, skew_tolerance=args.skew_tolerance)
@@ -600,6 +678,43 @@ def build_parser() -> argparse.ArgumentParser:
                         help="print the host x module x channel matrix (Markdown) rendered from the manifest")
     doctor.set_defaults(func=command_doctor)
 
+    inventory = sub.add_parser("inventory", help="inspect committed project files; never execute project commands")
+    inventory.add_argument("--target", default=".")
+    inventory.add_argument("--history-limit", type=int, default=200)
+    inventory.add_argument("--inspect", action="store_true", help="read-only envelope with freshness, also used by the atlas")
+    inventory.add_argument("--inventory", help="artifact for --inspect instead of a new inventory")
+    inventory.add_argument("--out", nargs="?", const="", help="explicitly store JSON; default .hpp/inventory/<commit>.json")
+    inventory.set_defaults(func=command_inventory)
+
+    codegraph = sub.add_parser("codegraph", help="on-demand static relations with declared coverage")
+    cg_sub = codegraph.add_subparsers(dest="codegraph_command", required=True)
+    for name in ("build", "import", "status", "show", "compare"):
+        command = cg_sub.add_parser(name)
+        command.add_argument("--target", default=".")
+        command.set_defaults(func=command_codegraph)
+        if name in {"build", "import"}:
+            command.add_argument("--out", nargs="?", const="", help="explicitly store commit-keyed JSON")
+        if name == "build":
+            command.add_argument("--indexer-command", help="explicit JSON argv; an external program will run, without a shell")
+            command.add_argument("--timeout", type=float, default=30.0)
+        elif name == "import":
+            command.add_argument("source")
+        elif name == "compare":
+            command.add_argument("--declared", required=True)
+        else:
+            command.add_argument("--codegraph", help="artifact to inspect instead of the commit-keyed cache")
+
+    lanes = sub.add_parser("lanes", help="propose territories without applying lane configuration")
+    lane_sub = lanes.add_subparsers(dest="lanes_command", required=True)
+    proposal = lane_sub.add_parser("propose")
+    proposal.add_argument("--target", default=".")
+    proposal.add_argument("--inventory")
+    proposal.add_argument("--codegraph")
+    proposal.add_argument("--max-lanes", type=int, default=4)
+    proposal.add_argument("--depth", type=int, default=2)
+    proposal.add_argument("--out", nargs="?", const="", help="explicitly store the proposal; never apply it")
+    proposal.set_defaults(func=command_lanes)
+
     atlas = sub.add_parser("atlas", help="render read-only project projections as a standalone HTML page")
     atlas.add_argument("--html", required=True, action="store_true", help="write an offline HTML document to stdout")
     atlas.add_argument("--target", default=".", help="project root; explicit source files resolve inside it")
@@ -615,6 +730,8 @@ def build_parser() -> argparse.ArgumentParser:
     atlas.add_argument("--local-offset", metavar="+HH:MM", help="offset for unzoned feed stamps")
     atlas.add_argument("--deliberation", help="sealed House Session JSON record")
     atlas.add_argument("--attestation", help="release attestation JSON to verify against --target")
+    atlas.add_argument("--inventory", help="project inventory JSON inside --target")
+    atlas.add_argument("--codegraph", help="project code graph JSON inside --target")
     atlas.set_defaults(func=command_atlas)
 
     graph = sub.add_parser("graph")
@@ -680,6 +797,7 @@ def build_parser() -> argparse.ArgumentParser:
     status = sub.add_parser("status")
     status.add_argument("--manifest")
     status.add_argument("--json", action="store_true")
+    status.add_argument("--target", default=".")
     status.set_defaults(func=command_status)
 
     resume = sub.add_parser("resume")
@@ -716,6 +834,8 @@ def build_parser() -> argparse.ArgumentParser:
     attest_create.add_argument("--sign-key", dest="sign_key",
                                help="SSH private key; the record is signed with ssh-keygen -Y sign (namespace hpp)")
     attest_create.add_argument("--signer", help="the principal the signature names (default: the checker)")
+    attest_create.add_argument("--codegraph", help="code graph for a measured reverse-import blast radius")
+    attest_create.add_argument("--base-commit", help="base commit for changed paths; requires --codegraph")
     attest_create.set_defaults(func=command_attest)
     attest_verify = attest_sub.add_parser("verify")
     attest_verify.add_argument("attestation")
@@ -728,6 +848,8 @@ def build_parser() -> argparse.ArgumentParser:
     work_sub = work.add_subparsers(dest="work_command", required=True)
     plan = work_sub.add_parser("plan")
     plan.add_argument("spec")
+    plan.add_argument("--codegraph", help="warn when territories in the same wave are coupled")
+    plan.add_argument("--target", default=".")
     _format_option(plan)
     plan.set_defaults(func=command_work)
     waves = work_sub.add_parser("waves")
@@ -906,6 +1028,8 @@ def build_parser() -> argparse.ArgumentParser:
                       help="explicit Unix timestamp used to derive liveness")
     lane.add_argument("--suspect-after", type=int, default=300)
     lane.add_argument("--dead-after", type=int, default=900)
+    lane.add_argument("--codegraph", help="warn about imports between exclusive territories")
+    lane.add_argument("--target", default=".")
     _format_option(lane)
     lane.set_defaults(func=command_map)
     agent = map_sub.add_parser("agent")

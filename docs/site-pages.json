@@ -158,6 +158,18 @@
             "title": "UX-INSTALL-JOURNEY — a jornada de instalação, contada na conversa",
             "summary": "Como um agente conduz um humano pela instalação na conversa, sobre o instalador do harness e o instalador de módulos."
           }
+        },
+        {
+          "en": {
+            "href": "PROJECT-INVENTORY.html",
+            "title": "Inspect an existing project",
+            "summary": "Inspect committed project files, code relationships and freshness before proposing parallel territories."
+          },
+          "pt-BR": {
+            "href": "PROJECT-INVENTORY.pt-BR.html",
+            "title": "Inspecionar um projeto existente",
+            "summary": "Inspecione arquivos versionados, relações de código e validade antes de propor territórios paralelos."
+          }
         }
       ]
     },
