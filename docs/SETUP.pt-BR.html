@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>House Party Protocol — Instalação guiada</title>
+  <meta name="description" content="Prepare o ambiente do projeto e instale um bundle revisado ou todos os módulos compatíveis, com ativação explícita do host.">
+  <link rel="alternate" hreflang="en" href="SETUP.html">
+  <link rel="alternate" hreflang="pt-BR" href="SETUP.pt-BR.html">
+  <style>
+    :root{--hpp-black: #000000;--hpp-ink: #0F1113;--hpp-paper: #F4F1EB;--hpp-signal: #FF6A00;--line:rgba(15,17,19,.18);--surface:rgba(15,17,19,.04);--muted:rgba(15,17,19,.72);--max:1120px}
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;background:var(--hpp-paper);color:var(--hpp-ink);font:16px/1.65 Inter,"Segoe UI",Arial,sans-serif}
+    a{color:var(--hpp-ink);text-decoration:underline;text-decoration-color:var(--hpp-signal);text-decoration-thickness:2px;text-underline-offset:3px}
+    a:hover{color:var(--hpp-signal)}
+    a:focus-visible{outline:4px solid var(--hpp-signal);outline-offset:3px}
+    .wrap{width:min(var(--max),calc(100% - 40px));margin:auto}
+    .lang{background:var(--hpp-black);color:var(--hpp-paper);font-size:.9rem;padding:10px 0}
+    .lang a{color:var(--hpp-paper)}
+    .lang a[aria-current]{text-decoration:none;font-weight:700}
+    .hero{background:var(--hpp-ink);color:var(--hpp-paper);padding:44px 0 50px}
+    .hero img{width:min(720px,100%);display:block}
+    .hero h1{font:800 clamp(2.2rem,6vw,5rem)/.95 Sora,Inter,"Segoe UI",sans-serif;letter-spacing:-.02em;margin:.35em 0}
+    .hero p{max-width:760px;font-size:1.15rem;color:rgba(244,241,235,.82)}
+    .hero .eyebrow{color:var(--hpp-paper);border-color:var(--hpp-signal)}
+    .signal{color:var(--hpp-signal)}
+    .eyebrow,.mono,code,pre,.gate,.label{font-family:"JetBrains Mono","Cascadia Code",Consolas,monospace}
+    .eyebrow{display:inline-block;letter-spacing:.13em;text-transform:uppercase;font-size:.78rem;border-left:4px solid var(--hpp-signal);padding-left:.6em;margin:0 0 .6em}
+    nav{position:sticky;top:0;z-index:2;background:rgba(244,241,235,.96);border-bottom:1px solid var(--line);backdrop-filter:blur(8px)}
+    nav .wrap{display:flex;gap:20px;overflow:auto;padding:12px 0}
+    nav a{white-space:nowrap;text-decoration:none;font-weight:700}
+    nav a:hover{text-decoration:underline;text-decoration-color:var(--hpp-signal)}
+    section{padding:64px 0;border-bottom:1px solid var(--line)}
+    h2{font:800 clamp(1.7rem,3vw,2.6rem)/1.1 Sora,Inter,"Segoe UI",sans-serif;letter-spacing:-.01em;margin:0 0 .6em}
+    h3{margin:0 0 .4em;font-size:1.1rem}
+    .lead{max-width:780px;color:var(--muted)}
+    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:20px}
+    .card{grid-column:span 4;border:1px solid var(--line);border-radius:16px;padding:22px;background:var(--surface)}
+    .card.wide{grid-column:span 6}
+    .card.full{grid-column:1/-1}
+    pre{background:var(--hpp-ink);color:var(--hpp-paper);padding:20px;border-radius:12px;overflow:auto;border-left:6px solid var(--hpp-signal);font-size:.92rem;line-height:1.5}
+    code{font-size:.94em}
+    p code,li code,td code{background:var(--surface);padding:.08em .35em;border-radius:5px}
+    pre code{background:none;padding:0}
+    table{width:100%;border-collapse:collapse;background:var(--surface);margin:1em 0}
+    th,td{text-align:left;padding:12px;border-bottom:1px solid var(--line);vertical-align:top}
+    th{background:rgba(15,17,19,.08);font-weight:700}
+    .gate{display:inline-block;border-radius:999px;padding:.15rem .7rem;font-weight:700;font-size:.8rem;margin-bottom:.6em}
+    .gate.allow{background:var(--hpp-signal);color:var(--hpp-ink)}
+    .gate.manual{border:2px solid var(--hpp-ink);color:var(--hpp-ink)}
+    .gate.block{background:var(--hpp-ink);color:var(--hpp-paper)}
+    .label{font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+    .measured{border-left:4px solid var(--hpp-signal);padding-left:1em;color:var(--muted);font-size:.95rem}
+    ul,ol{padding-left:1.3em}
+    li{margin:.25em 0}
+    footer{padding:48px 0;background:var(--hpp-black);color:var(--hpp-paper)}
+    footer a{color:var(--hpp-paper)}
+    footer .five{letter-spacing:.2em;font-size:.8rem;color:rgba(244,241,235,.72)}
+    @media(max-width:760px){.card,.card.wide{grid-column:1/-1}.wrap{width:min(100% - 32px,var(--max))}th,td{font-size:.88rem;padding:8px}.hero{padding-top:28px}section{padding:44px 0}}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+    h3[id],h4[id],h5[id]{scroll-margin-top:64px}
+    ul.tasks{list-style:none;padding-left:.2em}
+    blockquote{margin:1em 0}
+  </style>
+</head>
+<body>
+  <div class="lang"><div class="wrap"><a href="SETUP.html" hreflang="en" lang="en">English</a> · <a href="SETUP.pt-BR.html" aria-current="page" hreflang="pt-BR">Português</a></div></div>
+  <header class="hero">
+    <div class="wrap">
+      <img src="assets/hpp-logo-header.png" alt="House Party Protocol">
+      <p class="eyebrow">Método · SETUP.pt-BR.md</p>
+      <h1>Instalação guiada</h1>
+    </div>
+  </header>
+  <nav aria-label="Capítulos"><div class="wrap"><a href="#pré-requisitos">Pré-requisitos</a><a href="#seleção">Seleção</a><a href="#bootstrap-a-partir-de-um-checkout-do-produto-público">Bootstrap a partir de um checkout do produto público</a><a href="#interface-offline">Interface offline</a><a href="#comportamento-do-plano-e-da-aplicação">Comportamento do plano e da aplicação</a><a href="#reexecução-e-interrupção">Reexecução e interrupção</a><a href="#limites-dos-hosts">Limites dos hosts</a><a href="#status-da-verificação">Status da verificação</a></div></nav>
+  <main>
+
+    <section><div class="wrap">
+<blockquote class="measured">
+<p><strong>Disponibilidade:</strong> este guia cobre o HPP 2.14.0 e versões posteriores; versões anteriores não
+incluem <code>hpp setup</code>. A ativação do host é uma ação humana explícita e separada.</p>
+</blockquote>
+<p>A instalação guiada combina o checkout completo do produto público do HPP, o instalador de módulos existente e um
+ambiente Python isolado no projeto. Ela oferece um plano revisável seguido por uma aplicação em
+lote. O core continua local e independente de provedor: não faz chamadas de inferência nem coleta
+ou armazena credenciais.</p>
+    </div></section>
+
+    <section id="pré-requisitos"><div class="wrap">
+      <p class="eyebrow">01</p>
+      <h2>Pré-requisitos</h2>
+<ul>
+<li>Python 3.10 ou mais novo.</li>
+<li>Git.</li>
+<li>Claude Code ou Codex CLI já instalado, se esse for o host escolhido.</li>
+<li>Um checkout completo do produto público em <code>github.com/rusharlabs/house-party-protocol</code>. Use o
+mesmo checkout para o bootstrap e como distribuição em <code>--source</code> para <code>hpp setup</code> offline.</li>
+</ul>
+<p>Login, assinatura e custos de modelos continuam sob responsabilidade do host. A instalação não
+instala Python, Git, Claude Code, Codex ou outro software de sistema. Credenciais Supabase só são
+necessárias para configurar e usar a integração opcional do Supabase. Orca também é opcional.</p>
+    </div></section>
+
+    <section id="seleção"><div class="wrap">
+      <p class="eyebrow">02</p>
+      <h2>Seleção</h2>
+<table>
+<thead><tr><th>Seleção</th><th style="text-align:right">Claude Code</th><th style="text-align:right">Codex CLI</th></tr></thead>
+<tbody>
+<tr><td><code>reliable-coding</code> (padrão)</td><td style="text-align:right">6 módulos</td><td style="text-align:right">6 módulos</td></tr>
+<tr><td><code>--all-compatible</code></td><td style="text-align:right">10 módulos</td><td style="text-align:right">9 módulos</td></tr>
+<tr><td><code>--modules &lt;ids&gt;</code></td><td style="text-align:right">IDs compatíveis explícitos</td><td style="text-align:right">IDs compatíveis explícitos</td></tr>
+</tbody>
+</table>
+<p>O Codex não suporta <code>claude-dev-kit</code>. <code>--all-compatible</code> o exclui; informar explicitamente um
+módulo incompatível falha antes da aplicação. A seleção de módulos vem do manifesto emitido e das
+declarações de compatibilidade por host.</p>
+    </div></section>
+
+    <section id="bootstrap-a-partir-de-um-checkout-do-produto-público"><div class="wrap">
+      <p class="eyebrow">03</p>
+      <h2>Bootstrap a partir de um checkout do produto público</h2>
+<p>Clone o produto público uma única vez e rode o bootstrap da raiz desse checkout. Esse mesmo
+diretório é a distribuição completa usada pelo bootstrap e por <code>hpp setup --source</code>; não crie uma
+segunda cópia para o argumento <code>--source</code>.</p>
+<pre><code class="language-bash">git clone https://github.com/rusharlabs/house-party-protocol.git
+cd house-party-protocol</code></pre>
+<p>Partindo do checkout completo e versionado, Windows PowerShell:</p>
+<pre><code class="language-powershell">python -I -B scripts/setup_hpp.py --target &lt;projeto&gt; --host claude-code
+python -I -B scripts/setup_hpp.py --target &lt;projeto&gt; --host claude-code --apply
+python -I -B scripts/setup_hpp.py --target &lt;projeto&gt; --host claude-code --all-compatible</code></pre>
+<p>Partindo do checkout completo e versionado, Terminal do macOS:</p>
+<pre><code class="language-bash">python3 -I -B scripts/setup_hpp.py --target &lt;projeto&gt; --host codex
+python3 -I -B scripts/setup_hpp.py --target &lt;projeto&gt; --host codex --apply
+python3 -I -B scripts/setup_hpp.py --target &lt;projeto&gt; --host codex --all-compatible</code></pre>
+<p>O primeiro comando gera um plano offline e não escreve nada; revise a saída completa. O segundo
+repete as mesmas opções e acrescenta <code>--apply</code>; cria <code>.hpp/venv</code>, instala wheels de bootstrap com
+hash fixado e a CLI local, e então aplica o plano dos módulos. A aplicação do bootstrap precisa de
+acesso ao PyPI. A instalação não chama CLI de modelo nem ativa o host, não aciona inferência paga
+nem pede credenciais de modelo. Invoque o launcher gerado com <code>-I -B</code>; ele preserva o ambiente
+Python da aplicação chamadora e direciona comandos HPP ao runtime gerenciado no projeto.</p>
+<p>O bootstrap também mantém metadados confiáveis de propriedade num diretório local do usuário, fora
+do projeto consumidor: <code>~/.hpp-setup-state</code> por padrão (no Windows, esse diretório fica dentro da
+pasta pessoal do usuário). A opção avançada <code>--state-dir &lt;caminho&gt;</code> seleciona outro local; ele
+precisa continuar fora do projeto consumidor. Esses metadados inventariam todos os arquivos do
+ambiente gerenciado e validam o launcher. O bootstrap recusa recibo forjado no projeto, ambiente
+existente sem proprietário reconhecido ou launcher/ambiente alterado. Se o estado confiável sumir,
+não adote nem apague automaticamente os arquivos do projeto: pare e preserve-os para reconciliação.</p>
+<p>O processo constrói a CLI numa cópia exclusiva e retida em <code>.hpp/bootstrap-build-&lt;unique&gt;</code>; o
+checkout versionado da release permanece intacto e dados antigos não são removidos
+automaticamente. Mantenha <code>.hpp/venv</code>, <code>.hpp/bin</code>, <code>.hpp/runtime-router.json</code>, <code>.hpp/run.py</code>,
+recibos, dados do launcher e cópias de build retidas locais; não os versione no projeto consumidor.</p>
+<p>Use o launcher para executar o HPP e o host com o ambiente preparado. No Windows PowerShell:</p>
+<pre><code class="language-powershell">python -I -B .hpp/run.py hpp doctor
+python -I -B .hpp/run.py host --version</code></pre>
+<p>No Terminal do macOS, use <code>python3</code>:</p>
+<pre><code class="language-bash">python3 -I -B .hpp/run.py hpp doctor
+python3 -I -B .hpp/run.py host --version</code></pre>
+<p>A ativação de plugins nativos do Claude Code é uma ação explícita separada, depois de revisar o
+plano. No Windows, rode <code>python -I -B .hpp/run.py activate</code>; no macOS, rode
+<code>python3 -I -B .hpp/run.py activate</code>. O comando confere novamente os checksums da distribuição e dos
+módulos e chama os comandos de plugin do host sem uma flag automática de confirmação. Reinicie o
+Claude Code e verifique o estado dos plugins e hooks no próprio host antes de dizer que a ativação
+foi concluída. No Codex, runtime e skills são copiados localmente; os hooks ficam desligados e não é
+necessário instalar outro plugin apenas para copiar as mesmas skills.</p>
+    </div></section>
+
+    <section id="interface-offline"><div class="wrap">
+      <p class="eyebrow">04</p>
+      <h2>Interface offline</h2>
+<p>A CLI offline recebe esse mesmo checkout em <code>--source</code>; a versão precisa corresponder à CLI
+instalada. Rode da raiz do produto e mantenha o projeto-alvo fora dele. Por padrão, ela planeja;
+<code>--apply</code> executa o lote revisado. A gramática é:</p>
+<pre><code class="language-text">hpp setup --source &lt;mesmo checkout do produto público&gt; --target &lt;projeto&gt; --host claude-code|codex
+          [--bundle reliable-coding | --all-compatible | --modules &lt;ids&gt;]
+          [--apply] [--json]</code></pre>
+<p>Exemplos:</p>
+<pre><code class="language-bash">hpp setup --source . --target ../meu-projeto --host claude-code
+hpp setup --source . --target ../meu-projeto --host claude-code --apply
+hpp setup --source . --target ../meu-projeto --host codex --all-compatible
+hpp setup --source . --target ../meu-projeto --host codex --modules kit-forge,operator-kit</code></pre>
+<p>Use apenas um modo de seleção. Sem uma flag de seleção, <code>reliable-coding</code> é o padrão. <code>--json</code>
+solicita um relatório legível por máquina; não elimina a fronteira de revisão e aplicação. Monte
+argumentos de processo a partir de campos estruturados; nunca interprete ou execute texto de shell
+impresso pelo plano.</p>
+    </div></section>
+
+    <section id="comportamento-do-plano-e-da-aplicação"><div class="wrap">
+      <p class="eyebrow">05</p>
+      <h2>Comportamento do plano e da aplicação</h2>
+<p>Antes da primeira escrita, o plano deve listar os módulos escolhidos, arquivos-alvo, ambiente do
+projeto e dependências fixadas, ações específicas do host e todos os gates manuais restantes.
+Revise conflitos e configurações existentes antes de aplicar. Instruções e configurações do host
+existentes devem ser preservadas. Recusa, divergência de checksum, módulo incompatível ou conflito
+deve parar antes de qualquer escrita afetada.</p>
+    </div></section>
+
+    <section id="reexecução-e-interrupção"><div class="wrap">
+      <p class="eyebrow">06</p>
+      <h2>Reexecução e interrupção</h2>
+<p>Uma reexecução só é aceita quando versão da fonte, host, seleção de módulos, artefatos registrados e
+perfil gerenciado continuam iguais aos recibos de propriedade. Mudança de seleção/versão/artefato ou
+edição do perfil/arquivo gerenciado é recusada para revisão; upgrade ou migração automática não está
+implementado. Se uma interrupção abrupta deixar o recibo inválido ou ausente, preserve os arquivos
+existentes para reconciliação; o instalador não pode retomar com segurança um estado sem registro.</p>
+<p>A aplicação deve guardar informações de rollback e reportar falha parcial como parcial. Retome
+somente etapas pendentes depois de conferir o destino vivo; não repita escritas que já deram certo.
+O relatório final deve separar:</p>
+<ul>
+<li>arquivos de módulo instalados e integridade conferida;</li>
+<li>runtime e skills copiados;</li>
+<li>ambiente/launchers instalados e caminho do interpretador medido;</li>
+<li>integração do host ativa, aguardando ação humana, recusada ou não suportada;</li>
+<li>integrações opcionais configuradas ou ainda não configuradas.</li>
+</ul>
+    </div></section>
+
+    <section id="limites-dos-hosts"><div class="wrap">
+      <p class="eyebrow">07</p>
+      <h2>Limites dos hosts</h2>
+<p>A ativação de plugins nativos do Claude Code é o comando explícito do launcher acima e mantém o
+fluxo de consentimento do próprio host. O lote de instalação não ativa plugins nem edita
+configurações/hooks do Claude. Módulos <code>explicit-command</code> são instalados como arquivos e comandos,
+não devem ser descritos como plugins nativos.</p>
+<p>No Codex, a instalação copia runtime e skills suportados; os hooks do HPP continuam desligados. Não
+exija instalar um plugin redundante só para copiar skills que o instalador de módulos já copia. A
+presença de um arquivo não prova que o host o carregou.</p>
+<p>Nunca grave credenciais em arquivos gerados ou logs. Instalar arquivos de uma integração opcional
+não configura Supabase nem outra conta.</p>
+    </div></section>
+
+    <section id="status-da-verificação"><div class="wrap">
+      <p class="eyebrow">08</p>
+      <h2>Status da verificação</h2>
+<p>Este guia cobre o HPP 2.14.0 e versões posteriores; versões anteriores não têm instalação guiada.
+A ativação do host é uma ação humana explícita e separada. Os comandos do macOS usam <code>python3</code>.
+Testes de host simulado podem verificar a montagem de argumentos, mas não provam ativação no host.</p>
+    </div></section>
+
+  </main>
+  <footer><div class="wrap">
+    <p class="five">AGENTS · EVIDENCE · MEMORY · PROTOCOL · CONTINUITY</p>
+    <strong>House Party Protocol</strong>
+    <p>Opere agentes de código sob evidência, não confiança.</p>
+    <p><a href="index.html">Documentação</a> · <a href="MANUAL.pt-BR.html">Manual do harness</a> · <a href="CATALOG.pt-BR.html">Catálogo de módulos</a> · <a href="https://github.com/rusharlabs/house-party-protocol/blob/main/docs/SETUP.pt-BR.md">Fonte em Markdown</a> · <a href="SETUP.html" hreflang="en" lang="en">English</a></p>
+  </div></footer>
+</body>
+</html>

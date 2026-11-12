@@ -1,0 +1,3 @@
+include scripts/setup_hpp.py
+include .github/requirements/setup.txt
+include .github/requirements/build.txt

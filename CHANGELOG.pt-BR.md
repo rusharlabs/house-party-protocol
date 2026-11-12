@@ -7,6 +7,22 @@ Todas as mudanças relevantes do harness são registradas aqui. O formato segue
 [SemVer](https://semver.org/lang/pt-BR/). A versão do produto descreve o contrato do harness;
 cada módulo mantém sua própria versão no `plugin.json` e no `marketplace.json`.
 
+## [2.14.0] — 2026-11-11
+
+### Adicionado
+
+- `hpp setup` compõe o instalador existente em um lote offline, com plano antes da aplicação.
+  Selecione um bundle, módulos explícitos ou todos os compatíveis com o host escolhido.
+- Um script do checkout completo prepara um ambiente isolado, instala dependências fixadas por
+  hash e a CLI local, e cria launchers que mantêm o mesmo runtime Python.
+- Recibos distinguem arquivos preparados de ativação nativa manual e hooks sem suporte;
+  integridade, plano explícito de arquivos e checkpoints preservam o trabalho existente.
+
+### Corrigido
+
+- Os guias esclarecem que `hpp init --apply` registra um perfil; não conecta automaticamente
+  Claude Code ou Codex CLI. O novo guia de setup cobre ambos os hosts.
+
 ## [2.13.2] — 2026-11-11
 
 ### Alterado
@@ -2159,6 +2175,7 @@ publicar.
 [2.6.5]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.5
 [2.6.6]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.6
 [2.6.7]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.7
+[2.14.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.14.0
 [2.13.2]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.13.2
 [2.13.1]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.13.1
 [2.13.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.13.0

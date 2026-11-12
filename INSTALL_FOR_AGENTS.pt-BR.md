@@ -1,143 +1,131 @@
 [English](INSTALL_FOR_AGENTS.md) · [Português](INSTALL_FOR_AGENTS.pt-BR.md)
 
-# Instalando o House Party Protocol — um guia para agentes
+# Instalando o House Party Protocol — guia para agentes
 
-Você é um agente a quem pediram para instalar o House Party Protocol num repositório. Este
-arquivo é a instrução inteira. Leia até o fim antes de rodar qualquer coisa: o passo 4 contém um
-portão que você não pode pular, e saber que ele existe muda o que você faz no passo 3.
-
-O House Party Protocol é um harness local-first de confiabilidade, governança e avaliação de
-agentes de código. Ele não tem dependência de runtime e não fala com serviço de rede. Instalar
-escreve arquivos num repositório e os liga a um host; nada além disso acontece.
-
-## Passo 0 — identifique o seu host
-
-Os dois hosts se ligam de formas diferentes, e a diferença não é cosmética.
-
-| você é | vá para |
-|---|---|
-| **Claude Code** | passos 1 → 4, depois o 6 |
-| **Codex CLI** | passos 1 → 4, depois o 5, depois o 6 |
-| nenhum dos dois | a CLI instala e o `hpp doctor` responde, mas não existe wiring de host para você; pare depois do passo 3 e avise a pessoa |
-
-## Passo 1 — confira os pré-requisitos, não os presuma
-
-- **Python 3.10 ou mais novo.** A CI exercita 3.10 a 3.13 em Linux, macOS e Windows.
-  Interpretadores mais antigos não são prometidos, porque nada os mede.
-- **`git` no `PATH`**, para attestation.
-- **Um repositório-alvo.** Instalar num diretório vazio funciona e é assim que o wizard é
-  testado, mas o harness só é útil onde há trabalho a governar.
-
-Se um pré-requisito falhar, diga qual e pare. Não instale um Python, não troque o interpretador
-da pessoa, não contorne a ausência do `git`.
-
-## Passo 2 — instale a CLI
+Para instalar somente a CLI do core, sem os módulos, a alternativa versionada é:
 
 ```bash
-pip install git+https://github.com/rusharlabs/house-party-protocol@v2.13.2
+python -m pip install git+https://github.com/rusharlabs/house-party-protocol@v2.14.0
 ```
 
-`pipx install git+…` funciona igual. O pacote traz o próprio manifesto e a própria suíte de
-benchmark, então a CLI responde de qualquer diretório depois de instalada.
+Este guia cobre o HPP 2.14.0 e versões posteriores; versões anteriores não incluem `hpp setup` nem
+`scripts/setup_hpp.py`. O comando atual `hpp init` planeja e registra um perfil; ele não instala
+módulos nem ativa integrações do host.
 
-## Passo 3 — prove a instalação antes de usá-la
+House Party Protocol (HPP) é um conjunto local-first para confiabilidade, governança e avaliação de
+agentes de código. O core não chama modelos nem manipula credenciais. A instalação prepara um
+ambiente Python isolado no projeto e instala os módulos escolhidos. A ativação do host e as
+integrações opcionais são estados separados e devem ser reportados como tais.
+
+## Antes de instalar
+
+Tenha Python 3.10 ou mais novo, Git e o host escolhido (Claude Code ou Codex CLI) instalados. Faça
+login no host por conta própria; o HPP não instala software de sistema, troca contas nem gerencia
+login, assinatura ou custo de modelos. Credenciais Supabase só são necessárias se você configurar
+essa integração opcional. Orca também é opcional.
+
+Use um único checkout completo do produto público em `github.com/rusharlabs/house-party-protocol`
+para o bootstrap e para `hpp setup --source`. Não crie uma segunda cópia do produto. O bootstrap
+prepara o projeto, um `.hpp/venv` isolado, dependências fixadas e a CLI do HPP, e então chama o
+planejador offline de instalação. O `--apply` pode acessar o índice de pacotes Python para instalar
+dependências fixadas. O core do HPP e a instalação dos módulos não fazem chamadas de inferência a
+modelos.
+
+Clone uma vez e rode os comandos a partir da raiz desse checkout. Mantenha o projeto consumidor
+existente fora do checkout do produto:
 
 ```bash
-hpp doctor
+git clone https://github.com/rusharlabs/house-party-protocol.git
+cd house-party-protocol
 ```
 
-Ele imprime uma linha e sai com `0`:
+## Escolha um pacote
 
+| Seleção | Claude Code | Codex CLI |
+|---|---:|---:|
+| `reliable-coding` (padrão) | 6 módulos | 6 módulos |
+| todos os módulos compatíveis | 10 módulos | 9 módulos |
+
+O Codex não suporta `claude-dev-kit`. A seleção de todos os compatíveis o omite; um pedido explícito
+de módulo incompatível é recusado, sem contornar a restrição. Selecione IDs individuais apenas quando
+souber qual integração precisa.
+
+## Planeje, revise, aplique
+
+A partir da raiz desse único checkout público do produto, rode o plano do bootstrap. No Windows,
+use `python`; no macOS, use `python3`:
+
+```powershell
+python -I -B scripts/setup_hpp.py --target <projeto> --host claude-code
+python -I -B scripts/setup_hpp.py --target <projeto> --host claude-code --all-compatible
 ```
-HPP doctor: ok - modules=10 - hosts=claude-code, codex - hooks=18 (permission gates=9 - llm egress=0)
-```
-
-Saída diferente de zero aqui significa instalação quebrada. Reporte a linha e pare; não siga
-para o passo 4 esperando que se resolva sozinho.
-
-## Passo 4 — leia o plano para a pessoa. NÃO PULE
 
 ```bash
-hpp init --target <path-to-the-repository>
+python3 -I -B scripts/setup_hpp.py --target <projeto> --host codex
+python3 -I -B scripts/setup_hpp.py --target <projeto> --host codex --all-compatible
 ```
 
-Sem `--apply`, o `hpp init` **não escreve nada**. Ele roda seis estágios fixos e imprime um
-plano do que escreveria.
+O padrão é o bundle `reliable-coding`, com seis módulos. `--all-compatible` seleciona todos os
+módulos suportados pelo host: 10 para Claude Code e 9 para Codex CLI.
 
-Leia o plano em voz alta, e não só as linhas a colar. Quando os módulos escolhidos declaram
-hooks, ele imprime uma tabela HOOK CAPABILITIES antes do bloco WIRE: para cada hook, seus eventos,
-sua política de saída (`observe`, `warn` ou `block`) e seus grupos de capacidade. Essa tabela é o
-que os hooks conseguem fazer depois de ligados; as linhas a colar sozinhas são só nomes de
-arquivo. Deixe o `--decision-advisor` em `off`, a menos que a pessoa tenha pedido (novo na
-2.6.0).
+A primeira invocação gera um plano: módulos escolhidos, arquivos, mudanças no ambiente e nas
+dependências, ações específicas do host e gates manuais. Revise o caminho-alvo e o plano inteiro
+antes de autorizar o lote. Depois, repita o mesmo comando com `--apply`:
 
-**Mostre esse plano à pessoa e espere o sim dela.** Só então:
+```powershell
+python -I -B scripts/setup_hpp.py --target <projeto> --host claude-code --apply
+```
 
 ```bash
-hpp init --target <path-to-the-repository> --apply
+python3 -I -B scripts/setup_hpp.py --target <projeto> --host codex --apply
 ```
 
-Isso não é cerimônia. O plano é o único instante em que a pessoa consegue ver o que está prestes
-a entrar no repositório dela, e um instalador que escreve antes de você ler é exatamente a falha
-que este harness existe para impedir. Se você pular, instalou o harness violando-o.
+O primeiro comando planeja totalmente offline e não escreve. A aplicação cria `.hpp/venv`, instala
+wheels de bootstrap com hash fixado e a CLI local, e então aplica o plano dos módulos; precisa de
+acesso ao PyPI. Deve preservar instruções e configurações existentes, mostrar conflitos antes de
+escrever e guardar dados de rollback. Falha parcial não é instalação concluída: use o relatório para
+retomar somente as etapas pendentes e medir o estado final.
 
-## Passo 5 — wiring do Codex CLI
+Os metadados confiáveis de propriedade ficam fora do projeto consumidor, em `~/.hpp-setup-state`
+por padrão (no Windows, dentro da pasta pessoal do usuário). A opção avançada `--state-dir
+<caminho>` muda esse local; mantenha-o fora do projeto. Esses metadados registram o inventário
+completo do ambiente gerenciado e validam o launcher. A instalação recusa recibos forjados no
+projeto, ambiente existente sem proprietário reconhecido e launcher/ambiente alterado. Se o estado
+confiável sumir, pare e preserve os arquivos para reconciliação; não os adote nem apague. O build usa
+uma cópia exclusiva e retida em `.hpp/bootstrap-build-<unique>` e mantém intacto o checkout
+versionado da release. Não versione `.hpp/venv`, `.hpp/bin`, `.hpp/runtime-router.json`, recibos,
+dados do launcher, `.hpp/run.py` nem cópias de build retidas.
 
-O Claude Code é ligado pelo passo 4. O Codex CLI tem um canal de plugin próprio para os módulos que
-carregam skills (só skills; os hooks ficam desligados):
+## O que a instalação ativa — e o que não ativa
 
-```bash
-codex plugin marketplace add rusharlabs/house-party-protocol
-codex plugin add <module>@house-party-protocol
-```
+- O `.hpp/venv` do projeto isola o HPP e as dependências dos módulos do Python do sistema.
+- Arquivos de módulos, runtime copiado e skills não provam que o host os carregou ou ativou.
+- Plugins nativos do Claude Code exigem uma ação explícita no host e o consentimento próprio dele.
+  Módulos `explicit-command` continuam sendo comandos; a instalação não edita configurações ou
+  hooks do Claude.
+- No Codex, a instalação copia o runtime e as skills suportados. Os hooks do HPP ficam desligados.
+  Não instale um plugin duplicado apenas para copiar novamente skills já instaladas pelo módulo.
+- `.hpp/run.py` preserva o ambiente Python da aplicação chamadora; comandos HPP são encaminhados
+  ao runtime gerenciado por aliases locais em `.hpp/bin`. Invoque-o com
+  `python -I -B .hpp/run.py hpp doctor` no Windows ou `python3 -I -B .hpp/run.py hpp doctor` no
+  macOS.
+- Para plugins nativos do Claude Code, revise o plano e ative separadamente: no Windows, rode
+  `python -I -B .hpp/run.py activate`; no macOS, rode `python3 -I -B .hpp/run.py activate`. O comando confere
+  novamente os checksums da distribuição e dos
+  módulos e mantém o consentimento do host. Reinicie o Claude Code e verifique o estado dos plugins
+  e hooks. O lote de instalação não ativa o host por conta própria.
+- Instalar arquivos de integração opcional não configura a conta nem a integração.
 
-Todo o resto — runtime, scripts, templates, e qualquer módulo sem skills — precisa de um comando a
-mais por módulo:
+O relatório deve separar `instalado`, `ativo`, `manual`, `recusado` e `falhou`. Verifique a CLI, a
+integridade dos módulos, o runtime, as skills e o wiring do host de forma independente. Não diga que
+a ativação está concluída sem confirmação do próprio host.
 
-```bash
-installers/kit-forge-1.5.6/kit_doctor.py install --kit <kit> --host codex --target <repo> --apply
-```
+## Comandos de nível mais baixo
 
-As skills vão para `.agents/skills`; o runtime completo vai para `.agents/hpp`. Os hooks
-declarados em `hooks.json` pertencem ao Claude Code e **não** são ativados no Codex. O
-`hpp init --host codex` imprime a tabela HOOK CAPABILITIES mesmo assim; leia-a em voz alta como o
-que esses hooks fariam no Claude Code, e diga que nenhum deles roda aqui, em vez de deixar a
-pessoa acreditar que um portão está armado quando não está.
+Em versões sem instalação guiada, `hpp init` pode planejar e registrar `.hpp/profile.json`; ele não
+instala o lote de módulos nem ativa o wiring do host. Os instaladores de módulo continuam disponíveis
+para instalações individuais. Leia o guia do módulo correspondente e mantenha a confirmação entre
+plano e aplicação e os gates de consentimento do host.
 
-## Passo 6 — verifique, e reporte o código de saída, não a sua impressão
-
-```bash
-hpp doctor
-hpp benchmark
-```
-
-O `hpp benchmark` reporta `pass@k` e `pass^k` separadamente e imprime o próprio veredito de
-gate. Cite as duas saídas à pessoa. Transcrição não é código de saída.
-
-Se o `hpp init` imprimiu uma seção DOCUMENTATION, aponte à pessoa as páginas que ela nomeia; cada
-uma foi encontrada no disco. Uma instalação por pip não carrega páginas de documentação, então
-depois do passo 2 a seção não aparece — não invente caminhos.
-
-## Códigos de saída
-
-`0` ok · `1` warn/manual · `2` block · `3` error.
-
-## Não faça
-
-- **Não edite os diretórios versionados de módulo.** Eles são artefatos emitidos. Uma edição à
-  mão faz o checksum divergir, e a próxima instalação os recusa.
-- **Não baixe um gate para ficar verde.** Conserte o artefato que o gate reprovou.
-- **Não registre credencial, caminho pessoal, cliente ou infraestrutura privada** em lugar
-  nenhum onde o harness escreve.
-- **Não trate `healthy` como correto.** Ele prova o frescor do sinal declarado, nada mais.
-
-## Atualizando
-
-Refaça o passo 2 com a tag nova e o passo 3. O `hpp init` é idempotente: rode de novo e leia o
-plano de novo. O plano é o que mudou.
-
-## Se falhar
-
-Rode `hpp doctor` e cite a linha inteira. Abra uma issue em
-<https://github.com/rusharlabs/house-party-protocol/issues> com essa linha, a sua versão de
-Python e o seu host. Não cole credencial, token nem caminho absoluto da máquina da pessoa.
+Nunca copie credenciais para arquivos, logs ou relatos de problema do HPP. Nunca sobrescreva uma
+configuração existente do host para fazer a instalação parecer concluída.

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>House Party Protocol — UX-INSTALL-JOURNEY — the installation journey, told in the conversation</title>
+  <title>House Party Protocol — UX-INSTALL-JOURNEY — from manual install to guided setup</title>
   <meta name="description" content="How an agent guides a human through the installation in the conversation, over the harness installer and the module installer.">
   <link rel="alternate" hreflang="en" href="UX-INSTALL-JOURNEY.html">
   <link rel="alternate" hreflang="pt-BR" href="UX-INSTALL-JOURNEY.pt-BR.html">
@@ -70,15 +70,15 @@
     <div class="wrap">
       <img src="assets/hpp-logo-header.png" alt="House Party Protocol">
       <p class="eyebrow">Method · UX-INSTALL-JOURNEY.md</p>
-      <h1>UX-INSTALL-JOURNEY — the installation journey, told in the conversation</h1>
+      <h1>UX-INSTALL-JOURNEY — from manual install to guided setup</h1>
     </div>
   </header>
-  <nav aria-label="Chapters"><div class="wrap"><a href="#principle">Principle</a><a href="#path-1--hpp-init-the-harness-journey-primary">Path 1 — <code>hpp init</code>, the harness journey (primary)</a><a href="#path-2--the-module-installer-kit_doctorpy">Path 2 — the module installer (<code>kit_doctor.py</code>)</a><a href="#what-the-agent-never-does-conduct-checklist">What the agent NEVER does (conduct checklist)</a></div></nav>
+  <nav aria-label="Chapters"><div class="wrap"><a href="#guided-setup--hpp-2140-and-later">Guided setup — HPP 2.14.0 and later</a><a href="#historical-measured-journey--hpp-init-and-per-module-installer">Historical measured journey — <code>hpp init</code> and per-module installer</a><a href="#principle">Principle</a><a href="#historical-path-1--hpp-init-the-profile-planning-journey">Historical Path 1 — <code>hpp init</code>, the profile-planning journey</a><a href="#path-2--the-module-installer-kit_doctorpy">Path 2 — the module installer (<code>kit_doctor.py</code>)</a><a href="#what-the-agent-never-does-conduct-checklist">What the agent NEVER does (conduct checklist)</a></div></nav>
   <main>
 
     <section><div class="wrap">
 <blockquote class="measured">
-<p><strong>Version:</strong> 2.0.0 — a presentation layer over two frozen contracts.
+<p><strong>Version:</strong> 2.0.0 — historical measured journey, retained as an installation record.
 <strong>Path 1</strong> is <code>hpp init</code>, the harness installer (<code>hpp/wizard.py</code>, six stages, plan then
 <code>--apply</code>). <strong>Path 2</strong> is the module installer, <code>installers/kit-forge-1.5.6/kit_doctor.py</code>,
 whose mechanics live in <code>INSTALL-CONTRACT.md</code> and whose per-module README follows
@@ -89,12 +89,47 @@ in a conversation. Nothing here changes the mechanics — if this document contr
 2026-09-23 against version 2.5.8, from a clone of this repository at the <code>v2.5.8</code> tag unless the
 text says "pip install"; the <code>kit_doctor.py</code> outputs in Path 2 were captured on 2026-09-21 against
 version 2.4.1, and the end-to-end example says what has changed since. What is marked
-<em>new in 2.6.0</em> arrived after the version measured here.</p>
+<em>new in 2.6.0</em> arrived after the version measured here. Those transcripts and counts are history,
+not current output. <code>hpp init</code> writes only <code>.hpp/profile.json</code> on apply; its WIRE block is
+suggestions, not installation or host activation. See <a href="SETUP.html">Guided setup</a> for the HPP
+2.14.0+ flow; earlier releases lack bulk setup.</p>
 </blockquote>
     </div></section>
 
-    <section id="principle"><div class="wrap">
+    <section id="guided-setup--hpp-2140-and-later"><div class="wrap">
       <p class="eyebrow">01</p>
+      <h2>Guided setup — HPP 2.14.0 and later</h2>
+<p>The guided flow reduces setup to a plan and an apply. Clone the public product once and run
+<code>scripts/setup_hpp.py</code> from that checkout; the same checkout is passed to offline <code>hpp setup --source</code>. The bootstrap creates a project <code>.hpp/venv</code>, installs pinned dependencies and the HPP
+CLI, then applies the offline module plan. Invoke the generated launcher with <code>python -I -B</code> on
+Windows or <code>python3 -I -B</code> on macOS. It preserves the calling application's Python environment and
+routes HPP commands through the project's managed runtime. Earlier HPP releases lack guided setup.
+Host activation remains a separate, explicit human action.</p>
+<p>The offline command accepts <code>--source</code>, <code>--target</code> and <code>--host claude-code|codex</code>; its selection is
+the six-module <code>reliable-coding</code> bundle by default, <code>--all-compatible</code> (10 Claude modules or 9
+Codex modules), or an explicit <code>--modules</code> list. It plans without writing. The human reviews the
+complete plan and authorizes the batch before <code>--apply</code>. <code>--json</code> changes report format, not the
+review boundary. See <a href="SETUP.html">SETUP.md</a> for command syntax, prerequisites and limits.</p>
+<p>Installing files and activating a host are separate results. Claude native plugin activation keeps
+its explicit host action and consent. Codex receives supported runtime and skills with hooks off;
+do not install a redundant plugin solely to duplicate those skills. Supabase and Orca remain
+optional. Login, subscription and model cost remain with the host. Bootstrap dependency installation
+uses <code>pip</code>; setup makes no paid inference call and stores no credentials. Trusted ownership metadata
+stays outside the project in <code>~/.hpp-setup-state</code> by default (advanced <code>--state-dir</code>); it inventories
+the full managed environment. A rerun requires the same source version, host, selection, artifacts
+and managed profile; changed values are refused for review. Automatic upgrade/migration is not
+implemented. Keep project-local <code>.hpp/venv</code>, <code>.hpp/bin</code>, <code>.hpp/runtime-router.json</code>, receipts,
+launchers and retained build copies out of Git. If interruption leaves no valid receipt, preserve
+the files for reconciliation instead of adopting or deleting them.</p>
+    </div></section>
+
+    <section id="historical-measured-journey--hpp-init-and-per-module-installer"><div class="wrap">
+      <p class="eyebrow">02</p>
+      <h2>Historical measured journey — <code>hpp init</code> and per-module installer</h2>
+    </div></section>
+
+    <section id="principle"><div class="wrap">
+      <p class="eyebrow">03</p>
       <h2>Principle</h2>
 <p><strong>The human never sees a terminal prompt. The human sees a conversation.</strong> The agent runs the
 plan, translates the plan into the human's language, and waits for the human to say "apply it"
@@ -112,12 +147,12 @@ or <code>CI</code> in the environment take that path away; the "Confirm" is the 
 </table>
     </div></section>
 
-    <section id="path-1--hpp-init-the-harness-journey-primary"><div class="wrap">
-      <p class="eyebrow">02</p>
-      <h2>Path 1 — <code>hpp init</code>, the harness journey (primary)</h2>
-<p><code>hpp init</code> is the front door: it plans the whole installation for a host, verifies what it can,
-writes at most one file, and prints the module-installer lines of Path 2 in its wire block. The
-agent starts here, always.</p>
+    <section id="historical-path-1--hpp-init-the-profile-planning-journey"><div class="wrap">
+      <p class="eyebrow">04</p>
+      <h2>Historical Path 1 — <code>hpp init</code>, the profile-planning journey</h2>
+<p>The transcript below records the older <code>hpp init</code> flow. It plans a profile and prints module
+installer suggestions; it does not install a module batch or activate host wiring. Do not use its
+captured output as evidence for the guided setup interface.</p>
 <h3 id="the-six-stages">The six stages</h3>
 <p>The stages are fixed and run in this order; each boot line completes only when its stage has
 finished.</p>
@@ -262,7 +297,7 @@ If this is fine, say "apply it" and I run the same command with --apply.</code><
     </div></section>
 
     <section id="path-2--the-module-installer-kit_doctorpy"><div class="wrap">
-      <p class="eyebrow">03</p>
+      <p class="eyebrow">05</p>
       <h2>Path 2 — the module installer (<code>kit_doctor.py</code>)</h2>
 <p>The module-installer lines <code>hpp init</code> prints in its wire block — one per module on Codex CLI,
 after the plugin lines, and one per explicit-command module on Claude Code — are this installer.
@@ -424,7 +459,7 @@ path? In either one, the person who runs the final step is you.</p>
     </div></section>
 
     <section id="what-the-agent-never-does-conduct-checklist"><div class="wrap">
-      <p class="eyebrow">04</p>
+      <p class="eyebrow">06</p>
       <h2>What the agent NEVER does (conduct checklist)</h2>
 <ul class="tasks">
 <li><input type="checkbox" disabled> NEVER runs <code>--apply</code> — of <code>hpp init</code> or of <code>kit_doctor.py</code> — without explicit confirmation from the human IN THIS conversation</li>
