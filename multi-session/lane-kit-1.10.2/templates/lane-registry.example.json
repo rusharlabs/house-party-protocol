@@ -17,7 +17,7 @@
     "rev-a": {
       "role": "reviewer",
       "session_id": "REPLACE-ME",
-      "model": "gpt-5.6-sol",
+      "model": "gpt-6.1-sol",
       "branch": "feat/exemplo",
       "started_at": "2026-07-10T15:10:00-03:00",
       "heartbeat_at": "2026-07-10T15:10:00-03:00",

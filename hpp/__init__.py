@@ -1,3 +1,3 @@
 """House Party Protocol's portable, local-first harness."""
 
-__version__ = "2.13.1"
+__version__ = "2.13.2"

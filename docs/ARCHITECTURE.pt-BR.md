@@ -211,7 +211,7 @@ essa renderização.
 |---|---|---|
 | `operator-kit` 1.8.6 | `native` · plugin + hooks depois de colar o wiring | `explicit-command` · plugin (só skills) + cópia verificada |
 | `kit-forge` 1.5.6 | `explicit-command` · plugin | `explicit-command` · cópia verificada |
-| `lane-kit` 1.10.1 | `native` · plugin + hooks depois de colar o wiring | `explicit-command` · plugin (só skills) + cópia verificada |
+| `lane-kit` 1.10.2 | `native` · plugin + hooks depois de colar o wiring | `explicit-command` · plugin (só skills) + cópia verificada |
 | `continuity-kit` 1.5.5 | `native` · plugin + hooks depois de colar o wiring | `explicit-command` · plugin (só skills) + cópia verificada |
 | `health-kit` 1.4.6 | `explicit-command` · plugin | `explicit-command` · plugin (só skills) + cópia verificada |
 | `claude-dev-kit` 1.3.10 | `native` · plugin | `unsupported` · — |
