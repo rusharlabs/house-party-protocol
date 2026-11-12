@@ -236,17 +236,17 @@ Clone o produto público uma única vez e rode o bootstrap na raiz desse checkou
 no `--source` de `hpp setup` offline. No Windows PowerShell:
 
 ```powershell
-python -I -B scripts/setup_hpp.py --target <projeto> --host claude-code
-python -I -B scripts/setup_hpp.py --target <projeto> --host claude-code --apply
-python -I -B scripts/setup_hpp.py --target <projeto> --host claude-code --all-compatible
+python -I -B scripts/setup_hpp.py --target <project> --host claude-code
+python -I -B scripts/setup_hpp.py --target <project> --host claude-code --apply
+python -I -B scripts/setup_hpp.py --target <project> --host claude-code --all-compatible
 ```
 
 No Terminal do macOS, use `python3` e o host instalado:
 
 ```bash
-python3 -I -B scripts/setup_hpp.py --target <projeto> --host codex
-python3 -I -B scripts/setup_hpp.py --target <projeto> --host codex --apply
-python3 -I -B scripts/setup_hpp.py --target <projeto> --host codex --all-compatible
+python3 -I -B scripts/setup_hpp.py --target <project> --host codex
+python3 -I -B scripts/setup_hpp.py --target <project> --host codex --apply
+python3 -I -B scripts/setup_hpp.py --target <project> --host codex --all-compatible
 ```
 
 Revise o plano antes de repeti-lo com `--apply`. Aplicar o bootstrap usa `pip` para dependências

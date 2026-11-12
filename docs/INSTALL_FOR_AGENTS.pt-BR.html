@@ -73,12 +73,12 @@
       <h1>Instalando o House Party Protocol — guia para agentes</h1>
     </div>
   </header>
-  <nav aria-label="Capítulos"><div class="wrap"><a href="#antes-de-instalar">Antes de instalar</a><a href="#escolha-um-pacote">Escolha um pacote</a><a href="#planeje-revise-aplique">Planeje, revise, aplique</a><a href="#o-que-a-instalação-ativa--e-o-que-não-ativa">O que a instalação ativa — e o que não ativa</a><a href="#comandos-de-nível-mais-baixo">Comandos de nível mais baixo</a></div></nav>
+  <nav aria-label="Capítulos"><div class="wrap"><a href="#antes-de-instalar">Antes de instalar</a><a href="#escolha-um-pacote">Escolha um pacote</a><a href="#planeje-revise-aplique">Planeje, revise, aplique</a><a href="#o-que-a-instalação-ativa--e-o-que-não-ativa">O que a instalação ativa — e o que não ativa</a><a href="#códigos-de-saída">Códigos de saída</a><a href="#comandos-de-nível-mais-baixo">Comandos de nível mais baixo</a></div></nav>
   <main>
 
     <section><div class="wrap">
 <p>Para instalar somente a CLI do core, sem os módulos, a alternativa versionada é:</p>
-<pre><code class="language-bash">python -m pip install git+https://github.com/rusharlabs/house-party-protocol@v2.14.0</code></pre>
+<pre><code class="language-bash">pip install git+https://github.com/rusharlabs/house-party-protocol@v2.14.0</code></pre>
 <p>Este guia cobre o HPP 2.14.0 e versões posteriores; versões anteriores não incluem <code>hpp setup</code> nem
 <code>scripts/setup_hpp.py</code>. O comando atual <code>hpp init</code> planeja e registra um perfil; ele não instala
 módulos nem ativa integrações do host.</p>
@@ -127,17 +127,18 @@ souber qual integração precisa.</p>
       <h2>Planeje, revise, aplique</h2>
 <p>A partir da raiz desse único checkout público do produto, rode o plano do bootstrap. No Windows,
 use <code>python</code>; no macOS, use <code>python3</code>:</p>
-<pre><code class="language-powershell">python -I -B scripts/setup_hpp.py --target &lt;projeto&gt; --host claude-code
-python -I -B scripts/setup_hpp.py --target &lt;projeto&gt; --host claude-code --all-compatible</code></pre>
-<pre><code class="language-bash">python3 -I -B scripts/setup_hpp.py --target &lt;projeto&gt; --host codex
-python3 -I -B scripts/setup_hpp.py --target &lt;projeto&gt; --host codex --all-compatible</code></pre>
+<pre><code class="language-powershell">python -I -B scripts/setup_hpp.py --target &lt;project&gt; --host claude-code
+python -I -B scripts/setup_hpp.py --target &lt;project&gt; --host claude-code --all-compatible</code></pre>
+<pre><code class="language-bash">python3 -I -B scripts/setup_hpp.py --target &lt;project&gt; --host codex
+python3 -I -B scripts/setup_hpp.py --target &lt;project&gt; --host codex --all-compatible</code></pre>
 <p>O padrão é o bundle <code>reliable-coding</code>, com seis módulos. <code>--all-compatible</code> seleciona todos os
 módulos suportados pelo host: 10 para Claude Code e 9 para Codex CLI.</p>
-<p>A primeira invocação gera um plano: módulos escolhidos, arquivos, mudanças no ambiente e nas
-dependências, ações específicas do host e gates manuais. Revise o caminho-alvo e o plano inteiro
-antes de autorizar o lote. Depois, repita o mesmo comando com <code>--apply</code>:</p>
-<pre><code class="language-powershell">python -I -B scripts/setup_hpp.py --target &lt;projeto&gt; --host claude-code --apply</code></pre>
-<pre><code class="language-bash">python3 -I -B scripts/setup_hpp.py --target &lt;projeto&gt; --host codex --apply</code></pre>
+<p><strong>NÃO PULE O PLANO.</strong> Primeiro execute o comando sem <code>--apply</code>, leia o plano completo (módulos
+escolhidos, arquivos, mudanças no ambiente e nas dependências, ações específicas do host e gates
+manuais) e revise o caminho-alvo. Só então repita o mesmo comando com <code>--apply</code>. Nunca aplique antes
+de ler o plano correspondente:</p>
+<pre><code class="language-powershell">python -I -B scripts/setup_hpp.py --target &lt;project&gt; --host claude-code --apply</code></pre>
+<pre><code class="language-bash">python3 -I -B scripts/setup_hpp.py --target &lt;project&gt; --host codex --apply</code></pre>
 <p>O primeiro comando planeja totalmente offline e não escreve. A aplicação cria <code>.hpp/venv</code>, instala
 wheels de bootstrap com hash fixado e a CLI local, e então aplica o plano dos módulos; precisa de
 acesso ao PyPI. Deve preservar instruções e configurações existentes, mostrar conflitos antes de
@@ -180,8 +181,14 @@ integridade dos módulos, o runtime, as skills e o wiring do host de forma indep
 a ativação está concluída sem confirmação do próprio host.</p>
     </div></section>
 
-    <section id="comandos-de-nível-mais-baixo"><div class="wrap">
+    <section id="códigos-de-saída"><div class="wrap">
       <p class="eyebrow">05</p>
+      <h2>Códigos de saída</h2>
+<p><code>0</code> ok · <code>1</code> warn/manual · <code>2</code> block · <code>3</code> error.</p>
+    </div></section>
+
+    <section id="comandos-de-nível-mais-baixo"><div class="wrap">
+      <p class="eyebrow">06</p>
       <h2>Comandos de nível mais baixo</h2>
 <p>Em versões sem instalação guiada, <code>hpp init</code> pode planejar e registrar <code>.hpp/profile.json</code>; ele não
 instala o lote de módulos nem ativa o wiring do host. Os instaladores de módulo continuam disponíveis

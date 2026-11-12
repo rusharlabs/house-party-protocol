@@ -48,17 +48,17 @@ cd house-party-protocol
 Partindo do checkout completo e versionado, Windows PowerShell:
 
 ```powershell
-python -I -B scripts/setup_hpp.py --target <projeto> --host claude-code
-python -I -B scripts/setup_hpp.py --target <projeto> --host claude-code --apply
-python -I -B scripts/setup_hpp.py --target <projeto> --host claude-code --all-compatible
+python -I -B scripts/setup_hpp.py --target <project> --host claude-code
+python -I -B scripts/setup_hpp.py --target <project> --host claude-code --apply
+python -I -B scripts/setup_hpp.py --target <project> --host claude-code --all-compatible
 ```
 
 Partindo do checkout completo e versionado, Terminal do macOS:
 
 ```bash
-python3 -I -B scripts/setup_hpp.py --target <projeto> --host codex
-python3 -I -B scripts/setup_hpp.py --target <projeto> --host codex --apply
-python3 -I -B scripts/setup_hpp.py --target <projeto> --host codex --all-compatible
+python3 -I -B scripts/setup_hpp.py --target <project> --host codex
+python3 -I -B scripts/setup_hpp.py --target <project> --host codex --apply
+python3 -I -B scripts/setup_hpp.py --target <project> --host codex --all-compatible
 ```
 
 O primeiro comando gera um plano offline e não escreve nada; revise a saída completa. O segundo
@@ -110,7 +110,7 @@ instalada. Rode da raiz do produto e mantenha o projeto-alvo fora dele. Por padr
 `--apply` executa o lote revisado. A gramática é:
 
 ```text
-hpp setup --source <mesmo checkout do produto público> --target <projeto> --host claude-code|codex
+hpp setup --source <same public product checkout> --target <project> --host claude-code|codex
           [--bundle reliable-coding | --all-compatible | --modules <ids>]
           [--apply] [--json]
 ```
@@ -118,10 +118,10 @@ hpp setup --source <mesmo checkout do produto público> --target <projeto> --hos
 Exemplos:
 
 ```bash
-hpp setup --source . --target ../meu-projeto --host claude-code
-hpp setup --source . --target ../meu-projeto --host claude-code --apply
-hpp setup --source . --target ../meu-projeto --host codex --all-compatible
-hpp setup --source . --target ../meu-projeto --host codex --modules kit-forge,operator-kit
+hpp setup --source . --target ../my-project --host claude-code
+hpp setup --source . --target ../my-project --host claude-code --apply
+hpp setup --source . --target ../my-project --host codex --all-compatible
+hpp setup --source . --target ../my-project --host codex --modules kit-forge,operator-kit
 ```
 
 Use apenas um modo de seleção. Sem uma flag de seleção, `reliable-coding` é o padrão. `--json`

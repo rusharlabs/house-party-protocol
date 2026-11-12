@@ -13,6 +13,7 @@ import json
 import os
 from pathlib import Path
 import re
+import shlex
 import shutil
 import stat
 import subprocess
@@ -269,10 +270,26 @@ def _no_core_bytecode(source: Path) -> None:
                 stack.append(path)
 
 
+def _write_posix_shims(python: Path, directory: Path) -> None:
+    """Quote literal paths before the shell sees interpreter or launcher names."""
+    interpreter = shlex.quote(python.absolute().as_posix())
+    entries = [("hpp", "hpp.cli", "main"), ("hpp-python", "hpp.runtime", "python_main"),
+               ("python", "hpp.runtime", "router_main"), ("python3", "hpp.runtime", "router_main")]
+    for name, module, function in entries:
+        launcher = directory / name
+        code = f"import sys;sys.argv=sys.argv[1:];from {module} import {function};sys.exit({function}())"
+        script = f'#!/bin/sh\nexec {interpreter} -I -B -c {shlex.quote(code)} {shlex.quote(launcher.absolute().as_posix())} "$@"\n'
+        launcher.write_text(script, encoding="utf-8", newline="\n")
+        launcher.chmod(0o755)
+
+
 def _make_shims(python: Path, directory: Path, env: dict[str, str], source: Path) -> None:
     directory.mkdir(exist_ok=True)
-    code = ("from pip._vendor.distlib.scripts import ScriptMaker;import sys;"
-            "m=ScriptMaker(None,sys.argv[1]);m.executable=sys.executable;m.variants={''};m.clobber=True;"
+    if os.name != "nt":
+        _write_posix_shims(python, directory)
+        return
+    code = ("from pip._vendor.distlib.scripts import ScriptMaker,enquote_executable;import sys;"
+            "m=ScriptMaker(None,sys.argv[1]);m.executable=enquote_executable(sys.executable);m.variants={''};m.clobber=True;"
             "[m.make(s,{'interpreter_args':['-I']}) for s in "
             "['hpp = hpp.cli:main','hpp-python = hpp.runtime:python_main',"
             "'python = hpp.runtime:router_main','python3 = hpp.runtime:router_main']]")

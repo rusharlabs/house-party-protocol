@@ -5,7 +5,7 @@
 For the core CLI alone, without installing modules, the versioned alternative is:
 
 ```bash
-python -m pip install git+https://github.com/rusharlabs/house-party-protocol@v2.14.0
+pip install git+https://github.com/rusharlabs/house-party-protocol@v2.14.0
 ```
 
 This guide covers HPP 2.14.0 and later; earlier releases do not include `hpp setup` or
@@ -67,9 +67,10 @@ python3 -I -B scripts/setup_hpp.py --target <project> --host codex --all-compati
 The default is the six-module `reliable-coding` bundle. `--all-compatible` selects all supported
 modules for the host: 10 for Claude Code and 9 for Codex CLI.
 
-The first invocation is a plan: it lists selected modules, files, environment and dependency
-changes, host-specific actions, and manual gates. Review the target path and the complete plan
-before authorizing the batch. Then repeat the same command with `--apply`:
+**DO NOT SKIP THE PLAN.** First run the command without `--apply`, read the complete plan (selected
+modules, files, environment and dependency changes, host-specific actions, and manual gates), and
+review the target path. Only then repeat that same command with `--apply`. Never apply before
+reading the corresponding plan:
 
 ```powershell
 python -I -B scripts/setup_hpp.py --target <project> --host claude-code --apply
@@ -115,6 +116,10 @@ and leaves the versioned release checkout unchanged. Do not commit `.hpp/venv`, 
 The report must distinguish `installed`, `active`, `manual`, `refused` and `failed`. Verify the CLI,
 module integrity, runtime, skills and host wiring independently. Do not describe host activation as
 complete unless the host itself confirms it.
+
+## Exit codes
+
+`0` ok · `1` warn/manual · `2` block · `3` error.
 
 ## Existing lower-level commands
 

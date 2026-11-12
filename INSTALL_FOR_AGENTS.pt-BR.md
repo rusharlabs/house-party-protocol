@@ -5,7 +5,7 @@
 Para instalar somente a CLI do core, sem os módulos, a alternativa versionada é:
 
 ```bash
-python -m pip install git+https://github.com/rusharlabs/house-party-protocol@v2.14.0
+pip install git+https://github.com/rusharlabs/house-party-protocol@v2.14.0
 ```
 
 Este guia cobre o HPP 2.14.0 e versões posteriores; versões anteriores não incluem `hpp setup` nem
@@ -56,28 +56,29 @@ A partir da raiz desse único checkout público do produto, rode o plano do boot
 use `python`; no macOS, use `python3`:
 
 ```powershell
-python -I -B scripts/setup_hpp.py --target <projeto> --host claude-code
-python -I -B scripts/setup_hpp.py --target <projeto> --host claude-code --all-compatible
+python -I -B scripts/setup_hpp.py --target <project> --host claude-code
+python -I -B scripts/setup_hpp.py --target <project> --host claude-code --all-compatible
 ```
 
 ```bash
-python3 -I -B scripts/setup_hpp.py --target <projeto> --host codex
-python3 -I -B scripts/setup_hpp.py --target <projeto> --host codex --all-compatible
+python3 -I -B scripts/setup_hpp.py --target <project> --host codex
+python3 -I -B scripts/setup_hpp.py --target <project> --host codex --all-compatible
 ```
 
 O padrão é o bundle `reliable-coding`, com seis módulos. `--all-compatible` seleciona todos os
 módulos suportados pelo host: 10 para Claude Code e 9 para Codex CLI.
 
-A primeira invocação gera um plano: módulos escolhidos, arquivos, mudanças no ambiente e nas
-dependências, ações específicas do host e gates manuais. Revise o caminho-alvo e o plano inteiro
-antes de autorizar o lote. Depois, repita o mesmo comando com `--apply`:
+**NÃO PULE O PLANO.** Primeiro execute o comando sem `--apply`, leia o plano completo (módulos
+escolhidos, arquivos, mudanças no ambiente e nas dependências, ações específicas do host e gates
+manuais) e revise o caminho-alvo. Só então repita o mesmo comando com `--apply`. Nunca aplique antes
+de ler o plano correspondente:
 
 ```powershell
-python -I -B scripts/setup_hpp.py --target <projeto> --host claude-code --apply
+python -I -B scripts/setup_hpp.py --target <project> --host claude-code --apply
 ```
 
 ```bash
-python3 -I -B scripts/setup_hpp.py --target <projeto> --host codex --apply
+python3 -I -B scripts/setup_hpp.py --target <project> --host codex --apply
 ```
 
 O primeiro comando planeja totalmente offline e não escreve. A aplicação cria `.hpp/venv`, instala
@@ -119,6 +120,10 @@ dados do launcher, `.hpp/run.py` nem cópias de build retidas.
 O relatório deve separar `instalado`, `ativo`, `manual`, `recusado` e `falhou`. Verifique a CLI, a
 integridade dos módulos, o runtime, as skills e o wiring do host de forma independente. Não diga que
 a ativação está concluída sem confirmação do próprio host.
+
+## Códigos de saída
+
+`0` ok · `1` warn/manual · `2` block · `3` error.
 
 ## Comandos de nível mais baixo
 

@@ -127,13 +127,13 @@ segunda cópia para o argumento <code>--source</code>.</p>
 <pre><code class="language-bash">git clone https://github.com/rusharlabs/house-party-protocol.git
 cd house-party-protocol</code></pre>
 <p>Partindo do checkout completo e versionado, Windows PowerShell:</p>
-<pre><code class="language-powershell">python -I -B scripts/setup_hpp.py --target &lt;projeto&gt; --host claude-code
-python -I -B scripts/setup_hpp.py --target &lt;projeto&gt; --host claude-code --apply
-python -I -B scripts/setup_hpp.py --target &lt;projeto&gt; --host claude-code --all-compatible</code></pre>
+<pre><code class="language-powershell">python -I -B scripts/setup_hpp.py --target &lt;project&gt; --host claude-code
+python -I -B scripts/setup_hpp.py --target &lt;project&gt; --host claude-code --apply
+python -I -B scripts/setup_hpp.py --target &lt;project&gt; --host claude-code --all-compatible</code></pre>
 <p>Partindo do checkout completo e versionado, Terminal do macOS:</p>
-<pre><code class="language-bash">python3 -I -B scripts/setup_hpp.py --target &lt;projeto&gt; --host codex
-python3 -I -B scripts/setup_hpp.py --target &lt;projeto&gt; --host codex --apply
-python3 -I -B scripts/setup_hpp.py --target &lt;projeto&gt; --host codex --all-compatible</code></pre>
+<pre><code class="language-bash">python3 -I -B scripts/setup_hpp.py --target &lt;project&gt; --host codex
+python3 -I -B scripts/setup_hpp.py --target &lt;project&gt; --host codex --apply
+python3 -I -B scripts/setup_hpp.py --target &lt;project&gt; --host codex --all-compatible</code></pre>
 <p>O primeiro comando gera um plano offline e não escreve nada; revise a saída completa. O segundo
 repete as mesmas opções e acrescenta <code>--apply</code>; cria <code>.hpp/venv</code>, instala wheels de bootstrap com
 hash fixado e a CLI local, e então aplica o plano dos módulos. A aplicação do bootstrap precisa de
@@ -172,14 +172,14 @@ necessário instalar outro plugin apenas para copiar as mesmas skills.</p>
 <p>A CLI offline recebe esse mesmo checkout em <code>--source</code>; a versão precisa corresponder à CLI
 instalada. Rode da raiz do produto e mantenha o projeto-alvo fora dele. Por padrão, ela planeja;
 <code>--apply</code> executa o lote revisado. A gramática é:</p>
-<pre><code class="language-text">hpp setup --source &lt;mesmo checkout do produto público&gt; --target &lt;projeto&gt; --host claude-code|codex
+<pre><code class="language-text">hpp setup --source &lt;same public product checkout&gt; --target &lt;project&gt; --host claude-code|codex
           [--bundle reliable-coding | --all-compatible | --modules &lt;ids&gt;]
           [--apply] [--json]</code></pre>
 <p>Exemplos:</p>
-<pre><code class="language-bash">hpp setup --source . --target ../meu-projeto --host claude-code
-hpp setup --source . --target ../meu-projeto --host claude-code --apply
-hpp setup --source . --target ../meu-projeto --host codex --all-compatible
-hpp setup --source . --target ../meu-projeto --host codex --modules kit-forge,operator-kit</code></pre>
+<pre><code class="language-bash">hpp setup --source . --target ../my-project --host claude-code
+hpp setup --source . --target ../my-project --host claude-code --apply
+hpp setup --source . --target ../my-project --host codex --all-compatible
+hpp setup --source . --target ../my-project --host codex --modules kit-forge,operator-kit</code></pre>
 <p>Use apenas um modo de seleção. Sem uma flag de seleção, <code>reliable-coding</code> é o padrão. <code>--json</code>
 solicita um relatório legível por máquina; não elimina a fronteira de revisão e aplicação. Monte
 argumentos de processo a partir de campos estruturados; nunca interprete ou execute texto de shell

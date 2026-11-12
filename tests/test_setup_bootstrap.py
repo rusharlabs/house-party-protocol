@@ -359,3 +359,122 @@ def test_native_posix_shim_retry_replaces_owned_partial_file(tmp_path):
     maker.clobber = True
     maker.make("isolated = json.tool:main", {"interpreter_args": ["-I"]})
     assert launcher.read_bytes().startswith(b"#!") and b"json.tool" in launcher.read_bytes()
+
+
+def test_posix_shim_quotes_spaced_interpreter_and_keeps_isolation(tmp_path):
+    """Execute POSIX-style launcher wrappers on Bash, including real Git Bash."""
+    import venv
+
+    scripts = pytest.importorskip("pip._vendor.distlib.scripts")
+    if os.name == "nt":
+        bash = Path("C:/Program Files/Git/bin/bash.exe")
+        if not bash.is_file():
+            pytest.skip("real Git Bash is unavailable")
+    else:
+        binary = shutil.which("bash")
+        if not binary:
+            pytest.skip("Bash is unavailable")
+        bash = Path(binary)
+    environment = tmp_path / "Python environment with spaces"
+    venv.EnvBuilder(with_pip=False).create(environment)
+    interpreter = environment / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
+    output = tmp_path / "generated commands with spaces"
+    output.mkdir()
+    poison = tmp_path / "poison import path"
+    (poison / "json").mkdir(parents=True)
+    marker = tmp_path / "unsafe-import-executed"
+    (poison / "json/__init__.py").write_text(
+        f"from pathlib import Path\nPath({str(marker)!r}).write_text('unsafe')\nraise RuntimeError('startup shadow control')\n"
+    )
+
+    def posix_shebang(executable, post_interp):
+        # Force only the shell-wrapper writer; do not mutate shared os.name.
+        return b"#!/bin/sh\n'''exec' " + executable + post_interp + b' "$0" "$@"\n\' \'\'\'\n'
+
+    maker = scripts.ScriptMaker(None, str(output))
+    maker._is_nt = False
+    maker._build_shebang = posix_shebang
+    maker.variants = {""}
+    maker.executable = interpreter.as_posix()
+    maker.make("unquoted = json.tool:main", {"interpreter_args": ["-I"]})
+    maker.executable = scripts.enquote_executable(interpreter.as_posix())
+    maker.make("quoted-unsafe = json.tool:main")
+    maker.make("quoted-isolated = json.tool:main", {"interpreter_args": ["-I"]})
+    env = {**os.environ, "PYTHONPATH": str(poison)}
+    env.pop("PYTHONHOME", None)
+
+    def execute(name):
+        return REAL_RUN([str(bash), "--noprofile", "--norc", (output / name).as_posix(), "--help"],
+                        env=env, capture_output=True, text=True)
+
+    # Old assignment skips distlib's automatic quoting and fails before Python.
+    control = execute("unquoted")
+    assert control.returncode != 0 and not marker.exists()
+    assert "not found" in control.stderr or "No such file" in control.stderr, control.stderr
+    unsafe = execute("quoted-unsafe")
+    assert unsafe.returncode != 0 and marker.exists(), unsafe.stderr
+    marker.rename(tmp_path / "preserved-unsafe-control")
+    fixed = execute("quoted-isolated")
+    assert fixed.returncode == 0 and not marker.exists(), fixed.stderr
+    assert "usage:" in fixed.stdout.lower()
+
+
+def test_posix_shims_keep_shell_metacharacters_literal(tmp_path):
+    import venv
+
+    if os.name == "nt":
+        bash = Path("C:/Program Files/Git/bin/bash.exe")
+        if not bash.is_file():
+            pytest.skip("real Git Bash is unavailable")
+    else:
+        binary = shutil.which("bash")
+        if not binary:
+            pytest.skip("Bash is unavailable")
+        bash = Path(binary)
+    environment = tmp_path / "Python env $(touch injected-marker) with 'quotes' and spaces"
+    venv.EnvBuilder(with_pip=False).create(environment)
+    interpreter = environment / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
+    site = REAL_RUN([str(interpreter), "-I", "-B", "-c", "import sysconfig;print(sysconfig.get_path('purelib'))"],
+                    capture_output=True, text=True, check=True)
+    package = Path(site.stdout.strip()) / "hpp"
+    package.mkdir()
+    (package / "__init__.py").write_text("")
+    probe = ("import json,sys\n"
+             "def report(entry):\n"
+             " print(json.dumps({'entry':entry,'argv':sys.argv,'isolated':sys.flags.isolated,"
+             "'no_bytecode':sys.dont_write_bytecode,'prefix':sys.prefix}));return 0\n")
+    (package / "cli.py").write_text(probe + "def main():return report('hpp')\n")
+    (package / "runtime.py").write_text(probe + "def python_main():return report('hpp-python')\ndef router_main():return report('router')\n")
+    output = tmp_path / "commands $(touch injected-marker) with 'quotes' and spaces"
+    output.mkdir()
+    bootstrap._write_posix_shims(interpreter, output)
+    poison = tmp_path / "poisoned consumer import path"
+    (poison / "hpp").mkdir(parents=True)
+    import_marker = tmp_path / "consumer-import-executed"
+    (poison / "hpp/__init__.py").write_text(f"from pathlib import Path\nPath({str(import_marker)!r}).write_text('unsafe')\nraise RuntimeError('consumer shadow')\n")
+    env = {**os.environ, "PYTHONPATH": str(poison)}
+    env.pop("PYTHONHOME", None)
+    if os.name == "nt":
+        env["PATH"] = "C:/Program Files/Git/usr/bin" + os.pathsep + env.get("PATH", "")
+    legacy = output / "legacy-double-quoted"
+    legacy.write_text('#!/bin/sh\nexec "' + interpreter.absolute().as_posix() + '" -I -B -c "pass" "$@"\n')
+
+    def execute(name, *arguments):
+        return REAL_RUN([str(bash), "--noprofile", "--norc", (output / name).as_posix(), *arguments],
+                        cwd=tmp_path, env=env, capture_output=True, text=True)
+
+    injection_marker = tmp_path / "injected-marker"
+    control = execute("legacy-double-quoted")
+    assert control.returncode != 0 and injection_marker.exists(), control.stderr
+    injection_marker.rename(tmp_path / "preserved-legacy-injection-control")
+    arguments = ["a b", "$(touch injected-marker)", ";", "single ' quote"]
+    for name, entry in [("hpp", "hpp"), ("hpp-python", "hpp-python"), ("python", "router"), ("python3", "router")]:
+        result = execute(name, *arguments)
+        assert result.returncode == 0, result.stderr
+        measured = json.loads(result.stdout)
+        assert measured["entry"] == entry
+        assert Path(measured["argv"][0]).name == name
+        assert measured["argv"][1:] == arguments
+        assert measured["isolated"] == 1 and measured["no_bytecode"]
+        assert Path(measured["prefix"]) == environment
+        assert not injection_marker.exists() and not import_marker.exists()

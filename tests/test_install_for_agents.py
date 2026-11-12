@@ -41,6 +41,21 @@ def _install_commands(text: str) -> list[str]:
     return INSTALL_LINE.findall(text)
 
 
+def _plans_precede_apply(text: str) -> bool:
+    commands = re.findall(r"^(?:python|python3) -I -B scripts/setup_hpp\.py (.+)$", text, re.M)
+    planned = set()
+    applied = False
+    for command in commands:
+        if "--apply" in command.split():
+            before_apply = " ".join(x for x in command.split() if x != "--apply")
+            if before_apply not in planned:
+                return False
+            applied = True
+        else:
+            planned.add(" ".join(command.split()))
+    return applied
+
+
 def test_the_four_files_exist() -> None:
     for p in (GUIDE_EN, GUIDE_PT, README_EN, README_PT):
         assert p.is_file(), f"{p.name} does not exist"
@@ -82,9 +97,17 @@ def test_the_guide_requires_the_plan_before_apply() -> None:
     assert "NÃO PULE" in _read(GUIDE_PT)
     for guide in (GUIDE_EN, GUIDE_PT):
         text = _read(guide)
-        without_apply = text.index("hpp init --target")
-        with_apply = text.index("--apply", without_apply)
-        assert without_apply < with_apply, f"{guide.name}: --apply appears before the plan"
+        assert _plans_precede_apply(text), f"{guide.name}: every apply needs its matching earlier setup plan"
+
+
+def test_CONTROLE_apply_requires_an_earlier_plan_with_the_same_options() -> None:
+    plan = "python -I -B scripts/setup_hpp.py --target ../repo --host codex"
+    apply = plan + " --apply"
+    assert _plans_precede_apply(plan + "\n" + apply)
+    assert not _plans_precede_apply(apply)
+    assert not _plans_precede_apply(apply + "\n" + plan)
+    assert not _plans_precede_apply(plan + "\n" + apply.replace("--host codex", "--host claude-code"))
+    assert not _plans_precede_apply(plan + "\n" + apply.replace("--apply", "--all-compatible --apply"))
 
 
 def test_the_README_points_to_the_guide() -> None:

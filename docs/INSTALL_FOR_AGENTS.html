@@ -73,12 +73,12 @@
       <h1>Installing House Party Protocol — agent guide</h1>
     </div>
   </header>
-  <nav aria-label="Chapters"><div class="wrap"><a href="#before-setup">Before setup</a><a href="#choose-a-package">Choose a package</a><a href="#plan-review-apply">Plan, review, apply</a><a href="#what-setup-does-and-does-not-activate">What setup does and does not activate</a><a href="#existing-lower-level-commands">Existing lower-level commands</a></div></nav>
+  <nav aria-label="Chapters"><div class="wrap"><a href="#before-setup">Before setup</a><a href="#choose-a-package">Choose a package</a><a href="#plan-review-apply">Plan, review, apply</a><a href="#what-setup-does-and-does-not-activate">What setup does and does not activate</a><a href="#exit-codes">Exit codes</a><a href="#existing-lower-level-commands">Existing lower-level commands</a></div></nav>
   <main>
 
     <section><div class="wrap">
 <p>For the core CLI alone, without installing modules, the versioned alternative is:</p>
-<pre><code class="language-bash">python -m pip install git+https://github.com/rusharlabs/house-party-protocol@v2.14.0</code></pre>
+<pre><code class="language-bash">pip install git+https://github.com/rusharlabs/house-party-protocol@v2.14.0</code></pre>
 <p>This guide covers HPP 2.14.0 and later; earlier releases do not include <code>hpp setup</code> or
 <code>scripts/setup_hpp.py</code>. The existing <code>hpp init</code> command is a profile planner; it does not install
 modules or activate host integrations.</p>
@@ -132,9 +132,10 @@ python -I -B scripts/setup_hpp.py --target &lt;project&gt; --host claude-code --
 python3 -I -B scripts/setup_hpp.py --target &lt;project&gt; --host codex --all-compatible</code></pre>
 <p>The default is the six-module <code>reliable-coding</code> bundle. <code>--all-compatible</code> selects all supported
 modules for the host: 10 for Claude Code and 9 for Codex CLI.</p>
-<p>The first invocation is a plan: it lists selected modules, files, environment and dependency
-changes, host-specific actions, and manual gates. Review the target path and the complete plan
-before authorizing the batch. Then repeat the same command with <code>--apply</code>:</p>
+<p><strong>DO NOT SKIP THE PLAN.</strong> First run the command without <code>--apply</code>, read the complete plan (selected
+modules, files, environment and dependency changes, host-specific actions, and manual gates), and
+review the target path. Only then repeat that same command with <code>--apply</code>. Never apply before
+reading the corresponding plan:</p>
 <pre><code class="language-powershell">python -I -B scripts/setup_hpp.py --target &lt;project&gt; --host claude-code --apply</code></pre>
 <pre><code class="language-bash">python3 -I -B scripts/setup_hpp.py --target &lt;project&gt; --host codex --apply</code></pre>
 <p>The first command plans entirely offline and writes nothing. The apply operation creates
@@ -177,8 +178,14 @@ module integrity, runtime, skills and host wiring independently. Do not describe
 complete unless the host itself confirms it.</p>
     </div></section>
 
-    <section id="existing-lower-level-commands"><div class="wrap">
+    <section id="exit-codes"><div class="wrap">
       <p class="eyebrow">05</p>
+      <h2>Exit codes</h2>
+<p><code>0</code> ok · <code>1</code> warn/manual · <code>2</code> block · <code>3</code> error.</p>
+    </div></section>
+
+    <section id="existing-lower-level-commands"><div class="wrap">
+      <p class="eyebrow">06</p>
       <h2>Existing lower-level commands</h2>
 <p>In releases that do not include guided setup, <code>hpp init</code> can plan and record <code>.hpp/profile.json</code>;
 it does not install the module batch or activate host wiring. Module installers remain available
