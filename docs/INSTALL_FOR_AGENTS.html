@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>House Party Protocol — Installing House Party Protocol — a guide for agents</title>
+  <title>House Party Protocol — Installing House Party Protocol — agent guide</title>
   <meta name="description" content="The whole instruction for an agent asked to install the harness into a repository, including the gate it must not skip.">
   <link rel="alternate" hreflang="en" href="INSTALL_FOR_AGENTS.html">
   <link rel="alternate" hreflang="pt-BR" href="INSTALL_FOR_AGENTS.pt-BR.html">
@@ -70,146 +70,129 @@
     <div class="wrap">
       <img src="assets/hpp-logo-header.png" alt="House Party Protocol">
       <p class="eyebrow">Contracts · INSTALL_FOR_AGENTS.md</p>
-      <h1>Installing House Party Protocol — a guide for agents</h1>
+      <h1>Installing House Party Protocol — agent guide</h1>
     </div>
   </header>
-  <nav aria-label="Chapters"><div class="wrap"><a href="#step-0--identify-your-host">Step 0 — identify your host</a><a href="#step-1--check-the-preconditions-do-not-assume-them">Step 1 — check the preconditions, do not assume them</a><a href="#step-2--install-the-cli">Step 2 — install the CLI</a><a href="#step-3--prove-the-install-before-you-use-it">Step 3 — prove the install before you use it</a><a href="#step-4--read-the-plan-to-the-person-do-not-skip">Step 4 — read the plan to the person. DO NOT SKIP</a><a href="#step-5--codex-cli-wiring">Step 5 — Codex CLI wiring</a><a href="#step-6--verify-and-report-the-exit-code-not-your-impression">Step 6 — verify, and report the exit code, not your impression</a><a href="#exit-codes">Exit codes</a><a href="#do-not">Do not</a><a href="#upgrading">Upgrading</a><a href="#if-it-fails">If it fails</a></div></nav>
+  <nav aria-label="Chapters"><div class="wrap"><a href="#before-setup">Before setup</a><a href="#choose-a-package">Choose a package</a><a href="#plan-review-apply">Plan, review, apply</a><a href="#what-setup-does-and-does-not-activate">What setup does and does not activate</a><a href="#exit-codes">Exit codes</a><a href="#existing-lower-level-commands">Existing lower-level commands</a></div></nav>
   <main>
 
     <section><div class="wrap">
-<p>You are an agent that has been asked to install House Party Protocol into a repository. This
-file is the whole instruction. Read it to the end before you run anything: step 4 contains a
-gate you must not skip, and knowing it exists changes what you do in step 3.</p>
-<p>House Party Protocol is a local-first harness for reliability, governance and evaluation of
-coding agents. It has no runtime dependencies and talks to no network service. Installing it
-writes files into a repository and wires them to a host; nothing else happens.</p>
+<p>For the core CLI alone, without installing modules, the versioned alternative is:</p>
+<pre><code class="language-bash">pip install git+https://github.com/rusharlabs/house-party-protocol@v2.14.0</code></pre>
+<p>This guide covers HPP 2.14.0 and later; earlier releases do not include <code>hpp setup</code> or
+<code>scripts/setup_hpp.py</code>. The existing <code>hpp init</code> command is a profile planner; it does not install
+modules or activate host integrations.</p>
+<p>House Party Protocol (HPP) is a local-first toolkit for reliability, governance and evaluation of
+coding agents. Its core does not call models or handle credentials. Setup installs selected module
+files and prepares a project-scoped Python environment. Host activation and optional integrations
+remain separately reported states.</p>
     </div></section>
 
-    <section id="step-0--identify-your-host"><div class="wrap">
+    <section id="before-setup"><div class="wrap">
       <p class="eyebrow">01</p>
-      <h2>Step 0 — identify your host</h2>
-<p>The two hosts wire differently, and the difference is not cosmetic.</p>
+      <h2>Before setup</h2>
+<p>Have Python 3.10 or newer, Git, and the chosen host (Claude Code or Codex CLI) installed. Sign in
+to the host yourself; HPP does not install system software, switch accounts, or manage host login,
+subscription or model costs. Supabase credentials are needed only if you later configure the
+optional Supabase integration. Orca is optional.</p>
+<p>Use one full public product checkout from <code>github.com/rusharlabs/house-party-protocol</code> for both the
+bootstrap and offline <code>hpp setup --source</code>. Do not create a second product copy. The bootstrap
+prepares the selected project, isolated <code>.hpp/venv</code>, pinned dependencies and HPP CLI, then invokes
+the offline setup planner. Its <code>--apply</code> may contact the package index to install pinned Python
+dependencies. The HPP core and module setup make no model-inference calls.</p>
+<p>Clone once and run the commands from that checkout's root. Keep the existing consumer project
+outside the product checkout:</p>
+<pre><code class="language-bash">git clone https://github.com/rusharlabs/house-party-protocol.git
+cd house-party-protocol</code></pre>
+    </div></section>
+
+    <section id="choose-a-package"><div class="wrap">
+      <p class="eyebrow">02</p>
+      <h2>Choose a package</h2>
 <table>
-<thead><tr><th>you are</th><th>go to</th></tr></thead>
+<thead><tr><th>Selection</th><th style="text-align:right">Claude Code</th><th style="text-align:right">Codex CLI</th></tr></thead>
 <tbody>
-<tr><td><strong>Claude Code</strong></td><td>steps 1 → 4, then step 6</td></tr>
-<tr><td><strong>Codex CLI</strong></td><td>steps 1 → 4, then step 5, then step 6</td></tr>
-<tr><td>neither</td><td>the CLI still installs and <code>hpp doctor</code> still answers, but no host wiring exists for you; stop after step 3 and tell the person</td></tr>
+<tr><td><code>reliable-coding</code> (default)</td><td style="text-align:right">6 modules</td><td style="text-align:right">6 modules</td></tr>
+<tr><td>all compatible modules</td><td style="text-align:right">10 modules</td><td style="text-align:right">9 modules</td></tr>
 </tbody>
 </table>
+<p>Codex does not support <code>claude-dev-kit</code>. The all-compatible selection omits it; an explicit
+request to install an incompatible module is rejected rather than bypassed. Select individual
+module IDs only when you know the integration you need.</p>
     </div></section>
 
-    <section id="step-1--check-the-preconditions-do-not-assume-them"><div class="wrap">
-      <p class="eyebrow">02</p>
-      <h2>Step 1 — check the preconditions, do not assume them</h2>
-<ul>
-<li><strong>Python 3.10 or newer.</strong> CI exercises 3.10 through 3.13 on Linux, macOS and Windows. Older
-interpreters are not promised, because nothing measures them.</li>
-<li><strong><code>git</code> on <code>PATH</code></strong>, for attestation.</li>
-<li><strong>A target repository.</strong> Installing into an empty directory works and is how the wizard is
-tested, but the harness is only useful where there is work to govern.</li>
-</ul>
-<p>If a precondition fails, say which one and stop. Do not install a Python, do not change the
-person's interpreter, do not work around a missing <code>git</code>.</p>
-    </div></section>
-
-    <section id="step-2--install-the-cli"><div class="wrap">
+    <section id="plan-review-apply"><div class="wrap">
       <p class="eyebrow">03</p>
-      <h2>Step 2 — install the CLI</h2>
-<pre><code class="language-bash">pip install git+https://github.com/rusharlabs/house-party-protocol@v2.13.2</code></pre>
-<p><code>pipx install git+…</code> works the same way. The package ships its own manifest and benchmark
-suite, so the CLI answers from any directory once installed.</p>
+      <h2>Plan, review, apply</h2>
+<p>From the root of that one public product checkout, run the bootstrap plan. On Windows use <code>python</code>;
+on macOS use <code>python3</code>:</p>
+<pre><code class="language-powershell">python -I -B scripts/setup_hpp.py --target &lt;project&gt; --host claude-code
+python -I -B scripts/setup_hpp.py --target &lt;project&gt; --host claude-code --all-compatible</code></pre>
+<pre><code class="language-bash">python3 -I -B scripts/setup_hpp.py --target &lt;project&gt; --host codex
+python3 -I -B scripts/setup_hpp.py --target &lt;project&gt; --host codex --all-compatible</code></pre>
+<p>The default is the six-module <code>reliable-coding</code> bundle. <code>--all-compatible</code> selects all supported
+modules for the host: 10 for Claude Code and 9 for Codex CLI.</p>
+<p><strong>DO NOT SKIP THE PLAN.</strong> First run the command without <code>--apply</code>, read the complete plan (selected
+modules, files, environment and dependency changes, host-specific actions, and manual gates), and
+review the target path. Only then repeat that same command with <code>--apply</code>. Never apply before
+reading the corresponding plan:</p>
+<pre><code class="language-powershell">python -I -B scripts/setup_hpp.py --target &lt;project&gt; --host claude-code --apply</code></pre>
+<pre><code class="language-bash">python3 -I -B scripts/setup_hpp.py --target &lt;project&gt; --host codex --apply</code></pre>
+<p>The first command plans entirely offline and writes nothing. The apply operation creates
+<code>.hpp/venv</code>, installs hash-pinned bootstrap wheels and the local CLI, then applies the module plan;
+it needs PyPI access. It must preserve existing instructions and host configuration, report
+conflicts before writing, and retain rollback information. A partial failure is not a completed
+installation: use the report to resume only pending steps and verify the final state.</p>
+<p>Trusted ownership metadata lives outside the consumer project in <code>~/.hpp-setup-state</code> by default
+(Windows: under the user's home directory). Advanced <code>--state-dir &lt;path&gt;</code> changes that location;
+keep it outside the project. It records the complete managed-environment inventory and validates
+the launcher. Setup refuses project-forged receipts, an unowned existing environment, or a changed
+launcher/environment. If trusted state is missing, stop and preserve the files for reconciliation;
+do not adopt or delete them. The build uses a unique retained copy at <code>.hpp/bootstrap-build-&lt;unique&gt;</code>
+and leaves the versioned release checkout unchanged. Do not commit <code>.hpp/venv</code>, <code>.hpp/bin</code>,
+<code>.hpp/runtime-router.json</code>, receipts, runner data, <code>.hpp/run.py</code> or retained build copies.</p>
     </div></section>
 
-    <section id="step-3--prove-the-install-before-you-use-it"><div class="wrap">
+    <section id="what-setup-does-and-does-not-activate"><div class="wrap">
       <p class="eyebrow">04</p>
-      <h2>Step 3 — prove the install before you use it</h2>
-<pre><code class="language-bash">hpp doctor</code></pre>
-<p>It prints one line and exits <code>0</code>:</p>
-<pre><code>HPP doctor: ok - modules=10 - hosts=claude-code, codex - hooks=18 (permission gates=9 - llm egress=0)</code></pre>
-<p>A non-zero exit here means the install is broken. Report the line and stop; do not continue to
-step 4 hoping it resolves itself.</p>
-    </div></section>
-
-    <section id="step-4--read-the-plan-to-the-person-do-not-skip"><div class="wrap">
-      <p class="eyebrow">05</p>
-      <h2>Step 4 — read the plan to the person. DO NOT SKIP</h2>
-<pre><code class="language-bash">hpp init --target &lt;path-to-the-repository&gt;</code></pre>
-<p>Without <code>--apply</code>, <code>hpp init</code> <strong>writes nothing</strong>. It runs six fixed stages and prints a plan of
-what it would write.</p>
-<p>Read the plan aloud, and not only the lines to paste. When the chosen modules declare hooks, it
-prints a HOOK CAPABILITIES table before the WIRE block: for each hook, its events, its exit policy
-(<code>observe</code>, <code>warn</code> or <code>block</code>) and its capability groups. That table is what the hooks can do once
-wired; the paste lines alone are only file names. Leave <code>--decision-advisor</code> at <code>off</code> unless the
-person asked for it (new in 2.6.0).</p>
-<p><strong>Show that plan to the person and wait for them to say yes.</strong> Only then:</p>
-<pre><code class="language-bash">hpp init --target &lt;path-to-the-repository&gt; --apply</code></pre>
-<p>This is not ceremony. The plan is the only moment at which the person can see what is about to
-enter their repository, and an installer that writes before you read is the exact failure this
-harness exists to prevent. If you skip it, you have installed the harness by violating it.</p>
-    </div></section>
-
-    <section id="step-5--codex-cli-wiring"><div class="wrap">
-      <p class="eyebrow">06</p>
-      <h2>Step 5 — Codex CLI wiring</h2>
-<p>Claude Code is wired by step 4. Codex CLI has a plugin channel of its own for the modules that
-carry skills (skills only; hooks stay off):</p>
-<pre><code class="language-bash">codex plugin marketplace add rusharlabs/house-party-protocol
-codex plugin add &lt;module&gt;@house-party-protocol</code></pre>
-<p>Everything else — runtime, scripts, templates, and any module without skills — needs one more
-command per module:</p>
-<pre><code class="language-bash">installers/kit-forge-1.5.6/kit_doctor.py install --kit &lt;kit&gt; --host codex --target &lt;repo&gt; --apply</code></pre>
-<p>Skills land in <code>.agents/skills</code>; the full runtime lands in <code>.agents/hpp</code>. Hooks declared in
-<code>hooks.json</code> belong to Claude Code and are <strong>not</strong> activated on Codex. <code>hpp init --host codex</code>
-still prints the HOOK CAPABILITIES table; read it aloud as what those hooks would do on Claude
-Code, and say that none of them runs here rather than letting the person believe a gate is armed
-when it is not.</p>
-    </div></section>
-
-    <section id="step-6--verify-and-report-the-exit-code-not-your-impression"><div class="wrap">
-      <p class="eyebrow">07</p>
-      <h2>Step 6 — verify, and report the exit code, not your impression</h2>
-<pre><code class="language-bash">hpp doctor
-hpp benchmark</code></pre>
-<p><code>hpp benchmark</code> reports <code>pass@k</code> and <code>pass^k</code> separately and prints its own gate verdict. Quote
-both outputs to the person. A transcript is not an exit code.</p>
-<p>If <code>hpp init</code> printed a DOCUMENTATION section, point the person to the pages it names; each one
-was found on disk. A pip install carries no documentation pages, so after step 2 the section is
-absent — do not invent paths.</p>
+      <h2>What setup does and does not activate</h2>
+<ul>
+<li>The project <code>.hpp/venv</code> isolates HPP and selected module dependencies from the system Python.</li>
+<li>Module files and copied runtime/skills are not proof that a host loaded or activated them.</li>
+<li>Claude Code native plugins require an explicit host action and its own consent. Explicit-command
+modules remain commands; setup does not edit Claude settings or hooks.</li>
+<li>On Codex, setup copies the supported runtime and skills. HPP hooks remain off. Do not install a
+second plugin solely to duplicate skills already copied by the module installer.</li>
+<li><code>.hpp/run.py</code> preserves the calling application's Python environment; HPP commands are routed
+through the managed runtime using local aliases in <code>.hpp/bin</code>. Invoke it with
+<code>python -I -B .hpp/run.py hpp doctor</code> on Windows or <code>python3 -I -B .hpp/run.py hpp doctor</code> on
+macOS.</li>
+<li>For Claude Code native plugins, review the plan and activate separately: Windows uses
+<code>python -I -B .hpp/run.py activate</code>; macOS uses <code>python3 -I -B .hpp/run.py activate</code>. It rechecks distribution
+and module checksums and keeps the host's consent flow. Restart Claude Code and verify
+plugin/hook state. The setup batch never activates the host by itself.</li>
+<li>Optional integrations are not configured merely because their files were installed.</li>
+</ul>
+<p>The report must distinguish <code>installed</code>, <code>active</code>, <code>manual</code>, <code>refused</code> and <code>failed</code>. Verify the CLI,
+module integrity, runtime, skills and host wiring independently. Do not describe host activation as
+complete unless the host itself confirms it.</p>
     </div></section>
 
     <section id="exit-codes"><div class="wrap">
-      <p class="eyebrow">08</p>
+      <p class="eyebrow">05</p>
       <h2>Exit codes</h2>
 <p><code>0</code> ok · <code>1</code> warn/manual · <code>2</code> block · <code>3</code> error.</p>
     </div></section>
 
-    <section id="do-not"><div class="wrap">
-      <p class="eyebrow">09</p>
-      <h2>Do not</h2>
-<ul>
-<li><strong>Do not edit the versioned module directories.</strong> They are emitted artifacts. A hand edit
-makes their checksums diverge and the next install refuses them.</li>
-<li><strong>Do not lower a gate to get green.</strong> Fix the artifact the gate rejected.</li>
-<li><strong>Do not record credentials, personal paths, clients or private infrastructure</strong> anywhere the
-harness writes.</li>
-<li><strong>Do not treat <code>healthy</code> as correct.</strong> It proves freshness of the declared signal, nothing more.</li>
-</ul>
-    </div></section>
-
-    <section id="upgrading"><div class="wrap">
-      <p class="eyebrow">10</p>
-      <h2>Upgrading</h2>
-<p>Re-run step 2 with the new tag, then step 3. <code>hpp init</code> is idempotent: run it again and read the
-plan again. The plan is what changed.</p>
-    </div></section>
-
-    <section id="if-it-fails"><div class="wrap">
-      <p class="eyebrow">11</p>
-      <h2>If it fails</h2>
-<p>Run <code>hpp doctor</code> and quote the whole line. Open an issue at
-<a href="https://github.com/rusharlabs/house-party-protocol/issues">https://github.com/rusharlabs/house-party-protocol/issues</a> with that line, your Python version
-and your host. Do not paste credentials, tokens or absolute paths from the person's machine.</p>
+    <section id="existing-lower-level-commands"><div class="wrap">
+      <p class="eyebrow">06</p>
+      <h2>Existing lower-level commands</h2>
+<p>In releases that do not include guided setup, <code>hpp init</code> can plan and record <code>.hpp/profile.json</code>;
+it does not install the module batch or activate host wiring. Module installers remain available
+for per-module installation. Read the matching module's installation guide and preserve the
+plan/apply confirmation and host-specific consent gates.</p>
+<p>Never copy credentials into HPP files, logs or issue reports. Never overwrite an existing host
+configuration to make a setup appear complete.</p>
     </div></section>
 
   </main>

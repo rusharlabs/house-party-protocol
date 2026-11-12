@@ -40,7 +40,7 @@ roda em segundo plano. Todo veredito que ele produz pode ser re-derivado de arqu
   <img alt="A jornada de instalação renderizada da saída real: pip install house-party-protocol termina em Successfully installed house-party-protocol; hpp init --target your-repo, rodado num repositório vazio, imprime as seis linhas de boot, protocol online e a barra READINESS e, depois das linhas deixadas de fora, o wordmark HOUSE PARTY PROTOCOL, BY RUSHAR LABS e Welcome to the party" src="assets/terminal/hpp-install.svg" width="860">
 </p>
 
-**Instale em uma linha** — a mesma wheel que o workflow de release constrói e atesta:
+**Instale a CLI em uma linha** — a mesma wheel que o workflow de release constrói e atesta:
 
 ```bash
 pip install house-party-protocol
@@ -50,6 +50,10 @@ hpp doctor && hpp init --target ../your-repo
 No Claude Code: `/plugin marketplace add rusharlabs/house-party-protocol`. No Codex CLI:
 `codex plugin marketplace add rusharlabs/house-party-protocol`. Cada passo, e os checksums para
 conferir antes, estão no [Quickstart](#quickstart).
+Adicionar um marketplace registra a origem; não instala nem ativa um módulo.
+
+Isso instala a CLI e permite que `hpp init` planeje um perfil; não instala o bundle de módulos nem
+ativa integrações do host. Para a instalação guiada em lote, veja [Instalação guiada](docs/SETUP.pt-BR.md).
 
 - **Nenhuma chamada de modelo, nenhuma dependência em runtime.** O pacote usa só a biblioteca
   padrão, e um teste reprova o build se isso mudar (`tests/test_stdlib_only.py`).
@@ -220,8 +224,43 @@ Requisitos: Python 3.10 ou mais novo (`pyproject.toml`), `git` no `PATH` para at
 nenhum pacote de terceiro. A CI exercita Python 3.10 a 3.13 em Linux, macOS e Windows
 (`.github/workflows/ci.yml`); interpretadores mais antigos não são prometidos porque nada os mede.
 
+### Instalação guiada do bundle — HPP 2.14.0 e posteriores
+
+O HPP 2.14.0 e as versões posteriores incluem a instalação guiada; versões anteriores não incluem
+`hpp setup` nem `scripts/setup_hpp.py`. O fluxo planeja e aplica um lote compatível, cria `.hpp/venv`
+no projeto e reporta as ações do host separadamente. Veja [docs/SETUP.pt-BR.md](docs/SETUP.pt-BR.md). O padrão é o bundle
+`reliable-coding`, com seis módulos; `--all-compatible` seleciona 10 módulos para Claude Code e 9
+para Codex CLI. O Codex exclui `claude-dev-kit`.
+
+Clone o produto público uma única vez e rode o bootstrap na raiz desse checkout; use o mesmo checkout
+no `--source` de `hpp setup` offline. No Windows PowerShell:
+
+```powershell
+python -I -B scripts/setup_hpp.py --target <project> --host claude-code
+python -I -B scripts/setup_hpp.py --target <project> --host claude-code --apply
+python -I -B scripts/setup_hpp.py --target <project> --host claude-code --all-compatible
+```
+
+No Terminal do macOS, use `python3` e o host instalado:
+
 ```bash
-pip install git+https://github.com/rusharlabs/house-party-protocol@v2.13.2
+python3 -I -B scripts/setup_hpp.py --target <project> --host codex
+python3 -I -B scripts/setup_hpp.py --target <project> --host codex --apply
+python3 -I -B scripts/setup_hpp.py --target <project> --host codex --all-compatible
+```
+
+Revise o plano antes de repeti-lo com `--apply`. Aplicar o bootstrap usa `pip` para dependências
+fixadas; o core do HPP não chama modelos nem manipula credenciais. Os metadados de propriedade
+ficam por padrão em `~/.hpp-setup-state`, fora do projeto; `--state-dir` é uma opção avançada.
+O launcher preserva o ambiente Python da aplicação chamadora e encaminha comandos HPP ao runtime
+gerenciado no projeto. Mantenha `.hpp/venv`, `.hpp/bin`, `.hpp/runtime-router.json`, recibos,
+`.hpp/run.py` e cópias de build retidas fora do Git. A forma offline da CLI e as regras de
+recuperação estão em [docs/SETUP.pt-BR.md](docs/SETUP.pt-BR.md).
+
+### Quickstart atual somente da CLI
+
+```bash
+pip install git+https://github.com/rusharlabs/house-party-protocol@v2.14.0
 hpp doctor
 hpp init --target ../your-repo
 ```
@@ -254,7 +293,8 @@ cd house-party-protocol
 python -m hpp doctor
 ```
 
-`hpp init` roda seis estágios fixos e imprime um plano. Cada linha de abertura completa só quando
+`hpp init` é o planejador de perfil atual, não o instalador guiado de módulos em lote. Ele roda
+seis estágios fixos e imprime um plano. Cada linha de abertura completa só quando
 o estágio terminou; a prontidão conta checagens que rodaram, e cada item carrega o comando que o
 reproduz. O que ele consegue verificar depende de onde o `hpp` roda. Este repositório é a
 distribuição emitida — harness, manifesto, os dez diretórios de módulo com seus `CHECKSUMS.txt`,
@@ -274,7 +314,8 @@ distribuição emitida — harness, manifesto, os dez diretórios de módulo com
   ████████████████░░░░  9/11 verified · 2 not verified · 0 failed
 ```
 
-Os dois itens não verificados são os dois que só uma ação posterior prova: o profile (só plano;
+Esta transcrição medida é um exemplo histórico de `hpp init`, não a saída da instalação guiada. Os
+dois itens não verificados são os dois que só uma ação posterior prova: o profile (só plano;
 `--apply` o escreve) e o wiring do host (um colar que você faz). A instalação por pip é outro
 canal: o wheel carrega o harness, o manifesto e a suíte de benchmark, mas nenhum diretório de
 módulo e nenhum `marketplace.json`. O mesmo comando a partir dessa instalação, no mesmo alvo

@@ -41,6 +41,7 @@ from hpp.policy import assess, exit_for as policy_exit_for, policy_for_workspace
 from hpp.retrieval import exit_for as retrieval_exit_for, run_retrieval_suite
 from hpp.routing import route
 from hpp.state import StateError, append_event, event_path, project, read_events, verify_chain
+from hpp.setup import run_setup
 from hpp.term import Console, write_stdout
 from hpp.territories import propose_lanes
 from hpp.wizard import DECISION_ADVISORS, InitUsageError, prepare_options, run_init_command
@@ -252,6 +253,44 @@ def command_init(args: argparse.Namespace) -> int:
         print(f"hpp init: {exc}", file=sys.stderr)
         return 3
     return run_init_command(options, manifest, path, json_output=args.json, no_animation=args.no_animation)
+
+
+def command_setup(args: argparse.Namespace) -> int:
+    report = run_setup(Path(args.source), Path(args.target), args.host, bundle=args.bundle or "reliable-coding",
+                       all_compatible=args.all_compatible, modules=args.modules, apply=args.apply, python=args.python)
+    if args.json:
+        _json(report)
+    else:
+        _line(f"HPP setup: {report['status']} · modules={len(report['selected_modules'])} · host={args.host}")
+        for module in report["modules"]:
+            _line(f"  {module['id']}: {module['status']} · {module['integration']} · configuration={module['configuration_status']}")
+        for module in report["skipped_modules"]:
+            _line(f"  {module['id']}: skipped · {module['reason']}")
+        if report["planned_files"]:
+            _line(f"Planned destination files: {len(report['planned_files'])} · complete source/destination map: --json")
+            for item in report["planned_files"]:
+                if item["kind"] in {"project-profile", "module-profile", "setup-receipt"}:
+                    _line(f"  {item['destination']}: {item['action']}")
+            for item in report["planned_actions"]:
+                _line(f"  {item['destination']}/: {item['action']}")
+        if report.get("error"):
+            _line(report["error"])
+        _line(f"Module runtime: {report['runtime_python']} · requires PyYAML for --apply")
+        _line("Host activation is not measured. Manual gates: " + ", ".join(report["manual_gates"]))
+        _line("Native activation: " + report["native_activation_status"])
+        if report["hook_capabilities"]:
+            _line("Declared hook capabilities (not enabled by setup):")
+            _line("  id | module | events | exit_policy | capability groups")
+            for hook in report["hook_capabilities"]:
+                _line("  " + " | ".join((hook["id"], hook["module"], ", ".join(hook["events"]),
+                                          hook["exit_policy"], ", ".join(hook["capabilities"]))))
+        if report["activation_commands"]:
+            _line("Native activation commands (argv; review capabilities first, run from the target project):")
+            for argv in report["activation_commands"]:
+                _line("  " + json.dumps(argv, ensure_ascii=False))
+        if report.get("receipt_path"):
+            _line(f"Receipt: {report['receipt_path']}" if args.apply else f"Planned receipt: {report['receipt_path']}")
+    return report["exit_code"]
 
 
 def command_policy(args: argparse.Namespace) -> int:
@@ -746,6 +785,19 @@ def build_parser() -> argparse.ArgumentParser:
     install.add_argument("--host", required=True)
     install.add_argument("--target", required=True)
     install.set_defaults(func=command_install)
+
+    setup = sub.add_parser("setup", help="plan or prepare a compatible module batch from a full local distribution")
+    setup.add_argument("--source", required=True, help="full emitted checkout; version must match this CLI")
+    setup.add_argument("--target", required=True, help="existing project directory")
+    setup.add_argument("--host", required=True, choices=["claude-code", "codex"])
+    selection = setup.add_mutually_exclusive_group()
+    selection.add_argument("--bundle", help="bundle name (default: reliable-coding)")
+    selection.add_argument("--all-compatible", action="store_true")
+    selection.add_argument("--modules", help="comma-separated module ids")
+    setup.add_argument("--python", help="module runtime interpreter with PyYAML (default: current interpreter)")
+    setup.add_argument("--apply", action="store_true", help="prepare module files; never activate native plugins or hooks")
+    setup.add_argument("--json", action="store_true")
+    setup.set_defaults(func=command_setup)
 
     init = sub.add_parser(
         "init",

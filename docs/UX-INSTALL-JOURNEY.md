@@ -1,8 +1,8 @@
 [English](UX-INSTALL-JOURNEY.md) · [Português](UX-INSTALL-JOURNEY.pt-BR.md)
 
-# UX-INSTALL-JOURNEY — the installation journey, told in the conversation
+# UX-INSTALL-JOURNEY — from manual install to guided setup
 
-> **Version:** 2.0.0 — a presentation layer over two frozen contracts.
+> **Version:** 2.0.0 — historical measured journey, retained as an installation record.
 > **Path 1** is `hpp init`, the harness installer (`hpp/wizard.py`, six stages, plan then
 > `--apply`). **Path 2** is the module installer, `installers/kit-forge-1.5.6/kit_doctor.py`,
 > whose mechanics live in `INSTALL-CONTRACT.md` and whose per-module README follows
@@ -13,7 +13,40 @@
 > 2026-09-23 against version 2.5.8, from a clone of this repository at the `v2.5.8` tag unless the
 > text says "pip install"; the `kit_doctor.py` outputs in Path 2 were captured on 2026-09-21 against
 > version 2.4.1, and the end-to-end example says what has changed since. What is marked
-> *new in 2.6.0* arrived after the version measured here.
+> *new in 2.6.0* arrived after the version measured here. Those transcripts and counts are history,
+> not current output. `hpp init` writes only `.hpp/profile.json` on apply; its WIRE block is
+> suggestions, not installation or host activation. See [Guided setup](SETUP.md) for the HPP
+> 2.14.0+ flow; earlier releases lack bulk setup.
+
+## Guided setup — HPP 2.14.0 and later
+
+The guided flow reduces setup to a plan and an apply. Clone the public product once and run
+`scripts/setup_hpp.py` from that checkout; the same checkout is passed to offline `hpp setup
+--source`. The bootstrap creates a project `.hpp/venv`, installs pinned dependencies and the HPP
+CLI, then applies the offline module plan. Invoke the generated launcher with `python -I -B` on
+Windows or `python3 -I -B` on macOS. It preserves the calling application's Python environment and
+routes HPP commands through the project's managed runtime. Earlier HPP releases lack guided setup.
+Host activation remains a separate, explicit human action.
+
+The offline command accepts `--source`, `--target` and `--host claude-code|codex`; its selection is
+the six-module `reliable-coding` bundle by default, `--all-compatible` (10 Claude modules or 9
+Codex modules), or an explicit `--modules` list. It plans without writing. The human reviews the
+complete plan and authorizes the batch before `--apply`. `--json` changes report format, not the
+review boundary. See [SETUP.md](SETUP.md) for command syntax, prerequisites and limits.
+
+Installing files and activating a host are separate results. Claude native plugin activation keeps
+its explicit host action and consent. Codex receives supported runtime and skills with hooks off;
+do not install a redundant plugin solely to duplicate those skills. Supabase and Orca remain
+optional. Login, subscription and model cost remain with the host. Bootstrap dependency installation
+uses `pip`; setup makes no paid inference call and stores no credentials. Trusted ownership metadata
+stays outside the project in `~/.hpp-setup-state` by default (advanced `--state-dir`); it inventories
+the full managed environment. A rerun requires the same source version, host, selection, artifacts
+and managed profile; changed values are refused for review. Automatic upgrade/migration is not
+implemented. Keep project-local `.hpp/venv`, `.hpp/bin`, `.hpp/runtime-router.json`, receipts,
+launchers and retained build copies out of Git. If interruption leaves no valid receipt, preserve
+the files for reconciliation instead of adopting or deleting them.
+
+## Historical measured journey — `hpp init` and per-module installer
 
 ## Principle
 
@@ -31,11 +64,11 @@ Three roles, with no overlap:
 | **agent** | runs commands, translates the plan, asks for confirmation, reports with real output | applies without confirmation; edits `settings.local.json`/hooks on its own |
 | **human** | reads the plan in the conversation, decides, confirms in natural language | needs to memorise flags — the agent carries the command |
 
-## Path 1 — `hpp init`, the harness journey (primary)
+## Historical Path 1 — `hpp init`, the profile-planning journey
 
-`hpp init` is the front door: it plans the whole installation for a host, verifies what it can,
-writes at most one file, and prints the module-installer lines of Path 2 in its wire block. The
-agent starts here, always.
+The transcript below records the older `hpp init` flow. It plans a profile and prints module
+installer suggestions; it does not install a module batch or activate host wiring. Do not use its
+captured output as evidence for the guided setup interface.
 
 ### The six stages
 

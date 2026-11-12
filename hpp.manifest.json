@@ -1,6 +1,6 @@
 {
   "protocol_version": "2.1",
-  "product_version": "2.13.2",
+  "product_version": "2.14.0",
   "name": "house-party-protocol",
   "hosts": [
     "claude-code",
