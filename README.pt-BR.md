@@ -431,7 +431,7 @@ mesma resposta em JSON. Nenhum dos dois pede a um modelo que lembre de alguma co
 | `lane-kit` | 1.10.2 | um quadro de lanes para sessões concorrentes: claim, território, liveness, maker ≠ checker, e um roteador que escolhe checker de outro provedor |
 | `continuity-kit` | 1.5.5 | handoff escrito antes de parada ou compactação, comandos de re-derivação em vez de estado lembrado, guardas contra replay de passo concluído |
 | `health-kit` | 1.4.6 | sondas de serviço config-driven que gravam um cache que a statusline lê sem tocar a rede; saúde de serviço separada de saúde de dado |
-| `gotcha-memory` | 1.1.6 | registra comandos que falharam por família de erro, detecta recorrência, injeta a lição antes da próxima execução; warn-only, segredo redigido por forma |
+| `gotcha-memory` | 1.1.7 | registra comandos que falharam por família de erro, detecta recorrência, injeta a lição antes da próxima execução; warn-only, segredo redigido por forma |
 | `kit-forge` | 1.5.6 | monta módulos a partir das fontes, faz lint de IP e PII, instala em seis estágios, escreve e verifica `CHECKSUMS.txt`, confere o marketplace |
 | `claude-dev-kit` | 1.3.10 | autoria de skills, hooks e plugins para Claude Code, wiring reversível de settings, secret scan na escrita |
 | `dev-squad-kit` | 1.3.0 | doze papéis de desenvolvimento como comandos e subagents com tools explícitos, mais skills de leitura e consolidação paralelas |

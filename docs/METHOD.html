@@ -149,6 +149,10 @@ The evidence therefore comes first and the attestation last. In your own project
 <code>.gitignore</code>: the event log and the evidence records are per-checkout state, and the snapshot
 covers every untracked file that is not ignored, so without that line an event or a record
 written after <code>attest create</code> blocks <code>attest verify</code>.</p>
+<p><code>attest create</code> warns when its snapshot includes <code>.hpp/</code> state. <code>attest verify</code> names added,
+modified and deleted paths when their bytes explain snapshot drift. The snapshot still covers
+those files until you deliberately ignore them; a warning never makes changed code approvable.
+<code>doctor</code> and <code>init --apply</code> also point out included <code>.hpp/</code> state without rewriting <code>.gitignore</code>.</p>
 <pre><code class="language-bash">python -m hpp cite check --text examples/citations/answer.md --context examples/citations/context.json
 python -m hpp retrieval eval examples/retrieval/suite.json \
   --retriever-command '["python", "examples/retrieval/keyword_retriever.py"]'

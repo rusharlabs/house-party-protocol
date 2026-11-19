@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="972" height="576" viewBox="0 0 972 576" role="img" aria-label="python -m hpp · diagnose → plan → measure → pass — measured output, 2026-11-12" font-family="ui-monospace, Menlo, Consolas, 'Liberation Mono', monospace" font-size="13">
-  <title>python -m hpp · diagnose → plan → measure → pass — measured output, 2026-11-12</title>
+<svg xmlns="http://www.w3.org/2000/svg" width="972" height="576" viewBox="0 0 972 576" role="img" aria-label="python -m hpp · diagnose → plan → measure → pass — measured output, 2026-11-19" font-family="ui-monospace, Menlo, Consolas, 'Liberation Mono', monospace" font-size="13">
+  <title>python -m hpp · diagnose → plan → measure → pass — measured output, 2026-11-19</title>
   <desc>Rendered from the command's real stdout by scripts/render_terminal_svg.py; no image was edited by hand. Commands, in the order they ran, and the whole lines of each stdout shown: 1) python -m hpp doctor — line 1 of 1; 2) python -m hpp init --target your-repo --non-interactive --no-animation — lines 1-9 of 126; 3) python -m hpp eval run examples/reliable-coding/benchmark-suite.json -k 3 --gate both — lines 110-115 of 125; 4) python -m hpp benchmark -k 3 — line 1 of 1. Every command ran from one temporary directory holding an empty your-repo/ and a copy of examples/reliable-coding/; a line left out is counted on screen, and no line was edited.</desc>
   <style>
     .s{animation:s 25.1s step-end infinite}

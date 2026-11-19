@@ -80,7 +80,7 @@
       "name": "gotcha-memory",
       "source": {
         "source": "local",
-        "path": "./continuity/gotcha-memory-1.1.6"
+        "path": "./continuity/gotcha-memory-1.1.7"
       },
       "policy": {
         "installation": "AVAILABLE",

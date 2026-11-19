@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="972" height="816" viewBox="0 0 972 816" role="img" aria-label="python -m hpp init --target your-repo --non-interactive --no-animation — measured output, 2026-11-12" font-family="ui-monospace, Menlo, Consolas, 'Liberation Mono', monospace" font-size="13">
-  <title>python -m hpp init --target your-repo --non-interactive --no-animation — measured output, 2026-11-12</title>
+<svg xmlns="http://www.w3.org/2000/svg" width="972" height="816" viewBox="0 0 972 816" role="img" aria-label="python -m hpp init --target your-repo --non-interactive --no-animation — measured output, 2026-11-19" font-family="ui-monospace, Menlo, Consolas, 'Liberation Mono', monospace" font-size="13">
+  <title>python -m hpp init --target your-repo --non-interactive --no-animation — measured output, 2026-11-19</title>
   <desc>Rendered from the command's real stdout by scripts/render_terminal_svg.py; no image was edited by hand.</desc>
   <rect width="972" height="816" rx="10" fill="#0F1113"/>
   <path d="M0 10a10 10 0 0 1 10-10h952a10 10 0 0 1 10 10v30H0z" fill="#16191C"/>

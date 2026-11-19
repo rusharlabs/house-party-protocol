@@ -426,7 +426,7 @@ returns the same answer as JSON. Neither asks a model to remember anything.
 | `lane-kit` | 1.10.2 | a lane board for concurrent sessions: claim, territory, liveness, maker ≠ checker, and a router that picks a checker from a different provider |
 | `continuity-kit` | 1.5.5 | handoff written before a stop or compaction, re-derivation commands instead of remembered state, guards against replaying finished steps |
 | `health-kit` | 1.4.6 | config-driven service probes that write a cache a statusline reads without touching the network; service health kept apart from data health |
-| `gotcha-memory` | 1.1.6 | records failed commands by error family, detects recurrence, injects the lesson before the next run; warn-only, secrets redacted by shape |
+| `gotcha-memory` | 1.1.7 | records failed commands by error family, detects recurrence, injects the lesson before the next run; warn-only, secrets redacted by shape |
 | `kit-forge` | 1.5.6 | assembles modules from source, lints for IP and PII, installs in six stages, writes and verifies `CHECKSUMS.txt`, checks the marketplace |
 | `claude-dev-kit` | 1.3.10 | authoring of skills, hooks and plugins for Claude Code, reversible settings wiring, secret scan on write |
 | `dev-squad-kit` | 1.3.0 | twelve development roles as commands and subagents with explicit tools, plus parallel read-and-consolidate skills |

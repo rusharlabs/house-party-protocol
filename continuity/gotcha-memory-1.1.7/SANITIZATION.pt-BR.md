@@ -2,7 +2,7 @@
 
 # SANITIZATION.pt-BR.md
 
-Kit: gotcha-memory 1.1.6
+Kit: gotcha-memory 1.1.7
 
 ## Sanitização aplicada
 - 9 padrão(ões) de exclusão de arquivo (ver manifesto interno da build — não distribuído)

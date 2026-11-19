@@ -7,14 +7,14 @@ Todas as mudanças relevantes do harness são registradas aqui. O formato segue
 [SemVer](https://semver.org/lang/pt-BR/). A versão do produto descreve o contrato do harness;
 cada módulo mantém sua própria versão no `plugin.json` e no `marketplace.json`.
 
-## [2.14.0] — 2026-11-11
+## [2.14.0] — 2026-11-19
 
 ### Adicionado
 
 - `hpp setup` compõe o instalador existente em um lote offline, com plano antes da aplicação.
   Selecione um bundle, módulos explícitos ou todos os compatíveis com o host escolhido.
 - Um script do checkout completo prepara um ambiente isolado, instala dependências fixadas por
-  hash e a CLI local, e cria launchers que mantêm o mesmo runtime Python.
+  hash e a CLI local, e roteia comandos HPP sem substituir o Python da aplicação.
 - Recibos distinguem arquivos preparados de ativação nativa manual e hooks sem suporte;
   integridade, plano explícito de arquivos e checkpoints preservam o trabalho existente.
 
@@ -22,6 +22,11 @@ cada módulo mantém sua própria versão no `plugin.json` e no `marketplace.jso
 
 - Os guias esclarecem que `hpp init --apply` registra um perfil; não conecta automaticamente
   Claude Code ou Codex CLI. O novo guia de setup cobre ambos os hosts.
+- Gotcha Memory mantém o store padrão na raiz em sessões dentro de subpastas e resolve caminhos
+  relativos do perfil a partir desse arquivo; overrides explícitos por ambiente continuam disponíveis.
+- Criação de atestação, doctor e init identificam estado incluído de `.hpp/`; a verificação aponta
+  caminhos alterados, preservando os controles de aprovação e a cobertura do digest.
+- A cobertura de identidade de commit das propostas preserva o teste de rejeição de junction.
 
 ## [2.13.2] — 2026-11-11
 

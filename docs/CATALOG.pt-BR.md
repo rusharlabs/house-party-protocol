@@ -20,7 +20,7 @@ Documentos válidos para todos os kits: [`ARCHITECTURE.md`](ARCHITECTURE.md) · 
 | [supabase-pack](#supabase-pack) | 1.2.5 | 2 | 0 | 0 | 0 | 0 | 0 | 0 |
 | [agent-framework-wizard](#agent-framework-wizard) | 1.2.7 | 1 | 0 | 0 | 0 | 0 | 5 | 0 |
 | [dev-squad-kit](#dev-squad-kit) | 1.3.0 | 3 | 12 | 12 | 0 | 0 | 0 | 0 |
-| [gotcha-memory](#gotcha-memory) | 1.1.6 | 1 | 0 | 0 | 3 | 0 | 0 | 0 |
+| [gotcha-memory](#gotcha-memory) | 1.1.7 | 1 | 0 | 0 | 3 | 0 | 0 | 0 |
 | **total** | | **34** | **17** | **18** | **23** | **13** | **25** | **30** |
 
 ## kit-forge

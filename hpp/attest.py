@@ -61,16 +61,42 @@ def _relative(root: Path, path: Path, label: str) -> str:
         raise AttestationError(f"{label} must be inside the repository") from exc
 
 
-def _snapshot(root: Path, excluded: set[str]) -> dict[str, Any]:
+def _repository_paths(root: Path, *args: str, timeout: Optional[float] = None,
+                      env: Optional[dict[str, str]] = None) -> list[str]:
     raw = subprocess.run(
-        ["git", "ls-files", "-z", "--cached", "--others", "--exclude-standard"],
-        cwd=root, capture_output=True,
+        ["git", "ls-files", "-z", "--cached", "--others", "--exclude-standard", *args],
+        cwd=root, capture_output=True, timeout=timeout, env=env,
     )
     if raw.returncode != 0:
         raise AttestationError(raw.stderr.decode("utf-8", errors="replace").strip())
-    paths = sorted({item for item in raw.stdout.decode("utf-8", errors="surrogateescape").split("\0") if item})
+    return sorted({item for item in raw.stdout.decode("utf-8", errors="surrogateescape").split("\0") if item})
+
+
+def runtime_paths_in_snapshot(snapshot: dict[str, Any]) -> list[str]:
+    """List HPP runtime paths already measured in an attestation snapshot."""
+    return [entry["path"] for entry in snapshot["entries"] if ".hpp" in entry["path"].split("/")[:-1]]
+
+
+def repository_runtime_paths(target: Path) -> list[str]:
+    """Best-effort advisory check using the same Git selection as an attestation."""
+    # Keep the fixed diagnostic pathspec independent of user-selected syntax and case modes.
+    pathspec_modes = {"GIT_LITERAL_PATHSPECS", "GIT_GLOB_PATHSPECS", "GIT_NOGLOB_PATHSPECS", "GIT_ICASE_PATHSPECS"}
+    env = {key: value for key, value in os.environ.items() if key.upper() not in pathspec_modes}
+    try:
+        return _repository_paths(target, "--full-name", "--", ":(top,glob)**/.hpp/**", timeout=10, env=env)
+    except (AttestationError, OSError, subprocess.TimeoutExpired):
+        # Doctor and init can run outside Git or without Git installed.
+        return []
+
+
+def _snapshot_digest(entries: list[dict[str, str]]) -> str:
+    canonical = json.dumps(entries, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return _sha256_bytes(canonical)
+
+
+def _snapshot(root: Path, excluded: set[str]) -> dict[str, Any]:
     entries: list[dict[str, str]] = []
-    for relative in paths:
+    for relative in _repository_paths(root):
         normalized = Path(relative).as_posix()
         if normalized in excluded:
             continue
@@ -85,8 +111,40 @@ def _snapshot(root: Path, excluded: set[str]) -> dict[str, Any]:
             kind = "missing"
             digest = _sha256_bytes(b"hpp:missing")
         entries.append({"path": normalized, "kind": kind, "sha256": digest})
-    canonical = json.dumps(entries, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
-    return {"file_count": len(entries), "digest": _sha256_bytes(canonical), "entries": entries}
+    return {"file_count": len(entries), "digest": _snapshot_digest(entries), "entries": entries}
+
+
+def _changed_snapshot_paths(stored: Any, current: list[dict[str, str]]) -> dict[str, str]:
+    if not isinstance(stored, dict) or not isinstance(stored.get("entries"), list):
+        return {}
+    entries = stored["entries"]
+    previous = {}
+    for entry in entries:
+        if not isinstance(entry, dict) or not all(isinstance(entry.get(key), str) for key in ("path", "kind", "sha256")):
+            return {}
+        previous[entry["path"]] = entry
+    try:
+        if len(previous) != len(entries) or _snapshot_digest(entries) != stored.get("digest"):
+            return {}
+    except UnicodeEncodeError:
+        return {}
+
+    latest = {entry["path"]: entry for entry in current}
+    changes = {}
+    for path in sorted(previous.keys() | latest.keys()):
+        before = previous.get(path)
+        after = latest.get(path)
+        if before == after:
+            continue
+        if before is None:
+            changes[path] = "added"
+        elif after is None or after["kind"] == "missing":
+            changes[path] = "deleted"
+        elif before["kind"] == "missing":
+            changes[path] = "added"
+        else:
+            changes[path] = "modified"
+    return changes
 
 
 def create_attestation(
@@ -207,13 +265,15 @@ def verify_attestation(path: Path, repo: Path, allowed_signers: Optional[Path] =
         pass
     current_snapshot = _snapshot(root, excluded)
     stored_snapshot = record.get("snapshot", {})
+    changed_paths = {}
     if not isinstance(stored_snapshot, dict) or stored_snapshot.get("digest") != current_snapshot["digest"]:
         mismatches.append("snapshot_digest")
+        changed_paths = _changed_snapshot_paths(stored_snapshot, current_snapshot["entries"])
     signature = signature_report(signable(record), record.get("signature"),
                                  Path(allowed_signers) if allowed_signers is not None else None)
     if allowed_signers is not None and signature["status"] != "verified":
         mismatches.append("signature")
-    return {
+    report = {
         "schema": "hpp.attestation-verification/v1",
         "status": "valid" if not mismatches else "blocked",
         "mismatches": sorted(set(mismatches)),
@@ -221,3 +281,6 @@ def verify_attestation(path: Path, repo: Path, allowed_signers: Optional[Path] =
         "snapshot_digest": current_snapshot["digest"],
         "signature": signature,
     }
+    if changed_paths:
+        report["changed_paths"] = changed_paths
+    return report

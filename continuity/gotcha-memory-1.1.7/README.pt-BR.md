@@ -78,7 +78,7 @@ runtime (scripts e hooks) continua vindo pela cópia verificada abaixo (`--host 
 
 ## Instalar por cópia (wire manual)
 
-Na distribuição emitida este módulo vive em `continuity/gotcha-memory-1.1.6/` (o
+Na distribuição emitida este módulo vive em `continuity/gotcha-memory-1.1.7/` (o
 diretório carrega a versão — declare-a uma vez, em `KIT`). O instalador do marketplace
 planeja primeiro e só escreve numa segunda invocação explícita com `--apply`; o estágio
 `profile` dele copia `profile.example.yaml` → `profile.yaml` e
@@ -87,7 +87,7 @@ estágio `configure` pergunta `seedar_curated_agora` (seedar as lições curated
 default: não):
 
 ```bash
-KIT=continuity/gotcha-memory-1.1.6
+KIT=continuity/gotcha-memory-1.1.7
 cp -r "$KIT" ../your-repo/gotcha-memory       # the copy itself (kit_doctor does not copy on claude-code)
 python installers/kit-forge-1.5.6/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo
 python installers/kit-forge-1.5.6/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo --apply
@@ -127,6 +127,14 @@ Copie de `profile.example.yaml` (o loader lê `operator-profile.yaml`, então o
 profile, defaults: store `.claude/gotchas/`, janela 24h, min_count 3, top 5. Override de
 store também via env `GOTCHA_STORE_DIR`. Recomendado **gitignorar o store** (memória
 local regenerável).
+
+O store padrão permanece na raiz ao entrar numa subpasta: `CLAUDE_PROJECT_DIR` absoluto e
+existente, diretório do perfil encontrado, raiz do worktree Git e, por último, cwd.
+Um store relativo no perfil parte do diretório desse perfil. O argumento explícito `store_dir`
+tem prioridade, seguido por `GOTCHA_STORE_DIR`, perfil e padrão; overrides relativos por
+argumento/ambiente continuam relativos ao cwd. Stores existentes nunca são movidos ou mesclados
+automaticamente. A descoberta implícita de perfil respeita a fronteira conhecida do projeto;
+um perfil de fallback ao lado do kit instalado não muda o local do store do projeto.
 
 ## Uso direto (CLI)
 

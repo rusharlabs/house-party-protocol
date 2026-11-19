@@ -14,7 +14,9 @@ from typing import Any, Optional
 from hpp import __version__
 from hpp._repository import artifact_status, write_artifact
 from hpp.atlas import render_atlas
-from hpp.attest import AttestationError, create_attestation, verify_attestation
+from hpp.attest import (
+    AttestationError, create_attestation, repository_runtime_paths, runtime_paths_in_snapshot, verify_attestation,
+)
 from hpp.citations import check_files as check_citations, context_ids, exit_for as citations_exit_for
 from hpp.codegraph import build_codegraph, compare_codegraphs, import_codegraph
 from hpp.context import compile_context
@@ -117,6 +119,14 @@ def _feedback_url(report: dict[str, Any]) -> str:
     return f"{FEEDBACK_ISSUES}?template=feedback.yml&title={urllib.parse.quote(title, safe='')}"
 
 
+def _warn_attestation_runtime_paths(paths: list[str]) -> None:
+    if paths:
+        listed = ", ".join(json.dumps(path) for path in paths)
+        print(f"Warning: attestation snapshots include .hpp runtime paths: {listed}. "
+              "Add '.hpp/' to .gitignore for untracked runtime files. Tracked files remain included.",
+              file=sys.stderr)
+
+
 def command_doctor(args: argparse.Namespace) -> int:
     manifest, path = _manifest(args)
     if args.matrix:
@@ -150,6 +160,7 @@ def command_doctor(args: argparse.Namespace) -> int:
         _json(result)
     else:
         _line(summary)
+    _warn_attestation_runtime_paths(repository_runtime_paths(Path.cwd()))
     return 0
 
 
@@ -252,7 +263,10 @@ def command_init(args: argparse.Namespace) -> int:
     except InitUsageError as exc:
         print(f"hpp init: {exc}", file=sys.stderr)
         return 3
-    return run_init_command(options, manifest, path, json_output=args.json, no_animation=args.no_animation)
+    status = run_init_command(options, manifest, path, json_output=args.json, no_animation=args.no_animation)
+    if options.apply and status < 2:
+        _warn_attestation_runtime_paths(repository_runtime_paths(options.target))
+    return status
 
 
 def command_setup(args: argparse.Namespace) -> int:
@@ -390,6 +404,7 @@ def command_attest(args: argparse.Namespace) -> int:
             base_commit=args.base_commit,
         )
         _json({"status": "recorded", **record})
+        _warn_attestation_runtime_paths(runtime_paths_in_snapshot(record["snapshot"]))
         return 0 if record["verdict"] == "approved" else 2
     report = verify_attestation(Path(args.attestation), Path(args.repo),
                                 allowed_signers=Path(args.allowed_signers) if args.allowed_signers else None)

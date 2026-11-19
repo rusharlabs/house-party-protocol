@@ -297,8 +297,8 @@
     },
     {
       "id": "gotcha-memory",
-      "version": "1.1.6",
-      "path": "continuity/gotcha-memory-1.1.6",
+      "version": "1.1.7",
+      "path": "continuity/gotcha-memory-1.1.7",
       "requires": [],
       "integrates_with": [
         "continuity-kit",
