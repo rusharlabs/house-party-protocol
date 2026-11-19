@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>House Party Protocol — Manual do harness</title>
-  <meta name="description" content="Manual operacional do harness House Party Protocol 2.13.2: init, mapas, loop, política, prova, hosts e exit codes, cada afirmação com o comando que a reproduz.">
+  <meta name="description" content="Manual operacional do harness House Party Protocol 2.14.0: init, mapas, loop, política, prova, hosts e exit codes, cada afirmação com o comando que a reproduz.">
   <link rel="alternate" hreflang="en" href="MANUAL.html">
   <link rel="alternate" hreflang="pt-BR" href="MANUAL.pt-BR.html">
   <style>
@@ -66,7 +66,7 @@
   <header class="hero">
     <div class="wrap">
       <img src="assets/hpp-logo-header.png" alt="House Party Protocol — by Rushar Labs">
-      <p class="eyebrow">Manual do harness · v2.13.2 · Claude Code e Codex CLI</p>
+      <p class="eyebrow">Manual do harness · v2.14.0 · Claude Code e Codex CLI</p>
       <h1>Da spec à prova.<br><span class="signal">Sem salto de confiança.</span></h1>
       <p>Um guia operacional do harness: como o <code>hpp init</code> instala, o que cada mapa projeta, como o loop avança, o que a política bloqueia e o que conta como prova. Toda afirmação abaixo carrega o comando que a reproduz. As saídas citadas foram medidas ao longo de várias versões, não contra uma só: as primeiras em 2026-09-23 contra a 2.5.8, a partir de um clone deste repositório na tag <code>v2.5.8</code> e de uma instalação por pip da mesma versão (os blocos do <code>hpp init</code> dizem qual), e as seguintes até a 2.10.1. Uma linha medida numa versão ou árvore específica a nomeia — <em>Medido na árvore-fonte da 2.10.1</em>, <em>Medido num checkout de main</em> — e uma linha que não nomeia nenhuma está num bloco que carrega o comando para medi-la de novo na sua versão. O que está marcado como <em>novo na 2.6.0</em> teve as saídas medidas num checkout de <code>main</code> antes dessa versão.</p>
     </div>
@@ -94,6 +94,11 @@
     </div></section>
 
     <section id="start"><div class="wrap">
+      <h3 id="guided-setup">Ambiente e módulos em lote · desde a 2.14.0</h3>
+      <p>No checkout completo e versionado do produto público, revise e aplique um lote com todos os módulos compatíveis com o host. O bootstrap prepara um ambiente Python isolado e a CLI local; a ativação nativa no Claude Code é uma ação explícita separada, e os hooks do Codex ficam desligados. Leia o <a href="SETUP.pt-BR.html">guia completo de instalação</a> para pré-requisitos, dependências, recibos e ativação do host.</p>
+      <pre>python -I -B scripts/setup_hpp.py --target ../your-repo --host codex --all-compatible
+python -I -B scripts/setup_hpp.py --target ../your-repo --host codex --all-compatible --apply</pre>
+      <p>No macOS, use <code>python3</code>. O bundle recomendado seleciona seis módulos nos dois hosts; todos os compatíveis seleciona dez no Claude Code e nove no Codex. Os comandos de perfil abaixo continuam disponíveis.</p>
       <p class="eyebrow">02 · começar</p>
       <h2>Diagnostique antes de instalar.</h2>
       <pre>python -m hpp doctor

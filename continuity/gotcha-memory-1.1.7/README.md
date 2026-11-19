@@ -78,7 +78,7 @@ Code's, and the runtime (scripts and hooks) still comes through the verified cop
 
 ## Install by copy (manual wire)
 
-In the emitted distribution this module lives in `continuity/gotcha-memory-1.1.6/` (the
+In the emitted distribution this module lives in `continuity/gotcha-memory-1.1.7/` (the
 directory carries the version — state it once, in `KIT`). The marketplace installer plans
 first and writes only on a second, explicit `--apply`; its `profile` stage copies
 `profile.example.yaml` → `profile.yaml` and `curated.seed.example.yaml` →
@@ -86,7 +86,7 @@ first and writes only on a second, explicit `--apply`; its `profile` stage copie
 `seedar_curated_agora` (seed the curated lessons now? default: no):
 
 ```bash
-KIT=continuity/gotcha-memory-1.1.6
+KIT=continuity/gotcha-memory-1.1.7
 cp -r "$KIT" ../your-repo/gotcha-memory       # the copy itself (kit_doctor does not copy on claude-code)
 python installers/kit-forge-1.5.6/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo
 python installers/kit-forge-1.5.6/kit_doctor.py install --kit "$KIT" --host claude-code --target ../your-repo --apply
@@ -126,6 +126,14 @@ Copy from `profile.example.yaml` (the loader reads `operator-profile.yaml`, so t
 defaults: store `.claude/gotchas/`, 24h window, min_count 3, top 5. The store can also be
 overridden through the `GOTCHA_STORE_DIR` env var. Recommended: **gitignore the store**
 (regenerable local memory).
+
+The default store stays at the project root when a session enters a subfolder: an existing
+absolute `CLAUDE_PROJECT_DIR`, the discovered profile directory, the Git worktree root, then cwd.
+A relative store configured in the profile is anchored to that profile's directory. Explicit
+`store_dir` arguments take precedence, followed by `GOTCHA_STORE_DIR`, profile settings and the
+default; relative argument/environment overrides remain relative to cwd. Existing stores are
+never moved or merged automatically. Implicit profile discovery stays inside the known project
+boundary; a fallback profile beside an installed kit does not relocate the project store.
 
 ## Direct use (CLI)
 

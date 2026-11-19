@@ -2,7 +2,7 @@
 
 # SANITIZATION.md
 
-Kit: gotcha-memory 1.1.6
+Kit: gotcha-memory 1.1.7
 
 ## Sanitization applied
 - 9 file exclusion pattern(s) (see the build's internal manifest — not distributed)

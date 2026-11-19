@@ -5,8 +5,8 @@ Portable module of the distributable `gotcha-memory` kit.
 Design notes:
 
   1. The `error_strategy` import is from the SIBLING `_lib/` (vendored), so the kit needs no external package.
-  2. The store is resolved DYNAMICALLY per call: profile (`paths.gotcha_store`)
-     -> env `GOTCHA_STORE_DIR` -> `.claude/gotchas/` under the project's cwd.
+  2. The store is resolved per call: explicit argument -> env `GOTCHA_STORE_DIR`
+     -> profile (relative to its file) -> `.claude/gotchas/` under the project root.
   3. No hardcoded guardrail seed ships with the kit (a seed is personal
      content -- it does not belong in a distributable kit). Instead,
      `seed_from_file(path)` reads curated lessons from a YAML/JSONL of YOUR OWN
@@ -38,6 +38,7 @@ import json
 import math
 import os
 import re
+import subprocess
 import sys
 import time
 from dataclasses import dataclass
@@ -118,33 +119,110 @@ class Gotcha:
 
 # ─────────────────────────── config / store ───────────────────────────
 
+def _host_project_dir() -> Path | None:
+    raw = os.environ.get("CLAUDE_PROJECT_DIR")
+    if raw:
+        try:
+            path = Path(raw)
+            if path.is_absolute() and path.is_dir():
+                return path.resolve()
+        except (OSError, RuntimeError, ValueError):
+            pass
+    return None
+
+
+def _profile_in_scope(profile: Path, start: Path, root: Path | None) -> bool:
+    override = os.environ.get("OPERATOR_PROFILE")
+    if override and Path(override).absolute() == profile:
+        return True
+
+    directory = profile.parent.resolve()
+    target = profile.resolve()
+    if root is not None:
+        return (directory == root or root in directory.parents) and root in target.parents
+
+    # Without a known project boundary, accept the loader's ancestor search, but
+    # not its private fallback beside the kit installation.
+    start = start.resolve()
+    return target.parent == directory and any(
+        directory in (base, base / "operator-kit", base / "staging" / "operator-kit")
+        for base in (start, *start.parents)
+    )
+
+
+def _profile_config(project_dir: Path | None) -> tuple[dict[str, Any], Path | None, Path | None]:
+    cfg: dict[str, Any] = {"window_hours": 24.0, "min_count": 3, "top": 5, "store_dir": None, "seed_file": None}
+    profile = None
+    git_root = None
+    try:
+        start = project_dir or Path.cwd()
+        if project_dir is None:
+            git_root = _git_root(start)
+        if profile_loader is None:
+            return cfg, profile, git_root
+        path = profile_loader.profile_path(start)
+        if path is None or not path.is_file():
+            return cfg, profile, git_root
+        path = path.absolute()
+        if not _profile_in_scope(path, start, project_dir or git_root):
+            return cfg, profile, git_root
+        profile = path
+        import yaml  # optional; the profile directory is useful even without PyYAML
+
+        # Parse the same file the loader found so relative paths have the right base.
+        prof = yaml.safe_load(profile.read_text(encoding="utf-8"))
+        cfg["store_dir"] = profile_loader.get(prof, "paths.gotcha_store") or profile_loader.get(prof, "gotchas.store_dir")
+        cfg["window_hours"] = float(profile_loader.get(prof, "gotchas.window_hours", cfg["window_hours"]))
+        cfg["min_count"] = int(profile_loader.get(prof, "gotchas.min_count", cfg["min_count"]))
+        cfg["top"] = int(profile_loader.get(prof, "gotchas.top", cfg["top"]))
+        cfg["seed_file"] = profile_loader.get(prof, "gotchas.seed_file")
+    except Exception:
+        pass
+    return cfg, profile, git_root
+
+
 def config() -> dict[str, Any]:
     """The kit's effective config: profile (`gotchas.*`) layered over the defaults. Never raises."""
-    cfg: dict[str, Any] = {"window_hours": 24.0, "min_count": 3, "top": 5, "store_dir": None, "seed_file": None}
-    if profile_loader is not None:
-        try:
-            prof = profile_loader.load_profile()
-            cfg["store_dir"] = profile_loader.get(prof, "paths.gotcha_store") or profile_loader.get(prof, "gotchas.store_dir")
-            cfg["window_hours"] = float(profile_loader.get(prof, "gotchas.window_hours", cfg["window_hours"]))
-            cfg["min_count"] = int(profile_loader.get(prof, "gotchas.min_count", cfg["min_count"]))
-            cfg["top"] = int(profile_loader.get(prof, "gotchas.top", cfg["top"]))
-            cfg["seed_file"] = profile_loader.get(prof, "gotchas.seed_file")
-        except Exception:
-            pass
+    cfg, _, _ = _profile_config(_host_project_dir())
     return cfg
 
 
+def _git_root(cwd: Path) -> Path | None:
+    # Discover the local worktree even if a caller inherited another repository's Git env.
+    env = os.environ.copy()
+    for key in ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR"):
+        env.pop(key, None)
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "--show-toplevel"], cwd=cwd, env=env,
+            stdin=subprocess.DEVNULL, capture_output=True, encoding="utf-8", timeout=2,
+        )
+        if result.returncode == 0:
+            root = Path(result.stdout.rstrip("\r\n"))
+            if root.is_absolute():
+                root = root.resolve()
+                current = cwd.resolve()
+                if root == current or root in current.parents:
+                    return root
+    except (OSError, RuntimeError, ValueError, subprocess.TimeoutExpired):
+        pass
+    return None
+
+
 def _store(store_dir: str | Path | None) -> Path:
-    """Resolves the store: argument > profile > env GOTCHA_STORE_DIR > .claude/gotchas/ in the cwd."""
-    if store_dir:
-        return Path(store_dir)
-    cfg_dir = config().get("store_dir")
-    if cfg_dir:
-        return Path(cfg_dir)
-    env = os.environ.get("GOTCHA_STORE_DIR")
-    if env:
-        return Path(env)
-    return Path.cwd() / ".claude" / "gotchas"
+    """Resolve overrides first, then default to the host, profile, Git, or working directory."""
+    override = store_dir or os.environ.get("GOTCHA_STORE_DIR")
+    if override:
+        return Path(override)
+    project_dir = _host_project_dir()
+    cfg, profile, git_root = _profile_config(project_dir)
+    if profile is not None:
+        cfg_dir = cfg["store_dir"]
+        if isinstance(cfg_dir, str) and cfg_dir:
+            return profile.parent / cfg_dir
+        project_dir = project_dir or profile.parent
+    project_dir = project_dir or git_root or Path.cwd()
+    return project_dir / ".claude" / "gotchas"
 
 
 # ─────────────────────────── internal helpers ───────────────────────────
@@ -460,6 +538,7 @@ def gotchas_for_task(
 ) -> list[Gotcha]:
     """Gotchas relevant to a task: curated(match) + recurring(match), top-N by severity."""
     task_key = str(task_key)
+    store_dir = _store(store_dir)
     curated = [g for g in curated_gotchas(store_dir=store_dir) if _matches(g.key, task_key)]
     recurring = [
         g for g in recurring_gotchas(window_hours=window_hours, min_count=min_count, store_dir=store_dir, now=now)

@@ -211,7 +211,7 @@ One row per module, rendered from `hosts` and `components` in the manifest by `h
 | `supabase-pack` 1.2.5 | `explicit-command` · plugin | `explicit-command` · plugin (skills only) + verified copy |
 | `agent-framework-wizard` 1.2.7 | `explicit-command` · plugin | `explicit-command` · verified copy |
 | `dev-squad-kit` 1.3.0 | `native` · plugin | `explicit-command` · plugin (skills only) + verified copy |
-| `gotcha-memory` 1.1.6 | `native` · plugin + hooks after the wiring is pasted | `explicit-command` · plugin (skills only) + verified copy |
+| `gotcha-memory` 1.1.7 | `native` · plugin + hooks after the wiring is pasted | `explicit-command` · plugin (skills only) + verified copy |
 
 On Claude Code every module is a plugin of the marketplace, and a module that declares hooks arms
 them once the wiring is pasted. On Codex CLI the plugin channel is the product's own marketplace,

@@ -152,6 +152,10 @@ Por isso a evidência vem primeiro e a attestation por último. No seu próprio 
 no <code>.gitignore</code>: o event log e os registros de evidência são estado por checkout, e o snapshot
 cobre todo arquivo não rastreado que não esteja ignorado, então sem essa linha um evento ou um
 registro escrito depois do <code>attest create</code> bloqueia o <code>attest verify</code>.</p>
+<p><code>attest create</code> avisa quando o snapshot inclui estado de <code>.hpp/</code>. <code>attest verify</code> identifica
+caminhos adicionados, modificados e removidos quando seus bytes explicam a mudança do snapshot.
+Esses arquivos continuam cobertos até você ignorá-los deliberadamente; um aviso nunca aprova código
+alterado. <code>doctor</code> e <code>init --apply</code> também apontam esse estado sem reescrever <code>.gitignore</code>.</p>
 <pre><code class="language-bash">python -m hpp cite check --text examples/citations/answer.md --context examples/citations/context.json
 python -m hpp retrieval eval examples/retrieval/suite.json \
   --retriever-command '["python", "examples/retrieval/keyword_retriever.py"]'

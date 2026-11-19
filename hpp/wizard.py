@@ -55,6 +55,7 @@ READINESS_CELLS = 20
 # because a literal would be wrong in a source checkout, where docs/CATALOG.* is only written at
 # emission time, and wrong again in a wheel, which carries no docs/ at all.
 DOCUMENTATION: tuple[tuple[tuple[str, ...], str], ...] = (
+    (("docs/SETUP.md", "docs/SETUP.html"), "guided environment and batch module installation"),
     (("INSTALL_FOR_AGENTS.md",), "how an agent installs this, step by step"),
     (("docs/CATALOG.md", "docs/CATALOG.html"), "every module, host by host"),
     (("docs/MANUAL.md", "docs/MANUAL.html"), "the harness end to end"),

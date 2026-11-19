@@ -7,6 +7,27 @@ All relevant changes to the harness are recorded here. The format follows
 [SemVer](https://semver.org/). The product version describes the harness contract; each module
 keeps its own version in `plugin.json` and in `marketplace.json`.
 
+## [2.14.0] — 2026-11-19
+
+### Added
+
+- `hpp setup` composes the existing module installer into one offline, plan-first batch.
+  Select a bundle, explicit modules, or all modules compatible with the chosen host.
+- A full-checkout bootstrap script prepares an isolated project environment, installs hash-pinned
+  dependencies and the local CLI, and routes HPP commands without replacing application Python.
+- Setup receipts distinguish prepared files from manual native plugin activation and unsupported
+  hooks; integrity checks, explicit file plans and resumable checkpoints preserve existing work.
+
+### Fixed
+
+- The installation guides now state that `hpp init --apply` records a profile; it does not
+  automatically connect Claude Code or Codex CLI. The new setup guide covers both hosts.
+- Gotcha Memory keeps its default store at the project root from nested sessions and resolves
+  relative profile settings at the profile directory; explicit environment overrides remain usable.
+- Attestation creation, doctor and init identify included `.hpp/` state; verification names changed
+  snapshot paths while preserving the existing approval checks and digest coverage.
+- Proposal commit-identity regression coverage preserves the existing junction rejection test.
+
 ## [2.13.2] — 2026-11-11
 
 ### Changed
@@ -2115,6 +2136,7 @@ publishing.
 [2.6.5]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.5
 [2.6.6]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.6
 [2.6.7]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.7
+[2.14.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.14.0
 [2.13.2]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.13.2
 [2.13.1]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.13.1
 [2.13.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.13.0

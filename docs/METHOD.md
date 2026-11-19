@@ -81,6 +81,11 @@ The evidence therefore comes first and the attestation last. In your own project
 covers every untracked file that is not ignored, so without that line an event or a record
 written after `attest create` blocks `attest verify`.
 
+`attest create` warns when its snapshot includes `.hpp/` state. `attest verify` names added,
+modified and deleted paths when their bytes explain snapshot drift. The snapshot still covers
+those files until you deliberately ignore them; a warning never makes changed code approvable.
+`doctor` and `init --apply` also point out included `.hpp/` state without rewriting `.gitignore`.
+
 ```bash
 python -m hpp cite check --text examples/citations/answer.md --context examples/citations/context.json
 python -m hpp retrieval eval examples/retrieval/suite.json \

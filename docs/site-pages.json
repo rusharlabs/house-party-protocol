@@ -149,13 +149,25 @@
         },
         {
           "en": {
+            "href": "SETUP.html",
+            "title": "Guided setup",
+            "summary": "Prepare a project environment and install a reviewed bundle or all host-compatible modules, with explicit host activation."
+          },
+          "pt-BR": {
+            "href": "SETUP.pt-BR.html",
+            "title": "Instalação guiada",
+            "summary": "Prepare o ambiente do projeto e instale um bundle revisado ou todos os módulos compatíveis, com ativação explícita do host."
+          }
+        },
+        {
+          "en": {
             "href": "UX-INSTALL-JOURNEY.html",
-            "title": "UX-INSTALL-JOURNEY — the installation journey, told in the conversation",
+            "title": "UX-INSTALL-JOURNEY — from manual install to guided setup",
             "summary": "How an agent guides a human through the installation in the conversation, over the harness installer and the module installer."
           },
           "pt-BR": {
             "href": "UX-INSTALL-JOURNEY.pt-BR.html",
-            "title": "UX-INSTALL-JOURNEY — a jornada de instalação, contada na conversa",
+            "title": "UX-INSTALL-JOURNEY — da instalação manual à guiada",
             "summary": "Como um agente conduz um humano pela instalação na conversa, sobre o instalador do harness e o instalador de módulos."
           }
         },
@@ -207,12 +219,12 @@
         {
           "en": {
             "href": "INSTALL_FOR_AGENTS.html",
-            "title": "Installing House Party Protocol — a guide for agents",
+            "title": "Installing House Party Protocol — agent guide",
             "summary": "The whole instruction for an agent asked to install the harness into a repository, including the gate it must not skip."
           },
           "pt-BR": {
             "href": "INSTALL_FOR_AGENTS.pt-BR.html",
-            "title": "Instalando o House Party Protocol — um guia para agentes",
+            "title": "Instalando o House Party Protocol — guia para agentes",
             "summary": "A instrução inteira para um agente a quem pediram instalar o harness num repositório, incluindo o gate que ele não pode pular."
           }
         }

@@ -14,7 +14,9 @@ from typing import Any, Optional
 from hpp import __version__
 from hpp._repository import artifact_status, write_artifact
 from hpp.atlas import render_atlas
-from hpp.attest import AttestationError, create_attestation, verify_attestation
+from hpp.attest import (
+    AttestationError, create_attestation, repository_runtime_paths, runtime_paths_in_snapshot, verify_attestation,
+)
 from hpp.citations import check_files as check_citations, context_ids, exit_for as citations_exit_for
 from hpp.codegraph import build_codegraph, compare_codegraphs, import_codegraph
 from hpp.context import compile_context
@@ -41,6 +43,7 @@ from hpp.policy import assess, exit_for as policy_exit_for, policy_for_workspace
 from hpp.retrieval import exit_for as retrieval_exit_for, run_retrieval_suite
 from hpp.routing import route
 from hpp.state import StateError, append_event, event_path, project, read_events, verify_chain
+from hpp.setup import run_setup
 from hpp.term import Console, write_stdout
 from hpp.territories import propose_lanes
 from hpp.wizard import DECISION_ADVISORS, InitUsageError, prepare_options, run_init_command
@@ -116,6 +119,14 @@ def _feedback_url(report: dict[str, Any]) -> str:
     return f"{FEEDBACK_ISSUES}?template=feedback.yml&title={urllib.parse.quote(title, safe='')}"
 
 
+def _warn_attestation_runtime_paths(paths: list[str]) -> None:
+    if paths:
+        listed = ", ".join(json.dumps(path) for path in paths)
+        print(f"Warning: attestation snapshots include .hpp runtime paths: {listed}. "
+              "Add '.hpp/' to .gitignore for untracked runtime files. Tracked files remain included.",
+              file=sys.stderr)
+
+
 def command_doctor(args: argparse.Namespace) -> int:
     manifest, path = _manifest(args)
     if args.matrix:
@@ -149,6 +160,7 @@ def command_doctor(args: argparse.Namespace) -> int:
         _json(result)
     else:
         _line(summary)
+    _warn_attestation_runtime_paths(repository_runtime_paths(Path.cwd()))
     return 0
 
 
@@ -251,7 +263,48 @@ def command_init(args: argparse.Namespace) -> int:
     except InitUsageError as exc:
         print(f"hpp init: {exc}", file=sys.stderr)
         return 3
-    return run_init_command(options, manifest, path, json_output=args.json, no_animation=args.no_animation)
+    status = run_init_command(options, manifest, path, json_output=args.json, no_animation=args.no_animation)
+    if options.apply and status < 2:
+        _warn_attestation_runtime_paths(repository_runtime_paths(options.target))
+    return status
+
+
+def command_setup(args: argparse.Namespace) -> int:
+    report = run_setup(Path(args.source), Path(args.target), args.host, bundle=args.bundle or "reliable-coding",
+                       all_compatible=args.all_compatible, modules=args.modules, apply=args.apply, python=args.python)
+    if args.json:
+        _json(report)
+    else:
+        _line(f"HPP setup: {report['status']} · modules={len(report['selected_modules'])} · host={args.host}")
+        for module in report["modules"]:
+            _line(f"  {module['id']}: {module['status']} · {module['integration']} · configuration={module['configuration_status']}")
+        for module in report["skipped_modules"]:
+            _line(f"  {module['id']}: skipped · {module['reason']}")
+        if report["planned_files"]:
+            _line(f"Planned destination files: {len(report['planned_files'])} · complete source/destination map: --json")
+            for item in report["planned_files"]:
+                if item["kind"] in {"project-profile", "module-profile", "setup-receipt"}:
+                    _line(f"  {item['destination']}: {item['action']}")
+            for item in report["planned_actions"]:
+                _line(f"  {item['destination']}/: {item['action']}")
+        if report.get("error"):
+            _line(report["error"])
+        _line(f"Module runtime: {report['runtime_python']} · requires PyYAML for --apply")
+        _line("Host activation is not measured. Manual gates: " + ", ".join(report["manual_gates"]))
+        _line("Native activation: " + report["native_activation_status"])
+        if report["hook_capabilities"]:
+            _line("Declared hook capabilities (not enabled by setup):")
+            _line("  id | module | events | exit_policy | capability groups")
+            for hook in report["hook_capabilities"]:
+                _line("  " + " | ".join((hook["id"], hook["module"], ", ".join(hook["events"]),
+                                          hook["exit_policy"], ", ".join(hook["capabilities"]))))
+        if report["activation_commands"]:
+            _line("Native activation commands (argv; review capabilities first, run from the target project):")
+            for argv in report["activation_commands"]:
+                _line("  " + json.dumps(argv, ensure_ascii=False))
+        if report.get("receipt_path"):
+            _line(f"Receipt: {report['receipt_path']}" if args.apply else f"Planned receipt: {report['receipt_path']}")
+    return report["exit_code"]
 
 
 def command_policy(args: argparse.Namespace) -> int:
@@ -351,6 +404,7 @@ def command_attest(args: argparse.Namespace) -> int:
             base_commit=args.base_commit,
         )
         _json({"status": "recorded", **record})
+        _warn_attestation_runtime_paths(runtime_paths_in_snapshot(record["snapshot"]))
         return 0 if record["verdict"] == "approved" else 2
     report = verify_attestation(Path(args.attestation), Path(args.repo),
                                 allowed_signers=Path(args.allowed_signers) if args.allowed_signers else None)
@@ -746,6 +800,19 @@ def build_parser() -> argparse.ArgumentParser:
     install.add_argument("--host", required=True)
     install.add_argument("--target", required=True)
     install.set_defaults(func=command_install)
+
+    setup = sub.add_parser("setup", help="plan or prepare a compatible module batch from a full local distribution")
+    setup.add_argument("--source", required=True, help="full emitted checkout; version must match this CLI")
+    setup.add_argument("--target", required=True, help="existing project directory")
+    setup.add_argument("--host", required=True, choices=["claude-code", "codex"])
+    selection = setup.add_mutually_exclusive_group()
+    selection.add_argument("--bundle", help="bundle name (default: reliable-coding)")
+    selection.add_argument("--all-compatible", action="store_true")
+    selection.add_argument("--modules", help="comma-separated module ids")
+    setup.add_argument("--python", help="module runtime interpreter with PyYAML (default: current interpreter)")
+    setup.add_argument("--apply", action="store_true", help="prepare module files; never activate native plugins or hooks")
+    setup.add_argument("--json", action="store_true")
+    setup.set_defaults(func=command_setup)
 
     init = sub.add_parser(
         "init",

@@ -17,6 +17,26 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  guided-setup:
+    name: guided setup (${{ matrix.os }}, py3.10)
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.10"
+      - name: Prepare every compatible module for both hosts, verify rerun and installed CLI
+        run: python -I -B scripts/check_guided_setup.py
+
   test:
     name: pytest + hpp doctor/benchmark (${{ matrix.os }}, py${{ matrix.python-version }})
     runs-on: ${{ matrix.os }}

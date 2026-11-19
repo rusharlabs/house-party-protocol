@@ -84,6 +84,11 @@ no `.gitignore`: o event log e os registros de evidência são estado por checko
 cobre todo arquivo não rastreado que não esteja ignorado, então sem essa linha um evento ou um
 registro escrito depois do `attest create` bloqueia o `attest verify`.
 
+`attest create` avisa quando o snapshot inclui estado de `.hpp/`. `attest verify` identifica
+caminhos adicionados, modificados e removidos quando seus bytes explicam a mudança do snapshot.
+Esses arquivos continuam cobertos até você ignorá-los deliberadamente; um aviso nunca aprova código
+alterado. `doctor` e `init --apply` também apontam esse estado sem reescrever `.gitignore`.
+
 ```bash
 python -m hpp cite check --text examples/citations/answer.md --context examples/citations/context.json
 python -m hpp retrieval eval examples/retrieval/suite.json \

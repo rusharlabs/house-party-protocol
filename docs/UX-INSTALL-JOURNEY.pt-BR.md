@@ -1,8 +1,8 @@
 [English](UX-INSTALL-JOURNEY.md) · [Português](UX-INSTALL-JOURNEY.pt-BR.md)
 
-# UX-INSTALL-JOURNEY — a jornada de instalação, contada na conversa
+# UX-INSTALL-JOURNEY — da instalação manual à guiada
 
-> **Versão:** 2.0.0 — camada de apresentação sobre dois contratos congelados.
+> **Versão:** 2.0.0 — jornada histórica medida, preservada como registro de instalação.
 > **Caminho 1** é o `hpp init`, o instalador do harness (`hpp/wizard.py`, seis estágios, plano e
 > depois `--apply`). **Caminho 2** é o instalador de módulos, `installers/kit-forge-1.5.6/kit_doctor.py`,
 > cuja mecânica vive em `INSTALL-CONTRACT.md` e cujo README por módulo segue o
@@ -13,7 +13,42 @@
 > 2026-09-23 contra a versão 2.5.8, a partir de um clone deste repositório na tag `v2.5.8`, salvo
 > onde o texto diz "instalação por pip"; as saídas do `kit_doctor.py` no Caminho 2 foram
 > capturadas em 2026-09-21 contra a versão 2.4.1, e o exemplo de ponta a ponta diz o que mudou
-> desde então. O que está marcado como *novo na 2.6.0* chegou depois da versão medida aqui.
+> desde então. O que está marcado como *novo na 2.6.0* chegou depois da versão medida aqui. Essas
+> transcrições e contagens são história, não saídas atuais. `hpp init` escreve apenas
+> `.hpp/profile.json` ao aplicar; seu bloco WIRE contém sugestões, não instalação nem ativação do
+> host. Veja [Instalação guiada](SETUP.pt-BR.md) para o fluxo do HPP 2.14.0+; versões anteriores
+> não têm instalação em lote.
+
+## Instalação guiada — HPP 2.14.0 e posteriores
+
+O fluxo guiado reduz a instalação a um plano e uma aplicação. Clone o produto público uma única vez
+e rode `scripts/setup_hpp.py` a partir desse checkout; passe o mesmo checkout a `hpp setup --source`
+offline. O bootstrap cria `.hpp/venv` no projeto, instala dependências fixadas e a CLI do HPP, e
+então aplica o plano offline dos módulos. Invoque o launcher gerado com `python -I -B` no Windows ou
+`python3 -I -B` no macOS. Ele preserva o ambiente Python da aplicação chamadora e encaminha comandos
+HPP ao runtime gerenciado no projeto. Versões anteriores do HPP não têm instalação guiada. A
+ativação do host continua sendo uma ação humana explícita e separada.
+
+O comando offline recebe `--source`, `--target` e `--host claude-code|codex`; por padrão escolhe o
+bundle `reliable-coding`, com seis módulos, ou aceita `--all-compatible` (10 módulos Claude ou 9
+Codex) ou uma lista explícita em `--modules`. Ele planeja sem escrever. A pessoa revisa o plano
+completo e autoriza o lote antes de `--apply`. `--json` muda o formato do relatório, não o gate de
+revisão. Veja [SETUP.pt-BR.md](SETUP.pt-BR.md) para sintaxe, pré-requisitos e limites.
+
+Instalar arquivos e ativar um host são resultados separados. A ativação de plugin nativo no Claude
+mantém sua ação explícita no host e o consentimento próprio dele. O Codex recebe runtime e skills
+suportados, com hooks desligados; não instale um plugin redundante apenas para duplicar essas skills.
+Supabase e Orca continuam opcionais. Login, assinatura e custo de modelo continuam sob
+responsabilidade do host. A instalação de dependências do bootstrap usa `pip`; a instalação não faz
+inferência paga nem armazena credenciais. Os metadados confiáveis de propriedade ficam fora do
+projeto em `~/.hpp-setup-state` por padrão (`--state-dir` é avançado) e inventariam o ambiente
+gerenciado por completo. Uma reexecução exige a mesma versão da fonte, host, seleção, artefatos e
+perfil gerenciado; mudanças são recusadas para revisão. Upgrade/migração automática não está
+implementado. Mantenha `.hpp/venv`, `.hpp/bin`, `.hpp/runtime-router.json`, recibos, launchers e
+cópias de build locais fora do Git. Se uma interrupção deixar o recibo inválido ou ausente, preserve
+os arquivos para reconciliação em vez de adotá-los ou apagá-los.
+
+## Jornada histórica medida — `hpp init` e instalador por módulo
 
 ## Princípio
 
@@ -31,11 +66,11 @@ Três papéis, sem sobreposição:
 | **agente** | roda comandos, traduz o plano, pede confirmação, reporta com saída real | aplica sem confirmação; edita `settings.local.json`/hooks por conta própria |
 | **humano** | lê o plano na conversa, decide, confirma em linguagem natural | precisa decorar flags — o agente carrega o comando |
 
-## Caminho 1 — `hpp init`, a jornada do harness (principal)
+## Caminho histórico 1 — `hpp init`, a jornada de planejamento do perfil
 
-O `hpp init` é a porta de entrada: ele planeja a instalação inteira para um host, verifica o que
-consegue, escreve no máximo um arquivo e imprime no bloco de wiring as linhas do instalador de
-módulos do Caminho 2. O agente começa por aqui, sempre.
+A transcrição abaixo registra o fluxo antigo de `hpp init`. Ele planeja um perfil e imprime
+sugestões do instalador de módulos; não instala um lote de módulos nem ativa o wiring do host. Não
+use a saída capturada como evidência da interface de instalação guiada.
 
 ### Os seis estágios
 

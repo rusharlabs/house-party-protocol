@@ -7,7 +7,7 @@ Derived from the emitted tree: what each kit installs, resource by resource. Reg
 
 ## Shared resources
 
-Documents that apply to every kit: [`ARCHITECTURE.md`](ARCHITECTURE.md) · [`ARCHITECTURE.pt-BR.md`](ARCHITECTURE.pt-BR.md) · [`ASSURANCE-CASE.md`](ASSURANCE-CASE.md) · [`ASSURANCE-CASE.pt-BR.md`](ASSURANCE-CASE.pt-BR.md) · [`BENCHMARK.md`](BENCHMARK.md) · [`BENCHMARK.pt-BR.md`](BENCHMARK.pt-BR.md) · [`BRAND.md`](BRAND.md) · [`BRAND.pt-BR.md`](BRAND.pt-BR.md) · [`CONCEPTS.md`](CONCEPTS.md) · [`CONCEPTS.pt-BR.md`](CONCEPTS.pt-BR.md) · [`DESIGN.md`](DESIGN.md) · [`DESIGN.pt-BR.md`](DESIGN.pt-BR.md) · [`GITHUB-DESCRIPTION.txt`](GITHUB-DESCRIPTION.txt) · [`GRAPH-MODEL.md`](GRAPH-MODEL.md) · [`GRAPH-MODEL.pt-BR.md`](GRAPH-MODEL.pt-BR.md) · [`LOOPS.md`](LOOPS.md) · [`LOOPS.pt-BR.md`](LOOPS.pt-BR.md) · [`MANUAL.html`](MANUAL.html) · [`MANUAL.pt-BR.html`](MANUAL.pt-BR.html) · [`METHOD.md`](METHOD.md) · [`METHOD.pt-BR.md`](METHOD.pt-BR.md) · [`PROJECT-INVENTORY.md`](PROJECT-INVENTORY.md) · [`PROJECT-INVENTORY.pt-BR.md`](PROJECT-INVENTORY.pt-BR.md) · [`PROOF.md`](PROOF.md) · [`PROOF.pt-BR.md`](PROOF.pt-BR.md) · [`TIPS.md`](TIPS.md) · [`TIPS.pt-BR.md`](TIPS.pt-BR.md) · [`UX-INSTALL-JOURNEY.md`](UX-INSTALL-JOURNEY.md) · [`UX-INSTALL-JOURNEY.pt-BR.md`](UX-INSTALL-JOURNEY.pt-BR.md)
+Documents that apply to every kit: [`ARCHITECTURE.md`](ARCHITECTURE.md) · [`ARCHITECTURE.pt-BR.md`](ARCHITECTURE.pt-BR.md) · [`ASSURANCE-CASE.md`](ASSURANCE-CASE.md) · [`ASSURANCE-CASE.pt-BR.md`](ASSURANCE-CASE.pt-BR.md) · [`BENCHMARK.md`](BENCHMARK.md) · [`BENCHMARK.pt-BR.md`](BENCHMARK.pt-BR.md) · [`BRAND.md`](BRAND.md) · [`BRAND.pt-BR.md`](BRAND.pt-BR.md) · [`CONCEPTS.md`](CONCEPTS.md) · [`CONCEPTS.pt-BR.md`](CONCEPTS.pt-BR.md) · [`DESIGN.md`](DESIGN.md) · [`DESIGN.pt-BR.md`](DESIGN.pt-BR.md) · [`GITHUB-DESCRIPTION.txt`](GITHUB-DESCRIPTION.txt) · [`GRAPH-MODEL.md`](GRAPH-MODEL.md) · [`GRAPH-MODEL.pt-BR.md`](GRAPH-MODEL.pt-BR.md) · [`LOOPS.md`](LOOPS.md) · [`LOOPS.pt-BR.md`](LOOPS.pt-BR.md) · [`MANUAL.html`](MANUAL.html) · [`MANUAL.pt-BR.html`](MANUAL.pt-BR.html) · [`METHOD.md`](METHOD.md) · [`METHOD.pt-BR.md`](METHOD.pt-BR.md) · [`PROJECT-INVENTORY.md`](PROJECT-INVENTORY.md) · [`PROJECT-INVENTORY.pt-BR.md`](PROJECT-INVENTORY.pt-BR.md) · [`PROOF.md`](PROOF.md) · [`PROOF.pt-BR.md`](PROOF.pt-BR.md) · [`SETUP.md`](SETUP.md) · [`SETUP.pt-BR.md`](SETUP.pt-BR.md) · [`TIPS.md`](TIPS.md) · [`TIPS.pt-BR.md`](TIPS.pt-BR.md) · [`UX-INSTALL-JOURNEY.md`](UX-INSTALL-JOURNEY.md) · [`UX-INSTALL-JOURNEY.pt-BR.md`](UX-INSTALL-JOURNEY.pt-BR.md)
 
 | kit | version | skills | commands | agents | hooks | rules | templates | scripts |
 |---|---|---:|---:|---:|---:|---:|---:|---:|
@@ -20,7 +20,7 @@ Documents that apply to every kit: [`ARCHITECTURE.md`](ARCHITECTURE.md) · [`ARC
 | [supabase-pack](#supabase-pack) | 1.2.5 | 2 | 0 | 0 | 0 | 0 | 0 | 0 |
 | [agent-framework-wizard](#agent-framework-wizard) | 1.2.7 | 1 | 0 | 0 | 0 | 0 | 5 | 0 |
 | [dev-squad-kit](#dev-squad-kit) | 1.3.0 | 3 | 12 | 12 | 0 | 0 | 0 | 0 |
-| [gotcha-memory](#gotcha-memory) | 1.1.6 | 1 | 0 | 0 | 3 | 0 | 0 | 0 |
+| [gotcha-memory](#gotcha-memory) | 1.1.7 | 1 | 0 | 0 | 3 | 0 | 0 | 0 |
 | **total** | | **34** | **17** | **18** | **23** | **13** | **25** | **30** |
 
 ## kit-forge
