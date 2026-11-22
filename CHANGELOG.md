@@ -7,6 +7,40 @@ All relevant changes to the harness are recorded here. The format follows
 [SemVer](https://semver.org/). The product version describes the harness contract; each module
 keeps its own version in `plugin.json` and in `marketplace.json`.
 
+## [2.15.0] — 2026-11-22
+
+### Added
+
+- `hpp skills catalog|graph|request|recommend`: local advisory skill selection — a bounded catalog
+  of project skills (and, with `--include-bundled`, module skills available in the distribution), a
+  lexical shortlist that abstains when nothing overlaps, a provenance graph, and explicit import of
+  an existing typed-decision record bound to the exact request. HPP never calls a model, loads or
+  installs a skill. See `docs/SKILL-ROUTING.md`.
+- Lane Kit 1.11.0: a session started in an Orca terminal without `CLAUDE_LANE_ID` is its own lane,
+  `orca-<id>`, so two agents opened from Orca's interface see each other in the guards. Continuity
+  Kit 1.6.0 resolves the same lane for handoffs.
+- Lane Kit 1.11.0: an opt-in mirror of the board on the Orca workspace card (`mailbox.orca_status`):
+  the workspace status and one `HPP:` comment line per transition, bounded and fail-open.
+
+### Changed
+
+- PyPI metadata: a one-sentence summary that matches the repository description, a Documentation
+  link to the manual site, and keywords without internal jargon. The site publishes `sitemap.xml`.
+
+### Fixed
+
+- Lane Kit: `release-fix` and `start-review` for a Codex lane no longer hang on Windows when the
+  `codex queue` doorbell does not answer; the doorbell returns within its 5-second timeout plus at most
+  3 seconds to end the process tree.
+- Hooks and lane scripts no longer write `__pycache__` into a plugin installed from a directory
+  (Lane Kit, Operator Kit, Continuity Kit, Gotcha Memory, Claude Dev Kit and Health Kit).
+- Typed-decision validation rejects null probabilities with a clear error instead of an internal one.
+
+### Thanks
+
+- The Gotcha Memory default store from nested sessions (#68) and the handling of `.hpp/` state by
+  attestation, doctor and init (#69), both fixed in 2.14.0: Reported by @vilmarioia.
+
 ## [2.14.0] — 2026-11-19
 
 ### Added
@@ -2136,6 +2170,7 @@ publishing.
 [2.6.5]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.5
 [2.6.6]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.6
 [2.6.7]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.7
+[2.15.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.15.0
 [2.14.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.14.0
 [2.13.2]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.13.2
 [2.13.1]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.13.1

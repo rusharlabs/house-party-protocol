@@ -168,6 +168,8 @@ def validate(record: Any) -> dict[str, Any]:
         if not isinstance(probabilities, dict) or set(probabilities) != set(question["options"]):
             raise DecisionError("probabilities must name every option exactly once")
         values = [_unit(item, "each probability") for item in probabilities.values()]
+        if any(value is None for value in values):
+            raise DecisionError("each probability must be a number, not null")
         if abs(sum(values) - 1.0) > 1e-3:
             raise DecisionError("probabilities must sum to 1")
     provider = record.get("provider")

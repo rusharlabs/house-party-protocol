@@ -7,6 +7,41 @@ Todas as mudanças relevantes do harness são registradas aqui. O formato segue
 [SemVer](https://semver.org/lang/pt-BR/). A versão do produto descreve o contrato do harness;
 cada módulo mantém sua própria versão no `plugin.json` e no `marketplace.json`.
 
+## [2.15.0] — 2026-11-22
+
+### Adicionado
+
+- `hpp skills catalog|graph|request|recommend`: seleção consultiva local de skills — catálogo
+  limitado das skills do projeto (e, com `--include-bundled`, das skills de módulos disponíveis na
+  distribuição), lista curta lexical que se abstém quando nada coincide, grafo de proveniência e
+  importação explícita de um registro de decisão tipada já existente, amarrado à requisição exata.
+  O HPP nunca chama modelo, nem carrega ou instala skill. Veja `docs/SKILL-ROUTING.pt-BR.md`.
+- Lane Kit 1.11.0: uma sessão iniciada num terminal do Orca sem `CLAUDE_LANE_ID` é uma lane própria,
+  `orca-<id>`, então dois agentes abertos pela interface do Orca se veem nos guards. O Continuity
+  Kit 1.6.0 resolve a mesma lane para os handoffs.
+- Lane Kit 1.11.0: espelho opcional do board no card de workspace do Orca (`mailbox.orca_status`):
+  o status do workspace e uma linha de comentário `HPP:` por transição, com limite e sem travar nada.
+
+### Alterado
+
+- Metadados do PyPI: resumo de uma frase igual à descrição do repositório, link de Documentation
+  para o site do manual e keywords sem jargão interno. O site publica `sitemap.xml`.
+
+### Corrigido
+
+- Lane Kit: `release-fix` e `start-review` para uma lane do Codex não travam mais no Windows quando a
+  campainha `codex queue` não responde; a campainha volta dentro do limite de 5 segundos, mais no máximo
+  3 segundos para encerrar a árvore de processos.
+- Hooks e scripts de lane não gravam mais `__pycache__` num plugin instalado a partir de diretório
+  (Lane Kit, Operator Kit, Continuity Kit, Gotcha Memory, Claude Dev Kit e Health Kit).
+- A validação de decisões tipadas recusa probabilidades nulas com erro claro, em vez de erro interno.
+
+### Agradecimentos
+
+- O store padrão da Gotcha Memory em sessões dentro de subpastas (#68) e o tratamento do estado de
+  `.hpp/` pela atestação, pelo doctor e pelo init (#69), ambos corrigidos na 2.14.0: Relatado por
+  @vilmarioia.
+
 ## [2.14.0] — 2026-11-19
 
 ### Adicionado
@@ -2180,6 +2215,7 @@ publicar.
 [2.6.5]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.5
 [2.6.6]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.6
 [2.6.7]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.6.7
+[2.15.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.15.0
 [2.14.0]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.14.0
 [2.13.2]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.13.2
 [2.13.1]: https://github.com/rusharlabs/house-party-protocol/releases/tag/v2.13.1

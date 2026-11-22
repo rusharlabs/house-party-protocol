@@ -5,7 +5,7 @@
 For the core CLI alone, without installing modules, the versioned alternative is:
 
 ```bash
-pip install git+https://github.com/rusharlabs/house-party-protocol@v2.14.0
+pip install git+https://github.com/rusharlabs/house-party-protocol@v2.15.0
 ```
 
 This guide covers HPP 2.14.0 and later; earlier releases do not include `hpp setup` or
