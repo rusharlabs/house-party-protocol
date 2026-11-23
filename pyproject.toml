@@ -6,8 +6,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "house-party-protocol"
-version = "2.14.0"
-description = "Local-first harness for coding-agent teams: cross-model review and evidence before done."
+version = "2.15.0"
+description = "Local-first Python harness for multi-agent coding with Claude Code and Codex CLI: parallel lanes, cross-model maker-checker code review, human approvals bound to artifacts, and a task counts as done only when recorded evidence proves it."
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
@@ -17,9 +17,10 @@ requires-python = ">=3.10"  # Why: the CI matrix covers 3.10-3.13. The code uses
 # exclusive to 3.10 and probably runs on 3.9, but nothing measures that - so nothing promises it.
 dependencies = []
 keywords = [
-  "coding-agents", "claude-code", "codex-cli", "harness", "evidence", "attestation",
-  "verification", "guardrails", "pass-at-k", "local-first", "agent-harness", "maker-checker",
-  "cross-model", "provider-neutral", "typed-decisions", "multi-agent", "jev", "agent-teams",
+  "coding-agents", "claude-code", "codex-cli", "codex", "harness", "evidence", "attestation",
+  "verification", "guardrails", "local-first", "agent-harness", "agent-orchestration", "maker-checker",
+  "cross-model", "code-review", "human-in-the-loop", "spec-driven-development", "multi-agent",
+  "claude-code-plugin", "codex-plugin", "jev", "agent-teams",
 ]
 classifiers = [
   "Development Status :: 4 - Beta",
@@ -37,6 +38,7 @@ classifiers = [
 
 [project.urls]
 Homepage = "https://rusharlabs.com"
+Documentation = "https://rusharlabs.github.io/house-party-protocol/"
 Repository = "https://github.com/rusharlabs/house-party-protocol"
 Changelog = "https://github.com/rusharlabs/house-party-protocol/blob/main/CHANGELOG.md"
 Issues = "https://github.com/rusharlabs/house-party-protocol/issues"

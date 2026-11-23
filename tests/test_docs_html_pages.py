@@ -215,3 +215,29 @@ def test_CONTROLE_the_checks_discriminate_on_a_known_good_and_a_known_bad_page()
     manual = _text(DOCS / "MANUAL.html")
     assert manual.startswith('<!doctype html>\n<html lang="en">') and 'href="MANUAL.pt-BR.html"' in manual
     assert html_headings(manual, (1,)), "the extractor does not see the manual's <h1>"
+
+
+# ----------------------------------------------------------------------------- SITEMAP
+
+SITE = "https://rusharlabs.github.io/house-party-protocol/"
+
+
+def test_the_sitemap_lists_every_page_of_the_site_once() -> None:
+    """2.15: /sitemap.xml answered 404, so a search engine found the pages only through links."""
+    import json
+    import xml.etree.ElementTree as ET
+
+    sitemap = DOCS / "sitemap.xml"
+    assert sitemap.is_file(), "SITEMAP-MISSING docs/sitemap.xml (render_docs_html.py writes it)"
+    root = ET.fromstring(sitemap.read_bytes())
+    namespace = "{http://www.sitemaps.org/schemas/sitemap/0.9}"
+    assert root.tag == f"{namespace}urlset"
+    locs = [element.text or "" for element in root.iter(f"{namespace}loc")]
+    assert len(locs) == len(set(locs)) and locs == sorted(locs), "SITEMAP-ORDER duplicates or unsorted"
+    assert all(loc.startswith(SITE) for loc in locs), [loc for loc in locs if not loc.startswith(SITE)]
+    site = json.loads((DOCS / "site-pages.json").read_text(encoding="utf-8"))
+    expected = {entry[lang]["href"] for group in site["groups"] for entry in group["pages"] for lang in LANG_SUFFIX}
+    expected |= {"", "CATALOG.html", "CATALOG.pt-BR.html", "MANUAL.html", "MANUAL.pt-BR.html"}
+    listed = {loc[len(SITE):] for loc in locs}
+    assert listed == expected, f"SITEMAP-PAGES missing {sorted(expected - listed)} · extra {sorted(listed - expected)}"
+    assert "<lastmod>" not in sitemap.read_text(encoding="utf-8"), "a date would make render --check drift daily"

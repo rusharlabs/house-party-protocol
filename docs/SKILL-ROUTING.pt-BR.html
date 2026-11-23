@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>House Party Protocol — Roteamento consultivo de skills</title>
+  <meta name="description" content="Catálogos locais, relações de capacidades e decisões tipadas explícitas sem chamadas a modelos.">
+  <link rel="alternate" hreflang="en" href="SKILL-ROUTING.html">
+  <link rel="alternate" hreflang="pt-BR" href="SKILL-ROUTING.pt-BR.html">
+  <style>
+    :root{--hpp-black: #000000;--hpp-ink: #0F1113;--hpp-paper: #F4F1EB;--hpp-signal: #FF6A00;--line:rgba(15,17,19,.18);--surface:rgba(15,17,19,.04);--muted:rgba(15,17,19,.72);--max:1120px}
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;background:var(--hpp-paper);color:var(--hpp-ink);font:16px/1.65 Inter,"Segoe UI",Arial,sans-serif}
+    a{color:var(--hpp-ink);text-decoration:underline;text-decoration-color:var(--hpp-signal);text-decoration-thickness:2px;text-underline-offset:3px}
+    a:hover{color:var(--hpp-signal)}
+    a:focus-visible{outline:4px solid var(--hpp-signal);outline-offset:3px}
+    .wrap{width:min(var(--max),calc(100% - 40px));margin:auto}
+    .lang{background:var(--hpp-black);color:var(--hpp-paper);font-size:.9rem;padding:10px 0}
+    .lang a{color:var(--hpp-paper)}
+    .lang a[aria-current]{text-decoration:none;font-weight:700}
+    .hero{background:var(--hpp-ink);color:var(--hpp-paper);padding:44px 0 50px}
+    .hero img{width:min(720px,100%);display:block}
+    .hero h1{font:800 clamp(2.2rem,6vw,5rem)/.95 Sora,Inter,"Segoe UI",sans-serif;letter-spacing:-.02em;margin:.35em 0}
+    .hero p{max-width:760px;font-size:1.15rem;color:rgba(244,241,235,.82)}
+    .hero .eyebrow{color:var(--hpp-paper);border-color:var(--hpp-signal)}
+    .signal{color:var(--hpp-signal)}
+    .eyebrow,.mono,code,pre,.gate,.label{font-family:"JetBrains Mono","Cascadia Code",Consolas,monospace}
+    .eyebrow{display:inline-block;letter-spacing:.13em;text-transform:uppercase;font-size:.78rem;border-left:4px solid var(--hpp-signal);padding-left:.6em;margin:0 0 .6em}
+    nav{position:sticky;top:0;z-index:2;background:rgba(244,241,235,.96);border-bottom:1px solid var(--line);backdrop-filter:blur(8px)}
+    nav .wrap{display:flex;gap:20px;overflow:auto;padding:12px 0}
+    nav a{white-space:nowrap;text-decoration:none;font-weight:700}
+    nav a:hover{text-decoration:underline;text-decoration-color:var(--hpp-signal)}
+    section{padding:64px 0;border-bottom:1px solid var(--line)}
+    h2{font:800 clamp(1.7rem,3vw,2.6rem)/1.1 Sora,Inter,"Segoe UI",sans-serif;letter-spacing:-.01em;margin:0 0 .6em}
+    h3{margin:0 0 .4em;font-size:1.1rem}
+    .lead{max-width:780px;color:var(--muted)}
+    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:20px}
+    .card{grid-column:span 4;border:1px solid var(--line);border-radius:16px;padding:22px;background:var(--surface)}
+    .card.wide{grid-column:span 6}
+    .card.full{grid-column:1/-1}
+    pre{background:var(--hpp-ink);color:var(--hpp-paper);padding:20px;border-radius:12px;overflow:auto;border-left:6px solid var(--hpp-signal);font-size:.92rem;line-height:1.5}
+    code{font-size:.94em}
+    p code,li code,td code{background:var(--surface);padding:.08em .35em;border-radius:5px}
+    pre code{background:none;padding:0}
+    table{width:100%;border-collapse:collapse;background:var(--surface);margin:1em 0}
+    th,td{text-align:left;padding:12px;border-bottom:1px solid var(--line);vertical-align:top}
+    th{background:rgba(15,17,19,.08);font-weight:700}
+    .gate{display:inline-block;border-radius:999px;padding:.15rem .7rem;font-weight:700;font-size:.8rem;margin-bottom:.6em}
+    .gate.allow{background:var(--hpp-signal);color:var(--hpp-ink)}
+    .gate.manual{border:2px solid var(--hpp-ink);color:var(--hpp-ink)}
+    .gate.block{background:var(--hpp-ink);color:var(--hpp-paper)}
+    .label{font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+    .measured{border-left:4px solid var(--hpp-signal);padding-left:1em;color:var(--muted);font-size:.95rem}
+    ul,ol{padding-left:1.3em}
+    li{margin:.25em 0}
+    footer{padding:48px 0;background:var(--hpp-black);color:var(--hpp-paper)}
+    footer a{color:var(--hpp-paper)}
+    footer .five{letter-spacing:.2em;font-size:.8rem;color:rgba(244,241,235,.72)}
+    @media(max-width:760px){.card,.card.wide{grid-column:1/-1}.wrap{width:min(100% - 32px,var(--max))}th,td{font-size:.88rem;padding:8px}.hero{padding-top:28px}section{padding:44px 0}}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+    h3[id],h4[id],h5[id]{scroll-margin-top:64px}
+    ul.tasks{list-style:none;padding-left:.2em}
+    blockquote{margin:1em 0}
+  </style>
+</head>
+<body>
+  <div class="lang"><div class="wrap"><a href="SKILL-ROUTING.html" hreflang="en" lang="en">English</a> · <a href="SKILL-ROUTING.pt-BR.html" aria-current="page" hreflang="pt-BR">Português</a></div></div>
+  <header class="hero">
+    <div class="wrap">
+      <img src="assets/hpp-logo-header.png" alt="House Party Protocol">
+      <p class="eyebrow">Conceitos · SKILL-ROUTING.pt-BR.md</p>
+      <h1>Roteamento consultivo de skills</h1>
+    </div>
+  </header>
+  <nav aria-label="Capítulos"><div class="wrap"><a href="#catálogo-local-e-seleção-preliminar">Catálogo local e seleção preliminar</a><a href="#conselho-opcional-de-jev-ou-outro-decisor-tipado">Conselho opcional de Jev ou outro decisor tipado</a><a href="#resultados-e-limites">Resultados e limites</a><a href="#relação-com-o-resto-do-hpp">Relação com o resto do HPP</a></div></nav>
+  <main>
+
+    <section><div class="wrap">
+<p><code>hpp skills</code> relaciona um objetivo declarado aos metadados inspecionáveis das skills.
+Não carrega, instala ou executa skills, altera perfis, registra hooks nem chama modelos.
+Uma recomendação não concede permissão e não substitui as instruções ou gates do host.</p>
+    </div></section>
+
+    <section id="catálogo-local-e-seleção-preliminar"><div class="wrap">
+      <p class="eyebrow">01</p>
+      <h2>Catálogo local e seleção preliminar</h2>
+<p>Em um checkout, substitua <code>./my-project</code> pelo projeto desejado:</p>
+<pre><code class="language-sh">python -m hpp skills catalog --target ./my-project --host codex
+python -m hpp skills recommend --target ./my-project --host codex --intent "inspect database schema" --limit 3</code></pre>
+<p><code>--host claude-code</code> lê <code>.claude/skills</code>; <code>codex</code> lê <code>.agents/skills</code>. A inspeção cobre
+somente os diretórios de skills imediatamente abaixo dessa raiz explícita. Não há busca
+global, nos ancestrais, cache de plugins, transcrições ou catálogo de skills embutidas.
+O HPP não interpreta as configurações de ativação do host: repita <code>--exclude project:NOME</code>
+para excluir entradas explicitamente.</p>
+<p><code>--include-bundled</code> acrescenta skills disponíveis na distribuição HPP indicada pelo
+manifesto. Isso <strong>não</strong> comprova instalação no projeto:</p>
+<pre><code class="language-sh">python -m hpp skills catalog --target ./my-project --host codex --include-bundled
+python -m hpp skills recommend --target ./my-project --host codex --include-bundled --profile ./my-project/.hpp/profile.json --intent "coordinate parallel review"</code></pre>
+<p><code>--profile</code> aceita um perfil existente <code>hpp.init/v1</code>, com host correspondente e IDs de
+módulos conhecidos. Exige <code>--include-bundled</code> e restringe <strong>somente os módulos da
+distribuição</strong>; skills locais continuam independentes. <code>--manifest ARQUIVO</code> seleciona
+outro manifesto para essa descoberta. Diretórios ausentes são informados, não inventados.
+Uma instalação pip sem artefatos dos módulos não fornece um catálogo completo deles.</p>
+<p>As identidades são <code>project:DIRETORIO</code> e <code>module:MODULO:DIRETORIO</code>. Nomes iguais continuam
+distintos. Cada entrada contém nome, descrição, origem, indicador de instalação, módulo,
+capacidades declaradas do módulo, caminho relativo e SHA-256 do arquivo. Capacidades
+são declarações no nível do módulo, não prova de competência nem afirmação de que
+cada skill individual fornece todas elas. <code>installed: true</code> significa que o arquivo foi
+encontrado no diretório de projeto do host, não que o host o carregou.</p>
+<p>Inspecione o mesmo catálogo como grafo de proveniência:</p>
+<pre><code class="language-sh">python -m hpp skills graph --target ./my-project --host codex --include-bundled</code></pre>
+<p><code>graph</code> aceita os mesmos parâmetros comuns de <code>catalog</code>: <code>--target</code>, <code>--host</code>,
+<code>--include-bundled</code>, <code>--manifest</code>, <code>--profile</code> e <code>--exclude</code> repetido. A saída
+<code>hpp.skill-graph/v1</code> vincula o hash do catálogo a nós de skill, host, módulo e capacidade.
+Skills ligam-se a hosts por <code>installed-for</code> ou <code>available-for</code>; módulos usam <code>contains</code>
+para skills e <code>provides</code> para capacidades declaradas. Não há aresta <code>provides</code> de skill
+para capacidade: pertencer a um módulo não comprova competência individual da skill.</p>
+<p>A seleção lexical informa termos coincidentes e pontuação, com <code>confidence: null</code>.
+Pontuações medem sobreposição de tokens, <strong>não probabilidades</strong>. Empates favorecem
+entradas instaladas e depois IDs estáveis. Sem coincidência, há abstenção, não a conclusão
+de que nenhuma skill é necessária. Leia as skills selecionadas antes de decidir usá-las.</p>
+    </div></section>
+
+    <section id="conselho-opcional-de-jev-ou-outro-decisor-tipado"><div class="wrap">
+      <p class="eyebrow">02</p>
+      <h2>Conselho opcional de Jev ou outro decisor tipado</h2>
+<p>Exportar uma requisição ainda é uma operação local, mas seu <code>state</code> contém o objetivo e
+metadados do catálogo. Revise antes de compartilhar. A pergunta Choice inclui os IDs das
+skills e as opções <code>no-skill-needed</code> e <code>search-needed</code>:</p>
+<pre><code class="language-sh">python -m hpp skills request --target ./my-project --host codex --intent "inspect database schema" &gt; skill-request.json</code></pre>
+<p>Depois da aprovação humana do provedor, dos dados transmitidos e de eventual custo, o
+adaptador externo existente pode ler esse JSON diretamente pela entrada padrão. O exemplo
+abaixo é uma <strong>chamada de rede manual</strong>, nunca uma etapa automática:</p>
+<pre><code class="language-sh">python examples/typed-decisions/decide.py --provider typesafe --model PINNED_MODEL_ID --abstain-below 0.7 &lt; skill-request.json &gt; skill-decision.json</code></pre>
+<p>Substitua <code>PINNED_MODEL_ID</code> por uma versão fixa disponível e confirmada pelo provedor;
+não use <code>jev-latest</code>. O exemplo TypeSafe lê <code>TYPESAFE_API_KEY</code> do ambiente. Não coloque
+chaves em argumentos ou arquivos versionados. Outros adaptadores estão descritos em
+<a href="https://github.com/rusharlabs/house-party-protocol/blob/main/examples/typed-decisions/README.pt-BR.md">decisões tipadas</a>. O adaptador guarda respostas
+brutas em <code>.hpp/decisions/raw</code> por padrão e recusa estados acima de 60.000 caracteres;
+reduza o catálogo quando necessário. Não passe <code>--declared</code>: a escolha de skill é
+informativa, não uma escala ordenada de risco. Os testes offline deste recurso não
+comprovam chamada real nem disponibilidade de qualquer provedor.</p>
+<p>Consuma a resposta localmente, com os mesmos projeto, host, objetivo, exclusões, manifesto
+e perfil usados na exportação:</p>
+<pre><code class="language-sh">python -m hpp skills recommend --target ./my-project --host codex --intent "inspect database schema" --decision skill-decision.json --min-confidence 0.7</code></pre>
+<p>A importação valida <code>hpp.decision/v1</code>, incluindo autoridade consultiva, e exige igualdade
+do estado e da pergunta atuais. Mudanças nos bytes das skills, catálogo, objetivo ou
+exclusões invalidam o conselho antigo. Recomendações de modelo/replay abaixo do limiar
+viram abstenção; falhas do instrumento continuam falhas. Hashes vinculam evidência ao
+conteúdo, mas não autenticam o provedor nem comprovam segurança da skill. Preserve a
+resposta bruta para auditoria; o comando valida o registro, não uma assinatura do provedor.</p>
+    </div></section>
+
+    <section id="resultados-e-limites"><div class="wrap">
+      <p class="eyebrow">03</p>
+      <h2>Resultados e limites</h2>
+<p>A saída <code>hpp.skill-route/v1</code> contém hashes do catálogo, estado e pergunta e contagens de
+cobertura:</p>
+<ul>
+<li><code>recommendation</code> + <code>review-skills</code>: inspecionar as entradas; nada é executado.</li>
+<li><code>recommendation</code> + <code>no-skill-needed</code>: conselho importado indica assistência geral.</li>
+<li><code>recommendation</code> + <code>search-needed</code>: conselho importado sugere descoberta, mas nenhuma
+busca ou instalação ocorre.</li>
+<li><code>abstention</code> ou <code>instrument-failure</code> + <code>review-manually</code>: seguir com avaliação humana/do host.</li>
+</ul>
+<p>Catálogo usa <code>hpp.skill-catalog/v1</code>; requisição usa <code>hpp.skill-request/v1</code>. Confira
+<code>skipped</code> e <code>unavailable</code> no catálogo, não só a recomendação ou o grafo. Grafo e
+requisição retornam 0 quando geram a saída; o grafo não inclui diagnósticos do catálogo. Catálogo retorna código 1 se houver
+entradas ignoradas, senão 0; recomendação retorna 0 para uma recomendação e 1 para
+abstenção/falha. Entrada inválida retorna 2; erro interno inesperado, 3.</p>
+<p>A descoberta rejeita caminhos com links simbólicos, arquivos não regulares/grandes e
+metadados inválidos. Em POSIX, percorre os diretórios por descritores vinculados e lê com
+<code>O_NOFOLLOW</code>/<code>O_NONBLOCK</code>, usando <code>fstat</code> após abrir para conferir identidade, tipo regular
+e tamanho. No Windows, mantém verificações de pontos de nova análise (reparse points) e
+identidade, mas essas proteções <strong>não são uma sandbox contra um sistema de arquivos
+hostil com alterações concorrentes</strong>. Inspecione somente raízes cujo conteúdo você confia.
+Limites: 128 KiB por arquivo, 2.048 entradas enumeradas e 250 skills;
+exceder o limite causa recusa, não truncamento silencioso. O subconjunto YAML é propositalmente
+pequeno: nome e descrição, com valores escalares simples, entre aspas ou blocos dobrados/literais.
+Os bytes do arquivo são lidos para o hash, mas seu corpo não vira contexto de roteamento nem
+é executado. Textos parecidos com segredos são recusados; essa verificação não detecta
+necessariamente todo dado privado. Revise exportações e não versione requisições/respostas
+com metadados privados.</p>
+<p>Coincidências lexicais podem ser irrelevantes, especialmente com palavras genéricas de
+capacidades. Os limiares não estão calibrados para todos os catálogos e idiomas. Meça
+objetivos representativos contra seu catálogo real. <code>hpp retrieval eval</code> e <code>hpp decide eval</code>
+oferecem réguas separadas para ranking e decisões; este recurso não reivindica precisão
+nem desempenho próprios.</p>
+    </div></section>
+
+    <section id="relação-com-o-resto-do-hpp"><div class="wrap">
+      <p class="eyebrow">04</p>
+      <h2>Relação com o resto do HPP</h2>
+<p>O roteamento de skills é um comando explícito, com descoberta limitada ao projeto,
+registros Choice independentes de provedor e nenhuma chamada de rede ou execução automática.
+HPP decision v1 mede perguntas Choice, portanto "nenhuma skill necessária" e "busca
+necessária" são opções da mesma pergunta, e não uma pergunta separada.</p>
+<p>O recurso complementa o grafo de capacidades e os perfis de montagem. O grafo descreve
+capacidades dos módulos e hosts suportados, os perfis selecionam módulos e o roteamento
+de skills sugere descrições adequadas ao objetivo. <code>hpp route</code> continua escolhendo o
+nível de provedor conforme pisos de risco; <code>hpp skills</code> não altera esses pisos.</p>
+    </div></section>
+
+  </main>
+  <footer><div class="wrap">
+    <p class="five">AGENTS · EVIDENCE · MEMORY · PROTOCOL · CONTINUITY</p>
+    <strong>House Party Protocol</strong>
+    <p>Opere agentes de código sob evidência, não confiança.</p>
+    <p><a href="index.html">Documentação</a> · <a href="MANUAL.pt-BR.html">Manual do harness</a> · <a href="CATALOG.pt-BR.html">Catálogo de módulos</a> · <a href="https://github.com/rusharlabs/house-party-protocol/blob/main/docs/SKILL-ROUTING.pt-BR.md">Fonte em Markdown</a> · <a href="SKILL-ROUTING.html" hreflang="en" lang="en">English</a></p>
+  </div></footer>
+</body>
+</html>

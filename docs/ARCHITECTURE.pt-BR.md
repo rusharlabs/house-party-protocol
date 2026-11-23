@@ -209,16 +209,16 @@ essa renderização.
 
 | módulo | Claude Code | Codex CLI |
 |---|---|---|
-| `operator-kit` 1.8.6 | `native` · plugin + hooks depois de colar o wiring | `explicit-command` · plugin (só skills) + cópia verificada |
+| `operator-kit` 1.8.7 | `native` · plugin + hooks depois de colar o wiring | `explicit-command` · plugin (só skills) + cópia verificada |
 | `kit-forge` 1.5.6 | `explicit-command` · plugin | `explicit-command` · cópia verificada |
-| `lane-kit` 1.10.2 | `native` · plugin + hooks depois de colar o wiring | `explicit-command` · plugin (só skills) + cópia verificada |
-| `continuity-kit` 1.5.5 | `native` · plugin + hooks depois de colar o wiring | `explicit-command` · plugin (só skills) + cópia verificada |
-| `health-kit` 1.4.6 | `explicit-command` · plugin | `explicit-command` · plugin (só skills) + cópia verificada |
-| `claude-dev-kit` 1.3.10 | `native` · plugin | `unsupported` · — |
+| `lane-kit` 1.11.0 | `native` · plugin + hooks depois de colar o wiring | `explicit-command` · plugin (só skills) + cópia verificada |
+| `continuity-kit` 1.6.0 | `native` · plugin + hooks depois de colar o wiring | `explicit-command` · plugin (só skills) + cópia verificada |
+| `health-kit` 1.4.7 | `explicit-command` · plugin | `explicit-command` · plugin (só skills) + cópia verificada |
+| `claude-dev-kit` 1.3.11 | `native` · plugin | `unsupported` · — |
 | `supabase-pack` 1.2.5 | `explicit-command` · plugin | `explicit-command` · plugin (só skills) + cópia verificada |
 | `agent-framework-wizard` 1.2.7 | `explicit-command` · plugin | `explicit-command` · cópia verificada |
 | `dev-squad-kit` 1.3.0 | `native` · plugin | `explicit-command` · plugin (só skills) + cópia verificada |
-| `gotcha-memory` 1.1.7 | `native` · plugin + hooks depois de colar o wiring | `explicit-command` · plugin (só skills) + cópia verificada |
+| `gotcha-memory` 1.1.8 | `native` · plugin + hooks depois de colar o wiring | `explicit-command` · plugin (só skills) + cópia verificada |
 
 No Claude Code todo módulo é um plugin do marketplace, e um módulo que declara hooks os arma depois
 que o wiring é colado. No Codex CLI o canal de plugin é o marketplace do próprio produto,

@@ -9,8 +9,8 @@ its note in `CHANGELOG.md`. Check yours with `hpp --version`.
 
 | version | supported |
 |---|---|
-| 2.14.x | yes — current line |
-| 2.0 – 2.13 | no — upgrade to 2.14.x |
+| 2.15.x | yes — current line |
+| 2.0 – 2.14 | no — upgrade to 2.15.x |
 | 1.x | no |
 
 Modules carry their own version (`plugin.json`, `marketplace.json`); a module fix ships as a new

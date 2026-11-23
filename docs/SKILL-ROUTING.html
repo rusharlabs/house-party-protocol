@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>House Party Protocol — Advisory skill routing</title>
+  <meta name="description" content="Local skill catalogs, capability relations and explicit typed-decision advice without model calls.">
+  <link rel="alternate" hreflang="en" href="SKILL-ROUTING.html">
+  <link rel="alternate" hreflang="pt-BR" href="SKILL-ROUTING.pt-BR.html">
+  <style>
+    :root{--hpp-black: #000000;--hpp-ink: #0F1113;--hpp-paper: #F4F1EB;--hpp-signal: #FF6A00;--line:rgba(15,17,19,.18);--surface:rgba(15,17,19,.04);--muted:rgba(15,17,19,.72);--max:1120px}
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;background:var(--hpp-paper);color:var(--hpp-ink);font:16px/1.65 Inter,"Segoe UI",Arial,sans-serif}
+    a{color:var(--hpp-ink);text-decoration:underline;text-decoration-color:var(--hpp-signal);text-decoration-thickness:2px;text-underline-offset:3px}
+    a:hover{color:var(--hpp-signal)}
+    a:focus-visible{outline:4px solid var(--hpp-signal);outline-offset:3px}
+    .wrap{width:min(var(--max),calc(100% - 40px));margin:auto}
+    .lang{background:var(--hpp-black);color:var(--hpp-paper);font-size:.9rem;padding:10px 0}
+    .lang a{color:var(--hpp-paper)}
+    .lang a[aria-current]{text-decoration:none;font-weight:700}
+    .hero{background:var(--hpp-ink);color:var(--hpp-paper);padding:44px 0 50px}
+    .hero img{width:min(720px,100%);display:block}
+    .hero h1{font:800 clamp(2.2rem,6vw,5rem)/.95 Sora,Inter,"Segoe UI",sans-serif;letter-spacing:-.02em;margin:.35em 0}
+    .hero p{max-width:760px;font-size:1.15rem;color:rgba(244,241,235,.82)}
+    .hero .eyebrow{color:var(--hpp-paper);border-color:var(--hpp-signal)}
+    .signal{color:var(--hpp-signal)}
+    .eyebrow,.mono,code,pre,.gate,.label{font-family:"JetBrains Mono","Cascadia Code",Consolas,monospace}
+    .eyebrow{display:inline-block;letter-spacing:.13em;text-transform:uppercase;font-size:.78rem;border-left:4px solid var(--hpp-signal);padding-left:.6em;margin:0 0 .6em}
+    nav{position:sticky;top:0;z-index:2;background:rgba(244,241,235,.96);border-bottom:1px solid var(--line);backdrop-filter:blur(8px)}
+    nav .wrap{display:flex;gap:20px;overflow:auto;padding:12px 0}
+    nav a{white-space:nowrap;text-decoration:none;font-weight:700}
+    nav a:hover{text-decoration:underline;text-decoration-color:var(--hpp-signal)}
+    section{padding:64px 0;border-bottom:1px solid var(--line)}
+    h2{font:800 clamp(1.7rem,3vw,2.6rem)/1.1 Sora,Inter,"Segoe UI",sans-serif;letter-spacing:-.01em;margin:0 0 .6em}
+    h3{margin:0 0 .4em;font-size:1.1rem}
+    .lead{max-width:780px;color:var(--muted)}
+    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:20px}
+    .card{grid-column:span 4;border:1px solid var(--line);border-radius:16px;padding:22px;background:var(--surface)}
+    .card.wide{grid-column:span 6}
+    .card.full{grid-column:1/-1}
+    pre{background:var(--hpp-ink);color:var(--hpp-paper);padding:20px;border-radius:12px;overflow:auto;border-left:6px solid var(--hpp-signal);font-size:.92rem;line-height:1.5}
+    code{font-size:.94em}
+    p code,li code,td code{background:var(--surface);padding:.08em .35em;border-radius:5px}
+    pre code{background:none;padding:0}
+    table{width:100%;border-collapse:collapse;background:var(--surface);margin:1em 0}
+    th,td{text-align:left;padding:12px;border-bottom:1px solid var(--line);vertical-align:top}
+    th{background:rgba(15,17,19,.08);font-weight:700}
+    .gate{display:inline-block;border-radius:999px;padding:.15rem .7rem;font-weight:700;font-size:.8rem;margin-bottom:.6em}
+    .gate.allow{background:var(--hpp-signal);color:var(--hpp-ink)}
+    .gate.manual{border:2px solid var(--hpp-ink);color:var(--hpp-ink)}
+    .gate.block{background:var(--hpp-ink);color:var(--hpp-paper)}
+    .label{font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+    .measured{border-left:4px solid var(--hpp-signal);padding-left:1em;color:var(--muted);font-size:.95rem}
+    ul,ol{padding-left:1.3em}
+    li{margin:.25em 0}
+    footer{padding:48px 0;background:var(--hpp-black);color:var(--hpp-paper)}
+    footer a{color:var(--hpp-paper)}
+    footer .five{letter-spacing:.2em;font-size:.8rem;color:rgba(244,241,235,.72)}
+    @media(max-width:760px){.card,.card.wide{grid-column:1/-1}.wrap{width:min(100% - 32px,var(--max))}th,td{font-size:.88rem;padding:8px}.hero{padding-top:28px}section{padding:44px 0}}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+    h3[id],h4[id],h5[id]{scroll-margin-top:64px}
+    ul.tasks{list-style:none;padding-left:.2em}
+    blockquote{margin:1em 0}
+  </style>
+</head>
+<body>
+  <div class="lang"><div class="wrap"><a href="SKILL-ROUTING.html" aria-current="page" hreflang="en">English</a> · <a href="SKILL-ROUTING.pt-BR.html" hreflang="pt-BR" lang="pt-BR">Português</a></div></div>
+  <header class="hero">
+    <div class="wrap">
+      <img src="assets/hpp-logo-header.png" alt="House Party Protocol">
+      <p class="eyebrow">Concepts · SKILL-ROUTING.md</p>
+      <h1>Advisory skill routing</h1>
+    </div>
+  </header>
+  <nav aria-label="Chapters"><div class="wrap"><a href="#local-catalog-and-shortlist">Local catalog and shortlist</a><a href="#optional-jev-or-other-typed-decision-advice">Optional Jev or other typed-decision advice</a><a href="#outcomes-and-limits">Outcomes and limits</a><a href="#relationship-to-the-rest-of-hpp">Relationship to the rest of HPP</a></div></nav>
+  <main>
+
+    <section><div class="wrap">
+<p><code>hpp skills</code> connects a declared goal to inspectable skill metadata. It does not load,
+install or execute a skill, change a profile, register a hook, or call a model. A
+recommendation is not permission and does not replace the host's instructions or gates.</p>
+    </div></section>
+
+    <section id="local-catalog-and-shortlist"><div class="wrap">
+      <p class="eyebrow">01</p>
+      <h2>Local catalog and shortlist</h2>
+<p>From a checkout, with the target project substituted for <code>./my-project</code>:</p>
+<pre><code class="language-sh">python -m hpp skills catalog --target ./my-project --host codex
+python -m hpp skills recommend --target ./my-project --host codex --intent "inspect database schema" --limit 3</code></pre>
+<p>Use <code>--host claude-code</code> for <code>.claude/skills</code>; <code>codex</code> reads <code>.agents/skills</code>.
+Only immediate skill directories under that explicit project root are inspected.
+There is no global, ancestor, plugin-cache, transcript, or built-in-skill scan. HPP does
+not infer a host's enabled/disabled settings: use repeated <code>--exclude project:NAME</code> flags
+to leave entries out explicitly.</p>
+<p><code>--include-bundled</code> adds skills available in the HPP distribution selected by the
+manifest. It does <strong>not</strong> prove those modules or skills are installed in the target:</p>
+<pre><code class="language-sh">python -m hpp skills catalog --target ./my-project --host codex --include-bundled
+python -m hpp skills recommend --target ./my-project --host codex --include-bundled --profile ./my-project/.hpp/profile.json --intent "coordinate parallel review"</code></pre>
+<p><code>--profile</code> accepts an existing <code>hpp.init/v1</code> profile with the matching host and known
+module IDs. It requires <code>--include-bundled</code> and restricts <strong>bundled modules only</strong>;
+project skills remain independent. <code>--manifest FILE</code> selects another manifest for
+bundled discovery. Missing distribution directories are reported, not invented. A pip
+installation without module artifacts does not become a full module catalog.</p>
+<p>Catalog records use <code>project:DIRECTORY</code> and <code>module:MODULE:DIRECTORY</code> identities. Equal
+names stay distinct. Each entry includes its name, description, origin, installed flag,
+module, declared module capabilities, relative skill path and file SHA-256. Capabilities
+are module-level manifest declarations, not measured competence or claims that each
+individual skill provides every capability. A project entry's <code>installed: true</code>
+means its file was discovered in the host's project directory, not that the host loaded it.</p>
+<p>Inspect the same catalog as a provenance graph:</p>
+<pre><code class="language-sh">python -m hpp skills graph --target ./my-project --host codex --include-bundled</code></pre>
+<p><code>graph</code> accepts the same common flags as <code>catalog</code>: <code>--target</code>, <code>--host</code>,
+<code>--include-bundled</code>, <code>--manifest</code>, <code>--profile</code> and repeated <code>--exclude</code>. Its
+<code>hpp.skill-graph/v1</code> output binds the catalog hash to skill, host, module and capability
+nodes. Skills link to hosts as <code>installed-for</code> or <code>available-for</code>; modules <code>contains</code>
+skills and <code>provides</code> declared capabilities. There is deliberately no skill-to-capability
+<code>provides</code> edge: membership in a module is not proof of individual skill competence.</p>
+<p>The lexical shortlist reports matched terms and a score, with <code>confidence: null</code>. Scores
+are token overlap, <strong>not probabilities</strong>. Ties prefer installed entries, then stable IDs.
+No overlap yields abstention, not a claim that no skill is needed. Read the shortlisted
+skills before deciding whether any really fits.</p>
+    </div></section>
+
+    <section id="optional-jev-or-other-typed-decision-advice"><div class="wrap">
+      <p class="eyebrow">02</p>
+      <h2>Optional Jev or other typed-decision advice</h2>
+<p>Exporting a request remains local, but its <code>state</code> contains the goal and catalog metadata.
+Review it before sharing. The request includes a Choice question with skill IDs plus
+<code>no-skill-needed</code> and <code>search-needed</code> options:</p>
+<pre><code class="language-sh">python -m hpp skills request --target ./my-project --host codex --intent "inspect database schema" &gt; skill-request.json</code></pre>
+<p>After a human approves the specific provider, data transmission and any cost, the existing
+external example adapter can read this JSON directly on stdin. The following is a
+<strong>manual network-call example</strong>, not a command to run automatically:</p>
+<pre><code class="language-sh">python examples/typed-decisions/decide.py --provider typesafe --model PINNED_MODEL_ID --abstain-below 0.7 &lt; skill-request.json &gt; skill-decision.json</code></pre>
+<p>Replace <code>PINNED_MODEL_ID</code> with an available, pinned model version confirmed by the provider;
+do not use <code>jev-latest</code>. The TypeSafe example reads <code>TYPESAFE_API_KEY</code> from the environment.
+Do not put a key in arguments or committed files. Other declared adapters are described in
+<a href="https://github.com/rusharlabs/house-party-protocol/blob/main/examples/typed-decisions/README.md">typed decisions</a>. The adapter stores raw responses
+in <code>.hpp/decisions/raw</code> by default and refuses states over 60,000 characters; narrow the
+catalog if necessary. Do not pass <code>--declared</code>: skill choice is informational, not an
+ordered risk ladder. No real provider call or provider availability is established by
+this feature's offline tests.</p>
+<p>Consume the result locally, using exactly the same target, host, goal, exclusions,
+manifest and profile as the exported request:</p>
+<pre><code class="language-sh">python -m hpp skills recommend --target ./my-project --host codex --intent "inspect database schema" --decision skill-decision.json --min-confidence 0.7</code></pre>
+<p>The import validates <code>hpp.decision/v1</code>, including advisory authority, and requires the
+exact current state and question to match. Changed skill bytes, catalog, intent or
+exclusions invalidate old advice. Model/replay recommendations below the confidence
+floor abstain; instrument failures stay failures. Hashes bind evidence to content, but
+do not authenticate a provider or prove a skill is safe. Preserve raw-response evidence
+for independent audit; this routing command validates the record, not a provider signature.</p>
+    </div></section>
+
+    <section id="outcomes-and-limits"><div class="wrap">
+      <p class="eyebrow">03</p>
+      <h2>Outcomes and limits</h2>
+<p>Output is <code>hpp.skill-route/v1</code>, with catalog/state/question hashes and coverage counts:</p>
+<ul>
+<li><code>recommendation</code> + <code>review-skills</code>: inspect the selected entries; nothing executes.</li>
+<li><code>recommendation</code> + <code>no-skill-needed</code>: imported advice says ordinary assistance suffices.</li>
+<li><code>recommendation</code> + <code>search-needed</code>: imported advice suggests discovery, but no search
+or installation is performed.</li>
+<li><code>abstention</code> or <code>instrument-failure</code> + <code>review-manually</code>: proceed with human/host judgment.</li>
+</ul>
+<p>Catalog output is <code>hpp.skill-catalog/v1</code>; request output is <code>hpp.skill-request/v1</code>.
+Inspect <code>skipped</code> and <code>unavailable</code> in the catalog, not just the recommendation or graph.
+Graph and request commands exit 0 on successful output; a graph omits catalog diagnostics. Catalog exits 1 when
+entries were skipped and otherwise 0; recommendation exits 0 for a recommendation and
+1 for abstention/failure. Invalid input exits 2; unexpected internal errors exit 3.</p>
+<p>Discovery rejects symlink paths, nonregular/oversized files and invalid metadata. It
+uses descriptor-bound parent traversal and <code>O_NOFOLLOW</code>/<code>O_NONBLOCK</code> reads on POSIX,
+with <code>fstat</code> checks for file identity, regular-file type and size after opening. Windows
+retains reparse-point and identity checks, but these guards are <strong>not a sandbox against
+a concurrently hostile filesystem</strong>. Only scan roots whose contents you trust.
+Discovery bounds files to 128 KiB, enumeration to 2,048 entries and choices to 250 skills, refusing
+overflow rather than silently truncating. Metadata is a deliberately small YAML subset:
+name and description only, with simple quoted or folded/literal scalar values. A file's
+bytes are read for its digest, but its body is not used as routing context or executed.
+Secret-like text is refused; this pattern check is not a guarantee that all private data
+will be detected. Review exports and avoid committing request/decision files containing
+private project metadata.</p>
+<p>Lexical matches can be irrelevant, especially when common capability words overlap.
+Thresholds are not calibrated for every catalog or language. Measure representative
+goals against your actual catalog before relying on the shortlist. The existing
+<code>hpp retrieval eval</code> and <code>hpp decide eval</code> provide separate ranking and decision rulers;
+this feature makes no accuracy or performance claim of its own.</p>
+    </div></section>
+
+    <section id="relationship-to-the-rest-of-hpp"><div class="wrap">
+      <p class="eyebrow">04</p>
+      <h2>Relationship to the rest of HPP</h2>
+<p>Skill routing is an explicit command with bounded project discovery, provider-neutral
+Choice records and no automatic network call or execution. HPP decision v1 measures
+Choice questions, so "no skill needed" and "search needed" are options in the same
+question rather than a separate one.</p>
+<p>This complements the capability graph and mounting profiles; it does not replace them.
+The graph explains module capabilities and supported hosts, profiles choose module scope,
+and skill routing suggests which descriptions fit an intent. <code>hpp route</code> still selects
+a provider tier subject to risk floors; <code>hpp skills</code> does not alter those floors.</p>
+    </div></section>
+
+  </main>
+  <footer><div class="wrap">
+    <p class="five">AGENTS · EVIDENCE · MEMORY · PROTOCOL · CONTINUITY</p>
+    <strong>House Party Protocol</strong>
+    <p>Operate coding agents under evidence, not trust.</p>
+    <p><a href="index.html">Documentation</a> · <a href="MANUAL.html">Harness manual</a> · <a href="CATALOG.html">Module catalogue</a> · <a href="https://github.com/rusharlabs/house-party-protocol/blob/main/docs/SKILL-ROUTING.md">Markdown source</a> · <a href="SKILL-ROUTING.pt-BR.html" hreflang="pt-BR" lang="pt-BR">Português</a></p>
+  </div></footer>
+</body>
+</html>

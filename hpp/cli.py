@@ -42,6 +42,7 @@ from hpp.maps import build_agent_map, build_context_map, build_feed_map, build_l
 from hpp.policy import assess, exit_for as policy_exit_for, policy_for_workspace
 from hpp.retrieval import exit_for as retrieval_exit_for, run_retrieval_suite
 from hpp.routing import route
+from hpp.skills import build_catalog, make_request, recommend, skill_graph
 from hpp.state import StateError, append_event, event_path, project, read_events, verify_chain
 from hpp.setup import run_setup
 from hpp.term import Console, write_stdout
@@ -478,6 +479,33 @@ def command_work(args: argparse.Namespace) -> int:
     else:
         _json(compiled)
     return 0
+
+
+def command_skills(args: argparse.Namespace) -> int:
+    if args.profile and not args.include_bundled:
+        raise ValueError("--profile needs --include-bundled")
+    manifest = root = None
+    if args.include_bundled:
+        manifest, root = _manifest(args)
+    catalog = build_catalog(args.target, args.host,
+                            manifest=manifest if args.include_bundled else None,
+                            distribution=root.parent if args.include_bundled else None,
+                            profile=_read_json(args.profile, dict) if args.profile else None,
+                            exclude=tuple(args.exclude))
+    if args.skills_command == "graph":
+        _json(skill_graph(catalog))
+        return 0
+    if args.skills_command == "catalog":
+        _json(catalog)
+        return 1 if catalog["skipped"] else 0
+    if args.skills_command == "request":
+        _json(make_request(catalog, args.intent))
+        return 0
+    result = recommend(catalog, args.intent,
+                       decision=_read_json(args.decision, dict) if args.decision else None,
+                       min_confidence=args.min_confidence, limit=args.limit)
+    _json(result)
+    return 0 if result["status"] == "recommendation" else 1
 
 
 def command_route(args: argparse.Namespace) -> int:
@@ -931,6 +959,25 @@ def build_parser() -> argparse.ArgumentParser:
     coverage.add_argument("--junit", nargs="+", default=[],
                           help="JUnit XML reports of the run; without them only citation is measured")
     coverage.set_defaults(func=command_work)
+
+    skills_parser = sub.add_parser("skills", help="local advisory skill selection; never loads or installs skills")
+    skills_sub = skills_parser.add_subparsers(dest="skills_command", required=True)
+    for name in ("catalog", "graph", "request", "recommend"):
+        skill_command = skills_sub.add_parser(name)
+        skill_command.add_argument("--target", default=".")
+        skill_command.add_argument("--host", required=True, choices=["codex", "claude-code"])
+        skill_command.add_argument("--include-bundled", action="store_true",
+                                   help="include available module skills, not evidence of installation")
+        skill_command.add_argument("--manifest")
+        skill_command.add_argument("--profile", help="hpp.init/v1 profile; restricts bundled modules")
+        skill_command.add_argument("--exclude", action="append", default=[], help="exact skill id to exclude")
+        if name in ("request", "recommend"):
+            skill_command.add_argument("--intent", required=True, help="goal; request explicitly exports this text")
+        if name == "recommend":
+            skill_command.add_argument("--decision", help="existing hpp.decision/v1 advice for this exact request")
+            skill_command.add_argument("--min-confidence", type=float, default=0.7)
+            skill_command.add_argument("--limit", type=int, default=3)
+        skill_command.set_defaults(func=command_skills)
 
     route_parser = sub.add_parser("route")
     route_parser.add_argument("--request", required=True)

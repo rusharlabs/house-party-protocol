@@ -56,6 +56,18 @@
             "title": "Loops, autoprompt e waves",
             "summary": "O que um loop governado tem — objetivo, estado observável, próxima ação, orçamento, gate de evidência e condições de parada — e o autoloop, o autoprompt, a memória de falhas e a avaliação em volta dele."
           }
+        },
+        {
+          "en": {
+            "href": "SKILL-ROUTING.html",
+            "title": "Advisory skill routing",
+            "summary": "Local skill catalogs, capability relations and explicit typed-decision advice without model calls."
+          },
+          "pt-BR": {
+            "href": "SKILL-ROUTING.pt-BR.html",
+            "title": "Roteamento consultivo de skills",
+            "summary": "Catálogos locais, relações de capacidades e decisões tipadas explícitas sem chamadas a modelos."
+          }
         }
       ]
     },
